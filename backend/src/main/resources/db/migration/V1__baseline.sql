@@ -1,0 +1,1 @@
+-- Baseline inicial: nenhuma tabela ainda, nenhuma entidade existe.
