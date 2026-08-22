@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>SISZOO — Usuários</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  .role-card {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+  }
+  .role-card .num {
+    width: 40px; height: 40px;
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    border-radius: 10px;
+    font-family: var(--font-display); font-weight: 700; font-size: 18px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .role-card h4 { font-size: 14px; }
+  .role-card p { font-size: 12px; color: var(--color-text-secondary); }
+
+  .avatar-i {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff;
+    font-weight: 600; font-size: 12px;
+    font-family: var(--font-body);
+  }
+
+  .modal-backdrop {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(2px);
+    z-index: 200;
+    align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .modal-backdrop.show { display: flex; }
+</style>
+</head>
+<body data-page="usuarios">
+<div data-shell-root>
+
+  <div class="page-header">
+    <div class="title-block">
+      <h1>Usuários do Sistema <span class="counter">14 usuários</span></h1>
+      <p class="subtitle">Gerencie acessos e perfis · Apenas Administradores podem criar e desativar usuários</p>
+    </div>
+    <div class="actions">
+      <button class="btn btn-outline btn-sm"><span id="ic-perm"></span>Permissões</button>
+      <button class="btn btn-primary" id="open-modal"><span id="ic-plus"></span>Adicionar Usuário</button>
+    </div>
+  </div>
+
+  <!-- Roles overview -->
+  <div class="grid grid-4" style="gap: var(--space-3);">
+    <div class="role-card">
+      <span class="num">1</span>
+      <div>
+        <h4 style="display: flex; align-items: center; gap: 6px;">Administrador <span class="badge badge-role-admin">ADMIN</span></h4>
+        <p>Acesso total ao sistema. Gerencia usuários e configurações.</p>
+      </div>
+    </div>
+    <div class="role-card">
+      <span class="num">5</span>
+      <div>
+        <h4 style="display: flex; align-items: center; gap: 6px;">Veterinário <span class="badge badge-role-vet">VET</span></h4>
+        <p>Gestão clínica de animais, vacinas, exames e cirurgias.</p>
+      </div>
+    </div>
+    <div class="role-card">
+      <span class="num">4</span>
+      <div>
+        <h4 style="display: flex; align-items: center; gap: 6px;">Agente Sanitário <span class="badge badge-role-agent">AGENTE</span></h4>
+        <p>Processos sanitários e ocorrências de campo.</p>
+      </div>
+    </div>
+    <div class="role-card">
+      <span class="num">4</span>
+      <div>
+        <h4 style="display: flex; align-items: center; gap: 6px;">Recepção <span class="badge badge-role-recep">RECEP</span></h4>
+        <p>Cadastro básico e consultas. Sem acesso clínico.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filter-bar">
+    <div class="search-input">
+      <span id="ic-search"></span>
+      <input type="text" placeholder="Buscar por nome ou e-mail..." />
+    </div>
+    <select class="filter-select">
+      <option>Perfil: Todos</option>
+      <option>Administrador</option>
+      <option>Veterinário</option>
+      <option>Agente Sanitário</option>
+      <option>Recepção</option>
+    </select>
+    <select class="filter-select">
+      <option>Status: Todos</option>
+      <option>Ativos</option>
+      <option>Inativos</option>
+    </select>
+  </div>
+
+  <!-- Tabela -->
+  <div class="table-wrap">
+    <div style="overflow-x: auto;">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Usuário</th>
+            <th>Perfil</th>
+            <th>Status</th>
+            <th>Último acesso</th>
+            <th>Criado em</th>
+            <th style="width: 80px;">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="table-footer">
+      <span>Mostrando <strong>1 – 14</strong> de <strong>14</strong> usuários</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal: Adicionar usuário -->
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Adicionar Usuário</h3>
+      <button class="btn btn-ghost btn-sm btn-icon-only" id="close-modal"><span id="ic-x"></span></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid cols-1">
+        <div class="field"><label>Nome completo <span class="req">*</span></label><input class="input" type="text" placeholder="Maria Silva Souza" /></div>
+        <div class="field"><label>E-mail institucional <span class="req">*</span></label><input class="input" type="email" placeholder="nome.sobrenome@itu.sp.gov.br" /></div>
+        <div class="form-grid">
+          <div class="field"><label>Perfil <span class="req">*</span></label>
+            <select class="select"><option>Veterinário</option><option>Agente Sanitário</option><option>Recepção</option><option>Administrador</option></select>
+          </div>
+          <div class="field"><label>CRMV / Registro (se aplic.)</label><input class="input mono" type="text" placeholder="CRMV-SP 00000" /></div>
+        </div>
+        <div class="field">
+          <label>Senha inicial</label>
+          <div class="flex gap-2">
+            <input class="input mono" type="text" value="Itu@2026!" style="flex: 1;" />
+            <button class="btn btn-outline btn-sm">Gerar</button>
+          </div>
+          <span class="hint">O usuário será obrigado a trocar a senha no primeiro acesso.</span>
+        </div>
+        <div class="switch-row">
+          <label class="switch"><input type="checkbox" checked /><span class="slider"></span></label>
+          <label style="cursor: pointer;">Ativo · pode acessar o sistema imediatamente</label>
+        </div>
+        <div class="switch-row">
+          <label class="switch"><input type="checkbox" checked /><span class="slider"></span></label>
+          <label style="cursor: pointer;">Enviar e-mail de boas-vindas com credenciais</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="cancel-modal">Cancelar</button>
+      <button class="btn btn-primary">Criar Usuário</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/icons.js"></script>
+<script src="assets/shell.js"></script>
+<script src="assets/tweaks.js"></script>
+<script>
+  const I = window.SISZOO_ICONS;
+  const $ = id => document.getElementById(id);
+  $('ic-perm').innerHTML = I.lock(14);
+  $('ic-plus').innerHTML = I.plus(14);
+  $('ic-search').innerHTML = I.search(14);
+  $('ic-x').innerHTML = I.x(16);
+
+  // Avatar color from name (hash → hue)
+  const hue = name => Math.abs([...name].reduce((a,c) => a + c.charCodeAt(0), 0)) % 360;
+  const initials = name => name.split(' ').slice(0, 2).map(s => s[0]).join('').toUpperCase();
+
+  const users = [
+    { name: 'Stéphanie Lima',  email: 'stephanie.lima@itu.sp.gov.br',  role: 'Veterinário',     roleCls: 'badge-role-vet',   active: true,  last: '20/05/2026 14:32', created: '15/03/2024' },
+    { name: 'Rafael Souza',    email: 'rafael.souza@itu.sp.gov.br',    role: 'Veterinário',     roleCls: 'badge-role-vet',   active: true,  last: '20/05/2026 13:18', created: '02/04/2024' },
+    { name: 'Carlos Martins',  email: 'carlos.martins@itu.sp.gov.br',  role: 'Veterinário',     roleCls: 'badge-role-vet',   active: true,  last: '19/05/2026 17:02', created: '10/05/2024' },
+    { name: 'Maria Isabel',    email: 'maria.isabel@itu.sp.gov.br',    role: 'Veterinário',     roleCls: 'badge-role-vet',   active: true,  last: '20/05/2026 09:44', created: '12/07/2024' },
+    { name: 'Joana Pires',     email: 'joana.pires@itu.sp.gov.br',     role: 'Veterinário',     roleCls: 'badge-role-vet',   active: false, last: '12/02/2026 11:00', created: '18/09/2024' },
+    { name: 'Rafael Santos',   email: 'rafael.santos@itu.sp.gov.br',   role: 'Agente Sanitário',roleCls: 'badge-role-agent', active: true,  last: '20/05/2026 12:55', created: '03/11/2024' },
+    { name: 'Marcos Oliveira', email: 'marcos.oliveira@itu.sp.gov.br', role: 'Agente Sanitário',roleCls: 'badge-role-agent', active: true,  last: '20/05/2026 11:08', created: '20/12/2024' },
+    { name: 'Lúcia Pereira',   email: 'lucia.pereira@itu.sp.gov.br',   role: 'Agente Sanitário',roleCls: 'badge-role-agent', active: true,  last: '20/05/2026 08:22', created: '15/01/2025' },
+    { name: 'Antônio Costa',   email: 'antonio.costa@itu.sp.gov.br',   role: 'Agente Sanitário',roleCls: 'badge-role-agent', active: true,  last: '19/05/2026 16:40', created: '02/02/2025' },
+    { name: 'Beatriz Almeida', email: 'beatriz.almeida@itu.sp.gov.br', role: 'Recepção',        roleCls: 'badge-role-recep', active: true,  last: '20/05/2026 14:55', created: '14/03/2025' },
+    { name: 'Larissa Tavares', email: 'larissa.tavares@itu.sp.gov.br', role: 'Recepção',        roleCls: 'badge-role-recep', active: true,  last: '20/05/2026 14:50', created: '14/03/2025' },
+    { name: 'Felipe Borges',   email: 'felipe.borges@itu.sp.gov.br',   role: 'Recepção',        roleCls: 'badge-role-recep', active: true,  last: '17/05/2026 18:00', created: '22/04/2025' },
+    { name: 'Tatiana Silva',   email: 'tatiana.silva@itu.sp.gov.br',   role: 'Recepção',        roleCls: 'badge-role-recep', active: false, last: '03/01/2026 09:10', created: '05/06/2025' },
+    { name: 'Paulo Henriques', email: 'paulo.henriques@itu.sp.gov.br', role: 'Administrador',   roleCls: 'badge-role-admin', active: true,  last: '20/05/2026 14:00', created: '15/03/2024' },
+  ];
+  document.getElementById('rows').innerHTML = users.map(u => `
+    <tr>
+      <td>
+        <div class="animal-cell">
+          <div class="avatar-i" style="background: hsl(${hue(u.name)}, 35%, 50%);">${initials(u.name)}</div>
+          <div>
+            <div class="name">${u.name}</div>
+          </div>
+        </div>
+      </td>
+      <td><span class="badge ${u.roleCls}">${u.role}</span></td>
+      <td>${u.active
+        ? '<span class="badge badge-available"><span class="badge-dot"></span>Ativo</span>'
+        : '<span class="badge badge-deceased"><span class="badge-dot"></span>Inativo</span>'
+      }</td>
+      <td><span class="mono" style="font-size: 12px;">${u.last}</span></td>
+      <td><span class="mono" style="font-size: 11px; color: var(--color-text-secondary);">${u.created}</span></td>
+      <td>
+        <div class="flex gap-1">
+          <button class="btn btn-ghost btn-sm btn-icon-only" title="Editar">${I.edit(14)}</button>
+          <button class="btn btn-ghost btn-sm btn-icon-only" title="Mais">${I.moreV(14)}</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+  // Modal
+  $('open-modal').addEventListener('click', () => $('modal').classList.add('show'));
+  $('close-modal').addEventListener('click', () => $('modal').classList.remove('show'));
+  $('cancel-modal').addEventListener('click', () => $('modal').classList.remove('show'));
+</script>
+</body>
+</html>

@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>SISZOO — Processo Sanitário 045/2026</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  .urgency-banner {
+    background: linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%);
+    border: 1px solid #EF9A9A;
+    border-left: 6px solid var(--color-danger);
+    padding: 18px 22px;
+    border-radius: var(--radius-lg);
+    display: flex; align-items: flex-start; gap: 16px;
+  }
+  .urgency-banner .ub-ico {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--color-danger);
+    color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .urgency-banner h3 { color: #6A0F0F; font-family: var(--font-display); font-size: 16px; letter-spacing: 0.04em; }
+  .urgency-banner p { color: #5A1818; font-size: 13px; margin-top: 4px; line-height: 1.5; }
+
+  .animal-amostra {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--color-surface-alt);
+  }
+  .am-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .am-head .am-n {
+    font-family: var(--font-display);
+    font-weight: 600; font-size: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .am-head .am-n .num-circle {
+    width: 22px; height: 22px;
+    background: var(--color-primary);
+    color: #fff;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 11px;
+  }
+  .am-body { padding: 16px; }
+  .am-flags { display: flex; gap: 12px; font-size: 13px; margin-top: 8px; padding: 12px; background: #FFF8E1; border: 1px solid #FFECB3; border-radius: var(--radius-sm); }
+  .am-flags .ico-warn { color: var(--color-warning); }
+
+  .checkbox-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .checkbox-grid label {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .checkbox-grid label input { accent-color: var(--color-primary); }
+  .checkbox-grid label.checked { background: var(--color-primary-light); border-color: var(--color-primary); color: var(--color-primary); font-weight: 500; }
+
+  .docs-list {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .docs-list .doc-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    font-size: 13px;
+  }
+  .docs-list .doc-row .doc-ico {
+    width: 32px; height: 32px;
+    background: var(--color-info-bg);
+    color: var(--color-info);
+    border-radius: 6px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+
+  .lab-info-strip {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3);
+  }
+  .info-box {
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 12px;
+  }
+  .info-box .ib-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-secondary); font-weight: 600; }
+  .info-box .ib-value { font-family: var(--font-display); font-weight: 600; font-size: 16px; margin-top: 4px; }
+  .info-box .ib-value.mono { font-family: var(--font-mono); }
+</style>
+</head>
+<body data-page="processo">
+<div data-shell-root>
+
+  <div class="page-header">
+    <div class="title-block">
+      <a href="processos.html" class="btn btn-ghost btn-sm" style="align-self: flex-start;">← Voltar para Processos</a>
+      <div style="display: flex; align-items: center; gap: 8px; margin: 4px 0;">
+        <span class="badge badge-disease raiva">RAIVA</span>
+        <span class="badge badge-process-awaiting">Aguardando Resultado</span>
+        <span class="badge badge-urgent">🚨 URGENTE</span>
+      </div>
+      <h1 style="font-family: var(--font-mono); letter-spacing: 0;">Processo 045/2026</h1>
+      <p class="subtitle">Aberto em 20/05/2026 · Vinculado à Ocorrência <a href="ocorrencia.html" class="mono">089/2026</a></p>
+    </div>
+    <div class="actions">
+      <button class="btn btn-outline btn-sm"><span id="ic-pdf"></span>Gerar PDF</button>
+      <button class="btn btn-outline btn-sm"><span id="ic-edit"></span>Editar</button>
+    </div>
+  </div>
+
+  <!-- Urgency Banner -->
+  <div class="urgency-banner">
+    <div class="ub-ico"><span id="ic-warn"></span></div>
+    <div>
+      <h3>ATENÇÃO — CONTATO HUMANO-ANIMAL CONFIRMADO</h3>
+      <p>Um dos animais amostrados teve contato físico direto com munícipe (mordedura). <strong>Resultado laboratorial obrigatório</strong> antes de encerrar este processo. Equipe de saúde foi notificada automaticamente.</p>
+    </div>
+  </div>
+
+  <!-- Lab info strip -->
+  <div class="lab-info-strip">
+    <div class="info-box">
+      <div class="ib-label">Laboratório</div>
+      <div class="ib-value" style="font-size: 14px;">Instituto Pasteur — SP</div>
+    </div>
+    <div class="info-box">
+      <div class="ib-label">Nº GAL</div>
+      <div class="ib-value mono">GAL-2026-08712</div>
+    </div>
+    <div class="info-box">
+      <div class="ib-label">Nº Notificação SINAN</div>
+      <div class="ib-value mono">SIN-04451-26</div>
+    </div>
+    <div class="info-box">
+      <div class="ib-label">CID</div>
+      <div class="ib-value mono">A82 — Raiva</div>
+    </div>
+  </div>
+
+  <!-- Dados do processo -->
+  <div class="card">
+    <div class="card-header"><h3>1. Dados do Processo</h3></div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="field">
+          <label>Protocolo interno</label>
+          <input class="input mono" type="text" value="045/2026" disabled />
+        </div>
+        <div class="field">
+          <label>Data de abertura <span class="req">*</span></label>
+          <input class="input mono" type="text" value="20/05/2026" />
+        </div>
+        <div class="field">
+          <label>Tipo de doença investigada <span class="req">*</span></label>
+          <select class="select">
+            <option>Raiva</option><option>Esporotricose</option><option>Leishmaniose Visceral</option>
+            <option>Leptospirose</option><option>Febre Maculosa</option><option>Febre Amarela</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Laboratório de destino <span class="req">*</span></label>
+          <select class="select">
+            <option>Instituto Pasteur — SP</option>
+            <option>IAL — Sorocaba</option>
+            <option>CCZ — SP</option>
+            <option>ITU-LL01 (local)</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label>Vínculo com ocorrência</label>
+          <input class="input" type="text" value="Ocorrência 089/2026 · Suspeita de Zoonose · Vila Esperança" disabled />
+          <span class="hint">Vínculo definido na abertura do processo — não pode ser alterado aqui.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Responsável (munícipe) -->
+  <div class="card">
+    <div class="card-header"><h3>2. Responsável / Munícipe</h3></div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="field"><label>Nome <span class="req">*</span></label><input class="input" type="text" value="Maria Souza Oliveira" /></div>
+        <div class="field"><label>CPF</label><input class="input mono" type="text" value="123.456.789-00" /></div>
+        <div class="field"><label>Telefone</label><input class="input mono" type="text" value="(11) 9 8765-4321" /></div>
+        <div class="field"><label>E-mail</label><input class="input" type="email" value="maria.souza@email.com" /></div>
+        <div class="field"><label>CEP</label><input class="input mono" type="text" value="13301-000" /></div>
+        <div class="field"><label>Logradouro / nº</label><input class="input" type="text" value="Rua dos Ipês, 220" /></div>
+        <div class="field"><label>Bairro residencial</label><input class="input" type="text" value="Vila Esperança" /></div>
+        <div class="field"><label>Bairro da ocorrência</label><input class="input" type="text" value="Vila Esperança" /></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Animais Amostrados -->
+  <div class="card">
+    <div class="card-header">
+      <h3>3. Animais Amostrados <span style="color: var(--color-text-secondary); font-weight: 500;">(2 animais)</span></h3>
+      <button class="btn btn-secondary btn-sm"><span id="ic-add-an"></span>Adicionar animal</button>
+    </div>
+    <div class="card-body" style="display: flex; flex-direction: column; gap: var(--space-4);">
+
+      <!-- Animal #1 -->
+      <div class="animal-amostra">
+        <div class="am-head">
+          <div class="am-n">
+            <span class="num-circle">1</span>
+            <a href="animal.html" style="font-weight: 600; color: var(--color-primary);">Caramelo</a>
+            <span style="color: var(--color-text-secondary); font-weight: 500;">· Cão SRD · Macho · ~3 anos</span>
+            <span class="badge badge-available" style="margin-left: 8px;"><span class="badge-dot"></span>Vinculado à ficha A-0067</span>
+          </div>
+          <div class="flex gap-2">
+            <span class="badge badge-canine">Canino</span>
+            <a href="animal.html" class="btn btn-ghost btn-sm">Ver ficha →</a>
+            <button class="btn btn-ghost btn-sm btn-icon-only" title="Remover"><span id="ic-rm-1"></span></button>
+          </div>
+        </div>
+        <div class="am-body">
+          <div class="form-grid cols-3">
+            <div class="field"><label>Espécie <span class="req">*</span></label><select class="select"><option>Canino</option><option>Felino</option></select></div>
+            <div class="field"><label>Sexo <span class="req">*</span></label><select class="select"><option>Macho</option><option>Fêmea</option></select></div>
+            <div class="field"><label>Idade aprox.</label><input class="input" type="text" value="3 anos" /></div>
+            <div class="field"><label>Raça</label><input class="input" type="text" value="SRD" /></div>
+            <div class="field"><label>Peso (kg)</label><input class="input mono" type="text" value="18.5" /></div>
+            <div class="field"><label>Coloração</label><input class="input" type="text" value="Caramelo" /></div>
+            <div class="field"><label>Pelagem</label><select class="select"><option>Curta</option><option>Longa</option></select></div>
+            <div class="field"><label>Status clínico</label><select class="select"><option>Sintomático</option><option>Assintomático</option><option>Óbito</option></select></div>
+            <div class="field"><label>Alt. comportamental</label><input class="input" type="text" value="Agressividade, hipersensibilidade" /></div>
+            <div class="field full">
+              <label>Tipo de abrigo <span class="hint" style="margin-left: 6px; font-weight: 400; text-transform: none; letter-spacing: 0;">(onde o animal vivia antes da coleta)</span></label>
+              <div class="check-list inline">
+                <label class="radio-line" title="Vive dentro de casa, junto à família"><input type="radio" name="abrigo1" checked /> Intradomiciliar <span style="color: var(--color-text-muted); font-size: 11px;">— dentro de casa</span></label>
+                <label class="radio-line" title="Vive nas proximidades — quintal, terreno, garagem"><input type="radio" name="abrigo1" /> Peridomiciliar <span style="color: var(--color-text-muted); font-size: 11px;">— quintal/peri-domicílio</span></label>
+                <label class="radio-line" title="Animal silvestre/selvagem, sem dono identificado"><input type="radio" name="abrigo1" /> Silvestre <span style="color: var(--color-text-muted); font-size: 11px;">— selvagem</span></label>
+                <label class="radio-line"><input type="radio" name="abrigo1" /> Não identificado</label>
+              </div>
+            </div>
+            <div class="field"><label>Data de coleta <span class="req">*</span></label><input class="input mono" type="text" value="20/05/2026" /></div>
+            <div class="field"><label>Material biológico <span class="req">*</span></label>
+              <select class="select"><option>Tecido encefálico</option><option>Soro</option><option>Sangue</option><option>Saliva</option><option>Urina</option></select>
+            </div>
+          </div>
+
+          <div style="margin-top: var(--space-4);">
+            <div class="uppercase-label" style="margin-bottom: 8px;">Sinais e sintomas</div>
+            <div class="checkbox-grid">
+              <label class="checked"><input type="checkbox" checked /> Apatia</label>
+              <label class="checked"><input type="checkbox" checked /> Alt. comportamental</label>
+              <label><input type="checkbox" /> Descamação</label>
+              <label><input type="checkbox" /> Úlcera de Pele</label>
+              <label><input type="checkbox" /> Ceratoconjuntivite</label>
+              <label><input type="checkbox" /> Coriza</label>
+              <label class="checked"><input type="checkbox" checked /> Emagrecimento</label>
+              <label><input type="checkbox" /> Diarreia</label>
+              <label class="checked"><input type="checkbox" checked /> Salivação excessiva</label>
+              <label><input type="checkbox" /> Hemorragia interna</label>
+              <label><input type="checkbox" /> Vômito</label>
+              <label><input type="checkbox" /> Aumento de linfonodo</label>
+            </div>
+          </div>
+
+          <div class="am-flags">
+            <span style="display: flex; align-items: center; gap: 6px;">
+              <span id="ic-warn1"></span>
+              <strong>Munícipe teve contato físico:</strong>
+            </span>
+            <label class="radio-line"><input type="radio" name="contato1" checked /> Sim</label>
+            <label class="radio-line"><input type="radio" name="contato1" /> Não</label>
+            <span style="margin-left: 18px;"><strong>Nível:</strong></span>
+            <label class="radio-line"><input type="radio" name="nivel1" checked /> Direta</label>
+            <label class="radio-line"><input type="radio" name="nivel1" /> Indireta</label>
+            <span style="margin-left: 18px;"><strong>Animal agrediu humano:</strong></span>
+            <label class="radio-line"><input type="radio" name="agr1" checked /> Sim</label>
+            <label class="radio-line"><input type="radio" name="agr1" /> Não</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Animal #2 -->
+      <div class="animal-amostra">
+        <div class="am-head">
+          <div class="am-n">
+            <span class="num-circle">2</span>
+            Cão SRD · Preto e branco · Fêmea · ~5 anos
+          </div>
+          <div class="flex gap-2">
+            <span class="badge badge-canine">Canino</span>
+            <button class="btn btn-ghost btn-sm btn-icon-only" title="Expandir"><span id="ic-rm-2"></span></button>
+          </div>
+        </div>
+        <div class="am-body">
+          <div style="font-size: 13px; color: var(--color-text-secondary); display: flex; justify-content: space-between;">
+            <span>Coleta: <span class="mono">20/05/2026</span> · Material: <strong>Tecido encefálico</strong> · Sintomas: Apatia, Salivação</span>
+            <a href="#">Expandir detalhes ▾</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resultado Laboratorial -->
+  <div class="card">
+    <div class="card-header"><h3>4. Resultado Laboratorial</h3></div>
+    <div class="card-body">
+      <div class="alert info" style="margin-bottom: var(--space-4);">
+        <div class="bullet"></div>
+        <div class="alert-content">
+          <strong>Aguardando resultado do laboratório.</strong>
+          <div class="alert-desc">Amostras enviadas em 20/05/2026 às 16:40 · Previsão de retorno: 5–7 dias úteis.</div>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Resultado</label>
+          <select class="select" disabled>
+            <option>Aguardando</option>
+            <option>Negativo</option>
+            <option>Positivo</option>
+            <option>Inconclusivo</option>
+            <option>Material Inadequado</option>
+            <option>Não Realizado</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Data do resultado</label>
+          <input class="input mono" type="text" placeholder="DD/MM/AAAA" disabled />
+        </div>
+        <div class="field full">
+          <label>Desfecho do animal</label>
+          <select class="select" disabled>
+            <option>Em acompanhamento</option>
+            <option>Óbito — Natural</option>
+            <option>Óbito — Eutanásia</option>
+            <option>Óbito — Outro</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label>Observações</label>
+          <textarea class="textarea" disabled placeholder="Disponível após o registro do resultado..."></textarea>
+        </div>
+      </div>
+      <div class="alert alert-yellow" style="margin-top: var(--space-3);">
+        <div class="bullet"></div>
+        <div class="alert-content">
+          <strong>Notificação automática.</strong>
+          <div class="alert-desc">Ao registrar resultado <strong>Positivo</strong> ou <strong>Inconclusivo</strong>, o sistema enviará e-mail automático ao munícipe responsável e à Vigilância Epidemiológica de Itu.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Documentos -->
+  <div class="card">
+    <div class="card-header">
+      <h3>5. Documentos</h3>
+      <button class="btn btn-outline btn-sm"><span id="ic-pdf2"></span>Gerar PDF do processo</button>
+    </div>
+    <div class="card-body">
+      <div class="docs-list">
+        <div class="doc-row">
+          <span class="doc-ico" id="d-1"></span>
+          <div style="flex: 1;">
+            <div style="font-weight: 500;">Ficha de Investigação Sanitária — 045-2026.pdf</div>
+            <div style="font-size: 11px; color: var(--color-text-muted);">Gerado em 20/05/2026 · 184 KB</div>
+          </div>
+          <button class="btn btn-ghost btn-sm">Baixar</button>
+        </div>
+        <div class="doc-row">
+          <span class="doc-ico" id="d-2"></span>
+          <div style="flex: 1;">
+            <div style="font-weight: 500;">Termo de envio Pasteur-SP.pdf</div>
+            <div style="font-size: 11px; color: var(--color-text-muted);">20/05/2026 · 96 KB</div>
+          </div>
+          <button class="btn btn-ghost btn-sm">Baixar</button>
+        </div>
+        <div class="doc-row">
+          <span class="doc-ico" id="d-3"></span>
+          <div style="flex: 1;">
+            <div style="font-weight: 500;">Fotos da coleta (3 arquivos)</div>
+            <div style="font-size: 11px; color: var(--color-text-muted);">20/05/2026 · 8.2 MB</div>
+          </div>
+          <button class="btn btn-ghost btn-sm">Baixar</button>
+        </div>
+        <button class="btn btn-outline btn-sm" style="margin-top: 6px;"><span id="ic-up"></span>Anexar documento</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="assets/icons.js"></script>
+<script src="assets/shell.js"></script>
+<script src="assets/tweaks.js"></script>
+<script>
+  const I = window.SISZOO_ICONS;
+  const $ = id => document.getElementById(id);
+  $('ic-pdf').innerHTML = I.fileText(14);
+  $('ic-pdf2').innerHTML = I.fileText(14);
+  $('ic-edit').innerHTML = I.edit(14);
+  $('ic-warn').innerHTML = I.alert(24);
+  $('ic-warn1').innerHTML = I.alert(14);
+  $('ic-add-an').innerHTML = I.plus(14);
+  $('ic-rm-1').innerHTML = I.moreV(14);
+  $('ic-rm-2').innerHTML = I.moreV(14);
+  $('ic-up').innerHTML = I.upload(14);
+  $('d-1').innerHTML = I.fileText(16);
+  $('d-2').innerHTML = I.fileText(16);
+  $('d-3').innerHTML = I.camera(16);
+</script>
+</body>
+</html>

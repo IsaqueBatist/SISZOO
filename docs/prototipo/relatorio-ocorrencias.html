@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>SISZOO — Relatório de Ocorrências por Bairro</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/report.css">
+</head>
+<body>
+<div class="toolbar">
+  <button class="secondary" onclick="window.close()">← Fechar</button>
+  <button onclick="window.print()">🖨 Imprimir / Salvar PDF</button>
+</div>
+<div class="sheet">
+  <div class="r-header">
+    <div class="r-brand">
+      <div class="wm"><span class="wm-mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><circle cx="6" cy="9" r="2"/><circle cx="10" cy="5" r="2"/><circle cx="14" cy="5" r="2"/><circle cx="18" cy="9" r="2"/><path d="M12 11c-3 0-5 2.5-5 5 0 2 1.5 3 3 3 1 0 1.5-.5 2-.5s1 .5 2 .5c1.5 0 3-1 3-3 0-2.5-2-5-5-5z"/></svg></span>SISZOO</div>
+      <div class="gov">Prefeitura Municipal de Itu · CCZ</div>
+    </div>
+    <div class="r-meta">
+      <div class="doc-id">DOC-2026-0189</div>
+      <div>Emitido em 20/05/2026</div>
+      <div>Geração: Rafael Santos</div>
+    </div>
+  </div>
+  <h1 class="r-title">Relatório de Ocorrências por Bairro</h1>
+  <div class="r-subtitle">Período: <strong>01/01/2026 a 20/05/2026</strong></div>
+  <div class="kpi-row">
+    <div class="kpi"><div class="l">Ocorrências registradas</div><div class="v" >218</div><div class="d">▲ 24% vs período anterior</div></div><div class="kpi"><div class="l">Bairros atingidos</div><div class="v" >21</div><div class="d">De 28 bairros do município</div></div><div class="kpi"><div class="l">Tempo médio (h)</div><div class="v" style="color:#2E7D32;">3.4</div><div class="d">Registro → atendimento</div></div><div class="kpi"><div class="l">Encerradas</div><div class="v" style="color:#2E7D32;">94.9%</div><div class="d">207 de 218</div></div>
+  </div>
+  <h2 class="section">Bairros com mais ocorrências</h2>
+    <table>
+      <thead><tr><th>Bairro</th><th>Ocorrências</th><th>Tipo predominante</th><th>Tempo médio (h)</th></tr></thead>
+      <tbody>
+        <tr><td>Centro</td><td class="mono">42</td><td>Infestação de Morcegos</td><td class="mono">2.8</td></tr>
+        <tr><td>Vila Esperança</td><td class="mono">28</td><td>Animal Agressivo</td><td class="mono">3.1</td></tr>
+        <tr><td>Jd. Padre Bento</td><td class="mono">21</td><td>Suspeita de Zoonose</td><td class="mono">3.6</td></tr>
+        <tr><td>Itaim</td><td class="mono">18</td><td>Criação Irregular</td><td class="mono">4.2</td></tr>
+        <tr><td>Pq. das Aroeiras</td><td class="mono">17</td><td>Suspeita de Zoonose</td><td class="mono">3.8</td></tr>
+        <tr><td>Brasil</td><td class="mono">14</td><td>Animal Agressivo</td><td class="mono">2.9</td></tr>
+        <tr><td>Cidade Nova</td><td class="mono">12</td><td>Criação Irregular</td><td class="mono">4.1</td></tr>
+        <tr><td>Vila Brasil</td><td class="mono">11</td><td>Outros</td><td class="mono">3.3</td></tr>
+        <tr><td>Jd. Itália</td><td class="mono">9</td><td>Suspeita de Zoonose</td><td class="mono">3.7</td></tr>
+        <tr><td>Outros (12 bairros)</td><td class="mono">46</td><td>Diversos</td><td class="mono">3.5</td></tr>
+      </tbody>
+    </table><h2 class="section">Tipos de ocorrência</h2>
+    <div class="bar-row"><span class="label">Infestação de Morcegos</span><span class="track"><span class="fill" style="width: 100%; background: #424242;"></span></span><span class="val">68</span></div>
+    <div class="bar-row"><span class="label">Animal Agressivo</span><span class="track"><span class="fill" style="width: 75%; background: #F57F17;"></span></span><span class="val">51</span></div>
+    <div class="bar-row"><span class="label">Suspeita de Zoonose</span><span class="track"><span class="fill" style="width: 65%; background: #C62828;"></span></span><span class="val">44</span></div>
+    <div class="bar-row"><span class="label">Criação Irregular</span><span class="track"><span class="fill" style="width: 50%; background: #E65100;"></span></span><span class="val">34</span></div>
+    <div class="bar-row"><span class="label">Outros</span><span class="track"><span class="fill" style="width: 30%; background: #5A6A7E;"></span></span><span class="val">21</span></div>
+
+    <div class="note"><strong>Foco geográfico:</strong> o bairro Centro concentra 19,3% das ocorrências, principalmente relacionadas à infestação de morcegos.</div>
+  <div class="r-footer">
+    <span>SISZOO · DOC-2026-0189</span>
+    <span>Página 1 de 1</span>
+  </div>
+</div>
+</body>
+</html>

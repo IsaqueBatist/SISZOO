@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>SISZOO — Cadastrar Animal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  .wizard-shell { max-width: 920px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: var(--space-5); }
+  .upload-area {
+    border: 2px dashed var(--color-border-strong);
+    border-radius: var(--radius-md);
+    padding: var(--space-8);
+    text-align: center;
+    background: var(--color-surface-alt);
+    cursor: pointer;
+    transition: background 150ms, border-color 150ms;
+  }
+  .upload-area:hover { border-color: var(--color-primary); background: var(--color-primary-light); }
+  .upload-area .ico { width: 56px; height: 56px; background: var(--color-surface); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: var(--color-text-secondary); margin-bottom: 12px; box-shadow: var(--shadow-sm); }
+  .upload-area h4 { font-size: 14px; margin-bottom: 4px; }
+  .upload-area p { font-size: 12px; color: var(--color-text-secondary); }
+
+  .step-pane { display: none; }
+  .step-pane.active { display: block; }
+  .review-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3) var(--space-5); }
+  .review-row { display: flex; flex-direction: column; gap: 2px; padding: 8px 0; border-bottom: 1px solid var(--color-border); }
+  .review-row .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-text-muted); font-weight: 600; }
+  .review-row .v { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+  .review-row .v.mono { font-family: var(--font-mono); font-size: 13px; }
+</style>
+</head>
+<body data-page="cadastrar-animal">
+<div data-shell-root>
+
+  <div class="wizard-shell">
+    <div class="page-header">
+      <div class="title-block">
+        <a href="animais.html" class="btn btn-ghost btn-sm" style="align-self:flex-start;">← Voltar para Animais</a>
+        <h1>Cadastrar Novo Animal</h1>
+        <p class="subtitle">Preencha as informações em 3 etapas. Você poderá editar depois.</p>
+      </div>
+    </div>
+
+    <!-- Stepper -->
+    <div class="stepper">
+      <div class="step active">
+        <span class="num">1</span>
+        <span>Dados Básicos</span>
+      </div>
+      <div class="arrow"></div>
+      <div class="step">
+        <span class="num">2</span>
+        <span>Saúde &amp; Baia</span>
+      </div>
+      <div class="arrow"></div>
+      <div class="step">
+        <span class="num">3</span>
+        <span>Foto &amp; Revisão</span>
+      </div>
+    </div>
+
+    <!-- STEP 1 -->
+    <div class="card step-pane active" data-step="1">
+      <div class="card-header">
+        <h3>Dados Básicos</h3>
+        <span class="sub">Campos com <span style="color: var(--color-danger);">*</span> são obrigatórios</span>
+      </div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="field full">
+            <label>Nome do animal <span class="req">*</span></label>
+            <input class="input" type="text" placeholder="Ex: Rex" />
+            <span class="hint">Use o nome de chamada do animal. Se desconhecido, use um apelido.</span>
+          </div>
+
+          <div class="field full">
+            <label>Espécie <span class="req">*</span></label>
+            <div class="radio-cards" style="grid-template-columns: 1fr 1fr;">
+              <div class="radio-card selected">
+                <span class="ico" id="ic-dog"></span>
+                <span class="label">Canino</span>
+                <span class="sub">Cães</span>
+              </div>
+              <div class="radio-card">
+                <span class="ico" id="ic-cat"></span>
+                <span class="label">Felino</span>
+                <span class="sub">Gatos</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Microchip <span class="req">*</span></label>
+            <input class="input mono" type="text" placeholder="985121234567890" maxlength="15" />
+            <span class="hint">15 dígitos numéricos (ISO 11784).</span>
+          </div>
+          <div class="field">
+            <label>Número da medalha</label>
+            <input class="input mono" type="text" placeholder="ITU-2026-000" />
+          </div>
+
+          <div class="field">
+            <label>Sexo <span class="req">*</span></label>
+            <div class="radio-cards" style="grid-template-columns: 1fr 1fr;">
+              <div class="radio-card selected">
+                <span style="color: #1565C0; font-size: 22px; font-weight: 700;">♂</span>
+                <span class="label">Macho</span>
+              </div>
+              <div class="radio-card">
+                <span style="color: #D81B60; font-size: 22px; font-weight: 700;">♀</span>
+                <span class="label">Fêmea</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Porte <span class="req">*</span></label>
+            <div class="radio-cards" style="grid-template-columns: repeat(3, 1fr);">
+              <div class="radio-card">
+                <span class="label">P</span>
+                <span class="sub">até 10kg</span>
+              </div>
+              <div class="radio-card selected">
+                <span class="label">M</span>
+                <span class="sub">10–25kg</span>
+              </div>
+              <div class="radio-card">
+                <span class="label">G</span>
+                <span class="sub">25kg+</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Raça</label>
+            <input class="input" type="text" placeholder="Ex: SRD, Labrador, Poodle..." />
+          </div>
+          <div class="field">
+            <label>Data provável de nascimento</label>
+            <input class="input" type="text" placeholder="MM/AAAA ou estimativa" value="Jan/2024" />
+          </div>
+
+          <div class="field">
+            <label>Pelagem</label>
+            <select class="select">
+              <option>Curta</option><option>Longa</option><option>Sem pelo</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Cor / coloração</label>
+            <input class="input" type="text" placeholder="Ex: Caramelo, Preto e branco..." />
+          </div>
+
+          <div class="field">
+            <label>Motivo de entrada <span class="req">*</span></label>
+            <select class="select">
+              <option>Recolhimento</option>
+              <option>Abandono</option>
+              <option>Entrega voluntária</option>
+              <option>Resgate</option>
+              <option>Apreensão judicial</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Procedência (endereço/bairro)</label>
+            <input class="input" type="text" placeholder="Ex: Rua XV de Novembro, Centro" />
+          </div>
+        </div>
+      </div>
+      <div class="card-header" style="border-top: 1px solid var(--color-border); border-bottom: none; justify-content: flex-end;">
+        <a href="animais.html" class="btn btn-ghost">Cancelar</a>
+        <button class="btn btn-primary" data-go="2">Próximo: Saúde &amp; Baia →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="card step-pane" data-step="2">
+      <div class="card-header">
+        <h3>Saúde &amp; Baia</h3>
+      </div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="field">
+            <label>Baia atual <span class="req">*</span></label>
+            <select class="select">
+              <option>Baia 1 — 5/6 (vaga disponível)</option>
+              <option>Baia 2 — 4/6 (vaga disponível)</option>
+              <option disabled>Baia 3 — 8/6 (superlotada)</option>
+              <option>Baia 4 — 3/6 (vaga disponível)</option>
+              <option>Gatil A — 6/8</option>
+              <option>Externa 1 — 2/4</option>
+              <option>Corredor</option>
+            </select>
+            <span class="hint">⚠ Baia 3 está superlotada e não permite novos animais.</span>
+          </div>
+          <div class="field">
+            <label>Status <span class="req">*</span></label>
+            <select class="select">
+              <option>Disponível para adoção</option>
+              <option>Em tratamento</option>
+              <option>Quarentena</option>
+            </select>
+          </div>
+
+          <div class="field full">
+            <label>Castração <span class="req">*</span></label>
+            <div class="radio-cards" style="grid-template-columns: repeat(3, 1fr);">
+              <div class="radio-card selected">
+                <span class="label">Não castrado</span>
+                <span class="sub">A agendar</span>
+              </div>
+              <div class="radio-card">
+                <span class="label">Orquiectomia</span>
+                <span class="sub">Macho castrado</span>
+              </div>
+              <div class="radio-card">
+                <span class="label">OSH</span>
+                <span class="sub">Fêmea castrada</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="field full">
+            <label>Condições de saúde pré-existentes</label>
+            <div class="check-list inline">
+              <label class="check"><input type="checkbox" /> Epilepsia</label>
+              <label class="check"><input type="checkbox" /> Cardiopatia</label>
+              <label class="check"><input type="checkbox" /> Diabetes</label>
+              <label class="check"><input type="checkbox" /> Agressividade</label>
+              <label class="check"><input type="checkbox" /> Cegueira</label>
+              <label class="check"><input type="checkbox" /> Surdez</label>
+              <label class="check"><input type="checkbox" /> Outras (descrever abaixo)</label>
+            </div>
+          </div>
+
+          <div class="field full">
+            <label>Observações gerais</label>
+            <textarea class="textarea" placeholder="Comportamento, características marcantes, histórico relevante..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="card-header" style="border-top: 1px solid var(--color-border); border-bottom: none; justify-content: space-between;">
+        <button class="btn btn-ghost" data-go="1">← Anterior</button>
+        <button class="btn btn-primary" data-go="3">Próximo: Foto &amp; Revisão →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="card step-pane" data-step="3">
+      <div class="card-header">
+        <h3>Foto &amp; Revisão</h3>
+      </div>
+      <div class="card-body">
+        <div class="field full" style="margin-bottom: var(--space-5);">
+          <label>Foto do animal</label>
+          <div class="upload-area">
+            <div class="ico" id="ic-cam"></div>
+            <h4>Arraste uma foto ou clique para enviar</h4>
+            <p>JPG ou PNG, até 5MB. A foto será cortada em círculo para a ficha.</p>
+          </div>
+        </div>
+
+        <div class="fieldset">
+          <legend>Revisão dos dados</legend>
+          <div class="review-grid">
+            <div class="review-row"><span class="k">Nome</span><span class="v">Rex</span></div>
+            <div class="review-row"><span class="k">Espécie</span><span class="v">Canino</span></div>
+            <div class="review-row"><span class="k">Microchip</span><span class="v mono">985121234567890</span></div>
+            <div class="review-row"><span class="k">Medalha</span><span class="v mono">ITU-2026-000</span></div>
+            <div class="review-row"><span class="k">Sexo</span><span class="v">Macho</span></div>
+            <div class="review-row"><span class="k">Porte</span><span class="v">Médio</span></div>
+            <div class="review-row"><span class="k">Raça</span><span class="v">SRD</span></div>
+            <div class="review-row"><span class="k">Nasc. aprox.</span><span class="v">Jan/2024</span></div>
+            <div class="review-row"><span class="k">Pelagem · Cor</span><span class="v">Curta · Caramelo</span></div>
+            <div class="review-row"><span class="k">Motivo / Procedência</span><span class="v">Recolhimento · Centro</span></div>
+            <div class="review-row"><span class="k">Baia</span><span class="v">Baia 1</span></div>
+            <div class="review-row"><span class="k">Status</span><span class="v">Disponível para adoção</span></div>
+            <div class="review-row"><span class="k">Castração</span><span class="v">Não castrado</span></div>
+            <div class="review-row"><span class="k">Condições</span><span class="v">Nenhuma registrada</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-header" style="border-top: 1px solid var(--color-border); border-bottom: none; justify-content: space-between;">
+        <button class="btn btn-ghost" data-go="2">← Anterior</button>
+        <div class="flex gap-2">
+          <button class="btn btn-outline">Salvar como rascunho</button>
+          <a href="animais.html" class="btn btn-primary btn-lg">Cadastrar animal</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="assets/icons.js"></script>
+<script src="assets/shell.js"></script>
+<script src="assets/tweaks.js"></script>
+<script>
+  const I = window.SISZOO_ICONS;
+  document.getElementById('ic-dog').innerHTML = I.dog(28);
+  document.getElementById('ic-cat').innerHTML = I.cat(28);
+  document.getElementById('ic-cam').innerHTML = I.camera(24);
+
+  // Wizard navigation
+  function goStep(n) {
+    document.querySelectorAll('.step-pane').forEach(p => p.classList.remove('active'));
+    document.querySelector(`.step-pane[data-step="${n}"]`).classList.add('active');
+    const steps = document.querySelectorAll('.stepper .step');
+    const arrows = document.querySelectorAll('.stepper .arrow');
+    steps.forEach((s, i) => {
+      s.classList.remove('active', 'done');
+      if (i + 1 < n) s.classList.add('done');
+      if (i + 1 === n) s.classList.add('active');
+    });
+    arrows.forEach((a, i) => {
+      a.classList.toggle('done', i + 1 < n);
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  document.querySelectorAll('[data-go]').forEach(b => {
+    b.addEventListener('click', () => goStep(+b.dataset.go));
+  });
+
+  // Radio card selection
+  document.querySelectorAll('.radio-cards').forEach(group => {
+    group.querySelectorAll('.radio-card').forEach(card => {
+      card.addEventListener('click', () => {
+        group.querySelectorAll('.radio-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+      });
+    });
+  });
+</script>
+</body>
+</html>

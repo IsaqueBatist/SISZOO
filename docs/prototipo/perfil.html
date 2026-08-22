@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>SISZOO — Meu Perfil</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  .perfil-grid { display: grid; grid-template-columns: 320px 1fr; gap: var(--space-5); align-items: start; }
+  @media (max-width: 1000px) { .perfil-grid { grid-template-columns: 1fr; } }
+
+  .profile-card { text-align: center; padding: 28px 24px; }
+  .profile-avatar {
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4CAF50, #2E7D32);
+    color: #fff;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 42px;
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-bottom: 16px;
+    border: 4px solid var(--color-surface);
+    box-shadow: var(--shadow-sm);
+  }
+  .profile-card h2 { font-size: 20px; margin-bottom: 4px; }
+  .profile-card .email { font-size: 12px; color: var(--color-text-secondary); font-family: var(--font-mono); margin-bottom: 12px; }
+
+  .stat-strip {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--color-border);
+    margin-top: 18px;
+    padding-top: 16px;
+  }
+  .stat-strip .stat-item { text-align: center; padding: 0 8px; }
+  .stat-strip .stat-item + .stat-item { border-left: 1px solid var(--color-border); }
+  .stat-strip .n { font-family: var(--font-display); font-weight: 700; font-size: 22px; }
+  .stat-strip .l { font-size: 10px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+
+  .activity-list { display: flex; flex-direction: column; gap: 0; }
+  .activity-item {
+    display: flex; gap: 14px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .activity-item:last-child { border-bottom: none; }
+  .activity-item:hover { background: var(--color-surface-alt); }
+  .activity-ico {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: var(--color-bg);
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .activity-content { flex: 1; min-width: 0; }
+  .activity-title { font-size: 13px; font-weight: 500; }
+  .activity-meta { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+  .activity-time { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-muted); }
+</style>
+</head>
+<body data-page="perfil">
+<div data-shell-root>
+
+  <div class="page-header">
+    <div class="title-block">
+      <h1>Meu Perfil</h1>
+      <p class="subtitle">Informações pessoais, atividade recente e estatísticas de uso</p>
+    </div>
+    <div class="actions">
+      <a href="configuracoes.html" class="btn btn-outline btn-sm"><span id="ic-cog"></span>Preferências</a>
+      <button class="btn btn-primary"><span id="ic-edit"></span>Editar perfil</button>
+    </div>
+  </div>
+
+  <div class="perfil-grid">
+    <!-- Card de perfil -->
+    <div class="col gap-4">
+      <div class="card profile-card">
+        <div class="profile-avatar" id="prof-init"></div>
+        <h2 id="prof-name"></h2>
+        <div class="email" id="prof-email"></div>
+        <div><span class="badge" id="prof-badge"></span></div>
+
+        <div class="stat-strip">
+          <div class="stat-item">
+            <div class="n">1.247</div>
+            <div class="l">Ações</div>
+          </div>
+          <div class="stat-item">
+            <div class="n">234</div>
+            <div class="l">Dias ativa</div>
+          </div>
+          <div class="stat-item">
+            <div class="n">15</div>
+            <div class="l">Animais hoje</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>Dados de contato</h3></div>
+        <div class="card-body" style="padding: 0;">
+          <div class="kv-list" style="padding: 16px;">
+            <div class="kv-row"><span class="k" id="k-mail"></span><span class="v" style="font-family: var(--font-mono); font-size: 12px;" id="prof-email2"></span></div>
+            <div class="kv-row"><span class="k" id="k-phone"></span><span class="v mono">(11) 9 8765-4321</span></div>
+            <div class="kv-row"><span class="k" id="k-id"></span><span class="v mono">CRMV-SP 18.245</span></div>
+            <div class="kv-row"><span class="k" id="k-loc"></span><span class="v">CCZ Itu · Sala 02</span></div>
+            <div class="kv-row"><span class="k" id="k-cal"></span><span class="v mono">Desde 15/03/2024</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>Permissões deste perfil</h3></div>
+        <div class="card-body" id="perm-list" style="padding: 16px;"></div>
+      </div>
+    </div>
+
+    <!-- Atividade -->
+    <div class="col gap-4">
+      <div class="grid grid-3">
+        <div class="card card-pad-sm">
+          <div class="uppercase-label">Animais cadastrados (mês)</div>
+          <div style="font-family: var(--font-display); font-weight: 700; font-size: 28px; margin-top: 4px;">8</div>
+          <div style="font-size: 11px; color: var(--color-success); font-weight: 600;">▲ +3 vs mês anterior</div>
+        </div>
+        <div class="card card-pad-sm">
+          <div class="uppercase-label">Procedimentos realizados</div>
+          <div style="font-family: var(--font-display); font-weight: 700; font-size: 28px; margin-top: 4px;">42</div>
+          <div style="font-size: 11px; color: var(--color-success); font-weight: 600;">▲ +12 vs mês anterior</div>
+        </div>
+        <div class="card card-pad-sm">
+          <div class="uppercase-label">Processos abertos</div>
+          <div style="font-family: var(--font-display); font-weight: 700; font-size: 28px; margin-top: 4px;">6</div>
+          <div style="font-size: 11px; color: var(--color-text-secondary);">2 ainda em curso</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>Atividade recente</h3><a href="#" style="font-size: 12px;">Ver todas →</a></div>
+        <div class="activity-list">
+          <div class="activity-item">
+            <span class="activity-ico" style="color: var(--color-success);" id="a-1"></span>
+            <div class="activity-content">
+              <div class="activity-title">Aplicou vacina Antirrábica em <a href="animal.html">Rex</a></div>
+              <div class="activity-meta">Baia 3 · Próximo reforço: 12/01/2027</div>
+            </div>
+            <span class="activity-time">há 2h</span>
+          </div>
+          <div class="activity-item">
+            <span class="activity-ico" style="color: var(--color-info);" id="a-2"></span>
+            <div class="activity-content">
+              <div class="activity-title">Registrou exame de hemograma em <a href="animal.html">Bolinha</a></div>
+              <div class="activity-meta">Resultado: Normal</div>
+            </div>
+            <span class="activity-time">há 4h</span>
+          </div>
+          <div class="activity-item">
+            <span class="activity-ico" style="color: var(--color-danger);" id="a-3"></span>
+            <div class="activity-content">
+              <div class="activity-title">Abriu processo sanitário <a href="processo.html">045/2026</a></div>
+              <div class="activity-meta">Raiva · Vila Esperança · 2 animais amostrados</div>
+            </div>
+            <span class="activity-time">há 4h</span>
+          </div>
+          <div class="activity-item">
+            <span class="activity-ico" style="color: #6A1B9A;" id="a-4"></span>
+            <div class="activity-content">
+              <div class="activity-title">Realizou castração em <a href="animal.html">Mel</a></div>
+              <div class="activity-meta">OSH · Sem intercorrências</div>
+            </div>
+            <span class="activity-time">ontem</span>
+          </div>
+          <div class="activity-item">
+            <span class="activity-ico" style="color: var(--color-text-secondary);" id="a-5"></span>
+            <div class="activity-content">
+              <div class="activity-title">Atualizou ficha de <a href="animal.html">Luna</a></div>
+              <div class="activity-meta">Transferida de Quarentena para Disponível</div>
+            </div>
+            <span class="activity-time">ontem</span>
+          </div>
+          <div class="activity-item">
+            <span class="activity-ico" style="color: var(--color-success);" id="a-6"></span>
+            <div class="activity-content">
+              <div class="activity-title">Cadastrou novo animal: <a href="animal.html">Thor</a></div>
+              <div class="activity-meta">Canino · Baia 5 · Recolhimento</div>
+            </div>
+            <span class="activity-time">há 2 dias</span>
+          </div>
+          <div class="activity-item">
+            <span class="activity-ico" style="color: var(--color-info);" id="a-7"></span>
+            <div class="activity-content">
+              <div class="activity-title">Gerou relatório de Vacinação — Abril/2026</div>
+              <div class="activity-meta">PDF 420 KB</div>
+            </div>
+            <span class="activity-time">há 5 dias</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="assets/icons.js"></script>
+<script src="assets/shell.js"></script>
+<script src="assets/tweaks.js"></script>
+<script>
+  const I = window.SISZOO_ICONS;
+  const $ = id => document.getElementById(id);
+  const role = window.SISZOO_ROLE;
+
+  // Populate profile from role
+  $('prof-init').textContent = role.initials;
+  $('prof-name').textContent = role.name;
+  $('prof-email').textContent = role.email;
+  $('prof-email2').textContent = role.email;
+  const badge = $('prof-badge');
+  badge.className = 'badge ' + role.badgeCls;
+  badge.textContent = role.label.toUpperCase();
+
+  $('k-mail').innerHTML = I.mail(14) + ' E-mail';
+  $('k-phone').innerHTML = I.phone(14) + ' Telefone';
+  $('k-id').innerHTML = I.pin(14) + ' Registro';
+  $('k-loc').innerHTML = I.map(14) + ' Lotação';
+  $('k-cal').innerHTML = I.calendar(14) + ' No SISZOO';
+
+  $('ic-cog').innerHTML = I.alert(14);
+  $('ic-edit').innerHTML = I.edit(14);
+  $('a-1').innerHTML = I.syringe(16);
+  $('a-2').innerHTML = I.flask(16);
+  $('a-3').innerHTML = I.alert(16);
+  $('a-4').innerHTML = I.scissors(16);
+  $('a-5').innerHTML = I.edit(16);
+  $('a-6').innerHTML = I.paw(16);
+  $('a-7').innerHTML = I.fileText(16);
+
+  // Permissions list per role
+  const permsByRole = {
+    admin: [
+      ['Gestão completa de animais', true],
+      ['Histórico veterinário', true],
+      ['Processos sanitários', true],
+      ['Ocorrências', true],
+      ['Relatórios', true],
+      ['Gestão de baias', true],
+      ['Gestão de usuários', true],
+      ['Configurações do sistema', true],
+    ],
+    vet: [
+      ['Gestão completa de animais', true],
+      ['Histórico veterinário', true],
+      ['Processos sanitários (visualizar)', true],
+      ['Ocorrências (visualizar)', true],
+      ['Relatórios', true],
+      ['Gestão de baias', true],
+      ['Gestão de usuários', false],
+      ['Configurações do sistema', false],
+    ],
+    agente: [
+      ['Animais (visualizar)', true],
+      ['Histórico veterinário', false],
+      ['Processos sanitários', true],
+      ['Ocorrências', true],
+      ['Relatórios', true],
+      ['Gestão de baias', false],
+      ['Gestão de usuários', false],
+      ['Configurações do sistema', false],
+    ],
+    recep: [
+      ['Animais (cadastro básico)', true],
+      ['Histórico veterinário', false],
+      ['Processos sanitários', false],
+      ['Ocorrências', true],
+      ['Relatórios', true],
+      ['Gestão de baias', false],
+      ['Gestão de usuários', false],
+      ['Configurações do sistema', false],
+    ],
+  };
+  const perms = permsByRole[role.key] || permsByRole.vet;
+  $('perm-list').innerHTML = perms.map(([label, ok]) => `
+    <div style="display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 13px;">
+      <span style="color: ${ok ? 'var(--color-success)' : 'var(--color-text-muted)'};">
+        ${ok ? I.check(14) : I.x(14)}
+      </span>
+      <span style="color: ${ok ? 'var(--color-text-primary)' : 'var(--color-text-muted)'}; ${!ok ? 'text-decoration: line-through;' : ''}">${label}</span>
+    </div>
+  `).join('');
+</script>
+</body>
+</html>

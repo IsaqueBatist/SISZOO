@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>SISZOO — Central de Ajuda</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  .help-hero {
+    background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%);
+    color: #fff;
+    border-radius: var(--radius-lg);
+    padding: 36px;
+    text-align: center;
+  }
+  .help-hero h2 { color: #fff; font-size: 26px; margin-bottom: 8px; }
+  .help-hero p { color: rgba(255,255,255,0.85); font-size: 14px; max-width: 540px; margin: 0 auto 18px; }
+  .help-search {
+    max-width: 480px;
+    margin: 0 auto;
+    position: relative;
+  }
+  .help-search input {
+    width: 100%;
+    height: 48px;
+    padding: 0 18px 0 48px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.95);
+    font-size: 14px;
+    font-family: var(--font-body);
+  }
+  .help-search input:focus { outline: 3px solid rgba(255,255,255,0.3); }
+  .help-search .ico { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted); }
+
+  .topic-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
+  @media (max-width: 1100px) { .topic-grid { grid-template-columns: 1fr 1fr; } }
+  .topic-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .topic-card .t-ico {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .topic-card h3 { font-size: 16px; }
+  .topic-card p { font-size: 12px; color: var(--color-text-secondary); }
+  .topic-card ul { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 4px; }
+  .topic-card ul li a { font-size: 13px; color: var(--color-text-primary); display: flex; align-items: center; gap: 8px; }
+  .topic-card ul li a::before { content: "→"; color: var(--color-text-muted); }
+  .topic-card ul li a:hover { color: var(--color-primary); }
+
+  details.faq {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 14px 18px;
+  }
+  details.faq + details.faq { margin-top: 8px; }
+  details.faq summary {
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    list-style: none;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  details.faq summary::after {
+    content: "+"; font-size: 22px; color: var(--color-text-muted);
+    transition: transform 150ms;
+  }
+  details.faq[open] summary::after { content: "−"; }
+  details.faq p { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; margin-top: 10px; }
+
+  .contact-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3);
+  }
+  .contact-card {
+    padding: 18px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    text-align: center;
+  }
+  .contact-card .c-ico {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-bottom: 8px;
+  }
+  .contact-card h4 { font-size: 14px; margin-bottom: 2px; }
+  .contact-card .v { font-family: var(--font-mono); font-size: 12px; color: var(--color-text-secondary); margin-bottom: 8px; }
+</style>
+</head>
+<body data-page="ajuda">
+<div data-shell-root>
+
+  <div class="help-hero">
+    <h2>Central de Ajuda do SISZOO</h2>
+    <p>Tutoriais, perguntas frequentes e contato com suporte. Você também pode pressionar <strong>F1</strong> a qualquer momento para abrir a ajuda contextual.</p>
+    <div class="help-search">
+      <span class="ico" id="ic-search"></span>
+      <input type="text" placeholder="Digite sua dúvida (ex: como cadastrar animal)..." />
+    </div>
+  </div>
+
+  <h2 style="margin-top: 8px;">Tópicos populares</h2>
+  <div class="topic-grid">
+    <div class="topic-card">
+      <div class="t-ico" style="background: var(--color-primary-light); color: var(--color-primary);" id="t-1"></div>
+      <h3>Animais</h3>
+      <p>Cadastro, histórico veterinário e transferência de baias</p>
+      <ul>
+        <li><a href="#">Como cadastrar um animal</a></li>
+        <li><a href="#">Registrar vacinas e exames</a></li>
+        <li><a href="#">Transferir animal entre baias</a></li>
+        <li><a href="#">Marcar animal como adotado</a></li>
+      </ul>
+    </div>
+    <div class="topic-card">
+      <div class="t-ico" style="background: var(--color-danger-bg); color: var(--color-danger);" id="t-2"></div>
+      <h3>Ocorrências e Denúncias</h3>
+      <p>Receber, registrar e encerrar ocorrências</p>
+      <ul>
+        <li><a href="#">Registrar nova ocorrência</a></li>
+        <li><a href="#">Ocorrência sigilosa: quando usar?</a></li>
+        <li><a href="#">Vincular a um processo sanitário</a></li>
+        <li><a href="#">Encerramento e providências</a></li>
+      </ul>
+    </div>
+    <div class="topic-card">
+      <div class="t-ico" style="background: var(--color-warning-bg); color: var(--color-warning);" id="t-3"></div>
+      <h3>Processos Sanitários</h3>
+      <p>Investigações laboratoriais de zoonoses</p>
+      <ul>
+        <li><a href="#">Abrir um processo sanitário</a></li>
+        <li><a href="#">Adicionar animais amostrados</a></li>
+        <li><a href="#">Registrar resultado laboratorial</a></li>
+        <li><a href="#">Casos urgentes (contato humano)</a></li>
+      </ul>
+    </div>
+    <div class="topic-card">
+      <div class="t-ico" style="background: var(--color-info-bg); color: var(--color-info);" id="t-4"></div>
+      <h3>Relatórios</h3>
+      <p>Gerar e exportar relatórios consolidados</p>
+      <ul>
+        <li><a href="relatorios.html">Tipos de relatório disponíveis</a></li>
+        <li><a href="#">Agendar geração automática</a></li>
+        <li><a href="#">Compartilhar PDF com a secretaria</a></li>
+      </ul>
+    </div>
+    <div class="topic-card">
+      <div class="t-ico" style="background: #F3E5F5; color: #6A1B9A;" id="t-5"></div>
+      <h3>Configurações</h3>
+      <p>Personalização e parâmetros do sistema</p>
+      <ul>
+        <li><a href="configuracoes.html">Alterar tema e densidade</a></li>
+        <li><a href="configuracoes.html">Configurar notificações</a></li>
+        <li><a href="configuracoes.html">Trocar senha</a></li>
+      </ul>
+    </div>
+    <div class="topic-card">
+      <div class="t-ico" style="background: var(--color-bg); color: var(--color-text-secondary);" id="t-6"></div>
+      <h3>Perfis &amp; Permissões</h3>
+      <p>Quem pode fazer o quê no SISZOO</p>
+      <ul>
+        <li><a href="#">Os 4 perfis de acesso</a></li>
+        <li><a href="usuarios.html">Adicionar novo usuário</a></li>
+        <li><a href="#">Desativar usuário</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <h2 style="margin-top: 8px;">Perguntas frequentes</h2>
+  <div>
+    <details class="faq" open>
+      <summary>O que é um processo sanitário "urgente"?</summary>
+      <p>Um processo sanitário é marcado como urgente quando um ou mais animais amostrados tiveram contato físico direto com munícipes — especialmente em casos de mordedura, agressão ou suspeita de raiva. Esses processos não podem ser encerrados sem resultado laboratorial confirmado, e disparam automaticamente uma notificação à Vigilância Epidemiológica.</p>
+    </details>
+    <details class="faq">
+      <summary>Como funciona o sigilo em uma ocorrência?</summary>
+      <p>Quando uma ocorrência é marcada como sigilosa, os dados do denunciante (nome, CPF, telefone, endereço) ficam visíveis apenas para usuários com perfil de Administrador. Para os demais usuários, esses campos aparecem como "*** Sigiloso ***".</p>
+    </details>
+    <details class="faq">
+      <summary>Posso transferir um animal entre baias?</summary>
+      <p>Sim. Na ficha do animal, clique em "Transferir baia". O sistema lista todas as baias disponíveis com sua ocupação atual e bloqueia baias superlotadas. Toda transferência fica registrada no histórico de movimentações.</p>
+    </details>
+    <details class="faq">
+      <summary>O que acontece se a internet cair durante o cadastro?</summary>
+      <p>O SISZOO salva automaticamente rascunhos a cada 30 segundos. Se a conexão for perdida, um banner laranja é exibido no topo da tela e os dados ficam armazenados localmente até a reconexão.</p>
+    </details>
+    <details class="faq">
+      <summary>Como recuperar um animal "Falecido" cadastrado por engano?</summary>
+      <p>Usuários com perfil de Administrador podem reverter mudanças de status através do menu "Mais opções" na ficha do animal. A reversão fica registrada no log de auditoria.</p>
+    </details>
+    <details class="faq">
+      <summary>Os relatórios incluem dados pessoais de munícipes?</summary>
+      <p>Não. Por conformidade com a LGPD, todos os relatórios consolidados omitem dados pessoais identificáveis. Para acessar dados individuais, é necessário gerar uma exportação específica pelo módulo de Auditoria (somente Administradores).</p>
+    </details>
+  </div>
+
+  <h2 style="margin-top: 8px;">Fale com a equipe de suporte</h2>
+  <div class="contact-row">
+    <div class="contact-card">
+      <div class="c-ico" id="c-1"></div>
+      <h4>Telefone</h4>
+      <div class="v">(11) 4022-7777</div>
+      <p style="font-size: 11px; color: var(--color-text-muted);">Seg-Sex · 8h às 17h</p>
+    </div>
+    <div class="contact-card">
+      <div class="c-ico" id="c-2"></div>
+      <h4>E-mail</h4>
+      <div class="v">ccz.suporte@itu.sp.gov.br</div>
+      <p style="font-size: 11px; color: var(--color-text-muted);">Resposta em até 24h úteis</p>
+    </div>
+    <div class="contact-card">
+      <div class="c-ico" id="c-3"></div>
+      <h4>Plantão técnico</h4>
+      <div class="v">(11) 9 0000-7777</div>
+      <p style="font-size: 11px; color: var(--color-text-muted);">24/7 · apenas urgências</p>
+    </div>
+  </div>
+
+</div>
+
+<script src="assets/icons.js"></script>
+<script src="assets/shell.js"></script>
+<script src="assets/tweaks.js"></script>
+<script>
+  const I = window.SISZOO_ICONS;
+  const $ = id => document.getElementById(id);
+  $('ic-search').innerHTML = I.search(16);
+  $('t-1').innerHTML = I.paw(22);
+  $('t-2').innerHTML = I.alert(22);
+  $('t-3').innerHTML = I.flask(22);
+  $('t-4').innerHTML = I.fileText(22);
+  $('t-5').innerHTML = I.heart(22);
+  $('t-6').innerHTML = I.user(22);
+  $('c-1').innerHTML = I.phone(20);
+  $('c-2').innerHTML = I.mail(20);
+  $('c-3').innerHTML = I.alert(20);
+</script>
+</body>
+</html>

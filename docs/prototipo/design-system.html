@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>SISZOO — Design System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  .ds-page { display: flex; flex-direction: column; gap: var(--space-8); padding-bottom: var(--space-12); }
+  .ds-section { display: flex; flex-direction: column; gap: var(--space-4); }
+  .ds-section > .h-band {
+    display: flex; align-items: baseline; gap: var(--space-3);
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: var(--space-3);
+  }
+  .ds-section .h-band .num {
+    font-family: var(--font-mono); font-size: 11px;
+    background: var(--color-bg);
+    padding: 2px 8px; border-radius: 4px;
+    color: var(--color-text-secondary);
+  }
+  .ds-section .h-band h2 { font-size: 20px; }
+  .ds-section .h-band .desc { color: var(--color-text-secondary); font-size: 13px; }
+
+  .swatch-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-3); }
+  @media (max-width: 1100px) { .swatch-grid { grid-template-columns: repeat(4, 1fr); } }
+  .swatch {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--color-surface);
+  }
+  .swatch .chip { height: 64px; }
+  .swatch .info { padding: 10px 12px; font-size: 12px; display: flex; flex-direction: column; gap: 2px; }
+  .swatch .info .name { font-weight: 600; }
+  .swatch .info .hex { font-family: var(--font-mono); color: var(--color-text-secondary); font-size: 11px; }
+  .swatch .info .role { font-size: 10px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+  .type-row {
+    display: grid; grid-template-columns: 140px 1fr 1fr;
+    align-items: center;
+    border-bottom: 1px solid var(--color-border);
+    padding: 16px 0;
+  }
+  .type-row .label { font-size: 12px; color: var(--color-text-secondary); }
+  .type-row .label .meta { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-muted); }
+  .type-row .preview { font-weight: 500; }
+
+  .examples-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+  .example-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    display: flex; flex-direction: column; gap: var(--space-3);
+  }
+  .example-card .ex-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-secondary); font-weight: 600; }
+
+  .row-of-things { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .nav-strip {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    display: flex; gap: 18px;
+    font-size: 13px;
+    margin-bottom: var(--space-5);
+    overflow-x: auto;
+  }
+  .nav-strip a { color: var(--color-text-secondary); white-space: nowrap; }
+  .nav-strip a:hover { color: var(--color-primary); }
+
+  .shadow-card {
+    width: 140px;
+    height: 80px;
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 11px; color: var(--color-text-secondary);
+  }
+  .radius-card {
+    width: 100px;
+    height: 100px;
+    background: var(--color-primary-light);
+    border: 1px solid var(--color-primary);
+    color: var(--color-primary);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .icon-cell {
+    width: 70px; height: 70px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    display: inline-flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--color-text-secondary);
+    background: var(--color-surface);
+  }
+</style>
+</head>
+<body data-page="design-system">
+<div data-shell-root>
+
+<div class="ds-page">
+
+  <div class="page-header">
+    <div class="title-block">
+      <h1>Design System SISZOO</h1>
+      <p class="subtitle">Catálogo de tokens, componentes e padrões · v1.0 · Para uso em todo o sistema</p>
+    </div>
+    <div class="actions">
+      <a href="index.html" class="btn btn-ghost btn-sm">← Mapa do protótipo</a>
+    </div>
+  </div>
+
+  <div class="nav-strip">
+    <a href="#colors">Cores</a>
+    <a href="#type">Tipografia</a>
+    <a href="#spacing">Espaço e raios</a>
+    <a href="#shadows">Sombras</a>
+    <a href="#icons">Ícones</a>
+    <a href="#buttons">Botões</a>
+    <a href="#badges">Badges</a>
+    <a href="#alerts">Alertas</a>
+    <a href="#forms">Formulários</a>
+    <a href="#kpi">KPI cards</a>
+    <a href="#tables">Tabelas</a>
+    <a href="#timeline">Timeline</a>
+    <a href="#states">Estados</a>
+  </div>
+
+  <!-- COLORS -->
+  <section class="ds-section" id="colors">
+    <div class="h-band">
+      <span class="num">01</span><h2>Cores</h2>
+      <span class="desc">Sistema baseado em verde institucional + neutros frios + cores semânticas</span>
+    </div>
+
+    <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-secondary); margin-top: 8px;">Primárias e neutras</h3>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="chip" style="background:#1B5E20;"></div><div class="info"><span class="role">Primária</span><span class="name">primary</span><span class="hex">#1B5E20</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#2E7D32;"></div><div class="info"><span class="role">Hover</span><span class="name">primary-hover</span><span class="hex">#2E7D32</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#4CAF50;"></div><div class="info"><span class="role">Acento</span><span class="name">primary-mid</span><span class="hex">#4CAF50</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#E8F5E9;"></div><div class="info"><span class="role">Bg destaque</span><span class="name">primary-light</span><span class="hex">#E8F5E9</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#F4F6F8;"></div><div class="info"><span class="role">Bg geral</span><span class="name">bg</span><span class="hex">#F4F6F8</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#FFFFFF; border: 1px solid var(--color-border);"></div><div class="info"><span class="role">Superfície</span><span class="name">surface</span><span class="hex">#FFFFFF</span></div></div>
+    </div>
+
+    <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-secondary); margin-top: 16px;">Texto</h3>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="chip" style="background:#1A2332;"></div><div class="info"><span class="role">Primário</span><span class="name">text-primary</span><span class="hex">#1A2332</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#5A6A7E;"></div><div class="info"><span class="role">Secundário</span><span class="name">text-secondary</span><span class="hex">#5A6A7E</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#9AAABB;"></div><div class="info"><span class="role">Atenuado</span><span class="name">text-muted</span><span class="hex">#9AAABB</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#E0E4EA;"></div><div class="info"><span class="role">Borda</span><span class="name">border</span><span class="hex">#E0E4EA</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#C5CDD8;"></div><div class="info"><span class="role">Borda forte</span><span class="name">border-strong</span><span class="hex">#C5CDD8</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#F9FAFB; border: 1px solid var(--color-border);"></div><div class="info"><span class="role">Zebra</span><span class="name">surface-alt</span><span class="hex">#F9FAFB</span></div></div>
+    </div>
+
+    <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-secondary); margin-top: 16px;">Semânticas</h3>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="chip" style="background:#C62828;"></div><div class="info"><span class="role">Danger</span><span class="name">danger</span><span class="hex">#C62828</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#E65100;"></div><div class="info"><span class="role">Warning</span><span class="name">warning</span><span class="hex">#E65100</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#F57F17;"></div><div class="info"><span class="role">Alert</span><span class="name">alert</span><span class="hex">#F57F17</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#1565C0;"></div><div class="info"><span class="role">Info</span><span class="name">info</span><span class="hex">#1565C0</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#2E7D32;"></div><div class="info"><span class="role">Success</span><span class="name">success</span><span class="hex">#2E7D32</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#6A1B9A;"></div><div class="info"><span class="role">Adotado</span><span class="name">adopted</span><span class="hex">#6A1B9A</span></div></div>
+    </div>
+
+    <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-secondary); margin-top: 16px;">Doenças (gráficos e badges)</h3>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="chip" style="background:#C62828;"></div><div class="info"><span class="role">Raiva</span><span class="name">disease-raiva</span><span class="hex">#C62828</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#F57F17;"></div><div class="info"><span class="role">Leishmaniose</span><span class="name">disease-leishmaniose</span><span class="hex">#F57F17</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#1565C0;"></div><div class="info"><span class="role">Leptospirose</span><span class="name">disease-leptospirose</span><span class="hex">#1565C0</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#6A1B9A;"></div><div class="info"><span class="role">Esporotricose</span><span class="name">disease-esporotricose</span><span class="hex">#6A1B9A</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#E65100;"></div><div class="info"><span class="role">F. Maculosa</span><span class="name">disease-febre-maculosa</span><span class="hex">#E65100</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#F9A825;"></div><div class="info"><span class="role">F. Amarela</span><span class="name">disease-febre-amarela</span><span class="hex">#F9A825</span></div></div>
+    </div>
+  </section>
+
+  <!-- TYPOGRAPHY -->
+  <section class="ds-section" id="type">
+    <div class="h-band">
+      <span class="num">02</span><h2>Tipografia</h2>
+      <span class="desc">DM Sans (display) · Inter (corpo) · JetBrains Mono (microchips e protocolos)</span>
+    </div>
+
+    <div class="card card-pad">
+      <div class="type-row">
+        <div class="label">Display 3xl<div class="meta">36px / DM Sans 700</div></div>
+        <div class="preview" style="font-family: var(--font-display); font-weight: 700; font-size: 36px; line-height: 1.1; letter-spacing: -0.02em;">147 animais</div>
+        <div class="label" style="font-family: var(--font-mono); font-size: 11px;">--text-3xl</div>
+      </div>
+      <div class="type-row">
+        <div class="label">Display 2xl<div class="meta">28px / DM Sans 600</div></div>
+        <div class="preview" style="font-family: var(--font-display); font-weight: 600; font-size: 28px; line-height: 1.2;">Dashboard Operacional</div>
+        <div class="label" style="font-family: var(--font-mono); font-size: 11px;">--text-2xl</div>
+      </div>
+      <div class="type-row">
+        <div class="label">Display xl<div class="meta">22px / DM Sans 600</div></div>
+        <div class="preview" style="font-family: var(--font-display); font-weight: 600; font-size: 22px;">Histórico Veterinário</div>
+        <div class="label" style="font-family: var(--font-mono); font-size: 11px;">--text-xl</div>
+      </div>
+      <div class="type-row">
+        <div class="label">Display lg<div class="meta">18px / DM Sans 600</div></div>
+        <div class="preview" style="font-family: var(--font-display); font-weight: 600; font-size: 18px;">Próxima vacina</div>
+        <div class="label" style="font-family: var(--font-mono); font-size: 11px;">--text-lg</div>
+      </div>
+      <div class="type-row">
+        <div class="label">Body base<div class="meta">14px / Inter 400</div></div>
+        <div class="preview" style="font-family: var(--font-body); font-size: 14px; line-height: 1.6;">Texto corrido padrão usado em parágrafos, labels e células de tabela.</div>
+        <div class="label" style="font-family: var(--font-mono); font-size: 11px;">--text-base</div>
+      </div>
+      <div class="type-row">
+        <div class="label">Body sm<div class="meta">13px / Inter 400</div></div>
+        <div class="preview" style="font-family: var(--font-body); font-size: 13px;">Texto secundário, sublabels, metadados.</div>
+        <div class="label" style="font-family: var(--font-mono); font-size: 11px;">--text-sm</div>
+      </div>
+      <div class="type-row">
+        <div class="label">Mono<div class="meta">JetBrains Mono</div></div>
+        <div class="preview" style="font-family: var(--font-mono); font-size: 14px;">985121234567890 · 045/2026 · 20/05/2026</div>
+        <div class="label" style="font-family: var(--font-mono); font-size: 11px;">.mono</div>
+      </div>
+      <div class="type-row">
+        <div class="label">Uppercase label<div class="meta">11px · letter-spacing 0.08em</div></div>
+        <div class="preview uppercase-label">Próxima vacina · Total de animais</div>
+        <div class="label" style="font-family: var(--font-mono); font-size: 11px;">.uppercase-label</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SPACING -->
+  <section class="ds-section" id="spacing">
+    <div class="h-band">
+      <span class="num">03</span><h2>Espaços e Raios</h2>
+      <span class="desc">Sistema base 4px · 9 níveis de espaço · 5 raios padronizados</span>
+    </div>
+    <div class="examples-grid">
+      <div class="example-card">
+        <div class="ex-label">Espaçamentos</div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 12px;"><span style="background: var(--color-primary); height: 12px; width: 4px;"></span><span style="font-family: var(--font-mono); font-size: 11px;">--space-1 · 4px</span></div>
+          <div style="display: flex; align-items: center; gap: 12px;"><span style="background: var(--color-primary); height: 12px; width: 8px;"></span><span style="font-family: var(--font-mono); font-size: 11px;">--space-2 · 8px</span></div>
+          <div style="display: flex; align-items: center; gap: 12px;"><span style="background: var(--color-primary); height: 12px; width: 12px;"></span><span style="font-family: var(--font-mono); font-size: 11px;">--space-3 · 12px</span></div>
+          <div style="display: flex; align-items: center; gap: 12px;"><span style="background: var(--color-primary); height: 12px; width: 16px;"></span><span style="font-family: var(--font-mono); font-size: 11px;">--space-4 · 16px</span></div>
+          <div style="display: flex; align-items: center; gap: 12px;"><span style="background: var(--color-primary); height: 12px; width: 24px;"></span><span style="font-family: var(--font-mono); font-size: 11px;">--space-6 · 24px</span></div>
+          <div style="display: flex; align-items: center; gap: 12px;"><span style="background: var(--color-primary); height: 12px; width: 32px;"></span><span style="font-family: var(--font-mono); font-size: 11px;">--space-8 · 32px</span></div>
+          <div style="display: flex; align-items: center; gap: 12px;"><span style="background: var(--color-primary); height: 12px; width: 48px;"></span><span style="font-family: var(--font-mono); font-size: 11px;">--space-12 · 48px</span></div>
+        </div>
+      </div>
+      <div class="example-card">
+        <div class="ex-label">Raios</div>
+        <div class="row-of-things">
+          <div class="radius-card" style="border-radius: 6px;">6 · sm</div>
+          <div class="radius-card" style="border-radius: 10px;">10 · md</div>
+          <div class="radius-card" style="border-radius: 14px;">14 · lg</div>
+          <div class="radius-card" style="border-radius: 20px;">20 · xl</div>
+          <div class="radius-card" style="border-radius: 999px;">∞ · full</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SHADOWS -->
+  <section class="ds-section" id="shadows">
+    <div class="h-band"><span class="num">04</span><h2>Sombras</h2></div>
+    <div class="row-of-things" style="gap: 20px;">
+      <div class="shadow-card" style="box-shadow: var(--shadow-sm);">--shadow-sm</div>
+      <div class="shadow-card" style="box-shadow: var(--shadow-md);">--shadow-md</div>
+      <div class="shadow-card" style="box-shadow: var(--shadow-lg);">--shadow-lg</div>
+    </div>
+  </section>
+
+  <!-- ICONS -->
+  <section class="ds-section" id="icons">
+    <div class="h-band"><span class="num">05</span><h2>Ícones</h2><span class="desc">Estilo line, 1.5–2px stroke · 18px no sidebar, 14px em botões, 28px em hero areas</span></div>
+    <div class="row-of-things" id="icons-row"></div>
+  </section>
+
+  <!-- BUTTONS -->
+  <section class="ds-section" id="buttons">
+    <div class="h-band"><span class="num">06</span><h2>Botões</h2></div>
+    <div class="example-card">
+      <div class="ex-label">Variantes</div>
+      <div class="row-of-things">
+        <button class="btn btn-primary">Primário</button>
+        <button class="btn btn-secondary">Secundário</button>
+        <button class="btn btn-outline">Outline</button>
+        <button class="btn btn-ghost">Ghost</button>
+        <button class="btn btn-danger">Destrutivo</button>
+      </div>
+      <div class="ex-label" style="margin-top: 8px;">Tamanhos</div>
+      <div class="row-of-things">
+        <button class="btn btn-primary btn-sm">Small</button>
+        <button class="btn btn-primary">Default</button>
+        <button class="btn btn-primary btn-lg">Large</button>
+        <button class="btn btn-primary btn-icon-only" id="ic-btn1"></button>
+        <button class="btn btn-primary" disabled>Desabilitado</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- BADGES -->
+  <section class="ds-section" id="badges">
+    <div class="h-band"><span class="num">07</span><h2>Badges</h2></div>
+    <div class="example-card">
+      <div class="ex-label">Status de animais</div>
+      <div class="row-of-things">
+        <span class="badge badge-available"><span class="badge-dot"></span>Disponível</span>
+        <span class="badge badge-treatment"><span class="badge-dot"></span>Em Tratamento</span>
+        <span class="badge badge-quarantine"><span class="badge-dot"></span>Quarentena</span>
+        <span class="badge badge-adopted"><span class="badge-dot"></span>Adotado</span>
+        <span class="badge badge-deceased"><span class="badge-dot"></span>Falecido</span>
+      </div>
+      <div class="ex-label">Espécies</div>
+      <div class="row-of-things">
+        <span class="badge badge-canine">Canino</span>
+        <span class="badge badge-feline">Felino</span>
+      </div>
+      <div class="ex-label">Resultados laboratoriais</div>
+      <div class="row-of-things">
+        <span class="badge badge-positive">Positivo</span>
+        <span class="badge badge-negative">Negativo</span>
+        <span class="badge badge-awaiting">Aguardando</span>
+        <span class="badge badge-inconclusive">Inconclusivo</span>
+        <span class="badge badge-urgent">🚨 URGENTE</span>
+      </div>
+      <div class="ex-label">Doenças (em listas e gráficos)</div>
+      <div class="row-of-things">
+        <span class="badge badge-disease raiva">RAIVA</span>
+        <span class="badge badge-disease leishmaniose">LEISHMANIOSE</span>
+        <span class="badge badge-disease leptospirose">LEPTOSPIROSE</span>
+        <span class="badge badge-disease esporotricose">ESPOROTRICOSE</span>
+        <span class="badge badge-disease febre-maculosa">F. MACULOSA</span>
+        <span class="badge badge-disease febre-amarela">F. AMARELA</span>
+      </div>
+      <div class="ex-label">Perfis de usuário</div>
+      <div class="row-of-things">
+        <span class="badge badge-role-admin">ADMIN</span>
+        <span class="badge badge-role-vet">VET</span>
+        <span class="badge badge-role-agent">AGENTE</span>
+        <span class="badge badge-role-recep">RECEP</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ALERTS -->
+  <section class="ds-section" id="alerts">
+    <div class="h-band"><span class="num">08</span><h2>Alertas</h2></div>
+    <div class="grid grid-2">
+      <div class="alert danger"><div class="bullet"></div><div class="alert-content"><strong>5 vacinas</strong> vencem em 7 dias<div class="alert-desc">Rex, Bolinha, Luna, Thor, Mel</div></div></div>
+      <div class="alert warning"><div class="bullet"></div><div class="alert-content"><strong>Baia 3</strong> superlotada<div class="alert-desc">8 animais em 6 lugares (133%)</div></div></div>
+      <div class="alert alert-yellow"><div class="bullet"></div><div class="alert-content"><strong>3 animais</strong> sem avaliação há 30+ dias<div class="alert-desc">Última avaliação em 18/04/2026</div></div></div>
+      <div class="alert info"><div class="bullet"></div><div class="alert-content"><strong>7 animais</strong> com medicação ativa<div class="alert-desc">2 com término previsto esta semana</div></div></div>
+      <div class="alert success"><div class="bullet"></div><div class="alert-content"><strong>Vacinação em dia.</strong><div class="alert-desc">84% dos animais com vacinas atualizadas — meta anual atingida</div></div></div>
+    </div>
+  </section>
+
+  <!-- FORMS -->
+  <section class="ds-section" id="forms">
+    <div class="h-band"><span class="num">09</span><h2>Formulários</h2></div>
+    <div class="card card-pad">
+      <div class="form-grid">
+        <div class="field">
+          <label>Campo padrão <span class="req">*</span></label>
+          <input class="input" type="text" placeholder="Texto livre" value="Rex" />
+        </div>
+        <div class="field">
+          <label>Campo mono</label>
+          <input class="input mono" type="text" value="985121234567890" />
+        </div>
+        <div class="field">
+          <label>Select</label>
+          <select class="select"><option>Canino</option><option>Felino</option></select>
+        </div>
+        <div class="field">
+          <label>Erro de validação</label>
+          <input class="input error" type="text" value="abc" />
+          <span class="err">Microchip deve conter 15 dígitos numéricos.</span>
+        </div>
+        <div class="field">
+          <label>Desabilitado</label>
+          <input class="input" type="text" value="Somente leitura" disabled />
+        </div>
+        <div class="field">
+          <label>Toggle</label>
+          <div class="switch-row" style="height: 40px;">
+            <label class="switch"><input type="checkbox" checked /><span class="slider"></span></label>
+            <span style="font-size: 13px;">Ativo</span>
+          </div>
+        </div>
+        <div class="field full">
+          <label>Textarea</label>
+          <textarea class="textarea" placeholder="Observações...">Animal calmo, sem histórico de agressividade.</textarea>
+        </div>
+        <div class="field full">
+          <label>Radio cards (visuais)</label>
+          <div class="radio-cards" style="grid-template-columns: repeat(3, 1fr); max-width: 480px;">
+            <div class="radio-card"><span class="label">P</span><span class="sub">até 10kg</span></div>
+            <div class="radio-card selected"><span class="label">M</span><span class="sub">10–25kg</span></div>
+            <div class="radio-card"><span class="label">G</span><span class="sub">25kg+</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- KPI -->
+  <section class="ds-section" id="kpi">
+    <div class="h-band"><span class="num">10</span><h2>KPI Cards</h2></div>
+    <div class="grid grid-4">
+      <div class="kpi kpi-info">
+        <div class="kpi-head"><span class="kpi-label">Total de Animais</span><span class="kpi-icon" id="k-1"></span></div>
+        <div class="kpi-value">147</div>
+        <div class="kpi-foot"><span>123 cães · 24 gatos</span><span class="kpi-delta up">▲ +12</span></div>
+      </div>
+      <div class="kpi kpi-success">
+        <div class="kpi-head"><span class="kpi-label">Vacinados</span><span class="kpi-icon" id="k-2"></span></div>
+        <div class="kpi-value">84<span class="unit">%</span></div>
+        <div class="kpi-foot"><span>123 de 147</span><span class="kpi-delta up">▲ 5.2%</span></div>
+      </div>
+      <div class="kpi kpi-danger">
+        <div class="kpi-head"><span class="kpi-label">Ocorrências Abertas</span><span class="kpi-icon" id="k-3"></span></div>
+        <div class="kpi-value">4</div>
+        <div class="kpi-foot"><span>Média 1/h</span><span class="kpi-delta down">▼ -2</span></div>
+      </div>
+      <div class="kpi kpi-warning">
+        <div class="kpi-head"><span class="kpi-label">Sem Microchip</span><span class="kpi-icon" id="k-4"></span></div>
+        <div class="kpi-value">12</div>
+        <div class="kpi-foot"><span>8.1% do total</span><span class="kpi-delta up">▲ -3</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TIMELINE -->
+  <section class="ds-section" id="timeline">
+    <div class="h-band"><span class="num">11</span><h2>Timeline & Tabelas</h2></div>
+    <div class="examples-grid">
+      <div class="card card-pad">
+        <div class="ex-label">Timeline</div>
+        <div class="timeline" style="margin-top: 12px;">
+          <div class="timeline-item vacina">
+            <div class="bullet"></div>
+            <div class="meta">12/01/2026 · <strong>Vacina</strong></div>
+            <div class="ev-title">Antirrábica aplicada</div>
+            <div class="ev-body">Próximo reforço: 12/01/2027</div>
+          </div>
+          <div class="timeline-item exame">
+            <div class="bullet"></div>
+            <div class="meta">05/01/2026 · <strong>Exame</strong></div>
+            <div class="ev-title">Hemograma — Normal</div>
+          </div>
+          <div class="timeline-item cirurgia">
+            <div class="bullet"></div>
+            <div class="meta">28/12/2025 · <strong>Cirurgia</strong></div>
+            <div class="ev-title">Castração — Orquiectomia</div>
+            <div class="ev-body">Sem intercorrências</div>
+          </div>
+        </div>
+      </div>
+      <div class="card card-pad">
+        <div class="ex-label">Ocupação de Baia</div>
+        <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 12px;">
+          <div class="occ-row"><span class="label">Baia 1</span><div class="occ-bar"><div class="fill" style="width: 83%;"></div></div><span class="nums">5/6</span></div>
+          <div class="occ-row"><span class="label">Baia 2</span><div class="occ-bar warn"><div class="fill" style="width: 95%; background: var(--color-alert);"></div></div><span class="nums">6/6</span></div>
+          <div class="occ-row"><span class="label">Baia 3</span><div class="occ-bar danger"><div class="fill" style="width: 100%; background: var(--color-danger);"></div></div><span class="nums">8/6</span></div>
+          <div class="occ-row"><span class="label">Baia 4</span><div class="occ-bar"><div class="fill" style="width: 50%;"></div></div><span class="nums">3/6</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATES -->
+  <section class="ds-section" id="states">
+    <div class="h-band"><span class="num">12</span><h2>Estados de Interface</h2></div>
+    <div class="grid grid-3">
+      <div class="example-card">
+        <div class="ex-label">Empty State</div>
+        <div class="empty">
+          <div class="ico" id="es-1"></div>
+          <h3>Nenhum animal cadastrado</h3>
+          <p>Comece cadastrando o primeiro animal do canil.</p>
+          <button class="btn btn-primary btn-sm">Cadastrar Animal</button>
+        </div>
+      </div>
+      <div class="example-card">
+        <div class="ex-label">Loading (skeleton)</div>
+        <div style="display: flex; flex-direction: column; gap: 10px; padding: 16px;">
+          <span class="skel" style="height: 16px; width: 60%;"></span>
+          <span class="skel" style="height: 12px; width: 90%;"></span>
+          <span class="skel" style="height: 12px; width: 80%;"></span>
+          <div style="display: flex; gap: 10px; margin-top: 8px;">
+            <span class="skel" style="height: 40px; width: 40px; border-radius: 50%;"></span>
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+              <span class="skel" style="height: 12px; width: 70%;"></span>
+              <span class="skel" style="height: 10px; width: 50%;"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="example-card">
+        <div class="ex-label">Toast de sucesso</div>
+        <div style="position: relative; padding: 20px;">
+          <div style="position: static;" class="toast">
+            <span class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            <div>
+              <div class="title">Animal cadastrado!</div>
+              <div class="desc">Rex foi adicionado à Baia 3</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+</div>
+
+<script src="assets/icons.js"></script>
+<script src="assets/shell.js"></script>
+<script src="assets/tweaks.js"></script>
+<script>
+  const I = window.SISZOO_ICONS;
+  const $ = id => document.getElementById(id);
+  // KPI icons
+  $('k-1').innerHTML = I.paw(18);
+  $('k-2').innerHTML = I.syringe(18);
+  $('k-3').innerHTML = I.alert(18);
+  $('k-4').innerHTML = I.chip(18);
+  $('ic-btn1').innerHTML = I.plus(14);
+  $('es-1').innerHTML = I.paw(28);
+
+  // Icon catalog
+  const iconNames = ['paw','syringe','heart','chip','alert','bell','check','plus','edit','eye','trash','download','filter','search','map','pill','flask','fileText','camera','mail','lock','phone','user','calendar','arrowRight','arrowLeft','home','inbox','x','bat','cat','dog','moreV','scissors','upload','pin','flag'];
+  $('icons-row').innerHTML = iconNames.map(n => `
+    <div class="icon-cell">
+      <span style="color: var(--color-text-primary);">${I[n](22)}</span>
+      <span class="mono">${n}</span>
+    </div>
+  `).join('');
+</script>
+</body>
+</html>

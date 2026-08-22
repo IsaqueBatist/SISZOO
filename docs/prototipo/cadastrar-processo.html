@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>SISZOO — Novo Processo Sanitário</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  .wizard-shell { max-width: 960px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: var(--space-5); }
+  .step-pane { display: none; }
+  .step-pane.active { display: block; }
+
+  .occur-search { display: flex; gap: 12px; margin-bottom: 16px; }
+  .occur-list { display: flex; flex-direction: column; gap: 8px; max-height: 460px; overflow-y: auto; }
+  .occur-row {
+    display: grid;
+    grid-template-columns: 110px 1fr auto auto;
+    gap: 16px;
+    align-items: center;
+    padding: 14px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    cursor: pointer;
+    transition: border-color 120ms, background 120ms;
+  }
+  .occur-row:hover { border-color: var(--color-primary); background: var(--color-primary-light); }
+  .occur-row.selected { border-color: var(--color-primary); background: var(--color-primary-light); box-shadow: 0 0 0 3px rgba(27,94,32,0.10); }
+  .occur-row .proto { font-family: var(--font-mono); font-weight: 700; font-size: 14px; }
+  .occur-row .summary { display: flex; flex-direction: column; gap: 4px; }
+  .occur-row .summary .head { font-weight: 600; font-size: 14px; }
+  .occur-row .summary .sec { font-size: 12px; color: var(--color-text-secondary); }
+  .occur-row .pick {
+    width: 22px; height: 22px;
+    border: 2px solid var(--color-border-strong);
+    border-radius: 50%;
+    display: inline-block;
+    position: relative;
+  }
+  .occur-row.selected .pick { border-color: var(--color-primary); background: var(--color-primary); }
+  .occur-row.selected .pick::after {
+    content: ""; position: absolute; inset: 4px;
+    background: #fff; border-radius: 50%;
+  }
+
+  .skip-banner {
+    background: var(--color-warning-bg);
+    border: 1px solid var(--color-warning-border);
+    border-left: 4px solid var(--color-warning);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #5A3A00;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .skip-banner.show { display: block; }
+
+  .prefilled-banner {
+    background: var(--color-info-bg);
+    border: 1px solid var(--color-info-border);
+    border-left: 4px solid var(--color-info);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .prefilled-banner.show { display: block; }
+
+  .vinculo-display {
+    padding: 12px 14px;
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .vinculo-display.empty { color: var(--color-text-muted); font-style: italic; }
+
+  .animal-amostra-mini {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    background: var(--color-surface-alt);
+  }
+  .am-head-mini {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .am-head-mini .num-circle {
+    width: 22px; height: 22px;
+    background: var(--color-primary);
+    color: #fff;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    margin-right: 8px;
+  }
+  .am-head-mini .title { font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; }
+
+  .source-toggle {
+    display: inline-flex;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 0;
+  }
+  .source-toggle button {
+    background: transparent;
+    border: none;
+    color: var(--color-text-secondary);
+    padding: 6px 14px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font-body);
+  }
+  .source-toggle button.active {
+    background: var(--color-primary);
+    color: #fff;
+  }
+
+  .animal-search-wrap { position: relative; margin-bottom: 14px; }
+  .animal-suggestions {
+    position: absolute;
+    top: calc(100% + 4px); left: 0; right: 0;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: 50;
+    max-height: 260px;
+    overflow-y: auto;
+    display: none;
+  }
+  .animal-suggestions.show { display: block; }
+  .animal-suggestions .sug {
+    padding: 10px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    border-bottom: 1px solid var(--color-border);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px 12px;
+    align-items: center;
+  }
+  .animal-suggestions .sug:last-child { border-bottom: none; }
+  .animal-suggestions .sug:hover { background: var(--color-primary-light); }
+  .animal-suggestions .sug .name { font-weight: 600; }
+  .animal-suggestions .sug .meta { font-size: 11px; color: var(--color-text-secondary); grid-column: 1 / -1; }
+  .animal-suggestions .sug .chip { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-secondary); }
+
+  .selected-animal-card {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px;
+    background: var(--color-primary-light);
+    border: 1px solid var(--color-primary);
+    border-radius: var(--radius-md);
+    margin-bottom: 14px;
+  }
+  .selected-animal-card .sa-avatar {
+    width: 48px; height: 48px;
+    background: var(--color-primary);
+    color: #fff;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-weight: 700;
+  }
+  .selected-animal-card .sa-info { flex: 1; }
+  .selected-animal-card .sa-info .name { font-weight: 700; font-size: 15px; color: var(--color-primary); }
+  .selected-animal-card .sa-info .meta { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
+  .selected-animal-card .sa-chip {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: rgba(255,255,255,0.7);
+    padding: 4px 8px;
+    border-radius: 6px;
+    color: var(--color-text-primary);
+    margin-right: 6px;
+  }
+
+  .empty-search {
+    padding: 22px 16px;
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-size: 13px;
+    background: var(--color-surface-alt);
+    border: 1px dashed var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    margin-bottom: 14px;
+  }
+</style>
+</head>
+<body data-page="processo">
+<div data-shell-root>
+
+  <div class="wizard-shell">
+
+    <div class="page-header">
+      <div class="title-block">
+        <a href="processos.html" class="btn btn-ghost btn-sm" style="align-self: flex-start;">← Voltar</a>
+        <h1>Novo Processo Sanitário</h1>
+        <p class="subtitle">Protocolo será gerado automaticamente após confirmação. Etapa 1: vincular ocorrência (opcional). Etapa 2: dados do processo.</p>
+      </div>
+    </div>
+
+    <!-- Stepper -->
+    <div class="stepper">
+      <div class="step active">
+        <span class="num">1</span>
+        <span>Vincular Ocorrência</span>
+      </div>
+      <div class="arrow"></div>
+      <div class="step">
+        <span class="num">2</span>
+        <span>Dados do Processo</span>
+      </div>
+    </div>
+
+    <!-- ============== STEP 1 ============== -->
+    <div class="card step-pane active" data-step="1">
+      <div class="card-header">
+        <h3>Vincular Ocorrência (opcional)</h3>
+        <span class="sub">Selecione a ocorrência relacionada para vincular automaticamente</span>
+      </div>
+      <div class="card-body">
+        <p style="font-size: 13px; color: var(--color-text-secondary); margin-bottom: 16px;">
+          Se este processo está sendo aberto a partir de uma denúncia ou ocorrência registrada, selecione-a abaixo. Caso contrário, clique em <strong>Pular esta etapa</strong>.
+        </p>
+
+        <div class="occur-search">
+          <div class="search-input" style="flex: 1;">
+            <span id="ic-search"></span>
+            <input type="text" placeholder="Buscar por protocolo, bairro ou denunciante..." />
+          </div>
+          <select class="filter-select">
+            <option>Tipo: Todos</option>
+            <option>Suspeita de Zoonose</option>
+            <option>Animal Agressivo</option>
+            <option>Infestação de Morcegos</option>
+            <option>Criação Irregular</option>
+            <option>Outros</option>
+          </select>
+        </div>
+
+        <div class="occur-list" id="occur-list"></div>
+      </div>
+      <div class="card-header" style="border-top: 1px solid var(--color-border); border-bottom: none; justify-content: space-between;">
+        <button class="btn btn-ghost" id="skip-btn">Pular esta etapa</button>
+        <button class="btn btn-primary" id="next-1" disabled>Continuar →</button>
+      </div>
+    </div>
+
+    <!-- ============== STEP 2 ============== -->
+    <div class="step-pane" data-step="2">
+      <div class="skip-banner" id="skip-banner">
+        ⚠ <strong>Esta etapa foi pulada.</strong> O processo não terá vínculo com nenhuma ocorrência. Você poderá adicionar um vínculo posteriormente, se necessário.
+      </div>
+      <div class="prefilled-banner" id="prefilled-banner">
+        ℹ <strong>Ocorrência vinculada automaticamente:</strong> <span id="prefilled-label">—</span>. Este vínculo será mantido ao longo do processo.
+      </div>
+
+      <!-- Dados do processo -->
+      <div class="card">
+        <div class="card-header"><h3>1. Dados do Processo</h3></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="field">
+              <label>Protocolo interno</label>
+              <input class="input mono" type="text" value="046/2026" disabled />
+              <span class="hint">Gerado automaticamente.</span>
+            </div>
+            <div class="field">
+              <label>Data de abertura <span class="req">*</span></label>
+              <input class="input mono" type="text" value="20/05/2026" />
+            </div>
+            <div class="field">
+              <label>Tipo de doença investigada <span class="req">*</span></label>
+              <select class="select">
+                <option>Raiva</option>
+                <option>Esporotricose</option>
+                <option>Leishmaniose Visceral</option>
+                <option>Leptospirose</option>
+                <option>Febre Maculosa</option>
+                <option>Febre Amarela</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Laboratório de destino <span class="req">*</span></label>
+              <select class="select">
+                <option>Instituto Pasteur — SP</option>
+                <option>IAL — Sorocaba</option>
+                <option>CCZ — SP</option>
+                <option>ITU-LL01 (local)</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label>Vínculo com ocorrência</label>
+              <div class="vinculo-display" id="vinculo-display">
+                <span id="vinculo-text">Nenhuma ocorrência vinculada</span>
+                <button class="btn btn-ghost btn-sm" type="button" id="change-link">← Voltar e alterar</button>
+              </div>
+              <span class="hint">Definido na etapa 1 — não editável aqui.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Responsável / Munícipe -->
+      <div class="card">
+        <div class="card-header"><h3>2. Responsável / Munícipe</h3><span class="sub">Pessoa de contato relacionada ao animal ou local investigado</span></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="field"><label>Nome <span class="req">*</span></label><input class="input" id="resp-nome" type="text" placeholder="Nome completo" /></div>
+            <div class="field"><label>CPF</label><input class="input mono" type="text" placeholder="000.000.000-00" /></div>
+            <div class="field"><label>Telefone</label><input class="input mono" id="resp-tel" type="text" placeholder="(11) 9 0000-0000" /></div>
+            <div class="field"><label>E-mail</label><input class="input" type="email" placeholder="exemplo@email.com" /></div>
+            <div class="field"><label>CEP</label><input class="input mono" type="text" placeholder="00000-000" /></div>
+            <div class="field"><label>Logradouro / nº</label><input class="input" type="text" placeholder="Rua, número" /></div>
+            <div class="field"><label>Bairro residencial</label><input class="input" id="resp-bairro" type="text" /></div>
+            <div class="field"><label>Bairro da ocorrência</label><input class="input" id="ocorr-bairro" type="text" /></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Animais Amostrados -->
+      <div class="card">
+        <div class="card-header">
+          <h3>3. Animais Amostrados <span style="color: var(--color-text-secondary); font-weight: 500;">(<span id="animal-count">1</span> animal)</span></h3>
+          <button class="btn btn-secondary btn-sm" id="add-animal"><span id="ic-add-an"></span>Adicionar animal</button>
+        </div>
+        <div class="card-body" style="display: flex; flex-direction: column; gap: var(--space-3);">
+          <div id="animais-list"></div>
+        </div>
+      </div>
+
+      <!-- Footer actions -->
+      <div class="card" style="padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);">
+        <button class="btn btn-ghost" id="back-1">← Voltar para etapa 1</button>
+        <div class="flex gap-2">
+          <a href="processos.html" class="btn btn-ghost">Cancelar</a>
+          <button class="btn btn-outline">Salvar rascunho</button>
+          <a href="processo.html" class="btn btn-primary">Registrar Processo Sanitário</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="assets/icons.js"></script>
+<script src="assets/shell.js"></script>
+<script src="assets/tweaks.js"></script>
+<script>
+  const I = window.SISZOO_ICONS;
+  const $ = id => document.getElementById(id);
+  $('ic-search').innerHTML = I.search(14);
+  $('ic-add-an').innerHTML = I.plus(14);
+
+  // ===== Ocorrências disponíveis para vincular =====
+  const OCORRENCIAS = [
+    { proto: '089/2026', tipo: 'Suspeita de Zoonose',     bairro: 'Vila Esperança',    data: '20/05/2026', den: 'Maria Souza Oliveira', tel: '(11) 9 8765-4321', urg: true,  bcls: 'badge-urgent' },
+    { proto: '087/2026', tipo: 'Animal Agressivo',        bairro: 'Itaim',             data: '19/05/2026', den: 'Carlos Lima',          tel: '(11) 9 9123-4567', urg: false, bcls: 'badge-process-open' },
+    { proto: '084/2026', tipo: 'Suspeita de Zoonose',     bairro: 'Vila Brasil',       data: '17/05/2026', den: 'Pedro Mendes',         tel: '(11) 9 9876-5432', urg: true,  bcls: 'badge-urgent' },
+    { proto: '083/2026', tipo: 'Infestação de Morcegos',  bairro: 'Centro',            data: '16/05/2026', den: 'Luiza Pereira',        tel: '(11) 9 8765-1234', urg: false, bcls: 'badge-process-open' },
+  ];
+
+  // Pre-fill from query string (?ocorrencia=089/2026)
+  const params = new URLSearchParams(window.location.search);
+  const preOcc = params.get('ocorrencia');
+  let selectedOcc = preOcc ? OCORRENCIAS.find(o => o.proto === preOcc) : null;
+
+  function renderOccList() {
+    const html = OCORRENCIAS.map(o => `
+      <div class="occur-row ${selectedOcc && selectedOcc.proto === o.proto ? 'selected' : ''}" data-proto="${o.proto}">
+        <span class="proto">${o.proto}</span>
+        <div class="summary">
+          <div class="head">${o.tipo} <span class="badge ${o.bcls}" style="margin-left: 6px;">${o.urg ? '🚨 URGENTE' : 'Aberta'}</span></div>
+          <div class="sec">${o.bairro} · ${o.data} · Denunciante: ${o.den}</div>
+        </div>
+        <span class="mono" style="font-size: 11px; color: var(--color-text-muted);">${o.data}</span>
+        <span class="pick"></span>
+      </div>
+    `).join('');
+    $('occur-list').innerHTML = html;
+
+    document.querySelectorAll('.occur-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const proto = row.dataset.proto;
+        selectedOcc = OCORRENCIAS.find(o => o.proto === proto);
+        document.querySelectorAll('.occur-row').forEach(r => r.classList.remove('selected'));
+        row.classList.add('selected');
+        $('next-1').disabled = false;
+      });
+    });
+  }
+
+  renderOccList();
+  if (selectedOcc) $('next-1').disabled = false;
+
+  // ===== Wizard navigation =====
+  function goStep(n, opts) {
+    document.querySelectorAll('.step-pane').forEach(p => p.classList.remove('active'));
+    document.querySelector(`.step-pane[data-step="${n}"]`).classList.add('active');
+    const steps = document.querySelectorAll('.stepper .step');
+    steps.forEach((s, i) => {
+      s.classList.remove('active', 'done');
+      if (i + 1 < n) s.classList.add('done');
+      else if (i + 1 === n) s.classList.add('active');
+    });
+    if (n === 2) applyVinculo(opts && opts.skipped);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function applyVinculo(skipped) {
+    const vincText = $('vinculo-text');
+    const display = $('vinculo-display');
+    const skipBanner = $('skip-banner');
+    const prefBanner = $('prefilled-banner');
+    if (skipped || !selectedOcc) {
+      vincText.textContent = 'Nenhuma ocorrência vinculada';
+      display.classList.add('empty');
+      skipBanner.classList.add('show');
+      prefBanner.classList.remove('show');
+    } else {
+      const label = `Ocorrência ${selectedOcc.proto} · ${selectedOcc.tipo} · ${selectedOcc.bairro}`;
+      vincText.textContent = label;
+      display.classList.remove('empty');
+      skipBanner.classList.remove('show');
+      prefBanner.classList.add('show');
+      $('prefilled-label').textContent = label;
+      // Pre-fill responsável with data from occurrence
+      $('resp-nome').value = selectedOcc.den;
+      $('resp-tel').value = selectedOcc.tel;
+      $('resp-bairro').value = selectedOcc.bairro;
+      $('ocorr-bairro').value = selectedOcc.bairro;
+    }
+  }
+
+  $('skip-btn').addEventListener('click', () => {
+    selectedOcc = null;
+    goStep(2, { skipped: true });
+  });
+  $('next-1').addEventListener('click', () => goStep(2));
+  $('back-1').addEventListener('click', () => goStep(1));
+  $('change-link').addEventListener('click', () => goStep(1));
+
+  // ===== Catálogo de animais já cadastrados (mock) =====
+  const CATALOG = [
+    { id: 'A-0142', name: 'Rex',      especie: 'Canino', sexo: 'Macho', raca: 'SRD',           peso: '18.5', idade: '3 anos', color: 'Caramelo',     chip: '985121235103892', baia: 'Baia 5' },
+    { id: 'A-0158', name: 'Bolinha',  especie: 'Canino', sexo: 'Fêmea', raca: 'Poodle mix',    peso: '8.2',  idade: '5 anos', color: 'Branco',       chip: '985121235103881', baia: 'Baia 2' },
+    { id: 'A-0202', name: 'Luna',     especie: 'Felino', sexo: 'Fêmea', raca: 'SRD',           peso: '3.4',  idade: '2 anos', color: 'Tricolor',     chip: '985121235641082', baia: 'Gatil A' },
+    { id: 'A-0089', name: 'Thor',     especie: 'Canino', sexo: 'Macho', raca: 'Pitbull mix',   peso: '24.1', idade: '4 anos', color: 'Tigrado',      chip: '985121234856201', baia: 'Baia 13' },
+    { id: 'A-0123', name: 'Mel',      especie: 'Canino', sexo: 'Fêmea', raca: 'SRD',           peso: '12.0', idade: '3 anos', color: 'Caramelo',     chip: '—',               baia: 'Baia 14' },
+    { id: 'A-0067', name: 'Caramelo', especie: 'Canino', sexo: 'Macho', raca: 'SRD',           peso: '17.8', idade: '6 anos', color: 'Caramelo',     chip: '985121235103871', baia: 'Baia 11' },
+    { id: 'A-0234', name: 'Mia',      especie: 'Felino', sexo: 'Fêmea', raca: 'Siamês',        peso: '3.1',  idade: '2 anos', color: 'Cinza',        chip: '985121235641099', baia: 'Gatil B' },
+    { id: 'A-0091', name: 'Bidu',     especie: 'Canino', sexo: 'Macho', raca: 'Beagle mix',    peso: '14.2', idade: '5 anos', color: 'Tricolor',     chip: '985121235103862', baia: 'Baia 8'  },
+    { id: 'A-0156', name: 'Pingo',    especie: 'Canino', sexo: 'Macho', raca: 'SRD',           peso: '22.0', idade: '7 anos', color: 'Preto',        chip: '985121235183881', baia: 'Baia 4'  },
+  ];
+
+  // ===== Animais amostrados =====
+  // state[i] = { mode: 'novo' | 'cadastrado', linkedId: 'A-0142' | null }
+  let animals = [{ mode: 'novo', linkedId: null }];
+
+  function newAnimalFormHtml(idx) {
+    return `
+      <div class="form-grid cols-3">
+        <div class="field"><label>Espécie <span class="req">*</span></label><select class="select"><option>Canino</option><option>Felino</option><option>Quiróptero</option><option>Primata não-humano</option></select></div>
+        <div class="field"><label>Sexo <span class="req">*</span></label><select class="select"><option>Macho</option><option>Fêmea</option><option>Não identificado</option></select></div>
+        <div class="field"><label>Idade aprox.</label><input class="input" type="text" placeholder="Ex: 3 anos" /></div>
+        <div class="field"><label>Raça</label><input class="input" type="text" placeholder="SRD" /></div>
+        <div class="field"><label>Peso (kg)</label><input class="input mono" type="text" placeholder="0.0" /></div>
+        <div class="field"><label>Coloração</label><input class="input" type="text" placeholder="Ex: Caramelo" /></div>
+      </div>`;
+  }
+
+  function commonClinicalHtml(prefill) {
+    const p = prefill || {};
+    return `
+      <div class="form-grid cols-3" style="margin-top: 12px;">
+        <div class="field"><label>Data de coleta <span class="req">*</span></label><input class="input mono" type="text" value="20/05/2026" /></div>
+        <div class="field"><label>Material biológico <span class="req">*</span></label>
+          <select class="select"><option>Tecido encefálico</option><option>Soro</option><option>Sangue</option><option>Saliva</option><option>Urina</option></select>
+        </div>
+        <div class="field"><label>Status clínico</label><select class="select"><option>Sintomático</option><option>Assintomático</option><option>Óbito</option></select></div>
+        <div class="field full"><label>Sinais e sintomas observados</label><textarea class="textarea" placeholder="Apatia, salivação excessiva, alteração comportamental..."></textarea></div>
+      </div>`;
+  }
+
+  function selectedAnimalCardHtml(a) {
+    return `
+      <div class="selected-animal-card">
+        <div class="sa-avatar">${(a.name[0] || '?').toUpperCase()}</div>
+        <div class="sa-info">
+          <div class="name">${a.name} <a href="animal.html" style="font-size: 11px; margin-left: 8px; font-weight: 500;">Ver ficha →</a></div>
+          <div class="meta">
+            <span class="sa-chip">${a.id}</span>
+            <span class="sa-chip">Microchip: ${a.chip}</span>
+            <span>${a.especie} · ${a.sexo} · ${a.idade} · ${a.raca} · ${a.peso} kg · ${a.color} · ${a.baia}</span>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function renderAnimais() {
+    const list = $('animais-list');
+    list.innerHTML = '';
+    animals.forEach((a, i) => {
+      const idx = i + 1;
+      const wrap = document.createElement('div');
+      wrap.className = 'animal-amostra-mini';
+      const linked = a.linkedId ? CATALOG.find(c => c.id === a.linkedId) : null;
+      wrap.innerHTML = `
+        <div class="am-head-mini">
+          <span class="title"><span class="num-circle">${idx}</span> Animal ${idx}</span>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span class="source-toggle">
+              <button data-idx="${i}" data-mode="novo" class="${a.mode==='novo'?'active':''}">Novo animal</button>
+              <button data-idx="${i}" data-mode="cadastrado" class="${a.mode==='cadastrado'?'active':''}">Já cadastrado</button>
+            </span>
+            ${animals.length > 1 ? `<button class="btn btn-ghost btn-sm" data-rm="${i}">Remover</button>` : ''}
+          </div>
+        </div>
+        ${a.mode === 'cadastrado'
+          ? (linked
+              ? selectedAnimalCardHtml(linked) + `<button class="btn btn-ghost btn-sm" data-clear="${i}" style="margin-bottom:12px;">← Trocar animal</button>` + commonClinicalHtml(linked)
+              : `<div class="animal-search-wrap" data-search-wrap="${i}">
+                  <label style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-text-secondary); font-weight:600; margin-bottom: 6px; display: block;">Buscar animal cadastrado</label>
+                  <input class="input" type="text" placeholder="Digite o nome, microchip ou ID do animal..." data-search-input="${i}" autocomplete="off" />
+                  <div class="animal-suggestions" data-sug="${i}"></div>
+                </div>
+                <div class="empty-search">Selecione um animal acima para preencher os dados básicos automaticamente.</div>`
+            )
+          : newAnimalFormHtml(idx) + commonClinicalHtml()
+        }
+      `;
+      list.appendChild(wrap);
+    });
+    $('animal-count').textContent = animals.length;
+
+    // Bindings
+    list.querySelectorAll('[data-mode]').forEach(btn => btn.addEventListener('click', () => {
+      const i = +btn.dataset.idx;
+      animals[i].mode = btn.dataset.mode;
+      if (btn.dataset.mode === 'novo') animals[i].linkedId = null;
+      renderAnimais();
+    }));
+    list.querySelectorAll('[data-rm]').forEach(btn => btn.addEventListener('click', () => {
+      animals.splice(+btn.dataset.rm, 1);
+      if (animals.length === 0) animals.push({ mode: 'novo', linkedId: null });
+      renderAnimais();
+    }));
+    list.querySelectorAll('[data-clear]').forEach(btn => btn.addEventListener('click', () => {
+      animals[+btn.dataset.clear].linkedId = null;
+      renderAnimais();
+    }));
+    list.querySelectorAll('[data-search-input]').forEach(input => {
+      const i = +input.dataset.searchInput;
+      const sug = list.querySelector(`[data-sug="${i}"]`);
+      const update = () => {
+        const q = input.value.trim().toLowerCase();
+        const matches = q
+          ? CATALOG.filter(c => c.name.toLowerCase().includes(q) || c.chip.includes(q) || c.id.toLowerCase().includes(q)).slice(0, 8)
+          : CATALOG.slice(0, 6);
+        sug.innerHTML = matches.map(c => `
+          <div class="sug" data-pick="${c.id}" data-pick-idx="${i}">
+            <span class="name">${c.name}</span>
+            <span class="chip">${c.id}</span>
+            <span class="meta">${c.especie} · ${c.sexo} · ${c.raca} · ${c.baia} · microchip ${c.chip}</span>
+          </div>
+        `).join('') || '<div style="padding: 12px; font-size: 13px; color: var(--color-text-muted);">Nenhum animal encontrado.</div>';
+        sug.classList.add('show');
+        sug.querySelectorAll('[data-pick]').forEach(s => s.addEventListener('click', () => {
+          animals[+s.dataset.pickIdx].linkedId = s.dataset.pick;
+          renderAnimais();
+        }));
+      };
+      input.addEventListener('focus', update);
+      input.addEventListener('input', update);
+      input.addEventListener('blur', () => setTimeout(() => sug.classList.remove('show'), 200));
+    });
+  }
+  renderAnimais();
+  $('add-animal').addEventListener('click', () => { animals.push({ mode: 'novo', linkedId: null }); renderAnimais(); });
+</script>
+</body>
+</html>

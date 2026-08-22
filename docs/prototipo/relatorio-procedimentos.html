@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>SISZOO — Relatório de Procedimentos</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/report.css">
+</head>
+<body>
+<div class="toolbar">
+  <button class="secondary" onclick="window.close()">← Fechar</button>
+  <button onclick="window.print()">🖨 Imprimir / Salvar PDF</button>
+</div>
+<div class="sheet">
+  <div class="r-header">
+    <div class="r-brand">
+      <div class="wm"><span class="wm-mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><circle cx="6" cy="9" r="2"/><circle cx="10" cy="5" r="2"/><circle cx="14" cy="5" r="2"/><circle cx="18" cy="9" r="2"/><path d="M12 11c-3 0-5 2.5-5 5 0 2 1.5 3 3 3 1 0 1.5-.5 2-.5s1 .5 2 .5c1.5 0 3-1 3-3 0-2.5-2-5-5-5z"/></svg></span>SISZOO</div>
+      <div class="gov">Prefeitura Municipal de Itu · CCZ</div>
+    </div>
+    <div class="r-meta">
+      <div class="doc-id">DOC-2026-0171</div>
+      <div>Emitido em 12/05/2026</div>
+      <div>Geração: Carlos Martins</div>
+    </div>
+  </div>
+  <h1 class="r-title">Relatório de Procedimentos</h1>
+  <div class="r-subtitle">Período: <strong>01/04/2026 a 30/04/2026</strong> · Abril 2026</div>
+  <div class="kpi-row">
+    <div class="kpi"><div class="l">Total de procedimentos</div><div class="v" >318</div><div class="d">▲ 8% vs março</div></div><div class="kpi"><div class="l">Castrações</div><div class="v" style="color:#1565C0;">34</div><div class="d">21 machos · 13 fêmeas</div></div><div class="kpi"><div class="l">Atendimentos clínicos</div><div class="v" >87</div><div class="d">Média 4/dia</div></div><div class="kpi"><div class="l">Cirurgias maiores</div><div class="v" style="color:#6A1B9A;">12</div><div class="d">Inclui 2 emergências</div></div>
+  </div>
+  <h2 class="section">Procedimentos por tipo</h2>
+    <div class="bar-row"><span class="label">Vacinações</span><span class="track"><span class="fill" style="width: 100%;"></span></span><span class="val">159</span></div>
+    <div class="bar-row"><span class="label">Atendimentos clínicos</span><span class="track"><span class="fill" style="width: 54%; background: #1565C0;"></span></span><span class="val">87</span></div>
+    <div class="bar-row"><span class="label">Castrações</span><span class="track"><span class="fill" style="width: 21%; background: #E65100;"></span></span><span class="val">34</span></div>
+    <div class="bar-row"><span class="label">Medicações</span><span class="track"><span class="fill" style="width: 16%; background: #F57F17;"></span></span><span class="val">26</span></div>
+    <div class="bar-row"><span class="label">Cirurgias maiores</span><span class="track"><span class="fill" style="width: 7%; background: #6A1B9A;"></span></span><span class="val">12</span></div><h2 class="section">Produtividade por veterinário</h2>
+    <table>
+      <thead><tr><th>Veterinário</th><th>Atendimentos</th><th>Castrações</th><th>Cirurgias</th><th>Vacinações</th><th>Total</th></tr></thead>
+      <tbody>
+        <tr><td>Stéphanie Lima</td><td class="mono">28</td><td class="mono">11</td><td class="mono">4</td><td class="mono">62</td><td class="mono">105</td></tr>
+        <tr><td>Rafael Souza</td><td class="mono">24</td><td class="mono">9</td><td class="mono">3</td><td class="mono">48</td><td class="mono">84</td></tr>
+        <tr><td>Carlos Martins</td><td class="mono">22</td><td class="mono">8</td><td class="mono">3</td><td class="mono">31</td><td class="mono">64</td></tr>
+        <tr><td>Maria Isabel</td><td class="mono">13</td><td class="mono">6</td><td class="mono">2</td><td class="mono">18</td><td class="mono">39</td></tr>
+        <tr style="font-weight: 600; background: #F4F6F8;"><td>TOTAL</td><td class="mono">87</td><td class="mono">34</td><td class="mono">12</td><td class="mono">159</td><td class="mono">292</td></tr>
+      </tbody>
+    </table><h2 class="section">Cirurgias realizadas</h2>
+    <table>
+      <thead><tr><th>Data</th><th>Animal</th><th>Procedimento</th><th>Vet. responsável</th><th>Resultado</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">28/04/2026</td><td>Thor</td><td>OSH</td><td>Rafael Souza</td><td>Sem intercorr.</td></tr>
+        <tr><td class="mono">22/04/2026</td><td>Bidu</td><td>Remoção tumor cutâneo</td><td>Carlos Martins</td><td>Bom prognóstico</td></tr>
+        <tr><td class="mono">18/04/2026</td><td>Mel</td><td>OSH</td><td>Stéphanie Lima</td><td>Sem intercorr.</td></tr>
+        <tr><td class="mono">15/04/2026</td><td>Spike</td><td>Cesárea de emergência</td><td>Stéphanie Lima</td><td>3 filhotes vivos</td></tr>
+        <tr><td class="mono">10/04/2026</td><td>Pretinho</td><td>Orquiectomia</td><td>Maria Isabel</td><td>Sem intercorr.</td></tr>
+      </tbody>
+    </table>
+  <div class="signatures" style="display:none;"></div>
+  <div class="r-footer">
+    <span>SISZOO · DOC-2026-0171</span>
+    <span>Página 1 de 1</span>
+  </div>
+</div>
+</body>
+</html>
