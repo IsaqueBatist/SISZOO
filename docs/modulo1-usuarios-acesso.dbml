@@ -1,0 +1,156 @@
+// ══════════════════════════════════════════════════════
+// MÓDULO 01 — USUÁRIOS & ACESSO
+// Tabelas: Usuario, Sessao, Cargo, UsuarioCargo,
+//          CargoPermissao, PreferenciaUsuario,
+//          AuditoriaEvento
+// Enums:   Modulo, TemaUsuario, DensidadeUsuario,
+//          AcaoAuditoria
+// ══════════════════════════════════════════════════════
+
+// ── Enums ──────────────────────────────────────────────
+
+Enum Modulo {
+  USUARIOS_ACESSO
+  GESTAO_ANIMAIS
+  OCORRENCIAS_DENUNCIAS
+  PROCESSOS_SANITARIOS
+  RELATORIOS
+}
+
+Enum TemaUsuario {
+  LIGHT
+  DARK
+}
+
+Enum DensidadeUsuario {
+  COMPACTO
+  NORMAL
+  CONFORTAVEL
+}
+
+Enum AcaoAuditoria {
+  CRIACAO
+  ATUALIZACAO
+  DESATIVACAO
+  REATIVACAO
+  LOGIN
+  LOGOUT
+  EXPORTACAO
+  ENCERRAMENTO
+}
+
+// ── Usuario ────────────────────────────────────────────
+
+Table Usuario {
+  id                 uuid         [pk, not null, default: `gen_random_uuid()`]
+  email              varchar(255) [not null, unique]
+  senha              varchar(255) [not null]
+  nome               varchar(100) [not null]
+  sobrenome          varchar(100) [not null]
+  crmv               varchar(20)
+  telefone           varchar(20)
+  ativo              boolean      [not null, default: true]
+  dois_fatores_ativo boolean      [not null, default: false]
+  ultimo_acesso      timestamp
+  criado_em          timestamp    [not null, default: `now()`]
+  senha_alterada_em  timestamp
+  desativado_em      timestamp
+  data_modificacao   timestamp    [not null, default: `now()`]
+
+  indexes {
+    email [unique]
+  }
+}
+
+// ── Sessão ─────────────────────────────────────────────
+
+Table Sessao {
+  id           uuid         [pk, not null, default: `gen_random_uuid()`]
+  usuario_id   uuid         [not null, ref: > Usuario.id]
+  token_hash   varchar(512) [not null, unique]
+  ip           varchar(45)
+  user_agent   text
+  criada_em    timestamp    [not null, default: `now()`]
+  expira_em    timestamp    [not null]
+  encerrada_em timestamp
+
+  indexes {
+    token_hash [unique]
+    usuario_id
+  }
+}
+
+// ── Cargo e Permissões ─────────────────────────────────
+
+Table Cargo {
+  id        uuid         [pk, not null, default: `gen_random_uuid()`]
+  nome      varchar(100) [not null]
+  descricao text
+}
+
+Table UsuarioCargo {
+  usuario_id    uuid      [not null, ref: > Usuario.id]
+  cargo_id      uuid      [not null, ref: > Cargo.id]
+  adicionado_em timestamp [not null, default: `now()`]
+
+  indexes {
+    (usuario_id, cargo_id) [pk]
+  }
+}
+
+Table CargoPermissao {
+  id       uuid    [pk, not null, default: `gen_random_uuid()`]
+  cargo_id uuid    [not null, ref: > Cargo.id]
+  modulo   Modulo  [not null]
+  feature  varchar(100) [not null]
+  leitura  boolean [not null, default: false]
+  escrita  boolean [not null, default: false]
+  exclusao boolean [not null, default: false]
+
+  indexes {
+    (cargo_id, modulo, feature) [unique]
+  }
+}
+
+// ── Preferências ───────────────────────────────────────
+
+Table PreferenciaUsuario {
+  id                     uuid             [pk, not null, default: `gen_random_uuid()`]
+  usuario_id             uuid             [not null, unique, ref: - Usuario.id]
+  tema                   TemaUsuario      [not null, default: 'LIGHT']
+  densidade              DensidadeUsuario [not null, default: 'NORMAL']
+  notif_alertas_criticos boolean          [not null, default: true]
+  notif_vacina_vencendo  boolean          [not null, default: true]
+  notif_superlotacao     boolean          [not null, default: true]
+  notif_resultado_lab    boolean          [not null, default: true]
+  notif_email_diario     boolean          [not null, default: false]
+}
+
+// ── Auditoria ──────────────────────────────────────────
+
+Table AuditoriaEvento {
+  id             uuid          [pk, not null, default: `gen_random_uuid()`]
+  usuario_id     uuid          [ref: > Usuario.id]
+  acao           AcaoAuditoria [not null]
+  entidade       varchar(100)  [not null]
+  payload_antes  jsonb
+  payload_depois jsonb
+  ip             varchar(45)
+  ocorreu_em     timestamp     [not null, default: `now()`]
+
+  indexes {
+    usuario_id
+    entidade
+    ocorreu_em
+  }
+}
+
+TableGroup Usuarios_Acesso {
+  Usuario
+  Sessao
+  Cargo
+  UsuarioCargo
+  CargoPermissao
+  PreferenciaUsuario
+  AuditoriaEvento
+}

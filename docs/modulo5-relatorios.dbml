@@ -1,0 +1,55 @@
+// ══════════════════════════════════════════════════════
+// MÓDULO 05 — RELATÓRIOS
+// Tabelas: RelatorioGerado
+// Enums:   StatusRelatorio, TipoRelatorio
+// Dependências externas: Usuario (Módulo 01)
+// ══════════════════════════════════════════════════════
+
+// ── Enums ──────────────────────────────────────────────
+
+Enum StatusRelatorio {
+  PENDENTE
+  EM_PROCESSAMENTO
+  CONCLUIDO
+  FALHA
+}
+
+Enum TipoRelatorio {
+  ANUAL_PROCESSOS
+  ANUAL_ANIMAIS
+  OCUPACAO_BAIAS
+  ALERTAS_VACINAIS
+  DISTRIBUICAO_DOENCAS
+}
+
+// ── Referências externas ───────────────────────────────
+
+Table Usuario {
+  id uuid [pk, not null]
+}
+
+// ── Relatório Gerado ───────────────────────────────────
+
+Table RelatorioGerado {
+  id               uuid             [pk, not null, default: `gen_random_uuid()`]
+  gerado_por       uuid             [not null, ref: > Usuario.id]
+  tipo_relatorio   TipoRelatorio    [not null]
+  periodo_inicio   date
+  periodo_fim      date
+  parametros_jsonb jsonb
+  gerado_em        timestamp        [not null, default: `now()`]
+  status           StatusRelatorio  [not null, default: 'PENDENTE']
+  arquivo_url      varchar(500)
+  tamanho_bytes    bigint
+
+  indexes {
+    gerado_por
+    tipo_relatorio
+    gerado_em
+    status
+  }
+}
+
+TableGroup Relatorios {
+  RelatorioGerado
+}

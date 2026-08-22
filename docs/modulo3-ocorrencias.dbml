@@ -1,0 +1,156 @@
+// ══════════════════════════════════════════════════════
+// MÓDULO 03 — GESTÃO DE OCORRÊNCIAS & DENÚNCIAS
+// Tabelas: TipoOcorrencia, ProvidenciaTomada,
+//          Denunciante, Denunciado,
+//          Ocorrencia, AnexoOcorrencia, MovimentacaoOcorrencia
+// Enums:   StatusOcorrencia, TipoMovimentacaoOcorrencia
+// ══════════════════════════════════════════════════════
+
+// ── Enums ──────────────────────────────────────────────
+
+Enum StatusOcorrencia {
+  ABERTA
+  EM_ATENDIMENTO
+  AGUARDANDO_RETORNO
+  ENCERRADA
+}
+
+Enum TipoMovimentacaoOcorrencia {
+  ABERTURA
+  ATRIBUICAO
+  ATUALIZACAO
+  GERACAO_PROCESSO
+  ENCERRAMENTO
+}
+
+// ── Lookup tables ──────────────────────────────────────
+
+Table TipoOcorrencia {
+  id     uuid         [pk, not null, default: `gen_random_uuid()`]
+  nome   varchar(100) [not null]
+  ativo  boolean      [not null, default: true]
+}
+
+Table ProvidenciaTomada {
+  id     uuid         [pk, not null, default: `gen_random_uuid()`]
+  nome   varchar(100) [not null]
+  ativo boolean     [not null, default: true]
+}
+
+// ── Partes envolvidas ──────────────────────────────────
+
+Table Denunciante {
+  id                 uuid         [pk, not null, default: `gen_random_uuid()`]
+  nome               varchar(200) [not null]
+  cpf                varchar(14)
+  telefone           varchar(20)
+  email              varchar(255)
+  cep                varchar(10)
+  endereco           varchar(300)
+  bairro_residencial varchar(100)
+}
+
+Table Denunciado {
+  id          uuid         [pk, not null, default: `gen_random_uuid()`]
+  nome        varchar(200) [not null]
+  cpf         varchar(14)
+  telefone    varchar(20)
+  endereco    varchar(300)
+  observacoes text
+}
+
+Table Usuario {
+  id                 uuid         [pk, not null, default: `gen_random_uuid()`]
+  email              varchar(255) [not null, unique]
+  senha              varchar(255) [not null]
+  nome               varchar(100) [not null]
+  sobrenome          varchar(100) [not null]
+  crmv               varchar(20)
+  telefone           varchar(20)
+  ativo              boolean      [not null, default: true]
+  dois_fatores_ativo boolean      [not null, default: false]
+  ultimo_acesso      timestamp
+  criado_em          timestamp    [not null, default: `now()`]
+  senha_alterada_em  timestamp
+  desativado_em      timestamp
+  data_modificacao   timestamp    [not null, default: `now()`]
+
+  indexes {
+    email [unique]
+  }
+}
+
+// ── Ocorrência (entidade central) ──────────────────────
+
+Table Ocorrencia {
+  id                    uuid          [pk, not null, default: `gen_random_uuid()`]
+  protocolo             varchar(50)   [not null, unique]
+  registrado_por        uuid          [not null, ref: > Usuario.id]
+  tipo_ocorrencia_id    uuid          [not null, ref: > TipoOcorrencia.id]
+  status_ocorrencia     StatusOcorrencia [not null, default: 'ABERTA']
+  providencia_tomada_id uuid          [ref: > ProvidenciaTomada.id]
+  denunciante_id        uuid          [ref: > Denunciante.id]
+  denunciado_id         uuid          [ref: > Denunciado.id]
+  data_abertura         date          [not null]
+  hora_abertura         time
+  bairro                varchar(100)
+  ponto_referencia      varchar(200)
+  descricao             text          [not null]
+  urgente               boolean       [not null, default: false]
+  sigilosa              boolean       [not null, default: false]
+  descricao_encerramento text
+  encerrada_em          timestamp
+  criado_em             timestamp     [not null, default: `now()`]
+  atualizado_em         timestamp     [not null, default: `now()`]
+
+  indexes {
+    protocolo         [unique]
+    registrado_por
+    tipo_ocorrencia_id
+    status_ocorrencia
+    data_abertura
+  }
+}
+
+// ── Anexos ─────────────────────────────────────────────
+
+Table AnexoOcorrencia {
+  id            uuid         [pk, not null, default: `gen_random_uuid()`]
+  ocorrencia_id uuid         [not null, ref: > Ocorrencia.id]
+  nome          varchar(255) [not null]
+  url           varchar(500) [not null]
+  tamanho_bytes bigint
+  
+  criado_em     timestamp    [not null, default: `now()`]
+
+  indexes {
+    ocorrencia_id
+  }
+}
+
+// ── Histórico de movimentações ─────────────────────────
+
+Table MovimentacaoOcorrencia {
+  id                uuid                     [pk, not null, default: `gen_random_uuid()`]
+  ocorrencia_id     uuid                     [not null, ref: > Ocorrencia.id]
+  usuario_id        uuid                     [ref: > Usuario.id]
+  tipo_movimentacao TipoMovimentacaoOcorrencia [not null]
+  data              timestamp                [not null, default: `now()`]
+  descricao         text
+  criado_em         timestamp                [not null, default: `now()`]
+
+  indexes {
+    ocorrencia_id
+    usuario_id
+  }
+}
+
+TableGroup Ocorrencias_Denuncias {
+  TipoOcorrencia
+  ProvidenciaTomada
+  Denunciante
+  Denunciado
+  Ocorrencia
+  AnexoOcorrencia
+  MovimentacaoOcorrencia
+}

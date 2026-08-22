@@ -1,0 +1,205 @@
+// ══════════════════════════════════════════════════════
+// MÓDULO 04 — PROCESSOS SANITÁRIOS
+// Tabelas: Doenca, ResponsavelProcesso,
+//          ProcessoSanitario, DocumentoProcesso,
+//          AmostraAnimal
+// Enums:   StatusProcesso, ResultadoLaboratorial,
+//          DesfechoAnimal, NivelContato
+// Dependências externas: Laboratorio (Módulo 02),
+//                        Ocorrencia (Módulo 03),
+//                        Animal (Módulo 02),
+//                        Usuario (Módulo 01),
+//                        Sexo (Módulo 02)
+// ══════════════════════════════════════════════════════
+
+// ── Enums ──────────────────────────────────────────────
+
+Enum StatusProcesso {
+  ABERTO
+  EM_ANDAMENTO
+  AGUARDANDO_RESULTADO
+  CONCLUIDO
+}
+
+Enum ResultadoLaboratorial {
+  NEGATIVO
+  POSITIVO
+  MATERIAL_INADEQUADO
+  INCONCLUSIVO
+  NAO_REALIZADO
+  AGUARDANDO
+}
+
+Enum DesfechoAnimal {
+  OBITO_NATURAL
+  EUTANASIA
+  EM_ACOMPANHAMENTO
+  OUTRO
+}
+
+Enum NivelContato {
+  DIRETO
+  INDIRETO
+  SEM_CONTATO
+}
+
+Enum Sexo {
+  MACHO
+  FÊMEA
+}
+
+Enum MaterialBiologico {
+  SORO
+  SANGUE_TOTAL
+  SWAB
+  TECIDO
+  LIQUOR
+  PELO_ESCAMA
+}
+
+Enum TipoAmostra {
+  IN_NATURA
+  CONGELADO
+  FIXADO_FORMOL
+  GELO_RECICLAVEL
+}
+
+// ── Referências externas (definidas em outros módulos) ─
+
+Table Usuario {
+  id uuid [pk, not null]
+}
+
+Table Laboratorio {
+  id uuid [pk, not null]
+}
+
+Table Ocorrencia {
+  id uuid [pk, not null]
+}
+
+Table Animal {
+  id uuid [pk, not null]
+}
+
+// ── Lookup tables ──────────────────────────────────────
+
+Table Doenca {
+  id   uuid         [pk, not null, default: `gen_random_uuid()`]
+  nome varchar(150) [not null]
+  cid  varchar(20)
+  ativo boolean     [not null, default: true]
+}
+
+Table TipoDocumentoProcesso {
+  id    uuid         [pk, not null, default: `gen_random_uuid()`]
+  nome  varchar(100) [not null, unique]
+  ativo boolean      [not null, default: true]
+}
+
+// ── Responsável (munícipe dono do animal) ──────────────
+
+Table ResponsavelProcesso {
+  id                 uuid         [pk, not null, default: `gen_random_uuid()`]
+  nome               varchar(200) [not null]
+  cpf                varchar(14)  [unique] 
+  telefone           varchar(20)
+  email              varchar(255)
+  cep                varchar(10)
+  endereco           varchar(300)
+  bairro_residencial varchar(100)
+  bairro_ocorrencia  varchar(100)
+
+  indexes {
+    cpf 
+  }
+}
+
+// ── Processo Sanitário (entidade central) ──────────────
+
+Table ProcessoSanitario {
+  id                     uuid                  [pk, not null, default: `gen_random_uuid()`]
+  protocolo varchar(50) [not null, unique]  // ← ausente, deve ser adicionado
+  criado_por             uuid                  [not null, ref: > Usuario.id]
+  doenca_id              uuid                  [not null, ref: > Doenca.id]
+  status_processo        StatusProcesso        [not null, default: 'ABERTO']
+  laboratorio_id         uuid                  [ref: > Laboratorio.id]
+  resultado_laboratorial ResultadoLaboratorial
+  desfecho_animal        DesfechoAnimal
+  responsavel_id         uuid                  [not null, ref: > ResponsavelProcesso.id]
+  ocorrencia_id          uuid                  [ref: > Ocorrencia.id]
+  urgente                boolean               [not null, default: false]
+  gal_numero             varchar(50)
+  sinan_numero           varchar(50)
+  data_abertura          date                  [not null]
+  data_envio_amostras    date
+  data_resultado         date
+  previsao_retorno       date
+  observacoes            text
+  criado_em              timestamp             [not null, default: `now()`]
+  atualizado_em          timestamp             [not null, default: `now()`]
+
+  indexes {
+    protocolo [unique]
+    criado_por
+    doenca_id
+    status_processo
+    ocorrencia_id
+    data_abertura
+  }
+}
+
+// ── Documentos do processo ─────────────────────────────
+
+Table DocumentoProcesso {
+  id            uuid         [pk, not null, default: `gen_random_uuid()`]
+  processo_id   uuid         [not null, ref: > ProcessoSanitario.id]
+  criado_por    uuid         [ref: > Usuario.id]
+  nome          varchar(255) [not null]
+  url           varchar(500) [not null]
+  tipo_id         uuid         [not null, ref: > TipoDocumentoProcesso.id]
+  tamanho_bytes bigint
+  criado_em     timestamp    [not null, default: `now()`]
+
+  indexes {
+    processo_id
+  }
+}
+
+// ── Animal Amostrado ───────────────────────────────────
+
+Table AmostraAnimal {
+  id                 uuid             [pk, not null, default: `gen_random_uuid()`]
+  processo_id        uuid             [not null, ref: > ProcessoSanitario.id]
+  animal_id          uuid             [ref: > Animal.id]
+  sexo               Sexo
+  coloracao          varchar(100)
+  pelagem            varchar(100)
+  idade_aprox        varchar(50)
+  peso_kg            decimal(5,2)
+  nome_animal        varchar(100)
+  status_clinico     varchar(100)
+  raca               varchar(100)
+  material_biologico MaterialBiologico
+  tipo_amostra       TipoAmostra
+  data_coleta        date
+  observacoes        text
+  agrediu_humano     boolean
+  contato_humano     boolean          [not null, default: false]
+  alt_comportamental varchar(200)
+  nivel_contato      NivelContato
+  criado_em          timestamp        [not null, default: `now()`]
+
+  indexes {
+    processo_id
+    animal_id
+  }
+}
+
+TableGroup Processos_Sanitarios {
+  Doenca
+  ResponsavelProcesso
+  ProcessoSanitario
+  DocumentoProcesso
+  AmostraAnimal
+}
