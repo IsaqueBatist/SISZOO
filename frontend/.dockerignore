@@ -1,0 +1,10 @@
+node_modules
+dist
+coverage
+.git
+.gitignore
+CLAUDE.md
+README.md
+*.md
+.idea
+.vscode
