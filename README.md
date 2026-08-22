@@ -1,5 +1,7 @@
 # SISZOO - Sistema de Gerenciamento do CCZ de Itu
 
+[![CI](https://github.com/IsaqueBatist/SISZOO/actions/workflows/ci.yml/badge.svg)](https://github.com/IsaqueBatist/SISZOO/actions/workflows/ci.yml)
+
 Sistema web interno para o **Centro de Controle de Zoonoses (CCZ) de Itu/SP**, desenvolvido para substituir os controles manuais em papel e planilhas Excel utilizados atualmente na rotina do canil e no acompanhamento de processos sanitários.
 
 > **TCC - Análise e Desenvolvimento de Sistemas (ADS) | FATEC Itu | 2026**
