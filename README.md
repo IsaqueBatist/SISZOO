@@ -44,7 +44,7 @@ O **SISZOO** digitaliza e centraliza esses processos em um sistema web leve, de 
 
 **Backend**
 - Java 21
-- Spring Boot 3
+- Spring Boot 4
 - Maven
 - Spring Data JPA / Hibernate
 
@@ -73,11 +73,9 @@ O **SISZOO** digitaliza e centraliza esses processos em um sistema web leve, de 
 
 | Perfil | Função |
 |--------|--------|
-| Administrador (Diretora) | Acesso total, incluindo dados sigilosos de denunciantes |
-| Veterinária do canil | Gestão de animais e histórico veterinário |
-| Recepção / Secretaria | Atendimento e registros iniciais |
-| Agente sanitário | Processos de zoonoses |
-| Cirurgiã | Procedimentos cirúrgicos |
+| Administrador | Acesso total, incluindo dados sigilosos de denunciantes |
+| Veterinário | Gestão de animais, histórico veterinário e procedimentos |
+| Agente Sanitário | Processos de zoonoses |
 
 ## Restrições de infraestrutura
 
@@ -87,15 +85,18 @@ O **SISZOO** digitaliza e centraliza esses processos em um sistema web leve, de 
 
 ## Como executar
 
-> Pré-requisitos: Java 21, Node.js 18+, PostgreSQL 16 e Maven instalados.
+> Pré-requisitos: Java 21, Node.js 18+, PostgreSQL 16 e Docker (para os testes
+> de integração com Testcontainers). O Maven não precisa estar instalado à
+> parte — o projeto já traz o Maven Wrapper (`./mvnw`).
 
 ### Backend
 
 ```bash
 cd backend
-cp src/main/resources/application.example.yml src/main/resources/application-local.yml
-# ajuste as credenciais do PostgreSQL em application-local.yml
-./mvnw spring-boot:run
+export DB_URL=jdbc:postgresql://localhost:5432/siszoo
+export DB_USER=postgres
+export DB_PASSWORD=postgres
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
 ### Frontend
