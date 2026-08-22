@@ -18,10 +18,16 @@ dist-ssr/
 *.local
 .vite/
 
+# Build / dependências
+/backend/target/
+/frontend/node_modules/
+/frontend/dist/
+
 # Ambiente / segredos
 .env
 .env.*
 !.env.example
+*.env.local
 
 # IDE
 .idea/
