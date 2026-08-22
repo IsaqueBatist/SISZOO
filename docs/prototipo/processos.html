@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>SISZOO — Processos Sanitários</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  .stats-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-3); }
+  @media (max-width: 1280px) { .stats-strip { grid-template-columns: repeat(3, 1fr); } }
+  .ss-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .ss-card .ss-ico { width: 36px; height: 36px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .ss-card .ss-n { font-family: var(--font-display); font-weight: 700; font-size: 22px; line-height: 1; }
+  .ss-card .ss-l { font-size: 11px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.08em; }
+</style>
+</head>
+<body data-page="processos">
+<div data-shell-root>
+
+  <div class="page-header">
+    <div class="title-block">
+      <h1>Processos Sanitários <span class="counter">45 em 2026</span></h1>
+      <p class="subtitle">Investigações laboratoriais de zoonoses · 2 com contato humano-animal exigem atenção imediata</p>
+    </div>
+    <div class="actions">
+      <button class="btn btn-outline btn-sm"><span id="ic-dl"></span>Exportar</button>
+      <a href="cadastrar-processo.html" class="btn btn-primary"><span id="ic-plus"></span>Novo Processo</a>
+    </div>
+  </div>
+
+  <div class="stats-strip">
+    <div class="ss-card">
+      <span class="ss-ico" style="background: var(--color-danger-bg); color: var(--color-danger);" id="ic-urg"></span>
+      <div><div class="ss-n">2</div><div class="ss-l">Urgentes</div></div>
+    </div>
+    <div class="ss-card">
+      <span class="ss-ico" style="background: var(--color-info-bg); color: var(--color-info);" id="ic-op"></span>
+      <div><div class="ss-n">5</div><div class="ss-l">Abertos</div></div>
+    </div>
+    <div class="ss-card">
+      <span class="ss-ico" style="background: var(--color-warning-bg); color: var(--color-warning);" id="ic-aw"></span>
+      <div><div class="ss-n">7</div><div class="ss-l">Aguardando Lab.</div></div>
+    </div>
+    <div class="ss-card">
+      <span class="ss-ico" style="background: var(--color-success-bg); color: var(--color-success);" id="ic-cr"></span>
+      <div><div class="ss-n">12</div><div class="ss-l">Com Resultado</div></div>
+    </div>
+    <div class="ss-card">
+      <span class="ss-ico" style="background: #ECEFF1; color: #455A64;" id="ic-co"></span>
+      <div><div class="ss-n">21</div><div class="ss-l">Concluídos</div></div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filter-bar">
+    <div class="search-input">
+      <span id="ic-search"></span>
+      <input type="text" placeholder="Buscar protocolo, responsável ou bairro..." />
+    </div>
+    <select class="filter-select">
+      <option>Doença: Todas</option>
+      <option>Raiva</option>
+      <option>Esporotricose</option>
+      <option>Leishmaniose Visceral</option>
+      <option>Leptospirose</option>
+      <option>Febre Maculosa</option>
+      <option>Febre Amarela</option>
+    </select>
+    <select class="filter-select">
+      <option>Status: Todos</option>
+      <option>Aberto</option>
+      <option>Aguardando Resultado</option>
+      <option>Com Resultado</option>
+      <option>Concluído</option>
+    </select>
+    <select class="filter-select">
+      <option>Laboratório: Todos</option>
+      <option>Pasteur — SP</option>
+      <option>IAL — Sorocaba</option>
+      <option>CCZ — SP</option>
+      <option>ITU-LL01</option>
+    </select>
+    <select class="filter-select">
+      <option>Urgência: Todas</option>
+      <option>Apenas urgentes</option>
+    </select>
+    <button class="btn btn-ghost btn-sm">Limpar</button>
+  </div>
+
+  <!-- Tabela -->
+  <div class="table-wrap">
+    <div style="overflow-x: auto;">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Protocolo</th>
+            <th>Data</th>
+            <th>Doença</th>
+            <th>Bairro</th>
+            <th>Responsável</th>
+            <th>Laboratório</th>
+            <th>Resultado</th>
+            <th>Status</th>
+            <th style="width: 80px;">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="table-footer">
+      <span>Mostrando <strong>1 – 12</strong> de <strong>45</strong> processos</span>
+      <div class="pager">
+        <button class="btn btn-ghost btn-sm" disabled>Anterior</button>
+        <button class="btn btn-outline btn-sm" style="width: 32px; padding: 0;">1</button>
+        <button class="btn btn-ghost btn-sm" style="width: 32px; padding: 0;">2</button>
+        <button class="btn btn-outline btn-sm">Próximo</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="assets/icons.js"></script>
+<script src="assets/shell.js"></script>
+<script src="assets/tweaks.js"></script>
+<script>
+  const I = window.SISZOO_ICONS;
+  const $ = id => document.getElementById(id);
+  $('ic-dl').innerHTML = I.download(14);
+  $('ic-plus').innerHTML = I.plus(14);
+  $('ic-search').innerHTML = I.search(14);
+  $('ic-urg').innerHTML = I.alert(18);
+  $('ic-op').innerHTML = I.inbox(18);
+  $('ic-aw').innerHTML = I.flask(18);
+  $('ic-cr').innerHTML = I.check(18);
+  $('ic-co').innerHTML = I.fileText(18);
+
+  const diseaseClass = {
+    'Raiva': 'raiva',
+    'Leishmaniose': 'leishmaniose',
+    'Leptospirose': 'leptospirose',
+    'Esporotricose': 'esporotricose',
+    'F. Maculosa':   'febre-maculosa',
+    'F. Amarela':    'febre-amarela',
+  };
+  const sTag = {
+    'Aberto':                'badge-process-open',
+    'Aguardando Resultado':  'badge-process-awaiting',
+    'Com Resultado':         'badge-process-result',
+    'Concluído':             'badge-process-closed',
+  };
+  const rTag = {
+    'Positivo':    'badge-positive',
+    'Negativo':    'badge-negative',
+    'Inconclusivo':'badge-inconclusive',
+    'Aguardando':  'badge-awaiting',
+    '—':           'badge-neutral',
+  };
+  const processes = [
+    { p: '045/2026', d: '20/05/2026', dis: 'Raiva',         bair: 'Vila Esperança',    resp: 'R. Santos',  lab: 'Pasteur — SP',  res: 'Aguardando',  st: 'Aguardando Resultado', urg: true },
+    { p: '044/2026', d: '19/05/2026', dis: 'Leishmaniose',  bair: 'Jd. Padre Bento',   resp: 'M. Oliveira',lab: 'IAL — Sorocaba',res: 'Aguardando',  st: 'Aguardando Resultado', urg: false },
+    { p: '043/2026', d: '17/05/2026', dis: 'Esporotricose', bair: 'Centro',            resp: 'L. Pereira', lab: 'CCZ — SP',      res: 'Positivo',    st: 'Com Resultado',        urg: false },
+    { p: '042/2026', d: '15/05/2026', dis: 'Leptospirose',  bair: 'Itaim',             resp: 'A. Costa',   lab: 'IAL — Sorocaba',res: 'Negativo',    st: 'Concluído',            urg: false },
+    { p: '041/2026', d: '12/05/2026', dis: 'F. Maculosa',   bair: 'Pq. Aroeiras',      resp: 'C. Lima',    lab: 'IAL — Sorocaba',res: 'Negativo',    st: 'Concluído',            urg: false },
+    { p: '040/2026', d: '10/05/2026', dis: 'Raiva',         bair: 'Cidade Nova',       resp: 'R. Santos',  lab: 'Pasteur — SP',  res: 'Aguardando',  st: 'Aguardando Resultado', urg: true },
+    { p: '039/2026', d: '08/05/2026', dis: 'Leishmaniose',  bair: 'Brasil',            resp: 'M. Oliveira',lab: 'IAL — Sorocaba',res: 'Negativo',    st: 'Concluído',            urg: false },
+    { p: '038/2026', d: '05/05/2026', dis: 'Esporotricose', bair: 'Centro',            resp: 'L. Pereira', lab: 'CCZ — SP',      res: 'Positivo',    st: 'Concluído',            urg: false },
+    { p: '037/2026', d: '02/05/2026', dis: 'F. Amarela',    bair: 'Vila Brasil',       resp: 'C. Lima',    lab: 'IAL — Sorocaba',res: 'Negativo',    st: 'Concluído',            urg: false },
+    { p: '036/2026', d: '28/04/2026', dis: 'Raiva',         bair: 'Itaim',             resp: 'R. Santos',  lab: 'Pasteur — SP',  res: 'Inconclusivo',st: 'Com Resultado',        urg: false },
+    { p: '035/2026', d: '25/04/2026', dis: 'Leptospirose',  bair: 'Centro',            resp: 'A. Costa',   lab: 'IAL — Sorocaba',res: 'Aguardando',  st: 'Aguardando Resultado', urg: false },
+    { p: '034/2026', d: '20/04/2026', dis: 'Leishmaniose',  bair: 'Jd. Itália',        resp: 'M. Oliveira',lab: 'IAL — Sorocaba',res: 'Aguardando',  st: 'Aguardando Resultado', urg: false },
+  ];
+
+  // Sort urgent on top
+  const sorted = [...processes].sort((a, b) => (b.urg ? 1 : 0) - (a.urg ? 1 : 0));
+
+  document.getElementById('rows').innerHTML = sorted.map(o => `
+    <tr ${o.urg ? 'class="urgent"' : ''}>
+      <td>
+        <span class="mono" style="font-weight: 600; color: var(--color-text-primary);">${o.p}</span>
+        ${o.urg ? '<div style="margin-top: 4px;"><span class="badge badge-urgent" style="font-size: 9px;">🚨 URGENTE</span></div>' : ''}
+      </td>
+      <td><span class="mono" style="font-size: 12px;">${o.d}</span></td>
+      <td><span class="badge badge-disease ${diseaseClass[o.dis]}">${o.dis}</span></td>
+      <td>${o.bair}</td>
+      <td>${o.resp}</td>
+      <td><span style="font-size: 12px;">${o.lab}</span></td>
+      <td><span class="badge ${rTag[o.res]}">${o.res}</span></td>
+      <td><span class="badge ${sTag[o.st]}">${o.st}</span></td>
+      <td>
+        <div class="flex gap-1">
+          <a href="processo.html" class="btn btn-ghost btn-sm btn-icon-only" title="Ver">${I.eye(14)}</a>
+          <button class="btn btn-ghost btn-sm btn-icon-only" title="Mais">${I.moreV(14)}</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+</script>
+</body>
+</html>

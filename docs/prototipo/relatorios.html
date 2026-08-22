@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>SISZOO — Relatórios</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  .reports-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
+  @media (max-width: 1200px) { .reports-grid { grid-template-columns: repeat(2, 1fr); } }
+  .report-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: var(--space-5);
+    display: flex; flex-direction: column; gap: var(--space-3);
+    transition: transform 150ms, box-shadow 150ms;
+  }
+  .report-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .report-card .r-ico {
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-bottom: 4px;
+  }
+  .report-card h3 { font-size: 16px; }
+  .report-card .desc { font-size: 13px; color: var(--color-text-secondary); flex: 1; line-height: 1.5; }
+  .report-card .period-row { display: flex; gap: 8px; align-items: center; }
+  .report-card .period-row label { font-size: 11px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; min-width: 50px; }
+  .report-card .status-line {
+    padding: 8px 10px;
+    background: var(--color-surface-alt);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .recent-section { margin-top: var(--space-5); }
+</style>
+</head>
+<body data-page="relatorios">
+<div data-shell-root>
+
+  <div class="page-header">
+    <div class="title-block">
+      <h1>Relatórios</h1>
+      <p class="subtitle">Geração e exportação de relatórios consolidados · Resultados disponíveis em PDF, CSV e Excel</p>
+    </div>
+    <div class="actions">
+      <button class="btn btn-outline btn-sm"><span id="ic-hist"></span>Histórico de gerações</button>
+    </div>
+  </div>
+
+  <div class="reports-grid">
+
+    <div class="report-card">
+      <div class="r-ico" style="background: var(--color-info-bg); color: var(--color-info);" id="r-1"></div>
+      <h3>Relatório Anual de Processos</h3>
+      <p class="desc">Distribuição de investigações sanitárias por doença, espécie e bairro. Inclui taxas de positividade e tempo médio de resolução.</p>
+      <div class="period-row">
+        <label>Ano</label>
+        <select class="select" style="height: 34px; flex: 1;"><option>2026 (em curso)</option><option>2025</option><option>2024</option></select>
+      </div>
+      <a href="relatorios/relatorio-anual.html" target="_blank" class="btn btn-primary"><span id="rb-1"></span>Gerar Relatório</a>
+    </div>
+
+    <div class="report-card">
+      <div class="r-ico" style="background: var(--color-success-bg); color: var(--color-success);" id="r-2"></div>
+      <h3>Relatório de Vacinação</h3>
+      <p class="desc">Animais vacinados, vacinas vencidas e próximas a vencer. Por espécie, baia e veterinário responsável.</p>
+      <div class="period-row">
+        <label>Período</label>
+        <input class="input mono" type="text" value="01/01/2026 → 20/05/2026" style="height: 34px; flex: 1;" />
+      </div>
+      <div class="status-line">
+        <span style="width:8px;height:8px;background:var(--color-warning);border-radius:50%;"></span>
+        Última geração: <strong>15/05/2026</strong> · <a href="relatorios/relatorio-vacinacao.html" target="_blank">Ver PDF</a>
+      </div>
+      <a href="relatorios/relatorio-vacinacao.html" target="_blank" class="btn btn-primary"><span id="rb-2"></span>Gerar Relatório</a>
+    </div>
+
+    <div class="report-card">
+      <div class="r-ico" style="background:#F3E5F5; color:#6A1B9A;" id="r-3"></div>
+      <h3>Relatório de Adoções</h3>
+      <p class="desc">Adoções realizadas, tempo médio de permanência, perfil dos adotantes e taxas de devolução.</p>
+      <div class="period-row">
+        <label>Período</label>
+        <input class="input mono" type="text" value="01/05/2026 → 20/05/2026" style="height: 34px; flex: 1;" />
+      </div>
+      <a href="relatorios/relatorio-adocoes.html" target="_blank" class="btn btn-primary"><span id="rb-3"></span>Gerar Relatório</a>
+    </div>
+
+    <div class="report-card">
+      <div class="r-ico" style="background: var(--color-warning-bg); color: var(--color-warning);" id="r-4"></div>
+      <h3>Relatório de Procedimentos</h3>
+      <p class="desc">Castrações, cirurgias e atendimentos clínicos consolidados. Inclui produtividade por veterinário.</p>
+      <div class="period-row">
+        <label>Período</label>
+        <input class="input mono" type="text" value="01/04/2026 → 20/05/2026" style="height: 34px; flex: 1;" />
+      </div>
+      <div class="status-line">
+        <span style="width:8px;height:8px;background:var(--color-success);border-radius:50%;"></span>
+        Geração em curso: <strong>83%</strong>
+      </div>
+      <a href="relatorios/relatorio-procedimentos.html" target="_blank" class="btn btn-outline">Ver versão parcial →</a>
+    </div>
+
+    <div class="report-card">
+      <div class="r-ico" style="background:#E8F5E9; color:#2E7D32;" id="r-5"></div>
+      <h3>Ocupação de Baias</h3>
+      <p class="desc">Histórico mensal de ocupação por baia, transferências internas e taxa média de superlotação.</p>
+      <div class="period-row">
+        <label>Período</label>
+        <select class="select" style="height: 34px; flex: 1;"><option>Últimos 6 meses</option><option>Últimos 12 meses</option><option>Custom...</option></select>
+      </div>
+      <a href="relatorios/relatorio-ocupacao.html" target="_blank" class="btn btn-primary"><span id="rb-5"></span>Gerar Relatório</a>
+    </div>
+
+    <div class="report-card">
+      <div class="r-ico" style="background: var(--color-danger-bg); color: var(--color-danger);" id="r-6"></div>
+      <h3>Ocorrências por Bairro</h3>
+      <p class="desc">Mapa de calor de ocorrências por bairro · Tipos de denúncia mais frequentes · Tempo médio de atendimento.</p>
+      <div class="period-row">
+        <label>Período</label>
+        <input class="input mono" type="text" value="01/01/2026 → 20/05/2026" style="height: 34px; flex: 1;" />
+      </div>
+      <a href="relatorios/relatorio-ocorrencias.html" target="_blank" class="btn btn-primary"><span id="rb-6"></span>Gerar Relatório</a>
+    </div>
+
+  </div>
+
+  <div class="recent-section">
+    <div class="section-header"><h2>Relatórios recentes</h2></div>
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr><th>Relatório</th><th>Período</th><th>Gerado por</th><th>Data</th><th>Tamanho</th><th>Status</th><th>Ações</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Relatório Anual de Processos</td><td class="mono">2025</td><td>Stéphanie Lima</td><td class="mono">18/05/2026</td><td>1.8 MB</td><td><span class="badge badge-available"><span class="badge-dot"></span>Concluído</span></td><td><a href="relatorios/relatorio-anual.html" target="_blank">Baixar PDF</a></td></tr>
+          <tr><td>Relatório de Vacinação</td><td class="mono">Abr/2026</td><td>Rafael Souza</td><td class="mono">15/05/2026</td><td>420 KB</td><td><span class="badge badge-available"><span class="badge-dot"></span>Concluído</span></td><td><a href="relatorios/relatorio-vacinacao.html" target="_blank">Baixar PDF</a></td></tr>
+          <tr><td>Procedimentos</td><td class="mono">Abr/2026</td><td>Carlos Martins</td><td class="mono">12/05/2026</td><td>—</td><td><span class="badge badge-process-awaiting">Processando</span></td><td><span class="muted">—</span></td></tr>
+          <tr><td>Adoções 1º trimestre</td><td class="mono">Q1 2026</td><td>Stéphanie Lima</td><td class="mono">02/04/2026</td><td>312 KB</td><td><span class="badge badge-available"><span class="badge-dot"></span>Concluído</span></td><td><a href="relatorios/relatorio-adocoes.html" target="_blank">Baixar PDF</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script src="assets/icons.js"></script>
+<script src="assets/shell.js"></script>
+<script src="assets/tweaks.js"></script>
+<script>
+  const I = window.SISZOO_ICONS;
+  const $ = id => document.getElementById(id);
+  $('ic-hist').innerHTML = I.fileText(14);
+  $('r-1').innerHTML = I.fileText(28);
+  $('r-2').innerHTML = I.syringe(28);
+  $('r-3').innerHTML = I.heart(28);
+  $('r-4').innerHTML = I.scissors(28);
+  $('r-5').innerHTML = I.inbox(28);
+  $('r-6').innerHTML = I.map(28);
+  ['rb-1','rb-2','rb-3','rb-5','rb-6'].forEach(k => $(k).innerHTML = I.download(14));
+</script>
+</body>
+</html>

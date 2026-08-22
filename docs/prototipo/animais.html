@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>SISZOO — Animais</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  .view-toggle {
+    display: inline-flex;
+    background: var(--color-bg);
+    border-radius: 8px;
+    padding: 3px;
+    border: 1px solid var(--color-border);
+  }
+  .view-toggle button {
+    background: transparent; border: none; cursor: pointer;
+    padding: 6px 12px; font-size: 12px; font-weight: 600;
+    color: var(--color-text-secondary);
+    border-radius: 6px;
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--font-body);
+  }
+  .view-toggle button.active { background: var(--color-surface); color: var(--color-text-primary); box-shadow: var(--shadow-sm); }
+
+  .animal-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); }
+  @media (max-width: 1280px) { .animal-grid { grid-template-columns: repeat(3, 1fr); } }
+  .animal-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    transition: transform 150ms, box-shadow 150ms;
+    box-shadow: var(--shadow-sm);
+  }
+  .animal-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .animal-card .photo {
+    height: 160px;
+    background: linear-gradient(135deg, #ECEFF1 0%, #DDE3E8 100%);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--color-text-muted);
+    position: relative;
+  }
+  .animal-card .photo .placeholder {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;
+    font-family: var(--font-mono);
+  }
+  .animal-card .photo .photo-overlay {
+    position: absolute; top: 10px; left: 10px;
+  }
+  .animal-card .body { padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+  .animal-card .name { font-family: var(--font-display); font-weight: 600; font-size: 15px; }
+  .animal-card .meta { font-size: 12px; color: var(--color-text-secondary); display: flex; align-items: center; gap: 4px; }
+  .animal-card .chip { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-muted); }
+  .animal-card .footer-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 6px;
+  }
+
+  .sex-marker {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    font-size: 10px; font-weight: 700;
+    color: #fff;
+  }
+  .sex-marker.M { background: #1565C0; }
+  .sex-marker.F { background: #D81B60; }
+
+  .selected-row td { background: rgba(27,94,32,0.04) !important; }
+  .selected-row td:first-child { box-shadow: inset 4px 0 0 var(--color-primary); }
+</style>
+</head>
+<body data-page="animais">
+<div data-shell-root>
+
+  <div class="page-header">
+    <div class="title-block">
+      <h1>Animais do Canil <span class="counter">147 animais</span></h1>
+      <p class="subtitle">Cadastrados desde 2024 · 123 cães · 24 gatos</p>
+    </div>
+    <div class="actions">
+      <button class="btn btn-outline btn-sm"><span id="ic-dl"></span>Exportar CSV</button>
+      <a href="cadastrar-animal.html" class="btn btn-primary"><span id="ic-plus"></span>Cadastrar Animal</a>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filter-bar">
+    <div class="search-input">
+      <span id="ic-search"></span>
+      <input type="text" placeholder="Buscar por nome, microchip ou medalha..." value="" />
+    </div>
+    <select class="filter-select">
+      <option>Espécie: Todas</option>
+      <option>Canino</option>
+      <option>Felino</option>
+    </select>
+    <select class="filter-select">
+      <option>Status: Todos</option>
+      <option>Disponível</option>
+      <option>Em Tratamento</option>
+      <option>Quarentena</option>
+      <option>Adotado</option>
+      <option>Falecido</option>
+    </select>
+    <select class="filter-select">
+      <option>Baia: Todas</option>
+      <option>Baia 1</option>
+      <option>Baia 2</option>
+      <option>Baia 3</option>
+      <option>Externas</option>
+      <option>Corredor</option>
+    </select>
+    <select class="filter-select">
+      <option>Porte: Todos</option>
+      <option>Pequeno</option>
+      <option>Médio</option>
+      <option>Grande</option>
+    </select>
+    <button class="btn btn-ghost btn-sm">Limpar filtros</button>
+    <div style="margin-left: auto;">
+      <div class="view-toggle">
+        <button class="active" id="view-table"><span id="ic-table"></span>Tabela</button>
+        <button id="view-grid"><span id="ic-grid"></span>Cards</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabela -->
+  <div class="table-wrap" id="table-view">
+    <div style="overflow-x: auto;">
+      <table class="data">
+        <thead>
+          <tr>
+            <th style="width: 30px;"><input type="checkbox" /></th>
+            <th>Animal</th>
+            <th>Espécie</th>
+            <th>Baia</th>
+            <th>Sexo</th>
+            <th>Porte</th>
+            <th>Status</th>
+            <th>Castrado</th>
+            <th>Entrada</th>
+            <th style="width: 80px;">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="animal-rows"></tbody>
+      </table>
+    </div>
+    <div class="table-footer">
+      <span>Mostrando <strong>1 – 20</strong> de <strong>147</strong> animais</span>
+      <div class="pager">
+        <button class="btn btn-ghost btn-sm" disabled>Anterior</button>
+        <button class="btn btn-outline btn-sm" style="width: 32px; padding: 0;">1</button>
+        <button class="btn btn-ghost btn-sm" style="width: 32px; padding: 0;">2</button>
+        <button class="btn btn-ghost btn-sm" style="width: 32px; padding: 0;">3</button>
+        <span style="font-family: var(--font-mono); color: var(--color-text-muted);">…</span>
+        <button class="btn btn-ghost btn-sm" style="width: 32px; padding: 0;">8</button>
+        <button class="btn btn-outline btn-sm">Próximo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cards -->
+  <div id="grid-view" style="display: none;">
+    <div class="animal-grid" id="animal-cards"></div>
+    <div class="table-footer" style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); margin-top: var(--space-4);">
+      <span>Mostrando <strong>1 – 12</strong> de <strong>147</strong> animais</span>
+      <div class="pager">
+        <button class="btn btn-ghost btn-sm" disabled>Anterior</button>
+        <button class="btn btn-outline btn-sm">Próximo</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="assets/icons.js"></script>
+<script src="assets/shell.js"></script>
+<script src="assets/tweaks.js"></script>
+<script>
+  const I = window.SISZOO_ICONS;
+  const $ = id => document.getElementById(id);
+  $('ic-dl').innerHTML = I.download(14);
+  $('ic-plus').innerHTML = I.plus(14);
+  $('ic-search').innerHTML = I.search(14);
+  $('ic-table').innerHTML = I.fileText(12);
+  $('ic-grid').innerHTML = I.inbox(12);
+
+  // Mock animal data
+  const animals = [
+    { name: 'Rex',     chip: '985121234567890', medal: 'ITU-2024-089', species: 'Canino', baia: 'Baia 3', sex: 'M', porte: 'Grande',  status: 'Disponível',     castrado: 'Sim', entrada: '15/03/2024', avatarHue: 32 },
+    { name: 'Bolinha', chip: '985121234587142', medal: 'ITU-2024-102', species: 'Canino', baia: 'Baia 1', sex: 'M', porte: 'Pequeno',  status: 'Em Tratamento',  castrado: 'Sim', entrada: '02/05/2024', avatarHue: 18 },
+    { name: 'Luna',    chip: '985121234698732', medal: 'ITU-2024-145', species: 'Felino', baia: 'Gatil A', sex: 'F', porte: 'Pequeno', status: 'Quarentena',     castrado: 'Sim', entrada: '12/08/2024', avatarHue: 200 },
+    { name: 'Thor',    chip: '985121234712634', medal: 'ITU-2024-201', species: 'Canino', baia: 'Baia 5', sex: 'M', porte: 'Grande',  status: 'Disponível',     castrado: 'Sim', entrada: '21/09/2024', avatarHue: 25 },
+    { name: 'Mel',     chip: '985121234856201', medal: 'ITU-2024-289', species: 'Canino', baia: 'Baia 2', sex: 'F', porte: 'Médio',   status: 'Disponível',     castrado: 'Não', entrada: '03/11/2024', avatarHue: 45 },
+    { name: 'Frida',   chip: '985121234902347', medal: 'ITU-2025-014', species: 'Felino', baia: 'Gatil B', sex: 'F', porte: 'Pequeno', status: 'Disponível',    castrado: 'Sim', entrada: '08/01/2025', avatarHue: 280 },
+    { name: 'Bidu',    chip: '985121235012984', medal: 'ITU-2025-067', species: 'Canino', baia: 'Baia 6', sex: 'M', porte: 'Médio',   status: 'Em Tratamento',  castrado: 'Sim', entrada: '22/02/2025', avatarHue: 10 },
+    { name: 'Pingo',   chip: '985121235103881', medal: 'ITU-2025-098', species: 'Canino', baia: 'Baia 4', sex: 'M', porte: 'Pequeno',  status: 'Disponível',    castrado: 'Não', entrada: '14/03/2025', avatarHue: 55 },
+    { name: 'Mia',     chip: '985121235201554', medal: 'ITU-2025-127', species: 'Felino', baia: 'Gatil A', sex: 'F', porte: 'Pequeno', status: 'Adotado',       castrado: 'Sim', entrada: '02/04/2025', avatarHue: 320 },
+    { name: 'Bob',     chip: '985121235298011', medal: 'ITU-2025-156', species: 'Canino', baia: 'Baia 7', sex: 'M', porte: 'Grande',  status: 'Disponível',     castrado: 'Sim', entrada: '11/05/2025', avatarHue: 15 },
+    { name: 'Nina',    chip: '985121235387204', medal: 'ITU-2025-189', species: 'Canino', baia: 'Baia 1', sex: 'F', porte: 'Médio',   status: 'Disponível',     castrado: 'Sim', entrada: '23/06/2025', avatarHue: 40 },
+    { name: 'Tigre',   chip: '985121235471098', medal: 'ITU-2025-220', species: 'Felino', baia: 'Gatil C', sex: 'M', porte: 'Pequeno', status: 'Em Tratamento', castrado: 'Sim', entrada: '01/07/2025', avatarHue: 30 },
+    { name: 'Lola',    chip: '985121235566237', medal: 'ITU-2025-244', species: 'Canino', baia: 'Baia 8', sex: 'F', porte: 'Pequeno',  status: 'Disponível',    castrado: 'Sim', entrada: '15/08/2025', avatarHue: 350 },
+    { name: 'Pretinho',chip: '985121235641082', medal: 'ITU-2025-271', species: 'Canino', baia: 'Baia 2', sex: 'M', porte: 'Médio',    status: 'Disponível',    castrado: 'Não', entrada: '04/09/2025', avatarHue: 220 },
+    { name: 'Branca',  chip: '985121235722891', medal: 'ITU-2025-298', species: 'Felino', baia: 'Gatil B', sex: 'F', porte: 'Pequeno', status: 'Disponível',    castrado: 'Sim', entrada: '19/10/2025', avatarHue: 180 },
+    { name: 'Caramelo',chip: '985121235814521', medal: 'ITU-2025-326', species: 'Canino', baia: 'Baia 3', sex: 'M', porte: 'Médio',    status: 'Disponível',    castrado: 'Sim', entrada: '02/12/2025', avatarHue: 35 },
+    { name: 'Pipoca',  chip: '—',               medal: 'ITU-2026-003', species: 'Canino', baia: 'Baia 4', sex: 'F', porte: 'Pequeno',  status: 'Quarentena',    castrado: 'Não', entrada: '08/01/2026', avatarHue: 50 },
+    { name: 'Spike',   chip: '985121235998732', medal: 'ITU-2026-021', species: 'Canino', baia: 'Externa 1', sex: 'M', porte: 'Grande', status: 'Em Tratamento', castrado: 'Sim', entrada: '17/02/2026', avatarHue: 20 },
+    { name: 'Mingau',  chip: '985121236082145', medal: 'ITU-2026-049', species: 'Felino', baia: 'Gatil C', sex: 'M', porte: 'Pequeno', status: 'Disponível',    castrado: 'Sim', entrada: '05/04/2026', avatarHue: 60 },
+    { name: 'Anita',   chip: '985121236176390', medal: 'ITU-2026-068', species: 'Canino', baia: 'Baia 5', sex: 'F', porte: 'Grande',   status: 'Falecido',       castrado: 'Sim', entrada: '18/05/2025', avatarHue: 8 },
+  ];
+
+  function statusBadge(s) {
+    const map = {
+      'Disponível':    ['badge-available',  'Disponível'],
+      'Em Tratamento': ['badge-treatment',  'Em Tratamento'],
+      'Quarentena':    ['badge-quarantine', 'Quarentena'],
+      'Adotado':       ['badge-adopted',    'Adotado'],
+      'Falecido':      ['badge-deceased',   'Falecido'],
+    };
+    const [cls, label] = map[s] || ['badge-neutral', s];
+    return `<span class="badge ${cls}"><span class="badge-dot"></span>${label}</span>`;
+  }
+  function specBadge(sp) {
+    return sp === 'Canino'
+      ? `<span class="badge badge-canine">Canino</span>`
+      : `<span class="badge badge-feline">Felino</span>`;
+  }
+  function avatarSvg(hue) {
+    return `<div class="animal-avatar" style="background: hsl(${hue}, 25%, 92%); border-color: hsl(${hue}, 25%, 85%); color: hsl(${hue}, 30%, 55%);">${I.paw(18)}</div>`;
+  }
+  function photoPlaceholder(hue, name) {
+    return `<div class="photo" style="background: linear-gradient(135deg, hsl(${hue}, 30%, 92%) 0%, hsl(${hue}, 28%, 84%) 100%); color: hsl(${hue}, 35%, 45%);">
+      <div class="placeholder">${I.paw(40)}<span>${name.toUpperCase()}</span></div>
+    </div>`;
+  }
+
+  const rows = document.getElementById('animal-rows');
+  rows.innerHTML = animals.map((a, i) => `
+    <tr ${i === 0 ? 'class="selected-row"' : ''}>
+      <td><input type="checkbox" ${i === 0 ? 'checked' : ''} /></td>
+      <td>
+        <a href="animal.html" style="text-decoration: none; color: inherit;" class="animal-cell">
+          ${avatarSvg(a.avatarHue)}
+          <div>
+            <div class="name">${a.name}</div>
+            <div class="chip">${a.chip}</div>
+          </div>
+        </a>
+      </td>
+      <td>${specBadge(a.species)}</td>
+      <td><span class="mono" style="font-size: 12px;">${a.baia}</span></td>
+      <td><span class="sex-marker ${a.sex}">${a.sex}</span></td>
+      <td>${a.porte}</td>
+      <td>${statusBadge(a.status)}</td>
+      <td>${a.castrado === 'Sim' ? '<span style="color: var(--color-success);">●</span> Sim' : '<span style="color: var(--color-text-muted);">○</span> Não'}</td>
+      <td><span class="mono" style="font-size: 11px; color: var(--color-text-secondary);">${a.entrada}</span></td>
+      <td>
+        <div class="flex gap-1">
+          <a href="animal.html" class="btn btn-ghost btn-sm btn-icon-only" title="Ver ficha">${I.eye(14)}</a>
+          <a href="animal.html" class="btn btn-ghost btn-sm btn-icon-only" title="Editar">${I.edit(14)}</a>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+  // Cards
+  const cards = document.getElementById('animal-cards');
+  cards.innerHTML = animals.slice(0, 12).map(a => `
+    <a href="animal.html" class="animal-card" style="text-decoration: none; color: inherit;">
+      ${photoPlaceholder(a.avatarHue, a.name)}
+      <div class="body">
+        <div class="footer-row">
+          <span class="name">${a.name}</span>
+          ${statusBadge(a.status)}
+        </div>
+        <div class="meta">${specBadge(a.species)} · ${a.baia}</div>
+        <div class="chip">${a.chip}</div>
+      </div>
+    </a>
+  `).join('');
+
+  // View toggle
+  document.getElementById('view-table').addEventListener('click', () => {
+    document.getElementById('view-table').classList.add('active');
+    document.getElementById('view-grid').classList.remove('active');
+    document.getElementById('table-view').style.display = 'block';
+    document.getElementById('grid-view').style.display = 'none';
+  });
+  document.getElementById('view-grid').addEventListener('click', () => {
+    document.getElementById('view-grid').classList.add('active');
+    document.getElementById('view-table').classList.remove('active');
+    document.getElementById('grid-view').style.display = 'block';
+    document.getElementById('table-view').style.display = 'none';
+  });
+</script>
+</body>
+</html>

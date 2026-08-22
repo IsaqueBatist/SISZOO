@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SISZOO — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); }
+  @media (max-width: 1280px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .compare-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 3px;
+    font-size: 12px;
+  }
+  .compare-filter button {
+    background: transparent;
+    border: none;
+    color: var(--color-text-secondary);
+    padding: 6px 12px;
+    border-radius: 5px;
+    font-weight: 600;
+    font-family: var(--font-body);
+    font-size: 12px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+  }
+  .compare-filter button.active {
+    background: var(--color-primary);
+    color: #fff;
+  }
+  .compare-filter .label {
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 10px;
+    padding: 0 10px 0 6px;
+    font-weight: 600;
+  }
+
+  .alerts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); }
+  @media (max-width: 1280px) { .alerts-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .charts-row { display: grid; grid-template-columns: 1.1fr 1fr 1.1fr; gap: var(--space-4); }
+  .bottom-row { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: var(--space-4); }
+  @media (max-width: 1280px) { .charts-row, .bottom-row { grid-template-columns: 1fr; } }
+
+  .mini-bar-row { display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 6px 0; }
+  .mini-bar-row .mb-label { min-width: 90px; display:flex; align-items:center; gap: 6px; }
+  .mini-bar-row .mb-track { flex: 1; height: 8px; background: var(--color-border); border-radius: 999px; overflow: hidden; display: block; }
+  .mini-bar-row .mb-fill { display: block; height: 100%; background: var(--color-primary); border-radius: 999px; }
+  .mini-bar-row .mb-val { font-family: var(--font-mono); font-size: 12px; font-weight: 600; min-width: 30px; text-align: right; }
+
+  .donuts-pair { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+  .donut-block { flex: 1; min-width: 0; }
+  .donut-block .donut-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-secondary); margin-bottom: 10px; }
+
+  /* Multi-segment donut via SVG */
+  .svg-donut { display: block; margin: 0 auto 12px; }
+
+  .baia-chart-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 4px 0;
+  }
+  .baia-row {
+    display: grid;
+    grid-template-columns: 70px 1fr 84px 50px;
+    gap: 10px;
+    align-items: center;
+    font-size: 12px;
+  }
+  .baia-row .b-name { font-weight: 600; color: var(--color-text-primary); font-size: 13px; }
+  .baia-row .b-track {
+    position: relative;
+    height: 22px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .baia-row .b-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: var(--color-success);
+    border-radius: 5px 0 0 5px;
+    transition: width 240ms ease;
+  }
+  .baia-row .b-fill.warn { background: var(--color-alert); }
+  .baia-row .b-fill.danger { background: var(--color-danger); }
+  .baia-row .b-cap-mark {
+    position: absolute;
+    top: -2px; bottom: -2px;
+    width: 2px;
+    background: var(--color-text-primary);
+    opacity: 0.4;
+  }
+  .baia-row .b-overflow {
+    position: absolute;
+    top: 0; bottom: 0;
+    background: repeating-linear-gradient(45deg,
+      var(--color-danger) 0 4px,
+      #B71C1C 4px 8px);
+    border-radius: 0 5px 5px 0;
+  }
+  .baia-row .b-nums { font-family: var(--font-mono); font-weight: 700; font-size: 13px; text-align: right; }
+  .baia-row .b-pct { font-family: var(--font-mono); font-size: 12px; color: var(--color-text-secondary); text-align: right; }
+  .baia-row.danger .b-pct { color: var(--color-danger); font-weight: 700; }
+  .baia-row.warn .b-pct { color: var(--color-alert); font-weight: 600; }
+
+  .mini-list { display: flex; flex-direction: column; gap: 4px; }
+  .mini-list .mini-row {
+    display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+  }
+  .mini-list .mini-row:hover { background: var(--color-surface-alt); }
+  .mini-list .mini-row .proto { font-family: var(--font-mono); font-size: 12px; font-weight: 600; }
+  .mini-list .mini-row .sec { color: var(--color-text-secondary); font-size: 12px; }
+
+  .quick-stats { display: flex; flex-direction: column; gap: 10px; }
+  .quick-stat {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 10px;
+    border-radius: 8px;
+  }
+  .quick-stat:hover { background: var(--color-surface-alt); }
+  .quick-stat .qs-ico {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .quick-stat .qs-label { font-size: 13px; color: var(--color-text-primary); font-weight: 500; }
+  .quick-stat .qs-val { margin-left: auto; font-family: var(--font-display); font-weight: 700; font-size: 18px; }
+</style>
+</head>
+<body data-page="dashboard">
+<div data-shell-root>
+
+  <div class="page-header">
+    <div class="title-block">
+      <h1>Dashboard Operacional</h1>
+      <p class="subtitle">Visão geral do Centro de Controle de Zoonoses · Atualizado há 2 minutos</p>
+    </div>
+    <div class="actions">
+      <span class="compare-filter" id="compare-filter">
+        <span class="label">Comparar com</span>
+        <button data-period="week" class="active">Semana</button>
+        <button data-period="month">Mês</button>
+      </span>
+      <button class="btn btn-outline btn-sm"><span id="ic-cal"></span>Hoje · 20/05/2026</button>
+      <button class="btn btn-outline btn-sm"><span id="ic-dl"></span>Exportar</button>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid" data-screen-label="KPIs">
+    <div class="kpi kpi-info">
+      <div class="kpi-head">
+        <span class="kpi-label">Total de Animais</span>
+        <span class="kpi-icon" id="kpi-paw"></span>
+      </div>
+      <div class="kpi-value">147</div>
+      <div class="kpi-foot">
+        <span>123 cães · 24 gatos</span>
+        <span class="kpi-delta up" data-delta-week="▲ +12 essa semana" data-delta-month="▲ +38 este mês">▲ +12 essa semana</span>
+      </div>
+    </div>
+
+    <div class="kpi kpi-success">
+      <div class="kpi-head">
+        <span class="kpi-label">Vacinados</span>
+        <span class="kpi-icon" id="kpi-syringe"></span>
+      </div>
+      <div class="kpi-value">84<span class="unit">%</span></div>
+      <div class="kpi-foot">
+        <span>123 de 147 animais</span>
+        <span class="kpi-delta up" data-delta-week="▲ 5.2% vs semana" data-delta-month="▲ 11.8% vs mês">▲ 5.2% vs semana</span>
+      </div>
+    </div>
+
+    <div class="kpi kpi-alert">
+      <div class="kpi-head">
+        <span class="kpi-label">Adoções no Mês</span>
+        <span class="kpi-icon" id="kpi-heart"></span>
+      </div>
+      <div class="kpi-value">8</div>
+      <div class="kpi-foot">
+        <span>Meta mensal: 12</span>
+        <span class="kpi-delta up" data-delta-week="▲ +2 essa semana" data-delta-month="▲ +5 vs mês anterior">▲ +2 essa semana</span>
+      </div>
+    </div>
+
+    <div class="kpi kpi-danger">
+      <div class="kpi-head">
+        <span class="kpi-label">Ocorrências</span>
+        <span class="kpi-icon" id="kpi-alert"></span>
+      </div>
+      <div class="kpi-value" id="kpi-occ-value">4</div>
+      <div class="kpi-foot">
+        <span id="kpi-occ-sub">Abertas hoje · média 1 a cada hora</span>
+        <span class="kpi-delta down" id="kpi-occ-delta" data-delta-week="▼ −2 vs semana passada" data-delta-month="▲ +8% vs mês anterior">▼ −2 vs semana passada</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alertas Críticos -->
+  <div>
+    <div class="section-header">
+      <h2><span style="color: var(--color-danger);" id="ic-alert-section"></span>Alertas Críticos</h2>
+      <a href="#">Ver todos →</a>
+    </div>
+    <div class="alerts-grid">
+      <a href="alerta.html?tipo=vacinas" class="alert danger" style="text-decoration:none; color:inherit; cursor:pointer;">
+        <div class="bullet"></div>
+        <div class="alert-content">
+          <strong>5 vacinas</strong> vencem em 7 dias
+          <div class="alert-desc">Rex, Bolinha, Luna, Thor, Mel — ver detalhes →</div>
+        </div>
+      </a>
+      <a href="alerta.html?tipo=avaliacao" class="alert alert-yellow" style="text-decoration:none; color:inherit; cursor:pointer;">
+        <div class="bullet"></div>
+        <div class="alert-content">
+          <strong>3 animais</strong> sem avaliação há >30 dias
+          <div class="alert-desc">Última avaliação em 18/04/2026 — ver detalhes →</div>
+        </div>
+      </a>
+      <a href="alerta.html?tipo=baia" class="alert warning" style="text-decoration:none; color:inherit; cursor:pointer;">
+        <div class="bullet"></div>
+        <div class="alert-content">
+          <strong>Baia 3</strong> superlotada (8/6 animais)
+          <div class="alert-desc">133% de ocupação — remanejar →</div>
+        </div>
+      </a>
+      <a href="alerta.html?tipo=medicacao" class="alert info" style="text-decoration:none; color:inherit; cursor:pointer;">
+        <div class="bullet"></div>
+        <div class="alert-content">
+          <strong>7 animais</strong> com medicação ativa
+          <div class="alert-desc">2 com término previsto esta semana — ver detalhes →</div>
+        </div>
+      </a>
+      <a href="alerta.html?tipo=ficha" class="alert info" style="text-decoration:none; color:inherit; cursor:pointer;">
+        <div class="bullet"></div>
+        <div class="alert-content">
+          <strong>2 novos</strong> animais sem ficha completa
+          <div class="alert-desc">Entrados em 18/05 e 19/05 — completar cadastro →</div>
+        </div>
+      </a>
+      <a href="alerta.html?tipo=castracao" class="alert danger" style="text-decoration:none; color:inherit; cursor:pointer;">
+        <div class="bullet"></div>
+        <div class="alert-content">
+          <strong>10 animais</strong> não castrados
+          <div class="alert-desc">6 machos · 4 fêmeas — agendar procedimento →</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Gráficos -->
+  <div class="charts-row">
+    <!-- Ocupação por Baia -->
+    <div class="card">
+      <div class="card-header">
+        <h3>Ocupação por Baia</h3>
+        <span class="sub">Cada baia tem capacidade própria · ordenado por % de ocupação</span>
+      </div>
+      <div class="card-body">
+        <div class="baia-chart-list" id="baia-chart-list"></div>
+        <div class="mt-3 flex items-center gap-3" style="font-size: 11px; color: var(--color-text-secondary);">
+          <span class="flex items-center gap-2"><span style="width:10px;height:10px;background:var(--color-success);border-radius:2px;display:inline-block;"></span>Até 80%</span>
+          <span class="flex items-center gap-2"><span style="width:10px;height:10px;background:var(--color-alert);border-radius:2px;display:inline-block;"></span>80–99%</span>
+          <span class="flex items-center gap-2"><span style="width:10px;height:10px;background:var(--color-danger);border-radius:2px;display:inline-block;"></span>100%+</span>
+          <span class="flex items-center gap-2"><span style="width:10px;height:10px;background: repeating-linear-gradient(45deg, var(--color-danger) 0 3px, #B71C1C 3px 6px); border-radius:2px;display:inline-block;"></span>Excedente</span>
+          <span style="margin-left:auto;color:var(--color-danger);font-weight:600;">⚠ Baia 3 superlotada</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resultados Laboratoriais -->
+    <div class="card">
+      <div class="card-header">
+        <h3>Resultados Laboratoriais</h3>
+        <span class="sub">Último mês</span>
+      </div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:var(--space-5);">
+        <div>
+          <div class="flex items-center justify-between mt-2" style="margin-bottom: 6px;">
+            <span style="font-size: 13px; font-weight: 600;">Leishmaniose Visceral Canina</span>
+            <span class="mono" style="font-size: 11px; color: var(--color-text-secondary);">3 exames</span>
+          </div>
+          <div class="hbar" title="0 positivos · 3 negativos">
+            <div class="seg neg" style="width: 100%;"></div>
+          </div>
+          <div class="flex items-center justify-between mt-2" style="font-size: 11px;">
+            <span style="color: var(--color-danger); font-weight: 600;">● Positivos: 0</span>
+            <span style="color: var(--color-success); font-weight: 600;">Negativos: 3 ●</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between" style="margin-bottom: 6px;">
+            <span style="font-size: 13px; font-weight: 600;">Esporotricose Felina</span>
+            <span class="mono" style="font-size: 11px; color: var(--color-text-secondary);">5 exames</span>
+          </div>
+          <div class="hbar">
+            <div class="seg pos" style="width: 40%;"></div>
+            <div class="seg neg" style="width: 60%;"></div>
+          </div>
+          <div class="flex items-center justify-between mt-2" style="font-size: 11px;">
+            <span style="color: var(--color-danger); font-weight: 600;">● Positivos: 2</span>
+            <span style="color: var(--color-success); font-weight: 600;">Negativos: 3 ●</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between" style="margin-bottom: 6px;">
+            <span style="font-size: 13px; font-weight: 600;">Raiva (suspeitas)</span>
+            <span class="mono" style="font-size: 11px; color: var(--color-text-secondary);">2 exames</span>
+          </div>
+          <div class="hbar">
+            <div class="seg neg" style="width: 100%;"></div>
+          </div>
+          <div class="flex items-center justify-between mt-2" style="font-size: 11px;">
+            <span style="color: var(--color-danger); font-weight: 600;">● Positivos: 0</span>
+            <span style="color: var(--color-success); font-weight: 600;">Negativos: 2 ●</span>
+          </div>
+        </div>
+
+        <a href="processos.html" style="font-size: 12px; align-self: flex-start;">Ver todos os processos →</a>
+      </div>
+    </div>
+
+    <!-- Donuts -->
+    <div class="card">
+      <div class="card-header">
+        <h3>Casos Suspeitos</h3>
+        <span class="sub">Mês corrente</span>
+      </div>
+      <div class="card-body">
+        <div class="donuts-pair">
+          <div class="donut-block">
+            <div class="donut-title">Raiva por Espécie</div>
+            <svg class="svg-donut" width="120" height="120" viewBox="0 0 36 36">
+              <circle cx="18" cy="18" r="15.91" fill="transparent" stroke="#E0E4EA" stroke-width="6"/>
+              <!-- 4 segments: 50%, 25%, 15%, 10% -->
+              <circle cx="18" cy="18" r="15.91" fill="transparent" stroke="#1565C0" stroke-width="6" stroke-dasharray="50 50" stroke-dashoffset="25" transform="rotate(-90 18 18)"/>
+              <circle cx="18" cy="18" r="15.91" fill="transparent" stroke="#00695C" stroke-width="6" stroke-dasharray="25 75" stroke-dashoffset="-25" transform="rotate(-90 18 18)"/>
+              <circle cx="18" cy="18" r="15.91" fill="transparent" stroke="#6A1B9A" stroke-width="6" stroke-dasharray="15 85" stroke-dashoffset="-50" transform="rotate(-90 18 18)"/>
+              <circle cx="18" cy="18" r="15.91" fill="transparent" stroke="#424242" stroke-width="6" stroke-dasharray="10 90" stroke-dashoffset="-65" transform="rotate(-90 18 18)"/>
+              <text x="18" y="20" text-anchor="middle" font-size="6" font-family="DM Sans" font-weight="700" fill="#1A2332">20</text>
+            </svg>
+            <div class="legend">
+              <div class="leg-row"><span class="swatch" style="background:#1565C0"></span>Canino<span class="leg-num">10</span></div>
+              <div class="leg-row"><span class="swatch" style="background:#00695C"></span>Felino<span class="leg-num">5</span></div>
+              <div class="leg-row"><span class="swatch" style="background:#6A1B9A"></span>PNH<span class="leg-num">3</span></div>
+              <div class="leg-row"><span class="swatch" style="background:#424242"></span>Quirópteros<span class="leg-num">2</span></div>
+            </div>
+          </div>
+          <div class="donut-block">
+            <div class="donut-title">Por Patologia</div>
+            <svg class="svg-donut" width="120" height="120" viewBox="0 0 36 36">
+              <circle cx="18" cy="18" r="15.91" fill="transparent" stroke="#E0E4EA" stroke-width="6"/>
+              <circle cx="18" cy="18" r="15.91" fill="transparent" stroke="#C62828" stroke-width="6" stroke-dasharray="35 65" stroke-dashoffset="25" transform="rotate(-90 18 18)"/>
+              <circle cx="18" cy="18" r="15.91" fill="transparent" stroke="#F57F17" stroke-width="6" stroke-dasharray="25 75" stroke-dashoffset="-10" transform="rotate(-90 18 18)"/>
+              <circle cx="18" cy="18" r="15.91" fill="transparent" stroke="#1565C0" stroke-width="6" stroke-dasharray="20 80" stroke-dashoffset="-35" transform="rotate(-90 18 18)"/>
+              <circle cx="18" cy="18" r="15.91" fill="transparent" stroke="#6A1B9A" stroke-width="6" stroke-dasharray="15 85" stroke-dashoffset="-55" transform="rotate(-90 18 18)"/>
+              <circle cx="18" cy="18" r="15.91" fill="transparent" stroke="#E65100" stroke-width="6" stroke-dasharray="5 95" stroke-dashoffset="-70" transform="rotate(-90 18 18)"/>
+              <text x="18" y="20" text-anchor="middle" font-size="6" font-family="DM Sans" font-weight="700" fill="#1A2332">20</text>
+            </svg>
+            <div class="legend">
+              <div class="leg-row"><span class="swatch" style="background:#C62828"></span>Raiva<span class="leg-num">7</span></div>
+              <div class="leg-row"><span class="swatch" style="background:#F57F17"></span>Leishm.<span class="leg-num">5</span></div>
+              <div class="leg-row"><span class="swatch" style="background:#1565C0"></span>Lepto.<span class="leg-num">4</span></div>
+              <div class="leg-row"><span class="swatch" style="background:#6A1B9A"></span>Esporotr.<span class="leg-num">3</span></div>
+              <div class="leg-row"><span class="swatch" style="background:#E65100"></span>F. Macul.<span class="leg-num">1</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom row -->
+  <div class="bottom-row">
+    <div class="card">
+      <div class="card-header">
+        <h3>Procedimentos no Mês</h3>
+        <span class="sub">Maio/2026</span>
+      </div>
+      <div class="card-body">
+        <div class="mini-bar-row">
+          <span class="mb-label"><span id="ic-vac"></span>Vacinações</span>
+          <span class="mb-track"><span class="mb-fill" style="width: 100%;"></span></span>
+          <span class="mb-val">159</span>
+        </div>
+        <div class="mini-bar-row">
+          <span class="mb-label"><span id="ic-stet"></span>Atend. Clínicos</span>
+          <span class="mb-track"><span class="mb-fill" style="width: 54%; background: var(--color-info);"></span></span>
+          <span class="mb-val">87</span>
+        </div>
+        <div class="mini-bar-row">
+          <span class="mb-label"><span id="ic-scis"></span>Castrações</span>
+          <span class="mb-track"><span class="mb-fill" style="width: 21%; background: var(--color-warning);"></span></span>
+          <span class="mb-val">34</span>
+        </div>
+        <div class="mini-bar-row">
+          <span class="mb-label"><span id="ic-pill"></span>Medicações</span>
+          <span class="mb-track"><span class="mb-fill" style="width: 16%; background: var(--color-alert);"></span></span>
+          <span class="mb-val">26</span>
+        </div>
+        <div class="mini-bar-row">
+          <span class="mb-label"><span id="ic-cir"></span>Cirurgias</span>
+          <span class="mb-track"><span class="mb-fill" style="width: 7%; background: #6A1B9A;"></span></span>
+          <span class="mb-val">12</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3>Perfil dos Animais</h3>
+        <span class="sub">Distribuição por espécie</span>
+      </div>
+      <div class="card-body">
+        <div class="quick-stats">
+          <div class="quick-stat">
+            <span class="qs-ico" style="background:#DCEDC8;color:#33691E;" id="ic-dog"></span>
+            <span class="qs-label">Caninos</span>
+            <span class="qs-val">123</span>
+          </div>
+          <div class="quick-stat">
+            <span class="qs-ico" style="background:#B2DFDB;color:#00695C;" id="ic-cat"></span>
+            <span class="qs-label">Felinos</span>
+            <span class="qs-val">24</span>
+          </div>
+          <div class="quick-stat">
+            <span class="qs-ico" style="background:#ECEFF1;color:#424242;font-weight:700;font-size:11px;">QUI</span>
+            <span class="qs-label">Quirópteros</span>
+            <span class="qs-val">3</span>
+          </div>
+          <div class="quick-stat">
+            <span class="qs-ico" style="background:#F3E5F5;color:#6A1B9A;font-weight:700;font-size:11px;">PNH</span>
+            <span class="qs-label">Primatas não-humanos</span>
+            <span class="qs-val">2</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3>Processos Sanitários — últimos 7 dias</h3>
+        <a href="processos.html" style="font-size: 12px;">Ver todos →</a>
+      </div>
+      <div class="card-body" style="padding-top: 8px;">
+        <div class="mini-list">
+          <div class="mini-row">
+            <span class="proto">045/2026</span>
+            <span style="display:flex;flex-direction:column;">
+              <span class="badge badge-disease raiva" style="align-self:flex-start;">RAIVA</span>
+              <span class="sec mt-2">Vila Esperança · Resp. R. Santos</span>
+            </span>
+            <span class="badge badge-urgent">🚨 URGENTE</span>
+          </div>
+          <div class="mini-row">
+            <span class="proto">044/2026</span>
+            <span style="display:flex;flex-direction:column;">
+              <span class="badge badge-disease leishmaniose" style="align-self:flex-start;">LEISHMANIOSE</span>
+              <span class="sec mt-2">Jd. Padre Bento · Resp. M. Oliveira</span>
+            </span>
+            <span class="badge badge-process-awaiting">Aguardando</span>
+          </div>
+          <div class="mini-row">
+            <span class="proto">043/2026</span>
+            <span style="display:flex;flex-direction:column;">
+              <span class="badge badge-disease esporotricose" style="align-self:flex-start;">ESPOROTRICOSE</span>
+              <span class="sec mt-2">Centro · Resp. L. Pereira</span>
+            </span>
+            <span class="badge badge-positive">Positivo</span>
+          </div>
+          <div class="mini-row">
+            <span class="proto">042/2026</span>
+            <span style="display:flex;flex-direction:column;">
+              <span class="badge badge-disease leptospirose" style="align-self:flex-start;">LEPTOSPIROSE</span>
+              <span class="sec mt-2">Itaim · Resp. A. Costa</span>
+            </span>
+            <span class="badge badge-negative">Negativo</span>
+          </div>
+          <div class="mini-row">
+            <span class="proto">041/2026</span>
+            <span style="display:flex;flex-direction:column;">
+              <span class="badge badge-disease febre-maculosa" style="align-self:flex-start;">F. MACULOSA</span>
+              <span class="sec mt-2">Pq. das Aroeiras · Resp. C. Lima</span>
+            </span>
+            <span class="badge badge-process-closed">Concluído</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="assets/icons.js"></script>
+<script src="assets/shell.js"></script>
+<script src="assets/tweaks.js"></script>
+<script>
+  // Hydrate inline icon slots after shell renders
+  const I = window.SISZOO_ICONS;
+  const setIcon = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+  setIcon('kpi-paw', I.paw(20));
+  setIcon('kpi-syringe', I.syringe(20));
+  setIcon('kpi-heart', I.heart(20));
+  setIcon('kpi-alert', I.alert(20));
+  setIcon('ic-alert-section', I.alert(20));
+  setIcon('ic-cal', I.calendar(14));
+  setIcon('ic-dl', I.download(14));
+  setIcon('ic-vac', I.syringe(14));
+  setIcon('ic-stet', I.heart(14));
+  setIcon('ic-scis', I.scissors(14));
+  setIcon('ic-pill', I.pill(14));
+  setIcon('ic-cir', I.flask(14));
+  setIcon('ic-dog', I.dog(18));
+  setIcon('ic-cat', I.cat(18));
+
+  // Baia chart — horizontal stacked bars (each baia at its own capacity)
+  const BAIAS = [
+    { name: 'Baia 1',    cap: 6, cur: 5 },
+    { name: 'Baia 2',    cap: 6, cur: 4 },
+    { name: 'Baia 3',    cap: 6, cur: 8 },
+    { name: 'Baia 4',    cap: 6, cur: 3 },
+    { name: 'Gatil A',   cap: 8, cur: 6 },
+    { name: 'Gatil C',   cap: 8, cur: 7 },
+    { name: 'Externa 1', cap: 4, cur: 2 },
+    { name: 'Externa 2', cap: 4, cur: 3 },
+  ];
+  // Sort: superlot. → mais cheias → menos cheias
+  BAIAS.sort((a, b) => (b.cur / b.cap) - (a.cur / a.cap));
+  // Reference for visual scale: bar full width = max capacity in set (8)
+  const MAX_CAP = Math.max(...BAIAS.map(b => b.cap));
+  const baiaList = document.getElementById('baia-chart-list');
+  if (baiaList) {
+    baiaList.innerHTML = BAIAS.map(b => {
+      const pct = Math.round((b.cur / b.cap) * 100);
+      const tone = pct >= 100 ? 'danger' : pct >= 80 ? 'warn' : '';
+      // capacity portion (relative to max capacity bar)
+      const capWidth = (b.cap / MAX_CAP) * 100;
+      // filled within capacity
+      const fillWithin = (Math.min(b.cur, b.cap) / MAX_CAP) * 100;
+      // overflow beyond capacity
+      const overflow = b.cur > b.cap ? ((b.cur - b.cap) / MAX_CAP) * 100 : 0;
+      const capMarkLeft = capWidth;
+      return `
+        <div class="baia-row ${tone}" title="${b.name} · ${b.cur}/${b.cap} · ${pct}%">
+          <span class="b-name">${b.name}</span>
+          <span class="b-track">
+            <span class="b-fill ${tone}" style="width: ${fillWithin}%;"></span>
+            ${overflow > 0 ? `<span class="b-overflow" style="left: ${capWidth}%; width: ${overflow}%;"></span>` : ''}
+            <span class="b-cap-mark" style="left: ${capMarkLeft}%;" title="Capacidade: ${b.cap}"></span>
+          </span>
+          <span class="b-nums">${b.cur}/${b.cap}</span>
+          <span class="b-pct">${pct}%</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Compare-with filter (Semana / Mês) — swap KPI delta strings
+  const cf = document.getElementById('compare-filter');
+  if (cf) {
+    cf.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-period]');
+      if (!btn) return;
+      cf.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const period = btn.dataset.period;
+      document.querySelectorAll('.kpi-delta[data-delta-week]').forEach(el => {
+        el.textContent = el.dataset['delta' + (period === 'week' ? 'Week' : 'Month')];
+      });
+      // Update ocorrências KPI: switch from "abertas hoje" to "média do mês"
+      const occVal = document.getElementById('kpi-occ-value');
+      const occSub = document.getElementById('kpi-occ-sub');
+      if (occVal && occSub) {
+        if (period === 'month') {
+          occVal.textContent = '11,2';
+          occSub.textContent = 'Média por dia · mês corrente (218 no mês)';
+        } else {
+          occVal.textContent = '4';
+          occSub.textContent = 'Abertas hoje · média 1 a cada hora';
+        }
+      }
+    });
+  }
+</script>
+</body>
+</html>

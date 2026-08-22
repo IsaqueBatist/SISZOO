@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>SISZOO — Ocorrências</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  .occur-type {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .occur-type .ot-ico {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    background: var(--color-bg);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .ot-bats { background: #ECEFF1; color: #424242; }
+  .ot-zoon  { background: #FFEBEE; color: #C62828; }
+  .ot-irreg { background: #FFF3E0; color: #E65100; }
+  .ot-aggr  { background: #FFF8E1; color: #F57F17; }
+  .ot-other { background: #ECEFF1; color: #5A6A7E; }
+
+  .stats-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); }
+  .ss-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .ss-card .ss-ico { width: 36px; height: 36px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .ss-card .ss-n { font-family: var(--font-display); font-weight: 700; font-size: 22px; line-height: 1; }
+  .ss-card .ss-l { font-size: 11px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.08em; }
+</style>
+</head>
+<body data-page="ocorrencias">
+<div data-shell-root>
+
+  <div class="page-header">
+    <div class="title-block">
+      <h1>Ocorrências e Denúncias <span class="counter">218 registros</span></h1>
+      <p class="subtitle">Denúncias e demandas recebidas de munícipes · 4 ainda em atendimento</p>
+    </div>
+    <div class="actions">
+      <button class="btn btn-outline btn-sm"><span id="ic-dl"></span>Exportar</button>
+      <a href="cadastrar-ocorrencia.html" class="btn btn-primary"><span id="ic-plus"></span>Registrar Ocorrência</a>
+    </div>
+  </div>
+
+  <div class="stats-strip">
+    <div class="ss-card">
+      <span class="ss-ico" style="background: var(--color-info-bg); color: var(--color-info);" id="ic-open"></span>
+      <div><div class="ss-n">4</div><div class="ss-l">Abertas</div></div>
+    </div>
+    <div class="ss-card">
+      <span class="ss-ico" style="background: var(--color-warning-bg); color: var(--color-warning);" id="ic-att"></span>
+      <div><div class="ss-n">7</div><div class="ss-l">Em Atendimento</div></div>
+    </div>
+    <div class="ss-card">
+      <span class="ss-ico" style="background: var(--color-success-bg); color: var(--color-success);" id="ic-clo"></span>
+      <div><div class="ss-n">207</div><div class="ss-l">Encerradas</div></div>
+    </div>
+    <div class="ss-card">
+      <span class="ss-ico" style="background: var(--color-danger-bg); color: var(--color-danger);" id="ic-urg"></span>
+      <div><div class="ss-n">2</div><div class="ss-l">Com Urgência</div></div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filter-bar">
+    <div class="search-input">
+      <span id="ic-search"></span>
+      <input type="text" placeholder="Buscar protocolo, denunciante ou bairro..." />
+    </div>
+    <select class="filter-select">
+      <option>Tipo: Todos</option>
+      <option>Suspeita de Zoonose</option>
+      <option>Infestação de Morcegos</option>
+      <option>Criação Irregular</option>
+      <option>Animal Agressivo</option>
+      <option>Outros</option>
+    </select>
+    <select class="filter-select">
+      <option>Status: Todos</option>
+      <option>Aberta</option>
+      <option>Em Atendimento</option>
+      <option>Encerrada</option>
+    </select>
+    <span style="font-size: 11px; color: var(--color-text-secondary);">Período:</span>
+    <input class="input mono" type="text" value="01/05/2026" style="width: 110px; height: 36px;" />
+    <span style="color: var(--color-text-muted);">→</span>
+    <input class="input mono" type="text" value="20/05/2026" style="width: 110px; height: 36px;" />
+    <button class="btn btn-ghost btn-sm">Limpar</button>
+  </div>
+
+  <!-- Tabela -->
+  <div class="table-wrap">
+    <div style="overflow-x: auto;">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Protocolo</th>
+            <th>Data</th>
+            <th>Tipo</th>
+            <th>Bairro</th>
+            <th>Denunciante</th>
+            <th>Status</th>
+            <th>Processo Vinc.</th>
+            <th style="width: 80px;">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="table-footer">
+      <span>Mostrando <strong>1 – 18</strong> de <strong>218</strong> ocorrências</span>
+      <div class="pager">
+        <button class="btn btn-ghost btn-sm" disabled>Anterior</button>
+        <button class="btn btn-outline btn-sm" style="width: 32px; padding: 0;">1</button>
+        <button class="btn btn-ghost btn-sm" style="width: 32px; padding: 0;">2</button>
+        <button class="btn btn-ghost btn-sm" style="width: 32px; padding: 0;">3</button>
+        <button class="btn btn-outline btn-sm">Próximo</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="assets/icons.js"></script>
+<script src="assets/shell.js"></script>
+<script src="assets/tweaks.js"></script>
+<script>
+  const I = window.SISZOO_ICONS;
+  const $ = id => document.getElementById(id);
+  $('ic-dl').innerHTML = I.download(14);
+  $('ic-plus').innerHTML = I.plus(14);
+  $('ic-search').innerHTML = I.search(14);
+  $('ic-open').innerHTML = I.inbox(18);
+  $('ic-att').innerHTML = I.flag(18);
+  $('ic-clo').innerHTML = I.check(18);
+  $('ic-urg').innerHTML = I.alert(18);
+
+  const typeIcon = (t) => {
+    const map = {
+      'morcegos': ['ot-bats',  I.bat(13)],
+      'zoonose':  ['ot-zoon',  I.alert(13)],
+      'irregular':['ot-irreg', I.home(13)],
+      'agressivo':['ot-aggr',  I.dog(13)],
+      'outros':   ['ot-other', I.fileText(13)],
+    };
+    return map[t];
+  };
+  const typeLabel = {
+    'morcegos': 'Infestação de Morcegos',
+    'zoonose':  'Suspeita de Zoonose',
+    'irregular':'Criação Irregular',
+    'agressivo':'Animal Agressivo',
+    'outros':   'Outros',
+  };
+  const occurs = [
+    { proto: '089/2026', date: '20/05/2026', type: 'zoonose',  bairro: 'Vila Esperança',    denun: 'Maria Souza',     status: 'Aberta',         proc: '045/2026', urgent: true },
+    { proto: '088/2026', date: '20/05/2026', type: 'morcegos', bairro: 'Centro',            denun: '*** Sigiloso ***', status: 'Aberta',         proc: null,       urgent: false, sigil: true },
+    { proto: '087/2026', date: '19/05/2026', type: 'agressivo',bairro: 'Itaim',             denun: 'Carlos Lima',     status: 'Em Atendimento', proc: null,       urgent: false },
+    { proto: '086/2026', date: '19/05/2026', type: 'zoonose',  bairro: 'Jd. Padre Bento',   denun: 'Ana Oliveira',    status: 'Em Atendimento', proc: '044/2026', urgent: false },
+    { proto: '085/2026', date: '18/05/2026', type: 'irregular',bairro: 'Pq. das Aroeiras',  denun: '*** Sigiloso ***', status: 'Em Atendimento', proc: null,       urgent: false, sigil: true },
+    { proto: '084/2026', date: '17/05/2026', type: 'zoonose',  bairro: 'Vila Brasil',       denun: 'Pedro Mendes',    status: 'Aberta',         proc: '043/2026', urgent: true },
+    { proto: '083/2026', date: '16/05/2026', type: 'morcegos', bairro: 'Centro',            denun: 'Luiza Pereira',   status: 'Encerrada',      proc: null,       urgent: false },
+    { proto: '082/2026', date: '15/05/2026', type: 'agressivo',bairro: 'Brasil',            denun: 'José Almeida',    status: 'Encerrada',      proc: null,       urgent: false },
+    { proto: '081/2026', date: '14/05/2026', type: 'irregular',bairro: 'Cidade Nova',       denun: '*** Sigiloso ***', status: 'Encerrada',      proc: null,       urgent: false, sigil: true },
+    { proto: '080/2026', date: '12/05/2026', type: 'zoonose',  bairro: 'Itaim',             denun: 'Renata Costa',    status: 'Encerrada',      proc: '042/2026', urgent: false },
+    { proto: '079/2026', date: '11/05/2026', type: 'outros',   bairro: 'Centro',            denun: 'Fábio Santos',    status: 'Encerrada',      proc: null,       urgent: false },
+    { proto: '078/2026', date: '10/05/2026', type: 'zoonose',  bairro: 'Pq. das Aroeiras',  denun: 'Clara Rodrigues', status: 'Encerrada',      proc: '041/2026', urgent: false },
+  ];
+  const sTag = {
+    'Aberta':         'badge-process-open',
+    'Em Atendimento': 'badge-process-awaiting',
+    'Encerrada':      'badge-process-closed',
+  };
+  const rows = document.getElementById('rows');
+  rows.innerHTML = occurs.map(o => {
+    const [cls, ico] = typeIcon(o.type);
+    return `<tr class="${o.urgent ? 'urgent' : ''}">
+      <td><span class="mono" style="font-weight: 600; color: var(--color-text-primary);">${o.proto}</span>${o.urgent ? ' <span class="badge badge-urgent" style="margin-left:6px;">🚨</span>' : ''}</td>
+      <td><span class="mono" style="font-size: 12px;">${o.date}</span></td>
+      <td><span class="occur-type"><span class="ot-ico ${cls}">${ico}</span>${typeLabel[o.type]}</span></td>
+      <td>${o.bairro}</td>
+      <td>${o.sigil ? `<span style="font-style: italic; color: var(--color-text-muted);">${o.denun}</span>` : o.denun}</td>
+      <td><span class="badge ${sTag[o.status]}">${o.status}</span></td>
+      <td>${o.proc ? `<a href="processo.html" class="mono" style="font-weight: 600;">${o.proc}</a>` : '<span class="muted">—</span>'}</td>
+      <td>
+        <div class="flex gap-1">
+          <a href="ocorrencia.html" class="btn btn-ghost btn-sm btn-icon-only" title="Ver">${I.eye(14)}</a>
+          <button class="btn btn-ghost btn-sm btn-icon-only" title="Mais">${I.moreV(14)}</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+</script>
+</body>
+</html>

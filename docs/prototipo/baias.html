@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>SISZOO — Gestão de Baias</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  .baia-section { margin-bottom: var(--space-5); }
+  .baia-section h2 { display: flex; align-items: center; gap: 12px; margin-bottom: var(--space-3); font-size: 16px; }
+  .baia-section h2 .count { background: var(--color-bg); color: var(--color-text-secondary); font-size: 12px; padding: 2px 10px; border-radius: 999px; font-weight: 600; }
+  .baia-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); }
+  @media (max-width: 1100px) { .baia-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 800px)  { .baia-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .baia-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    display: flex; flex-direction: column; gap: 10px;
+    position: relative;
+    transition: transform 150ms, box-shadow 150ms;
+  }
+  .baia-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+  .baia-card.warn { border-color: var(--color-warning-border); }
+  .baia-card.danger { border-color: var(--color-danger-border); background: linear-gradient(135deg, var(--color-surface) 0%, #FFF5F5 100%); }
+  .baia-card .head {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .baia-card .baia-name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: -0.01em;
+  }
+  .baia-card .occupancy-line {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px;
+  }
+  .baia-card .nums {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .baia-card .pct {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--color-text-secondary);
+  }
+  .baia-card.danger .pct { color: var(--color-danger); }
+  .baia-card .resi-list { display: flex; gap: -4px; flex-wrap: wrap; align-items: center; }
+  .baia-card .resi-avatar {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--color-bg);
+    border: 2px solid var(--color-surface);
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-left: -8px;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+  }
+  .baia-card .resi-avatar:first-child { margin-left: 0; }
+  .baia-card .resi-more {
+    font-size: 11px;
+    margin-left: 8px;
+    color: var(--color-text-secondary);
+    font-weight: 600;
+  }
+  .baia-card .status-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .baia-card.warn .status-label { background: var(--color-alert-bg); color: var(--color-alert); }
+  .baia-card.danger .status-label { background: var(--color-danger-bg); color: var(--color-danger); }
+
+  .add-baia {
+    border: 2px dashed var(--color-border-strong);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 6px;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    text-align: center;
+    min-height: 140px;
+    background: transparent;
+  }
+  .add-baia:hover { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-light); }
+
+  .legend-strip {
+    display: inline-flex; gap: 16px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    padding: 8px 14px;
+    border-radius: var(--radius-md);
+    font-size: 11px;
+    color: var(--color-text-secondary);
+  }
+  .legend-strip .l-dot { display: inline-flex; align-items: center; gap: 6px; }
+  .legend-strip .l-dot .d { width: 10px; height: 10px; border-radius: 3px; }
+</style>
+</head>
+<body data-page="baias">
+<div data-shell-root>
+
+  <div class="page-header">
+    <div class="title-block">
+      <h1>Gestão de Baias <span class="counter">21 baias · 147 animais</span></h1>
+      <p class="subtitle">Capacidade total: 124 vagas · Taxa de ocupação geral: 119% · 1 baia superlotada</p>
+    </div>
+    <div class="actions">
+      <button class="btn btn-outline btn-sm"><span id="ic-rep"></span>Histórico de ocupação</button>
+      <button class="btn btn-primary"><span id="ic-plus"></span>Adicionar Baia</button>
+    </div>
+  </div>
+
+  <div class="legend-strip">
+    <span class="l-dot"><span class="d" style="background: var(--color-success);"></span>Normal (até 80%)</span>
+    <span class="l-dot"><span class="d" style="background: var(--color-alert);"></span>Atenção (80–99%)</span>
+    <span class="l-dot"><span class="d" style="background: var(--color-danger);"></span>Superlotada (100%+)</span>
+    <span style="margin-left: auto; color: var(--color-text-muted);">Clique em um animal para abrir sua ficha</span>
+  </div>
+
+  <!-- Baias Internas -->
+  <div class="baia-section">
+    <h2>Baias Internas <span class="count">16 baias</span></h2>
+    <div class="baia-grid" id="internas"></div>
+  </div>
+
+  <!-- Gatil -->
+  <div class="baia-section">
+    <h2>Gatil <span class="count">3 áreas</span></h2>
+    <div class="baia-grid" id="gatil"></div>
+  </div>
+
+  <!-- Externas -->
+  <div class="baia-section">
+    <h2>Externas <span class="count">4 áreas</span></h2>
+    <div class="baia-grid" id="externas"></div>
+  </div>
+
+</div>
+
+<script src="assets/icons.js"></script>
+<script src="assets/shell.js"></script>
+<script src="assets/tweaks.js"></script>
+<script>
+  const I = window.SISZOO_ICONS;
+  const $ = id => document.getElementById(id);
+  $('ic-rep').innerHTML = I.fileText(14);
+  $('ic-plus').innerHTML = I.plus(14);
+
+  function statusLabel(pct) {
+    if (pct >= 100) return 'SUPERLOTADA';
+    if (pct >= 80) return 'PRÓX. LIMITE';
+    return '';
+  }
+  function tone(pct) {
+    if (pct >= 100) return 'danger';
+    if (pct >= 80) return 'warn';
+    return '';
+  }
+  function fillColor(pct) {
+    if (pct >= 100) return 'var(--color-danger)';
+    if (pct >= 80) return 'var(--color-alert)';
+    return 'var(--color-success)';
+  }
+
+  function baiaCard(b) {
+    const pct = Math.round((b.cur / b.cap) * 100);
+    const t = tone(pct);
+    const slabel = statusLabel(pct);
+    const colorH = i => 20 + (i * 47) % 320;
+    const residents = Array.from({ length: Math.min(b.cur, 5) }).map((_, i) => `
+      <a href="animal.html" class="resi-avatar" title="Animal ${i+1}" style="background: hsl(${colorH(i+b.cur)}, 30%, 92%); color: hsl(${colorH(i+b.cur)}, 35%, 45%);">${I.paw(12)}</a>
+    `).join('');
+    const more = b.cur > 5 ? `<span class="resi-more">+${b.cur - 5}</span>` : '';
+    const fill = Math.min(pct, 100);
+    return `<div class="baia-card ${t}">
+      <div class="head">
+        <span class="baia-name">${b.name}</span>
+        ${slabel ? `<span class="status-label">${slabel}</span>` : ''}
+      </div>
+      <div class="occupancy-line">
+        <div class="occ-bar ${t === 'warn' ? 'warn' : t === 'danger' ? 'danger' : ''}" style="flex: 1;">
+          <span class="fill" style="width: ${fill}%; background: ${fillColor(pct)};"></span>
+        </div>
+        <span class="nums">${b.cur}/${b.cap}</span>
+        <span class="pct">${pct}%</span>
+      </div>
+      <div class="resi-list">${residents || '<span style="font-size: 11px; color: var(--color-text-muted);">Vazia</span>'}${more}</div>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 6px; border-top: 1px solid var(--color-border);">
+        <span style="font-size: 11px; color: var(--color-text-secondary);">${b.kind}</span>
+        <button class="btn btn-ghost btn-sm" style="height: 26px; padding: 0 8px; font-size: 11px;">Gerenciar →</button>
+      </div>
+    </div>`;
+  }
+
+  const internas = [
+    { name: 'Baia 1', cur: 5, cap: 6, kind: 'Cães porte médio' },
+    { name: 'Baia 2', cur: 4, cap: 6, kind: 'Cães porte médio' },
+    { name: 'Baia 3', cur: 8, cap: 6, kind: 'Cães porte grande' },
+    { name: 'Baia 4', cur: 3, cap: 6, kind: 'Cães porte pequeno' },
+    { name: 'Baia 5', cur: 5, cap: 6, kind: 'Cães porte grande' },
+    { name: 'Baia 6', cur: 6, cap: 6, kind: 'Cães porte médio' },
+    { name: 'Baia 7', cur: 2, cap: 6, kind: 'Quarentena' },
+    { name: 'Baia 8', cur: 4, cap: 6, kind: 'Cães porte pequeno' },
+    { name: 'Baia 9', cur: 5, cap: 6, kind: 'Cães porte médio' },
+    { name: 'Baia 10', cur: 1, cap: 6, kind: 'Tratamento intensivo' },
+    { name: 'Baia 11', cur: 3, cap: 6, kind: 'Cães porte médio' },
+    { name: 'Baia 12', cur: 4, cap: 6, kind: 'Recém-chegados' },
+    { name: 'Baia 13', cur: 6, cap: 6, kind: 'Cães porte grande' },
+    { name: 'Baia 14', cur: 5, cap: 6, kind: 'Pós-operatório' },
+    { name: 'Baia 15', cur: 3, cap: 6, kind: 'Filhotes' },
+    { name: 'Baia 16', cur: 4, cap: 6, kind: 'Cães porte médio' },
+  ];
+  const gatil = [
+    { name: 'Gatil A', cur: 6, cap: 8, kind: 'Adultos' },
+    { name: 'Gatil B', cur: 5, cap: 8, kind: 'Filhotes' },
+    { name: 'Gatil C', cur: 7, cap: 8, kind: 'Quarentena' },
+  ];
+  const externas = [
+    { name: 'Externa 1', cur: 2, cap: 4, kind: 'Cães porte grande' },
+    { name: 'Externa 2', cur: 3, cap: 4, kind: 'Cães porte grande' },
+    { name: 'Externa 3', cur: 1, cap: 4, kind: 'Recuperação' },
+    { name: 'Corredor', cur: 0, cap: 4, kind: 'Trânsito (uso temporário)' },
+  ];
+  document.getElementById('internas').innerHTML = internas.map(baiaCard).join('') + `<div class="add-baia">${I.plus(28)}<div style="font-weight: 600; font-size: 13px; margin-top: 6px;">Adicionar Baia Interna</div><div style="font-size: 11px;">Configure capacidade e tipo</div></div>`;
+  document.getElementById('gatil').innerHTML = gatil.map(baiaCard).join('');
+  document.getElementById('externas').innerHTML = externas.map(baiaCard).join('');
+</script>
+</body>
+</html>

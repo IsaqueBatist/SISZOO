@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>SISZOO — Detalhe de Alerta</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  .alert-hero {
+    border-radius: var(--radius-lg);
+    padding: 24px 28px;
+    display: flex; align-items: flex-start; gap: 18px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+  }
+  .alert-hero.danger { background: linear-gradient(135deg, var(--color-danger-bg) 0%, #FFCDD2 100%); border-color: #EF9A9A; }
+  .alert-hero.warning { background: linear-gradient(135deg, var(--color-warning-bg) 0%, #FFE0B2 100%); border-color: #FFCC80; }
+  .alert-hero.info { background: linear-gradient(135deg, var(--color-info-bg) 0%, #BBDEFB 100%); border-color: #90CAF9; }
+  .alert-hero.yellow { background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%); border-color: #FFE082; }
+  .alert-hero .ah-ico {
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.6);
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .alert-hero h1 { font-size: 24px; margin-bottom: 4px; }
+  .alert-hero p { font-size: 14px; color: var(--color-text-secondary); }
+  .alert-hero .ah-kpis { display: flex; gap: 24px; margin-top: 16px; }
+  .alert-hero .ah-kpi { font-size: 13px; }
+  .alert-hero .ah-kpi .v { font-family: var(--font-display); font-weight: 700; font-size: 22px; display: block; }
+  .alert-hero .ah-kpi .l { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-secondary); }
+</style>
+</head>
+<body data-page="dashboard">
+<div data-shell-root>
+
+  <div class="page-header">
+    <div class="title-block">
+      <a href="dashboard.html" class="btn btn-ghost btn-sm" style="align-self: flex-start;">← Voltar para Dashboard</a>
+      <h1 id="alert-title">Detalhe de Alerta</h1>
+      <p class="subtitle" id="alert-subtitle">Carregando...</p>
+    </div>
+    <div class="actions">
+      <button class="btn btn-outline btn-sm"><span id="ic-dl"></span>Exportar lista</button>
+      <button class="btn btn-primary btn-sm" id="ic-act">Tomar providências</button>
+    </div>
+  </div>
+
+  <div id="alert-hero-host"></div>
+
+  <div class="card" style="margin-top: var(--space-4);">
+    <div class="card-header">
+      <h3 id="list-title">Animais afetados</h3>
+      <span class="sub" id="list-sub">Clique no nome do animal para abrir a ficha</span>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <table class="data" id="alert-table">
+        <thead id="alert-thead"></thead>
+        <tbody id="alert-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script src="assets/icons.js"></script>
+<script src="assets/shell.js"></script>
+<script src="assets/tweaks.js"></script>
+<script>
+  const I = window.SISZOO_ICONS;
+  document.getElementById('ic-dl').innerHTML = I.download(14);
+
+  const params = new URLSearchParams(window.location.search);
+  const tipo = params.get('tipo') || 'vacinas';
+
+  const ALERTS = {
+    vacinas: {
+      title: '5 vacinas vencem em 7 dias',
+      subtitle: 'Animais com aplicação prevista entre 20/05 e 27/05/2026',
+      hero: 'danger',
+      icon: 'syringe',
+      kpis: [
+        { l: 'Animais', v: '5' },
+        { l: 'Atraso médio', v: '0 dias' },
+        { l: 'Antirrábicas', v: '3' },
+        { l: 'Polivalente', v: '2' },
+      ],
+      cols: ['Animal', 'Espécie · Sexo', 'Baia', 'Vacina', 'Vence em', 'Veterinário'],
+      rows: [
+        ['Rex',     'Canino · M',  'Baia 5', 'Antirrábica', '22/05/2026 · em 2d',  'S. Lima'],
+        ['Bolinha', 'Canino · F',  'Baia 2', 'V10',         '23/05/2026 · em 3d',  'R. Souza'],
+        ['Luna',    'Felino · F',  'Gatil A','V4 (felinos)','24/05/2026 · em 4d',  'C. Martins'],
+        ['Thor',    'Canino · M',  'Baia 13','Antirrábica', '25/05/2026 · em 5d',  'S. Lima'],
+        ['Mel',     'Canino · F',  'Baia 14','Antirrábica', '27/05/2026 · em 7d',  'M. Isabel'],
+      ],
+    },
+    avaliacao: {
+      title: '3 animais sem avaliação há mais de 30 dias',
+      subtitle: 'Última consulta clínica registrada antes de 20/04/2026',
+      hero: 'yellow',
+      icon: 'heart',
+      kpis: [
+        { l: 'Animais', v: '3' },
+        { l: 'Dias máx.', v: '48' },
+        { l: 'Sintomáticos', v: '1' },
+      ],
+      cols: ['Animal', 'Espécie · Sexo', 'Baia', 'Última avaliação', 'Dias sem avaliação'],
+      rows: [
+        ['Caramelo', 'Canino · M', 'Baia 11', '02/04/2026', '48 dias'],
+        ['Mia',      'Felino · F', 'Gatil B', '15/04/2026', '35 dias'],
+        ['Bidu',     'Canino · M', 'Baia 8',  '18/04/2026', '32 dias'],
+      ],
+    },
+    baia: {
+      title: 'Baia 3 superlotada (8/6 animais)',
+      subtitle: '133% de ocupação — remanejar animais para outras baias com capacidade disponível',
+      hero: 'warning',
+      icon: 'inbox',
+      kpis: [
+        { l: 'Ocupação', v: '133%' },
+        { l: 'Excedente', v: '+2' },
+        { l: 'Baias com vagas', v: '7' },
+      ],
+      cols: ['Animal', 'Espécie · Sexo', 'Entrou em', 'Sugestão de remanejamento'],
+      rows: [
+        ['Spike',   'Canino · M · Grande',  '10/05/2026', 'Baia 4 (3/6 — vaga disponível)'],
+        ['Bidu',    'Canino · M · Grande',  '08/05/2026', 'Baia 10 (1/6 — vaga disponível)'],
+        ['Caramelo','Canino · M · Grande',  '03/05/2026', 'Externa 3 (1/4 — vaga disponível)'],
+        ['Pingo',   'Canino · M · Grande',  '01/05/2026', '—'],
+        ['Mel',     'Canino · F · Médio',   '28/04/2026', '—'],
+        ['Thor',    'Canino · M · Grande',  '25/04/2026', '—'],
+        ['Rex',     'Canino · M · Médio',   '20/04/2026', '—'],
+        ['Bolinha', 'Canino · F · Médio',   '15/04/2026', '—'],
+      ],
+    },
+    medicacao: {
+      title: '7 animais com medicação ativa',
+      subtitle: '2 com término previsto esta semana — acompanhamento clínico necessário',
+      hero: 'info',
+      icon: 'pill',
+      kpis: [
+        { l: 'Animais', v: '7' },
+        { l: 'Encerram esta semana', v: '2' },
+        { l: 'Antibióticos', v: '4' },
+        { l: 'Anti-inflam.', v: '3' },
+      ],
+      cols: ['Animal', 'Espécie', 'Medicação', 'Início', 'Término previsto', 'Vet.'],
+      rows: [
+        ['Pretinho', 'Canino', 'Amoxicilina 250mg', '15/05/2026', '25/05/2026 · 5d', 'R. Souza'],
+        ['Mia',      'Felino', 'Doxiciclina',       '12/05/2026', '22/05/2026 · 2d', 'S. Lima'],
+        ['Bidu',     'Canino', 'Meloxicam',         '18/05/2026', '28/05/2026',      'C. Martins'],
+        ['Caramelo', 'Canino', 'Cefalexina',        '10/05/2026', '24/05/2026',      'M. Isabel'],
+        ['Spike',    'Canino', 'Tramadol',          '17/05/2026', '27/05/2026',      'S. Lima'],
+        ['Branca',   'Felino', 'Mirtazapina',       '14/05/2026', '24/05/2026',      'R. Souza'],
+        ['Thor',     'Canino', 'Enrofloxacino',     '19/05/2026', '29/05/2026',      'S. Lima'],
+      ],
+    },
+    ficha: {
+      title: '2 animais sem ficha completa',
+      subtitle: 'Cadastros básicos pendentes de complementação',
+      hero: 'info',
+      icon: 'fileText',
+      kpis: [
+        { l: 'Animais', v: '2' },
+        { l: 'Campos faltantes (méd)', v: '6' },
+      ],
+      cols: ['Animal', 'Entrada', 'Origem', 'Campos pendentes'],
+      rows: [
+        ['Recém-chegado #1', '19/05/2026', 'Resgate Vila Esperança', 'Microchip · Raça · Peso · Vacinas'],
+        ['Recém-chegado #2', '18/05/2026', 'Apreensão',              'Microchip · Peso · Castração · Histórico'],
+      ],
+    },
+    castracao: {
+      title: '10 animais não castrados',
+      subtitle: '6 machos · 4 fêmeas — agendar procedimento cirúrgico',
+      hero: 'danger',
+      icon: 'scissors',
+      kpis: [
+        { l: 'Animais', v: '10' },
+        { l: 'Machos', v: '6' },
+        { l: 'Fêmeas', v: '4' },
+        { l: 'Aptos cirurgia', v: '8' },
+      ],
+      cols: ['Animal', 'Espécie · Sexo', 'Baia', 'Idade aprox.', 'Apto cirurgia'],
+      rows: [
+        ['Rex',     'Canino · M', 'Baia 5',  '3 anos', 'Sim'],
+        ['Thor',    'Canino · M', 'Baia 13', '4 anos', 'Sim'],
+        ['Bidu',    'Canino · M', 'Baia 8',  '5 anos', 'Sim'],
+        ['Spike',   'Canino · M', 'Baia 3',  '2 anos', 'Sim'],
+        ['Caramelo','Canino · M', 'Baia 11', '6 anos', 'Avaliar'],
+        ['Pingo',   'Canino · M', 'Baia 4',  '7 anos', 'Avaliar'],
+        ['Mel',     'Canino · F', 'Baia 14', '3 anos', 'Sim'],
+        ['Bolinha', 'Canino · F', 'Baia 2',  '4 anos', 'Sim'],
+        ['Mia',     'Felino · F', 'Gatil B', '2 anos', 'Sim'],
+        ['Luna',    'Felino · F', 'Gatil A', '3 anos', 'Sim'],
+      ],
+    },
+  };
+
+  const data = ALERTS[tipo] || ALERTS.vacinas;
+  document.getElementById('alert-title').textContent = data.title;
+  document.getElementById('alert-subtitle').textContent = data.subtitle;
+
+  // Render hero
+  const heroIcon = I[data.icon] ? I[data.icon](28) : I.alert(28);
+  const kpisHtml = data.kpis.map(k => `
+    <div class="ah-kpi">
+      <span class="v">${k.v}</span>
+      <span class="l">${k.l}</span>
+    </div>
+  `).join('');
+  document.getElementById('alert-hero-host').innerHTML = `
+    <div class="alert-hero ${data.hero}">
+      <div class="ah-ico" style="color: var(--color-${data.hero === 'yellow' ? 'warning' : data.hero});">${heroIcon}</div>
+      <div>
+        <h1>${data.title}</h1>
+        <p>${data.subtitle}</p>
+        <div class="ah-kpis">${kpisHtml}</div>
+      </div>
+    </div>
+  `;
+
+  // Render table
+  document.getElementById('alert-thead').innerHTML = `<tr>${data.cols.map(c => `<th>${c}</th>`).join('')}</tr>`;
+  document.getElementById('alert-tbody').innerHTML = data.rows.map(r => {
+    const cells = r.map((cell, i) => {
+      if (i === 0) {
+        return `<td><a href="animal.html" style="font-weight: 600; color: var(--color-primary);">${cell}</a></td>`;
+      }
+      return `<td>${cell}</td>`;
+    }).join('');
+    return `<tr>${cells}</tr>`;
+  }).join('');
+</script>
+</body>
+</html>

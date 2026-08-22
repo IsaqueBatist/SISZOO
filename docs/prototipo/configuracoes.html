@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>SISZOO — Configurações</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  .config-grid { display: grid; grid-template-columns: 240px 1fr; gap: var(--space-5); align-items: start; }
+  @media (max-width: 1000px) { .config-grid { grid-template-columns: 1fr; } }
+
+  .config-nav { display: flex; flex-direction: column; gap: 2px; position: sticky; top: calc(var(--topbar-height) + 24px); }
+  .config-nav .cn-section { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-muted); font-weight: 700; padding: 12px 12px 6px; }
+  .config-nav a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    margin-left: -3px;
+  }
+  .config-nav a:hover { background: var(--color-surface-alt); color: var(--color-text-primary); }
+  .config-nav a.active { background: var(--color-primary-light); color: var(--color-primary); border-left-color: var(--color-primary); font-weight: 600; }
+  .config-nav a .ico { width: 16px; height: 16px; }
+
+  .config-section { display: none; }
+  .config-section.active { display: block; }
+
+  .pref-row {
+    display: grid; grid-template-columns: 1fr auto;
+    gap: var(--space-4);
+    padding: 16px 0;
+    border-bottom: 1px solid var(--color-border);
+    align-items: center;
+  }
+  .pref-row:last-child { border-bottom: none; }
+  .pref-row .title { font-size: 14px; font-weight: 600; }
+  .pref-row .desc { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
+
+  .pal-grid { display: flex; gap: 8px; }
+  .pal-chip {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    border: 2px solid var(--color-border);
+    cursor: pointer;
+  }
+  .pal-chip.active { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(27,94,32,0.12); }
+
+  .integration-card {
+    display: flex; align-items: center; gap: 16px;
+    padding: 16px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+  }
+  .integration-card .ic-ico {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    background: var(--color-bg);
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .integration-card .grow { flex: 1; }
+  .integration-card h4 { font-size: 14px; }
+  .integration-card p { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
+</style>
+</head>
+<body data-page="configuracoes">
+<div data-shell-root>
+
+  <div class="page-header">
+    <div class="title-block">
+      <h1>Configurações</h1>
+      <p class="subtitle">Preferências do sistema, integrações e parâmetros operacionais do CCZ</p>
+    </div>
+  </div>
+
+  <div class="config-grid">
+    <!-- Sidebar de configurações -->
+    <nav class="config-nav">
+      <div class="cn-section">Conta</div>
+      <a href="#" data-tab="prefs" class="active"><span class="ico" id="i-prefs"></span>Preferências</a>
+      <a href="#" data-tab="notif"><span class="ico" id="i-notif"></span>Notificações</a>
+      <a href="#" data-tab="seg"><span class="ico" id="i-seg"></span>Segurança</a>
+      <div class="cn-section">Sistema</div>
+      <a href="#" data-tab="catalogos"><span class="ico" id="i-cat"></span>Catálogos</a>
+      <a href="#" data-tab="backup"><span class="ico" id="i-bak"></span>Backup &amp; Auditoria</a>
+    </nav>
+
+    <!-- Conteúdo -->
+    <div>
+      <!-- Preferências -->
+      <div class="config-section active" data-pane="prefs">
+        <div class="card">
+          <div class="card-header"><h3>Preferências</h3><span class="sub">Ajustes da sua experiência</span></div>
+          <div class="card-body">
+            <div class="pref-row">
+              <div>
+                <div class="title">Tema institucional</div>
+                <div class="desc">Tonalidade do verde usado em toda a interface</div>
+              </div>
+              <div class="pal-grid">
+                <div class="pal-chip active" style="background: linear-gradient(135deg, #1B5E20, #2E7D32);"></div>
+                <div class="pal-chip" style="background: linear-gradient(135deg, #1F4D2E, #316b48);"></div>
+                <div class="pal-chip" style="background: linear-gradient(135deg, #0F5257, #1A7882);"></div>
+                <div class="pal-chip" style="background: linear-gradient(135deg, #1B3A6E, #2C5BA3);"></div>
+              </div>
+            </div>
+            <div class="pref-row">
+              <div>
+                <div class="title">Densidade da interface</div>
+                <div class="desc">Espaçamento entre elementos · afeta a quantidade de informação visível por tela</div>
+              </div>
+              <select class="select" style="width: 180px;"><option>Padrão</option><option>Compacto</option><option>Espaçoso</option></select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notificações -->
+      <div class="config-section" data-pane="notif">
+        <div class="card">
+          <div class="card-header"><h3>Notificações</h3><span class="sub">Quando e como o SISZOO deve te avisar</span></div>
+          <div class="card-body">
+            <div class="pref-row">
+              <div>
+                <div class="title">Alertas críticos</div>
+                <div class="desc">Casos urgentes com contato humano-animal · sempre ligado</div>
+              </div>
+              <label class="switch"><input type="checkbox" checked disabled /><span class="slider"></span></label>
+            </div>
+            <div class="pref-row">
+              <div>
+                <div class="title">Lembretes de vacinação</div>
+                <div class="desc">Avisar 7 dias antes de uma vacina vencer</div>
+              </div>
+              <label class="switch"><input type="checkbox" checked /><span class="slider"></span></label>
+            </div>
+            <div class="pref-row">
+              <div>
+                <div class="title">Superlotação de baias</div>
+                <div class="desc">Alertar quando uma baia atingir 80% de ocupação</div>
+              </div>
+              <label class="switch"><input type="checkbox" checked /><span class="slider"></span></label>
+            </div>
+            <div class="pref-row">
+              <div>
+                <div class="title">Resultados laboratoriais</div>
+                <div class="desc">Notificar imediatamente quando um resultado for registrado</div>
+              </div>
+              <label class="switch"><input type="checkbox" checked /><span class="slider"></span></label>
+            </div>
+            <div class="pref-row">
+              <div>
+                <div class="title">E-mail diário</div>
+                <div class="desc">Resumo do dia enviado às 18h</div>
+              </div>
+              <label class="switch"><input type="checkbox" /><span class="slider"></span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Segurança -->
+      <div class="config-section" data-pane="seg">
+        <div class="card">
+          <div class="card-header"><h3>Segurança da Conta</h3></div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="field full">
+                <label>Senha atual</label>
+                <input class="input" type="password" placeholder="••••••••" />
+              </div>
+              <div class="field">
+                <label>Nova senha</label>
+                <input class="input" type="password" />
+                <span class="hint">Mínimo 8 caracteres, com letras e números</span>
+              </div>
+              <div class="field">
+                <label>Confirmar nova senha</label>
+                <input class="input" type="password" />
+              </div>
+            </div>
+            <div class="divider"></div>
+            <div class="pref-row">
+              <div>
+                <div class="title">Autenticação em dois fatores</div>
+                <div class="desc">Receber código por SMS ao fazer login</div>
+              </div>
+              <label class="switch"><input type="checkbox" /><span class="slider"></span></label>
+            </div>
+            <div class="pref-row">
+              <div>
+                <div class="title">Sessão atual</div>
+                <div class="desc">Iniciada em 20/05/2026 às 09:00 · Chrome / Windows 11</div>
+              </div>
+              <button class="btn btn-danger btn-sm">Encerrar todas as sessões</button>
+            </div>
+          </div>
+          <div class="card-header" style="border-top: 1px solid var(--color-border); border-bottom: none; justify-content: flex-end;">
+            <button class="btn btn-ghost">Cancelar</button>
+            <button class="btn btn-primary">Salvar alterações</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Catálogos -->
+      <div class="config-section" data-pane="catalogos">
+        <div class="card">
+          <div class="card-header"><h3>Catálogos do Sistema</h3><span class="sub">Listas usadas em formulários</span></div>
+          <div class="card-body">
+            <div class="grid grid-2">
+              <div class="card card-pad-sm" style="border-radius: var(--radius-md);">
+                <h4 style="font-size: 13px; margin-bottom: 8px;">Doenças investigáveis</h4>
+                <div class="tag-list">
+                  <span class="badge badge-disease raiva">RAIVA</span>
+                  <span class="badge badge-disease leishmaniose">LEISHMANIOSE</span>
+                  <span class="badge badge-disease leptospirose">LEPTOSPIROSE</span>
+                  <span class="badge badge-disease esporotricose">ESPOROTRICOSE</span>
+                  <span class="badge badge-disease febre-maculosa">F. MACULOSA</span>
+                  <span class="badge badge-disease febre-amarela">F. AMARELA</span>
+                </div>
+                <button class="btn btn-ghost btn-sm" style="margin-top: 12px;">Gerenciar →</button>
+              </div>
+              <div class="card card-pad-sm" style="border-radius: var(--radius-md);">
+                <h4 style="font-size: 13px; margin-bottom: 8px;">Laboratórios</h4>
+                <div class="kv-list" style="font-size: 13px;">
+                  <div class="kv-row"><span class="k">Pasteur — SP</span><span class="v">Padrão Raiva</span></div>
+                  <div class="kv-row"><span class="k">IAL — Sorocaba</span><span class="v">Multidoenças</span></div>
+                  <div class="kv-row"><span class="k">CCZ — SP</span><span class="v">Apoio</span></div>
+                  <div class="kv-row"><span class="k">ITU-LL01</span><span class="v">Local</span></div>
+                </div>
+              </div>
+              <div class="card card-pad-sm" style="border-radius: var(--radius-md);">
+                <h4 style="font-size: 13px; margin-bottom: 8px;">Vacinas catalogadas</h4>
+                <div class="tag-list">
+                  <span class="badge badge-neutral">Antirrábica</span>
+                  <span class="badge badge-neutral">V10</span>
+                  <span class="badge badge-neutral">V8</span>
+                  <span class="badge badge-neutral">Giárdia</span>
+                  <span class="badge badge-neutral">Gripe canina</span>
+                  <span class="badge badge-neutral">V4 (felinos)</span>
+                  <span class="badge badge-neutral">FeLV</span>
+                </div>
+              </div>
+              <div class="card card-pad-sm" style="border-radius: var(--radius-md);">
+                <h4 style="font-size: 13px; margin-bottom: 8px;">Motivos de entrada</h4>
+                <div class="tag-list">
+                  <span class="badge badge-neutral">Recolhimento</span>
+                  <span class="badge badge-neutral">Abandono</span>
+                  <span class="badge badge-neutral">Entrega voluntária</span>
+                  <span class="badge badge-neutral">Resgate</span>
+                  <span class="badge badge-neutral">Apreensão judicial</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Backup -->
+      <div class="config-section" data-pane="backup">
+        <div class="card">
+          <div class="card-header"><h3>Backup &amp; Auditoria</h3></div>
+          <div class="card-body">
+            <div class="pref-row">
+              <div>
+                <div class="title">Último backup automático</div>
+                <div class="desc">Realizado em <span class="mono">20/05/2026 às 03:00</span> · 142 MB</div>
+              </div>
+              <button class="btn btn-outline btn-sm">Baixar</button>
+            </div>
+            <div class="pref-row">
+              <div>
+                <div class="title">Frequência de backup</div>
+                <div class="desc">Backups armazenados por 90 dias</div>
+              </div>
+              <select class="select" style="width: 180px;"><option>Diário (03:00)</option><option>A cada 12h</option><option>Semanal</option></select>
+            </div>
+            <div class="pref-row">
+              <div>
+                <div class="title">Log de auditoria</div>
+                <div class="desc">2.341 eventos registrados nos últimos 30 dias</div>
+              </div>
+              <button class="btn btn-outline btn-sm">Ver log</button>
+            </div>
+            <div class="pref-row">
+              <div>
+                <div class="title">Exportar todos os dados (LGPD)</div>
+                <div class="desc">Solicitação de portabilidade — gera um arquivo .zip com todos os registros</div>
+              </div>
+              <button class="btn btn-secondary btn-sm">Solicitar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script src="assets/icons.js"></script>
+<script src="assets/shell.js"></script>
+<script src="assets/tweaks.js"></script>
+<script>
+  const I = window.SISZOO_ICONS;
+  const $ = id => document.getElementById(id);
+  $('i-prefs').innerHTML = I.user(14);
+  $('i-notif').innerHTML = I.bell(14);
+  $('i-seg').innerHTML = I.lock(14);
+  $('i-cat').innerHTML = I.inbox(14);
+  $('i-bak').innerHTML = I.download(14);
+
+  // Tabs
+  document.querySelectorAll('.config-nav a[data-tab]').forEach(a => {
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.querySelectorAll('.config-nav a').forEach(x => x.classList.remove('active'));
+      a.classList.add('active');
+      document.querySelectorAll('.config-section').forEach(s => s.classList.remove('active'));
+      document.querySelector(`.config-section[data-pane="${a.dataset.tab}"]`).classList.add('active');
+    });
+  });
+
+  // Palette chips
+  document.querySelectorAll('.pal-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.pal-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>

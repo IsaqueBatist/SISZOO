@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>SISZOO — Ocorrência 089/2026</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  .det-grid { display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-5); align-items: start; }
+  @media (max-width: 1100px) { .det-grid { grid-template-columns: 1fr; } }
+  .map-stub {
+    height: 180px;
+    border-radius: var(--radius-md);
+    background:
+      repeating-linear-gradient(45deg, #DDE3E8 0 4px, transparent 4px 12px),
+      linear-gradient(135deg, #E8F0EF 0%, #DBEAE8 100%);
+    border: 1px solid var(--color-border);
+    position: relative;
+    overflow: hidden;
+  }
+  .map-stub::after {
+    content: ""; position: absolute;
+    top: 50%; left: 50%;
+    width: 16px; height: 16px;
+    background: var(--color-danger);
+    border-radius: 50%;
+    transform: translate(-50%, -100%);
+    box-shadow: 0 4px 8px rgba(198,40,40,0.4);
+  }
+  .map-stub::before {
+    content: "Vila Esperança · Rua das Acácias, 145";
+    position: absolute;
+    bottom: 10px; left: 10px;
+    background: rgba(255,255,255,0.95);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    z-index: 2;
+  }
+  .vinc-card {
+    border: 1px solid var(--color-info-border);
+    background: var(--color-info-bg);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+  }
+  .vinc-card h4 { font-size: 13px; margin-bottom: 6px; color: var(--color-info); }
+  .vinc-card .proto-big {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+</style>
+</head>
+<body data-page="ocorrencia">
+<div data-shell-root>
+
+  <div class="page-header">
+    <div class="title-block">
+      <a href="ocorrencias.html" class="btn btn-ghost btn-sm" style="align-self: flex-start;">← Voltar para Ocorrências</a>
+      <div style="display: flex; align-items: center; gap: 12px; margin: 4px 0;">
+        <span class="badge badge-process-open">Aberta</span>
+        <span class="badge badge-urgent">🚨 URGENTE</span>
+        <span style="font-size: 12px; color: var(--color-text-secondary);">Aberta há 4 horas · 20/05/2026 às 10:32</span>
+      </div>
+      <h1 style="font-family: var(--font-mono); letter-spacing: 0;">Ocorrência 089/2026</h1>
+      <p class="subtitle">Suspeita de Zoonose · Vila Esperança, Itu/SP</p>
+    </div>
+    <div class="actions">
+      <a href="cadastrar-processo.html?ocorrencia=089/2026" class="btn btn-secondary btn-sm"><span id="ic-link"></span>Abrir Processo Sanitário</a>
+      <button class="btn btn-outline btn-sm"><span id="ic-print"></span>Imprimir</button>
+      <button class="btn btn-outline btn-sm"><span id="ic-edit"></span>Editar</button>
+    </div>
+  </div>
+
+  <div class="det-grid">
+    <!-- Coluna principal -->
+    <div class="col gap-4">
+      <div class="card">
+        <div class="card-header"><h3>Detalhes da Ocorrência</h3></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="field"><label>Tipo</label><div><span class="badge" style="background: var(--color-danger-bg); color: var(--color-danger);">Suspeita de Zoonose</span></div></div>
+            <div class="field"><label>Data / hora</label><div class="mono" style="font-size: 14px;">20/05/2026 · 10:32</div></div>
+            <div class="field full"><label>Endereço</label><div>Rua das Acácias, 145 · Vila Esperança · Itu/SP</div></div>
+            <div class="field"><label>Ponto de referência</label><div>Esquina com a Rua dos Ipês</div></div>
+            <div class="field"><label>Registrada por</label><div>Rafael Santos (Agente Sanitário)</div></div>
+            <div class="field full">
+              <label>Descrição</label>
+              <div style="padding: 12px; background: var(--color-surface-alt); border-radius: var(--radius-sm); font-size: 13px; line-height: 1.6;">
+                Munícipe relata que encontrou um cão de pelagem caramelo apresentando sinais comportamentais incomuns: salivação excessiva, ataxia, hipersensibilidade a luz e ruídos. O animal não é de sua propriedade, foi observado nas proximidades de sua residência por 3 dias consecutivos. A munícipe informa também que houve mordedura em sua filha de 8 anos, que foi encaminhada ao posto de saúde. Solicita avaliação urgente do CCZ.
+              </div>
+            </div>
+          </div>
+          <div style="margin-top: var(--space-4);">
+            <div class="uppercase-label" style="margin-bottom: 8px;">Localização aproximada</div>
+            <div class="map-stub"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>Denunciante</h3></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="field"><label>Nome</label><div>Maria Souza Oliveira</div></div>
+            <div class="field"><label>CPF</label><div class="mono">123.456.789-00</div></div>
+            <div class="field"><label>Telefone</label><div class="mono">(11) 9 8765-4321</div></div>
+            <div class="field"><label>E-mail</label><div>maria.souza@email.com</div></div>
+            <div class="field full"><label>Endereço residencial</label><div>Rua dos Ipês, 220 · Vila Esperança · Itu/SP · CEP 13301-000</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>Denunciado</h3></div>
+        <div class="card-body" style="padding-top: 0;">
+          <p style="font-size: 13px; color: var(--color-text-secondary); padding-top: 12px;">Não há denunciado identificado para esta ocorrência. O animal foi reportado como abandonado ou sem proprietário visível.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>Histórico de Movimentações</h3></div>
+        <div class="card-body">
+          <div class="timeline">
+            <div class="timeline-item entrada">
+              <div class="bullet"></div>
+              <div class="meta">20/05/2026 · 14:32</div>
+              <div class="ev-title">Processo Sanitário 045/2026 vinculado</div>
+              <div class="ev-body">Vinculação automática com investigação laboratorial — animal será amostrado para teste de raiva. <span style="color: var(--color-text-muted);">Por Dra. Stéphanie Lima</span></div>
+            </div>
+            <div class="timeline-item exame">
+              <div class="bullet"></div>
+              <div class="meta">20/05/2026 · 12:14</div>
+              <div class="ev-title">Equipe de captura despachada ao local</div>
+              <div class="ev-body">Agente Rafael Santos e veterinária acionados. <span style="color: var(--color-text-muted);">Por Sistema</span></div>
+            </div>
+            <div class="timeline-item entrada">
+              <div class="bullet"></div>
+              <div class="meta">20/05/2026 · 10:32</div>
+              <div class="ev-title">Ocorrência registrada</div>
+              <div class="ev-body">Denúncia recebida via telefone (0800-CCZ-ITU). <span style="color: var(--color-text-muted);">Por Rafael Santos</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Coluna lateral -->
+    <div class="col gap-4">
+      <div class="vinc-card">
+        <h4>Processo Sanitário Vinculado</h4>
+        <div class="proto-big">045/2026</div>
+        <div style="font-size: 12px; color: var(--color-text-secondary); margin-top: 6px;">
+          <span class="badge badge-disease raiva">RAIVA</span>
+          <span class="badge badge-process-awaiting" style="margin-left: 4px;">Aguardando resultado</span>
+        </div>
+        <div style="font-size: 12px; margin-top: 8px;">Lab. destino: <strong>Instituto Pasteur — SP</strong></div>
+        <div style="font-size: 12px;">Abertura: <span class="mono">20/05/2026</span></div>
+        <a href="processo.html" class="btn btn-primary btn-sm" style="margin-top: 12px; width: 100%; justify-content: center;">Ver Processo →</a>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>Encerramento</h3></div>
+        <div class="card-body">
+          <p style="font-size: 12px; color: var(--color-text-secondary); margin-bottom: 12px;">Esta ocorrência está vinculada a um processo sanitário ativo. O encerramento depende do resultado laboratorial.</p>
+          <div class="field" style="margin-bottom: 12px;">
+            <label>Providência tomada</label>
+            <select class="select">
+              <option>Selecione...</option>
+              <option>Orientação ao munícipe</option>
+              <option>Encaminhamento ao GEPAR</option>
+              <option>Abertura de processo sanitário</option>
+              <option>Captura e remoção do animal</option>
+              <option>Sem ação necessária</option>
+              <option>Outro (descrever abaixo)</option>
+            </select>
+          </div>
+          <div class="field" style="margin-bottom: 12px;">
+            <label>Descrição do encerramento</label>
+            <textarea class="textarea" placeholder="Detalhe a conclusão e as ações tomadas... Se 'Outro', descreva aqui a providência efetivamente realizada."></textarea>
+          </div>
+          <button class="btn btn-danger w-full" disabled>Encerrar ocorrência</button>
+          <p style="font-size: 11px; color: var(--color-text-muted); text-align: center; margin-top: 6px;">Disponível após resultado do processo</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>Anexos</h3></div>
+        <div class="card-body" style="padding: var(--space-3); display: flex; flex-direction: column; gap: 6px;">
+          <div style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; font-size: 13px;">
+            <span style="color: var(--color-info);" id="att-1"></span>
+            <div style="flex: 1;">
+              <div style="font-weight: 500;">Foto do animal.jpg</div>
+              <div style="font-size: 11px; color: var(--color-text-muted);">2.4 MB · 20/05/2026</div>
+            </div>
+            <button class="btn btn-ghost btn-sm btn-icon-only"><span id="att-1-dl"></span></button>
+          </div>
+          <button class="btn btn-outline btn-sm" style="width: 100%;"><span id="ic-up"></span>Adicionar anexo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="assets/icons.js"></script>
+<script src="assets/shell.js"></script>
+<script src="assets/tweaks.js"></script>
+<script>
+  const I = window.SISZOO_ICONS;
+  const $ = id => document.getElementById(id);
+  $('ic-print').innerHTML = I.fileText(14);
+  $('ic-edit').innerHTML = I.edit(14);
+  $('ic-link').innerHTML = I.plus(14);
+  $('ic-up').innerHTML = I.upload(14);
+  $('att-1').innerHTML = I.fileText(16);
+  $('att-1-dl').innerHTML = I.download(14);
+</script>
+</body>
+</html>

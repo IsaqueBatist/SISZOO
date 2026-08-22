@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>SISZOO — Registrar Ocorrência</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  .form-shell { max-width: 820px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: var(--space-4); }
+  .type-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-2); }
+  @media (max-width: 900px) { .type-grid { grid-template-columns: repeat(2, 1fr); } }
+  .type-card {
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    padding: 16px 12px;
+    text-align: center;
+    cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    transition: border-color 120ms, background 120ms;
+  }
+  .type-card:hover { border-color: var(--color-border-strong); }
+  .type-card.selected { border-color: var(--color-primary); background: var(--color-primary-light); }
+  .type-card .ic-circle {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .type-card .label { font-size: 12px; font-weight: 600; line-height: 1.3; }
+
+  .sigil-warning {
+    display: none;
+    background: var(--color-warning-bg);
+    border: 1px solid var(--color-warning-border);
+    border-left: 4px solid var(--color-warning);
+    color: #5A3A00;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    margin-top: 8px;
+  }
+  .sigil-warning.show { display: block; }
+
+  .denun-extra { display: none; margin-top: var(--space-4); }
+  .denun-extra.show { display: block; }
+</style>
+</head>
+<body data-page="cadastrar-ocorrencia">
+<div data-shell-root>
+
+  <div class="form-shell">
+    <div class="page-header">
+      <div class="title-block">
+        <a href="ocorrencias.html" class="btn btn-ghost btn-sm" style="align-self: flex-start;">← Voltar</a>
+        <h1>Registrar Ocorrência</h1>
+        <p class="subtitle">Próximo protocolo será gerado automaticamente · Tipo da ocorrência define se um Processo Sanitário deve ser aberto.</p>
+      </div>
+    </div>
+
+    <!-- Tipo de Ocorrência -->
+    <div class="card">
+      <div class="card-header"><h3>1. Tipo de Ocorrência</h3></div>
+      <div class="card-body">
+        <div class="type-grid" id="type-grid">
+          <div class="type-card" data-t="zoonose">
+            <span class="ic-circle" style="background:#FFEBEE; color:#C62828;" id="t-z"></span>
+            <span class="label">Suspeita de Zoonose</span>
+          </div>
+          <div class="type-card" data-t="morcegos">
+            <span class="ic-circle" style="background:#ECEFF1; color:#424242;" id="t-m"></span>
+            <span class="label">Infestação de Morcegos</span>
+          </div>
+          <div class="type-card" data-t="irregular">
+            <span class="ic-circle" style="background:#FFF3E0; color:#E65100;" id="t-i"></span>
+            <span class="label">Criação Irregular</span>
+          </div>
+          <div class="type-card" data-t="agressivo">
+            <span class="ic-circle" style="background:#FFF8E1; color:#F57F17;" id="t-a"></span>
+            <span class="label">Animal Agressivo</span>
+          </div>
+          <div class="type-card" data-t="outros">
+            <span class="ic-circle" style="background:#ECEFF1; color:#5A6A7E;" id="t-o"></span>
+            <span class="label">Outros</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dados da Ocorrência -->
+    <div class="card">
+      <div class="card-header"><h3>2. Dados da Ocorrência</h3></div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="field">
+            <label>Data de abertura <span class="req">*</span></label>
+            <input class="input mono" type="text" value="20/05/2026" />
+            <span class="hint">Padrão: hoje · editável.</span>
+          </div>
+          <div class="field">
+            <label>Hora aproximada</label>
+            <input class="input mono" type="text" value="14:32" />
+          </div>
+          <div class="field full">
+            <label>Endereço da ocorrência <span class="req">*</span></label>
+            <input class="input" type="text" placeholder="Logradouro, número, complemento" />
+          </div>
+          <div class="field">
+            <label>Bairro <span class="req">*</span></label>
+            <input class="input" type="text" placeholder="Ex: Vila Esperança" />
+          </div>
+          <div class="field">
+            <label>Ponto de referência</label>
+            <input class="input" type="text" placeholder="Ex: próximo à escola municipal" />
+          </div>
+          <div class="field full">
+            <label>Descrição da ocorrência <span class="req">*</span></label>
+            <textarea class="textarea" placeholder="Descreva os fatos relatados pelo denunciante com clareza..."></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Denunciante -->
+    <div class="card">
+      <div class="card-header">
+        <h3>3. Dados do Denunciante</h3>
+        <div class="switch-row">
+          <span style="font-size: 12px; color: var(--color-text-secondary);">Ocorrência sigilosa</span>
+          <label class="switch"><input type="checkbox" id="sigil-toggle" /><span class="slider"></span></label>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="sigil-warning" id="sigil-warning">
+          ⚠ Os dados do denunciante não serão exibidos a outros usuários, exceto Administradores.
+        </div>
+        <div class="form-grid" style="margin-top: var(--space-3);">
+          <div class="field"><label>Nome completo</label><input class="input" type="text" /></div>
+          <div class="field"><label>CPF</label><input class="input mono" type="text" placeholder="000.000.000-00" /></div>
+          <div class="field"><label>Telefone</label><input class="input mono" type="text" placeholder="(11) 9 0000-0000" /></div>
+          <div class="field"><label>E-mail</label><input class="input" type="email" placeholder="exemplo@email.com" /></div>
+          <div class="field">
+            <label>CEP</label>
+            <input class="input mono" type="text" placeholder="00000-000" />
+            <span class="hint">Endereço será preenchido automaticamente.</span>
+          </div>
+          <div class="field"><label>Endereço residencial</label><input class="input" type="text" placeholder="Logradouro, número" /></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Denunciado -->
+    <div class="card">
+      <div class="card-header">
+        <h3>4. Existe Denunciado?</h3>
+        <div class="switch-row">
+          <span style="font-size: 12px; color: var(--color-text-secondary);">Sim, há um responsável identificado</span>
+          <label class="switch"><input type="checkbox" id="denun-toggle" /><span class="slider"></span></label>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="denun-extra" id="denun-extra">
+          <div class="form-grid">
+            <div class="field"><label>Nome</label><input class="input" type="text" /></div>
+            <div class="field"><label>CPF</label><input class="input mono" type="text" placeholder="000.000.000-00" /></div>
+            <div class="field full"><label>Endereço</label><input class="input" type="text" placeholder="Logradouro, número, bairro" /></div>
+            <div class="field"><label>Telefone</label><input class="input mono" type="text" placeholder="(11) 9 0000-0000" /></div>
+            <div class="field"><label>Observações</label><input class="input" type="text" /></div>
+          </div>
+        </div>
+        <p id="denun-empty" style="font-size: 13px; color: var(--color-text-secondary);">Ative o seletor acima para informar dados do denunciado.</p>
+      </div>
+    </div>
+
+    <!-- Footer actions -->
+    <div class="card" style="padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);">
+      <span style="font-size: 12px; color: var(--color-text-secondary);">Após registrar, um protocolo será gerado e você poderá abrir um Processo Sanitário (se aplicável).</span>
+      <div class="flex gap-2">
+        <a href="ocorrencias.html" class="btn btn-ghost">Cancelar</a>
+        <button class="btn btn-outline">Salvar rascunho</button>
+        <a href="ocorrencia.html" class="btn btn-primary">Registrar Ocorrência</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="assets/icons.js"></script>
+<script src="assets/shell.js"></script>
+<script src="assets/tweaks.js"></script>
+<script>
+  const I = window.SISZOO_ICONS;
+  const $ = id => document.getElementById(id);
+  $('t-z').innerHTML = I.alert(18);
+  $('t-m').innerHTML = I.bat(18);
+  $('t-i').innerHTML = I.home(18);
+  $('t-a').innerHTML = I.dog(18);
+  $('t-o').innerHTML = I.fileText(18);
+
+  // Default selection
+  document.querySelectorAll('.type-card').forEach(c => {
+    c.addEventListener('click', () => {
+      document.querySelectorAll('.type-card').forEach(x => x.classList.remove('selected'));
+      c.classList.add('selected');
+    });
+  });
+  document.querySelector('.type-card[data-t="zoonose"]').classList.add('selected');
+
+  // Toggles
+  $('sigil-toggle').addEventListener('change', e => $('sigil-warning').classList.toggle('show', e.target.checked));
+  $('denun-toggle').addEventListener('change', e => {
+    $('denun-extra').classList.toggle('show', e.target.checked);
+    $('denun-empty').style.display = e.target.checked ? 'none' : 'block';
+  });
+</script>
+</body>
+</html>

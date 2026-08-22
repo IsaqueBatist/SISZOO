@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>SISZOO — Ficha do Animal · Rex</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  .ficha-grid { display: grid; grid-template-columns: 340px 1fr; gap: var(--space-5); align-items: start; }
+  @media (max-width: 1100px) { .ficha-grid { grid-template-columns: 1fr; } }
+
+  .identity-card { display: flex; flex-direction: column; }
+  .id-photo {
+    width: 100%; aspect-ratio: 1;
+    background: linear-gradient(135deg, hsl(32, 30%, 88%) 0%, hsl(32, 28%, 76%) 100%);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    display: flex; align-items: center; justify-content: center;
+    color: hsl(32, 40%, 40%);
+    position: relative;
+  }
+  .id-photo .ph-label {
+    position: absolute; bottom: 12px; left: 12px;
+    background: rgba(0,0,0,0.45);
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .id-info { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 12px; }
+  .id-info .name-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .id-info h2 { font-size: 26px; line-height: 1.1; letter-spacing: -0.02em; }
+  .id-info .badges-row { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .ficha-actions { display: grid; gap: 8px; padding: 0 18px 18px; }
+  .ficha-actions .btn { width: 100%; justify-content: center; }
+
+  .identity-card .section-pad { padding: 14px 18px; }
+  .identity-card .section-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--color-text-secondary);
+    padding: 14px 18px 8px;
+    margin-top: 4px;
+    border-top: 1px solid var(--color-border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .right-panel { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+  .tab-content { padding: var(--space-5); }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* layout switching via body[data-animal-layout] */
+  body[data-animal-layout="timeline"] .layout-tabs { display: none; }
+  body[data-animal-layout="tabs"] .layout-timeline { display: none; }
+  body[data-animal-layout="timeline"] .all-timeline { display: block; }
+  body[data-animal-layout="tabs"] .all-timeline { display: none; }
+
+  .vet-table th, .vet-table td { font-size: 12px !important; }
+  .reforco-warning { background: var(--color-warning-bg) !important; }
+  .reforco-warning td:first-child { box-shadow: inset 4px 0 0 var(--color-warning); }
+  .reforco-soon { background: var(--color-alert-bg) !important; }
+  .reforco-soon td:first-child { box-shadow: inset 4px 0 0 var(--color-alert); }
+
+  .med-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3); }
+  .med-card {
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 14px;
+  }
+  .med-card h4 { font-family: var(--font-display); font-size: 14px; margin-bottom: 8px; display: flex; gap: 8px; align-items: center; }
+  .med-card .kv { display: flex; gap: 12px; font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px; }
+  .med-card .kv .k { color: var(--color-text-muted); }
+
+  .timeline-controls {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: var(--space-4);
+  }
+  .timeline-filters { display: flex; gap: 4px; }
+  .tf-chip {
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: var(--font-body);
+  }
+  .tf-chip.active { background: var(--color-primary-light); color: var(--color-primary); border-color: var(--color-primary); }
+</style>
+</head>
+<body data-page="animal" data-animal-layout="timeline">
+<div data-shell-root>
+
+  <div class="page-header">
+    <div class="title-block">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px;">
+        <a href="animais.html" class="btn btn-ghost btn-sm">← Voltar</a>
+        <span class="badge badge-canine">Canino</span>
+        <span class="badge badge-available"><span class="badge-dot"></span>Disponível para Adoção</span>
+      </div>
+      <h1>Rex</h1>
+      <p class="subtitle">Ficha completa · No CCZ desde 15/03/2024 · Última atualização há 3 dias</p>
+    </div>
+    <div class="actions">
+      <button class="btn btn-outline btn-sm"><span id="ic-print"></span>Imprimir</button>
+      <button class="btn btn-outline btn-sm"><span id="ic-share"></span>Compartilhar</button>
+      <button class="btn btn-primary"><span id="ic-edit"></span>Editar ficha</button>
+    </div>
+  </div>
+
+  <div class="ficha-grid">
+    <!-- Left identity panel -->
+    <div class="identity-card card" style="padding: 0;">
+      <div class="id-photo">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+          <span style="opacity: 0.7;"><svg width="80" height="80" viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="9" r="2"/><circle cx="10" cy="5" r="2"/><circle cx="14" cy="5" r="2"/><circle cx="18" cy="9" r="2"/><path d="M12 11c-3 0-5 2.5-5 5 0 2 1.5 3 3 3 1 0 1.5-.5 2-.5s1 .5 2 .5c1.5 0 3-1 3-3 0-2.5-2-5-5-5z"/></svg></span>
+          <span style="font-family: var(--font-mono); font-size: 11px; opacity: 0.65; text-transform: uppercase; letter-spacing: 0.1em;">Foto do animal</span>
+        </div>
+        <div class="ph-label">arraste uma foto</div>
+      </div>
+      <div class="id-info">
+        <div class="name-row">
+          <div>
+            <h2>Rex</h2>
+            <div style="font-size: 12px; color: var(--color-text-secondary); margin-top: 2px;">SRD · Caramelo · Pelagem curta</div>
+          </div>
+        </div>
+        <div class="kv-list">
+          <div class="kv-row"><span class="k"><span id="ic-chip"></span>Microchip</span><span class="v mono">985121234567890</span></div>
+          <div class="kv-row"><span class="k"><span id="ic-tag"></span>Medalha</span><span class="v mono">ITU-2024-089</span></div>
+          <div class="kv-row"><span class="k">Espécie</span><span class="v">Canino</span></div>
+          <div class="kv-row"><span class="k">Sexo</span><span class="v">Macho</span></div>
+          <div class="kv-row"><span class="k">Porte</span><span class="v">Grande</span></div>
+          <div class="kv-row"><span class="k">Raça</span><span class="v">SRD</span></div>
+          <div class="kv-row"><span class="k">Nasc. aprox.</span><span class="v mono">Jan/2022</span></div>
+          <div class="kv-row"><span class="k">Baia atual</span><span class="v">Baia 3</span></div>
+          <div class="kv-row"><span class="k">Castrado</span><span class="v">Sim · Orquiectomia (28/12/2025)</span></div>
+        </div>
+      </div>
+
+      <div class="section-title">Condições de Saúde</div>
+      <div class="section-pad">
+        <div class="tag-list">
+          <span class="badge badge-quarantine">Epilepsia</span>
+          <span class="badge badge-neutral">Sem outras condições</span>
+        </div>
+      </div>
+
+      <div class="section-title">Entrada</div>
+      <div class="section-pad">
+        <div class="kv-list">
+          <div class="kv-row"><span class="k">Motivo</span><span class="v">Recolhimento</span></div>
+          <div class="kv-row"><span class="k">Data</span><span class="v mono">15/03/2024</span></div>
+          <div class="kv-row"><span class="k">Procedência</span><span class="v" style="text-align: right; font-size: 12px;">Rua XV de Novembro<br/>Centro, Itu/SP</span></div>
+        </div>
+      </div>
+
+      <div class="ficha-actions">
+        <button class="btn btn-primary"><span id="ic-add"></span>Registrar procedimento</button>
+        <button class="btn btn-secondary">Transferir baia</button>
+        <button class="btn btn-ghost btn-sm">Alterar status</button>
+      </div>
+    </div>
+
+    <!-- Right panel: tabs OR timeline depending on tweak -->
+    <div class="right-panel">
+
+      <!-- Quick summary always visible -->
+      <div class="grid grid-3">
+        <div class="card card-pad-sm">
+          <div class="uppercase-label">Próxima Vacina</div>
+          <div style="font-family: var(--font-display); font-size: 18px; font-weight: 600; margin-top: 4px;">12/01/2027</div>
+          <div style="font-size: 11px; color: var(--color-text-secondary);">Antirrábica · em 237 dias</div>
+        </div>
+        <div class="card card-pad-sm">
+          <div class="uppercase-label">Medicação Ativa</div>
+          <div style="font-family: var(--font-display); font-size: 18px; font-weight: 600; margin-top: 4px;">Fenobarbital 30mg</div>
+          <div style="font-size: 11px; color: var(--color-text-secondary);">Até 10/04/2026 · 2x/dia</div>
+        </div>
+        <div class="card card-pad-sm">
+          <div class="uppercase-label">Total de Eventos</div>
+          <div style="font-family: var(--font-display); font-size: 18px; font-weight: 600; margin-top: 4px;">23 registros</div>
+          <div style="font-size: 11px; color: var(--color-text-secondary);">Desde 15/03/2024</div>
+        </div>
+      </div>
+
+      <!-- TABS LAYOUT (visible when tweak = tabs) -->
+      <div class="card layout-tabs">
+        <div class="tabs">
+          <button class="tab active" data-tab="hist">Histórico</button>
+          <button class="tab" data-tab="vac">Vacinas <span class="count">8</span></button>
+          <button class="tab" data-tab="med">Medicamentos <span class="count">1</span></button>
+          <button class="tab" data-tab="exa">Exames <span class="count">5</span></button>
+          <button class="tab" data-tab="cir">Cirurgias <span class="count">1</span></button>
+        </div>
+        <div class="tab-content">
+          <div class="tab-pane active" id="tab-hist"></div>
+          <div class="tab-pane" id="tab-vac">
+            <div style="overflow-x: auto;">
+              <table class="data vet-table">
+                <thead>
+                  <tr><th>Vacina</th><th>Aplicação</th><th>Próx. Reforço</th><th>Veterinário</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                  <tr class="reforco-soon"><td>V10 (Polivalente)</td><td class="mono">25/05/2026</td><td class="mono">25/05/2027</td><td>Dra. Stéphanie</td><td><span class="badge badge-alert" style="background: var(--color-alert-bg); color: var(--color-alert);">⚠ Em 5 dias</span></td></tr>
+                  <tr><td>Antirrábica</td><td class="mono">12/01/2026</td><td class="mono">12/01/2027</td><td>Dra. Stéphanie</td><td><span class="badge badge-available"><span class="badge-dot"></span>Em dia</span></td></tr>
+                  <tr><td>Giárdia</td><td class="mono">08/10/2025</td><td class="mono">08/10/2026</td><td>Dr. Rafael</td><td><span class="badge badge-available"><span class="badge-dot"></span>Em dia</span></td></tr>
+                  <tr><td>V10 (Polivalente)</td><td class="mono">25/05/2025</td><td class="mono">25/05/2026</td><td>Dra. Stéphanie</td><td><span class="badge badge-positive">⚠ Vencida</span></td></tr>
+                  <tr><td>Antirrábica</td><td class="mono">12/01/2025</td><td class="mono">12/01/2026</td><td>Dra. Stéphanie</td><td><span class="badge badge-deceased">Aplicada</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="tab-pane" id="tab-med">
+            <div class="med-grid">
+              <div class="med-card">
+                <h4><span style="color: var(--color-warning);" id="ic-pill1"></span>Fenobarbital 30mg</h4>
+                <div class="kv"><span class="k">Dose:</span><span>1 comp · 2x/dia · oral</span></div>
+                <div class="kv"><span class="k">Início:</span><span class="mono">10/01/2026</span></div>
+                <div class="kv"><span class="k">Término:</span><span class="mono">10/04/2026</span></div>
+                <div class="kv"><span class="k">Responsável:</span><span>Maria Isabel</span></div>
+                <div class="kv"><span class="k">Indicação:</span><span>Controle de crises epilépticas</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="tab-pane" id="tab-exa">
+            <table class="data vet-table">
+              <thead><tr><th>Data</th><th>Tipo</th><th>Resultado</th><th>Veterinário</th><th>Anexo</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">05/01/2026</td><td>Hemograma</td><td><span class="badge badge-available">Normal</span></td><td>Dr. Rafael</td><td><a href="#">📎 PDF</a></td></tr>
+                <tr><td class="mono">18/11/2025</td><td>Bioquímico</td><td><span class="badge badge-available">Normal</span></td><td>Dr. Rafael</td><td><a href="#">📎 PDF</a></td></tr>
+                <tr><td class="mono">02/08/2025</td><td>Ultrassom Abd.</td><td><span class="badge badge-available">Sem alterações</span></td><td>Dr. Carlos</td><td><a href="#">📎 PDF</a></td></tr>
+                <tr><td class="mono">14/05/2025</td><td>Hemograma</td><td><span class="badge badge-inconclusive">Acompanhamento</span></td><td>Dr. Rafael</td><td><a href="#">📎 PDF</a></td></tr>
+                <tr><td class="mono">22/01/2025</td><td>Sorologia</td><td><span class="badge badge-negative">Negativo</span></td><td>Dra. Stéphanie</td><td><a href="#">📎 PDF</a></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="tab-pane" id="tab-cir">
+            <table class="data vet-table">
+              <thead><tr><th>Data</th><th>Procedimento</th><th>Veterinário</th><th>Observações pós-op</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">28/12/2025</td><td>Castração — Orquiectomia</td><td>Dr. Rafael Souza</td><td>Sem intercorrências. Alta no mesmo dia.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TIMELINE LAYOUT (visible when tweak = timeline) -->
+      <div class="card layout-timeline">
+        <div class="card-header">
+          <h3>Histórico Veterinário Completo</h3>
+          <button class="btn btn-primary btn-sm"><span id="ic-plus2"></span>Registrar evento</button>
+        </div>
+        <div class="card-body">
+          <div class="timeline-controls">
+            <div class="timeline-filters">
+              <button class="tf-chip active">Todos · 23</button>
+              <button class="tf-chip"><span style="width:6px;height:6px;background:var(--color-success);border-radius:50%;display:inline-block;"></span>Vacinas · 8</button>
+              <button class="tf-chip"><span style="width:6px;height:6px;background:var(--color-info);border-radius:50%;display:inline-block;"></span>Exames · 5</button>
+              <button class="tf-chip"><span style="width:6px;height:6px;background:#6A1B9A;border-radius:50%;display:inline-block;"></span>Cirurgias · 1</button>
+              <button class="tf-chip"><span style="width:6px;height:6px;background:var(--color-warning);border-radius:50%;display:inline-block;"></span>Medicamentos · 4</button>
+            </div>
+            <span style="font-size: 12px; color: var(--color-text-secondary);">Mais recente primeiro</span>
+          </div>
+          <div class="timeline" id="timeline-events"></div>
+        </div>
+      </div>
+
+      <!-- All layouts: always-visible summary -->
+      <div class="all-timeline" style="display: none;"></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="assets/icons.js"></script>
+<script src="assets/shell.js"></script>
+<script src="assets/tweaks.js"></script>
+<script>
+  const I = window.SISZOO_ICONS;
+  const $ = id => document.getElementById(id);
+  if ($('ic-print')) $('ic-print').innerHTML = I.fileText(14);
+  if ($('ic-share')) $('ic-share').innerHTML = I.arrowRight(14);
+  if ($('ic-edit')) $('ic-edit').innerHTML = I.edit(14);
+  if ($('ic-chip')) $('ic-chip').innerHTML = I.chip(14);
+  if ($('ic-tag')) $('ic-tag').innerHTML = I.pin(14);
+  if ($('ic-add')) $('ic-add').innerHTML = I.plus(14);
+  if ($('ic-plus2')) $('ic-plus2').innerHTML = I.plus(14);
+  if ($('ic-pill1')) $('ic-pill1').innerHTML = I.pill(14);
+
+  // Timeline events
+  const events = [
+    { date: '12/05/2026', type: 'vacina', title: 'Lembrete: V10 vence em 13 dias',     by: 'Sistema',      warn: 'Reforço programado para 25/05/2026' },
+    { date: '12/01/2026', type: 'vacina', title: 'Vacina Antirrábica aplicada',         by: 'Dra. Stéphanie Lima', body: 'Lote 22B-4451 · Próximo reforço: 12/01/2027' },
+    { date: '10/01/2026', type: 'medicamento', title: 'Início: Fenobarbital 30mg', by: 'Dra. Stéphanie Lima', body: 'Dose: 1 comp 2x/dia. Indicação: controle de epilepsia. Duração prevista: 90 dias.' },
+    { date: '05/01/2026', type: 'exame',  title: 'Exame de Sangue — Hemograma',         by: 'Dr. Rafael Souza',    body: 'Resultado: Normal · Hb 14.2 · Plaq 320k', attach: 'hemograma_05012026.pdf' },
+    { date: '28/12/2025', type: 'cirurgia', title: 'Castração — Orquiectomia',          by: 'Dr. Rafael Souza',    body: 'Sem intercorrências. Alta no mesmo dia.' },
+    { date: '18/11/2025', type: 'exame',  title: 'Painel Bioquímico',                   by: 'Dr. Rafael Souza',    body: 'Resultado: Normal · Função hepática e renal preservadas', attach: 'bioquimico_18112025.pdf' },
+    { date: '08/10/2025', type: 'vacina', title: 'Vacina Giárdia aplicada',             by: 'Dr. Rafael Souza',    body: 'Lote 18A-9923 · Próximo reforço: 08/10/2026' },
+    { date: '02/08/2025', type: 'exame',  title: 'Ultrassom Abdominal',                 by: 'Dr. Carlos Martins',  body: 'Sem alterações dignas de nota', attach: 'ultrassom_02082025.pdf' },
+    { date: '25/05/2025', type: 'vacina', title: 'Vacina V10 (Polivalente)',           by: 'Dra. Stéphanie Lima', body: 'Reforço anual. Próximo: 25/05/2026' },
+    { date: '14/05/2025', type: 'exame',  title: 'Hemograma de controle',               by: 'Dr. Rafael Souza',    body: 'Acompanhamento de tratamento. Sugerida nova coleta em 6 meses.' },
+    { date: '12/01/2025', type: 'vacina', title: 'Vacina Antirrábica',                  by: 'Dra. Stéphanie Lima', body: 'Aplicação anual' },
+    { date: '15/03/2024', type: 'entrada', title: 'Entrada no canil',                   by: 'Recepção CCZ',        body: 'Motivo: Recolhimento · Procedência: Rua XV de Novembro, Centro' },
+  ];
+  const eventLabel = { vacina: 'Vacina', exame: 'Exame', cirurgia: 'Cirurgia', medicamento: 'Medicamento', entrada: 'Entrada' };
+  const tl = document.getElementById('timeline-events');
+  tl.innerHTML = events.map(e => `
+    <div class="timeline-item ${e.type}">
+      <div class="bullet"></div>
+      <div class="meta">${e.date} · <strong style="color: var(--color-text-primary);">${eventLabel[e.type]}</strong></div>
+      <div class="ev-title">${e.title}</div>
+      <div class="ev-body">
+        ${e.body ? e.body + '<br/>' : ''}
+        <span style="color: var(--color-text-muted);">Por ${e.by}</span>
+        ${e.attach ? ` · <a href="#">📎 ${e.attach}</a>` : ''}
+        ${e.warn ? `<div class="ev-warn">⚠ ${e.warn}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+
+  // Mirror timeline in the tabs layout
+  document.getElementById('tab-hist').innerHTML = `<div class="timeline">${tl.innerHTML}</div>`;
+
+  // Tabs interaction
+  document.querySelectorAll('.layout-tabs .tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.layout-tabs .tab').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.layout-tabs .tab-pane').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      document.getElementById('tab-' + t.dataset.tab).classList.add('active');
+    });
+  });
+
+  // Filter chips
+  document.querySelectorAll('.tf-chip').forEach(c => {
+    c.addEventListener('click', () => {
+      document.querySelectorAll('.tf-chip').forEach(x => x.classList.remove('active'));
+      c.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>
