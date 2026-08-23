@@ -3,6 +3,7 @@ import { Layout } from '../components/layout/Layout'
 import { Login } from '../features/auth/Login'
 import { Dashboard } from '../features/dashboard/Dashboard'
 import { EmConstrucao } from '../pages/EmConstrucao'
+import { RotaProtegida } from './RotaProtegida'
 
 export function AppRoutes() {
   return (
@@ -10,9 +11,11 @@ export function AppRoutes() {
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
 
-      <Route element={<Layout />}>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="*" element={<EmConstrucao />} />
+      <Route element={<RotaProtegida />}>
+        <Route element={<Layout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="*" element={<EmConstrucao />} />
+        </Route>
       </Route>
     </Routes>
   )

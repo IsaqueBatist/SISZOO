@@ -1,27 +1,52 @@
 import { useState, type FormEvent } from 'react'
+import { isAxiosError } from 'axios'
 import { useNavigate } from 'react-router-dom'
-import { ROLES, ROLE_STORAGE_KEY, type RoleKey } from '../../lib/nav'
+import { useAuth } from './AuthContext'
+import { loginSchema } from './loginSchema'
 import { Icon } from '../../components/layout/Icon'
 import './Login.css'
 
+interface FieldErrors {
+  email?: string
+  senha?: string
+}
+
 export function Login() {
   const navigate = useNavigate()
-  const [email, setEmail] = useState('stephanie.lima@itu.sp.gov.br')
-  const [senha, setSenha] = useState('senha-de-exemplo')
+  const { login, isLoading } = useAuth()
+  const [email, setEmail] = useState('')
+  const [senha, setSenha] = useState('')
   const [senhaVisivel, setSenhaVisivel] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
-  function entrarComo(roleKey: RoleKey) {
-    try {
-      localStorage.setItem(ROLE_STORAGE_KEY, roleKey)
-    } catch {
-      /* localStorage indisponível */
-    }
-    navigate('/dashboard')
-  }
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    entrarComo('vet')
+    setSubmitError(null)
+
+    const resultado = loginSchema.safeParse({ email, senha })
+    if (!resultado.success) {
+      const erros: FieldErrors = {}
+      for (const issue of resultado.error.issues) {
+        const campo = issue.path[0]
+        if (campo === 'email' || campo === 'senha') erros[campo] = issue.message
+      }
+      setFieldErrors(erros)
+      return
+    }
+
+    setFieldErrors({})
+
+    try {
+      await login(resultado.data)
+      navigate('/dashboard', { replace: true })
+    } catch (erro) {
+      if (isAxiosError(erro) && erro.response?.status === 401) {
+        setSubmitError('E-mail ou senha inválidos.')
+      } else {
+        setSubmitError('Não foi possível entrar. Verifique sua conexão e tente novamente.')
+      }
+    }
   }
 
   return (
@@ -73,11 +98,18 @@ export function Login() {
       </section>
 
       <section className="login-form-area">
-        <form className="login-card" onSubmit={handleSubmit}>
+        <form className="login-card" onSubmit={handleSubmit} noValidate>
           <div>
             <h2>Bem-vinda ao SISZOO</h2>
             <p className="lead">Faça login com suas credenciais institucionais.</p>
           </div>
+
+          {submitError && (
+            <div className="alert danger" role="alert">
+              <span className="bullet" />
+              <div className="alert-content">{submitError}</div>
+            </div>
+          )}
 
           <div className="field">
             <label htmlFor="email">
@@ -89,13 +121,15 @@ export function Login() {
               </span>
               <input
                 id="email"
-                className="input"
+                className={`input${fieldErrors.email ? ' error' : ''}`}
                 type="email"
                 placeholder="nome.sobrenome@itu.sp.gov.br"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
+                autoComplete="username"
               />
             </div>
+            {fieldErrors.email && <span className="err">{fieldErrors.email}</span>}
           </div>
 
           <div className="field">
@@ -108,11 +142,12 @@ export function Login() {
               </span>
               <input
                 id="senha"
-                className="input"
+                className={`input${fieldErrors.senha ? ' error' : ''}`}
                 type={senhaVisivel ? 'text' : 'password'}
                 placeholder="••••••••"
                 value={senha}
                 onChange={(event) => setSenha(event.target.value)}
+                autoComplete="current-password"
               />
               <button
                 type="button"
@@ -123,35 +158,12 @@ export function Login() {
                 <Icon name="eye" size={16} />
               </button>
             </div>
+            {fieldErrors.senha && <span className="err">{fieldErrors.senha}</span>}
           </div>
 
-          <div className="actions-row">
-            <label className="check">
-              <input type="checkbox" /> Manter conectado
-            </label>
-            <a href="#esqueci-senha" onClick={(event) => event.preventDefault()}>
-              Esqueci minha senha
-            </a>
-          </div>
-
-          <button type="submit" className="btn btn-primary btn-lg btn-block">
-            Entrar
+          <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={isLoading}>
+            {isLoading ? 'Entrando…' : 'Entrar'}
           </button>
-
-          <div className="role-hints">
-            <div className="hint-title">Acesso de demonstração — clique para entrar</div>
-            {(Object.entries(ROLES) as [RoleKey, (typeof ROLES)[RoleKey]][]).map(([key, role]) => (
-              <button
-                type="button"
-                key={key}
-                className="hint-row"
-                onClick={() => entrarComo(key)}
-              >
-                <span className={`badge ${role.badgeCls}`}>{role.short}</span>
-                <span className="email">{role.email}</span>
-              </button>
-            ))}
-          </div>
 
           <div className="login-foot">
             SISZOO <span className="version">v 1.2.0</span> · © 2026 Prefeitura Municipal de Itu

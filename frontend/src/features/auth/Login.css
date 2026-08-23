@@ -122,15 +122,6 @@
 .login-card .field {
   gap: 8px;
 }
-.login-card .actions-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-}
-.login-card .actions-row a {
-  font-weight: 500;
-}
 
 .login-foot {
   text-align: center;
@@ -139,44 +130,4 @@
 }
 .login-foot .version {
   font-family: var(--font-mono);
-}
-
-.role-hints {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 8px;
-  padding: 12px;
-  border: 1px dashed var(--color-border-strong);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-alt);
-}
-.role-hints .hint-title {
-  grid-column: 1 / -1;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-text-secondary);
-  font-weight: 600;
-}
-.role-hints .hint-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  padding: 6px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  background: none;
-  border: none;
-  text-align: left;
-  font-family: var(--font-body);
-}
-.role-hints .hint-row:hover {
-  background: var(--color-surface);
-}
-.role-hints .hint-row .email {
-  font-family: var(--font-mono);
-  color: var(--color-text-secondary);
-  font-size: 10px;
 }
