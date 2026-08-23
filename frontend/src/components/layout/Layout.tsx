@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
-import { getCurrentRoleKey } from '../../lib/nav'
+import { roleKeyFromCargos } from '../../lib/nav'
+import { useAuth } from '../../features/auth/AuthContext'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 
 export function Layout() {
   const [collapsed, setCollapsed] = useState(false)
-  const [roleKey] = useState(getCurrentRoleKey)
+  const { user } = useAuth()
+  const roleKey = roleKeyFromCargos(user?.cargos ?? [])
 
   return (
     <div className={`app-shell${collapsed ? ' collapsed' : ''}`}>

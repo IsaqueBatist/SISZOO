@@ -15,8 +15,6 @@ export interface Role {
   access: string[]
 }
 
-export const ROLE_STORAGE_KEY = 'siszoo_role'
-
 export const ROLES: Record<RoleKey, Role> = {
   admin: {
     label: 'Administrador',
@@ -78,14 +76,36 @@ export const NAV_ALL: NavEntry[] = [
   { id: 'config', label: 'Configurações', to: '/configuracoes', icon: 'cog' },
 ]
 
-export function getCurrentRoleKey(): RoleKey {
-  try {
-    const stored = localStorage.getItem(ROLE_STORAGE_KEY)
-    if (stored && stored in ROLES) return stored as RoleKey
-  } catch {
-    /* localStorage indisponível (ex.: SSR/teste) */
+// Mapeamento provisório entre `usuario.cargos` (schema real N:N do backend)
+// e as chaves de perfil do design system. Comparação por substring
+// normalizada tolera variação de acento/gênero entre o cargo real e o
+// rótulo interno (ex.: "Veterinário" vs. label "Veterinária"). Quando o
+// usuário acumula múltiplos cargos, a precedência é fixa:
+// admin > veterinário > agente — independente da ordem vinda do backend.
+const PRECEDENCIA_CARGOS: { chave: RoleKey; correspondeA: string }[] = [
+  { chave: 'admin', correspondeA: 'admin' },
+  { chave: 'vet', correspondeA: 'veterin' },
+  { chave: 'agente', correspondeA: 'agente' },
+]
+
+// Marcas diacríticas combinantes (U+0300–U+036F), isoladas por normalize('NFD').
+const DIACRITICOS = new RegExp(`[${String.fromCharCode(0x300)}-${String.fromCharCode(0x36f)}]`, 'g')
+
+function normalizar(valor: string): string {
+  return valor
+    .normalize('NFD')
+    .replace(DIACRITICOS, '')
+    .toLowerCase()
+}
+
+export function roleKeyFromCargos(cargos: string[]): RoleKey {
+  const normalizados = cargos.map(normalizar)
+
+  for (const { chave, correspondeA } of PRECEDENCIA_CARGOS) {
+    if (normalizados.some((cargo) => cargo.includes(correspondeA))) return chave
   }
-  return 'vet'
+
+  return 'agente'
 }
 
 export function getNavForRole(roleKey: RoleKey): NavEntry[] {

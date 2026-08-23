@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { ROLES, getNavForRole, isNavGroup, type RoleKey } from '../../lib/nav'
+import { useAuth } from '../../features/auth/AuthContext'
 import { Icon } from './Icon'
 
 interface SidebarProps {
@@ -9,6 +10,7 @@ interface SidebarProps {
 
 export function Sidebar({ roleKey, onToggleCollapsed }: SidebarProps) {
   const navigate = useNavigate()
+  const { logout } = useAuth()
   const role = ROLES[roleKey]
   const nav = getNavForRole(roleKey)
 
@@ -66,7 +68,10 @@ export function Sidebar({ roleKey, onToggleCollapsed }: SidebarProps) {
           type="button"
           className="logout-btn"
           title="Sair"
-          onClick={() => navigate('/login')}
+          onClick={() => {
+            logout()
+            navigate('/login')
+          }}
         >
           <Icon name="logout" size={14} />
         </button>
