@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw'
-import { API_BASE_URL } from '../lib/env'
 import type { LoginRequest, LoginResponse } from '../features/auth/auth.types'
+import { API_BASE_URL } from '../lib/env'
 
 // Contrato provisório — o backend real de login (T09) ainda não existe.
 export const CREDENCIAIS_VALIDAS: LoginRequest = {
