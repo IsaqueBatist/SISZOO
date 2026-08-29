@@ -2,6 +2,10 @@ spring:
   application:
     name: siszoo-backend
 
+siszoo:
+  cors:
+    allowed-origin: ${SISZOO_CORS_ORIGIN:http://localhost:5173}
+
 ---
 spring:
   config:
