@@ -22,6 +22,9 @@ siszoo:
   admin:
     email: ${ADMIN_SEED_EMAIL:}
     password: ${ADMIN_SEED_PASSWORD:}
+  jwt:
+    secret: ${JWT_SECRET:}
+    expiracao-minutos: 60
 
 ---
 spring:
@@ -43,6 +46,9 @@ siszoo:
   admin:
     email: ${ADMIN_SEED_EMAIL:}
     password: ${ADMIN_SEED_PASSWORD:}
+  jwt:
+    secret: ${JWT_SECRET:}
+    expiracao-minutos: 60
 
 ---
 spring:
@@ -55,3 +61,8 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
+
+siszoo:
+  jwt:
+    secret: chave-secreta-de-teste-determin-nao-usar-em-producao-1234567890
+    expiracao-minutos: 60
