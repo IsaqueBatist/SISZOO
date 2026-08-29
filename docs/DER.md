@@ -40,10 +40,11 @@ erDiagram
 
   %% ============ USUÁRIOS / SEGURANÇA ============
   USUARIO ||--o{ SESSAO : "abre"
-  USUARIO ||--|| PERFIL : "tem"
-  USUARIO ||--o{ PREFERENCIA_USUARIO : "configura"
+  USUARIO ||--o{ USUARIO_CARGO : "recebe"
+  CARGO ||--o{ USUARIO_CARGO : "concedido via"
+  USUARIO ||--|| PREFERENCIA_USUARIO : "configura"
   USUARIO ||--o{ AUDITORIA_EVENTO : "produz"
-  PERFIL ||--o{ PERFIL_PERMISSAO : "concede"
+  CARGO ||--o{ CARGO_PERMISSAO : "concede"
 
   %% ============ ANIMAIS ============
   ANIMAL }o--|| ESPECIE : "é"
@@ -115,58 +116,69 @@ erDiagram
 
 #### `usuario`
 
-| Campo                 | Tipo         | Obrig. | Observações                     |
+| Campo                | Tipo         | Obrig. | Observações                     |
 | --------------------- | ------------ | ------ | ------------------------------- |
 | `id`                  | uuid PK      | \*     |                                 |
-| `nome_completo`       | varchar(150) | \*     |                                 |
-| `email_institucional` | varchar(150) | \*     | Único · sufixo `@itu.sp.gov.br` |
-| `senha_hash`          | varchar(255) | \*     | bcrypt/argon2                   |
-| `perfil_id`           | FK `perfil`  | \*     | Admin / Vet / Agente            |
-| `crmv`                | varchar(20)  | ?      | Quando perfil = Veterinário     |
+| `email`               | varchar(255) | \*     | Único · sufixo `@itu.sp.gov.br` |
+| `senha`               | varchar(255) | \*     | hash bcrypt                     |
+| `nome`                | varchar(100) | \*     |                                 |
+| `sobrenome`           | varchar(100) | \*     |                                 |
+| `crmv`                | varchar(20)  | ?      | Quando cargo = Veterinário      |
 | `telefone`            | varchar(20)  | ?      |                                 |
 | `ativo`               | boolean      | \*     | default `true`                  |
 | `dois_fatores_ativo`  | boolean      | \*     | default `false`                 |
-| `senha_alterada_em`   | timestamp    | ?      | NULL = força troca no 1º acesso |
 | `ultimo_acesso`       | timestamp    | ?      |                                 |
 | `criado_em`           | timestamp    | \*     |                                 |
-| `criado_por_id`       | FK `usuario` | ?      |                                 |
+| `senha_alterada_em`   | timestamp    | ?      | NULL = força troca no 1º acesso |
 | `desativado_em`       | timestamp    | ?      | soft-delete                     |
+| `data_modificacao`    | timestamp    | \*     | atualizado a cada alteração do registro |
 
 **Regras**
 
 - E-mail deve casar regex `^[a-z.]+@itu\.sp\.gov\.br$` (institucional).
-- Perfil `recepcionista` foi removido do escopo — não criar mais.
-- Apenas perfil `admin` pode criar / desativar usuários e ver dados de denunciante em ocorrências sigilosas.
+- Cargo `recepcionista` foi removido do escopo — não criar mais.
+- Apenas cargo `Administrador` pode criar / desativar usuários e ver dados de denunciante em ocorrências sigilosas.
 
-#### `perfil`
+#### `cargo`
 
-| Campo       | Tipo        | Obrig. | Observações                                        |
-| ----------- | ----------- | ------ | -------------------------------------------------- |
-| `id`        | smallint PK | \*     | enum                                               |
-| `codigo`    | varchar(20) | \*     | `admin`, `vet`, `agente`                           |
-| `nome`      | varchar(50) | \*     | "Administrador", "Veterinário", "Agente Sanitário" |
-| `descricao` | text        | ?      |                                                    |
+| Campo       | Tipo         | Obrig. | Observações                                        |
+| ----------- | ------------ | ------ | -------------------------------------------------- |
+| `id`        | uuid PK      | \*     |                                                    |
+| `nome`      | varchar(100) | \*     | "Administrador", "Veterinário", "Agente Sanitário" |
+| `descricao` | text         | ?      |                                                    |
 
-#### `perfil_permissao`
+#### `usuario_cargo`
 
-| Campo           | Tipo        | Obrig. |
-| --------------- | ----------- | ------ | ------------------------------------------------------------------------------------- |
-| `perfil_id`     | FK `perfil` | \*     |
-| `modulo`        | varchar(40) | \*     | `animais`, `ocorrencias`, `processos`, `relatorios`, `baias`, `usuarios`, `dashboard` |
-| `pode_ler`      | boolean     | \*     |
-| `pode_escrever` | boolean     | \*     |
-| `pode_excluir`  | boolean     | \*     |
+> Tabela associativa — um usuário pode acumular mais de um cargo (N:N).
+
+| Campo           | Tipo         | Obrig. | Observações  |
+| --------------- | ------------ | ------ | ------------ |
+| `usuario_id`    | FK `usuario` PK | \* |              |
+| `cargo_id`      | FK `cargo` PK   | \* |              |
+| `adicionado_em` | timestamp    | \*     |              |
+
+#### `cargo_permissao`
+
+| Campo      | Tipo         | Obrig. | Observações                                                                              |
+| ---------- | ------------ | ------ | ----------------------------------------------------------------------------------------- |
+| `id`       | uuid PK      | \*     |                                                                                            |
+| `cargo_id` | FK `cargo`   | \*     |                                                                                            |
+| `modulo`   | enum         | \*     | `USUARIOS_ACESSO`, `GESTAO_ANIMAIS`, `OCORRENCIAS_DENUNCIAS`, `PROCESSOS_SANITARIOS`, `RELATORIOS` |
+| `feature`  | varchar(100) | \*     | granularidade dentro do módulo (ex.: `geral`)                                             |
+| `leitura`  | boolean      | \*     |                                                                                            |
+| `escrita`  | boolean      | \*     |                                                                                            |
+| `exclusao` | boolean      | \*     |                                                                                            |
+
+Único: (`cargo_id`, `modulo`, `feature`).
 
 **Matriz padrão** (referência):
 
 | Módulo      | Admin | Vet | Agente |
 | ----------- | ----- | --- | ------ |
-| dashboard   | RW    | RW  | RW     |
 | animais     | RWD   | RW  | R      |
 | ocorrencias | RWD   | R   | RW     |
 | processos   | RWD   | RW  | RW     |
 | relatorios  | R     | R   | R      |
-| baias       | RWD   | R   | —      |
 | usuarios    | RWD   | —   | —      |
 
 #### `sessao`
@@ -175,8 +187,8 @@ erDiagram
 | -------------- | ------------ | ------ | ----------- |
 | `id`           | uuid PK      | \*     |             |
 | `usuario_id`   | FK `usuario` | \*     |             |
-| `token_hash`   | varchar(255) | \*     |             |
-| `ip`           | inet         | ?      |             |
+| `token_hash`   | varchar(512) | \*     |             |
+| `ip`           | varchar(45)  | ?      |             |
 | `user_agent`   | text         | ?      |             |
 | `criada_em`    | timestamp    | \*     |             |
 | `expira_em`    | timestamp    | \*     |             |
@@ -184,16 +196,17 @@ erDiagram
 
 #### `preferencia_usuario`
 
-| Campo                    | Tipo            | Obrig. | Observações                                                 |
-| ------------------------ | --------------- | ------ | ----------------------------------------------------------- |
-| `usuario_id`             | FK `usuario` PK | \*     |                                                             |
-| `tema_codigo`            | varchar(20)     | \*     | `verde`, `oliva`, `azul`, `petroleo` — paleta institucional |
-| `densidade`              | enum            | \*     | `padrao`, `compacto`, `espacoso`                            |
-| `notif_alertas_criticos` | boolean         | \*     | sempre `true` (não editável)                                |
-| `notif_vacina_vencendo`  | boolean         | \*     | default `true`                                              |
-| `notif_superlotacao`     | boolean         | \*     | default `true`                                              |
-| `notif_resultado_lab`    | boolean         | \*     | default `true`                                              |
-| `notif_email_diario`     | boolean         | \*     | default `false`                                             |
+| Campo                    | Tipo        | Obrig. | Observações                       |
+| ------------------------ | ----------- | ------ | ---------------------------------- |
+| `id`                     | uuid PK     | \*     |                                    |
+| `usuario_id`             | FK `usuario`, único | \* | 1:1 com `usuario`         |
+| `tema`                   | enum        | \*     | `LIGHT`, `DARK`                    |
+| `densidade`              | enum        | \*     | `COMPACTO`, `NORMAL`, `CONFORTAVEL` |
+| `notif_alertas_criticos` | boolean     | \*     | sempre `true` (não editável)       |
+| `notif_vacina_vencendo`  | boolean     | \*     | default `true`                     |
+| `notif_superlotacao`     | boolean     | \*     | default `true`                     |
+| `notif_resultado_lab`    | boolean     | \*     | default `true`                     |
+| `notif_email_diario`     | boolean     | \*     | default `false`                    |
 
 > **Removidos do protótipo:** idioma, formato de data, fuso horário (fixos em PT-BR / DD-MM-AAAA / America-São_Paulo). Não precisam de coluna.
 
@@ -653,23 +666,21 @@ Campos: `id`, `codigo`, `nome`, `tipo` ("padrão raiva", "multidoenças", "apoio
 
 #### `auditoria_evento`
 
-| Campo                  | Tipo         | Obrig. |
-| ---------------------- | ------------ | ------ | ----------------------------------------------------------------- |
-| `id`                   | bigserial PK | \*     |
-| `usuario_id`           | FK `usuario` | \*     |
-| `acao`                 | enum         | \*     | `create`, `update`, `delete`, `view`, `login`, `logout`, `export` |
-| `entidade`             | varchar(50)  | \*     | nome da tabela                                                    |
-| `entidade_id`          | varchar(40)  | ?      | UUID/ID do registro                                               |
-| `payload_antes_jsonb`  | jsonb        | ?      | snapshot pré-alteração                                            |
-| `payload_depois_jsonb` | jsonb        | ?      | snapshot pós-alteração                                            |
-| `ip`                   | inet         | ?      |                                                                   |
-| `user_agent`           | text         | ?      |                                                                   |
-| `ocorreu_em`           | timestamp    | \*     |                                                                   |
+| Campo            | Tipo         | Obrig. |
+| ---------------- | ------------ | ------ | ------------------------------------------------------------------------------------------------- |
+| `id`             | uuid PK      | \*     |
+| `usuario_id`     | FK `usuario` | ?      | nulo se o usuário for excluído (ON DELETE SET NULL)                                                |
+| `acao`           | enum         | \*     | `CRIACAO`, `ATUALIZACAO`, `DESATIVACAO`, `REATIVACAO`, `LOGIN`, `LOGOUT`, `EXPORTACAO`, `ENCERRAMENTO` |
+| `entidade`       | varchar(100) | \*     | nome da tabela                                                                                      |
+| `payload_antes`  | jsonb        | ?      | snapshot pré-alteração                                                                              |
+| `payload_depois` | jsonb        | ?      | snapshot pós-alteração                                                                              |
+| `ip`             | varchar(45)  | ?      |                                                                                                      |
+| `ocorreu_em`     | timestamp    | \*     |                                                                                                      |
 
 **Regras**
 
-- Toda operação `create/update/delete` em entidades de negócio gera evento.
-- Visualização de denunciante sigiloso por admin: `view` + `entidade = 'denunciante'` para rastreabilidade LGPD.
+- Toda operação `CRIACAO`/`ATUALIZACAO`/`DESATIVACAO`/`REATIVACAO` em entidades de negócio gera evento.
+- ⚠️ **Ponto em aberto**: o enum `acao` atual não tem um valor equivalente a "visualização" — a regra crítica de LGPD (acesso do Admin a dados de denunciante sigiloso deve gerar evento de auditoria) ainda não tem uma ação correspondente no schema. Precisa de decisão de produto antes de T08+ (adicionar valor ao enum, ou modelar de outra forma).
 
 ---
 
