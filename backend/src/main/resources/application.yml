@@ -18,6 +18,11 @@ spring:
   flyway:
     enabled: true
 
+siszoo:
+  admin:
+    email: ${ADMIN_SEED_EMAIL:}
+    password: ${ADMIN_SEED_PASSWORD:}
+
 ---
 spring:
   config:
@@ -33,6 +38,11 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
+
+siszoo:
+  admin:
+    email: ${ADMIN_SEED_EMAIL:}
+    password: ${ADMIN_SEED_PASSWORD:}
 
 ---
 spring:
