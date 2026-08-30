@@ -21,6 +21,8 @@ import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.repository.AuditoriaEventoRepository;
 import com.siszoo.usuarios.repository.UsuarioRepository;
 
+import tools.jackson.databind.ObjectMapper;
+
 class AuditoriaEventoServiceIT extends AbstractIntegrationTest {
 
     @Autowired
@@ -31,6 +33,9 @@ class AuditoriaEventoServiceIT extends AbstractIntegrationTest {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     private Usuario criarUsuario(String email) {
         Usuario usuario = new Usuario();
@@ -59,8 +64,10 @@ class AuditoriaEventoServiceIT extends AbstractIntegrationTest {
 
         assertThat(evento.getAcao(), equalTo(AcaoAuditoria.ATUALIZACAO));
         assertThat(evento.getEntidade(), equalTo("usuario"));
-        assertThat(evento.getPayloadAntes(), equalTo("{\"ativo\":true}"));
-        assertThat(evento.getPayloadDepois(), equalTo("{\"ativo\":false}"));
+        // Compara pelo conteúdo (via árvore JSON), não pela formatação exata da
+        // string — o ObjectMapper pode variar espaçamento entre versões/config.
+        assertThat(objectMapper.readTree(evento.getPayloadAntes()), equalTo(objectMapper.readTree("{\"ativo\":true}")));
+        assertThat(objectMapper.readTree(evento.getPayloadDepois()), equalTo(objectMapper.readTree("{\"ativo\":false}")));
         assertThat(evento.getOcorreuEm(), notNullValue());
     }
 

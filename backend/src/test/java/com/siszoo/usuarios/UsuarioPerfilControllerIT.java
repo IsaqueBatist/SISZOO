@@ -46,6 +46,7 @@ class UsuarioPerfilControllerIT extends AbstractIntegrationTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    private String tokenAdmin;
     private String tokenUsuario;
 
     @BeforeEach
@@ -65,7 +66,7 @@ class UsuarioPerfilControllerIT extends AbstractIntegrationTest {
             usuarioCargoRepository.save(vinculo);
         }
 
-        String tokenAdmin = given()
+        tokenAdmin = given()
                 .contentType(ContentType.JSON)
                 .body(new LoginRequest(EMAIL_ADMIN, SENHA_ADMIN))
                 .when()
@@ -75,9 +76,18 @@ class UsuarioPerfilControllerIT extends AbstractIntegrationTest {
                 .extract()
                 .path("token");
 
-        if (usuarioRepository.findByEmail(EMAIL_USUARIO).isEmpty()) {
+        tokenUsuario = criarUsuarioEObterToken(EMAIL_USUARIO, SENHA_INICIAL_USUARIO);
+    }
+
+    // Cria (se ainda não existir) um usuário via Admin e retorna o token dele.
+    // Cada teste que precisa de estado "intocado" (ex.: preferências default)
+    // deve pedir seu próprio e-mail aqui, em vez de reaproveitar EMAIL_USUARIO —
+    // o Postgres do Testcontainers é compartilhado por toda a classe de teste,
+    // então mutações de um teste (ex.: trocar o tema) vazam para os outros.
+    private String criarUsuarioEObterToken(String email, String senhaInicial) {
+        if (usuarioRepository.findByEmail(email).isEmpty()) {
             CriarUsuarioRequest request = new CriarUsuarioRequest(
-                    "Perfil", "Teste", EMAIL_USUARIO, "Agente Sanitário", null, null, SENHA_INICIAL_USUARIO);
+                    "Perfil", "Teste", email, "Agente Sanitário", null, null, senhaInicial);
 
             given()
                     .contentType(ContentType.JSON)
@@ -89,9 +99,9 @@ class UsuarioPerfilControllerIT extends AbstractIntegrationTest {
                     .statusCode(200);
         }
 
-        tokenUsuario = given()
+        return given()
                 .contentType(ContentType.JSON)
-                .body(new LoginRequest(EMAIL_USUARIO, SENHA_INICIAL_USUARIO))
+                .body(new LoginRequest(email, senhaInicial))
                 .when()
                 .post("/api/auth/login")
                 .then()
@@ -125,8 +135,13 @@ class UsuarioPerfilControllerIT extends AbstractIntegrationTest {
 
     @Test
     void deveRetornarPreferenciasPadraoDoUsuarioRecemCriado() {
+        // Usuário dedicado (não o EMAIL_USUARIO compartilhado): esta asserção só
+        // faz sentido para um usuário cujas preferências ninguém mais alterou.
+        String tokenUsuarioDedicado = criarUsuarioEObterToken(
+                "teste.perfil.preferencias.default@itu.sp.gov.br", "SenhaInicial123");
+
         given()
-                .header("Authorization", "Bearer " + tokenUsuario)
+                .header("Authorization", "Bearer " + tokenUsuarioDedicado)
                 .when()
                 .get("/api/usuarios/me/preferencias")
                 .then()
