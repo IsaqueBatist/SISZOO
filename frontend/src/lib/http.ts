@@ -16,12 +16,11 @@ http.interceptors.request.use((config) => {
   return config
 })
 
-// Endpoints que só existem como mock (MSW) até o momento — o backend real
-// ainda não os implementa, então um 401 deles é o proxy padrão do Spring
-// mascarando uma rota inexistente, não uma sessão inválida de verdade.
-// Remover cada entrada daqui assim que o endpoint correspondente existir
-// de fato no backend (o 401 passará a refletir sessão expirada/inválida).
-const ENDPOINTS_AINDA_SO_MOCKADOS = ['/usuarios', '/auth/senha']
+// Endpoints que só existiam como mock (MSW) até existir backend real — hoje
+// login, troca de senha e CRUD de usuários já são reais (módulo usuarios),
+// então um 401 deles já reflete sessão expirada/inválida de verdade. Mantido
+// vazio como ponto de extensão para o próximo módulo que nascer só mockado.
+const ENDPOINTS_AINDA_SO_MOCKADOS: string[] = []
 
 http.interceptors.response.use(
   (response) => response,

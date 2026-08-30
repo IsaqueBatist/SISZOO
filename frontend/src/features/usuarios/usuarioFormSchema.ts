@@ -17,7 +17,6 @@ export const usuarioFormSchema = z
     cargo: z.enum(PERFIS_USUARIO as [string, ...string[]], { message: 'Selecione um perfil.' }),
     crmv: z.string().trim().optional(),
     senhaInicial: z.string().min(8, 'A senha inicial deve ter no mínimo 8 caracteres.'),
-    ativo: z.boolean(),
   })
   .superRefine((dados, ctx) => {
     if (dados.cargo === 'Veterinário' && !dados.crmv) {

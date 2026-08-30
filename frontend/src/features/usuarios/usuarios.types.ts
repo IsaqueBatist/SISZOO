@@ -18,5 +18,14 @@ export interface CriarUsuarioRequest {
   cargo: PerfilUsuario
   crmv?: string
   senhaInicial: string
-  ativo: boolean
+}
+
+// Espelha comum/dto/PaginaResponse do backend — envelope de paginação
+// reaproveitado por todo endpoint de listagem.
+export interface PaginaResponse<T> {
+  itens: T[]
+  pagina: number
+  tamanho: number
+  totalItens: number
+  totalPaginas: number
 }

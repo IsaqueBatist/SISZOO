@@ -32,7 +32,6 @@ export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
   const [cargo, setCargo] = useState<PerfilUsuario | ''>('')
   const [crmv, setCrmv] = useState('')
   const [senhaInicial, setSenhaInicial] = useState(gerarSenhaAleatoria())
-  const [ativo, setAtivo] = useState(true)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [submitError, setSubmitError] = useState<string | null>(null)
 
@@ -48,7 +47,6 @@ export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
       cargo,
       crmv: crmv || undefined,
       senhaInicial,
-      ativo,
     })
 
     if (!resultado.success) {
@@ -74,7 +72,6 @@ export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
         cargo: resultado.data.cargo as PerfilUsuario,
         crmv: resultado.data.cargo === 'Veterinário' ? resultado.data.crmv : undefined,
         senhaInicial: resultado.data.senhaInicial,
-        ativo: resultado.data.ativo,
       })
       onFechar()
     } catch {
@@ -190,21 +187,6 @@ export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
                 </div>
                 {fieldErrors.senhaInicial && <span className="err">{fieldErrors.senhaInicial}</span>}
                 <span className="hint">O usuário será obrigado a trocar a senha no primeiro acesso.</span>
-              </div>
-
-              <div className="switch-row">
-                <label className="switch">
-                  <input
-                    id="ativo"
-                    type="checkbox"
-                    checked={ativo}
-                    onChange={(event) => setAtivo(event.target.checked)}
-                  />
-                  <span className="slider" />
-                </label>
-                <label htmlFor="ativo" style={{ cursor: 'pointer' }}>
-                  Ativo · pode acessar o sistema imediatamente
-                </label>
               </div>
             </div>
           </div>

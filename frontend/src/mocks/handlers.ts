@@ -3,7 +3,10 @@ import type { LoginRequest, LoginResponse } from '../features/auth/auth.types'
 import { API_BASE_URL } from '../lib/env'
 import type { CriarUsuarioRequest, UsuarioListItem } from '../features/usuarios/usuarios.types'
 
-// Contrato provisório — o backend real de login (T09) ainda não existe.
+// Usado só pelos testes automatizados (mocks/server.ts) — o dev browser
+// (mocks/browser.ts) não intercepta mais login/senha/usuários, que já existem
+// de verdade no backend (módulo usuarios). Mantido aqui para os componentes
+// não dependerem de um Postgres/Spring de pé para rodar `npm run test`.
 export const CREDENCIAIS_VALIDAS: LoginRequest = {
   email: 'stephanie.lima@itu.sp.gov.br',
   senha: 'senha-de-exemplo',
@@ -21,10 +24,8 @@ const LOGIN_RESPONSE: LoginResponse = {
   },
 }
 
-// Contrato provisório — não existe endpoint real de CRUD de usuários no
-// backend ainda (só /auth/login). `senhaInicial` é um detalhe só deste mock
-// (permite simular login com um usuário recém-criado) e nunca é devolvido
-// pela API simulada.
+// `senhaInicial` é um detalhe só deste mock (permite simular login com um
+// usuário recém-criado nos testes) e nunca é devolvido pela API simulada.
 interface UsuarioMockInterno extends UsuarioListItem {
   senhaInicial: string
 }
@@ -156,11 +157,18 @@ export const handlers = [
   }),
 
   http.post(`${API_BASE_URL}/auth/senha`, async () => {
-    return HttpResponse.json({ senhaAlteradaEm: new Date().toISOString() })
+    return new HttpResponse(null, { status: 204 })
   }),
 
   http.get(`${API_BASE_URL}/usuarios`, () => {
-    return HttpResponse.json(usuariosMock.map(paraUsuarioPublico))
+    const itens = usuariosMock.map(paraUsuarioPublico)
+    return HttpResponse.json({
+      itens,
+      pagina: 0,
+      tamanho: itens.length,
+      totalItens: itens.length,
+      totalPaginas: 1,
+    })
   }),
 
   http.post(`${API_BASE_URL}/usuarios`, async ({ request }) => {
@@ -174,7 +182,7 @@ export const handlers = [
       cargos: [body.cargo],
       crmv: body.crmv ?? null,
       senhaAlteradaEm: null,
-      ativo: body.ativo,
+      ativo: true,
       ultimoAcesso: null,
       criadoEm: new Date().toISOString(),
       senhaInicial: body.senhaInicial,
