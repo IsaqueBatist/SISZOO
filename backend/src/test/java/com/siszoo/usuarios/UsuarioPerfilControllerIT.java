@@ -110,6 +110,72 @@ class UsuarioPerfilControllerIT extends AbstractIntegrationTest {
                 .path("token");
     }
 
+    // Mimetiza exatamente o DataSeeder (admin do bootstrap do Docker): grava
+    // usuario + usuario_cargo diretamente, sem passar por UsuarioService.criar(),
+    // que é o único lugar que hoje cria a linha de preferencia_usuario. Antes
+    // da correção, GET/PATCH /me/preferencias para esse tipo de usuário
+    // respondia 404 "Usuario nao encontrado" mesmo o usuário existindo.
+    private String criarUsuarioSemPreferenciasEObterToken(String email, String senha) {
+        Usuario usuario = new Usuario();
+        usuario.setEmail(email);
+        usuario.setSenha(passwordEncoder.encode(senha));
+        usuario.setNome("Seed");
+        usuario.setSobrenome("SemPreferencias");
+        usuarioRepository.save(usuario);
+
+        Cargo cargoAdministrador = cargoRepository.findById(CARGO_ADMINISTRADOR_ID).orElseThrow();
+        UsuarioCargo vinculo = new UsuarioCargo();
+        vinculo.setUsuario(usuario);
+        vinculo.setCargo(cargoAdministrador);
+        usuarioCargoRepository.save(vinculo);
+
+        return given()
+                .contentType(ContentType.JSON)
+                .body(new LoginRequest(email, senha))
+                .when()
+                .post("/api/auth/login")
+                .then()
+                .statusCode(200)
+                .extract()
+                .path("token");
+    }
+
+    @Test
+    void deveCriarPreferenciasPadraoAoConsultarUsuarioSemLinhaDePreferencias() {
+        String token = criarUsuarioSemPreferenciasEObterToken(
+                "teste.seed.sem.preferencias.get@itu.sp.gov.br", "SenhaInicial123");
+
+        given()
+                .header("Authorization", "Bearer " + token)
+                .when()
+                .get("/api/usuarios/me/preferencias")
+                .then()
+                .statusCode(200)
+                .body("tema", equalTo("LIGHT"))
+                .body("densidade", equalTo("NORMAL"))
+                .body("notifAlertasCriticos", equalTo(true));
+    }
+
+    @Test
+    void deveCriarPreferenciasAoAtualizarUsuarioSemLinhaDePreferencias() {
+        String token = criarUsuarioSemPreferenciasEObterToken(
+                "teste.seed.sem.preferencias.patch@itu.sp.gov.br", "SenhaInicial123");
+
+        PreferenciaUsuarioRequest request = new PreferenciaUsuarioRequest(
+                TemaUsuario.DARK, DensidadeUsuario.COMPACTO, true, true, true, true, false);
+
+        given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + token)
+                .body(request)
+                .when()
+                .patch("/api/usuarios/me/preferencias")
+                .then()
+                .statusCode(200)
+                .body("tema", equalTo("DARK"))
+                .body("densidade", equalTo("COMPACTO"));
+    }
+
     @Test
     void deveRetornarPerfilProprio() {
         given()

@@ -22,6 +22,10 @@ export type IconName =
   | 'plus'
   | 'x'
   | 'edit'
+  | 'phone'
+  | 'check'
+  | 'bell'
+  | 'user'
 
 interface IconProps {
   name: IconName
@@ -47,6 +51,10 @@ const STROKE_PATHS: Partial<Record<IconName, string>> = {
   plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
   x: '<line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>',
   edit: '<path d="M4 20h4l10-10-4-4L4 16v4z"/><line x1="14" y1="6" x2="18" y2="10"/>',
+  phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
+  check: '<polyline points="20 6 9 17 4 12"/>',
+  bell: '<path d="M18 16v-5a6 6 0 0 0-12 0v5l-2 2h16l-2-2z"/><path d="M10 21a2 2 0 0 0 4 0"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 4-7 8-7s7 2 8 7"/>',
 }
 
 const FILL_PATHS: Partial<Record<IconName, string>> = {
