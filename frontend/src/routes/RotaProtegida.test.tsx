@@ -12,7 +12,7 @@ const USUARIO_EXEMPLO: Usuario = {
   sobrenome: 'Silva',
   email: 'ana.silva@itu.sp.gov.br',
   cargos: ['Administrador'],
-  senhaAlteradaEm: null,
+  senhaAlteradaEm: '2026-01-10T12:00:00Z',
 }
 
 function renderRotaProtegida(initialEntry: string) {
@@ -25,12 +25,17 @@ function renderRotaProtegida(initialEntry: string) {
             <Route path="/login" element={<div>Tela de login</div>} />
             <Route element={<RotaProtegida />}>
               <Route path="/protegida" element={<div>Conteúdo protegido</div>} />
+              <Route path="/trocar-senha" element={<div>Trocar senha</div>} />
             </Route>
           </Routes>
         </AuthProvider>
       </MemoryRouter>
     </QueryClientProvider>,
   )
+}
+
+function autenticar(usuario: Usuario) {
+  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario }))
 }
 
 describe('RotaProtegida', () => {
@@ -41,14 +46,28 @@ describe('RotaProtegida', () => {
     expect(screen.queryByText('Conteúdo protegido')).not.toBeInTheDocument()
   })
 
-  it('com token renderiza o conteúdo protegido', () => {
-    sessionStorage.setItem(
-      SESSION_STORAGE_KEY,
-      JSON.stringify({ token: 'token-existente', usuario: USUARIO_EXEMPLO }),
-    )
+  it('com token e senha já alterada renderiza o conteúdo protegido', () => {
+    autenticar(USUARIO_EXEMPLO)
 
     renderRotaProtegida('/protegida')
 
     expect(screen.getByText('Conteúdo protegido')).toBeInTheDocument()
+  })
+
+  it('com senhaAlteradaEm nula redireciona para /trocar-senha (1º acesso)', () => {
+    autenticar({ ...USUARIO_EXEMPLO, senhaAlteradaEm: null })
+
+    renderRotaProtegida('/protegida')
+
+    expect(screen.getByText('Trocar senha')).toBeInTheDocument()
+    expect(screen.queryByText('Conteúdo protegido')).not.toBeInTheDocument()
+  })
+
+  it('com senhaAlteradaEm nula ao reabrir a aba (sessão reidratada) continua preso em /trocar-senha', () => {
+    autenticar({ ...USUARIO_EXEMPLO, senhaAlteradaEm: null })
+
+    renderRotaProtegida('/trocar-senha')
+
+    expect(screen.getByText('Trocar senha')).toBeInTheDocument()
   })
 })
