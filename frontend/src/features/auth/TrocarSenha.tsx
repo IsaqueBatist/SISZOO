@@ -40,8 +40,11 @@ export function TrocarSenha() {
     setFieldErrors({})
 
     try {
-      const resposta = await mutation.mutateAsync({ novaSenha: resultado.data.novaSenha })
-      marcarSenhaAlterada(resposta.senhaAlteradaEm)
+      await mutation.mutateAsync({
+        novaSenha: resultado.data.novaSenha,
+        confirmarSenha: resultado.data.confirmarSenha,
+      })
+      marcarSenhaAlterada(new Date().toISOString())
       navigate('/dashboard', { replace: true })
     } catch {
       setSubmitError('Não foi possível trocar a senha. Tente novamente.')

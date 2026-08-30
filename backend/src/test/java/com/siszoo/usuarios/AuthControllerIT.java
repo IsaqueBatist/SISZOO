@@ -2,9 +2,11 @@ package com.siszoo.usuarios;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 
@@ -23,9 +25,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.siszoo.comum.AbstractIntegrationTest;
 import com.siszoo.usuarios.dto.LoginRequest;
+import com.siszoo.usuarios.dto.TrocarSenhaRequest;
+import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.Cargo;
 import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.entity.UsuarioCargo;
+import com.siszoo.usuarios.repository.AuditoriaEventoRepository;
 import com.siszoo.usuarios.repository.CargoRepository;
 import com.siszoo.usuarios.repository.UsuarioCargoRepository;
 import com.siszoo.usuarios.repository.UsuarioRepository;
@@ -50,6 +55,9 @@ class AuthControllerIT extends AbstractIntegrationTest {
 
     @Autowired
     private UsuarioCargoRepository usuarioCargoRepository;
+
+    @Autowired
+    private AuditoriaEventoRepository auditoriaEventoRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -123,6 +131,26 @@ class AuthControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    void deveRegistrarEventoDeAuditoriaAoFazerLoginComSucesso() {
+        given()
+                .contentType(ContentType.JSON)
+                .body(new LoginRequest(EMAIL_TESTE, SENHA_TESTE))
+                .when()
+                .post("/api/auth/login")
+                .then()
+                .statusCode(200);
+
+        Usuario usuario = usuarioRepository.findByEmail(EMAIL_TESTE).orElseThrow();
+        List<AcaoAuditoria> acoesRegistradas = auditoriaEventoRepository.findAll().stream()
+                .filter(evento -> evento.getUsuario() != null && evento.getUsuario().getId().equals(usuario.getId()))
+                .map(evento -> evento.getAcao())
+                .filter(acao -> acao == AcaoAuditoria.LOGIN)
+                .toList();
+
+        assertThat(acoesRegistradas, not(empty()));
+    }
+
+    @Test
     void deveRetornar401ParaSenhaIncorreta() {
         given()
                 .contentType(ContentType.JSON)
@@ -131,5 +159,101 @@ class AuthControllerIT extends AbstractIntegrationTest {
                 .post("/api/auth/login")
                 .then()
                 .statusCode(401);
+    }
+
+    @Test
+    void deveTrocarSenhaComSucessoQuandoAutenticado() {
+        String email = "teste.trocasenha.sucesso@itu.sp.gov.br";
+        String senhaAtual = "SenhaAntiga123";
+        Usuario usuario = new Usuario();
+        usuario.setEmail(email);
+        usuario.setSenha(passwordEncoder.encode(senhaAtual));
+        usuario.setNome("Teste");
+        usuario.setSobrenome("TrocaSenha");
+        usuarioRepository.save(usuario);
+
+        String token = obterToken(email, senhaAtual);
+
+        given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + token)
+                .body(new TrocarSenhaRequest("SenhaNovaValida123", "SenhaNovaValida123"))
+                .when()
+                .post("/api/auth/senha")
+                .then()
+                .statusCode(204);
+
+        Usuario atualizado = usuarioRepository.findByEmail(email).orElseThrow();
+        assertThat(atualizado.getSenhaAlteradaEm(), notNullValue());
+        assertThat(passwordEncoder.matches("SenhaNovaValida123", atualizado.getSenha()), equalTo(true));
+    }
+
+    @Test
+    void deveRetornar422QuandoNovaSenhaEConfirmacaoDivergem() {
+        String email = "teste.trocasenha.divergente@itu.sp.gov.br";
+        String senhaAtual = "SenhaAntiga123";
+        Usuario usuario = new Usuario();
+        usuario.setEmail(email);
+        usuario.setSenha(passwordEncoder.encode(senhaAtual));
+        usuario.setNome("Teste");
+        usuario.setSobrenome("TrocaSenhaDivergente");
+        usuarioRepository.save(usuario);
+
+        String token = obterToken(email, senhaAtual);
+
+        given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + token)
+                .body(new TrocarSenhaRequest("SenhaNovaValida123", "OutraSenhaValida456"))
+                .when()
+                .post("/api/auth/senha")
+                .then()
+                .statusCode(422);
+    }
+
+    @Test
+    void deveRetornar422QuandoNovaSenhaForMenorQueOitoCaracteres() {
+        String email = "teste.trocasenha.curta@itu.sp.gov.br";
+        String senhaAtual = "SenhaAntiga123";
+        Usuario usuario = new Usuario();
+        usuario.setEmail(email);
+        usuario.setSenha(passwordEncoder.encode(senhaAtual));
+        usuario.setNome("Teste");
+        usuario.setSobrenome("TrocaSenhaCurta");
+        usuarioRepository.save(usuario);
+
+        String token = obterToken(email, senhaAtual);
+
+        given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + token)
+                .body(new TrocarSenhaRequest("curta1", "curta1"))
+                .when()
+                .post("/api/auth/senha")
+                .then()
+                .statusCode(422);
+    }
+
+    @Test
+    void deveRetornar401AoTrocarSenhaSemToken() {
+        given()
+                .contentType(ContentType.JSON)
+                .body(new TrocarSenhaRequest("SenhaNovaValida123", "SenhaNovaValida123"))
+                .when()
+                .post("/api/auth/senha")
+                .then()
+                .statusCode(401);
+    }
+
+    private String obterToken(String email, String senha) {
+        return given()
+                .contentType(ContentType.JSON)
+                .body(new LoginRequest(email, senha))
+                .when()
+                .post("/api/auth/login")
+                .then()
+                .statusCode(200)
+                .extract()
+                .path("token");
     }
 }

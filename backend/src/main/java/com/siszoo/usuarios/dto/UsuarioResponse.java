@@ -9,6 +9,10 @@ public record UsuarioResponse(
         String email,
         String nome,
         String sobrenome,
+        String crmv,
         List<String> cargos,
+        boolean ativo,
+        LocalDateTime ultimoAcesso,
+        LocalDateTime criadoEm,
         LocalDateTime senhaAlteradaEm) {
 }
