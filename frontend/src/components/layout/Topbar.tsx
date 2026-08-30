@@ -1,5 +1,6 @@
 import { useLocation } from 'react-router-dom'
 import { NAV_ALL, ROLES, isNavGroup, type RoleKey } from '../../lib/nav'
+import { useAuth } from '../../features/auth/AuthContext'
 import { Icon } from './Icon'
 
 interface TopbarProps {
@@ -13,7 +14,9 @@ function currentCrumbLabel(pathname: string): string {
 
 export function Topbar({ roleKey }: TopbarProps) {
   const location = useLocation()
+  const { user } = useAuth()
   const role = ROLES[roleKey]
+  const iniciais = user ? `${user.nome[0] ?? ''}${user.sobrenome[0] ?? ''}`.toUpperCase() : ''
 
   return (
     <header className="topbar">
@@ -33,8 +36,8 @@ export function Topbar({ roleKey }: TopbarProps) {
           {role.short}
         </span>
         <div className="topbar-user">
-          <div className="avatar">{role.initials}</div>
-          <span className="name">{role.name.split(' ')[0]}</span>
+          <div className="avatar">{iniciais}</div>
+          <span className="name">{user?.nome ?? ''}</span>
         </div>
       </div>
     </header>

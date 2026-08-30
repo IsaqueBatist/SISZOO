@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-const EMAIL_INSTITUCIONAL = /^[a-z.]+@itu\.sp\.gov\.br$/
+export const EMAIL_INSTITUCIONAL = /^[a-z.]+@itu\.sp\.gov\.br$/
 
 export const loginSchema = z.object({
   email: z

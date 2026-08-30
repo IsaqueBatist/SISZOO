@@ -9,9 +9,6 @@ export interface Role {
   label: string
   short: string
   badgeCls: string
-  name: string
-  initials: string
-  email: string
   access: string[]
 }
 
@@ -20,27 +17,18 @@ export const ROLES: Record<RoleKey, Role> = {
     label: 'Administrador',
     short: 'ADMIN',
     badgeCls: 'badge-role-admin',
-    name: 'Paulo Henriques',
-    initials: 'PH',
-    email: 'paulo.henriques@itu.sp.gov.br',
     access: ['dashboard', 'animais', 'ocorrencias', 'processos', 'relatorios', 'baias', 'usuarios', 'config'],
   },
   vet: {
     label: 'Veterinária',
     short: 'VET',
     badgeCls: 'badge-role-vet',
-    name: 'Stéphanie Lima',
-    initials: 'SL',
-    email: 'stephanie.lima@itu.sp.gov.br',
     access: ['dashboard', 'animais', 'ocorrencias', 'processos', 'relatorios', 'baias', 'config'],
   },
   agente: {
     label: 'Agente Sanitário',
     short: 'AGENTE',
     badgeCls: 'badge-role-agent',
-    name: 'Rafael Santos',
-    initials: 'RS',
-    email: 'rafael.santos@itu.sp.gov.br',
     access: ['dashboard', 'animais', 'ocorrencias', 'processos', 'relatorios', 'config'],
   },
 }

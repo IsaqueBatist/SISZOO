@@ -20,3 +20,11 @@ export interface LoginResponse {
   token: string
   usuario: Usuario
 }
+
+export interface TrocarSenhaRequest {
+  novaSenha: string
+}
+
+export interface TrocarSenhaResponse {
+  senhaAlteradaEm: string
+}

@@ -17,6 +17,7 @@ interface AuthContextValue {
   token: string | null
   login: (credenciais: LoginRequest) => Promise<void>
   logout: () => void
+  marcarSenhaAlterada: (senhaAlteradaEm: string) => void
   isLoading: boolean
   error: unknown
 }
@@ -64,6 +65,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  function marcarSenhaAlterada(senhaAlteradaEm: string) {
+    setSessao((atual) => {
+      if (!atual) return atual
+      const novaSessao: SessaoArmazenada = {
+        ...atual,
+        usuario: { ...atual.usuario, senhaAlteradaEm },
+      }
+      try {
+        sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(novaSessao))
+      } catch {
+        /* sessionStorage indisponível */
+      }
+      return novaSessao
+    })
+  }
+
   useEffect(() => {
     function handleUnauthorized() {
       logout()
@@ -79,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     token: sessao?.token ?? null,
     login,
     logout,
+    marcarSenhaAlterada,
     isLoading: mutation.isPending,
     error: mutation.error,
   }

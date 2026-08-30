@@ -6,8 +6,10 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,6 +40,7 @@ class AuthControllerIT extends AbstractIntegrationTest {
     private static final UUID CARGO_VETERINARIO_ID = UUID.fromString("00000000-0000-4000-8000-000000000002");
     private static final String EMAIL_TESTE = "teste.login@itu.sp.gov.br";
     private static final String SENHA_TESTE = "SenhaValida123";
+    private static final String EMAIL_COM_SENHA_JA_ALTERADA = "teste.senhajaalterada@itu.sp.gov.br";
 
     @Autowired
     private UsuarioRepository usuarioRepository;
@@ -85,6 +88,7 @@ class AuthControllerIT extends AbstractIntegrationTest {
                 .statusCode(200)
                 .body("token", notNullValue())
                 .body("usuario.email", equalTo(EMAIL_TESTE))
+                .body("usuario.senhaAlteradaEm", nullValue())
                 .extract()
                 .path("token");
 
@@ -96,6 +100,26 @@ class AuthControllerIT extends AbstractIntegrationTest {
         @SuppressWarnings("unchecked")
         List<String> cargos = claims.get("cargos", List.class);
         assertThat(cargos, hasItem("Veterinário"));
+    }
+
+    @Test
+    void deveRetornarSenhaAlteradaEmPreenchidaQuandoUsuarioJaTrocouASenha() {
+        Usuario usuario = new Usuario();
+        usuario.setEmail(EMAIL_COM_SENHA_JA_ALTERADA);
+        usuario.setSenha(passwordEncoder.encode(SENHA_TESTE));
+        usuario.setNome("Teste");
+        usuario.setSobrenome("SenhaAlterada");
+        usuario.setSenhaAlteradaEm(LocalDateTime.now());
+        usuarioRepository.save(usuario);
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(new LoginRequest(EMAIL_COM_SENHA_JA_ALTERADA, SENHA_TESTE))
+                .when()
+                .post("/api/auth/login")
+                .then()
+                .statusCode(200)
+                .body("usuario.senhaAlteradaEm", notNullValue());
     }
 
     @Test

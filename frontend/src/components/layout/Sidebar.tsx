@@ -10,9 +10,11 @@ interface SidebarProps {
 
 export function Sidebar({ roleKey, onToggleCollapsed }: SidebarProps) {
   const navigate = useNavigate()
-  const { logout } = useAuth()
+  const { user, logout } = useAuth()
   const role = ROLES[roleKey]
   const nav = getNavForRole(roleKey)
+  const nomeCompleto = user ? `${user.nome} ${user.sobrenome}` : ''
+  const iniciais = user ? `${user.nome[0] ?? ''}${user.sobrenome[0] ?? ''}`.toUpperCase() : ''
 
   return (
     <aside className="sidebar">
@@ -59,9 +61,9 @@ export function Sidebar({ roleKey, onToggleCollapsed }: SidebarProps) {
       </nav>
 
       <div className="sidebar-footer">
-        <div className="avatar">{role.initials}</div>
+        <div className="avatar">{iniciais}</div>
         <div style={{ minWidth: 0 }}>
-          <div className="user-name">{role.name}</div>
+          <div className="user-name">{nomeCompleto}</div>
           <div className="user-role">{role.label}</div>
         </div>
         <button
