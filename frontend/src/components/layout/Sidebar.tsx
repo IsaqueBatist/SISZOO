@@ -61,11 +61,13 @@ export function Sidebar({ roleKey, onToggleCollapsed }: SidebarProps) {
       </nav>
 
       <div className="sidebar-footer">
-        <div className="avatar">{iniciais}</div>
-        <div style={{ minWidth: 0 }}>
-          <div className="user-name">{nomeCompleto}</div>
-          <div className="user-role">{role.label}</div>
-        </div>
+        <NavLink to="/perfil" className="sidebar-footer-link" title="Meu perfil">
+          <div className="avatar">{iniciais}</div>
+          <div style={{ minWidth: 0 }}>
+            <div className="user-name">{nomeCompleto}</div>
+            <div className="user-role">{role.label}</div>
+          </div>
+        </NavLink>
         <button
           type="button"
           className="logout-btn"

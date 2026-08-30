@@ -35,10 +35,10 @@ public class PreferenciaUsuarioService {
         this.auditoriaEventoService = auditoriaEventoService;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public PreferenciaUsuarioResponse buscar(UUID usuarioId) {
         PreferenciaUsuario preferencias = preferenciaUsuarioRepository.findByUsuarioId(usuarioId)
-                .orElseThrow(UsuarioNaoEncontradoException::new);
+                .orElseGet(() -> criarPreferenciasPadrao(usuarioId));
         return preferenciaUsuarioMapper.toResponse(preferencias);
     }
 
@@ -49,7 +49,7 @@ public class PreferenciaUsuarioService {
         }
 
         PreferenciaUsuario preferencias = preferenciaUsuarioRepository.findByUsuarioId(usuarioId)
-                .orElseThrow(UsuarioNaoEncontradoException::new);
+                .orElseGet(() -> criarPreferenciasPadrao(usuarioId));
 
         preferencias.setTema(request.tema());
         preferencias.setDensidade(request.densidade());
@@ -66,5 +66,18 @@ public class PreferenciaUsuarioService {
         auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "preferencia_usuario", null, response);
 
         return response;
+    }
+
+    // Usuários criados fora de UsuarioService.criar() (ex.: admin do
+    // DataSeeder, que só grava usuario + usuario_cargo) não ganham uma linha
+    // em preferencia_usuario automaticamente. Em vez de 404 em GET/PATCH
+    // /me/preferencias para esses casos, criamos a linha com os defaults da
+    // entity na primeira leitura/gravação.
+    private PreferenciaUsuario criarPreferenciasPadrao(UUID usuarioId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(UsuarioNaoEncontradoException::new);
+        PreferenciaUsuario preferencias = new PreferenciaUsuario();
+        preferencias.setUsuario(usuario);
+        return preferenciaUsuarioRepository.save(preferencias);
     }
 }

@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw'
 import type { LoginRequest, LoginResponse } from '../features/auth/auth.types'
 import { API_BASE_URL } from '../lib/env'
 import type { CriarUsuarioRequest, UsuarioListItem } from '../features/usuarios/usuarios.types'
+import type { PreferenciaUsuario } from '../features/configuracoes/configuracoes.types'
 
 // Usado só pelos testes automatizados (mocks/server.ts) — o dev browser
 // (mocks/browser.ts) não intercepta mais login/senha/usuários, que já existem
@@ -119,6 +120,27 @@ export function resetUsuariosMock() {
   usuariosMock = seedUsuariosMock()
 }
 
+// GET/PATCH /usuarios/me e /usuarios/me/preferencias não recebem id — no
+// backend real o usuário vem do token JWT. Aqui sempre representam o usuário
+// logado nos testes (usuariosMock[0]).
+function seedPreferenciasMock(): PreferenciaUsuario {
+  return {
+    tema: 'LIGHT',
+    densidade: 'NORMAL',
+    notifAlertasCriticos: true,
+    notifVacinaVencendo: true,
+    notifSuperlotacao: true,
+    notifResultadoLab: true,
+    notifEmailDiario: false,
+  }
+}
+
+let preferenciasMock: PreferenciaUsuario = seedPreferenciasMock()
+
+export function resetPreferenciasMock() {
+  preferenciasMock = seedPreferenciasMock()
+}
+
 function paraUsuarioPublico({ senhaInicial: _senhaInicial, ...usuario }: UsuarioMockInterno): UsuarioListItem {
   return usuario
 }
@@ -202,5 +224,33 @@ export const handlers = [
 
     usuario.ativo = ativo
     return HttpResponse.json(paraUsuarioPublico(usuario))
+  }),
+
+  http.get(`${API_BASE_URL}/usuarios/me`, () => {
+    return HttpResponse.json(paraUsuarioPublico(usuariosMock[0]))
+  }),
+
+  http.patch(`${API_BASE_URL}/usuarios/me`, async () => {
+    // O backend real também não devolve `telefone` na resposta (só aceita no
+    // PATCH) — o mock replica essa lacuna de propósito.
+    return HttpResponse.json(paraUsuarioPublico(usuariosMock[0]))
+  }),
+
+  http.get(`${API_BASE_URL}/usuarios/me/preferencias`, () => {
+    return HttpResponse.json(preferenciasMock)
+  }),
+
+  http.patch(`${API_BASE_URL}/usuarios/me/preferencias`, async ({ request }) => {
+    const body = (await request.json()) as PreferenciaUsuario
+
+    if (body.notifAlertasCriticos === false) {
+      return HttpResponse.json(
+        { mensagem: 'Notificacao de alertas criticos nao pode ser desativada' },
+        { status: 422 },
+      )
+    }
+
+    preferenciasMock = { ...body, notifAlertasCriticos: true }
+    return HttpResponse.json(preferenciasMock)
   }),
 ]
