@@ -6,6 +6,13 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.siszoo.animais.exception.AnimalNaoEncontradoException;
+import com.siszoo.animais.exception.BaiaInvalidaException;
+import com.siszoo.animais.exception.EspecieInvalidaException;
+import com.siszoo.animais.exception.MicrochipImutavelException;
+import com.siszoo.animais.exception.MicrochipJaCadastradoException;
+import com.siszoo.animais.exception.MotivoEntradaInvalidoException;
+import com.siszoo.animais.exception.StatusAnimalInvalidoException;
 import com.siszoo.comum.dto.ErroResponse;
 import com.siszoo.usuarios.exception.CargoInvalidoException;
 import com.siszoo.usuarios.exception.CredencialInvalidaException;
@@ -64,5 +71,47 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroResponse> handleValidacao() {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
                 .body(new ErroResponse("Dados invalidos"));
+    }
+
+    @ExceptionHandler(MicrochipJaCadastradoException.class)
+    public ResponseEntity<ErroResponse> handleMicrochipJaCadastrado() {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErroResponse("Microchip ja cadastrado"));
+    }
+
+    @ExceptionHandler(MicrochipImutavelException.class)
+    public ResponseEntity<ErroResponse> handleMicrochipImutavel() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Microchip nao pode ser alterado apos definido"));
+    }
+
+    @ExceptionHandler(AnimalNaoEncontradoException.class)
+    public ResponseEntity<ErroResponse> handleAnimalNaoEncontrado() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErroResponse("Animal nao encontrado"));
+    }
+
+    @ExceptionHandler(EspecieInvalidaException.class)
+    public ResponseEntity<ErroResponse> handleEspecieInvalida() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Especie informada nao existe"));
+    }
+
+    @ExceptionHandler(StatusAnimalInvalidoException.class)
+    public ResponseEntity<ErroResponse> handleStatusAnimalInvalido() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Status informado nao existe"));
+    }
+
+    @ExceptionHandler(MotivoEntradaInvalidoException.class)
+    public ResponseEntity<ErroResponse> handleMotivoEntradaInvalido() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Motivo de entrada informado nao existe"));
+    }
+
+    @ExceptionHandler(BaiaInvalidaException.class)
+    public ResponseEntity<ErroResponse> handleBaiaInvalida() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Baia informada nao existe"));
     }
 }

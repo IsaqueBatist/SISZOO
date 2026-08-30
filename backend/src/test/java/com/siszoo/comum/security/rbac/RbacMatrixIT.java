@@ -2,6 +2,7 @@ package com.siszoo.comum.security.rbac;
 
 import static io.restassured.RestAssured.given;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.siszoo.animais.dto.CriarAnimalRequest;
 import com.siszoo.comum.AbstractIntegrationTest;
 import com.siszoo.usuarios.dto.LoginRequest;
 import com.siszoo.usuarios.entity.Cargo;
@@ -29,14 +31,13 @@ import io.restassured.http.ContentType;
 // autorizado quanto o 403 dos demais.
 @Import({
         ScaffoldCriarUsuarioController.class,
-        ScaffoldListarUsuariosController.class,
-        ScaffoldEscreverAnimalController.class
+        ScaffoldListarUsuariosController.class
 })
 class RbacMatrixIT extends AbstractIntegrationTest {
 
     private static final String SENHA_TESTE = "SenhaValida123";
     private static final String ROTA_USUARIOS = "/api/teste/rbac/usuarios";
-    private static final String ROTA_ANIMAIS = "/api/teste/rbac/animais";
+    private static final String ROTA_ANIMAIS = "/api/animais";
 
     @Autowired
     private UsuarioRepository usuarioRepository;
@@ -111,11 +112,19 @@ class RbacMatrixIT extends AbstractIntegrationTest {
     @MethodSource("escreverAnimalPorPerfil")
     void agenteSanitarioNaoEscreveAnimais(Perfil perfil, int statusEsperado) {
         given()
+                .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + tokenPara(perfil))
+                .body(animalValidoParaTeste())
                 .when()
                 .post(ROTA_ANIMAIS)
                 .then()
                 .statusCode(statusEsperado);
+    }
+
+    private CriarAnimalRequest animalValidoParaTeste() {
+        return new CriarAnimalRequest(
+                "Rex", "canino", "macho", null, null, null, null, null, null, null, null,
+                false, null, "disponivel_adocao", "resgate", LocalDateTime.now(), null, null, null);
     }
 
     private String tokenPara(Perfil perfil) {
