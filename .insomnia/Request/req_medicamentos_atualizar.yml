@@ -1,0 +1,32 @@
+_id: "req_medicamentos_atualizar"
+type: "Request"
+parentId: "fld_medicamentos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/medicamentos/{{ _.medicamento_id_exemplo }}"
+name: "Atualizar medicamento"
+description: "Requer GESTAO_ANIMAIS:escrita. Substitua {{ _.medicamento_id_exemplo }} por um id real. Diferente dos registros clínicos (vacinações/procedimentos/prescrições), medicamento é catálogo mutável — este PUT sobrescreve nome/categoria na própria linha, sem retificação."
+method: "PUT"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "nome": "Amoxicilina 500mg",
+      "categoriaId": "{{ _.categoria_farmacologica_id_exemplo }}"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 64000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

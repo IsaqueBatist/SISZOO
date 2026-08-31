@@ -1,0 +1,24 @@
+_id: "req_medicamentos_desativar"
+type: "Request"
+parentId: "fld_medicamentos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/medicamentos/{{ _.medicamento_id_exemplo }}"
+name: "Desativar medicamento (soft-delete)"
+description: "Requer GESTAO_ANIMAIS:exclusao. É `DELETE`, mas o backend nunca remove a linha — é soft-delete (`ativo=false`, 200), mesmo padrão da pasta Baias. ATENÇÃO: diferente de Baia, esta versão não tem endpoint de reativação (não existe `PATCH /status` equivalente) — uma vez desativado, o único jeito de reverter é via \"Atualizar medicamento\" direto no banco ou aguardando uma tarefa futura que adicione reativação."
+method: "DELETE"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 65000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

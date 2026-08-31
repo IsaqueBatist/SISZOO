@@ -1,0 +1,10 @@
+_id: "fld_medicamentos"
+type: "RequestGroup"
+parentId: "wrk_siszoo_api"
+modified: 1750000000000
+created: 1750000000000
+name: "09 - Medicamentos"
+description: ''
+environment: {}
+metaSortKey: 0
+environmentType: "kv"

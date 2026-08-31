@@ -1,0 +1,32 @@
+_id: "req_medicamentos_criar"
+type: "Request"
+parentId: "fld_medicamentos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/medicamentos"
+name: "Criar medicamento - caso feliz"
+description: "Requer GESTAO_ANIMAIS:escrita. Catálogo (diferente de vacinações/procedimentos/prescrições, NÃO é registro clínico imutável — editar e desativar são permitidos aqui). ATENÇÃO: `categoriaId` é um uuid cru — `categoria_farmacologica` não tem endpoint de catálogo ainda, então é preciso inserir uma categoria direto no banco antes e colar o uuid gerado em {{ _.categoria_farmacologica_id_exemplo }}. Não há unicidade de `nome` no banco (sem `uq_medicamento_nome`) — dois medicamentos com o mesmo nome são aceitos, não é bug do exemplo."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "nome": "Amoxicilina",
+      "categoriaId": "{{ _.categoria_farmacologica_id_exemplo }}"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 61000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

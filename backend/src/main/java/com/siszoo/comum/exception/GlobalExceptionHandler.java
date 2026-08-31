@@ -6,7 +6,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.siszoo.animais.clinico.exception.CategoriaFarmacologicaInvalidaException;
 import com.siszoo.animais.clinico.exception.MedicamentoInvalidoException;
+import com.siszoo.animais.clinico.exception.MedicamentoNaoEncontradoException;
 import com.siszoo.animais.clinico.exception.PrescricaoNaoEncontradaException;
 import com.siszoo.animais.clinico.exception.ProcedimentoNaoEncontradoException;
 import com.siszoo.animais.clinico.exception.RegistroJaRetificadoException;
@@ -190,5 +192,17 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroResponse> handleRegistroJaRetificado() {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ErroResponse("Registro ja foi retificado por outro"));
+    }
+
+    @ExceptionHandler(MedicamentoNaoEncontradoException.class)
+    public ResponseEntity<ErroResponse> handleMedicamentoNaoEncontrado() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErroResponse("Medicamento nao encontrado"));
+    }
+
+    @ExceptionHandler(CategoriaFarmacologicaInvalidaException.class)
+    public ResponseEntity<ErroResponse> handleCategoriaFarmacologicaInvalida() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Categoria farmacologica informada nao existe"));
     }
 }

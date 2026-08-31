@@ -1,0 +1,24 @@
+_id: "req_medicamentos_buscar_por_id"
+type: "Request"
+parentId: "fld_medicamentos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/medicamentos/{{ _.medicamento_id_exemplo }}"
+name: "Buscar medicamento por id"
+description: "Substitua {{ _.medicamento_id_exemplo }} por um id real (ver \"Criar medicamento\" ou \"Listar medicamentos\"). Id inexistente retorna 404."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 63000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

@@ -17,6 +17,7 @@ data:
   procedimento_id_exemplo: ''
   prescricao_id_exemplo: ''
   medicamento_id_exemplo: ''
+  categoria_farmacologica_id_exemplo: ''
 color: null
 isPrivate: false
 metaSortKey: 1750000000000
