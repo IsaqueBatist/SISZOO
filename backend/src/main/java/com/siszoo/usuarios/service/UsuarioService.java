@@ -31,6 +31,7 @@ import com.siszoo.usuarios.exception.CargoInvalidoException;
 import com.siszoo.usuarios.exception.CrmvObrigatorioException;
 import com.siszoo.usuarios.exception.EmailJaCadastradoException;
 import com.siszoo.usuarios.exception.UsuarioNaoEncontradoException;
+import com.siszoo.usuarios.exception.UsuarioNaoPodeDesativarASiMesmoException;
 import com.siszoo.usuarios.mapper.UsuarioMapper;
 import com.siszoo.usuarios.repository.CargoRepository;
 import com.siszoo.usuarios.repository.PreferenciaUsuarioRepository;
@@ -142,11 +143,14 @@ public class UsuarioService {
     }
 
     @Transactional
-    public UsuarioResponse alterarStatus(UUID id, AtualizarStatusUsuarioRequest request) {
+    public UsuarioResponse alterarStatus(UUID id, AtualizarStatusUsuarioRequest request, UUID usuarioAutenticadoId) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(UsuarioNaoEncontradoException::new);
 
-        // TODO(confirmar com orientador): impedir usuario de desativar a si mesmo — regra nao esta no DER.
+        // NOTA: impede usuario de desativar a si mesmo (DER §3.1, adicionado nesta tarefa).
+        if (!Boolean.TRUE.equals(request.ativo()) && id.equals(usuarioAutenticadoId)) {
+            throw new UsuarioNaoPodeDesativarASiMesmoException();
+        }
 
         boolean ativar = Boolean.TRUE.equals(request.ativo());
         usuario.setAtivo(ativar);
