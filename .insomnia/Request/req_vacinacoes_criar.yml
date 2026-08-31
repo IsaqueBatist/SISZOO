@@ -1,0 +1,38 @@
+_id: "req_vacinacoes_criar"
+type: "Request"
+parentId: "fld_registros_clinicos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/vacinacoes"
+name: "Criar vacinação - caso feliz"
+description: "Requer GESTAO_ANIMAIS:escrita (Administrador ou Veterinário). Substitua {{ _.animal_id_exemplo }} por um id real (ver pasta Animais). `vacina` é o código do catálogo seedado em V5 (antirrabica/v10/v8/v4_felinos/giardia/gripe_canina/felv/leishmaniose) — código inexistente retorna 422. Registro clínico imutável: não existe PUT/PATCH/DELETE (ver \"Tentar atualizar vacinação (405)\"); correção é sempre um novo POST com `retificaId` (ver \"Retificar vacinação\")."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "animalId": "{{ _.animal_id_exemplo }}",
+      "vacina": "antirrabica",
+      "dataAplicacao": "2026-08-31",
+      "numeroDose": 1,
+      "doseQuantidade": 1.0,
+      "doseUnidade": "MILILITRO",
+      "lote": "LOTE-EXEMPLO-01",
+      "observacoes": "Cadastro de exemplo para documentação da API."
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 50000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

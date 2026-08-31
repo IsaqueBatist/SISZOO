@@ -1,0 +1,24 @@
+_id: "req_prescricoes_buscar_por_id"
+type: "Request"
+parentId: "fld_registros_clinicos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/prescricoes/{{ _.prescricao_id_exemplo }}"
+name: "Buscar prescrição por id"
+description: "Substitua {{ _.prescricao_id_exemplo }} por um id real (ver \"Criar prescrição\" ou \"Listar prescrições\"). Id inexistente retorna 404."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 60000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

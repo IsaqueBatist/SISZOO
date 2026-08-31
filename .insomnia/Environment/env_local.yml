@@ -13,6 +13,10 @@ data:
   usuario_id_exemplo: ''
   animal_id_exemplo: ''
   baia_id_exemplo: ''
+  vacinacao_id_exemplo: ''
+  procedimento_id_exemplo: ''
+  prescricao_id_exemplo: ''
+  medicamento_id_exemplo: ''
 color: null
 isPrivate: false
 metaSortKey: 1750000000000

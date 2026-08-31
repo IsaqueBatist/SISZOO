@@ -1,0 +1,24 @@
+_id: "req_vacinacoes_listar"
+type: "Request"
+parentId: "fld_registros_clinicos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/vacinacoes?pagina=0&tamanho=20"
+name: "Listar vacinações"
+description: "Requer GESTAO_ANIMAIS:leitura. `animalId` é o único filtro (opcional) — adicione `&animalId={{ _.animal_id_exemplo }}` para ver só o histórico de um animal. Cada item traz `statusRegistro` (\"ATIVO\" ou \"RETIFICADO\") e `dataValidade` (calculada a partir de `intervaloMeses` da vacina, não é coluna persistida)."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 51000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

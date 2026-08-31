@@ -1,0 +1,35 @@
+_id: "req_procedimentos_criar"
+type: "Request"
+parentId: "fld_registros_clinicos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/procedimentos"
+name: "Criar procedimento - caso feliz"
+description: "Requer GESTAO_ANIMAIS:escrita. `tipoProcedimento` é o código do catálogo seedado em V5 (atendimento_clinico/castracao/cirurgia_maior/vacinacao) — código inexistente retorna 422. Mesma imutabilidade e mecanismo de retificação (`retificaId`) da pasta Vacinações — ver \"Retificar vacinação\" e \"Tentar atualizar vacinação (405)\" para o padrão, idêntico aqui."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "animalId": "{{ _.animal_id_exemplo }}",
+      "tipoProcedimento": "atendimento_clinico",
+      "data": "2026-08-31",
+      "descricao": "Consulta de rotina - exemplo para documentação da API.",
+      "resultado": "Sem intercorrências"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 55000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

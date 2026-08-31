@@ -1,0 +1,24 @@
+_id: "req_procedimentos_buscar_por_id"
+type: "Request"
+parentId: "fld_registros_clinicos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/procedimentos/{{ _.procedimento_id_exemplo }}"
+name: "Buscar procedimento por id"
+description: "Substitua {{ _.procedimento_id_exemplo }} por um id real (ver \"Criar procedimento\" ou \"Listar procedimentos\"). Id inexistente retorna 404."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 57000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
