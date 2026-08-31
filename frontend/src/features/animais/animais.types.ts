@@ -71,3 +71,30 @@ export interface AnimaisFiltro {
   pagina: number
   tamanho: number
 }
+
+// Espelha com.siszoo.animais.dto.CriarAnimalRequest / AtualizarAnimalRequest
+// do backend (os dois DTOs têm campos idênticos). Ao contrário de `Animal`
+// (resposta), aqui espécie/status/motivo de entrada vão como código puro
+// (`especie`, `status`, `motivoEntrada`), sem o sufixo `Codigo` nem os `*Nome`
+// — nunca reenviar `especieNome`/`statusNome`/`motivoEntradaNome`.
+export interface AnimalRequest {
+  nome: string
+  especie: string
+  sexo: Sexo
+  raca?: string
+  coloracao?: string
+  pelagem?: Pelagem
+  porte?: Porte
+  pesoKg?: number
+  idadeAprox?: string
+  dataNascimentoAprox?: string
+  microchip?: string
+  esterilizado: boolean
+  dataEsterilizacao?: string
+  status: string
+  motivoEntrada: string
+  dataEntrada: string
+  baiaId?: string
+  fotoUrl?: string
+  observacoes?: string
+}

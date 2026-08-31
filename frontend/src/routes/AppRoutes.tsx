@@ -1,6 +1,8 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from '../components/layout/Layout'
 import { Animais } from '../features/animais/Animais'
+import { CadastrarAnimal } from '../features/animais/CadastrarAnimal'
+import { EditarAnimal } from '../features/animais/EditarAnimal'
 import { Login } from '../features/auth/Login'
 import { TrocarSenha } from '../features/auth/TrocarSenha'
 import { Configuracoes } from '../features/configuracoes/Configuracoes'
@@ -10,6 +12,7 @@ import { Usuarios } from '../features/usuarios/Usuarios'
 import { ThemeProvider } from '../lib/ThemeProvider'
 import { EmConstrucao } from '../pages/EmConstrucao'
 import { RotaAdmin } from './RotaAdmin'
+import { RotaEscritaAnimais } from './RotaEscritaAnimais'
 import { RotaProtegida } from './RotaProtegida'
 
 export function AppRoutes() {
@@ -29,6 +32,10 @@ export function AppRoutes() {
         >
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/animais" element={<Animais />} />
+          <Route element={<RotaEscritaAnimais />}>
+            <Route path="/animais/novo" element={<CadastrarAnimal />} />
+            <Route path="/animais/:id/editar" element={<EditarAnimal />} />
+          </Route>
           <Route path="/perfil" element={<Perfil />} />
           <Route path="/configuracoes" element={<Configuracoes />} />
           <Route element={<RotaAdmin />}>

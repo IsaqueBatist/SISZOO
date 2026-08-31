@@ -2,19 +2,36 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { HttpResponse, http } from 'msw'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { API_BASE_URL } from '../../lib/env'
 import { server } from '../../mocks/server'
+import { AuthProvider, SESSION_STORAGE_KEY } from '../auth/AuthContext'
+import type { Usuario } from '../auth/auth.types'
 import { Animais } from './Animais'
 import { badgeDeEspecie, badgeDeStatus } from './statusBadge'
 
 function renderAnimais() {
+  const usuario: Usuario = {
+    id: 'a1b2c3d4-0000-0000-0000-000000000001',
+    nome: 'Stéphanie',
+    sobrenome: 'Lima',
+    email: 'stephanie.lima@itu.sp.gov.br',
+    cargos: ['Veterinário'],
+    senhaAlteradaEm: '2026-01-10T12:00:00Z',
+  }
+  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario }))
+
   // retry: false evita que o teste de erro espere os retries automáticos do
   // TanStack Query (backoff de até alguns segundos) antes de isError virar true.
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
-      <Animais />
+      <MemoryRouter>
+        <AuthProvider>
+          <Animais />
+        </AuthProvider>
+      </MemoryRouter>
     </QueryClientProvider>,
   )
 }

@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw'
-import type { Animal, Baia, CatalogosAnimal } from '../features/animais/animais.types'
+import type { Animal, AnimalRequest, Baia, CatalogosAnimal } from '../features/animais/animais.types'
 import type { LoginRequest, LoginResponse } from '../features/auth/auth.types'
 import { API_BASE_URL } from '../lib/env'
 import type { CriarUsuarioRequest, UsuarioListItem } from '../features/usuarios/usuarios.types'
@@ -512,10 +512,15 @@ function criarAnimalFiller(indice: number): Animal {
   }
 }
 
-const animaisMock: Animal[] = [
-  ...seedAnimaisMock(),
-  ...Array.from({ length: 12 }, (_, indice) => criarAnimalFiller(indice + 11)),
-]
+function seedTodosAnimaisMock(): Animal[] {
+  return [...seedAnimaisMock(), ...Array.from({ length: 12 }, (_, indice) => criarAnimalFiller(indice + 11))]
+}
+
+let animaisMock: Animal[] = seedTodosAnimaisMock()
+
+export function resetAnimaisMock() {
+  animaisMock = seedTodosAnimaisMock()
+}
 
 const CATALOGOS_ANIMAIS_MOCK: CatalogosAnimal = {
   especies: [
@@ -608,6 +613,50 @@ const BAIAS_MOCK: Baia[] = [
     superlotada: false,
   },
 ]
+
+function nomeDoCatalogo(itens: { codigo: string; nome: string }[], codigo: string): string {
+  return itens.find((item) => item.codigo === codigo)?.nome ?? codigo
+}
+
+// Recompõe um `Animal` (resposta) a partir de um `AnimalRequest` (o que o
+// form de T18 envia) — espelha o que o service real faz ao resolver os
+// códigos de espécie/status/motivo/baia para os nomes exibidos.
+function construirAnimalMock(id: string, body: AnimalRequest, existente: Animal | null): Animal {
+  const baia = body.baiaId ? BAIAS_MOCK.find((item) => item.id === body.baiaId) : undefined
+  const agora = new Date().toISOString()
+  return {
+    id,
+    nome: body.nome,
+    especieCodigo: body.especie,
+    especieNome: nomeDoCatalogo(CATALOGOS_ANIMAIS_MOCK.especies, body.especie),
+    sexo: body.sexo,
+    raca: body.raca ?? null,
+    coloracao: body.coloracao ?? null,
+    pelagem: body.pelagem ?? null,
+    porte: body.porte ?? null,
+    pesoKg: body.pesoKg ?? null,
+    idadeAprox: body.idadeAprox ?? null,
+    dataNascimentoAprox: body.dataNascimentoAprox ?? null,
+    microchip: body.microchip ?? null,
+    esterilizado: body.esterilizado,
+    dataEsterilizacao: body.dataEsterilizacao ?? null,
+    statusCodigo: body.status,
+    statusNome: nomeDoCatalogo(CATALOGOS_ANIMAIS_MOCK.status, body.status),
+    motivoEntradaCodigo: body.motivoEntrada,
+    motivoEntradaNome: nomeDoCatalogo(CATALOGOS_ANIMAIS_MOCK.motivosEntrada, body.motivoEntrada),
+    dataEntrada: body.dataEntrada,
+    baiaId: body.baiaId ?? null,
+    baiaNome: baia?.nome ?? null,
+    tipoBaiaNome: baia?.tipoBaiaNome ?? null,
+    fichaCompleta: Boolean(body.microchip),
+    fotoUrl: body.fotoUrl ?? null,
+    observacoes: body.observacoes ?? null,
+    criadoPorId: existente?.criadoPorId ?? usuariosMock[0].id,
+    criadoPorNome: existente?.criadoPorNome ?? `${usuariosMock[0].nome} ${usuariosMock[0].sobrenome}`,
+    criadoEm: existente?.criadoEm ?? agora,
+    atualizadoEm: agora,
+  }
+}
 
 export const handlers = [
   http.get(`${API_BASE_URL}/health`, () => {
@@ -762,5 +811,46 @@ export const handlers = [
     const itens = filtradas.slice(inicio, inicio + tamanho)
 
     return HttpResponse.json({ itens, pagina, tamanho, totalItens, totalPaginas })
+  }),
+
+  http.get(`${API_BASE_URL}/animais/:id`, ({ params }) => {
+    const animal = animaisMock.find((item) => item.id === params.id)
+    if (!animal) {
+      return HttpResponse.json({ mensagem: 'Animal nao encontrado' }, { status: 404 })
+    }
+    return HttpResponse.json(animal)
+  }),
+
+  http.post(`${API_BASE_URL}/animais`, async ({ request }) => {
+    const body = (await request.json()) as AnimalRequest
+
+    if (body.microchip && animaisMock.some((item) => item.microchip === body.microchip)) {
+      return HttpResponse.json({ mensagem: 'Microchip ja cadastrado' }, { status: 409 })
+    }
+
+    const novoAnimal = construirAnimalMock(crypto.randomUUID(), body, null)
+    animaisMock = [...animaisMock, novoAnimal]
+    return HttpResponse.json(novoAnimal, { status: 201 })
+  }),
+
+  http.put(`${API_BASE_URL}/animais/:id`, async ({ params, request }) => {
+    const animal = animaisMock.find((item) => item.id === params.id)
+    if (!animal) {
+      return HttpResponse.json({ mensagem: 'Animal nao encontrado' }, { status: 404 })
+    }
+
+    const body = (await request.json()) as AnimalRequest
+
+    if (animal.microchip && body.microchip && body.microchip !== animal.microchip) {
+      return HttpResponse.json({ mensagem: 'Microchip nao pode ser alterado apos definido' }, { status: 422 })
+    }
+
+    if (body.microchip && animaisMock.some((item) => item.id !== animal.id && item.microchip === body.microchip)) {
+      return HttpResponse.json({ mensagem: 'Microchip ja cadastrado' }, { status: 409 })
+    }
+
+    const animalAtualizado = construirAnimalMock(animal.id, body, animal)
+    animaisMock = animaisMock.map((item) => (item.id === animal.id ? animalAtualizado : item))
+    return HttpResponse.json(animalAtualizado)
   }),
 ]

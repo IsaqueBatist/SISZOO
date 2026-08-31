@@ -1,6 +1,6 @@
 import { http } from '../../lib/http'
 import type { PaginaResponse } from '../usuarios/usuarios.types'
-import type { Animal, AnimaisFiltro, Baia, CatalogosAnimal } from './animais.types'
+import type { Animal, AnimaisFiltro, AnimalRequest, Baia, CatalogosAnimal } from './animais.types'
 
 // A tela de Animais só usa a lista de baias para popular o filtro (sem
 // paginação própria) — pedimos uma página grande o bastante para cobrir as
@@ -20,4 +20,16 @@ export function listarBaiasAtivas(): Promise<Baia[]> {
   return http
     .get<PaginaResponse<Baia>>('/baias', { params: { ativa: true, pagina: 0, tamanho: TAMANHO_PAGINA_SEM_UI_DE_PAGINACAO } })
     .then((response) => response.data.itens)
+}
+
+export function buscarAnimalPorId(id: string): Promise<Animal> {
+  return http.get<Animal>(`/animais/${id}`).then((response) => response.data)
+}
+
+export function criarAnimal(payload: AnimalRequest): Promise<Animal> {
+  return http.post<Animal>('/animais', payload).then((response) => response.data)
+}
+
+export function atualizarAnimal(id: string, payload: AnimalRequest): Promise<Animal> {
+  return http.put<Animal>(`/animais/${id}`, payload).then((response) => response.data)
 }
