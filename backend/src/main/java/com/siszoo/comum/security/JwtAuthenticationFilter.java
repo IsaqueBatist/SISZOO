@@ -50,10 +50,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    // Por padrao OncePerRequestFilter pula o re-dispatch de erro (ex.: o
+    // sendError(405) que o Spring MVC dispara para verbo nao mapeado): sem
+    // isso, o SecurityContext fica vazio nesse segundo passe pelo filter
+    // chain e o AuthorizationFilter troca o 405 correto por 401. Refazendo
+    // a autenticacao tambem no dispatch de erro mantem o status original.
+    @Override
+    protected boolean shouldNotFilterErrorDispatch() {
+        return false;
+    }
+
     private void autenticarSePossivel(String token) {
         try {
             Claims claims = jwtService.validarToken(token).getPayload();
             String usuarioId = claims.getSubject();
+            // Erasure: a API de claims do jjwt so oferece get(key, Class<T>), sem
+            // variante parametrizada para List<String> — o cast e inevitavel aqui.
             @SuppressWarnings("unchecked")
             List<String> cargos = claims.get("cargos", List.class);
             Set<GrantedAuthority> autoridades = autoridadeService.resolverAutoridades(cargos);

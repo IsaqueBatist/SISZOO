@@ -11,8 +11,9 @@ imutabilidade de microchip, RBAC por cargo, validações de e-mail/senha etc.).
 
 1. No Insomnia, crie/abra um Project e escolha **Git Sync → Clone** apontando
    para este repositório (ou, se já tiver o repo clonado localmente, aponte
-   o Git Sync para esta pasta). O workspace **"SISZOO API"** aparece com 7
-   pastas (Health, Auth, Usuários, Preferências, Auditoria, Animais, Baias).
+   o Git Sync para esta pasta). O workspace **"SISZOO API"** aparece com 8
+   pastas (Health, Auth, Usuários, Preferências, Auditoria, Animais, Baias,
+   Registros Clínicos).
 2. Selecione o Environment **"Local"** e preencha, no mínimo:
    - `admin_email` / `admin_password`: credenciais do admin seedado
      localmente (`ADMIN_SEED_EMAIL`/`ADMIN_SEED_PASSWORD` do seu `.env`).
@@ -40,6 +41,19 @@ A pasta **Baias** documenta um detalhe que não é óbvio pelo nome do verbo:
 "Excluir baia" é `DELETE`, mas o backend nunca remove a linha — é
 soft-delete (`ativa=false`, 200), sem bloqueio mesmo com animais alocados.
 Para reverter, use "Ativar/reativar baia" (`PATCH /status`).
+
+A pasta **Registros Clínicos** (vacinações, procedimentos, prescrições) reúne
+os três recursos porque compartilham o mesmo padrão de imutabilidade
+(CLAUDE.md): nenhum dos três controllers tem `PUT`/`PATCH`/`DELETE` — "Tentar
+atualizar vacinação (405)" mostra que o Spring MVC já rejeita esses verbos
+sozinho, sem código de bloqueio adicional. Correção de um registro (inclusive
+mudança de status de prescrição) é sempre um novo `POST` no mesmo endpoint com
+`retificaId` apontando para o registro anterior — ver "Retificar vacinação"
+para o exemplo completo (o padrão é idêntico nos outros dois recursos). Um
+detalhe que só aparece testando: `medicamentoId` (usado por "Criar
+prescrição") não tem seed nem endpoint de catálogo ainda — é preciso inserir
+uma `categoria_farmacologica`/`medicamento` direto no banco antes de testar
+esse endpoint (ver descrição da requisição).
 
 ## Testes automatizados
 

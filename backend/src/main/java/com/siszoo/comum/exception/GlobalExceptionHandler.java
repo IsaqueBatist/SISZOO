@@ -6,6 +6,14 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.siszoo.animais.clinico.exception.MedicamentoInvalidoException;
+import com.siszoo.animais.clinico.exception.PrescricaoNaoEncontradaException;
+import com.siszoo.animais.clinico.exception.ProcedimentoNaoEncontradoException;
+import com.siszoo.animais.clinico.exception.RegistroJaRetificadoException;
+import com.siszoo.animais.clinico.exception.RetificacaoAnimalDivergenteException;
+import com.siszoo.animais.clinico.exception.TipoProcedimentoInvalidoException;
+import com.siszoo.animais.clinico.exception.VacinaInvalidaException;
+import com.siszoo.animais.clinico.exception.VacinacaoNaoEncontradaException;
 import com.siszoo.animais.exception.AnimalNaoEncontradoException;
 import com.siszoo.animais.exception.BaiaInvalidaException;
 import com.siszoo.animais.exception.BaiaNaoEncontradaException;
@@ -134,5 +142,53 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroResponse> handleUsuarioNaoPodeDesativarASiMesmo() {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
                 .body(new ErroResponse("Nao e permitido desativar o proprio usuario"));
+    }
+
+    @ExceptionHandler(VacinacaoNaoEncontradaException.class)
+    public ResponseEntity<ErroResponse> handleVacinacaoNaoEncontrada() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErroResponse("Vacinacao nao encontrada"));
+    }
+
+    @ExceptionHandler(ProcedimentoNaoEncontradoException.class)
+    public ResponseEntity<ErroResponse> handleProcedimentoNaoEncontrado() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErroResponse("Procedimento nao encontrado"));
+    }
+
+    @ExceptionHandler(PrescricaoNaoEncontradaException.class)
+    public ResponseEntity<ErroResponse> handlePrescricaoNaoEncontrada() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErroResponse("Prescricao nao encontrada"));
+    }
+
+    @ExceptionHandler(VacinaInvalidaException.class)
+    public ResponseEntity<ErroResponse> handleVacinaInvalida() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Vacina informada nao existe"));
+    }
+
+    @ExceptionHandler(TipoProcedimentoInvalidoException.class)
+    public ResponseEntity<ErroResponse> handleTipoProcedimentoInvalido() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Tipo de procedimento informado nao existe"));
+    }
+
+    @ExceptionHandler(MedicamentoInvalidoException.class)
+    public ResponseEntity<ErroResponse> handleMedicamentoInvalido() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Medicamento informado nao existe"));
+    }
+
+    @ExceptionHandler(RetificacaoAnimalDivergenteException.class)
+    public ResponseEntity<ErroResponse> handleRetificacaoAnimalDivergente() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Registro retificado pertence a outro animal"));
+    }
+
+    @ExceptionHandler(RegistroJaRetificadoException.class)
+    public ResponseEntity<ErroResponse> handleRegistroJaRetificado() {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErroResponse("Registro ja foi retificado por outro"));
     }
 }

@@ -1,0 +1,40 @@
+_id: "req_prescricoes_criar"
+type: "Request"
+parentId: "fld_registros_clinicos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/prescricoes"
+name: "Criar prescrição - caso feliz"
+description: "Requer GESTAO_ANIMAIS:escrita. ATENÇÃO: diferente de `vacina`/`tipoProcedimento` (resolvidos por código de catálogo), `medicamentoId` é um uuid cru — e a migration V6 cria as tabelas `categoria_farmacologica`/`medicamento` mas não insere nenhuma linha (schema-only), e não existe endpoint de catálogo para elas ainda. Para testar este endpoint localmente é preciso inserir uma categoria e um medicamento direto no banco antes, e colar o uuid gerado em {{ _.medicamento_id_exemplo }}. Enums válidos: `doseUnidade` = MILIGRAMA/MICROGRAMA/GRAMA/MILILITRO/UNIDADE_INTERNACIONAL; `unidadeFrequencia` = HORAS/DIAS; `viaAdministracao` = ORAL/INTRAVENOSA/INTRAMUSCULAR/SUBCUTANEA/TOPICA; `status` = ATIVA/CONCLUIDA/SUSPENSA/CANCELADA. Mesma imutabilidade e retificação (`retificaId`) da pasta Vacinações, inclusive para mudança de status (não há endpoint separado para isso: uma transição ATIVA→CONCLUIDA, por exemplo, também é um novo POST retificando o registro anterior)."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "animalId": "{{ _.animal_id_exemplo }}",
+      "medicamentoId": "{{ _.medicamento_id_exemplo }}",
+      "dataInicio": "2026-08-31",
+      "dataFimPrevista": "2026-09-07",
+      "frequenciaAplicada": 12,
+      "unidadeFrequencia": "HORAS",
+      "doseQuantidade": 50.0,
+      "doseUnidade": "MILIGRAMA",
+      "viaAdministracao": "ORAL",
+      "status": "ATIVA"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 58000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

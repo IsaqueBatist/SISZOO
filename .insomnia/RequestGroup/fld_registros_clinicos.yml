@@ -1,0 +1,10 @@
+_id: "fld_registros_clinicos"
+type: "RequestGroup"
+parentId: "wrk_siszoo_api"
+modified: 1750000000000
+created: 1750000000000
+name: "08 - Registros Clínicos"
+description: ''
+environment: {}
+metaSortKey: -1000000
+environmentType: "kv"

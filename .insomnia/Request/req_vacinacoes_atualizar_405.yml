@@ -1,0 +1,24 @@
+_id: "req_vacinacoes_atualizar_405"
+type: "Request"
+parentId: "fld_registros_clinicos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/vacinacoes/{{ _.vacinacao_id_exemplo }}"
+name: "Tentar atualizar vacinação (405 - imutável)"
+description: "Registro clínico é imutável (CLAUDE.md): não existe @PutMapping/@PatchMapping/@DeleteMapping em nenhum dos três controllers deste módulo (vacinações, procedimentos, prescrições) — o Spring MVC já devolve 405 para qualquer verbo fora de GET/POST, sem nenhum código adicional de bloqueio. O mesmo vale trocando o verbo para PATCH/DELETE, ou apontando para /api/procedimentos ou /api/prescricoes. Para corrigir um registro, use POST com `retificaId` (ver \"Retificar vacinação\")."
+method: "PUT"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 54000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

@@ -1,0 +1,39 @@
+_id: "req_vacinacoes_retificar"
+type: "Request"
+parentId: "fld_registros_clinicos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/vacinacoes"
+name: "Retificar vacinação (corrigir registro anterior)"
+description: "Mesmo endpoint de \"Criar vacinação\": presença de `retificaId` (não-nulo) faz este POST corrigir o registro apontado, em vez de criar um histórico novo e independente. Substitua {{ _.vacinacao_id_exemplo }} pelo id do registro a corrigir — precisa ser do mesmo `animalId`, senão 422 (\"Registro retificado pertence a outro animal\"), e não pode já ter sido retificado antes, senão 409 (\"Registro ja foi retificado por outro\"). A linha original nunca sofre UPDATE: confira depois em \"Buscar vacinação por id\" — ela passa a ter `statusRegistro: \"RETIFICADO\"` e `retificadoPorId` apontando para este novo registro, enquanto o novo tem `statusRegistro: \"ATIVO\"`."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "animalId": "{{ _.animal_id_exemplo }}",
+      "vacina": "antirrabica",
+      "dataAplicacao": "2026-08-31",
+      "numeroDose": 1,
+      "doseQuantidade": 1.0,
+      "doseUnidade": "MILILITRO",
+      "lote": "LOTE-CORRIGIDO",
+      "observacoes": "Dose corrigida - exemplo de retificação.",
+      "retificaId": "{{ _.vacinacao_id_exemplo }}"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 53000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
