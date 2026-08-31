@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Icon } from '../../components/layout/Icon'
+import { useAuth } from '../auth/AuthContext'
+import { roleKeyFromCargos } from '../../lib/nav'
 import { useAnimaisQuery, useBaiasAtivasQuery, useCatalogosAnimaisQuery } from './useAnimais'
 import { badgeDeEspecie, badgeDeStatus } from './statusBadge'
 import type { Animal, Pelagem, Porte, Sexo } from './animais.types'
@@ -7,7 +10,7 @@ import type { Animal, Pelagem, Porte, Sexo } from './animais.types'
 const TAMANHO_PAGINA = 20
 const FUSO_ITU = 'America/Sao_Paulo'
 const LINHAS_SKELETON = [0, 1, 2, 3, 4]
-const COLUNAS_TABELA = ['animal', 'especie', 'baia', 'status', 'sexo', 'porte', 'entrada', 'castrado']
+const COLUNAS_TABELA = ['animal', 'especie', 'baia', 'status', 'sexo', 'porte', 'entrada', 'castrado', 'acoes']
 
 function formatarData(iso: string): string {
   const data = new Date(iso)
@@ -44,6 +47,8 @@ function corAvatar(seed: string): string {
 }
 
 export function Animais() {
+  const { user } = useAuth()
+  const podeEscrever = ['admin', 'vet'].includes(roleKeyFromCargos(user?.cargos ?? []))
   const [busca, setBusca] = useState('')
   const [buscaDebounced, setBuscaDebounced] = useState('')
   const [statusFiltro, setStatusFiltro] = useState('')
@@ -94,6 +99,14 @@ export function Animais() {
           </h1>
           <p className="subtitle">Listagem de animais cadastrados no CCZ</p>
         </div>
+        {podeEscrever && (
+          <div className="actions">
+            <Link to="/animais/novo" className="btn btn-primary">
+              <Icon name="plus" size={14} />
+              Novo animal
+            </Link>
+          </div>
+        )}
       </div>
 
       <div className="filter-bar">
@@ -168,6 +181,7 @@ export function Animais() {
                   <th>Porte</th>
                   <th>Entrada</th>
                   <th>Castrado</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -210,6 +224,7 @@ export function Animais() {
                   <th>Porte</th>
                   <th>Entrada</th>
                   <th>Castrado</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -266,6 +281,17 @@ export function Animais() {
                           <span style={{ color: 'var(--color-success)' }}>● Sim</span>
                         ) : (
                           <span style={{ color: 'var(--color-text-muted)' }}>○ Não</span>
+                        )}
+                      </td>
+                      <td>
+                        {podeEscrever && (
+                          <Link
+                            to={`/animais/${animal.id}/editar`}
+                            className="btn btn-ghost btn-sm btn-icon-only"
+                            aria-label={`Editar ${animal.nome}`}
+                          >
+                            <Icon name="edit" size={14} />
+                          </Link>
                         )}
                       </td>
                     </tr>

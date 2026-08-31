@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 import { afterAll, afterEach, beforeAll } from 'vitest'
 import { server } from '../mocks/server'
-import { resetPreferenciasMock, resetUsuariosMock } from '../mocks/handlers'
+import { resetAnimaisMock, resetPreferenciasMock, resetUsuariosMock } from '../mocks/handlers'
 
 // TODO: migrar para 'error' quando as integrações reais de API existirem,
 // para acusar chamadas HTTP não-mockadas nos testes.
@@ -11,5 +11,6 @@ afterEach(() => {
   sessionStorage.clear()
   resetUsuariosMock()
   resetPreferenciasMock()
+  resetAnimaisMock()
 })
 afterAll(() => server.close())
