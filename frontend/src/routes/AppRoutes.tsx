@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from '../components/layout/Layout'
+import { Animais } from '../features/animais/Animais'
 import { Login } from '../features/auth/Login'
 import { TrocarSenha } from '../features/auth/TrocarSenha'
 import { Configuracoes } from '../features/configuracoes/Configuracoes'
@@ -27,6 +28,7 @@ export function AppRoutes() {
           }
         >
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/animais" element={<Animais />} />
           <Route path="/perfil" element={<Perfil />} />
           <Route path="/configuracoes" element={<Configuracoes />} />
           <Route element={<RotaAdmin />}>
