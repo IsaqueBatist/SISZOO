@@ -63,6 +63,16 @@ export interface Baia {
   superlotada: boolean
 }
 
+// Espelha com.siszoo.animais.dto.CriarBaiaRequest / AtualizarBaiaRequest do
+// backend (os dois DTOs têm campos idênticos).
+export interface BaiaRequest {
+  nome: string
+  tipoBaia: string
+  capacidade: number
+  finalidade?: string
+  observacoes?: string
+}
+
 export interface AnimaisFiltro {
   status?: string
   especie?: string

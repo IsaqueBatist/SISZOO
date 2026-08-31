@@ -1,0 +1,156 @@
+/* Portado do <style> inline de docs/prototipo/baias.html — avatares de
+   residentes (.resi-*) e o card fantasma (.add-baia) foram deixados de fora:
+   o backend só devolve a contagem de ocupação, não a lista de animais, e o
+   botão "Adicionar Baia" já vive no page-header. */
+
+.baia-section {
+  margin-bottom: var(--space-5);
+}
+.baia-section h2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: var(--space-3);
+  font-size: 16px;
+  font-family: var(--font-display);
+}
+.baia-section h2 .count {
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.baia-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+}
+@media (max-width: 1100px) {
+  .baia-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 800px) {
+  .baia-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.baia-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  transition:
+    transform 150ms,
+    box-shadow 150ms;
+}
+.baia-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+.baia-card.warn {
+  border-color: var(--color-warning-border);
+}
+.baia-card.danger {
+  border-color: var(--color-danger-border);
+  background: linear-gradient(135deg, var(--color-surface) 0%, #fff5f5 100%);
+}
+.baia-card.inativa {
+  opacity: 0.55;
+}
+.baia-card .head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.baia-card .baia-name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+.baia-card .occupancy-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+.baia-card .nums {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 13px;
+}
+.baia-card .pct {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+.baia-card.danger .pct {
+  color: var(--color-danger);
+}
+.baia-card .status-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.baia-card.warn .status-label {
+  background: var(--color-alert-bg);
+  color: var(--color-alert);
+}
+.baia-card.danger .status-label {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+.baia-card.inativa .status-label {
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+}
+.baia-card .card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 6px;
+  border-top: 1px solid var(--color-border);
+}
+.baia-card .card-footer .tipo {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+.baia-card .card-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.legend-strip {
+  display: inline-flex;
+  gap: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  flex-wrap: wrap;
+}
+.legend-strip .l-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.legend-strip .l-dot .d {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
