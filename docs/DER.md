@@ -138,6 +138,7 @@ erDiagram
 - E-mail deve casar regex `^[a-z.]+@itu\.sp\.gov\.br$` (institucional).
 - Cargo `recepcionista` foi removido do escopo — não criar mais.
 - Apenas cargo `Administrador` pode criar / desativar usuários e ver dados de denunciante em ocorrências sigilosas.
+- Nenhum usuário, incluindo Administrador, pode desativar a si mesmo (bloqueado no backend, HTTP 422).
 
 #### `cargo`
 
@@ -746,6 +747,10 @@ Campos: `id`, `codigo`, `nome`, `tipo` ("padrão raiva", "multidoenças", "apoio
 ### Catálogos imutáveis pelo usuário final
 
 23. Espécies, status de animal, motivos de entrada, tipos de baia, doenças, laboratórios, sintomas, tipos de ocorrência, providências tomadas, status de processo, resultados laboratoriais, desfechos, vacinas → mantidos pelo administrador via `Catálogos`. Não há mais aba "Parâmetros" nem "Integrações" expostas ao usuário.
+
+### Acesso e segurança (adendo)
+
+24. Usuário autenticado não pode desativar a si mesmo (HTTP 422) — adicionado ao final para não renumerar as regras 5-23.
 
 ---
 
