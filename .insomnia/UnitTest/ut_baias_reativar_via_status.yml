@@ -1,0 +1,65 @@
+_id: "ut_baias_reativar_via_status"
+type: "UnitTest"
+parentId: "uts_baias"
+modified: 1750000000000
+created: 1750000000000
+requestId: "req_baias_status_patch"
+name: "PATCH /status reativa uma baia desativada"
+code: |-
+  async function login(email, senha) {
+    const res = await insomnia.send({
+      url: '{{ _.base_url }}/api/auth/login',
+      method: 'POST',
+      headers: [{ name: 'Content-Type', value: 'application/json' }],
+      body: { mimeType: 'application/json', text: JSON.stringify({ email, senha }) },
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body).token;
+  }
+
+  function baiaValida(overrides) {
+    return Object.assign(
+      { nome: 'Baia Teste', tipoBaia: 'interna', capacidade: 2 },
+      overrides,
+    );
+  }
+
+  async function criarBaia(token, overrides) {
+    const res = await insomnia.send({
+      url: '{{ _.base_url }}/api/baias',
+      method: 'POST',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${token}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify(baiaValida(overrides)) },
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body);
+  }
+
+  async function alterarStatus(token, id, ativa) {
+    return insomnia.send({
+      url: `{{ _.base_url }}/api/baias/${id}/status`,
+      method: 'PATCH',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${token}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify({ ativa }) },
+    });
+  }
+
+  const adminToken = await login('{{ _.admin_email }}', '{{ _.admin_password }}');
+
+  const baia = await criarBaia(adminToken, { nome: `Baia Reativacao ${Date.now()}` });
+
+  const desativada = await alterarStatus(adminToken, baia.id, false);
+  expect(desativada.status).to.equal(200);
+  expect(JSON.parse(desativada.body).ativa).to.equal(false);
+
+  const reativada = await alterarStatus(adminToken, baia.id, true);
+  expect(reativada.status).to.equal(200);
+  expect(JSON.parse(reativada.body).ativa).to.equal(true);
+
+metaSortKey: 46000000

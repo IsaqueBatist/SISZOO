@@ -1,0 +1,104 @@
+_id: "ut_baias_rbac_por_perfil"
+type: "UnitTest"
+parentId: "uts_baias"
+modified: 1750000000000
+created: 1750000000000
+requestId: null
+name: "Agente lê mas não cria/exclui (403); Veterinário lê e cria mas não exclui (403); Admin faz tudo"
+code: |-
+  async function login(email, senha) {
+    const res = await insomnia.send({
+      url: '{{ _.base_url }}/api/auth/login',
+      method: 'POST',
+      headers: [{ name: 'Content-Type', value: 'application/json' }],
+      body: { mimeType: 'application/json', text: JSON.stringify({ email, senha }) },
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body).token;
+  }
+
+  function emailUnico(prefixo) {
+    const sufixo = String(Date.now())
+      .split('')
+      .map((d) => String.fromCharCode(97 + Number(d)))
+      .join('');
+    return `${prefixo}.${sufixo}@itu.sp.gov.br`;
+  }
+
+  async function criarUsuario(adminToken, dados) {
+    return insomnia.send({
+      url: '{{ _.base_url }}/api/usuarios',
+      method: 'POST',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${adminToken}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify(dados) },
+    });
+  }
+
+  function baiaValida(overrides) {
+    return Object.assign(
+      { nome: 'Baia Teste', tipoBaia: 'interna', capacidade: 2 },
+      overrides,
+    );
+  }
+
+  async function criarBaia(token, overrides) {
+    return insomnia.send({
+      url: '{{ _.base_url }}/api/baias',
+      method: 'POST',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${token}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify(baiaValida(overrides)) },
+    });
+  }
+
+  async function listarBaias(token) {
+    return insomnia.send({
+      url: '{{ _.base_url }}/api/baias',
+      method: 'GET',
+      headers: [{ name: 'Authorization', value: `Bearer ${token}` }],
+    });
+  }
+
+  async function excluirBaia(token, id) {
+    return insomnia.send({
+      url: `{{ _.base_url }}/api/baias/${id}`,
+      method: 'DELETE',
+      headers: [{ name: 'Authorization', value: `Bearer ${token}` }],
+    });
+  }
+
+  const adminToken = await login('{{ _.admin_email }}', '{{ _.admin_password }}');
+  const senha = '{{ _.senha_teste_padrao }}';
+
+  async function criarELogar(cargo, prefixo, crmv) {
+    const email = emailUnico(prefixo);
+    const dados = { nome: 'Rbac', sobrenome: cargo, email, cargo, senhaInicial: senha };
+    if (crmv) dados.crmv = crmv;
+    const criar = await criarUsuario(adminToken, dados);
+    expect(criar.status).to.equal(200);
+    return login(email, senha);
+  }
+
+  const tokenAgente = await criarELogar('Agente Sanitário', 'rbac.baias.agente');
+  const tokenVeterinario = await criarELogar('Veterinário', 'rbac.baias.vet', 'CRMV-SP-0003');
+
+  // Agente Sanitário: só leitura.
+  expect((await listarBaias(tokenAgente)).status).to.equal(200);
+  expect((await criarBaia(tokenAgente, { nome: `NaoDeveriaCriar ${Date.now()}` })).status).to.equal(403);
+
+  // Veterinário: leitura + escrita, mas sem exclusão.
+  expect((await listarBaias(tokenVeterinario)).status).to.equal(200);
+  const criadaPeloVet = await criarBaia(tokenVeterinario, { nome: `VetPodeCriar ${Date.now()}` });
+  expect(criadaPeloVet.status).to.equal(200);
+  const baiaDoVet = JSON.parse(criadaPeloVet.body);
+  expect((await excluirBaia(tokenVeterinario, baiaDoVet.id)).status).to.equal(403);
+
+  // Administrador: exclusão liberada (mesma baia criada pelo Vet).
+  expect((await excluirBaia(adminToken, baiaDoVet.id)).status).to.equal(200);
+
+metaSortKey: 47000000

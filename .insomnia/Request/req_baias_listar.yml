@@ -1,0 +1,24 @@
+_id: "req_baias_listar"
+type: "Request"
+parentId: "fld_baias"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/baias?pagina=0&tamanho=20"
+name: "Listar baias (ativa é opcional)"
+description: "`ativa` é o único filtro server-side (sem `tipo`/`q`). Omitir `ativa` traz ativas e inativas juntas — é assim que a tela de Gestão de Baias (T19) busca tudo de uma vez e filtra tipo/lotação/status em memória. Adicione `&ativa=true` na URL para replicar o dropdown de baias ativas usado no formulário de animal. Requer GESTAO_ANIMAIS:leitura."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 35000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

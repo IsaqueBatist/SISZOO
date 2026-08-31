@@ -1,0 +1,31 @@
+_id: "req_baias_status_patch"
+type: "Request"
+parentId: "fld_baias"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/baias/{{ _.baia_id_exemplo }}/status"
+name: "Ativar/reativar baia"
+description: "Substitua {{ _.baia_id_exemplo }} pelo id retornado por \"Criar baia\" ou \"Listar baias\". Requer GESTAO_ANIMAIS:escrita. É o mesmo endpoint que a tela de Gestão de Baias usa para reativar uma baia inativa (ver \"Excluir baia\" — a exclusão é soft-delete, não hard-delete)."
+method: "PATCH"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "ativa": true
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 39000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

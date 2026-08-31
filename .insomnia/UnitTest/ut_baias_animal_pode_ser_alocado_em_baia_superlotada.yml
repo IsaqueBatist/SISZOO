@@ -1,0 +1,108 @@
+_id: "ut_baias_animal_pode_ser_alocado_em_baia_superlotada"
+type: "UnitTest"
+parentId: "uts_baias"
+modified: 1750000000000
+created: 1750000000000
+requestId: null
+name: "Backend não impede alocar um animal numa baia já superlotada (regra existe só no frontend)"
+code: |-
+  async function login(email, senha) {
+    const res = await insomnia.send({
+      url: '{{ _.base_url }}/api/auth/login',
+      method: 'POST',
+      headers: [{ name: 'Content-Type', value: 'application/json' }],
+      body: { mimeType: 'application/json', text: JSON.stringify({ email, senha }) },
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body).token;
+  }
+
+  function baiaValida(overrides) {
+    return Object.assign(
+      { nome: 'Baia Teste', tipoBaia: 'interna', capacidade: 2 },
+      overrides,
+    );
+  }
+
+  async function criarBaia(token, overrides) {
+    const res = await insomnia.send({
+      url: '{{ _.base_url }}/api/baias',
+      method: 'POST',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${token}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify(baiaValida(overrides)) },
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body);
+  }
+
+  async function buscarBaia(token, id) {
+    const res = await insomnia.send({
+      url: `{{ _.base_url }}/api/baias/${id}`,
+      method: 'GET',
+      headers: [{ name: 'Authorization', value: `Bearer ${token}` }],
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body);
+  }
+
+  function animalValido(overrides) {
+    return Object.assign(
+      {
+        nome: 'Animal Teste',
+        especie: 'canino',
+        sexo: 'macho',
+        status: 'disponivel_adocao',
+        motivoEntrada: 'recolhimento',
+        dataEntrada: '2026-08-30T09:00:00',
+      },
+      overrides,
+    );
+  }
+
+  async function criarAnimal(token, overrides) {
+    return insomnia.send({
+      url: '{{ _.base_url }}/api/animais',
+      method: 'POST',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${token}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify(animalValido(overrides)) },
+    });
+  }
+
+  const adminToken = await login('{{ _.admin_email }}', '{{ _.admin_password }}');
+
+  // Capacidade 1: o primeiro animal já deixa a baia superlotada (>=capacidade).
+  const baia = await criarBaia(adminToken, { nome: `Baia Superlotada ${Date.now()}`, capacidade: 1 });
+
+  const primeiro = await criarAnimal(adminToken, {
+    nome: 'Primeiro',
+    baiaId: baia.id,
+    microchip: `CHIP-SUPER-1-${Date.now()}`,
+  });
+  expect(primeiro.status).to.equal(200);
+
+  const baiaSuperlotada = await buscarBaia(adminToken, baia.id);
+  expect(baiaSuperlotada.superlotada).to.equal(true);
+
+  // AnimalService.resolverBaia (backend) só valida que a baia existe — não
+  // checa capacidade/ocupação. O único bloqueio hoje é o <option disabled>
+  // no select de baia do AnimalForm (frontend, T18): um segundo POST direto
+  // na API, como este, é aceito normalmente mesmo com a baia já superlotada.
+  const segundo = await criarAnimal(adminToken, {
+    nome: 'Segundo',
+    baiaId: baia.id,
+    microchip: `CHIP-SUPER-2-${Date.now()}`,
+  });
+  expect(segundo.status).to.equal(200);
+  expect(JSON.parse(segundo.body).baiaId).to.equal(baia.id);
+
+  const baiaDepois = await buscarBaia(adminToken, baia.id);
+  expect(baiaDepois.ocupacaoAtual).to.equal(2);
+  expect(baiaDepois.superlotada).to.equal(true);
+
+metaSortKey: 48000000

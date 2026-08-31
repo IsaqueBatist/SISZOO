@@ -1,0 +1,48 @@
+_id: "ut_baias_criar_422_tipo_invalido"
+type: "UnitTest"
+parentId: "uts_baias"
+modified: 1750000000000
+created: 1750000000000
+requestId: "req_baias_criar"
+name: "Criar baia com tipoBaia inexistente retorna 422"
+code: |-
+  async function login(email, senha) {
+    const res = await insomnia.send({
+      url: '{{ _.base_url }}/api/auth/login',
+      method: 'POST',
+      headers: [{ name: 'Content-Type', value: 'application/json' }],
+      body: { mimeType: 'application/json', text: JSON.stringify({ email, senha }) },
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body).token;
+  }
+
+  function baiaValida(overrides) {
+    return Object.assign(
+      { nome: 'Baia Teste', tipoBaia: 'interna', capacidade: 2 },
+      overrides,
+    );
+  }
+
+  async function criarBaia(token, overrides) {
+    return insomnia.send({
+      url: '{{ _.base_url }}/api/baias',
+      method: 'POST',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${token}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify(baiaValida(overrides)) },
+    });
+  }
+
+  const adminToken = await login('{{ _.admin_email }}', '{{ _.admin_password }}');
+
+  const tipoInvalido = await criarBaia(adminToken, { tipoBaia: 'tipo-que-nao-existe' });
+  expect(tipoInvalido.status).to.equal(422);
+  expect(JSON.parse(tipoInvalido.body).mensagem).to.equal('Tipo de baia informado nao existe');
+
+  const tipoValido = await criarBaia(adminToken, { nome: `Baia ${Date.now()}` });
+  expect(tipoValido.status).to.equal(200);
+
+metaSortKey: 42000000

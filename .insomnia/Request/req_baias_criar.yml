@@ -1,0 +1,35 @@
+_id: "req_baias_criar"
+type: "Request"
+parentId: "fld_baias"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/baias"
+name: "Criar baia - caso feliz"
+description: "Requer GESTAO_ANIMAIS:escrita (Administrador ou Veterinário). `tipoBaia` é o código do catálogo (ver \"Catálogos\" na pasta Animais: interna/gatil/externa) — código inexistente retorna 422. `nome`/`tipoBaia`/`capacidade` são obrigatórios; `finalidade`/`observacoes` são opcionais."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "nome": "Baia Exemplo 1",
+      "tipoBaia": "interna",
+      "capacidade": 2,
+      "finalidade": "Cães porte médio",
+      "observacoes": "Cadastro de exemplo para documentação da API."
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 37000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

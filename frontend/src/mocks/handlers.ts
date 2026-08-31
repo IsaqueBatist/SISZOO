@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw'
-import type { Animal, AnimalRequest, Baia, CatalogosAnimal } from '../features/animais/animais.types'
+import type { Animal, AnimalRequest, Baia, BaiaRequest, CatalogosAnimal } from '../features/animais/animais.types'
 import type { LoginRequest, LoginResponse } from '../features/auth/auth.types'
 import { API_BASE_URL } from '../lib/env'
 import type { CriarUsuarioRequest, UsuarioListItem } from '../features/usuarios/usuarios.types'
@@ -550,69 +550,102 @@ const CATALOGOS_ANIMAIS_MOCK: CatalogosAnimal = {
 }
 
 // IDs alinhados aos baiaId/baiaNome já usados em seedAnimaisMock (Rex, Luna,
-// Bidu, Bob), mais uma baia inativa para exercitar o filtro `ativa=true`.
-const BAIAS_MOCK: Baia[] = [
-  {
-    id: 'c3d4e5f6-0000-0000-0000-000000000001',
-    nome: 'Baia 3',
-    tipoBaiaCodigo: 'canil',
-    tipoBaiaNome: 'Canil',
-    capacidade: 2,
-    finalidade: null,
-    ativa: true,
-    observacoes: null,
-    ocupacaoAtual: 1,
-    superlotada: false,
-  },
-  {
-    id: 'c3d4e5f6-0000-0000-0000-000000000002',
-    nome: 'Gatil A',
-    tipoBaiaCodigo: 'gatil',
-    tipoBaiaNome: 'Gatil',
-    capacidade: 4,
-    finalidade: null,
-    ativa: true,
-    observacoes: null,
-    ocupacaoAtual: 1,
-    superlotada: false,
-  },
-  {
-    id: 'c3d4e5f6-0000-0000-0000-000000000003',
-    nome: 'Baia 6',
-    tipoBaiaCodigo: 'canil',
-    tipoBaiaNome: 'Canil',
-    capacidade: 2,
-    finalidade: null,
-    ativa: true,
-    observacoes: null,
-    ocupacaoAtual: 1,
-    superlotada: false,
-  },
-  {
-    id: 'c3d4e5f6-0000-0000-0000-000000000004',
-    nome: 'Baia 7',
-    tipoBaiaCodigo: 'canil',
-    tipoBaiaNome: 'Canil',
-    capacidade: 2,
-    finalidade: null,
-    ativa: true,
-    observacoes: null,
-    ocupacaoAtual: 1,
-    superlotada: false,
-  },
-  {
-    id: 'c3d4e5f6-0000-0000-0000-000000000005',
-    nome: 'Baia Interditada',
-    tipoBaiaCodigo: 'canil',
-    tipoBaiaNome: 'Canil',
-    capacidade: 2,
-    finalidade: 'Reforma',
-    ativa: false,
-    observacoes: null,
-    ocupacaoAtual: 0,
-    superlotada: false,
-  },
-]
+// Bidu, Bob), mais uma baia inativa para exercitar o filtro de status e uma
+// superlotada/em atenção para exercitar o destaque visual da T19.
+function seedBaiasMock(): Baia[] {
+  return [
+    {
+      id: 'c3d4e5f6-0000-0000-0000-000000000001',
+      nome: 'Baia 3',
+      tipoBaiaCodigo: 'canil',
+      tipoBaiaNome: 'Canil',
+      capacidade: 2,
+      finalidade: null,
+      ativa: true,
+      observacoes: null,
+      ocupacaoAtual: 1,
+      superlotada: false,
+    },
+    {
+      id: 'c3d4e5f6-0000-0000-0000-000000000002',
+      nome: 'Gatil A',
+      tipoBaiaCodigo: 'gatil',
+      tipoBaiaNome: 'Gatil',
+      capacidade: 4,
+      finalidade: null,
+      ativa: true,
+      observacoes: null,
+      ocupacaoAtual: 1,
+      superlotada: false,
+    },
+    {
+      id: 'c3d4e5f6-0000-0000-0000-000000000003',
+      nome: 'Baia 6',
+      tipoBaiaCodigo: 'canil',
+      tipoBaiaNome: 'Canil',
+      capacidade: 2,
+      finalidade: null,
+      ativa: true,
+      observacoes: null,
+      ocupacaoAtual: 1,
+      superlotada: false,
+    },
+    {
+      id: 'c3d4e5f6-0000-0000-0000-000000000004',
+      nome: 'Baia 7',
+      tipoBaiaCodigo: 'canil',
+      tipoBaiaNome: 'Canil',
+      capacidade: 2,
+      finalidade: null,
+      ativa: true,
+      observacoes: null,
+      ocupacaoAtual: 1,
+      superlotada: false,
+    },
+    {
+      id: 'c3d4e5f6-0000-0000-0000-000000000005',
+      nome: 'Baia Interditada',
+      tipoBaiaCodigo: 'canil',
+      tipoBaiaNome: 'Canil',
+      capacidade: 2,
+      finalidade: 'Reforma',
+      ativa: false,
+      observacoes: null,
+      ocupacaoAtual: 0,
+      superlotada: false,
+    },
+    {
+      id: 'c3d4e5f6-0000-0000-0000-000000000006',
+      nome: 'Baia 9',
+      tipoBaiaCodigo: 'canil',
+      tipoBaiaNome: 'Canil',
+      capacidade: 2,
+      finalidade: null,
+      ativa: true,
+      observacoes: null,
+      ocupacaoAtual: 2,
+      superlotada: true,
+    },
+    {
+      id: 'c3d4e5f6-0000-0000-0000-000000000007',
+      nome: 'Baia 10',
+      tipoBaiaCodigo: 'canil',
+      tipoBaiaNome: 'Canil',
+      capacidade: 3,
+      finalidade: null,
+      ativa: true,
+      observacoes: null,
+      ocupacaoAtual: 0,
+      superlotada: false,
+    },
+  ]
+}
+
+let baiasMock: Baia[] = seedBaiasMock()
+
+export function resetBaiasMock() {
+  baiasMock = seedBaiasMock()
+}
 
 function nomeDoCatalogo(itens: { codigo: string; nome: string }[], codigo: string): string {
   return itens.find((item) => item.codigo === codigo)?.nome ?? codigo
@@ -622,7 +655,7 @@ function nomeDoCatalogo(itens: { codigo: string; nome: string }[], codigo: strin
 // form de T18 envia) — espelha o que o service real faz ao resolver os
 // códigos de espécie/status/motivo/baia para os nomes exibidos.
 function construirAnimalMock(id: string, body: AnimalRequest, existente: Animal | null): Animal {
-  const baia = body.baiaId ? BAIAS_MOCK.find((item) => item.id === body.baiaId) : undefined
+  const baia = body.baiaId ? baiasMock.find((item) => item.id === body.baiaId) : undefined
   const agora = new Date().toISOString()
   return {
     id,
@@ -803,7 +836,7 @@ export const handlers = [
     const pagina = Number(url.searchParams.get('pagina') ?? '0')
     const tamanho = Number(url.searchParams.get('tamanho') ?? '20')
 
-    const filtradas = BAIAS_MOCK.filter((baia) => ativaParam === null || baia.ativa === (ativaParam === 'true'))
+    const filtradas = baiasMock.filter((baia) => ativaParam === null || baia.ativa === (ativaParam === 'true'))
 
     const totalItens = filtradas.length
     const totalPaginas = Math.max(Math.ceil(totalItens / tamanho), 1)
@@ -811,6 +844,81 @@ export const handlers = [
     const itens = filtradas.slice(inicio, inicio + tamanho)
 
     return HttpResponse.json({ itens, pagina, tamanho, totalItens, totalPaginas })
+  }),
+
+  http.post(`${API_BASE_URL}/baias`, async ({ request }) => {
+    const body = (await request.json()) as BaiaRequest
+    const tipo = CATALOGOS_ANIMAIS_MOCK.tiposBaia.find((item) => item.codigo === body.tipoBaia)
+    if (!tipo) {
+      return HttpResponse.json({ mensagem: 'Tipo de baia informado nao existe' }, { status: 422 })
+    }
+
+    const novaBaia: Baia = {
+      id: crypto.randomUUID(),
+      nome: body.nome,
+      tipoBaiaCodigo: tipo.codigo,
+      tipoBaiaNome: tipo.nome,
+      capacidade: body.capacidade,
+      finalidade: body.finalidade ?? null,
+      ativa: true,
+      observacoes: body.observacoes ?? null,
+      ocupacaoAtual: 0,
+      superlotada: false,
+    }
+
+    baiasMock = [...baiasMock, novaBaia]
+    return HttpResponse.json(novaBaia, { status: 201 })
+  }),
+
+  http.put(`${API_BASE_URL}/baias/:id`, async ({ params, request }) => {
+    const baia = baiasMock.find((item) => item.id === params.id)
+    if (!baia) {
+      return HttpResponse.json({ mensagem: 'Baia nao encontrada' }, { status: 404 })
+    }
+
+    const body = (await request.json()) as BaiaRequest
+    const tipo = CATALOGOS_ANIMAIS_MOCK.tiposBaia.find((item) => item.codigo === body.tipoBaia)
+    if (!tipo) {
+      return HttpResponse.json({ mensagem: 'Tipo de baia informado nao existe' }, { status: 422 })
+    }
+
+    const baiaAtualizada: Baia = {
+      ...baia,
+      nome: body.nome,
+      tipoBaiaCodigo: tipo.codigo,
+      tipoBaiaNome: tipo.nome,
+      capacidade: body.capacidade,
+      finalidade: body.finalidade ?? null,
+      observacoes: body.observacoes ?? null,
+      superlotada: baia.ocupacaoAtual >= body.capacidade,
+    }
+    baiasMock = baiasMock.map((item) => (item.id === baia.id ? baiaAtualizada : item))
+    return HttpResponse.json(baiaAtualizada)
+  }),
+
+  http.delete(`${API_BASE_URL}/baias/:id`, ({ params }) => {
+    const baia = baiasMock.find((item) => item.id === params.id)
+    if (!baia) {
+      return HttpResponse.json({ mensagem: 'Baia nao encontrada' }, { status: 404 })
+    }
+
+    // Espelha o backend real: soft-delete, sempre sucede mesmo com animais
+    // alocados (ver BaiaController#desativar).
+    const baiaDesativada: Baia = { ...baia, ativa: false }
+    baiasMock = baiasMock.map((item) => (item.id === baia.id ? baiaDesativada : item))
+    return HttpResponse.json(baiaDesativada)
+  }),
+
+  http.patch(`${API_BASE_URL}/baias/:id/status`, async ({ params, request }) => {
+    const baia = baiasMock.find((item) => item.id === params.id)
+    if (!baia) {
+      return HttpResponse.json({ mensagem: 'Baia nao encontrada' }, { status: 404 })
+    }
+
+    const { ativa } = (await request.json()) as { ativa: boolean }
+    const baiaAtualizada: Baia = { ...baia, ativa }
+    baiasMock = baiasMock.map((item) => (item.id === baia.id ? baiaAtualizada : item))
+    return HttpResponse.json(baiaAtualizada)
   }),
 
   http.get(`${API_BASE_URL}/animais/:id`, ({ params }) => {

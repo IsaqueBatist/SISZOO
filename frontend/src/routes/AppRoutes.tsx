@@ -5,6 +5,7 @@ import { CadastrarAnimal } from '../features/animais/CadastrarAnimal'
 import { EditarAnimal } from '../features/animais/EditarAnimal'
 import { Login } from '../features/auth/Login'
 import { TrocarSenha } from '../features/auth/TrocarSenha'
+import { GestaoBaias } from '../features/baias/GestaoBaias'
 import { Configuracoes } from '../features/configuracoes/Configuracoes'
 import { Dashboard } from '../features/dashboard/Dashboard'
 import { Perfil } from '../features/perfil/Perfil'
@@ -13,6 +14,7 @@ import { ThemeProvider } from '../lib/ThemeProvider'
 import { EmConstrucao } from '../pages/EmConstrucao'
 import { RotaAdmin } from './RotaAdmin'
 import { RotaEscritaAnimais } from './RotaEscritaAnimais'
+import { RotaGestaoBaias } from './RotaGestaoBaias'
 import { RotaProtegida } from './RotaProtegida'
 
 export function AppRoutes() {
@@ -35,6 +37,9 @@ export function AppRoutes() {
           <Route element={<RotaEscritaAnimais />}>
             <Route path="/animais/novo" element={<CadastrarAnimal />} />
             <Route path="/animais/:id/editar" element={<EditarAnimal />} />
+          </Route>
+          <Route element={<RotaGestaoBaias />}>
+            <Route path="/baias" element={<GestaoBaias />} />
           </Route>
           <Route path="/perfil" element={<Perfil />} />
           <Route path="/configuracoes" element={<Configuracoes />} />

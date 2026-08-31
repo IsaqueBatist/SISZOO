@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Icon } from '../../components/layout/Icon'
 import { useAuth } from '../auth/AuthContext'
 import { roleKeyFromCargos } from '../../lib/nav'
@@ -49,11 +49,15 @@ function corAvatar(seed: string): string {
 export function Animais() {
   const { user } = useAuth()
   const podeEscrever = ['admin', 'vet'].includes(roleKeyFromCargos(user?.cargos ?? []))
+  const [searchParams] = useSearchParams()
   const [busca, setBusca] = useState('')
   const [buscaDebounced, setBuscaDebounced] = useState('')
   const [statusFiltro, setStatusFiltro] = useState('')
   const [especieFiltro, setEspecieFiltro] = useState('')
-  const [baiaFiltro, setBaiaFiltro] = useState('')
+  // Hidrata só na primeira renderização: um card de baia (T19) linka para cá
+  // com `?baiaId=`; depois disso o filtro vira estado local normal, sem
+  // sincronização de volta para a URL.
+  const [baiaFiltro, setBaiaFiltro] = useState(() => searchParams.get('baiaId') ?? '')
   const [pagina, setPagina] = useState(0)
   const [filtroAnterior, setFiltroAnterior] = useState({ busca: '', status: '', especie: '', baia: '' })
 

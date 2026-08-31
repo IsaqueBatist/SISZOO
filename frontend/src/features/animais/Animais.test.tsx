@@ -11,7 +11,7 @@ import type { Usuario } from '../auth/auth.types'
 import { Animais } from './Animais'
 import { badgeDeEspecie, badgeDeStatus } from './statusBadge'
 
-function renderAnimais() {
+function renderAnimais(initialEntry = '/animais') {
   const usuario: Usuario = {
     id: 'a1b2c3d4-0000-0000-0000-000000000001',
     nome: 'Stéphanie',
@@ -27,7 +27,7 @@ function renderAnimais() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[initialEntry]}>
         <AuthProvider>
           <Animais />
         </AuthProvider>
@@ -135,6 +135,14 @@ describe('Animais', () => {
       expect(screen.queryByText('Rex')).not.toBeInTheDocument()
     })
     expect(screen.getByText('Luna')).toBeInTheDocument()
+  })
+
+  it('hidrata o filtro de baia a partir de ?baiaId= na URL', async () => {
+    renderAnimais('/animais?baiaId=c3d4e5f6-0000-0000-0000-000000000002')
+
+    await screen.findByText('Luna')
+    expect(screen.queryByText('Rex')).not.toBeInTheDocument()
+    expect(screen.getByLabelText(/filtrar por baia/i)).toHaveValue('c3d4e5f6-0000-0000-0000-000000000002')
   })
 
   it('busca por nome', async () => {

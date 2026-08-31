@@ -11,8 +11,8 @@ imutabilidade de microchip, RBAC por cargo, validações de e-mail/senha etc.).
 
 1. No Insomnia, crie/abra um Project e escolha **Git Sync → Clone** apontando
    para este repositório (ou, se já tiver o repo clonado localmente, aponte
-   o Git Sync para esta pasta). O workspace **"SISZOO API"** aparece com 6
-   pastas (Health, Auth, Usuários, Preferências, Auditoria, Animais).
+   o Git Sync para esta pasta). O workspace **"SISZOO API"** aparece com 7
+   pastas (Health, Auth, Usuários, Preferências, Auditoria, Animais, Baias).
 2. Selecione o Environment **"Local"** e preencha, no mínimo:
    - `admin_email` / `admin_password`: credenciais do admin seedado
      localmente (`ADMIN_SEED_EMAIL`/`ADMIN_SEED_PASSWORD` do seu `.env`).
@@ -28,20 +28,26 @@ salvo automaticamente na variável `token` (script "After Response"), que as
 demais requisições da pasta usam via header `Authorization: Bearer {{ _.token }}`.
 
 Algumas requisições têm placeholders para preencher manualmente, como
-`{{ _.usuario_id_exemplo }}` e `{{ _.animal_id_exemplo }}` — copie o `id` da
-resposta de um "criar"/"listar" e cole no Environment ou direto na URL.
+`{{ _.usuario_id_exemplo }}`, `{{ _.animal_id_exemplo }}` e
+`{{ _.baia_id_exemplo }}` — copie o `id` da resposta de um "criar"/"listar"
+e cole no Environment ou direto na URL.
 
 As requisições de criação (`Criar usuário`, `Criar animal`) usam e-mail/
 microchip fixos de propósito: rodá-las uma segunda vez sem alterar esses
 campos demonstra as regras de unicidade (409) — não é um bug do exemplo.
 
+A pasta **Baias** documenta um detalhe que não é óbvio pelo nome do verbo:
+"Excluir baia" é `DELETE`, mas o backend nunca remove a linha — é
+soft-delete (`ativa=false`, 200), sem bloqueio mesmo com animais alocados.
+Para reverter, use "Ativar/reativar baia" (`PATCH /status`).
+
 ## Testes automatizados
 
-Cada pasta `UnitTestSuite` (Auth, Usuários, Animais) roda de forma
-independente e autocontida: os próprios testes criam os usuários/animais
-temporários de que precisam (com e-mail/microchip únicos gerados em tempo de
-execução), fazem login com o perfil certo e limpam-se sozinhos por não
-reaproveitar dados fixos — só o `admin_email`/`admin_password` do
+Cada pasta `UnitTestSuite` (Auth, Usuários, Animais, Baias) roda de forma
+independente e autocontida: os próprios testes criam os usuários/animais/
+baias temporários de que precisam (com e-mail/microchip/nome únicos gerados
+em tempo de execução), fazem login com o perfil certo e limpam-se sozinhos
+por não reaproveitar dados fixos — só o `admin_email`/`admin_password` do
 Environment precisa estar correto.
 
 Para rodar: com o backend de pé, abra a aba **Unit Testing** no Insomnia,
@@ -54,6 +60,16 @@ temporário só para isso (nunca usa o admin seedado real), e a asserção
 reflete o comportamento *atual* (200, permite). Se a equipe decidir bloquear
 essa ação no futuro, o teste precisa ser atualizado para esperar o novo
 status.
+
+Da mesma forma, `ut_baias_excluir_soft_delete_nao_bloqueia_ocupada` e
+`ut_baias_animal_pode_ser_alocado_em_baia_superlotada` documentam dois gaps
+equivalentes no módulo de baias: o backend nem bloqueia excluir uma baia
+ocupada, nem impede alocar um animal numa baia já superlotada — os dois
+únicos freios existentes são de UI (aviso ao excluir, `<option disabled>` no
+formulário de animal), na tela de Gestão de Baias e no formulário de animal
+respectivamente. Ambos os testes refletem o comportamento *atual* (200,
+permite); se essas regras migrarem para o backend no futuro, os testes
+precisam ser atualizados para esperar 409/422.
 
 ## O que não está aqui
 

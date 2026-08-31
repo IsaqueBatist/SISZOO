@@ -1,0 +1,24 @@
+_id: "req_baias_excluir"
+type: "Request"
+parentId: "fld_baias"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/baias/{{ _.baia_id_exemplo }}"
+name: "Excluir baia (soft-delete)"
+description: "Requer GESTAO_ANIMAIS:exclusao (só Administrador — Veterinário recebe 403). Apesar do verbo DELETE, isto NUNCA remove a linha: marca `ativa=false` e retorna 200 com o `BaiaResponse` atualizado. Não há bloqueio se a baia tiver animais alocados (`ocupacaoAtual > 0`) — a proteção contra isso existe só no frontend (T19), como um aviso, não uma trava. Para reverter, use \"Ativar/reativar baia\" (PATCH /status)."
+method: "DELETE"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 40000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
