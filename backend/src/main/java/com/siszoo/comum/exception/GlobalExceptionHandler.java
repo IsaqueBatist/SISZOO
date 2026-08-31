@@ -8,11 +8,13 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.siszoo.animais.exception.AnimalNaoEncontradoException;
 import com.siszoo.animais.exception.BaiaInvalidaException;
+import com.siszoo.animais.exception.BaiaNaoEncontradaException;
 import com.siszoo.animais.exception.EspecieInvalidaException;
 import com.siszoo.animais.exception.MicrochipImutavelException;
 import com.siszoo.animais.exception.MicrochipJaCadastradoException;
 import com.siszoo.animais.exception.MotivoEntradaInvalidoException;
 import com.siszoo.animais.exception.StatusAnimalInvalidoException;
+import com.siszoo.animais.exception.TipoBaiaInvalidoException;
 import com.siszoo.comum.dto.ErroResponse;
 import com.siszoo.usuarios.exception.CargoInvalidoException;
 import com.siszoo.usuarios.exception.CredencialInvalidaException;
@@ -21,6 +23,7 @@ import com.siszoo.usuarios.exception.EmailJaCadastradoException;
 import com.siszoo.usuarios.exception.NotificacaoCriticaObrigatoriaException;
 import com.siszoo.usuarios.exception.SenhasDivergentesException;
 import com.siszoo.usuarios.exception.UsuarioNaoEncontradoException;
+import com.siszoo.usuarios.exception.UsuarioNaoPodeDesativarASiMesmoException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -113,5 +116,23 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroResponse> handleBaiaInvalida() {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
                 .body(new ErroResponse("Baia informada nao existe"));
+    }
+
+    @ExceptionHandler(BaiaNaoEncontradaException.class)
+    public ResponseEntity<ErroResponse> handleBaiaNaoEncontrada() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErroResponse("Baia nao encontrada"));
+    }
+
+    @ExceptionHandler(TipoBaiaInvalidoException.class)
+    public ResponseEntity<ErroResponse> handleTipoBaiaInvalido() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Tipo de baia informado nao existe"));
+    }
+
+    @ExceptionHandler(UsuarioNaoPodeDesativarASiMesmoException.class)
+    public ResponseEntity<ErroResponse> handleUsuarioNaoPodeDesativarASiMesmo() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Nao e permitido desativar o proprio usuario"));
     }
 }
