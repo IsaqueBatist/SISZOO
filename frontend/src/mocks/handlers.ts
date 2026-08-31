@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw'
-import type { Animal, CatalogosAnimal } from '../features/animais/animais.types'
+import type { Animal, Baia, CatalogosAnimal } from '../features/animais/animais.types'
 import type { LoginRequest, LoginResponse } from '../features/auth/auth.types'
 import { API_BASE_URL } from '../lib/env'
 import type { CriarUsuarioRequest, UsuarioListItem } from '../features/usuarios/usuarios.types'
@@ -544,6 +544,71 @@ const CATALOGOS_ANIMAIS_MOCK: CatalogosAnimal = {
   ],
 }
 
+// IDs alinhados aos baiaId/baiaNome já usados em seedAnimaisMock (Rex, Luna,
+// Bidu, Bob), mais uma baia inativa para exercitar o filtro `ativa=true`.
+const BAIAS_MOCK: Baia[] = [
+  {
+    id: 'c3d4e5f6-0000-0000-0000-000000000001',
+    nome: 'Baia 3',
+    tipoBaiaCodigo: 'canil',
+    tipoBaiaNome: 'Canil',
+    capacidade: 2,
+    finalidade: null,
+    ativa: true,
+    observacoes: null,
+    ocupacaoAtual: 1,
+    superlotada: false,
+  },
+  {
+    id: 'c3d4e5f6-0000-0000-0000-000000000002',
+    nome: 'Gatil A',
+    tipoBaiaCodigo: 'gatil',
+    tipoBaiaNome: 'Gatil',
+    capacidade: 4,
+    finalidade: null,
+    ativa: true,
+    observacoes: null,
+    ocupacaoAtual: 1,
+    superlotada: false,
+  },
+  {
+    id: 'c3d4e5f6-0000-0000-0000-000000000003',
+    nome: 'Baia 6',
+    tipoBaiaCodigo: 'canil',
+    tipoBaiaNome: 'Canil',
+    capacidade: 2,
+    finalidade: null,
+    ativa: true,
+    observacoes: null,
+    ocupacaoAtual: 1,
+    superlotada: false,
+  },
+  {
+    id: 'c3d4e5f6-0000-0000-0000-000000000004',
+    nome: 'Baia 7',
+    tipoBaiaCodigo: 'canil',
+    tipoBaiaNome: 'Canil',
+    capacidade: 2,
+    finalidade: null,
+    ativa: true,
+    observacoes: null,
+    ocupacaoAtual: 1,
+    superlotada: false,
+  },
+  {
+    id: 'c3d4e5f6-0000-0000-0000-000000000005',
+    nome: 'Baia Interditada',
+    tipoBaiaCodigo: 'canil',
+    tipoBaiaNome: 'Canil',
+    capacidade: 2,
+    finalidade: 'Reforma',
+    ativa: false,
+    observacoes: null,
+    ocupacaoAtual: 0,
+    superlotada: false,
+  },
+]
+
 export const handlers = [
   http.get(`${API_BASE_URL}/health`, () => {
     return HttpResponse.json({ status: 'ok' })
@@ -657,6 +722,7 @@ export const handlers = [
     const url = new URL(request.url)
     const status = url.searchParams.get('status')
     const especie = url.searchParams.get('especie')
+    const baiaId = url.searchParams.get('baiaId')
     const q = url.searchParams.get('q')?.trim().toLowerCase()
     const pagina = Number(url.searchParams.get('pagina') ?? '0')
     const tamanho = Number(url.searchParams.get('tamanho') ?? '20')
@@ -664,9 +730,10 @@ export const handlers = [
     const filtrados = animaisMock.filter((animal) => {
       const combinaStatus = !status || animal.statusCodigo === status
       const combinaEspecie = !especie || animal.especieCodigo === especie
+      const combinaBaia = !baiaId || animal.baiaId === baiaId
       const combinaBusca =
         !q || animal.nome.toLowerCase().includes(q) || (animal.microchip ?? '').toLowerCase().includes(q)
-      return combinaStatus && combinaEspecie && combinaBusca
+      return combinaStatus && combinaEspecie && combinaBaia && combinaBusca
     })
 
     const totalItens = filtrados.length
@@ -679,5 +746,21 @@ export const handlers = [
 
   http.get(`${API_BASE_URL}/animais/catalogos`, () => {
     return HttpResponse.json(CATALOGOS_ANIMAIS_MOCK)
+  }),
+
+  http.get(`${API_BASE_URL}/baias`, ({ request }) => {
+    const url = new URL(request.url)
+    const ativaParam = url.searchParams.get('ativa')
+    const pagina = Number(url.searchParams.get('pagina') ?? '0')
+    const tamanho = Number(url.searchParams.get('tamanho') ?? '20')
+
+    const filtradas = BAIAS_MOCK.filter((baia) => ativaParam === null || baia.ativa === (ativaParam === 'true'))
+
+    const totalItens = filtradas.length
+    const totalPaginas = Math.max(Math.ceil(totalItens / tamanho), 1)
+    const inicio = pagina * tamanho
+    const itens = filtradas.slice(inicio, inicio + tamanho)
+
+    return HttpResponse.json({ itens, pagina, tamanho, totalItens, totalPaginas })
   }),
 ]

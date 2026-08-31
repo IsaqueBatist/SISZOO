@@ -95,6 +95,31 @@ describe('Animais', () => {
     expect(screen.getByText('Mia')).toBeInTheDocument()
   })
 
+  it('exibe a baia de cada animal, com fallback para quem não está em nenhuma', async () => {
+    renderAnimais()
+
+    const linhaRex = (await screen.findByText('Rex')).closest('tr')
+    const linhaMia = screen.getByText('Mia').closest('tr')
+    if (!linhaRex || !linhaMia) throw new Error('linha não encontrada')
+
+    expect(within(linhaRex).getByText('Baia 3')).toBeInTheDocument()
+    // Mia está "adotado" e não tem baia (baiaId/baiaNome nulos no mock).
+    expect(within(linhaMia).getByText('—')).toBeInTheDocument()
+  })
+
+  it('filtra por baia', async () => {
+    const user = userEvent.setup()
+    renderAnimais()
+
+    await screen.findByText('Rex')
+    await user.selectOptions(screen.getByLabelText(/filtrar por baia/i), 'c3d4e5f6-0000-0000-0000-000000000002')
+
+    await waitFor(() => {
+      expect(screen.queryByText('Rex')).not.toBeInTheDocument()
+    })
+    expect(screen.getByText('Luna')).toBeInTheDocument()
+  })
+
   it('busca por nome', async () => {
     const user = userEvent.setup()
     renderAnimais()

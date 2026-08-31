@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Icon } from '../../components/layout/Icon'
-import { useAnimaisQuery, useCatalogosAnimaisQuery } from './useAnimais'
+import { useAnimaisQuery, useBaiasAtivasQuery, useCatalogosAnimaisQuery } from './useAnimais'
 import { badgeDeEspecie, badgeDeStatus } from './statusBadge'
 import type { Animal, Pelagem, Porte, Sexo } from './animais.types'
 
 const TAMANHO_PAGINA = 20
 const FUSO_ITU = 'America/Sao_Paulo'
 const LINHAS_SKELETON = [0, 1, 2, 3, 4]
-const COLUNAS_TABELA = ['animal', 'especie', 'status', 'sexo', 'porte', 'entrada', 'castrado']
+const COLUNAS_TABELA = ['animal', 'especie', 'baia', 'status', 'sexo', 'porte', 'entrada', 'castrado']
 
 function formatarData(iso: string): string {
   const data = new Date(iso)
@@ -48,8 +48,9 @@ export function Animais() {
   const [buscaDebounced, setBuscaDebounced] = useState('')
   const [statusFiltro, setStatusFiltro] = useState('')
   const [especieFiltro, setEspecieFiltro] = useState('')
+  const [baiaFiltro, setBaiaFiltro] = useState('')
   const [pagina, setPagina] = useState(0)
-  const [filtroAnterior, setFiltroAnterior] = useState({ busca: '', status: '', especie: '' })
+  const [filtroAnterior, setFiltroAnterior] = useState({ busca: '', status: '', especie: '', baia: '' })
 
   useEffect(() => {
     const timeout = setTimeout(() => setBuscaDebounced(busca.trim()), 300)
@@ -62,20 +63,23 @@ export function Animais() {
   const filtroMudou =
     filtroAnterior.busca !== buscaDebounced ||
     filtroAnterior.status !== statusFiltro ||
-    filtroAnterior.especie !== especieFiltro
+    filtroAnterior.especie !== especieFiltro ||
+    filtroAnterior.baia !== baiaFiltro
   if (filtroMudou) {
-    setFiltroAnterior({ busca: buscaDebounced, status: statusFiltro, especie: especieFiltro })
+    setFiltroAnterior({ busca: buscaDebounced, status: statusFiltro, especie: especieFiltro, baia: baiaFiltro })
     setPagina(0)
   }
 
   const { data, isLoading, isError } = useAnimaisQuery({
     status: statusFiltro || undefined,
     especie: especieFiltro || undefined,
+    baiaId: baiaFiltro || undefined,
     q: buscaDebounced || undefined,
     pagina,
     tamanho: TAMANHO_PAGINA,
   })
   const { data: catalogos } = useCatalogosAnimaisQuery()
+  const { data: baias } = useBaiasAtivasQuery()
 
   const totalPaginas = Math.max(data?.totalPaginas ?? 1, 1)
   const primeiroItem = data && data.totalItens > 0 ? pagina * TAMANHO_PAGINA + 1 : 0
@@ -128,6 +132,19 @@ export function Animais() {
             </option>
           ))}
         </select>
+        <select
+          className="filter-select"
+          aria-label="Filtrar por baia"
+          value={baiaFiltro}
+          onChange={(event) => setBaiaFiltro(event.target.value)}
+        >
+          <option value="">Baia: Todas</option>
+          {baias?.map((baia) => (
+            <option key={baia.id} value={baia.id}>
+              {baia.nome}
+            </option>
+          ))}
+        </select>
       </div>
 
       {isError && (
@@ -145,6 +162,7 @@ export function Animais() {
                 <tr>
                   <th>Animal</th>
                   <th>Espécie</th>
+                  <th>Baia</th>
                   <th>Status</th>
                   <th>Sexo</th>
                   <th>Porte</th>
@@ -186,6 +204,7 @@ export function Animais() {
                 <tr>
                   <th>Animal</th>
                   <th>Espécie</th>
+                  <th>Baia</th>
                   <th>Status</th>
                   <th>Sexo</th>
                   <th>Porte</th>
@@ -223,6 +242,11 @@ export function Animais() {
                       </td>
                       <td>
                         <span className={`badge ${especieBadge.classe}`}>{especieBadge.label}</span>
+                      </td>
+                      <td>
+                        <span className="mono" style={{ fontSize: 12 }}>
+                          {animal.baiaNome ?? '—'}
+                        </span>
                       </td>
                       <td>
                         <span className={`badge ${statusBadge.classe}`}>

@@ -49,9 +49,24 @@ export interface CatalogosAnimal {
   tiposBaia: CatalogoItem[]
 }
 
+// Espelha com.siszoo.animais.dto.BaiaResponse.
+export interface Baia {
+  id: string
+  nome: string
+  tipoBaiaCodigo: string
+  tipoBaiaNome: string
+  capacidade: number
+  finalidade: string | null
+  ativa: boolean
+  observacoes: string | null
+  ocupacaoAtual: number
+  superlotada: boolean
+}
+
 export interface AnimaisFiltro {
   status?: string
   especie?: string
+  baiaId?: string
   q?: string
   pagina: number
   tamanho: number
