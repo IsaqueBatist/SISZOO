@@ -1,0 +1,10 @@
+_id: "fld_usuarios"
+type: "RequestGroup"
+parentId: "wrk_siszoo_api"
+modified: 1750000000000
+created: 1750000000000
+name: "03 - Usuários"
+description: ''
+environment: {}
+metaSortKey: -6000000
+environmentType: "kv"

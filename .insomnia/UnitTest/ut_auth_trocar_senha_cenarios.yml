@@ -1,0 +1,80 @@
+_id: "ut_auth_trocar_senha_cenarios"
+type: "UnitTest"
+parentId: "uts_auth"
+modified: 1750000000000
+created: 1750000000000
+requestId: null
+name: "Trocar a própria senha: divergente (422), curta (422) e caso feliz (204)"
+code: |-
+  async function login(email, senha) {
+    const res = await insomnia.send({
+      url: '{{ _.base_url }}/api/auth/login',
+      method: 'POST',
+      headers: [{ name: 'Content-Type', value: 'application/json' }],
+      body: { mimeType: 'application/json', text: JSON.stringify({ email, senha }) },
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body).token;
+  }
+
+  function emailUnico(prefixo) {
+    const sufixo = String(Date.now())
+      .split('')
+      .map((d) => String.fromCharCode(97 + Number(d)))
+      .join('');
+    return `${prefixo}.${sufixo}@itu.sp.gov.br`;
+  }
+
+  async function criarUsuario(adminToken, dados) {
+    return insomnia.send({
+      url: '{{ _.base_url }}/api/usuarios',
+      method: 'POST',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${adminToken}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify(dados) },
+    });
+  }
+
+  const adminToken = await login('{{ _.admin_email }}', '{{ _.admin_password }}');
+  const email = emailUnico('temp.senha');
+  const senhaOriginal = '{{ _.senha_teste_padrao }}';
+
+  const criar = await criarUsuario(adminToken, {
+    nome: 'Temp',
+    sobrenome: 'Senha',
+    email,
+    cargo: 'Agente Sanitário',
+    senhaInicial: senhaOriginal,
+  });
+  expect(criar.status).to.equal(200);
+
+  const userToken = await login(email, senhaOriginal);
+
+  async function trocarSenha(novaSenha, confirmarSenha) {
+    return insomnia.send({
+      url: '{{ _.base_url }}/api/auth/senha',
+      method: 'POST',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${userToken}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify({ novaSenha, confirmarSenha }) },
+    });
+  }
+
+  const divergente = await trocarSenha('NovaSenhaForte123', 'OutraSenhaForte123');
+  expect(divergente.status).to.equal(422);
+  expect(JSON.parse(divergente.body).mensagem).to.equal('Nova senha e confirmacao nao conferem');
+
+  const curta = await trocarSenha('curta1', 'curta1');
+  expect(curta.status).to.equal(422);
+
+  const ok = await trocarSenha('NovaSenhaForte123', 'NovaSenhaForte123');
+  expect(ok.status).to.equal(204);
+
+  const loginComNovaSenha = await login(email, 'NovaSenhaForte123');
+  expect(loginComNovaSenha).to.be.a('string');
+
+metaSortKey: 20000000

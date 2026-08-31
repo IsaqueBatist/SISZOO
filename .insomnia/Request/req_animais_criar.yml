@@ -1,0 +1,45 @@
+_id: "req_animais_criar"
+type: "Request"
+parentId: "fld_animais"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/animais"
+name: "Criar animal - caso feliz"
+description: "Requer GESTAO_ANIMAIS:escrita (Administrador ou Veterinário). Rodar uma segunda vez sem trocar o microchip demonstra a regra de microchip único (409 Microchip ja cadastrado) — comportamento esperado."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "nome": "Rex",
+      "especie": "canino",
+      "sexo": "macho",
+      "raca": "Vira-lata",
+      "coloracao": "Caramelo",
+      "pelagem": "curta",
+      "porte": "medio",
+      "pesoKg": 12.5,
+      "idadeAprox": "2 anos",
+      "microchip": "CHIP-EXEMPLO-0001",
+      "esterilizado": true,
+      "status": "disponivel_adocao",
+      "motivoEntrada": "recolhimento",
+      "dataEntrada": "2026-08-30T09:00:00",
+      "observacoes": "Cadastro de exemplo para documentação da API."
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 12000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

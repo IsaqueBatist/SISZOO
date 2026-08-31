@@ -1,0 +1,10 @@
+_id: "fld_preferencias"
+type: "RequestGroup"
+parentId: "wrk_siszoo_api"
+modified: 1750000000000
+created: 1750000000000
+name: "04 - Preferências"
+description: ''
+environment: {}
+metaSortKey: -5000000
+environmentType: "kv"

@@ -1,0 +1,31 @@
+_id: "req_usuarios_status_patch"
+type: "Request"
+parentId: "fld_usuarios"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/usuarios/{{ _.usuario_id_exemplo }}/status"
+name: "Ativar/desativar usuário"
+description: "Substitua {{ _.usuario_id_exemplo }} pelo id retornado por \"Criar usuário\" ou \"Listar usuários\" (ou preencha a variável no Environment). Requer USUARIOS_ACESSO:escrita."
+method: "PATCH"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "ativo": false
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 4000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

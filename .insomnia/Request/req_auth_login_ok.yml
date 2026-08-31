@@ -1,0 +1,35 @@
+_id: "req_auth_login_ok"
+type: "Request"
+parentId: "fld_auth"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/auth/login"
+name: "Login - caso feliz"
+description: "Preencha admin_email/admin_password no Environment \"Local\" antes de rodar. Ao responder 200, o token é salvo automaticamente na variável {{ _.token }} (ver aba \"After Response Script\"), reaproveitado pelas demais requisições protegidas."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "email": "{{ _.admin_email }}",
+      "senha": "{{ _.admin_password }}"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication: {}
+metaSortKey: -1000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  if (insomnia.response.status === 200) {
+    const body = insomnia.response.json();
+    insomnia.environment.set('token', body.token);
+  }

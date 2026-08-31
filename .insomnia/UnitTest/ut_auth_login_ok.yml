@@ -1,0 +1,15 @@
+_id: "ut_auth_login_ok"
+type: "UnitTest"
+parentId: "uts_auth"
+modified: 1750000000000
+created: 1750000000000
+requestId: "req_auth_login_ok"
+name: "Login com credenciais válidas retorna token"
+code: |-
+  const response = await insomnia.send('req_auth_login_ok');
+  expect(response.status).to.equal(200);
+  const body = JSON.parse(response.body);
+  expect(body.token).to.be.a('string');
+  expect(body.usuario.email).to.equal('{{ _.admin_email }}');
+
+metaSortKey: 16000000

@@ -1,0 +1,22 @@
+_id: "req_health_get"
+type: "Request"
+parentId: "fld_health"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/health"
+name: "Health check"
+description: "Rota pública, usada por probes de infraestrutura. Sempre deve responder 200."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication: {}
+metaSortKey: -2000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

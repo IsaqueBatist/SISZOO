@@ -1,0 +1,66 @@
+_id: "ut_usuarios_rbac_usuarios_acesso"
+type: "UnitTest"
+parentId: "uts_usuarios"
+modified: 1750000000000
+created: 1750000000000
+requestId: null
+name: "Só Administrador acessa /api/usuarios (Veterinário e Agente Sanitário recebem 403)"
+code: |-
+  async function login(email, senha) {
+    const res = await insomnia.send({
+      url: '{{ _.base_url }}/api/auth/login',
+      method: 'POST',
+      headers: [{ name: 'Content-Type', value: 'application/json' }],
+      body: { mimeType: 'application/json', text: JSON.stringify({ email, senha }) },
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body).token;
+  }
+
+  function emailUnico(prefixo) {
+    const sufixo = String(Date.now())
+      .split('')
+      .map((d) => String.fromCharCode(97 + Number(d)))
+      .join('');
+    return `${prefixo}.${sufixo}@itu.sp.gov.br`;
+  }
+
+  async function criarUsuario(adminToken, dados) {
+    return insomnia.send({
+      url: '{{ _.base_url }}/api/usuarios',
+      method: 'POST',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${adminToken}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify(dados) },
+    });
+  }
+
+  const adminToken = await login('{{ _.admin_email }}', '{{ _.admin_password }}');
+  const senha = '{{ _.senha_teste_padrao }}';
+
+  async function criarELogar(cargo, prefixo, crmv) {
+    const email = emailUnico(prefixo);
+    const dados = { nome: 'Rbac', sobrenome: cargo, email, cargo, senhaInicial: senha };
+    if (crmv) dados.crmv = crmv;
+    const criar = await criarUsuario(adminToken, dados);
+    expect(criar.status).to.equal(200);
+    return login(email, senha);
+  }
+
+  const tokenVeterinario = await criarELogar('Veterinário', 'rbac.vet', 'CRMV-SP-0001');
+  const tokenAgente = await criarELogar('Agente Sanitário', 'rbac.agente');
+
+  async function getUsuarios(token) {
+    return insomnia.send({
+      url: '{{ _.base_url }}/api/usuarios',
+      method: 'GET',
+      headers: [{ name: 'Authorization', value: `Bearer ${token}` }],
+    });
+  }
+
+  expect((await getUsuarios(tokenVeterinario)).status).to.equal(403);
+  expect((await getUsuarios(tokenAgente)).status).to.equal(403);
+
+metaSortKey: 25000000

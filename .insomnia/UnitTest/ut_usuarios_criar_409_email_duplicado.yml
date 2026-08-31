@@ -1,0 +1,57 @@
+_id: "ut_usuarios_criar_409_email_duplicado"
+type: "UnitTest"
+parentId: "uts_usuarios"
+modified: 1750000000000
+created: 1750000000000
+requestId: null
+name: "Criar usuário com e-mail já cadastrado retorna 409"
+code: |-
+  async function login(email, senha) {
+    const res = await insomnia.send({
+      url: '{{ _.base_url }}/api/auth/login',
+      method: 'POST',
+      headers: [{ name: 'Content-Type', value: 'application/json' }],
+      body: { mimeType: 'application/json', text: JSON.stringify({ email, senha }) },
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body).token;
+  }
+
+  function emailUnico(prefixo) {
+    const sufixo = String(Date.now())
+      .split('')
+      .map((d) => String.fromCharCode(97 + Number(d)))
+      .join('');
+    return `${prefixo}.${sufixo}@itu.sp.gov.br`;
+  }
+
+  async function criarUsuario(adminToken, dados) {
+    return insomnia.send({
+      url: '{{ _.base_url }}/api/usuarios',
+      method: 'POST',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${adminToken}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify(dados) },
+    });
+  }
+
+  const adminToken = await login('{{ _.admin_email }}', '{{ _.admin_password }}');
+  const email = emailUnico('duplicado');
+  const dados = {
+    nome: 'Duplicado',
+    sobrenome: 'Teste',
+    email,
+    cargo: 'Agente Sanitário',
+    senhaInicial: '{{ _.senha_teste_padrao }}',
+  };
+
+  const primeira = await criarUsuario(adminToken, dados);
+  expect(primeira.status).to.equal(200);
+
+  const segunda = await criarUsuario(adminToken, dados);
+  expect(segunda.status).to.equal(409);
+  expect(JSON.parse(segunda.body).mensagem).to.equal('E-mail ja cadastrado');
+
+metaSortKey: 22000000

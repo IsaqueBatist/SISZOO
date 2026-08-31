@@ -1,0 +1,30 @@
+_id: "req_auth_login_401_credencial"
+type: "Request"
+parentId: "fld_auth"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/auth/login"
+name: "401 - senha incorreta"
+description: "Mesma regra de negócio para senha errada e para usuário inativo: a API nunca revela qual dos dois motivos causou o 401 (evita enumerar contas válidas)."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "email": "{{ _.admin_email }}",
+      "senha": "senha-propositalmente-errada"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication: {}
+metaSortKey: 0
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

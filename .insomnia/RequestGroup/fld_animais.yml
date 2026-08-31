@@ -1,0 +1,10 @@
+_id: "fld_animais"
+type: "RequestGroup"
+parentId: "wrk_siszoo_api"
+modified: 1750000000000
+created: 1750000000000
+name: "06 - Animais"
+description: ''
+environment: {}
+metaSortKey: -3000000
+environmentType: "kv"

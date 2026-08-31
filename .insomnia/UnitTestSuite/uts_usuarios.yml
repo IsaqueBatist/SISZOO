@@ -1,0 +1,7 @@
+_id: "uts_usuarios"
+type: "UnitTestSuite"
+parentId: "wrk_siszoo_api"
+modified: 1750000000000
+created: 1750000000000
+name: "Usuários - regras críticas e RBAC"
+metaSortKey: 21000000

@@ -1,0 +1,45 @@
+_id: "req_animais_atualizar"
+type: "Request"
+parentId: "fld_animais"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/animais/{{ _.animal_id_exemplo }}"
+name: "Atualizar animal"
+description: "Substitua {{ _.animal_id_exemplo }} por um id real. O corpo é um PUT completo (não parcial). Tentar mudar o microchip de um animal que já tem microchip definido retorna 422 (regra de imutabilidade) — para testar, troque só o campo \"microchip\" para um valor diferente do atual."
+method: "PUT"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "nome": "Rex",
+      "especie": "canino",
+      "sexo": "macho",
+      "raca": "Vira-lata",
+      "coloracao": "Caramelo",
+      "pelagem": "curta",
+      "porte": "medio",
+      "pesoKg": 13,
+      "idadeAprox": "2 anos",
+      "microchip": "CHIP-EXEMPLO-0001",
+      "esterilizado": true,
+      "status": "em_tratamento",
+      "motivoEntrada": "recolhimento",
+      "dataEntrada": "2026-08-30T09:00:00",
+      "observacoes": "Atualização de exemplo."
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 13000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

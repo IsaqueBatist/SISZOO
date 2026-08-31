@@ -1,0 +1,91 @@
+_id: "ut_animais_atualizar_422_microchip_imutavel"
+type: "UnitTest"
+parentId: "uts_animais"
+modified: 1750000000000
+created: 1750000000000
+requestId: null
+name: "Alterar o microchip de um animal que já tem microchip definido retorna 422"
+code: |-
+  async function login(email, senha) {
+    const res = await insomnia.send({
+      url: '{{ _.base_url }}/api/auth/login',
+      method: 'POST',
+      headers: [{ name: 'Content-Type', value: 'application/json' }],
+      body: { mimeType: 'application/json', text: JSON.stringify({ email, senha }) },
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body).token;
+  }
+
+  function emailUnico(prefixo) {
+    const sufixo = String(Date.now())
+      .split('')
+      .map((d) => String.fromCharCode(97 + Number(d)))
+      .join('');
+    return `${prefixo}.${sufixo}@itu.sp.gov.br`;
+  }
+
+  async function criarUsuario(adminToken, dados) {
+    return insomnia.send({
+      url: '{{ _.base_url }}/api/usuarios',
+      method: 'POST',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${adminToken}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify(dados) },
+    });
+  }
+  function animalValido(overrides) {
+    return Object.assign(
+      {
+        nome: 'Animal Teste',
+        especie: 'canino',
+        sexo: 'macho',
+        status: 'disponivel_adocao',
+        motivoEntrada: 'recolhimento',
+        dataEntrada: '2026-08-30T09:00:00',
+      },
+      overrides,
+    );
+  }
+
+  async function criarAnimal(token, overrides) {
+    return insomnia.send({
+      url: '{{ _.base_url }}/api/animais',
+      method: 'POST',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${token}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify(animalValido(overrides)) },
+    });
+  }
+
+  const adminToken = await login('{{ _.admin_email }}', '{{ _.admin_password }}');
+  const microchipOriginal = `CHIP-${Date.now()}`;
+
+  const criar = await criarAnimal(adminToken, { nome: 'Thor', microchip: microchipOriginal });
+  expect(criar.status).to.equal(200);
+  const animalId = JSON.parse(criar.body).id;
+
+  async function atualizar(overrides) {
+    return insomnia.send({
+      url: `{{ _.base_url }}/api/animais/${animalId}`,
+      method: 'PUT',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${adminToken}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify(animalValido(Object.assign({ nome: 'Thor' }, overrides))) },
+    });
+  }
+
+  const comMicrochipDiferente = await atualizar({ microchip: `CHIP-OUTRO-${Date.now()}` });
+  expect(comMicrochipDiferente.status).to.equal(422);
+  expect(JSON.parse(comMicrochipDiferente.body).mensagem).to.equal('Microchip nao pode ser alterado apos definido');
+
+  const comMesmoMicrochip = await atualizar({ microchip: microchipOriginal });
+  expect(comMesmoMicrochip.status).to.equal(200);
+
+metaSortKey: 31000000
