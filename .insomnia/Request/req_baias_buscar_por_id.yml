@@ -1,0 +1,24 @@
+_id: "req_baias_buscar_por_id"
+type: "Request"
+parentId: "fld_baias"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/baias/{{ _.baia_id_exemplo }}"
+name: "Buscar baia por id"
+description: "Substitua {{ _.baia_id_exemplo }} por um id real (ver \"Criar baia\" ou \"Listar baias\"). Id inexistente retorna 404. `ocupacaoAtual`/`superlotada` são recalculados na hora, não colunas persistidas."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 36000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

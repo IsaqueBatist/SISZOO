@@ -1,0 +1,104 @@
+_id: "ut_baias_excluir_soft_delete_nao_bloqueia_ocupada"
+type: "UnitTest"
+parentId: "uts_baias"
+modified: 1750000000000
+created: 1750000000000
+requestId: "req_baias_excluir"
+name: "DELETE numa baia ocupada não bloqueia (soft-delete) e o animal continua referenciando-a"
+code: |-
+  async function login(email, senha) {
+    const res = await insomnia.send({
+      url: '{{ _.base_url }}/api/auth/login',
+      method: 'POST',
+      headers: [{ name: 'Content-Type', value: 'application/json' }],
+      body: { mimeType: 'application/json', text: JSON.stringify({ email, senha }) },
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body).token;
+  }
+
+  function baiaValida(overrides) {
+    return Object.assign(
+      { nome: 'Baia Teste', tipoBaia: 'interna', capacidade: 2 },
+      overrides,
+    );
+  }
+
+  async function criarBaia(token, overrides) {
+    const res = await insomnia.send({
+      url: '{{ _.base_url }}/api/baias',
+      method: 'POST',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${token}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify(baiaValida(overrides)) },
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body);
+  }
+
+  function animalValido(overrides) {
+    return Object.assign(
+      {
+        nome: 'Animal Teste',
+        especie: 'canino',
+        sexo: 'macho',
+        status: 'disponivel_adocao',
+        motivoEntrada: 'recolhimento',
+        dataEntrada: '2026-08-30T09:00:00',
+      },
+      overrides,
+    );
+  }
+
+  async function criarAnimal(token, overrides) {
+    const res = await insomnia.send({
+      url: '{{ _.base_url }}/api/animais',
+      method: 'POST',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${token}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify(animalValido(overrides)) },
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body);
+  }
+
+  async function excluirBaia(token, id) {
+    return insomnia.send({
+      url: `{{ _.base_url }}/api/baias/${id}`,
+      method: 'DELETE',
+      headers: [{ name: 'Authorization', value: `Bearer ${token}` }],
+    });
+  }
+
+  const adminToken = await login('{{ _.admin_email }}', '{{ _.admin_password }}');
+
+  const baia = await criarBaia(adminToken, { nome: `Baia Exclusao ${Date.now()}`, capacidade: 2 });
+  const animal = await criarAnimal(adminToken, {
+    nome: 'Alocado',
+    baiaId: baia.id,
+    microchip: `CHIP-EXCL-${Date.now()}`,
+  });
+  expect(animal.baiaId).to.equal(baia.id);
+
+  // Diferente do que o card T19 presumia, não existe 409/422 de "baia
+  // ocupada": o backend soft-deleta (ativa=false, 200) mesmo com 1/2 animais
+  // alocados. A proteção contra isso é só um aviso no frontend, não uma trava.
+  const exclusao = await excluirBaia(adminToken, baia.id);
+  expect(exclusao.status).to.equal(200);
+  const baiaExcluida = JSON.parse(exclusao.body);
+  expect(baiaExcluida.ativa).to.equal(false);
+  expect(baiaExcluida.ocupacaoAtual).to.equal(1);
+
+  const animalDepois = await insomnia.send({
+    url: `{{ _.base_url }}/api/animais/${animal.id}`,
+    method: 'GET',
+    headers: [{ name: 'Authorization', value: `Bearer ${adminToken}` }],
+  });
+  expect(animalDepois.status).to.equal(200);
+  expect(JSON.parse(animalDepois.body).baiaId).to.equal(baia.id);
+
+metaSortKey: 45000000

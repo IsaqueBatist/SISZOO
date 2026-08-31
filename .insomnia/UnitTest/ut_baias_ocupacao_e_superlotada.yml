@@ -1,0 +1,95 @@
+_id: "ut_baias_ocupacao_e_superlotada"
+type: "UnitTest"
+parentId: "uts_baias"
+modified: 1750000000000
+created: 1750000000000
+requestId: null
+name: "ocupacaoAtual e superlotada refletem os animais alocados na baia"
+code: |-
+  async function login(email, senha) {
+    const res = await insomnia.send({
+      url: '{{ _.base_url }}/api/auth/login',
+      method: 'POST',
+      headers: [{ name: 'Content-Type', value: 'application/json' }],
+      body: { mimeType: 'application/json', text: JSON.stringify({ email, senha }) },
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body).token;
+  }
+
+  function baiaValida(overrides) {
+    return Object.assign(
+      { nome: 'Baia Teste', tipoBaia: 'interna', capacidade: 2 },
+      overrides,
+    );
+  }
+
+  async function criarBaia(token, overrides) {
+    const res = await insomnia.send({
+      url: '{{ _.base_url }}/api/baias',
+      method: 'POST',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${token}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify(baiaValida(overrides)) },
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body);
+  }
+
+  async function buscarBaia(token, id) {
+    const res = await insomnia.send({
+      url: `{{ _.base_url }}/api/baias/${id}`,
+      method: 'GET',
+      headers: [{ name: 'Authorization', value: `Bearer ${token}` }],
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body);
+  }
+
+  function animalValido(overrides) {
+    return Object.assign(
+      {
+        nome: 'Animal Teste',
+        especie: 'canino',
+        sexo: 'macho',
+        status: 'disponivel_adocao',
+        motivoEntrada: 'recolhimento',
+        dataEntrada: '2026-08-30T09:00:00',
+      },
+      overrides,
+    );
+  }
+
+  async function criarAnimal(token, overrides) {
+    const res = await insomnia.send({
+      url: '{{ _.base_url }}/api/animais',
+      method: 'POST',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${token}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify(animalValido(overrides)) },
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body);
+  }
+
+  const adminToken = await login('{{ _.admin_email }}', '{{ _.admin_password }}');
+
+  // Capacidade 1: o primeiro animal já deixa a baia em 100% (>=capacidade é
+  // superlotada, não só acima — ver estadoLotacao no frontend, T19).
+  const baia = await criarBaia(adminToken, { nome: `Baia Ocupacao ${Date.now()}`, capacidade: 1 });
+
+  const antes = await buscarBaia(adminToken, baia.id);
+  expect(antes.ocupacaoAtual).to.equal(0);
+  expect(antes.superlotada).to.equal(false);
+
+  await criarAnimal(adminToken, { nome: 'Ocupante', baiaId: baia.id, microchip: `CHIP-OCUP-${Date.now()}` });
+
+  const depois = await buscarBaia(adminToken, baia.id);
+  expect(depois.ocupacaoAtual).to.equal(1);
+  expect(depois.superlotada).to.equal(true);
+
+metaSortKey: 44000000

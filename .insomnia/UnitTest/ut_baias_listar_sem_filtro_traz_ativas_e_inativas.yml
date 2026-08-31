@@ -1,0 +1,77 @@
+_id: "ut_baias_listar_sem_filtro_traz_ativas_e_inativas"
+type: "UnitTest"
+parentId: "uts_baias"
+modified: 1750000000000
+created: 1750000000000
+requestId: "req_baias_listar"
+name: "Omitir ?ativa na listagem traz ativas e inativas; ?ativa=true só traz ativas"
+code: |-
+  async function login(email, senha) {
+    const res = await insomnia.send({
+      url: '{{ _.base_url }}/api/auth/login',
+      method: 'POST',
+      headers: [{ name: 'Content-Type', value: 'application/json' }],
+      body: { mimeType: 'application/json', text: JSON.stringify({ email, senha }) },
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body).token;
+  }
+
+  function baiaValida(overrides) {
+    return Object.assign(
+      { nome: 'Baia Teste', tipoBaia: 'interna', capacidade: 2 },
+      overrides,
+    );
+  }
+
+  async function criarBaia(token, overrides) {
+    const res = await insomnia.send({
+      url: '{{ _.base_url }}/api/baias',
+      method: 'POST',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${token}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify(baiaValida(overrides)) },
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body);
+  }
+
+  async function excluirBaia(token, id) {
+    return insomnia.send({
+      url: `{{ _.base_url }}/api/baias/${id}`,
+      method: 'DELETE',
+      headers: [{ name: 'Authorization', value: `Bearer ${token}` }],
+    });
+  }
+
+  async function listarBaias(token, query) {
+    const res = await insomnia.send({
+      url: `{{ _.base_url }}/api/baias?tamanho=200${query ?? ''}`,
+      method: 'GET',
+      headers: [{ name: 'Authorization', value: `Bearer ${token}` }],
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body).itens;
+  }
+
+  const adminToken = await login('{{ _.admin_email }}', '{{ _.admin_password }}');
+
+  const nome = `Baia Listagem ${Date.now()}`;
+  const baia = await criarBaia(adminToken, { nome });
+
+  const desativar = await excluirBaia(adminToken, baia.id);
+  expect(desativar.status).to.equal(200);
+  expect(JSON.parse(desativar.body).ativa).to.equal(false);
+
+  const semFiltro = await listarBaias(adminToken);
+  expect(semFiltro.some((item) => item.id === baia.id)).to.equal(true);
+
+  const soAtivas = await listarBaias(adminToken, '&ativa=true');
+  expect(soAtivas.some((item) => item.id === baia.id)).to.equal(false);
+
+  const soInativas = await listarBaias(adminToken, '&ativa=false');
+  expect(soInativas.some((item) => item.id === baia.id)).to.equal(true);
+
+metaSortKey: 43000000

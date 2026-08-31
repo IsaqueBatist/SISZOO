@@ -1,0 +1,35 @@
+_id: "req_baias_atualizar"
+type: "Request"
+parentId: "fld_baias"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/baias/{{ _.baia_id_exemplo }}"
+name: "Atualizar baia"
+description: "Substitua {{ _.baia_id_exemplo }} por um id real. O corpo é um PUT completo (não há PATCH parcial de campos — só PATCH /status para ativar/desativar, ver requisição própria). Reduzir a capacidade abaixo da ocupação atual é permitido (não bloqueia nem faz rollback): a baia só passa a aparecer como `superlotada` na resposta."
+method: "PUT"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "nome": "Baia Exemplo 1",
+      "tipoBaia": "interna",
+      "capacidade": 3,
+      "finalidade": "Cães porte médio",
+      "observacoes": "Atualização de exemplo."
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 38000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
