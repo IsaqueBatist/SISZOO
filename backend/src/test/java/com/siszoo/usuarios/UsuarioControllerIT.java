@@ -165,6 +165,38 @@ class UsuarioControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    void deveRetornar422QuandoAdminTentaDesativarASiMesmo() {
+        Usuario admin = usuarioRepository.findByEmail(EMAIL_ADMIN).orElseThrow();
+
+        given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .body(new AtualizarStatusUsuarioRequest(false))
+                .when()
+                .patch("/api/usuarios/" + admin.getId() + "/status")
+                .then()
+                .statusCode(422);
+
+        Usuario adminAposTentativa = usuarioRepository.findById(admin.getId()).orElseThrow();
+        assertThat(adminAposTentativa.isAtivo(), equalTo(true));
+    }
+
+    @Test
+    void devePermitirReativarASiMesmo() {
+        Usuario admin = usuarioRepository.findByEmail(EMAIL_ADMIN).orElseThrow();
+
+        given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .body(new AtualizarStatusUsuarioRequest(true))
+                .when()
+                .patch("/api/usuarios/" + admin.getId() + "/status")
+                .then()
+                .statusCode(200)
+                .body("email", equalTo(EMAIL_ADMIN));
+    }
+
+    @Test
     void deveRetornar403QuandoUsuarioSemAutoridadeTentaListar() {
         Usuario agente = new Usuario();
         agente.setEmail("teste.agente.sememautoridade@itu.sp.gov.br");

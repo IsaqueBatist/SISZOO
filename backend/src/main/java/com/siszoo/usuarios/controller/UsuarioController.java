@@ -51,8 +51,9 @@ public class UsuarioController {
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAuthority('USUARIOS_ACESSO:escrita')")
-    public UsuarioResponse alterarStatus(@PathVariable UUID id, @Valid @RequestBody AtualizarStatusUsuarioRequest request) {
-        return usuarioService.alterarStatus(id, request);
+    public UsuarioResponse alterarStatus(
+            Authentication authentication, @PathVariable UUID id, @Valid @RequestBody AtualizarStatusUsuarioRequest request) {
+        return usuarioService.alterarStatus(id, request, UUID.fromString(authentication.getName()));
     }
 
     @GetMapping("/me")
