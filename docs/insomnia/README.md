@@ -11,9 +11,9 @@ imutabilidade de microchip, RBAC por cargo, validações de e-mail/senha etc.).
 
 1. No Insomnia, crie/abra um Project e escolha **Git Sync → Clone** apontando
    para este repositório (ou, se já tiver o repo clonado localmente, aponte
-   o Git Sync para esta pasta). O workspace **"SISZOO API"** aparece com 8
+   o Git Sync para esta pasta). O workspace **"SISZOO API"** aparece com 9
    pastas (Health, Auth, Usuários, Preferências, Auditoria, Animais, Baias,
-   Registros Clínicos).
+   Registros Clínicos, Medicamentos).
 2. Selecione o Environment **"Local"** e preencha, no mínimo:
    - `admin_email` / `admin_password`: credenciais do admin seedado
      localmente (`ADMIN_SEED_EMAIL`/`ADMIN_SEED_PASSWORD` do seu `.env`).
@@ -49,11 +49,20 @@ atualizar vacinação (405)" mostra que o Spring MVC já rejeita esses verbos
 sozinho, sem código de bloqueio adicional. Correção de um registro (inclusive
 mudança de status de prescrição) é sempre um novo `POST` no mesmo endpoint com
 `retificaId` apontando para o registro anterior — ver "Retificar vacinação"
-para o exemplo completo (o padrão é idêntico nos outros dois recursos). Um
-detalhe que só aparece testando: `medicamentoId` (usado por "Criar
-prescrição") não tem seed nem endpoint de catálogo ainda — é preciso inserir
-uma `categoria_farmacologica`/`medicamento` direto no banco antes de testar
-esse endpoint (ver descrição da requisição).
+para o exemplo completo (o padrão é idêntico nos outros dois recursos).
+
+A pasta **Medicamentos** dá escrita (criar/listar/buscar/editar/desativar) ao
+catálogo `medicamento` — ao contrário dos outros catálogos clínicos (vacina,
+tipo_procedimento, categoria_farmacologica), que continuam schema-only, sem
+nenhum endpoint. É uma assimetria consciente, não descuido: só `medicamento`
+recebeu escrita nesta etapa. "Desativar medicamento" é soft-delete
+(`ativo=false`), mesmo padrão de "Excluir baia" — mas, diferente de Baia, não
+há endpoint de reativação aqui. Para testar "Criar medicamento" (e, por
+tabela, "Criar prescrição", que referencia `medicamentoId`), ainda é preciso
+inserir uma `categoria_farmacologica` direto no banco primeiro — não há
+endpoint de catálogo para ela — e colar o uuid em
+{{ _.categoria_farmacologica_id_exemplo }}; a partir daí, "Criar medicamento"
+já funciona pela API normalmente.
 
 ## Testes automatizados
 
