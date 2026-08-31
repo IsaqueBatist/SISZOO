@@ -1,0 +1,24 @@
+_id: "req_preferencias_get"
+type: "Request"
+parentId: "fld_preferencias"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/usuarios/me/preferencias"
+name: "Minhas preferências"
+description: "Se o usuário nunca configurou preferências, a API cria e devolve os valores padrão (notifAlertasCriticos sempre true)."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 7000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

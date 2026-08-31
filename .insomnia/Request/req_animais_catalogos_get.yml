@@ -1,0 +1,24 @@
+_id: "req_animais_catalogos_get"
+type: "Request"
+parentId: "fld_animais"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/animais/catalogos"
+name: "Catálogos (espécie, status, motivo, tipo de baia)"
+description: "Valores fixos usados nos campos \"especie\"/\"status\"/\"motivoEntrada\" dos requests de animal."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 14000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

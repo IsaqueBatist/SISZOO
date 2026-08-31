@@ -1,0 +1,12 @@
+_id: "ut_auth_senha_401_sem_token"
+type: "UnitTest"
+parentId: "uts_auth"
+modified: 1750000000000
+created: 1750000000000
+requestId: "req_auth_senha_401_sem_token"
+name: "Trocar senha sem token retorna 401"
+code: |-
+  const response = await insomnia.send('req_auth_senha_401_sem_token');
+  expect(response.status).to.equal(401);
+
+metaSortKey: 19000000

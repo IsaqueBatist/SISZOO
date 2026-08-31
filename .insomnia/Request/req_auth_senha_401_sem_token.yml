@@ -1,0 +1,30 @@
+_id: "req_auth_senha_401_sem_token"
+type: "Request"
+parentId: "fld_auth"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/auth/senha"
+name: "401 - trocar senha sem token"
+description: "POST /api/auth/senha exige usuário autenticado; sem header Authorization, 401 antes mesmo de validar o corpo."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "novaSenha": "NovaSenhaForte123",
+      "confirmarSenha": "NovaSenhaForte123"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication: {}
+metaSortKey: 1000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

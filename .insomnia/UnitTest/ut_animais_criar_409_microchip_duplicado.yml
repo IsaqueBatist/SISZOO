@@ -1,0 +1,75 @@
+_id: "ut_animais_criar_409_microchip_duplicado"
+type: "UnitTest"
+parentId: "uts_animais"
+modified: 1750000000000
+created: 1750000000000
+requestId: "req_animais_criar"
+name: "Criar dois animais com o mesmo microchip retorna 409 no segundo"
+code: |-
+  async function login(email, senha) {
+    const res = await insomnia.send({
+      url: '{{ _.base_url }}/api/auth/login',
+      method: 'POST',
+      headers: [{ name: 'Content-Type', value: 'application/json' }],
+      body: { mimeType: 'application/json', text: JSON.stringify({ email, senha }) },
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body).token;
+  }
+
+  function emailUnico(prefixo) {
+    const sufixo = String(Date.now())
+      .split('')
+      .map((d) => String.fromCharCode(97 + Number(d)))
+      .join('');
+    return `${prefixo}.${sufixo}@itu.sp.gov.br`;
+  }
+
+  async function criarUsuario(adminToken, dados) {
+    return insomnia.send({
+      url: '{{ _.base_url }}/api/usuarios',
+      method: 'POST',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${adminToken}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify(dados) },
+    });
+  }
+  function animalValido(overrides) {
+    return Object.assign(
+      {
+        nome: 'Animal Teste',
+        especie: 'canino',
+        sexo: 'macho',
+        status: 'disponivel_adocao',
+        motivoEntrada: 'recolhimento',
+        dataEntrada: '2026-08-30T09:00:00',
+      },
+      overrides,
+    );
+  }
+
+  async function criarAnimal(token, overrides) {
+    return insomnia.send({
+      url: '{{ _.base_url }}/api/animais',
+      method: 'POST',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${token}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify(animalValido(overrides)) },
+    });
+  }
+
+  const adminToken = await login('{{ _.admin_email }}', '{{ _.admin_password }}');
+  const microchip = `CHIP-${Date.now()}`;
+
+  const primeiro = await criarAnimal(adminToken, { nome: 'Rex', microchip });
+  expect(primeiro.status).to.equal(200);
+
+  const segundo = await criarAnimal(adminToken, { nome: 'Bidu', microchip });
+  expect(segundo.status).to.equal(409);
+  expect(JSON.parse(segundo.body).mensagem).to.equal('Microchip ja cadastrado');
+
+metaSortKey: 29000000

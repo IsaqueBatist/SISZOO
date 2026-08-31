@@ -1,0 +1,14 @@
+_id: "ut_auth_login_401_senha_errada"
+type: "UnitTest"
+parentId: "uts_auth"
+modified: 1750000000000
+created: 1750000000000
+requestId: "req_auth_login_401_credencial"
+name: "Login com senha errada retorna 401 genérico"
+code: |-
+  const response = await insomnia.send('req_auth_login_401_credencial');
+  expect(response.status).to.equal(401);
+  const body = JSON.parse(response.body);
+  expect(body.mensagem).to.equal('Credenciais invalidas');
+
+metaSortKey: 17000000

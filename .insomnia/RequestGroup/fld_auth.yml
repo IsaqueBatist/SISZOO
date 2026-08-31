@@ -1,0 +1,10 @@
+_id: "fld_auth"
+type: "RequestGroup"
+parentId: "wrk_siszoo_api"
+modified: 1750000000000
+created: 1750000000000
+name: "02 - Auth"
+description: ''
+environment: {}
+metaSortKey: -7000000
+environmentType: "kv"

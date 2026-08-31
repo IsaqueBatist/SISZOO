@@ -1,0 +1,7 @@
+_id: "uts_auth"
+type: "UnitTestSuite"
+parentId: "wrk_siszoo_api"
+modified: 1750000000000
+created: 1750000000000
+name: "Auth - regras críticas"
+metaSortKey: 15000000

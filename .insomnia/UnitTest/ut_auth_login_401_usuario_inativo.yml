@@ -1,0 +1,73 @@
+_id: "ut_auth_login_401_usuario_inativo"
+type: "UnitTest"
+parentId: "uts_auth"
+modified: 1750000000000
+created: 1750000000000
+requestId: null
+name: "Usuário desativado não consegue logar (mesmo 401 genérico)"
+code: |-
+  async function login(email, senha) {
+    const res = await insomnia.send({
+      url: '{{ _.base_url }}/api/auth/login',
+      method: 'POST',
+      headers: [{ name: 'Content-Type', value: 'application/json' }],
+      body: { mimeType: 'application/json', text: JSON.stringify({ email, senha }) },
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body).token;
+  }
+
+  function emailUnico(prefixo) {
+    const sufixo = String(Date.now())
+      .split('')
+      .map((d) => String.fromCharCode(97 + Number(d)))
+      .join('');
+    return `${prefixo}.${sufixo}@itu.sp.gov.br`;
+  }
+
+  async function criarUsuario(adminToken, dados) {
+    return insomnia.send({
+      url: '{{ _.base_url }}/api/usuarios',
+      method: 'POST',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${adminToken}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify(dados) },
+    });
+  }
+
+  const adminToken = await login('{{ _.admin_email }}', '{{ _.admin_password }}');
+  const email = emailUnico('agente.temp');
+  const senha = '{{ _.senha_teste_padrao }}';
+
+  const criar = await criarUsuario(adminToken, {
+    nome: 'Agente',
+    sobrenome: 'Temporario',
+    email,
+    cargo: 'Agente Sanitário',
+    senhaInicial: senha,
+  });
+  expect(criar.status).to.equal(200);
+  const usuarioId = JSON.parse(criar.body).id;
+
+  const desativar = await insomnia.send({
+    url: `{{ _.base_url }}/api/usuarios/${usuarioId}/status`,
+    method: 'PATCH',
+    headers: [
+      { name: 'Content-Type', value: 'application/json' },
+      { name: 'Authorization', value: `Bearer ${adminToken}` },
+    ],
+    body: { mimeType: 'application/json', text: JSON.stringify({ ativo: false }) },
+  });
+  expect(desativar.status).to.equal(200);
+
+  const tentativaLogin = await insomnia.send({
+    url: '{{ _.base_url }}/api/auth/login',
+    method: 'POST',
+    headers: [{ name: 'Content-Type', value: 'application/json' }],
+    body: { mimeType: 'application/json', text: JSON.stringify({ email, senha }) },
+  });
+  expect(tentativaLogin.status).to.equal(401);
+
+metaSortKey: 18000000

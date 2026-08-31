@@ -1,0 +1,31 @@
+_id: "req_usuarios_me_patch"
+type: "Request"
+parentId: "fld_usuarios"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/usuarios/me"
+name: "Atualizar meu perfil"
+description: "Self-service: único campo editável hoje é telefone (máx. 20 caracteres)."
+method: "PATCH"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "telefone": "(11) 98888-1234"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 6000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

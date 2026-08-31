@@ -1,0 +1,50 @@
+_id: "ut_usuarios_criar_422_email_fora_padrao"
+type: "UnitTest"
+parentId: "uts_usuarios"
+modified: 1750000000000
+created: 1750000000000
+requestId: null
+name: "Criar usuário com e-mail fora do padrão institucional retorna 422"
+code: |-
+  async function login(email, senha) {
+    const res = await insomnia.send({
+      url: '{{ _.base_url }}/api/auth/login',
+      method: 'POST',
+      headers: [{ name: 'Content-Type', value: 'application/json' }],
+      body: { mimeType: 'application/json', text: JSON.stringify({ email, senha }) },
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body).token;
+  }
+
+  function emailUnico(prefixo) {
+    const sufixo = String(Date.now())
+      .split('')
+      .map((d) => String.fromCharCode(97 + Number(d)))
+      .join('');
+    return `${prefixo}.${sufixo}@itu.sp.gov.br`;
+  }
+
+  async function criarUsuario(adminToken, dados) {
+    return insomnia.send({
+      url: '{{ _.base_url }}/api/usuarios',
+      method: 'POST',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${adminToken}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify(dados) },
+    });
+  }
+
+  const adminToken = await login('{{ _.admin_email }}', '{{ _.admin_password }}');
+  const response = await criarUsuario(adminToken, {
+    nome: 'Fora',
+    sobrenome: 'DoPadrao',
+    email: 'fora.do.padrao@gmail.com',
+    cargo: 'Agente Sanitário',
+    senhaInicial: '{{ _.senha_teste_padrao }}',
+  });
+  expect(response.status).to.equal(422);
+
+metaSortKey: 24000000

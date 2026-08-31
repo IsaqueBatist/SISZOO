@@ -1,0 +1,37 @@
+_id: "req_preferencias_patch"
+type: "Request"
+parentId: "fld_preferencias"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/usuarios/me/preferencias"
+name: "Atualizar minhas preferências"
+description: "Todos os 7 campos são obrigatórios no corpo (substituição completa, não é PATCH parcial)."
+method: "PATCH"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "tema": "LIGHT",
+      "densidade": "NORMAL",
+      "notifAlertasCriticos": true,
+      "notifVacinaVencendo": true,
+      "notifSuperlotacao": false,
+      "notifResultadoLab": true,
+      "notifEmailDiario": false
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 8000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

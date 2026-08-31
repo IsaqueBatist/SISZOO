@@ -1,0 +1,17 @@
+_id: "ut_animais_catalogos_listar_contagens"
+type: "UnitTest"
+parentId: "uts_animais"
+modified: 1750000000000
+created: 1750000000000
+requestId: "req_animais_catalogos_get"
+name: "Catálogos seedados têm as contagens esperadas (4 espécies, 7 status, 5 motivos, 3 tipos de baia)"
+code: |-
+  const response = await insomnia.send('req_animais_catalogos_get');
+  expect(response.status).to.equal(200);
+  const body = JSON.parse(response.body);
+  expect(body.especies.length).to.equal(4);
+  expect(body.status.length).to.equal(7);
+  expect(body.motivosEntrada.length).to.equal(5);
+  expect(body.tiposBaia.length).to.equal(3);
+
+metaSortKey: 34000000

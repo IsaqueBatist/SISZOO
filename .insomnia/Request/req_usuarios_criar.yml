@@ -1,0 +1,36 @@
+_id: "req_usuarios_criar"
+type: "Request"
+parentId: "fld_usuarios"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/usuarios"
+name: "Criar usuário - caso feliz"
+description: "Requer USUARIOS_ACESSO:escrita (só Administrador). Rodar esta requisição uma segunda vez sem trocar o e-mail demonstra a regra de e-mail único (409 E-mail ja cadastrado) — comportamento esperado, não é erro do exemplo."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "nome": "Ana",
+      "sobrenome": "Exemplo",
+      "email": "ana.exemplo@itu.sp.gov.br",
+      "cargo": "Agente Sanitário",
+      "telefone": "(11) 99999-0000",
+      "senhaInicial": "{{ _.senha_teste_padrao }}"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 3000000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

@@ -1,0 +1,70 @@
+_id: "ut_usuarios_autodesativacao_admin"
+type: "UnitTest"
+parentId: "uts_usuarios"
+modified: 1750000000000
+created: 1750000000000
+requestId: null
+name: "Administrador consegue desativar a própria conta (comportamento atual, sem bloqueio implementado)"
+code: |-
+  // Cria um Administrador TEMPORÁRIO e o desativa nele mesmo — nunca no admin
+  // seedado (evita travar o acesso real do time). O código atual (UsuarioService)
+  // não tem nenhuma regra que impeça autodesativação; este teste documenta o
+  // comportamento de HOJE (200 = permite). Se essa regra for definida no futuro
+  // (ex.: bloquear e retornar 422), atualizar a asserção abaixo de propósito.
+  async function login(email, senha) {
+    const res = await insomnia.send({
+      url: '{{ _.base_url }}/api/auth/login',
+      method: 'POST',
+      headers: [{ name: 'Content-Type', value: 'application/json' }],
+      body: { mimeType: 'application/json', text: JSON.stringify({ email, senha }) },
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body).token;
+  }
+
+  function emailUnico(prefixo) {
+    const sufixo = String(Date.now())
+      .split('')
+      .map((d) => String.fromCharCode(97 + Number(d)))
+      .join('');
+    return `${prefixo}.${sufixo}@itu.sp.gov.br`;
+  }
+
+  async function criarUsuario(adminToken, dados) {
+    return insomnia.send({
+      url: '{{ _.base_url }}/api/usuarios',
+      method: 'POST',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${adminToken}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify(dados) },
+    });
+  }
+
+  const adminToken = await login('{{ _.admin_email }}', '{{ _.admin_password }}');
+  const email = emailUnico('admin.temp');
+  const criar = await criarUsuario(adminToken, {
+    nome: 'Admin',
+    sobrenome: 'Temporario',
+    email,
+    cargo: 'Administrador',
+    senhaInicial: '{{ _.senha_teste_padrao }}',
+  });
+  expect(criar.status).to.equal(200);
+  const tempAdminId = JSON.parse(criar.body).id;
+  const tempAdminToken = await login(email, '{{ _.senha_teste_padrao }}');
+
+  const autodesativar = await insomnia.send({
+    url: `{{ _.base_url }}/api/usuarios/${tempAdminId}/status`,
+    method: 'PATCH',
+    headers: [
+      { name: 'Content-Type', value: 'application/json' },
+      { name: 'Authorization', value: `Bearer ${tempAdminToken}` },
+    ],
+    body: { mimeType: 'application/json', text: JSON.stringify({ ativo: false }) },
+  });
+  expect(autodesativar.status).to.equal(200);
+  expect(JSON.parse(autodesativar.body).ativo).to.equal(false);
+
+metaSortKey: 26000000

@@ -1,0 +1,18 @@
+_id: "env_local"
+type: "Environment"
+parentId: "wrk_siszoo_api"
+modified: 1750000000000
+created: 1750000000000
+name: "Local"
+data:
+  base_url: "http://localhost:8080"
+  admin_email: ''
+  admin_password: ''
+  token: ''
+  senha_teste_padrao: "SenhaForte123"
+  usuario_id_exemplo: ''
+  animal_id_exemplo: ''
+color: null
+isPrivate: false
+metaSortKey: 1750000000000
+environmentType: "kv"

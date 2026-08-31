@@ -1,0 +1,51 @@
+_id: "ut_usuarios_criar_422_crmv_ausente"
+type: "UnitTest"
+parentId: "uts_usuarios"
+modified: 1750000000000
+created: 1750000000000
+requestId: null
+name: "Criar Veterinário sem CRMV retorna 422"
+code: |-
+  async function login(email, senha) {
+    const res = await insomnia.send({
+      url: '{{ _.base_url }}/api/auth/login',
+      method: 'POST',
+      headers: [{ name: 'Content-Type', value: 'application/json' }],
+      body: { mimeType: 'application/json', text: JSON.stringify({ email, senha }) },
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body).token;
+  }
+
+  function emailUnico(prefixo) {
+    const sufixo = String(Date.now())
+      .split('')
+      .map((d) => String.fromCharCode(97 + Number(d)))
+      .join('');
+    return `${prefixo}.${sufixo}@itu.sp.gov.br`;
+  }
+
+  async function criarUsuario(adminToken, dados) {
+    return insomnia.send({
+      url: '{{ _.base_url }}/api/usuarios',
+      method: 'POST',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${adminToken}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify(dados) },
+    });
+  }
+
+  const adminToken = await login('{{ _.admin_email }}', '{{ _.admin_password }}');
+  const response = await criarUsuario(adminToken, {
+    nome: 'Vet',
+    sobrenome: 'SemCrmv',
+    email: emailUnico('vet.semcrmv'),
+    cargo: 'Veterinário',
+    senhaInicial: '{{ _.senha_teste_padrao }}',
+  });
+  expect(response.status).to.equal(422);
+  expect(JSON.parse(response.body).mensagem).to.equal('CRMV e obrigatorio para o cargo Veterinario');
+
+metaSortKey: 23000000
