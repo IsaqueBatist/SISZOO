@@ -177,7 +177,10 @@ export function useTimelineAnimal(animalId: string | undefined, animal: Animal |
     return {
       id: `entrada-${animal.id}`,
       tipo: 'entrada',
-      data: animal.dataEntrada,
+      // `Animal.dataEntrada` é LocalDateTime (com hora) — diferente das datas
+      // dos registros clínicos (LocalDate); recortada para o mesmo formato
+      // 'YYYY-MM-DD' usado por `formatarData` em AbaHistorico.tsx.
+      data: animal.dataEntrada.slice(0, 10),
       titulo: 'Entrada no CCZ',
       por: animal.criadoPorNome,
       corpo: `Motivo: ${animal.motivoEntradaNome}`,
