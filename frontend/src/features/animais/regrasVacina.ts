@@ -49,7 +49,11 @@ export function badgeReforcoVacina(dataValidade: string | null, hoje: string = h
     return {
       status: 'a_vencer',
       classeLinha: 'reforco-soon',
-      classeBadge: 'badge-alert',
+      // `badge-alert` não existe em components.css (o protótipo só o usa com
+      // estilo inline ad-hoc) — `badge-inconclusive` já é exatamente a mesma
+      // cor amarela (--color-alert-bg/--color-alert), então reaproveita em
+      // vez de inventar uma classe nova no design system compartilhado.
+      classeBadge: 'badge-inconclusive',
       label: dias === 0 ? '⚠ Vence hoje' : `⚠ Em ${dias} dia${dias === 1 ? '' : 's'}`,
     }
   }

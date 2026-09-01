@@ -1,0 +1,126 @@
+/* Portado do <style> inline de docs/prototipo/animal.html. Classes já
+   compartilhadas pelo design system (.card, .badge, .tabs/.tab, table.data,
+   .timeline/.timeline-item) ficam em components.css — não duplicadas aqui.
+   `.timeline-controls`/`.tf-chip` do protótipo (filtro por tipo na timeline)
+   não foram portados: a T22 não pediu filtro na aba Histórico. */
+
+.ficha-grid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: var(--space-5);
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  .ficha-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.identity-card {
+  display: flex;
+  flex-direction: column;
+}
+.id-photo {
+  width: 100%;
+  aspect-ratio: 1;
+  background: linear-gradient(135deg, hsl(32, 30%, 88%) 0%, hsl(32, 28%, 76%) 100%);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: hsl(32, 40%, 40%);
+  overflow: hidden;
+}
+.id-info {
+  padding: 16px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.id-info .name-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.id-info h2 {
+  font-size: 26px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.identity-card .section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  padding: 14px 18px 8px;
+  margin-top: 4px;
+  border-top: 1px solid var(--color-border);
+}
+.identity-card .section-pad {
+  padding: 0 18px 18px;
+}
+
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.tab-content {
+  padding: var(--space-5);
+}
+
+.vet-table th,
+.vet-table td {
+  font-size: 12px !important;
+}
+.reforco-warning {
+  background: var(--color-warning-bg) !important;
+}
+.reforco-warning td:first-child {
+  box-shadow: inset 4px 0 0 var(--color-warning);
+}
+.reforco-soon {
+  background: var(--color-alert-bg) !important;
+}
+.reforco-soon td:first-child {
+  box-shadow: inset 4px 0 0 var(--color-alert);
+}
+
+.med-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+}
+@media (max-width: 700px) {
+  .med-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.med-card {
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 14px;
+}
+.med-card h4 {
+  font-family: var(--font-display);
+  font-size: 14px;
+  margin-bottom: 8px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.med-card .kv {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+}
+.med-card .kv .k {
+  color: var(--color-text-muted);
+}

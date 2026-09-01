@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState, type MutableRefObject } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { listarPrescricoes, listarProcedimentos, listarVacinacoes } from './historicoApi'
 import { chavePrescricoes, chaveProcedimentos, chaveVacinacoes, TAMANHO_PAGINA_HISTORICO } from './useHistoricoAnimal'
@@ -159,16 +159,18 @@ export function useTimelineAnimal(animalId: string | undefined, animal: Animal |
 
   // Reinício: `refreshKey` muda a cada registro criado com sucesso em
   // qualquer aba — zera os buffers e recarrega do início para que o novo
-  // registro apareça também na timeline, não só na aba específica.
-  const precisaReiniciar = refreshKeyProcessadaRef.current !== refreshKey
-  if (precisaReiniciar && animalId) {
+  // registro apareça também na timeline, não só na aba específica. Feito em
+  // efeito (não durante o render) porque mutar refs durante o render não é
+  // seguro sob os double-renders do Strict Mode.
+  useEffect(() => {
+    if (!animalId || refreshKeyProcessadaRef.current === refreshKey) return
     refreshKeyProcessadaRef.current = refreshKey
     vacinasRef.current = estadoFonteInicial<Vacinacao>()
     procedimentosRef.current = estadoFonteInicial<Procedimento>()
     prescricoesRef.current = estadoFonteInicial<Prescricao>()
     setEventos([])
     setFimDoHistorico(false)
-  }
+  }, [animalId, refreshKey])
 
   const eventoEntrada = useMemo<EventoTimeline | null>(() => {
     if (!animal) return null
@@ -185,5 +187,5 @@ export function useTimelineAnimal(animalId: string | undefined, animal: Animal |
 
   const eventosComEntrada = fimDoHistorico && eventoEntrada ? [...eventos, eventoEntrada] : eventos
 
-  return { eventos: eventosComEntrada, carregando, fimDoHistorico, erro, carregarMais, precisaReiniciar }
+  return { eventos: eventosComEntrada, carregando, fimDoHistorico, erro, carregarMais }
 }
