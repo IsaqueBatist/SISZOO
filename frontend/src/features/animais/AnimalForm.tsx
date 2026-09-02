@@ -1,6 +1,9 @@
 import { isAxiosError } from 'axios'
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Controller, useForm, type FieldErrors as RhfFieldErrors } from 'react-hook-form'
+import { z } from 'zod'
 import { Icon } from '../../components/layout/Icon'
 import type { Animal, AnimalRequest, CatalogoItem, Pelagem, Porte, Sexo } from './animais.types'
 import {
@@ -27,27 +30,17 @@ interface AnimalFormProps {
   animal?: Animal
 }
 
-interface FieldErrors {
-  nome?: string
-  especie?: string
-  sexo?: string
-  raca?: string
-  coloracao?: string
-  pelagem?: string
-  porte?: string
-  pesoKg?: string
-  idadeAprox?: string
-  dataNascimentoAprox?: string
-  microchip?: string
-  dataEsterilizacao?: string
-  status?: string
-  motivoEntrada?: string
-  dataEntrada?: string
-  baiaId?: string
-  observacoes?: string
-}
+// Schema de UI: troca `esterilizado: boolean` (campo real do DTO) por
+// `castracaoOpcao` (os 3 cartões do protótipo) — a conversão para o DTO
+// acontece só no submit, via castracaoParaEsterilizado. Mantém o
+// animalFormSchema original intacto (é o contrato espelhado do backend,
+// usado/citado em outros lugares).
+const animalFormUiSchema = animalFormSchema.omit({ esterilizado: true }).extend({
+  castracaoOpcao: z.enum(['nao_castrado', 'orquiectomia', 'osh']),
+})
+type AnimalFormUiValues = z.infer<typeof animalFormUiSchema>
 
-const CAMPOS_STEP: Record<1 | 2 | 3, (keyof FieldErrors)[]> = {
+const CAMPOS_STEP: Record<1 | 2 | 3, (keyof AnimalFormUiValues)[]> = {
   1: ['nome', 'especie', 'sexo', 'raca', 'coloracao', 'pelagem', 'porte', 'pesoKg', 'idadeAprox', 'dataNascimentoAprox', 'microchip'],
   2: ['status', 'motivoEntrada', 'dataEntrada', 'baiaId', 'dataEsterilizacao'],
   3: [],
@@ -129,6 +122,60 @@ function valoresDeAnimal(animal: Animal): RascunhoAnimalValores {
   }
 }
 
+// Converte o valor do formulário (RHF, com número/undefined) para o formato
+// persistido em IndexedDB (RascunhoAnimalValores, todo em string) — o shape
+// exato não pode mudar, ou rascunhos já salvos por usuários ficam órfãos.
+function valoresParaRascunho(valores: AnimalFormUiValues): RascunhoAnimalValores {
+  return {
+    nome: valores.nome,
+    especie: valores.especie,
+    sexo: valores.sexo,
+    raca: valores.raca ?? '',
+    coloracao: valores.coloracao ?? '',
+    pelagem: valores.pelagem ?? '',
+    porte: valores.porte ?? '',
+    pesoKg: valores.pesoKg != null ? String(valores.pesoKg) : '',
+    idadeAprox: valores.idadeAprox ?? '',
+    dataNascimentoAprox: valores.dataNascimentoAprox ?? '',
+    microchip: valores.microchip ?? '',
+    castracaoOpcao: valores.castracaoOpcao,
+    dataEsterilizacao: valores.dataEsterilizacao ?? '',
+    status: valores.status,
+    motivoEntrada: valores.motivoEntrada,
+    dataEntrada: valores.dataEntrada,
+    baiaId: valores.baiaId ?? '',
+    fotoUrl: valores.fotoUrl ?? '',
+    observacoes: valores.observacoes ?? '',
+  }
+}
+
+// Inverso: um rascunho carregado do IndexedDB (todo string) vira valores do
+// formulário RHF. Aceita tanto o formato atual quanto um rascunho salvo
+// antes desta migração (mesmo shape — RascunhoAnimalValores não mudou).
+function rascunhoParaValores(rascunho: RascunhoAnimalValores): AnimalFormUiValues {
+  return {
+    nome: rascunho.nome,
+    especie: rascunho.especie,
+    sexo: rascunho.sexo as AnimalFormUiValues['sexo'],
+    raca: rascunho.raca || undefined,
+    coloracao: rascunho.coloracao || undefined,
+    pelagem: (rascunho.pelagem || undefined) as AnimalFormUiValues['pelagem'],
+    porte: (rascunho.porte || undefined) as AnimalFormUiValues['porte'],
+    pesoKg: rascunho.pesoKg.trim() ? Number(rascunho.pesoKg) : undefined,
+    idadeAprox: rascunho.idadeAprox || undefined,
+    dataNascimentoAprox: rascunho.dataNascimentoAprox || undefined,
+    microchip: rascunho.microchip || undefined,
+    castracaoOpcao: rascunho.castracaoOpcao,
+    dataEsterilizacao: rascunho.dataEsterilizacao || undefined,
+    status: rascunho.status,
+    motivoEntrada: rascunho.motivoEntrada,
+    dataEntrada: rascunho.dataEntrada,
+    baiaId: rascunho.baiaId || undefined,
+    fotoUrl: rascunho.fotoUrl || undefined,
+    observacoes: rascunho.observacoes || undefined,
+  }
+}
+
 function nomeCatalogo(itens: CatalogoItem[] | undefined, codigo: string): string {
   if (!codigo) return '—'
   return itens?.find((item) => item.codigo === codigo)?.nome ?? codigo
@@ -140,33 +187,23 @@ function formatarDataBr(data: string): string {
   return `${dia}/${mes}/${ano}`
 }
 
+// setValueAs roda tanto sobre o valor digitado (string, do DOM) quanto sobre
+// o valor inicial vindo de defaultValues/reset/setValue diretamente — que
+// pode já chegar como number/undefined, não só string.
+const semEspacos = (v: unknown) => (typeof v === 'string' ? v.trim() || undefined : v)
+const semVazio = (v: unknown) => (typeof v === 'string' ? v || undefined : v)
+const paraNumeroOuIndefinido = (v: unknown) => {
+  if (typeof v === 'number') return Number.isFinite(v) ? v : undefined
+  if (typeof v === 'string') return v.trim() ? Number(v) : undefined
+  return undefined
+}
+
 export function AnimalForm({ animal }: AnimalFormProps) {
   const navigate = useNavigate()
   const chaveRascunho = chaveRascunhoAnimal(animal?.id)
   const iniciais = animal ? valoresDeAnimal(animal) : valoresVazios()
 
   const [step, setStep] = useState<1 | 2 | 3>(1)
-  const [nome, setNome] = useState(iniciais.nome)
-  const [especie, setEspecie] = useState(iniciais.especie)
-  const [sexo, setSexo] = useState<Sexo | ''>(iniciais.sexo)
-  const [raca, setRaca] = useState(iniciais.raca)
-  const [coloracao, setColoracao] = useState(iniciais.coloracao)
-  const [pelagem, setPelagem] = useState<Pelagem | ''>(iniciais.pelagem)
-  const [porte, setPorte] = useState<Porte | ''>(iniciais.porte)
-  const [pesoKg, setPesoKg] = useState(iniciais.pesoKg)
-  const [idadeAprox, setIdadeAprox] = useState(iniciais.idadeAprox)
-  const [dataNascimentoAprox, setDataNascimentoAprox] = useState(iniciais.dataNascimentoAprox)
-  const [microchip, setMicrochip] = useState(iniciais.microchip)
-  const [castracaoOpcao, setCastracaoOpcao] = useState<CastracaoOpcao>(iniciais.castracaoOpcao)
-  const [dataEsterilizacao, setDataEsterilizacao] = useState(iniciais.dataEsterilizacao)
-  const [status, setStatus] = useState(iniciais.status)
-  const [motivoEntrada, setMotivoEntrada] = useState(iniciais.motivoEntrada)
-  const [dataEntrada, setDataEntrada] = useState(iniciais.dataEntrada)
-  const [baiaId, setBaiaId] = useState(iniciais.baiaId)
-  const [fotoUrl, setFotoUrl] = useState(iniciais.fotoUrl)
-  const [observacoes, setObservacoes] = useState(iniciais.observacoes)
-
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [fotoErro, setFotoErro] = useState<string | null>(null)
   const [fotoCarregando, setFotoCarregando] = useState(false)
@@ -181,11 +218,55 @@ export function AnimalForm({ animal }: AnimalFormProps) {
   const salvando = criarMutation.isPending || atualizarMutation.isPending
   const microchipTravado = Boolean(animal?.microchip)
 
+  const {
+    register,
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    setError,
+    getValues,
+    reset,
+    formState: { errors },
+  } = useForm<AnimalFormUiValues>({
+    resolver: zodResolver(animalFormUiSchema),
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
+    defaultValues: {
+      nome: iniciais.nome,
+      especie: iniciais.especie,
+      sexo: iniciais.sexo as AnimalFormUiValues['sexo'],
+      raca: iniciais.raca || undefined,
+      coloracao: iniciais.coloracao || undefined,
+      pelagem: (iniciais.pelagem || undefined) as AnimalFormUiValues['pelagem'],
+      porte: (iniciais.porte || undefined) as AnimalFormUiValues['porte'],
+      pesoKg: iniciais.pesoKg.trim() ? Number(iniciais.pesoKg) : undefined,
+      idadeAprox: iniciais.idadeAprox || undefined,
+      dataNascimentoAprox: iniciais.dataNascimentoAprox || undefined,
+      microchip: iniciais.microchip || undefined,
+      castracaoOpcao: iniciais.castracaoOpcao,
+      dataEsterilizacao: iniciais.dataEsterilizacao || undefined,
+      status: iniciais.status,
+      motivoEntrada: iniciais.motivoEntrada,
+      dataEntrada: iniciais.dataEntrada,
+      baiaId: iniciais.baiaId || undefined,
+      fotoUrl: iniciais.fotoUrl || undefined,
+      observacoes: iniciais.observacoes || undefined,
+    },
+  })
+
+  // Todos os campos são lidos ao vivo pela etapa 3 (revisão) — assinar tudo
+  // com watch() aceita o mesmo padrão de re-render que o formulário já tinha
+  // quando cada campo era um useState controlado; preservar o comportamento
+  // vem antes de qualquer ganho de performance que o RHF ofereceria por padrão.
+  const valores = watch()
+  const castracaoOpcao = valores.castracaoOpcao
+
   useEffect(() => {
     let cancelado = false
-    carregarRascunhoAnimal<RascunhoAnimalValores>(chaveRascunho).then((valores) => {
+    carregarRascunhoAnimal<RascunhoAnimalValores>(chaveRascunho).then((valoresSalvos) => {
       if (cancelado) return
-      if (valores) setRascunhoDisponivel(valores)
+      if (valoresSalvos) setRascunhoDisponivel(valoresSalvos)
       setProntoParaAutoSalvar(true)
     })
     return () => {
@@ -196,76 +277,21 @@ export function AnimalForm({ animal }: AnimalFormProps) {
   }, [])
 
   useEffect(() => {
+    // O gate precisa envolver a CRIAÇÃO da assinatura, não só o corpo do
+    // callback: criar a assinatura incondicionalmente e checar a flag só
+    // dentro do callback é um stale closure real (o callback fecharia sobre
+    // o valor de prontoParaAutoSalvar do momento em que a assinatura foi
+    // criada) — na pior hipótese, salvaria um rascunho vazio por cima do
+    // rascunho de verdade do usuário antes da hidratação terminar.
     if (!prontoParaAutoSalvar) return
-    agendarSalvarRascunhoAnimal(chaveRascunho, {
-      nome,
-      especie,
-      sexo,
-      raca,
-      coloracao,
-      pelagem,
-      porte,
-      pesoKg,
-      idadeAprox,
-      dataNascimentoAprox,
-      microchip,
-      castracaoOpcao,
-      dataEsterilizacao,
-      status,
-      motivoEntrada,
-      dataEntrada,
-      baiaId,
-      fotoUrl,
-      observacoes,
+    const inscricao = watch((valoresAtuais) => {
+      agendarSalvarRascunhoAnimal(chaveRascunho, valoresParaRascunho(valoresAtuais as AnimalFormUiValues))
     })
-  }, [
-    prontoParaAutoSalvar,
-    chaveRascunho,
-    nome,
-    especie,
-    sexo,
-    raca,
-    coloracao,
-    pelagem,
-    porte,
-    pesoKg,
-    idadeAprox,
-    dataNascimentoAprox,
-    microchip,
-    castracaoOpcao,
-    dataEsterilizacao,
-    status,
-    motivoEntrada,
-    dataEntrada,
-    baiaId,
-    fotoUrl,
-    observacoes,
-  ])
-
-  function aplicarValores(valores: RascunhoAnimalValores) {
-    setNome(valores.nome)
-    setEspecie(valores.especie)
-    setSexo(valores.sexo)
-    setRaca(valores.raca)
-    setColoracao(valores.coloracao)
-    setPelagem(valores.pelagem)
-    setPorte(valores.porte)
-    setPesoKg(valores.pesoKg)
-    setIdadeAprox(valores.idadeAprox)
-    setDataNascimentoAprox(valores.dataNascimentoAprox)
-    setMicrochip(valores.microchip)
-    setCastracaoOpcao(valores.castracaoOpcao)
-    setDataEsterilizacao(valores.dataEsterilizacao)
-    setStatus(valores.status)
-    setMotivoEntrada(valores.motivoEntrada)
-    setDataEntrada(valores.dataEntrada)
-    setBaiaId(valores.baiaId)
-    setFotoUrl(valores.fotoUrl)
-    setObservacoes(valores.observacoes)
-  }
+    return () => inscricao.unsubscribe()
+  }, [prontoParaAutoSalvar, chaveRascunho, watch])
 
   function handleRestaurarRascunho() {
-    if (rascunhoDisponivel) aplicarValores(rascunhoDisponivel)
+    if (rascunhoDisponivel) reset(rascunhoParaValores(rascunhoDisponivel))
     setRascunhoDisponivel(null)
   }
 
@@ -275,27 +301,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
   }
 
   async function handleSalvarRascunhoAgora() {
-    await salvarRascunhoAnimal(chaveRascunho, {
-      nome,
-      especie,
-      sexo,
-      raca,
-      coloracao,
-      pelagem,
-      porte,
-      pesoKg,
-      idadeAprox,
-      dataNascimentoAprox,
-      microchip,
-      castracaoOpcao,
-      dataEsterilizacao,
-      status,
-      motivoEntrada,
-      dataEntrada,
-      baiaId,
-      fotoUrl,
-      observacoes,
-    })
+    await salvarRascunhoAnimal(chaveRascunho, valoresParaRascunho(getValues()))
     setRascunhoMensagem('Rascunho salvo.')
     setTimeout(() => setRascunhoMensagem(null), 3000)
   }
@@ -309,7 +315,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
     setFotoCarregando(true)
     try {
       const dataUri = await comprimirImagem(arquivo)
-      setFotoUrl(dataUri)
+      setValue('fotoUrl', dataUri)
     } catch (erro) {
       setFotoErro(erro instanceof ImagemInvalidaError ? erro.message : 'Não foi possível processar a imagem.')
     } finally {
@@ -324,7 +330,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
       const pareceComMicrochip = mensagem?.toLowerCase().includes('icrochip')
 
       if (httpStatus === 409 || (httpStatus === 422 && pareceComMicrochip)) {
-        setFieldErrors((atual) => ({ ...atual, microchip: mensagem ?? 'Microchip já cadastrado.' }))
+        setError('microchip', { message: mensagem ?? 'Microchip já cadastrado.' })
         setStep(1)
         return
       }
@@ -332,69 +338,27 @@ export function AnimalForm({ animal }: AnimalFormProps) {
     setSubmitError('Não foi possível salvar o animal. Tente novamente.')
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setSubmitError(null)
-
-    const resultado = animalFormSchema.safeParse({
-      nome,
-      especie,
-      sexo: sexo || undefined,
-      raca: raca.trim() || undefined,
-      coloracao: coloracao.trim() || undefined,
-      pelagem: pelagem || undefined,
-      porte: porte || undefined,
-      pesoKg: pesoKg.trim() ? Number(pesoKg) : undefined,
-      idadeAprox: idadeAprox.trim() || undefined,
-      dataNascimentoAprox: dataNascimentoAprox || undefined,
-      microchip: microchip.trim() || undefined,
-      esterilizado: castracaoParaEsterilizado(castracaoOpcao),
-      dataEsterilizacao: dataEsterilizacao || undefined,
-      status,
-      motivoEntrada,
-      dataEntrada,
-      baiaId: baiaId || undefined,
-      fotoUrl: fotoUrl || undefined,
-      observacoes: observacoes.trim() || undefined,
-    })
-
-    if (!resultado.success) {
-      const erros: FieldErrors = {}
-      for (const issue of resultado.error.issues) {
-        const campo = issue.path[0]
-        if (typeof campo === 'string' && CAMPOS_COM_ERRO.has(campo)) {
-          erros[campo as keyof FieldErrors] = issue.message
-        }
-      }
-      setFieldErrors(erros)
-      const primeiroErro = Object.keys(erros)[0] as keyof FieldErrors | undefined
-      if (primeiroErro && CAMPOS_STEP[1].includes(primeiroErro)) setStep(1)
-      else if (primeiroErro && CAMPOS_STEP[2].includes(primeiroErro)) setStep(2)
-      return
-    }
-
-    setFieldErrors({})
-
+  async function onSubmit(dados: AnimalFormUiValues) {
     const payload: AnimalRequest = {
-      nome: resultado.data.nome,
-      especie: resultado.data.especie,
-      sexo: resultado.data.sexo,
-      raca: resultado.data.raca,
-      coloracao: resultado.data.coloracao,
-      pelagem: resultado.data.pelagem,
-      porte: resultado.data.porte,
-      pesoKg: resultado.data.pesoKg,
-      idadeAprox: resultado.data.idadeAprox,
-      dataNascimentoAprox: resultado.data.dataNascimentoAprox,
-      microchip: resultado.data.microchip,
-      esterilizado: resultado.data.esterilizado,
-      dataEsterilizacao: resultado.data.dataEsterilizacao,
-      status: resultado.data.status,
-      motivoEntrada: resultado.data.motivoEntrada,
-      dataEntrada: `${resultado.data.dataEntrada}T00:00:00`,
-      baiaId: resultado.data.baiaId,
-      fotoUrl: resultado.data.fotoUrl,
-      observacoes: resultado.data.observacoes,
+      nome: dados.nome,
+      especie: dados.especie,
+      sexo: dados.sexo,
+      raca: dados.raca,
+      coloracao: dados.coloracao,
+      pelagem: dados.pelagem,
+      porte: dados.porte,
+      pesoKg: dados.pesoKg,
+      idadeAprox: dados.idadeAprox,
+      dataNascimentoAprox: dados.dataNascimentoAprox,
+      microchip: dados.microchip,
+      esterilizado: castracaoParaEsterilizado(dados.castracaoOpcao),
+      dataEsterilizacao: dados.dataEsterilizacao,
+      status: dados.status,
+      motivoEntrada: dados.motivoEntrada,
+      dataEntrada: `${dados.dataEntrada}T00:00:00`,
+      baiaId: dados.baiaId,
+      fotoUrl: dados.fotoUrl,
+      observacoes: dados.observacoes,
     }
 
     try {
@@ -408,6 +372,19 @@ export function AnimalForm({ animal }: AnimalFormProps) {
     } catch (erro) {
       tratarErroSubmit(erro)
     }
+  }
+
+  function onInvalid(errosValidacao: RhfFieldErrors<AnimalFormUiValues>) {
+    const primeiroErro = (Object.keys(errosValidacao) as (keyof AnimalFormUiValues)[]).find((campo) =>
+      CAMPOS_COM_ERRO.has(campo),
+    )
+    if (primeiroErro && CAMPOS_STEP[1].includes(primeiroErro)) setStep(1)
+    else if (primeiroErro && CAMPOS_STEP[2].includes(primeiroErro)) setStep(2)
+  }
+
+  function aoEnviar(event: FormEvent<HTMLFormElement>) {
+    setSubmitError(null)
+    void handleSubmit(onSubmit, onInvalid)(event)
   }
 
   return (
@@ -458,7 +435,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} noValidate>
+      <form onSubmit={aoEnviar} noValidate>
         {submitError && (
           <div className="alert danger" role="alert" style={{ marginBottom: 'var(--space-4)' }}>
             <span className="bullet" />
@@ -481,14 +458,13 @@ export function AnimalForm({ animal }: AnimalFormProps) {
                 </label>
                 <input
                   id="nome"
-                  className={`input${fieldErrors.nome ? ' error' : ''}`}
+                  className={`input${errors.nome ? ' error' : ''}`}
                   type="text"
                   placeholder="Ex: Rex"
-                  value={nome}
-                  onChange={(event) => setNome(event.target.value)}
+                  {...register('nome')}
                 />
-                {fieldErrors.nome ? (
-                  <span className="err">{fieldErrors.nome}</span>
+                {errors.nome ? (
+                  <span className="err">{errors.nome.message}</span>
                 ) : (
                   <span className="hint">Use o nome de chamada do animal. Se desconhecido, use um apelido.</span>
                 )}
@@ -498,37 +474,42 @@ export function AnimalForm({ animal }: AnimalFormProps) {
                 <label id="especie-label">
                   Espécie <span className="req">*</span>
                 </label>
-                <div className="radio-cards" role="radiogroup" aria-labelledby="especie-label">
-                  {catalogos?.especies.map((item) => (
-                    <button
-                      key={item.codigo}
-                      type="button"
-                      role="radio"
-                      aria-checked={especie === item.codigo}
-                      className={`radio-card${especie === item.codigo ? ' selected' : ''}`}
-                      onClick={() => setEspecie(item.codigo)}
-                    >
-                      <span className="label">{item.nome}</span>
-                    </button>
-                  ))}
-                </div>
-                {fieldErrors.especie && <span className="err">{fieldErrors.especie}</span>}
+                <Controller
+                  name="especie"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="radio-cards" role="radiogroup" aria-labelledby="especie-label">
+                      {catalogos?.especies.map((item) => (
+                        <button
+                          key={item.codigo}
+                          type="button"
+                          role="radio"
+                          aria-checked={field.value === item.codigo}
+                          className={`radio-card${field.value === item.codigo ? ' selected' : ''}`}
+                          onClick={() => field.onChange(item.codigo)}
+                        >
+                          <span className="label">{item.nome}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                />
+                {errors.especie && <span className="err">{errors.especie.message}</span>}
               </div>
 
               <div className="field">
                 <label htmlFor="microchip">Microchip</label>
                 <input
                   id="microchip"
-                  className={`input mono${fieldErrors.microchip ? ' error' : ''}`}
+                  className={`input mono${errors.microchip ? ' error' : ''}`}
                   type="text"
                   placeholder="985121234567890"
                   maxLength={15}
-                  value={microchip}
                   disabled={microchipTravado}
-                  onChange={(event) => setMicrochip(event.target.value)}
+                  {...register('microchip', { setValueAs: semEspacos })}
                 />
-                {fieldErrors.microchip ? (
-                  <span className="err">{fieldErrors.microchip}</span>
+                {errors.microchip ? (
+                  <span className="err">{errors.microchip.message}</span>
                 ) : (
                   <span className="hint">
                     {microchipTravado
@@ -542,40 +523,62 @@ export function AnimalForm({ animal }: AnimalFormProps) {
                 <label id="sexo-label">
                   Sexo <span className="req">*</span>
                 </label>
-                <div className="radio-cards" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }} role="radiogroup" aria-labelledby="sexo-label">
-                  {SEXO_OPCOES.map((opcao) => (
-                    <button
-                      key={opcao.valor}
-                      type="button"
-                      role="radio"
-                      aria-checked={sexo === opcao.valor}
-                      className={`radio-card${sexo === opcao.valor ? ' selected' : ''}`}
-                      onClick={() => setSexo(opcao.valor)}
+                <Controller
+                  name="sexo"
+                  control={control}
+                  render={({ field }) => (
+                    <div
+                      className="radio-cards"
+                      style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}
+                      role="radiogroup"
+                      aria-labelledby="sexo-label"
                     >
-                      <span className="label">{opcao.label}</span>
-                    </button>
-                  ))}
-                </div>
-                {fieldErrors.sexo && <span className="err">{fieldErrors.sexo}</span>}
+                      {SEXO_OPCOES.map((opcao) => (
+                        <button
+                          key={opcao.valor}
+                          type="button"
+                          role="radio"
+                          aria-checked={field.value === opcao.valor}
+                          className={`radio-card${field.value === opcao.valor ? ' selected' : ''}`}
+                          onClick={() => field.onChange(opcao.valor)}
+                        >
+                          <span className="label">{opcao.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                />
+                {errors.sexo && <span className="err">{errors.sexo.message}</span>}
               </div>
 
               <div className="field">
                 <label id="porte-label">Porte</label>
-                <div className="radio-cards" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }} role="radiogroup" aria-labelledby="porte-label">
-                  {PORTE_OPCOES.map((opcao) => (
-                    <button
-                      key={opcao.valor}
-                      type="button"
-                      role="radio"
-                      aria-checked={porte === opcao.valor}
-                      className={`radio-card${porte === opcao.valor ? ' selected' : ''}`}
-                      onClick={() => setPorte(opcao.valor)}
+                <Controller
+                  name="porte"
+                  control={control}
+                  render={({ field }) => (
+                    <div
+                      className="radio-cards"
+                      style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}
+                      role="radiogroup"
+                      aria-labelledby="porte-label"
                     >
-                      <span className="label">{opcao.label}</span>
-                      <span className="sub">{opcao.sub}</span>
-                    </button>
-                  ))}
-                </div>
+                      {PORTE_OPCOES.map((opcao) => (
+                        <button
+                          key={opcao.valor}
+                          type="button"
+                          role="radio"
+                          aria-checked={field.value === opcao.valor}
+                          className={`radio-card${field.value === opcao.valor ? ' selected' : ''}`}
+                          onClick={() => field.onChange(opcao.valor)}
+                        >
+                          <span className="label">{opcao.label}</span>
+                          <span className="sub">{opcao.sub}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                />
               </div>
 
               <div className="field">
@@ -585,8 +588,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
                   className="input"
                   type="text"
                   placeholder="Ex: SRD, Labrador, Poodle..."
-                  value={raca}
-                  onChange={(event) => setRaca(event.target.value)}
+                  {...register('raca', { setValueAs: semEspacos })}
                 />
               </div>
               <div className="field">
@@ -595,14 +597,13 @@ export function AnimalForm({ animal }: AnimalFormProps) {
                   id="dataNascimentoAprox"
                   className="input"
                   type="date"
-                  value={dataNascimentoAprox}
-                  onChange={(event) => setDataNascimentoAprox(event.target.value)}
+                  {...register('dataNascimentoAprox', { setValueAs: semVazio })}
                 />
               </div>
 
               <div className="field">
                 <label htmlFor="pelagem">Pelagem</label>
-                <select id="pelagem" className="select" value={pelagem} onChange={(event) => setPelagem(event.target.value as Pelagem)}>
+                <select id="pelagem" className="select" {...register('pelagem', { setValueAs: semVazio })}>
                   <option value="">Selecione…</option>
                   {PELAGEM_OPCOES.map((opcao) => (
                     <option key={opcao.valor} value={opcao.valor}>
@@ -618,8 +619,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
                   className="input"
                   type="text"
                   placeholder="Ex: Caramelo, Preto e branco..."
-                  value={coloracao}
-                  onChange={(event) => setColoracao(event.target.value)}
+                  {...register('coloracao', { setValueAs: semEspacos })}
                 />
               </div>
 
@@ -630,23 +630,21 @@ export function AnimalForm({ animal }: AnimalFormProps) {
                   className="input"
                   type="text"
                   placeholder="Ex: 2 anos"
-                  value={idadeAprox}
-                  onChange={(event) => setIdadeAprox(event.target.value)}
+                  {...register('idadeAprox', { setValueAs: semEspacos })}
                 />
               </div>
               <div className="field">
                 <label htmlFor="pesoKg">Peso (kg)</label>
                 <input
                   id="pesoKg"
-                  className={`input${fieldErrors.pesoKg ? ' error' : ''}`}
+                  className={`input${errors.pesoKg ? ' error' : ''}`}
                   type="number"
                   step="0.1"
                   min="0"
                   placeholder="Ex: 12.5"
-                  value={pesoKg}
-                  onChange={(event) => setPesoKg(event.target.value)}
+                  {...register('pesoKg', { setValueAs: paraNumeroOuIndefinido })}
                 />
-                {fieldErrors.pesoKg && <span className="err">{fieldErrors.pesoKg}</span>}
+                {errors.pesoKg && <span className="err">{errors.pesoKg.message}</span>}
               </div>
             </div>
           </div>
@@ -671,7 +669,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
             <div className="form-grid">
               <div className="field">
                 <label htmlFor="baiaId">Baia atual</label>
-                <select id="baiaId" className="select" value={baiaId} onChange={(event) => setBaiaId(event.target.value)}>
+                <select id="baiaId" className="select" {...register('baiaId', { setValueAs: semVazio })}>
                   <option value="">Sem baia (em trânsito)</option>
                   {baias?.map((baia) => (
                     <option key={baia.id} value={baia.id} disabled={baia.superlotada && baia.id !== iniciais.baiaId}>
@@ -685,12 +683,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
                 <label htmlFor="status">
                   Status <span className="req">*</span>
                 </label>
-                <select
-                  id="status"
-                  className={`select${fieldErrors.status ? ' error' : ''}`}
-                  value={status}
-                  onChange={(event) => setStatus(event.target.value)}
-                >
+                <select id="status" className={`select${errors.status ? ' error' : ''}`} {...register('status')}>
                   <option value="" disabled>
                     Selecione…
                   </option>
@@ -700,7 +693,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
                     </option>
                   ))}
                 </select>
-                {fieldErrors.status && <span className="err">{fieldErrors.status}</span>}
+                {errors.status && <span className="err">{errors.status.message}</span>}
               </div>
 
               <div className="field">
@@ -709,9 +702,8 @@ export function AnimalForm({ animal }: AnimalFormProps) {
                 </label>
                 <select
                   id="motivoEntrada"
-                  className={`select${fieldErrors.motivoEntrada ? ' error' : ''}`}
-                  value={motivoEntrada}
-                  onChange={(event) => setMotivoEntrada(event.target.value)}
+                  className={`select${errors.motivoEntrada ? ' error' : ''}`}
+                  {...register('motivoEntrada')}
                 >
                   <option value="" disabled>
                     Selecione…
@@ -722,7 +714,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
                     </option>
                   ))}
                 </select>
-                {fieldErrors.motivoEntrada && <span className="err">{fieldErrors.motivoEntrada}</span>}
+                {errors.motivoEntrada && <span className="err">{errors.motivoEntrada.message}</span>}
               </div>
               <div className="field">
                 <label htmlFor="dataEntrada">
@@ -730,36 +722,41 @@ export function AnimalForm({ animal }: AnimalFormProps) {
                 </label>
                 <input
                   id="dataEntrada"
-                  className={`input${fieldErrors.dataEntrada ? ' error' : ''}`}
+                  className={`input${errors.dataEntrada ? ' error' : ''}`}
                   type="date"
-                  value={dataEntrada}
-                  onChange={(event) => setDataEntrada(event.target.value)}
+                  {...register('dataEntrada')}
                 />
-                {fieldErrors.dataEntrada && <span className="err">{fieldErrors.dataEntrada}</span>}
+                {errors.dataEntrada && <span className="err">{errors.dataEntrada.message}</span>}
               </div>
 
               <div className="field full">
                 <label id="castracao-label">Castração</label>
-                <div
-                  className="radio-cards"
-                  style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}
-                  role="radiogroup"
-                  aria-labelledby="castracao-label"
-                >
-                  {CASTRACAO_OPCOES.map((opcao) => (
-                    <button
-                      key={opcao.valor}
-                      type="button"
-                      role="radio"
-                      aria-checked={castracaoOpcao === opcao.valor}
-                      className={`radio-card${castracaoOpcao === opcao.valor ? ' selected' : ''}`}
-                      onClick={() => setCastracaoOpcao(opcao.valor)}
+                <Controller
+                  name="castracaoOpcao"
+                  control={control}
+                  render={({ field }) => (
+                    <div
+                      className="radio-cards"
+                      style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}
+                      role="radiogroup"
+                      aria-labelledby="castracao-label"
                     >
-                      <span className="label">{opcao.label}</span>
-                      <span className="sub">{opcao.sub}</span>
-                    </button>
-                  ))}
-                </div>
+                      {CASTRACAO_OPCOES.map((opcao) => (
+                        <button
+                          key={opcao.valor}
+                          type="button"
+                          role="radio"
+                          aria-checked={field.value === opcao.valor}
+                          className={`radio-card${field.value === opcao.valor ? ' selected' : ''}`}
+                          onClick={() => field.onChange(opcao.valor)}
+                        >
+                          <span className="label">{opcao.label}</span>
+                          <span className="sub">{opcao.sub}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                />
               </div>
 
               {castracaoOpcao !== 'nao_castrado' && (
@@ -769,8 +766,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
                     id="dataEsterilizacao"
                     className="input"
                     type="date"
-                    value={dataEsterilizacao}
-                    onChange={(event) => setDataEsterilizacao(event.target.value)}
+                    {...register('dataEsterilizacao', { setValueAs: semVazio })}
                   />
                 </div>
               )}
@@ -781,8 +777,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
                   id="observacoes"
                   className="textarea"
                   placeholder="Comportamento, características marcantes, histórico relevante..."
-                  value={observacoes}
-                  onChange={(event) => setObservacoes(event.target.value)}
+                  {...register('observacoes', { setValueAs: semEspacos })}
                 />
               </div>
             </div>
@@ -815,16 +810,16 @@ export function AnimalForm({ animal }: AnimalFormProps) {
                   onChange={handleArquivoFoto}
                   style={{ display: 'none' }}
                 />
-                {fotoUrl ? (
+                {valores.fotoUrl ? (
                   <div className="animal-avatar xl" style={{ margin: '0 auto 12px' }}>
-                    <img src={fotoUrl} alt="" style={{ width: '100%', height: '100%', borderRadius: 'inherit', objectFit: 'cover' }} />
+                    <img src={valores.fotoUrl} alt="" style={{ width: '100%', height: '100%', borderRadius: 'inherit', objectFit: 'cover' }} />
                   </div>
                 ) : (
                   <div className="ico">
                     <Icon name="plus" size={24} />
                   </div>
                 )}
-                <h4>{fotoCarregando ? 'Processando imagem…' : fotoUrl ? 'Trocar foto' : 'Arraste uma foto ou clique para enviar'}</h4>
+                <h4>{fotoCarregando ? 'Processando imagem…' : valores.fotoUrl ? 'Trocar foto' : 'Arraste uma foto ou clique para enviar'}</h4>
                 <p>JPG ou PNG, até 5MB.</p>
               </label>
               {fotoErro && <span className="err">{fotoErro}</span>}
@@ -835,57 +830,57 @@ export function AnimalForm({ animal }: AnimalFormProps) {
               <div className="review-grid">
                 <div className="review-row">
                   <span className="k">Nome</span>
-                  <span className="v">{nome || '—'}</span>
+                  <span className="v">{valores.nome || '—'}</span>
                 </div>
                 <div className="review-row">
                   <span className="k">Espécie</span>
-                  <span className="v">{nomeCatalogo(catalogos?.especies, especie)}</span>
+                  <span className="v">{nomeCatalogo(catalogos?.especies, valores.especie)}</span>
                 </div>
                 <div className="review-row">
                   <span className="k">Microchip</span>
-                  <span className="v mono">{microchip || '—'}</span>
+                  <span className="v mono">{valores.microchip || '—'}</span>
                 </div>
                 <div className="review-row">
                   <span className="k">Sexo</span>
-                  <span className="v">{SEXO_OPCOES.find((opcao) => opcao.valor === sexo)?.label ?? '—'}</span>
+                  <span className="v">{SEXO_OPCOES.find((opcao) => opcao.valor === valores.sexo)?.label ?? '—'}</span>
                 </div>
                 <div className="review-row">
                   <span className="k">Porte</span>
-                  <span className="v">{PORTE_OPCOES.find((opcao) => opcao.valor === porte)?.label ?? '—'}</span>
+                  <span className="v">{PORTE_OPCOES.find((opcao) => opcao.valor === valores.porte)?.label ?? '—'}</span>
                 </div>
                 <div className="review-row">
                   <span className="k">Raça</span>
-                  <span className="v">{raca || '—'}</span>
+                  <span className="v">{valores.raca || '—'}</span>
                 </div>
                 <div className="review-row">
                   <span className="k">Nasc. aprox.</span>
-                  <span className="v">{formatarDataBr(dataNascimentoAprox)}</span>
+                  <span className="v">{formatarDataBr(valores.dataNascimentoAprox ?? '')}</span>
                 </div>
                 <div className="review-row">
                   <span className="k">Pelagem · Cor</span>
                   <span className="v">
-                    {PELAGEM_OPCOES.find((opcao) => opcao.valor === pelagem)?.label ?? '—'} · {coloracao || '—'}
+                    {PELAGEM_OPCOES.find((opcao) => opcao.valor === valores.pelagem)?.label ?? '—'} · {valores.coloracao || '—'}
                   </span>
                 </div>
                 <div className="review-row">
                   <span className="k">Motivo de entrada</span>
-                  <span className="v">{nomeCatalogo(catalogos?.motivosEntrada, motivoEntrada)}</span>
+                  <span className="v">{nomeCatalogo(catalogos?.motivosEntrada, valores.motivoEntrada)}</span>
                 </div>
                 <div className="review-row">
                   <span className="k">Baia</span>
-                  <span className="v">{baias?.find((baia) => baia.id === baiaId)?.nome ?? '—'}</span>
+                  <span className="v">{baias?.find((baia) => baia.id === valores.baiaId)?.nome ?? '—'}</span>
                 </div>
                 <div className="review-row">
                   <span className="k">Status</span>
-                  <span className="v">{nomeCatalogo(catalogos?.status, status)}</span>
+                  <span className="v">{nomeCatalogo(catalogos?.status, valores.status)}</span>
                 </div>
                 <div className="review-row">
                   <span className="k">Castração</span>
-                  <span className="v">{CASTRACAO_OPCOES.find((opcao) => opcao.valor === castracaoOpcao)?.label}</span>
+                  <span className="v">{CASTRACAO_OPCOES.find((opcao) => opcao.valor === valores.castracaoOpcao)?.label}</span>
                 </div>
                 <div className="review-row" style={{ gridColumn: '1 / -1' }}>
                   <span className="k">Observações</span>
-                  <span className="v">{observacoes || '—'}</span>
+                  <span className="v">{valores.observacoes || '—'}</span>
                 </div>
               </div>
             </div>

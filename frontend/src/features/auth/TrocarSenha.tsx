@@ -1,49 +1,34 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
 import { useAuth } from './AuthContext'
 import { trocarSenha } from './authApi'
-import { trocarSenhaSchema } from './trocarSenhaSchema'
+import { trocarSenhaSchema, type TrocarSenhaFormValues } from './trocarSenhaSchema'
 import { Icon } from '../../components/layout/Icon'
 import './Login.css'
-
-interface FieldErrors {
-  novaSenha?: string
-  confirmarSenha?: string
-}
 
 export function TrocarSenha() {
   const navigate = useNavigate()
   const { marcarSenhaAlterada } = useAuth()
-  const [novaSenha, setNovaSenha] = useState('')
-  const [confirmarSenha, setConfirmarSenha] = useState('')
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const mutation = useMutation({ mutationFn: trocarSenha })
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setSubmitError(null)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<TrocarSenhaFormValues>({
+    resolver: zodResolver(trocarSenhaSchema),
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
+  })
 
-    const resultado = trocarSenhaSchema.safeParse({ novaSenha, confirmarSenha })
-    if (!resultado.success) {
-      const erros: FieldErrors = {}
-      for (const issue of resultado.error.issues) {
-        const campo = issue.path[0]
-        if (campo === 'novaSenha' || campo === 'confirmarSenha') erros[campo] = issue.message
-      }
-      setFieldErrors(erros)
-      return
-    }
-
-    setFieldErrors({})
-
+  async function onSubmit(dados: TrocarSenhaFormValues) {
     try {
-      await mutation.mutateAsync({
-        novaSenha: resultado.data.novaSenha,
-        confirmarSenha: resultado.data.confirmarSenha,
-      })
+      await mutation.mutateAsync({ novaSenha: dados.novaSenha, confirmarSenha: dados.confirmarSenha })
       marcarSenhaAlterada(new Date().toISOString())
       navigate('/dashboard', { replace: true })
     } catch {
@@ -51,9 +36,14 @@ export function TrocarSenha() {
     }
   }
 
+  function aoEnviar(event: FormEvent<HTMLFormElement>) {
+    setSubmitError(null)
+    void handleSubmit(onSubmit)(event)
+  }
+
   return (
     <div className="login-form-area" style={{ minHeight: '100vh' }}>
-      <form className="login-card" onSubmit={handleSubmit} noValidate>
+      <form className="login-card" onSubmit={aoEnviar} noValidate>
         <div>
           <h2>Troque sua senha</h2>
           <p className="lead">
@@ -78,15 +68,14 @@ export function TrocarSenha() {
             </span>
             <input
               id="novaSenha"
-              className={`input${fieldErrors.novaSenha ? ' error' : ''}`}
+              className={`input${errors.novaSenha ? ' error' : ''}`}
               type="password"
               placeholder="••••••••"
-              value={novaSenha}
-              onChange={(event) => setNovaSenha(event.target.value)}
               autoComplete="new-password"
+              {...register('novaSenha')}
             />
           </div>
-          {fieldErrors.novaSenha && <span className="err">{fieldErrors.novaSenha}</span>}
+          {errors.novaSenha && <span className="err">{errors.novaSenha.message}</span>}
         </div>
 
         <div className="field">
@@ -99,15 +88,14 @@ export function TrocarSenha() {
             </span>
             <input
               id="confirmarSenha"
-              className={`input${fieldErrors.confirmarSenha ? ' error' : ''}`}
+              className={`input${errors.confirmarSenha ? ' error' : ''}`}
               type="password"
               placeholder="••••••••"
-              value={confirmarSenha}
-              onChange={(event) => setConfirmarSenha(event.target.value)}
               autoComplete="new-password"
+              {...register('confirmarSenha')}
             />
           </div>
-          {fieldErrors.confirmarSenha && <span className="err">{fieldErrors.confirmarSenha}</span>}
+          {errors.confirmarSenha && <span className="err">{errors.confirmarSenha.message}</span>}
         </div>
 
         <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={mutation.isPending}>

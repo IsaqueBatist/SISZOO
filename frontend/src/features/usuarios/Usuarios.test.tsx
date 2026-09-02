@@ -45,6 +45,35 @@ describe('Usuarios', () => {
     expect(screen.queryByLabelText(/crmv/i)).not.toBeInTheDocument()
   })
 
+  it('botão "Gerar" atualiza o valor visível da senha inicial', async () => {
+    const user = userEvent.setup()
+    renderUsuarios()
+
+    await screen.findByText('Stéphanie Lima')
+    await user.click(screen.getByRole('button', { name: /adicionar usuário/i }))
+
+    const campoSenha = screen.getByLabelText(/senha inicial/i)
+    const senhaOriginal = (campoSenha as HTMLInputElement).value
+    await user.click(screen.getByRole('button', { name: /^gerar$/i }))
+
+    expect((campoSenha as HTMLInputElement).value).not.toBe(senhaOriginal)
+  })
+
+  it('exige perfil ao criar usuário sem selecionar nenhum', async () => {
+    const user = userEvent.setup()
+    renderUsuarios()
+
+    const totalInicial = (await screen.findAllByRole('row')).length
+    await user.click(screen.getByRole('button', { name: /adicionar usuário/i }))
+
+    await user.type(screen.getByLabelText(/nome completo/i), 'Fernanda Rocha')
+    await user.type(screen.getByLabelText(/e-mail institucional/i), 'fernanda.rocha@itu.sp.gov.br')
+    await user.click(screen.getByRole('button', { name: /^criar usuário$/i }))
+
+    expect(await screen.findByText('Selecione um perfil.')).toBeInTheDocument()
+    expect((await screen.findAllByRole('row')).length).toBe(totalInicial)
+  })
+
   it('exige CRMV ao criar usuário com perfil Veterinário', async () => {
     const user = userEvent.setup()
     renderUsuarios()

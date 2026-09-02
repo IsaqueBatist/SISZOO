@@ -1,29 +1,18 @@
 import { useState, type FormEvent } from 'react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
 import { Icon } from '../../components/layout/Icon'
 import { useAtualizarBaiaMutation, useCatalogosAnimaisQuery, useCriarBaiaMutation } from '../animais/useAnimais'
 import type { Baia } from '../animais/animais.types'
-import { baiaFormSchema } from './baiaFormSchema'
+import { baiaFormSchema, type BaiaFormValues } from './baiaFormSchema'
 
 interface BaiaFormModalProps {
   baia?: Baia
   onFechar: () => void
 }
 
-interface FieldErrors {
-  nome?: string
-  tipoBaia?: string
-  capacidade?: string
-  finalidade?: string
-}
-
 export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
   const editando = Boolean(baia)
-  const [nome, setNome] = useState(baia?.nome ?? '')
-  const [tipoBaia, setTipoBaia] = useState(baia?.tipoBaiaCodigo ?? '')
-  const [capacidade, setCapacidade] = useState(baia ? String(baia.capacidade) : '')
-  const [finalidade, setFinalidade] = useState(baia?.finalidade ?? '')
-  const [observacoes, setObservacoes] = useState(baia?.observacoes ?? '')
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const { data: catalogos } = useCatalogosAnimaisQuery()
@@ -31,37 +20,34 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
   const atualizarMutation = useAtualizarBaiaMutation()
   const mutation = editando ? atualizarMutation : criarMutation
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setSubmitError(null)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<BaiaFormValues>({
+    resolver: zodResolver(baiaFormSchema),
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
+    defaultValues: {
+      nome: baia?.nome ?? '',
+      tipoBaia: baia?.tipoBaiaCodigo ?? '',
+      // valueAsNumber (não z.coerce.number() no schema): campo vazio vira
+      // NaN, que z.number() rejeita como inválido ("Informe a capacidade.").
+      // z.coerce.number() converteria '' em 0, um valor numérico válido —
+      // mudaria a regra de negócio (capacidade zero silenciosamente aceita).
+      capacidade: baia ? baia.capacidade : undefined,
+      finalidade: baia?.finalidade ?? '',
+      observacoes: baia?.observacoes ?? '',
+    },
+  })
 
-    const resultado = baiaFormSchema.safeParse({
-      nome,
-      tipoBaia,
-      capacidade: capacidade === '' ? undefined : Number(capacidade),
-      finalidade: finalidade || undefined,
-      observacoes: observacoes || undefined,
-    })
-
-    if (!resultado.success) {
-      const erros: FieldErrors = {}
-      for (const issue of resultado.error.issues) {
-        const campo = issue.path[0]
-        if (campo === 'nome' || campo === 'tipoBaia' || campo === 'capacidade' || campo === 'finalidade') {
-          erros[campo] = issue.message
-        }
-      }
-      setFieldErrors(erros)
-      return
-    }
-
-    setFieldErrors({})
+  async function onSubmit(dados: BaiaFormValues) {
     const payload = {
-      nome: resultado.data.nome,
-      tipoBaia: resultado.data.tipoBaia,
-      capacidade: resultado.data.capacidade,
-      finalidade: resultado.data.finalidade,
-      observacoes: resultado.data.observacoes,
+      nome: dados.nome,
+      tipoBaia: dados.tipoBaia,
+      capacidade: dados.capacidade,
+      finalidade: dados.finalidade,
+      observacoes: dados.observacoes,
     }
 
     try {
@@ -76,6 +62,11 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
     }
   }
 
+  function aoEnviar(event: FormEvent<HTMLFormElement>) {
+    setSubmitError(null)
+    void handleSubmit(onSubmit)(event)
+  }
+
   return (
     <div className="modal-overlay" onClick={onFechar}>
       <div className="modal" onClick={(event) => event.stopPropagation()}>
@@ -86,7 +77,7 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate>
+        <form onSubmit={aoEnviar} noValidate>
           <div className="modal-body">
             <div className="form-grid cols-1">
               {submitError && (
@@ -102,13 +93,12 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
                 </label>
                 <input
                   id="baia-nome"
-                  className={`input${fieldErrors.nome ? ' error' : ''}`}
+                  className={`input${errors.nome ? ' error' : ''}`}
                   type="text"
                   placeholder="Baia 8"
-                  value={nome}
-                  onChange={(event) => setNome(event.target.value)}
+                  {...register('nome')}
                 />
-                {fieldErrors.nome && <span className="err">{fieldErrors.nome}</span>}
+                {errors.nome && <span className="err">{errors.nome.message}</span>}
               </div>
 
               <div className="form-grid">
@@ -116,12 +106,7 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
                   <label htmlFor="baia-tipo">
                     Tipo <span className="req">*</span>
                   </label>
-                  <select
-                    id="baia-tipo"
-                    className={`select${fieldErrors.tipoBaia ? ' error' : ''}`}
-                    value={tipoBaia}
-                    onChange={(event) => setTipoBaia(event.target.value)}
-                  >
+                  <select id="baia-tipo" className={`select${errors.tipoBaia ? ' error' : ''}`} {...register('tipoBaia')}>
                     <option value="" disabled>
                       Selecione…
                     </option>
@@ -131,7 +116,7 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
                       </option>
                     ))}
                   </select>
-                  {fieldErrors.tipoBaia && <span className="err">{fieldErrors.tipoBaia}</span>}
+                  {errors.tipoBaia && <span className="err">{errors.tipoBaia.message}</span>}
                 </div>
 
                 <div className="field">
@@ -140,14 +125,13 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
                   </label>
                   <input
                     id="baia-capacidade"
-                    className={`input${fieldErrors.capacidade ? ' error' : ''}`}
+                    className={`input${errors.capacidade ? ' error' : ''}`}
                     type="number"
                     min={1}
                     step={1}
-                    value={capacidade}
-                    onChange={(event) => setCapacidade(event.target.value)}
+                    {...register('capacidade', { valueAsNumber: true })}
                   />
-                  {fieldErrors.capacidade && <span className="err">{fieldErrors.capacidade}</span>}
+                  {errors.capacidade && <span className="err">{errors.capacidade.message}</span>}
                 </div>
               </div>
 
@@ -155,24 +139,17 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
                 <label htmlFor="baia-finalidade">Finalidade</label>
                 <input
                   id="baia-finalidade"
-                  className={`input${fieldErrors.finalidade ? ' error' : ''}`}
+                  className={`input${errors.finalidade ? ' error' : ''}`}
                   type="text"
                   placeholder="Cães porte médio"
-                  value={finalidade}
-                  onChange={(event) => setFinalidade(event.target.value)}
+                  {...register('finalidade')}
                 />
-                {fieldErrors.finalidade && <span className="err">{fieldErrors.finalidade}</span>}
+                {errors.finalidade && <span className="err">{errors.finalidade.message}</span>}
               </div>
 
               <div className="field">
                 <label htmlFor="baia-observacoes">Observações</label>
-                <textarea
-                  id="baia-observacoes"
-                  className="textarea"
-                  rows={3}
-                  value={observacoes}
-                  onChange={(event) => setObservacoes(event.target.value)}
-                />
+                <textarea id="baia-observacoes" className="textarea" rows={3} {...register('observacoes')} />
               </div>
             </div>
           </div>

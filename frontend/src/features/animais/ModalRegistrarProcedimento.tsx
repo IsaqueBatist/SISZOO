@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from 'react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
 import { Icon } from '../../components/layout/Icon'
 import { TIPOS_PROCEDIMENTO } from './catalogoClinico'
-import { procedimentoFormSchema } from './historicoFormSchemas'
+import { procedimentoFormSchema, type ProcedimentoFormValues } from './historicoFormSchemas'
 import { useCriarProcedimentoMutation } from './useHistoricoAnimal'
 import type { Procedimento } from './historico.types'
 
@@ -13,56 +15,46 @@ interface ModalRegistrarProcedimentoProps {
   onSucesso: () => void
 }
 
-interface FieldErrors {
-  tipoProcedimento?: string
-  data?: string
-}
-
 export function ModalRegistrarProcedimento({ animalId, retifica, onFechar, onSucesso }: ModalRegistrarProcedimentoProps) {
-  const [tipoProcedimento, setTipoProcedimento] = useState(retifica?.tipoProcedimentoCodigo ?? '')
-  const [data, setData] = useState(retifica?.data ?? '')
-  const [descricao, setDescricao] = useState(retifica?.descricao ?? '')
-  const [resultado, setResultado] = useState(retifica?.resultado ?? '')
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const mutation = useCriarProcedimentoMutation(animalId)
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setSubmitError(null)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ProcedimentoFormValues>({
+    resolver: zodResolver(procedimentoFormSchema),
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
+    defaultValues: {
+      tipoProcedimento: retifica?.tipoProcedimentoCodigo ?? '',
+      data: retifica?.data ?? '',
+      descricao: retifica?.descricao ?? '',
+      resultado: retifica?.resultado ?? '',
+    },
+  })
 
-    const resultadoValidacao = procedimentoFormSchema.safeParse({
-      tipoProcedimento,
-      data,
-      descricao: descricao.trim() || undefined,
-      resultado: resultado.trim() || undefined,
-    })
-
-    if (!resultadoValidacao.success) {
-      const erros: FieldErrors = {}
-      for (const issue of resultadoValidacao.error.issues) {
-        const campo = issue.path[0]
-        if (campo === 'tipoProcedimento' || campo === 'data') erros[campo] = issue.message
-      }
-      setFieldErrors(erros)
-      return
-    }
-
-    setFieldErrors({})
+  async function onSubmit(dados: ProcedimentoFormValues) {
     try {
       await mutation.mutateAsync({
         animalId,
-        tipoProcedimento: resultadoValidacao.data.tipoProcedimento,
-        data: resultadoValidacao.data.data,
-        descricao: resultadoValidacao.data.descricao,
-        resultado: resultadoValidacao.data.resultado,
+        tipoProcedimento: dados.tipoProcedimento,
+        data: dados.data,
+        descricao: dados.descricao,
+        resultado: dados.resultado,
         retificaId: retifica?.id,
       })
       onSucesso()
     } catch {
       setSubmitError(`Não foi possível ${retifica ? 'corrigir' : 'registrar'} o procedimento. Tente novamente.`)
     }
+  }
+
+  function aoEnviar(event: FormEvent<HTMLFormElement>) {
+    setSubmitError(null)
+    void handleSubmit(onSubmit)(event)
   }
 
   return (
@@ -75,7 +67,7 @@ export function ModalRegistrarProcedimento({ animalId, retifica, onFechar, onSuc
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate>
+        <form onSubmit={aoEnviar} noValidate>
           <div className="modal-body">
             <div className="form-grid cols-1">
               {submitError && (
@@ -98,12 +90,7 @@ export function ModalRegistrarProcedimento({ animalId, retifica, onFechar, onSuc
                   <label htmlFor="proc-tipo">
                     Tipo de procedimento <span className="req">*</span>
                   </label>
-                  <select
-                    id="proc-tipo"
-                    className={`select${fieldErrors.tipoProcedimento ? ' error' : ''}`}
-                    value={tipoProcedimento}
-                    onChange={(event) => setTipoProcedimento(event.target.value)}
-                  >
+                  <select id="proc-tipo" className={`select${errors.tipoProcedimento ? ' error' : ''}`} {...register('tipoProcedimento')}>
                     <option value="" disabled>
                       Selecione…
                     </option>
@@ -113,44 +100,26 @@ export function ModalRegistrarProcedimento({ animalId, retifica, onFechar, onSuc
                       </option>
                     ))}
                   </select>
-                  {fieldErrors.tipoProcedimento && <span className="err">{fieldErrors.tipoProcedimento}</span>}
+                  {errors.tipoProcedimento && <span className="err">{errors.tipoProcedimento.message}</span>}
                 </div>
 
                 <div className="field">
                   <label htmlFor="proc-data">
                     Data <span className="req">*</span>
                   </label>
-                  <input
-                    id="proc-data"
-                    className={`input${fieldErrors.data ? ' error' : ''}`}
-                    type="date"
-                    value={data}
-                    onChange={(event) => setData(event.target.value)}
-                  />
-                  {fieldErrors.data && <span className="err">{fieldErrors.data}</span>}
+                  <input id="proc-data" className={`input${errors.data ? ' error' : ''}`} type="date" {...register('data')} />
+                  {errors.data && <span className="err">{errors.data.message}</span>}
                 </div>
               </div>
 
               <div className="field">
                 <label htmlFor="proc-descricao">Descrição</label>
-                <textarea
-                  id="proc-descricao"
-                  className="textarea"
-                  rows={3}
-                  value={descricao}
-                  onChange={(event) => setDescricao(event.target.value)}
-                />
+                <textarea id="proc-descricao" className="textarea" rows={3} {...register('descricao')} />
               </div>
 
               <div className="field">
                 <label htmlFor="proc-resultado">Resultado / observações pós-procedimento</label>
-                <textarea
-                  id="proc-resultado"
-                  className="textarea"
-                  rows={3}
-                  value={resultado}
-                  onChange={(event) => setResultado(event.target.value)}
-                />
+                <textarea id="proc-resultado" className="textarea" rows={3} {...register('resultado')} />
               </div>
             </div>
           </div>

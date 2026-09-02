@@ -1,44 +1,32 @@
 import { useState, type FormEvent } from 'react'
 import { isAxiosError } from 'axios'
 import { useNavigate } from 'react-router-dom'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
 import { useAuth } from './AuthContext'
-import { loginSchema } from './loginSchema'
+import { loginSchema, type LoginFormValues } from './loginSchema'
 import { Icon } from '../../components/layout/Icon'
 import './Login.css'
-
-interface FieldErrors {
-  email?: string
-  senha?: string
-}
 
 export function Login() {
   const navigate = useNavigate()
   const { login, isLoading } = useAuth()
-  const [email, setEmail] = useState('')
-  const [senha, setSenha] = useState('')
   const [senhaVisivel, setSenhaVisivel] = useState(false)
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [submitError, setSubmitError] = useState<string | null>(null)
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setSubmitError(null)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
+  })
 
-    const resultado = loginSchema.safeParse({ email, senha })
-    if (!resultado.success) {
-      const erros: FieldErrors = {}
-      for (const issue of resultado.error.issues) {
-        const campo = issue.path[0]
-        if (campo === 'email' || campo === 'senha') erros[campo] = issue.message
-      }
-      setFieldErrors(erros)
-      return
-    }
-
-    setFieldErrors({})
-
+  async function onSubmit(dados: LoginFormValues) {
     try {
-      await login(resultado.data)
+      await login(dados)
       navigate('/dashboard', { replace: true })
     } catch (erro) {
       if (isAxiosError(erro) && erro.response?.status === 401) {
@@ -47,6 +35,11 @@ export function Login() {
         setSubmitError('Não foi possível entrar. Verifique sua conexão e tente novamente.')
       }
     }
+  }
+
+  function aoEnviar(event: FormEvent<HTMLFormElement>) {
+    setSubmitError(null)
+    void handleSubmit(onSubmit)(event)
   }
 
   return (
@@ -98,7 +91,7 @@ export function Login() {
       </section>
 
       <section className="login-form-area">
-        <form className="login-card" onSubmit={handleSubmit} noValidate>
+        <form className="login-card" onSubmit={aoEnviar} noValidate>
           <div>
             <h2>Bem-vinda ao SISZOO</h2>
             <p className="lead">Faça login com suas credenciais institucionais.</p>
@@ -121,15 +114,14 @@ export function Login() {
               </span>
               <input
                 id="email"
-                className={`input${fieldErrors.email ? ' error' : ''}`}
+                className={`input${errors.email ? ' error' : ''}`}
                 type="email"
                 placeholder="nome.sobrenome@itu.sp.gov.br"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
                 autoComplete="username"
+                {...register('email')}
               />
             </div>
-            {fieldErrors.email && <span className="err">{fieldErrors.email}</span>}
+            {errors.email && <span className="err">{errors.email.message}</span>}
           </div>
 
           <div className="field">
@@ -142,12 +134,11 @@ export function Login() {
               </span>
               <input
                 id="senha"
-                className={`input${fieldErrors.senha ? ' error' : ''}`}
+                className={`input${errors.senha ? ' error' : ''}`}
                 type={senhaVisivel ? 'text' : 'password'}
                 placeholder="••••••••"
-                value={senha}
-                onChange={(event) => setSenha(event.target.value)}
                 autoComplete="current-password"
+                {...register('senha')}
               />
               <button
                 type="button"
@@ -158,7 +149,7 @@ export function Login() {
                 <Icon name="eye" size={16} />
               </button>
             </div>
-            {fieldErrors.senha && <span className="err">{fieldErrors.senha}</span>}
+            {errors.senha && <span className="err">{errors.senha.message}</span>}
           </div>
 
           <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={isLoading}>
