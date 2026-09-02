@@ -31,7 +31,7 @@ export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
   const [email, setEmail] = useState('')
   const [cargo, setCargo] = useState<PerfilUsuario | ''>('')
   const [crmv, setCrmv] = useState('')
-  const [senhaInicial, setSenhaInicial] = useState(gerarSenhaAleatoria())
+  const [senhaInicial, setSenhaInicial] = useState(() => gerarSenhaAleatoria())
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [submitError, setSubmitError] = useState<string | null>(null)
 
