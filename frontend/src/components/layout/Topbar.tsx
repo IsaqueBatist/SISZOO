@@ -1,20 +1,16 @@
 import { useLocation } from 'react-router-dom'
-import { NAV_ALL, ROLES, isNavGroup, type RoleKey } from '../../lib/nav'
+import { NAV_ALL, ROLES, isNavGroup } from '../../lib/nav'
 import { useAuth } from '../../features/auth/AuthContext'
 import { Icon } from './Icon'
-
-interface TopbarProps {
-  roleKey: RoleKey
-}
 
 function currentCrumbLabel(pathname: string): string {
   const match = NAV_ALL.find((entry) => !isNavGroup(entry) && pathname.startsWith(entry.to))
   return match && !isNavGroup(match) ? match.label : 'Dashboard'
 }
 
-export function Topbar({ roleKey }: TopbarProps) {
+export function Topbar() {
   const location = useLocation()
-  const { user } = useAuth()
+  const { user, roleKey } = useAuth()
   const role = ROLES[roleKey]
   const iniciais = user ? `${user.nome[0] ?? ''}${user.sobrenome[0] ?? ''}`.toUpperCase() : ''
 

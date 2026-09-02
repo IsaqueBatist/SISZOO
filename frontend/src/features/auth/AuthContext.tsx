@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { setAuthToken } from '../../lib/http'
+import { roleKeyFromCargos, type RoleKey } from '../../lib/nav'
 import { login as loginRequest } from './authApi'
 import type { LoginRequest, Usuario } from './auth.types'
 
@@ -15,6 +16,7 @@ interface SessaoArmazenada {
 interface AuthContextValue {
   user: Usuario | null
   token: string | null
+  roleKey: RoleKey
   login: (credenciais: LoginRequest) => Promise<void>
   logout: () => void
   marcarSenhaAlterada: (senhaAlteradaEm: string) => void
@@ -94,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthContextValue = {
     user: sessao?.usuario ?? null,
     token: sessao?.token ?? null,
+    roleKey: roleKeyFromCargos(sessao?.usuario.cargos ?? []),
     login,
     logout,
     marcarSenhaAlterada,
