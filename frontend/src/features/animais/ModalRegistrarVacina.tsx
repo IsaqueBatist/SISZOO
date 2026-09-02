@@ -36,7 +36,7 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
       dataAplicacao: retifica?.dataAplicacao ?? '',
       numeroDose: retifica?.numeroDose ?? undefined,
       doseQuantidade: retifica?.doseQuantidade,
-      doseUnidade: retifica?.doseUnidade,
+      doseUnidade: retifica?.doseUnidade ?? undefined,
       lote: retifica?.lote ?? '',
       observacoes: retifica?.observacoes ?? '',
     },

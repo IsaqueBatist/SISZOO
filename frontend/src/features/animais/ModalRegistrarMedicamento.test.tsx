@@ -81,7 +81,7 @@ describe('ModalRegistrarMedicamento', () => {
     const user = userEvent.setup()
     renderAba()
 
-    const cardFenobarbital = (await screen.findByText('Fenobarbital 30mg')).closest('.med-card')
+    const cardFenobarbital = (await screen.findByText('Fenobarbital 30mg')).closest<HTMLElement>('.med-card')
     if (!cardFenobarbital) throw new Error('card não encontrado')
     await user.click(within(cardFenobarbital).getByRole('button', { name: /corrigir/i }))
 
@@ -100,7 +100,9 @@ describe('ModalRegistrarMedicamento', () => {
     await user.click(within(modal).getByRole('button', { name: /^salvar correção$/i }))
 
     await waitFor(() => expect(screen.queryByRole('heading', { name: 'Corrigir prescrição' })).not.toBeInTheDocument())
-    const cardsFenobarbital = (await screen.findAllByText('Fenobarbital 30mg')).map((titulo) => titulo.closest('.med-card'))
+    const cardsFenobarbital = (await screen.findAllByText('Fenobarbital 30mg')).map((titulo) =>
+      titulo.closest<HTMLElement>('.med-card'),
+    )
     const comBadgeRetificado = cardsFenobarbital.filter(
       (card): card is HTMLElement => card !== null && within(card).queryByText('Retificado') !== null,
     )
