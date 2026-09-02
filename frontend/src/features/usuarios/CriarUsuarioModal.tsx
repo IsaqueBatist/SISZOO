@@ -1,19 +1,13 @@
 import { useState, type FormEvent } from 'react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
 import { Icon } from '../../components/layout/Icon'
 import { useCriarUsuarioMutation } from './useUsuarios'
-import { usuarioFormSchema } from './usuarioFormSchema'
+import { usuarioFormSchema, type UsuarioFormValues } from './usuarioFormSchema'
 import { PERFIS_USUARIO, type PerfilUsuario } from './usuarios.types'
 
 interface CriarUsuarioModalProps {
   onFechar: () => void
-}
-
-interface FieldErrors {
-  nomeCompleto?: string
-  email?: string
-  cargo?: string
-  crmv?: string
-  senhaInicial?: string
 }
 
 function gerarSenhaAleatoria(): string {
@@ -27,56 +21,52 @@ function dividirNomeCompleto(nomeCompleto: string): { nome: string; sobrenome: s
 }
 
 export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
-  const [nomeCompleto, setNomeCompleto] = useState('')
-  const [email, setEmail] = useState('')
-  const [cargo, setCargo] = useState<PerfilUsuario | ''>('')
-  const [crmv, setCrmv] = useState('')
-  const [senhaInicial, setSenhaInicial] = useState(() => gerarSenhaAleatoria())
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const mutation = useCriarUsuarioMutation()
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setSubmitError(null)
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<UsuarioFormValues>({
+    resolver: zodResolver(usuarioFormSchema),
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
+    defaultValues: {
+      nomeCompleto: '',
+      email: '',
+      cargo: '',
+      crmv: '',
+      senhaInicial: gerarSenhaAleatoria(),
+    },
+  })
 
-    const resultado = usuarioFormSchema.safeParse({
-      nomeCompleto,
-      email,
-      cargo,
-      crmv: crmv || undefined,
-      senhaInicial,
-    })
+  const cargo = watch('cargo')
 
-    if (!resultado.success) {
-      const erros: FieldErrors = {}
-      for (const issue of resultado.error.issues) {
-        const campo = issue.path[0]
-        if (campo === 'nomeCompleto' || campo === 'email' || campo === 'cargo' || campo === 'crmv' || campo === 'senhaInicial') {
-          erros[campo] = issue.message
-        }
-      }
-      setFieldErrors(erros)
-      return
-    }
-
-    setFieldErrors({})
-    const { nome, sobrenome } = dividirNomeCompleto(resultado.data.nomeCompleto)
+  async function onSubmit(dados: UsuarioFormValues) {
+    const { nome, sobrenome } = dividirNomeCompleto(dados.nomeCompleto)
 
     try {
       await mutation.mutateAsync({
         nome,
         sobrenome,
-        email: resultado.data.email,
-        cargo: resultado.data.cargo as PerfilUsuario,
-        crmv: resultado.data.cargo === 'Veterinário' ? resultado.data.crmv : undefined,
-        senhaInicial: resultado.data.senhaInicial,
+        email: dados.email,
+        cargo: dados.cargo as PerfilUsuario,
+        crmv: dados.cargo === 'Veterinário' ? dados.crmv : undefined,
+        senhaInicial: dados.senhaInicial,
       })
       onFechar()
     } catch {
       setSubmitError('Não foi possível criar o usuário. Tente novamente.')
     }
+  }
+
+  function aoEnviar(event: FormEvent<HTMLFormElement>) {
+    setSubmitError(null)
+    void handleSubmit(onSubmit)(event)
   }
 
   return (
@@ -89,7 +79,7 @@ export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate>
+        <form onSubmit={aoEnviar} noValidate>
           <div className="modal-body">
             <div className="form-grid cols-1">
               {submitError && (
@@ -105,13 +95,12 @@ export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
                 </label>
                 <input
                   id="nomeCompleto"
-                  className={`input${fieldErrors.nomeCompleto ? ' error' : ''}`}
+                  className={`input${errors.nomeCompleto ? ' error' : ''}`}
                   type="text"
                   placeholder="Maria Silva Souza"
-                  value={nomeCompleto}
-                  onChange={(event) => setNomeCompleto(event.target.value)}
+                  {...register('nomeCompleto')}
                 />
-                {fieldErrors.nomeCompleto && <span className="err">{fieldErrors.nomeCompleto}</span>}
+                {errors.nomeCompleto && <span className="err">{errors.nomeCompleto.message}</span>}
               </div>
 
               <div className="field">
@@ -120,13 +109,12 @@ export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
                 </label>
                 <input
                   id="email"
-                  className={`input${fieldErrors.email ? ' error' : ''}`}
+                  className={`input${errors.email ? ' error' : ''}`}
                   type="email"
                   placeholder="nome.sobrenome@itu.sp.gov.br"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
+                  {...register('email')}
                 />
-                {fieldErrors.email && <span className="err">{fieldErrors.email}</span>}
+                {errors.email && <span className="err">{errors.email.message}</span>}
               </div>
 
               <div className="form-grid">
@@ -134,12 +122,7 @@ export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
                   <label htmlFor="cargo">
                     Perfil <span className="req">*</span>
                   </label>
-                  <select
-                    id="cargo"
-                    className={`select${fieldErrors.cargo ? ' error' : ''}`}
-                    value={cargo}
-                    onChange={(event) => setCargo(event.target.value as PerfilUsuario)}
-                  >
+                  <select id="cargo" className={`select${errors.cargo ? ' error' : ''}`} {...register('cargo')}>
                     <option value="" disabled>
                       Selecione…
                     </option>
@@ -149,7 +132,7 @@ export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
                       </option>
                     ))}
                   </select>
-                  {fieldErrors.cargo && <span className="err">{fieldErrors.cargo}</span>}
+                  {errors.cargo && <span className="err">{errors.cargo.message}</span>}
                 </div>
 
                 {cargo === 'Veterinário' && (
@@ -159,13 +142,12 @@ export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
                     </label>
                     <input
                       id="crmv"
-                      className={`input mono${fieldErrors.crmv ? ' error' : ''}`}
+                      className={`input mono${errors.crmv ? ' error' : ''}`}
                       type="text"
                       placeholder="CRMV-SP 00000"
-                      value={crmv}
-                      onChange={(event) => setCrmv(event.target.value)}
+                      {...register('crmv')}
                     />
-                    {fieldErrors.crmv && <span className="err">{fieldErrors.crmv}</span>}
+                    {errors.crmv && <span className="err">{errors.crmv.message}</span>}
                   </div>
                 )}
               </div>
@@ -175,17 +157,20 @@ export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
                 <div className="flex gap-2">
                   <input
                     id="senhaInicial"
-                    className={`input mono${fieldErrors.senhaInicial ? ' error' : ''}`}
+                    className={`input mono${errors.senhaInicial ? ' error' : ''}`}
                     type="text"
                     style={{ flex: 1 }}
-                    value={senhaInicial}
-                    onChange={(event) => setSenhaInicial(event.target.value)}
+                    {...register('senhaInicial')}
                   />
-                  <button type="button" className="btn btn-outline btn-sm" onClick={() => setSenhaInicial(gerarSenhaAleatoria())}>
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    onClick={() => setValue('senhaInicial', gerarSenhaAleatoria())}
+                  >
                     Gerar
                   </button>
                 </div>
-                {fieldErrors.senhaInicial && <span className="err">{fieldErrors.senhaInicial}</span>}
+                {errors.senhaInicial && <span className="err">{errors.senhaInicial.message}</span>}
                 <span className="hint">O usuário será obrigado a trocar a senha no primeiro acesso.</span>
               </div>
             </div>

@@ -45,6 +45,20 @@ describe('Usuarios', () => {
     expect(screen.queryByLabelText(/crmv/i)).not.toBeInTheDocument()
   })
 
+  it('botão "Gerar" atualiza o valor visível da senha inicial', async () => {
+    const user = userEvent.setup()
+    renderUsuarios()
+
+    await screen.findByText('Stéphanie Lima')
+    await user.click(screen.getByRole('button', { name: /adicionar usuário/i }))
+
+    const campoSenha = screen.getByLabelText(/senha inicial/i)
+    const senhaOriginal = (campoSenha as HTMLInputElement).value
+    await user.click(screen.getByRole('button', { name: /^gerar$/i }))
+
+    expect((campoSenha as HTMLInputElement).value).not.toBe(senhaOriginal)
+  })
+
   it('exige CRMV ao criar usuário com perfil Veterinário', async () => {
     const user = userEvent.setup()
     renderUsuarios()
