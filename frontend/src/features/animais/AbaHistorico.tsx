@@ -67,8 +67,9 @@ export function AbaHistorico({ animalId, animal, refreshKey }: AbaHistoricoProps
     }
     // Dispara ao montar e sempre que o hook reinicia (eventos volta a [])
     // após um novo registro criado em qualquer aba — ver useTimelineAnimal.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eventos.length, fimDoHistorico, erro])
+    // carregarMais só muda de identidade quando animalId muda (useCallback),
+    // então incluí-la aqui não gera execuções extras do efeito.
+  }, [eventos.length, carregando, fimDoHistorico, erro, carregarMais])
 
   if (erro) {
     return (
