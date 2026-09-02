@@ -254,7 +254,9 @@ export function Animais() {
                             )}
                           </div>
                           <div>
-                            <div className="name">{animal.nome}</div>
+                            <div className="name">
+                              <Link to={`/animais/${animal.id}`}>{animal.nome}</Link>
+                            </div>
                             <div className="chip">{animal.microchip ?? '—'}</div>
                           </div>
                         </div>

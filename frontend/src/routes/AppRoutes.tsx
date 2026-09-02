@@ -3,6 +3,7 @@ import { Layout } from '../components/layout/Layout'
 import { Animais } from '../features/animais/Animais'
 import { CadastrarAnimal } from '../features/animais/CadastrarAnimal'
 import { EditarAnimal } from '../features/animais/EditarAnimal'
+import { FichaAnimal } from '../features/animais/FichaAnimal'
 import { Login } from '../features/auth/Login'
 import { TrocarSenha } from '../features/auth/TrocarSenha'
 import { GestaoBaias } from '../features/baias/GestaoBaias'
@@ -34,6 +35,7 @@ export function AppRoutes() {
         >
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/animais" element={<Animais />} />
+          <Route path="/animais/:id" element={<FichaAnimal />} />
           <Route element={<RotaEscritaAnimais />}>
             <Route path="/animais/novo" element={<CadastrarAnimal />} />
             <Route path="/animais/:id/editar" element={<EditarAnimal />} />

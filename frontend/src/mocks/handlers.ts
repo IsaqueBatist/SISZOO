@@ -1,5 +1,16 @@
 import { http, HttpResponse } from 'msw'
 import type { Animal, AnimalRequest, Baia, BaiaRequest, CatalogosAnimal } from '../features/animais/animais.types'
+import { VACINAS, TIPOS_PROCEDIMENTO } from '../features/animais/catalogoClinico'
+import type {
+  CriarPrescricaoRequest,
+  CriarProcedimentoRequest,
+  CriarVacinacaoRequest,
+  Medicamento,
+  Prescricao,
+  Procedimento,
+  StatusRegistroClinico,
+  Vacinacao,
+} from '../features/animais/historico.types'
 import type { LoginRequest, LoginResponse } from '../features/auth/auth.types'
 import { API_BASE_URL } from '../lib/env'
 import type { CriarUsuarioRequest, UsuarioListItem } from '../features/usuarios/usuarios.types'
@@ -691,6 +702,220 @@ function construirAnimalMock(id: string, body: AnimalRequest, existente: Animal 
   }
 }
 
+// Registros clínicos (ver docs/CLAUDE.md): o mock guarda os campos crus +
+// `retificaId`, e deriva `retificadoPorId`/`statusRegistro` do mesmo jeito
+// que o mapper real do backend faz — nunca armazenados diretamente.
+type RegistroClinicoBruto = { id: string; retificaId: string | null }
+
+function derivarStatusRegistro<T extends RegistroClinicoBruto>(
+  itens: T[],
+): (T & { retificadoPorId: string | null; statusRegistro: StatusRegistroClinico })[] {
+  return itens.map((item) => {
+    const retificadoPor = itens.find((outro) => outro.retificaId === item.id)
+    return {
+      ...item,
+      retificadoPorId: retificadoPor?.id ?? null,
+      statusRegistro: retificadoPor ? 'RETIFICADO' : 'ATIVO',
+    }
+  })
+}
+
+const ANIMAL_REX_ID = 'b2c3d4e5-0000-0000-0000-000000000001'
+
+function addDiasIso(dias: number): string {
+  const data = new Date()
+  data.setUTCDate(data.getUTCDate() + dias)
+  return data.toISOString().slice(0, 10)
+}
+
+type VacinacaoMockInterna = Omit<Vacinacao, 'retificadoPorId' | 'statusRegistro'>
+
+function seedVacinacoesMock(): VacinacaoMockInterna[] {
+  const veterinaria = { id: usuariosMock[0].id, nome: `${usuariosMock[0].nome} ${usuariosMock[0].sobrenome}` }
+  return [
+    {
+      id: 'd1000000-0000-0000-0000-000000000001',
+      animalId: ANIMAL_REX_ID,
+      vacinaCodigo: 'v10',
+      vacinaNome: 'V10',
+      aplicadoPorId: veterinaria.id,
+      aplicadoPorNome: veterinaria.nome,
+      dataAplicacao: addDiasIso(-400),
+      dataValidade: addDiasIso(-10), // vencida
+      numeroDose: 1,
+      doseQuantidade: 1,
+      doseUnidade: 'MILILITRO',
+      lote: '22B-4451',
+      observacoes: null,
+      retificaId: null,
+      criadoEm: `${addDiasIso(-400)}T09:00:00Z`,
+    },
+    {
+      id: 'd1000000-0000-0000-0000-000000000002',
+      animalId: ANIMAL_REX_ID,
+      vacinaCodigo: 'antirrabica',
+      vacinaNome: 'Antirrábica',
+      aplicadoPorId: veterinaria.id,
+      aplicadoPorNome: veterinaria.nome,
+      dataAplicacao: addDiasIso(-360),
+      dataValidade: addDiasIso(5), // a vencer (≤ 7 dias)
+      numeroDose: 1,
+      doseQuantidade: 1,
+      doseUnidade: 'MILILITRO',
+      lote: '18A-9923',
+      observacoes: null,
+      retificaId: null,
+      criadoEm: `${addDiasIso(-360)}T09:00:00Z`,
+    },
+    {
+      id: 'd1000000-0000-0000-0000-000000000003',
+      animalId: ANIMAL_REX_ID,
+      vacinaCodigo: 'giardia',
+      vacinaNome: 'Giárdia',
+      aplicadoPorId: veterinaria.id,
+      aplicadoPorNome: veterinaria.nome,
+      dataAplicacao: addDiasIso(-30),
+      dataValidade: addDiasIso(335), // em dia
+      numeroDose: 1,
+      doseQuantidade: 1,
+      doseUnidade: 'MILILITRO',
+      lote: null,
+      observacoes: null,
+      retificaId: null,
+      criadoEm: `${addDiasIso(-30)}T09:00:00Z`,
+    },
+    // Par retificado: o registro 004 é corrigido pelo 005 (aponta retificaId
+    // de volta para 004) — 004 deve aparecer como "RETIFICADO", 005 "ATIVO".
+    {
+      id: 'd1000000-0000-0000-0000-000000000004',
+      animalId: ANIMAL_REX_ID,
+      vacinaCodigo: 'leishmaniose',
+      vacinaNome: 'Leishmaniose',
+      aplicadoPorId: veterinaria.id,
+      aplicadoPorNome: veterinaria.nome,
+      dataAplicacao: addDiasIso(-100),
+      dataValidade: addDiasIso(265),
+      numeroDose: 1,
+      doseQuantidade: 1,
+      doseUnidade: 'MILILITRO',
+      lote: 'LOTE-ERRADO',
+      observacoes: null,
+      retificaId: null,
+      criadoEm: `${addDiasIso(-100)}T09:00:00Z`,
+    },
+    {
+      id: 'd1000000-0000-0000-0000-000000000005',
+      animalId: ANIMAL_REX_ID,
+      vacinaCodigo: 'leishmaniose',
+      vacinaNome: 'Leishmaniose',
+      aplicadoPorId: veterinaria.id,
+      aplicadoPorNome: veterinaria.nome,
+      dataAplicacao: addDiasIso(-100),
+      dataValidade: addDiasIso(265),
+      numeroDose: 1,
+      doseQuantidade: 1,
+      doseUnidade: 'MILILITRO',
+      lote: 'LOTE-CORRIGIDO',
+      observacoes: 'Correção de lote informado errado.',
+      retificaId: 'd1000000-0000-0000-0000-000000000004',
+      criadoEm: `${addDiasIso(-99)}T09:00:00Z`,
+    },
+  ]
+}
+
+let vacinacoesMock: VacinacaoMockInterna[] = seedVacinacoesMock()
+
+export function resetVacinacoesMock() {
+  vacinacoesMock = seedVacinacoesMock()
+}
+
+type ProcedimentoMockInterno = Omit<Procedimento, 'retificadoPorId' | 'statusRegistro'>
+
+function seedProcedimentosMock(): ProcedimentoMockInterno[] {
+  const veterinario = { id: usuariosMock[0].id, nome: `${usuariosMock[0].nome} ${usuariosMock[0].sobrenome}` }
+  return [
+    {
+      id: 'e2000000-0000-0000-0000-000000000001',
+      animalId: ANIMAL_REX_ID,
+      tipoProcedimentoCodigo: 'castracao',
+      tipoProcedimentoNome: 'Castração',
+      executadoPorId: veterinario.id,
+      executadoPorNome: veterinario.nome,
+      data: addDiasIso(-250),
+      descricao: 'Orquiectomia eletiva.',
+      resultado: 'Sem intercorrências. Alta no mesmo dia.',
+      retificaId: null,
+      criadoEm: `${addDiasIso(-250)}T09:00:00Z`,
+    },
+    {
+      id: 'e2000000-0000-0000-0000-000000000002',
+      animalId: ANIMAL_REX_ID,
+      tipoProcedimentoCodigo: 'atendimento_clinico',
+      tipoProcedimentoNome: 'Atendimento clínico',
+      executadoPorId: veterinario.id,
+      executadoPorNome: veterinario.nome,
+      data: addDiasIso(-15),
+      descricao: 'Consulta de rotina.',
+      resultado: null,
+      retificaId: null,
+      criadoEm: `${addDiasIso(-15)}T09:00:00Z`,
+    },
+  ]
+}
+
+let procedimentosMock: ProcedimentoMockInterno[] = seedProcedimentosMock()
+
+export function resetProcedimentosMock() {
+  procedimentosMock = seedProcedimentosMock()
+}
+
+const MEDICAMENTO_FENOBARBITAL_ID = 'f3000000-0000-0000-0000-000000000001'
+
+const medicamentosMock: Medicamento[] = [
+  { id: MEDICAMENTO_FENOBARBITAL_ID, nome: 'Fenobarbital 30mg', categoriaId: 'cat-1', categoriaNome: 'Anticonvulsivante', ativo: true },
+  { id: 'f3000000-0000-0000-0000-000000000002', nome: 'Amoxicilina 250mg', categoriaId: 'cat-2', categoriaNome: 'Antibiótico', ativo: true },
+]
+
+type PrescricaoMockInterna = Omit<Prescricao, 'retificadoPorId' | 'statusRegistro'>
+
+function seedPrescricoesMock(): PrescricaoMockInterna[] {
+  const veterinaria = { id: usuariosMock[0].id, nome: `${usuariosMock[0].nome} ${usuariosMock[0].sobrenome}` }
+  return [
+    {
+      id: 'g4000000-0000-0000-0000-000000000001',
+      animalId: ANIMAL_REX_ID,
+      medicamentoId: MEDICAMENTO_FENOBARBITAL_ID,
+      medicamentoNome: 'Fenobarbital 30mg',
+      prescritoPorId: veterinaria.id,
+      prescritoPorNome: veterinaria.nome,
+      dataInicio: addDiasIso(-20),
+      dataFimPrevista: addDiasIso(70),
+      dataFimReal: null,
+      frequenciaAplicada: 2,
+      unidadeFrequencia: 'DIAS',
+      doseQuantidade: 1,
+      doseUnidade: 'MILIGRAMA',
+      viaAdministracao: 'ORAL',
+      status: 'ATIVA',
+      retificaId: null,
+      criadoEm: `${addDiasIso(-20)}T09:00:00Z`,
+    },
+  ]
+}
+
+let prescricoesMock: PrescricaoMockInterna[] = seedPrescricoesMock()
+
+export function resetPrescricoesMock() {
+  prescricoesMock = seedPrescricoesMock()
+}
+
+function paginar<T>(itens: T[], pagina: number, tamanho: number) {
+  const totalItens = itens.length
+  const totalPaginas = Math.max(Math.ceil(totalItens / tamanho), 1)
+  const inicio = pagina * tamanho
+  return { itens: itens.slice(inicio, inicio + tamanho), pagina, tamanho, totalItens, totalPaginas }
+}
+
 export const handlers = [
   http.get(`${API_BASE_URL}/health`, () => {
     return HttpResponse.json({ status: 'ok' })
@@ -960,5 +1185,118 @@ export const handlers = [
     const animalAtualizado = construirAnimalMock(animal.id, body, animal)
     animaisMock = animaisMock.map((item) => (item.id === animal.id ? animalAtualizado : item))
     return HttpResponse.json(animalAtualizado)
+  }),
+
+  http.get(`${API_BASE_URL}/vacinacoes`, ({ request }) => {
+    const url = new URL(request.url)
+    const animalId = url.searchParams.get('animalId')
+    const pagina = Number(url.searchParams.get('pagina') ?? '0')
+    const tamanho = Number(url.searchParams.get('tamanho') ?? '20')
+    const filtrados = derivarStatusRegistro(vacinacoesMock)
+      .filter((item) => !animalId || item.animalId === animalId)
+      .sort((a, b) => (a.dataAplicacao < b.dataAplicacao ? 1 : -1))
+    return HttpResponse.json(paginar(filtrados, pagina, tamanho))
+  }),
+
+  http.post(`${API_BASE_URL}/vacinacoes`, async ({ request }) => {
+    const body = (await request.json()) as CriarVacinacaoRequest
+    const novo: VacinacaoMockInterna = {
+      id: crypto.randomUUID(),
+      animalId: body.animalId,
+      vacinaCodigo: body.vacina,
+      vacinaNome: VACINAS.find((item) => item.codigo === body.vacina)?.nome ?? body.vacina,
+      aplicadoPorId: usuariosMock[0].id,
+      aplicadoPorNome: `${usuariosMock[0].nome} ${usuariosMock[0].sobrenome}`,
+      dataAplicacao: body.dataAplicacao,
+      dataValidade: null,
+      numeroDose: body.numeroDose ?? null,
+      doseQuantidade: body.doseQuantidade,
+      doseUnidade: body.doseUnidade ?? null,
+      lote: body.lote ?? null,
+      observacoes: body.observacoes ?? null,
+      retificaId: body.retificaId ?? null,
+      criadoEm: new Date().toISOString(),
+    }
+    vacinacoesMock = [...vacinacoesMock, novo]
+    const [comStatus] = derivarStatusRegistro([novo])
+    return HttpResponse.json(comStatus, { status: 201 })
+  }),
+
+  http.get(`${API_BASE_URL}/procedimentos`, ({ request }) => {
+    const url = new URL(request.url)
+    const animalId = url.searchParams.get('animalId')
+    const pagina = Number(url.searchParams.get('pagina') ?? '0')
+    const tamanho = Number(url.searchParams.get('tamanho') ?? '20')
+    const filtrados = derivarStatusRegistro(procedimentosMock)
+      .filter((item) => !animalId || item.animalId === animalId)
+      .sort((a, b) => (a.data < b.data ? 1 : -1))
+    return HttpResponse.json(paginar(filtrados, pagina, tamanho))
+  }),
+
+  http.post(`${API_BASE_URL}/procedimentos`, async ({ request }) => {
+    const body = (await request.json()) as CriarProcedimentoRequest
+    const novo: ProcedimentoMockInterno = {
+      id: crypto.randomUUID(),
+      animalId: body.animalId,
+      tipoProcedimentoCodigo: body.tipoProcedimento,
+      tipoProcedimentoNome: TIPOS_PROCEDIMENTO.find((item) => item.codigo === body.tipoProcedimento)?.nome ?? body.tipoProcedimento,
+      executadoPorId: usuariosMock[0].id,
+      executadoPorNome: `${usuariosMock[0].nome} ${usuariosMock[0].sobrenome}`,
+      data: body.data,
+      descricao: body.descricao ?? null,
+      resultado: body.resultado ?? null,
+      retificaId: body.retificaId ?? null,
+      criadoEm: new Date().toISOString(),
+    }
+    procedimentosMock = [...procedimentosMock, novo]
+    const [comStatus] = derivarStatusRegistro([novo])
+    return HttpResponse.json(comStatus, { status: 201 })
+  }),
+
+  http.get(`${API_BASE_URL}/prescricoes`, ({ request }) => {
+    const url = new URL(request.url)
+    const animalId = url.searchParams.get('animalId')
+    const pagina = Number(url.searchParams.get('pagina') ?? '0')
+    const tamanho = Number(url.searchParams.get('tamanho') ?? '20')
+    const filtrados = derivarStatusRegistro(prescricoesMock)
+      .filter((item) => !animalId || item.animalId === animalId)
+      .sort((a, b) => (a.dataInicio < b.dataInicio ? 1 : -1))
+    return HttpResponse.json(paginar(filtrados, pagina, tamanho))
+  }),
+
+  http.post(`${API_BASE_URL}/prescricoes`, async ({ request }) => {
+    const body = (await request.json()) as CriarPrescricaoRequest
+    const medicamento = medicamentosMock.find((item) => item.id === body.medicamentoId)
+    const novo: PrescricaoMockInterna = {
+      id: crypto.randomUUID(),
+      animalId: body.animalId,
+      medicamentoId: body.medicamentoId,
+      medicamentoNome: medicamento?.nome ?? body.medicamentoId,
+      prescritoPorId: usuariosMock[0].id,
+      prescritoPorNome: `${usuariosMock[0].nome} ${usuariosMock[0].sobrenome}`,
+      dataInicio: body.dataInicio,
+      dataFimPrevista: body.dataFimPrevista ?? null,
+      dataFimReal: body.dataFimReal ?? null,
+      frequenciaAplicada: body.frequenciaAplicada,
+      unidadeFrequencia: body.unidadeFrequencia,
+      doseQuantidade: body.doseQuantidade,
+      doseUnidade: body.doseUnidade,
+      viaAdministracao: body.viaAdministracao,
+      status: body.status,
+      retificaId: body.retificaId ?? null,
+      criadoEm: new Date().toISOString(),
+    }
+    prescricoesMock = [...prescricoesMock, novo]
+    const [comStatus] = derivarStatusRegistro([novo])
+    return HttpResponse.json(comStatus, { status: 201 })
+  }),
+
+  http.get(`${API_BASE_URL}/medicamentos`, ({ request }) => {
+    const url = new URL(request.url)
+    const ativoParam = url.searchParams.get('ativo')
+    const pagina = Number(url.searchParams.get('pagina') ?? '0')
+    const tamanho = Number(url.searchParams.get('tamanho') ?? '20')
+    const filtrados = medicamentosMock.filter((item) => ativoParam === null || item.ativo === (ativoParam === 'true'))
+    return HttpResponse.json(paginar(filtrados, pagina, tamanho))
   }),
 ]
