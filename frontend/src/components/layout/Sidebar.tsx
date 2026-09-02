@@ -39,9 +39,9 @@ export function Sidebar({ roleKey, onToggleCollapsed }: SidebarProps) {
       </div>
 
       <nav className="sidebar-nav">
-        {nav.map((entry, index) =>
+        {nav.map((entry) =>
           isNavGroup(entry) ? (
-            <div className="sidebar-group-label" key={`group-${entry.group}-${index}`}>
+            <div className="sidebar-group-label" key={entry.group}>
               {entry.group}
             </div>
           ) : (
