@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
+import { useCallback, useEffect, useRef, useState, type MutableRefObject } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { listarPrescricoes, listarProcedimentos, listarVacinacoes } from './historicoApi'
 import { chavePrescricoes, chaveProcedimentos, chaveVacinacoes, TAMANHO_PAGINA_HISTORICO } from './useHistoricoAnimal'
@@ -59,6 +59,21 @@ function procedimentoParaEvento(p: Procedimento): EventoTimeline {
     por: p.executadoPorNome ?? '—',
     corpo: [p.descricao, p.resultado].filter(Boolean).join(' · ') || undefined,
     retificado: p.statusRegistro === 'RETIFICADO',
+  }
+}
+
+function entradaParaEvento(animal: Animal): EventoTimeline {
+  return {
+    id: `entrada-${animal.id}`,
+    tipo: 'entrada',
+    // `Animal.dataEntrada` é LocalDateTime (com hora) — diferente das datas
+    // dos registros clínicos (LocalDate); recortada para o mesmo formato
+    // 'YYYY-MM-DD' usado por `formatarData` em AbaHistorico.tsx.
+    data: animal.dataEntrada.slice(0, 10),
+    titulo: 'Entrada no CCZ',
+    por: animal.criadoPorNome,
+    corpo: `Motivo: ${animal.motivoEntradaNome}`,
+    retificado: false,
   }
 }
 
@@ -172,21 +187,7 @@ export function useTimelineAnimal(animalId: string | undefined, animal: Animal |
     setFimDoHistorico(false)
   }, [animalId, refreshKey])
 
-  const eventoEntrada = useMemo<EventoTimeline | null>(() => {
-    if (!animal) return null
-    return {
-      id: `entrada-${animal.id}`,
-      tipo: 'entrada',
-      // `Animal.dataEntrada` é LocalDateTime (com hora) — diferente das datas
-      // dos registros clínicos (LocalDate); recortada para o mesmo formato
-      // 'YYYY-MM-DD' usado por `formatarData` em AbaHistorico.tsx.
-      data: animal.dataEntrada.slice(0, 10),
-      titulo: 'Entrada no CCZ',
-      por: animal.criadoPorNome,
-      corpo: `Motivo: ${animal.motivoEntradaNome}`,
-      retificado: false,
-    }
-  }, [animal])
+  const eventoEntrada = animal ? entradaParaEvento(animal) : null
 
   const eventosComEntrada = fimDoHistorico && eventoEntrada ? [...eventos, eventoEntrada] : eventos
 
