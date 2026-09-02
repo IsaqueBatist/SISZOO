@@ -116,6 +116,21 @@ describe('GestaoBaias', () => {
     expect(await screen.findByText('Baia Nova')).toBeInTheDocument()
   })
 
+  it('capacidade vazia mostra "informe a capacidade" em vez de aceitar como zero', async () => {
+    const user = userEvent.setup()
+    renderGestaoBaias()
+
+    await screen.findByText('Baia 3')
+    await user.click(screen.getByRole('button', { name: /adicionar baia/i }))
+
+    await user.type(screen.getByLabelText(/^nome/i), 'Baia Sem Capacidade')
+    await user.selectOptions(screen.getByLabelText(/^tipo/i), 'canil')
+    await user.click(screen.getByRole('button', { name: /^criar baia$/i }))
+
+    expect(await screen.findByText('Informe a capacidade.')).toBeInTheDocument()
+    expect(screen.queryByText('Baia Sem Capacidade')).not.toBeInTheDocument()
+  })
+
   it('edita a capacidade de uma baia existente', async () => {
     const user = userEvent.setup()
     renderGestaoBaias()
