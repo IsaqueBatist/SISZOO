@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '../../components/layout/Icon'
 import { useAuth } from '../auth/AuthContext'
-import { roleKeyFromCargos } from '../../lib/nav'
 import {
   useAlterarStatusBaiaMutation,
   useBaiasQuery,
@@ -43,8 +42,7 @@ function rotuloStatus(baia: Baia, estado: EstadoLotacao): string | null {
 }
 
 export function GestaoBaias() {
-  const { user } = useAuth()
-  const roleKey = roleKeyFromCargos(user?.cargos ?? [])
+  const { roleKey } = useAuth()
   const podeEscrever = roleKey === 'admin' || roleKey === 'vet'
   const podeExcluir = roleKey === 'admin'
 

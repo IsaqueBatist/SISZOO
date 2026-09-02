@@ -2,7 +2,6 @@ import { useState, type KeyboardEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Icon } from '../../components/layout/Icon'
 import { useAuth } from '../auth/AuthContext'
-import { roleKeyFromCargos } from '../../lib/nav'
 import { AbaExames } from './AbaExames'
 import { AbaHistorico } from './AbaHistorico'
 import { AbaMedicamentos } from './AbaMedicamentos'
@@ -53,8 +52,7 @@ function formatarPorte(porte: string | null): string {
 
 export function FichaAnimal() {
   const { id } = useParams<{ id: string }>()
-  const { user } = useAuth()
-  const roleKey = roleKeyFromCargos(user?.cargos ?? [])
+  const { roleKey } = useAuth()
   const podeEscrever = roleKey === 'admin' || roleKey === 'vet'
 
   const { data: animal, isLoading, isError } = useAnimalQuery(id)
@@ -232,14 +230,12 @@ export function FichaAnimal() {
             <div className="tab-content">
               <div className="tab-pane active" id={`tab-${tab}`} role="tabpanel" aria-labelledby={`tab-btn-${tab}`}>
                 {tab === 'historico' && <AbaHistorico animalId={id} animal={animal} refreshKey={refreshKey} />}
-                {tab === 'vacinas' && (
-                  <AbaVacinas animalId={id} podeEscrever={podeEscrever} onRegistroCriado={handleRegistroCriado} />
-                )}
+                {tab === 'vacinas' && <AbaVacinas animalId={id} onRegistroCriado={handleRegistroCriado} />}
                 {tab === 'procedimentos' && (
-                  <AbaProcedimentos animalId={id} podeEscrever={podeEscrever} onRegistroCriado={handleRegistroCriado} />
+                  <AbaProcedimentos animalId={id} onRegistroCriado={handleRegistroCriado} />
                 )}
                 {tab === 'medicamentos' && (
-                  <AbaMedicamentos animalId={id} podeEscrever={podeEscrever} onRegistroCriado={handleRegistroCriado} />
+                  <AbaMedicamentos animalId={id} onRegistroCriado={handleRegistroCriado} />
                 )}
                 {tab === 'exames' && <AbaExames />}
               </div>

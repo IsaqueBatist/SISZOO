@@ -28,6 +28,20 @@ function corAvatar(seed: string): string {
   return `hsl(${hue}, 35%, 50%)`
 }
 
+function contarPorPerfil(usuarios: UsuarioListItem[] | undefined): Record<PerfilUsuario, number> {
+  const contagem: Record<PerfilUsuario, number> = {
+    Administrador: 0,
+    Veterinário: 0,
+    'Agente Sanitário': 0,
+  }
+  for (const usuario of usuarios ?? []) {
+    for (const cargo of usuario.cargos) {
+      if (cargo in contagem) contagem[cargo as PerfilUsuario] += 1
+    }
+  }
+  return contagem
+}
+
 export function Usuarios() {
   const { data: usuarios, isLoading, isError } = useUsuariosQuery()
   const alterarStatus = useAlterarStatusUsuarioMutation()
@@ -56,19 +70,7 @@ export function Usuarios() {
     })
   }, [usuarios, busca, perfilFiltro, statusFiltro])
 
-  const contagemPorPerfil = useMemo(() => {
-    const contagem: Record<PerfilUsuario, number> = {
-      Administrador: 0,
-      Veterinário: 0,
-      'Agente Sanitário': 0,
-    }
-    for (const usuario of usuarios ?? []) {
-      for (const cargo of usuario.cargos) {
-        if (cargo in contagem) contagem[cargo as PerfilUsuario] += 1
-      }
-    }
-    return contagem
-  }, [usuarios])
+  const contagemPorPerfil = contarPorPerfil(usuarios)
 
   function handleAlterarStatus(usuario: UsuarioListItem) {
     const acao = usuario.ativo ? 'desativar' : 'reativar'

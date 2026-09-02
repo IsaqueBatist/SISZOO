@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Icon } from '../../components/layout/Icon'
 import { useAuth } from '../auth/AuthContext'
-import { roleKeyFromCargos } from '../../lib/nav'
 import { useAnimaisQuery, useBaiasAtivasQuery, useCatalogosAnimaisQuery } from './useAnimais'
 import { badgeDeEspecie, badgeDeStatus } from './statusBadge'
 import type { Animal, Pelagem, Porte, Sexo } from './animais.types'
@@ -47,8 +46,8 @@ function corAvatar(seed: string): string {
 }
 
 export function Animais() {
-  const { user } = useAuth()
-  const podeEscrever = ['admin', 'vet'].includes(roleKeyFromCargos(user?.cargos ?? []))
+  const { roleKey } = useAuth()
+  const podeEscrever = roleKey === 'admin' || roleKey === 'vet'
   const [searchParams] = useSearchParams()
   const [busca, setBusca] = useState('')
   const [buscaDebounced, setBuscaDebounced] = useState('')

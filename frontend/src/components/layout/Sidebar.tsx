@@ -1,16 +1,15 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { ROLES, getNavForRole, isNavGroup, type RoleKey } from '../../lib/nav'
+import { ROLES, getNavForRole, isNavGroup } from '../../lib/nav'
 import { useAuth } from '../../features/auth/AuthContext'
 import { Icon } from './Icon'
 
 interface SidebarProps {
-  roleKey: RoleKey
   onToggleCollapsed: () => void
 }
 
-export function Sidebar({ roleKey, onToggleCollapsed }: SidebarProps) {
+export function Sidebar({ onToggleCollapsed }: SidebarProps) {
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user, roleKey, logout } = useAuth()
   const role = ROLES[roleKey]
   const nav = getNavForRole(roleKey)
   const nomeCompleto = user ? `${user.nome} ${user.sobrenome}` : ''
@@ -39,9 +38,9 @@ export function Sidebar({ roleKey, onToggleCollapsed }: SidebarProps) {
       </div>
 
       <nav className="sidebar-nav">
-        {nav.map((entry, index) =>
+        {nav.map((entry) =>
           isNavGroup(entry) ? (
-            <div className="sidebar-group-label" key={`group-${entry.group}-${index}`}>
+            <div className="sidebar-group-label" key={entry.group}>
               {entry.group}
             </div>
           ) : (
