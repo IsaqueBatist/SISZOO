@@ -2,7 +2,6 @@ import { useState, type KeyboardEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Icon } from '../../components/layout/Icon'
 import { useAuth } from '../auth/AuthContext'
-import { roleKeyFromCargos } from '../../lib/nav'
 import { AbaExames } from './AbaExames'
 import { AbaHistorico } from './AbaHistorico'
 import { AbaMedicamentos } from './AbaMedicamentos'
@@ -53,8 +52,7 @@ function formatarPorte(porte: string | null): string {
 
 export function FichaAnimal() {
   const { id } = useParams<{ id: string }>()
-  const { user } = useAuth()
-  const roleKey = roleKeyFromCargos(user?.cargos ?? [])
+  const { roleKey } = useAuth()
   const podeEscrever = roleKey === 'admin' || roleKey === 'vet'
 
   const { data: animal, isLoading, isError } = useAnimalQuery(id)
