@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from 'react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
 import { Icon } from '../../components/layout/Icon'
 import { VACINAS } from './catalogoClinico'
-import { vacinacaoFormSchema } from './historicoFormSchemas'
+import { vacinacaoFormSchema, type VacinacaoFormValues } from './historicoFormSchemas'
 import { LABELS_UNIDADE_DOSE } from './historicoLabels'
 import { useCriarVacinacaoMutation } from './useHistoricoAnimal'
 import type { Vacinacao } from './historico.types'
@@ -16,69 +18,52 @@ interface ModalRegistrarVacinaProps {
   onSucesso: () => void
 }
 
-interface FieldErrors {
-  vacina?: string
-  dataAplicacao?: string
-  numeroDose?: string
-  doseQuantidade?: string
-}
-
 export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }: ModalRegistrarVacinaProps) {
-  const [vacina, setVacina] = useState(retifica?.vacinaCodigo ?? '')
-  const [dataAplicacao, setDataAplicacao] = useState(retifica?.dataAplicacao ?? '')
-  const [numeroDose, setNumeroDose] = useState(retifica?.numeroDose != null ? String(retifica.numeroDose) : '')
-  const [doseQuantidade, setDoseQuantidade] = useState(retifica ? String(retifica.doseQuantidade) : '')
-  const [doseUnidade, setDoseUnidade] = useState(retifica?.doseUnidade ?? '')
-  const [lote, setLote] = useState(retifica?.lote ?? '')
-  const [observacoes, setObservacoes] = useState(retifica?.observacoes ?? '')
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const mutation = useCriarVacinacaoMutation(animalId)
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setSubmitError(null)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<VacinacaoFormValues>({
+    resolver: zodResolver(vacinacaoFormSchema),
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
+    defaultValues: {
+      vacina: retifica?.vacinaCodigo ?? '',
+      dataAplicacao: retifica?.dataAplicacao ?? '',
+      numeroDose: retifica?.numeroDose ?? undefined,
+      doseQuantidade: retifica?.doseQuantidade,
+      doseUnidade: retifica?.doseUnidade,
+      lote: retifica?.lote ?? '',
+      observacoes: retifica?.observacoes ?? '',
+    },
+  })
 
-    const resultado = vacinacaoFormSchema.safeParse({
-      vacina,
-      dataAplicacao,
-      numeroDose: numeroDose.trim() ? Number(numeroDose) : undefined,
-      doseQuantidade: doseQuantidade.trim() ? Number(doseQuantidade) : undefined,
-      doseUnidade: doseUnidade || undefined,
-      lote: lote.trim() || undefined,
-      observacoes: observacoes.trim() || undefined,
-    })
-
-    if (!resultado.success) {
-      const erros: FieldErrors = {}
-      for (const issue of resultado.error.issues) {
-        const campo = issue.path[0]
-        if (campo === 'vacina' || campo === 'dataAplicacao' || campo === 'numeroDose' || campo === 'doseQuantidade') {
-          erros[campo] = issue.message
-        }
-      }
-      setFieldErrors(erros)
-      return
-    }
-
-    setFieldErrors({})
+  async function onSubmit(dados: VacinacaoFormValues) {
     try {
       await mutation.mutateAsync({
         animalId,
-        vacina: resultado.data.vacina,
-        dataAplicacao: resultado.data.dataAplicacao,
-        numeroDose: resultado.data.numeroDose,
-        doseQuantidade: resultado.data.doseQuantidade,
-        doseUnidade: resultado.data.doseUnidade,
-        lote: resultado.data.lote,
-        observacoes: resultado.data.observacoes,
+        vacina: dados.vacina,
+        dataAplicacao: dados.dataAplicacao,
+        numeroDose: dados.numeroDose,
+        doseQuantidade: dados.doseQuantidade,
+        doseUnidade: dados.doseUnidade,
+        lote: dados.lote,
+        observacoes: dados.observacoes,
         retificaId: retifica?.id,
       })
       onSucesso()
     } catch {
       setSubmitError(`Não foi possível ${retifica ? 'corrigir' : 'registrar'} a vacinação. Tente novamente.`)
     }
+  }
+
+  function aoEnviar(event: FormEvent<HTMLFormElement>) {
+    setSubmitError(null)
+    void handleSubmit(onSubmit)(event)
   }
 
   return (
@@ -91,7 +76,7 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate>
+        <form onSubmit={aoEnviar} noValidate>
           <div className="modal-body">
             <div className="form-grid cols-1">
               {submitError && (
@@ -114,12 +99,7 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
                   <label htmlFor="vac-vacina">
                     Vacina <span className="req">*</span>
                   </label>
-                  <select
-                    id="vac-vacina"
-                    className={`select${fieldErrors.vacina ? ' error' : ''}`}
-                    value={vacina}
-                    onChange={(event) => setVacina(event.target.value)}
-                  >
+                  <select id="vac-vacina" className={`select${errors.vacina ? ' error' : ''}`} {...register('vacina')}>
                     <option value="" disabled>
                       Selecione…
                     </option>
@@ -129,7 +109,7 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
                       </option>
                     ))}
                   </select>
-                  {fieldErrors.vacina && <span className="err">{fieldErrors.vacina}</span>}
+                  {errors.vacina && <span className="err">{errors.vacina.message}</span>}
                 </div>
 
                 <div className="field">
@@ -138,12 +118,11 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
                   </label>
                   <input
                     id="vac-data"
-                    className={`input${fieldErrors.dataAplicacao ? ' error' : ''}`}
+                    className={`input${errors.dataAplicacao ? ' error' : ''}`}
                     type="date"
-                    value={dataAplicacao}
-                    onChange={(event) => setDataAplicacao(event.target.value)}
+                    {...register('dataAplicacao')}
                   />
-                  {fieldErrors.dataAplicacao && <span className="err">{fieldErrors.dataAplicacao}</span>}
+                  {errors.dataAplicacao && <span className="err">{errors.dataAplicacao.message}</span>}
                 </div>
               </div>
 
@@ -156,8 +135,7 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
                     type="number"
                     min={1}
                     step={1}
-                    value={numeroDose}
-                    onChange={(event) => setNumeroDose(event.target.value)}
+                    {...register('numeroDose', { setValueAs: (v) => (v === '' ? undefined : Number(v)) })}
                   />
                 </div>
                 <div className="field">
@@ -166,22 +144,20 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
                   </label>
                   <input
                     id="vac-dose-quantidade"
-                    className={`input${fieldErrors.doseQuantidade ? ' error' : ''}`}
+                    className={`input${errors.doseQuantidade ? ' error' : ''}`}
                     type="number"
                     min={0}
                     step="0.001"
-                    value={doseQuantidade}
-                    onChange={(event) => setDoseQuantidade(event.target.value)}
+                    {...register('doseQuantidade', { valueAsNumber: true })}
                   />
-                  {fieldErrors.doseQuantidade && <span className="err">{fieldErrors.doseQuantidade}</span>}
+                  {errors.doseQuantidade && <span className="err">{errors.doseQuantidade.message}</span>}
                 </div>
                 <div className="field">
                   <label htmlFor="vac-dose-unidade">Unidade</label>
                   <select
                     id="vac-dose-unidade"
                     className="select"
-                    value={doseUnidade}
-                    onChange={(event) => setDoseUnidade(event.target.value as typeof doseUnidade)}
+                    {...register('doseUnidade', { setValueAs: (v) => (v === '' ? undefined : v) })}
                   >
                     <option value="">—</option>
                     {(Object.keys(LABELS_UNIDADE_DOSE) as (keyof typeof LABELS_UNIDADE_DOSE)[]).map((unidade) => (
@@ -195,7 +171,12 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
 
               <div className="field">
                 <label htmlFor="vac-lote">Lote</label>
-                <input id="vac-lote" className="input" type="text" value={lote} onChange={(event) => setLote(event.target.value)} />
+                <input
+                  id="vac-lote"
+                  className="input"
+                  type="text"
+                  {...register('lote', { setValueAs: (v: string) => (v.trim() ? v : undefined) })}
+                />
               </div>
 
               <div className="field">
@@ -204,8 +185,7 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
                   id="vac-observacoes"
                   className="textarea"
                   rows={3}
-                  value={observacoes}
-                  onChange={(event) => setObservacoes(event.target.value)}
+                  {...register('observacoes', { setValueAs: (v: string) => (v.trim() ? v : undefined) })}
                 />
               </div>
             </div>
