@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { Icon } from '../../components/layout/Icon'
 import { aplicarPreferenciasVisuais } from '../../lib/theme'
 import type { DensidadeUsuario, TemaUsuario } from './configuracoes.types'
@@ -38,23 +38,22 @@ export function Configuracoes() {
   const [form, setForm] = useState<FormState | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSucesso, setSubmitSucesso] = useState(false)
-  const jaInicializou = useRef(false)
 
-  // Seed único a partir do servidor — nunca resetado por um PATCH que falhe,
-  // para não perder a escolha do usuário numa queda de rede.
-  useEffect(() => {
-    if (query.data && !jaInicializou.current) {
-      jaInicializou.current = true
-      setForm({
-        tema: query.data.tema,
-        densidade: query.data.densidade,
-        notifVacinaVencendo: query.data.notifVacinaVencendo,
-        notifSuperlotacao: query.data.notifSuperlotacao,
-        notifResultadoLab: query.data.notifResultadoLab,
-        notifEmailDiario: query.data.notifEmailDiario,
-      })
-    }
-  }, [query.data])
+  // Seed único a partir do servidor, ajustado durante o render (sem efeito):
+  // `form` só é null antes do primeiro carregamento, então essa checagem
+  // nunca reexecuta depois de inicializado — nem quando query.data muda por
+  // um PATCH bem-sucedido (setQueryData) — e assim nunca descarta a escolha
+  // do usuário numa queda de rede.
+  if (query.data && !form) {
+    setForm({
+      tema: query.data.tema,
+      densidade: query.data.densidade,
+      notifVacinaVencendo: query.data.notifVacinaVencendo,
+      notifSuperlotacao: query.data.notifSuperlotacao,
+      notifResultadoLab: query.data.notifResultadoLab,
+      notifEmailDiario: query.data.notifEmailDiario,
+    })
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()

@@ -53,10 +53,14 @@ describe('Configuracoes', () => {
     renderConfiguracoes()
 
     await screen.findByText('Densidade da interface')
-    await user.selectOptions(screen.getByRole('combobox'), 'Compacto')
+    const select = screen.getByRole('combobox')
+    await user.selectOptions(select, 'Compacto')
     await user.click(screen.getByRole('button', { name: /salvar alterações/i }))
 
     expect(await screen.findByText(/não foi possível salvar/i)).toBeInTheDocument()
     expect(screen.getByRole('combobox')).toHaveValue('COMPACTO')
+    // Mesma instância de DOM: o formulário não pode ser remontado ao
+    // re-renderizar após a falha, sob risco de perder o foco do usuário.
+    expect(screen.getByRole('combobox')).toBe(select)
   })
 })
