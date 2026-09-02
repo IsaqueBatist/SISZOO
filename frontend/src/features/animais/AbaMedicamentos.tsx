@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Icon } from '../../components/layout/Icon'
+import { useAuth } from '../auth/AuthContext'
 import { ModalRegistrarMedicamento } from './ModalRegistrarMedicamento'
 import { LABELS_STATUS_PRESCRICAO, LABELS_UNIDADE_DOSE, LABELS_UNIDADE_FREQUENCIA, LABELS_VIA_ADMINISTRACAO } from './historicoLabels'
 import { usePrescricoesQuery } from './useHistoricoAnimal'
@@ -7,7 +8,6 @@ import type { Prescricao } from './historico.types'
 
 interface AbaMedicamentosProps {
   animalId: string
-  podeEscrever: boolean
   onRegistroCriado: () => void
 }
 
@@ -17,7 +17,9 @@ function formatarData(iso: string | null): string {
   return `${dia}/${mes}/${ano}`
 }
 
-export function AbaMedicamentos({ animalId, podeEscrever, onRegistroCriado }: AbaMedicamentosProps) {
+export function AbaMedicamentos({ animalId, onRegistroCriado }: AbaMedicamentosProps) {
+  const { roleKey } = useAuth()
+  const podeEscrever = roleKey === 'admin' || roleKey === 'vet'
   const [pagina, setPagina] = useState(0)
   const [modalAberto, setModalAberto] = useState(false)
   const [retificando, setRetificando] = useState<Prescricao | undefined>(undefined)

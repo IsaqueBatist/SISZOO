@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useAuth } from '../auth/AuthContext'
 import { ModalRegistrarVacina } from './ModalRegistrarVacina'
 import { badgeReforcoVacina } from './regrasVacina'
 import { useVacinacoesQuery } from './useHistoricoAnimal'
@@ -6,7 +7,6 @@ import type { Vacinacao } from './historico.types'
 
 interface AbaVacinasProps {
   animalId: string
-  podeEscrever: boolean
   onRegistroCriado: () => void
 }
 
@@ -18,7 +18,9 @@ function formatarData(iso: string | null): string {
   return `${dia}/${mes}/${ano}`
 }
 
-export function AbaVacinas({ animalId, podeEscrever, onRegistroCriado }: AbaVacinasProps) {
+export function AbaVacinas({ animalId, onRegistroCriado }: AbaVacinasProps) {
+  const { roleKey } = useAuth()
+  const podeEscrever = roleKey === 'admin' || roleKey === 'vet'
   const [pagina, setPagina] = useState(0)
   const [modalAberto, setModalAberto] = useState(false)
   const [retificando, setRetificando] = useState<Vacinacao | undefined>(undefined)

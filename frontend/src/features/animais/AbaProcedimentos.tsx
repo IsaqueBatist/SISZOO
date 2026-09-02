@@ -1,11 +1,11 @@
 import { useState } from 'react'
+import { useAuth } from '../auth/AuthContext'
 import { ModalRegistrarProcedimento } from './ModalRegistrarProcedimento'
 import { useProcedimentosQuery } from './useHistoricoAnimal'
 import type { Procedimento } from './historico.types'
 
 interface AbaProcedimentosProps {
   animalId: string
-  podeEscrever: boolean
   onRegistroCriado: () => void
 }
 
@@ -16,7 +16,9 @@ function formatarData(iso: string): string {
   return `${dia}/${mes}/${ano}`
 }
 
-export function AbaProcedimentos({ animalId, podeEscrever, onRegistroCriado }: AbaProcedimentosProps) {
+export function AbaProcedimentos({ animalId, onRegistroCriado }: AbaProcedimentosProps) {
+  const { roleKey } = useAuth()
+  const podeEscrever = roleKey === 'admin' || roleKey === 'vet'
   const [pagina, setPagina] = useState(0)
   const [modalAberto, setModalAberto] = useState(false)
   const [retificando, setRetificando] = useState<Procedimento | undefined>(undefined)
