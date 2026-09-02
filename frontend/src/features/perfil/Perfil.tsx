@@ -1,14 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
 import { Icon } from '../../components/layout/Icon'
 import { NAV_ALL, ROLES, isNavGroup, roleKeyFromCargos } from '../../lib/nav'
-import { perfilFormSchema } from './perfilFormSchema'
+import { perfilFormSchema, type PerfilFormValues } from './perfilFormSchema'
 import { useAtualizarTelefoneMutation, usePerfilQuery } from './usePerfil'
 import './Perfil.css'
-
-interface FieldErrors {
-  telefone?: string
-}
 
 function formatarData(iso: string): string {
   const data = new Date(iso)
@@ -19,38 +17,37 @@ export function Perfil() {
   const query = usePerfilQuery()
   const mutation = useAtualizarTelefoneMutation()
 
-  const [telefone, setTelefone] = useState('')
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSucesso, setSubmitSucesso] = useState(false)
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<PerfilFormValues>({
+    resolver: zodResolver(perfilFormSchema),
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
+    defaultValues: { telefone: '' },
+  })
 
   // O backend hoje não devolve `telefone` em GET /usuarios/me (só aceita no
   // PATCH), então o campo começa vazio — não há valor de servidor para
   // sincronizar. Em caso de erro de rede o estado local não é limpo, então o
   // que foi digitado continua no campo e pode ser reenviado.
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setSubmitError(null)
-    setSubmitSucesso(false)
-
-    const resultado = perfilFormSchema.safeParse({ telefone })
-    if (!resultado.success) {
-      const erros: FieldErrors = {}
-      for (const issue of resultado.error.issues) {
-        if (issue.path[0] === 'telefone') erros.telefone = issue.message
-      }
-      setFieldErrors(erros)
-      return
-    }
-
-    setFieldErrors({})
-
+  async function onSubmit(dados: PerfilFormValues) {
     try {
-      await mutation.mutateAsync({ telefone: resultado.data.telefone })
+      await mutation.mutateAsync({ telefone: dados.telefone })
       setSubmitSucesso(true)
     } catch {
       setSubmitError('Não foi possível salvar o telefone. Verifique a conexão e tente novamente.')
     }
+  }
+
+  function aoEnviar(event: FormEvent<HTMLFormElement>) {
+    setSubmitError(null)
+    setSubmitSucesso(false)
+    void handleSubmit(onSubmit)(event)
   }
 
   if (query.isLoading) {
@@ -157,7 +154,7 @@ export function Perfil() {
                   <div className="alert-content">Telefone atualizado com sucesso.</div>
                 </div>
               )}
-              <form onSubmit={handleSubmit} noValidate>
+              <form onSubmit={aoEnviar} noValidate>
                 <div className="field">
                   <label htmlFor="telefone">Telefone</label>
                   <div className="input-with-icon">
@@ -166,17 +163,13 @@ export function Perfil() {
                     </span>
                     <input
                       id="telefone"
-                      className={`input${fieldErrors.telefone ? ' error' : ''}`}
+                      className={`input${errors.telefone ? ' error' : ''}`}
                       type="text"
                       placeholder="(11) 91234-5678"
-                      value={telefone}
-                      onChange={(event) => {
-                        setTelefone(event.target.value)
-                        setSubmitSucesso(false)
-                      }}
+                      {...register('telefone', { onChange: () => setSubmitSucesso(false) })}
                     />
                   </div>
-                  {fieldErrors.telefone && <span className="err">{fieldErrors.telefone}</span>}
+                  {errors.telefone && <span className="err">{errors.telefone.message}</span>}
                 </div>
                 <button type="submit" className="btn btn-primary btn-sm" disabled={mutation.isPending}>
                   {mutation.isPending ? 'Salvando…' : 'Salvar telefone'}
