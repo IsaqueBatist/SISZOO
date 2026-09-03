@@ -1,0 +1,63 @@
+/* Portado do <style> inline de docs/prototipo/alerta.html (hero de alerta +
+   tiras de KPI), com cores planas nos tokens do design system em vez do
+   gradiente ad-hoc do protótipo — consistente com o resto do app. */
+.alert-hero {
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.alert-hero.danger {
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger);
+}
+.alert-hero.warning {
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning);
+}
+.alert-hero .ah-ico {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.6);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-danger);
+}
+.alert-hero.warning .ah-ico {
+  color: var(--color-warning);
+}
+.alert-hero h2 {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+.alert-hero p {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+.alert-hero .ah-kpis {
+  display: flex;
+  gap: 24px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.alert-hero .ah-kpi {
+  font-size: 13px;
+}
+.alert-hero .ah-kpi .v {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 22px;
+  display: block;
+}
+.alert-hero .ah-kpi .l {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-secondary);
+}

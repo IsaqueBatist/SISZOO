@@ -41,10 +41,17 @@ class RegistrosClinicosSemMutacaoTest {
     // metodo herdado de JpaSpecificationExecutor so para anotar com
     // @EntityGraph (evitar N+1 na listagem paginada) — nao e um metodo novo
     // nem de mutacao, so uma leitura ja existente no contrato do Spring Data.
+    // "findVigentesParaAlertaVacinal" e a query do alerta de reforco vacinal
+    // (com.siszoo.alertas) — tambem leitura pura (@Query JPQL de SELECT).
     @Test
     void repositorioDeVacinacaoSoDeclaraFindersDeRetificacaoEFindAllComEntityGraph() {
         assertNomesDosMetodosPublicosDeclarados(
-                VacinacaoRepository.class, "existsByRetificaId", "findByRetificaId", "findByRetificaIdIn", "findAll");
+                VacinacaoRepository.class,
+                "existsByRetificaId",
+                "findByRetificaId",
+                "findByRetificaIdIn",
+                "findAll",
+                "findVigentesParaAlertaVacinal");
     }
 
     @Test

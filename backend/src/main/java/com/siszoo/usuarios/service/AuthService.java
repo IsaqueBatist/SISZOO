@@ -1,5 +1,6 @@
 package com.siszoo.usuarios.service;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -25,18 +26,21 @@ public class AuthService {
     private final JwtService jwtService;
     private final UsuarioMapper usuarioMapper;
     private final AuditoriaEventoService auditoriaEventoService;
+    private final Clock clock;
 
     public AuthService(
             UsuarioRepository usuarioRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             UsuarioMapper usuarioMapper,
-            AuditoriaEventoService auditoriaEventoService) {
+            AuditoriaEventoService auditoriaEventoService,
+            Clock clock) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.usuarioMapper = usuarioMapper;
         this.auditoriaEventoService = auditoriaEventoService;
+        this.clock = clock;
     }
 
     @Transactional
@@ -62,7 +66,7 @@ public class AuthService {
                 .orElseThrow(CredencialInvalidaException::new);
 
         usuario.setSenha(passwordEncoder.encode(request.novaSenha()));
-        usuario.setSenhaAlteradaEm(LocalDateTime.now());
+        usuario.setSenhaAlteradaEm(LocalDateTime.now(clock));
         usuarioRepository.save(usuario);
 
         auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "usuario", null, null);

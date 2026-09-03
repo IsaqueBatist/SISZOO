@@ -1,9 +1,11 @@
 // Alerta de reforço vacinal: 7 dias de antecedência. Valor consistente em
 // toda fonte do projeto que o menciona — docs/CLAUDE.md (regra crítica),
 // docs/entrevista_09jan2026.md ("alertas de vacina com 7 dias") e os
-// protótipos configuracoes.html/dashboard.html/design-system.html — mas o
-// backend não tem essa constante hoje (nem endpoint dedicado), por isso o
-// cálculo é feito aqui no frontend.
+// protótipos configuracoes.html/dashboard.html/design-system.html. Hoje já
+// existe GET /api/alertas/vacinas (com.siszoo.alertas) para o alerta
+// agregado (ver features/alertas/) — mas essa função continua em uso aqui
+// porque AbaVacinas.tsx precisa do status "em dia" linha a linha (fora da
+// janela de alerta), que o endpoint não devolve por design.
 export const DIAS_ANTECEDENCIA_ALERTA_VACINA = 7
 
 const FUSO_ITU = 'America/Sao_Paulo'

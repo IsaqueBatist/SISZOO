@@ -1,5 +1,6 @@
 package com.siszoo.usuarios.service;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,6 +53,7 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final UsuarioMapper usuarioMapper;
     private final AuditoriaEventoService auditoriaEventoService;
+    private final Clock clock;
 
     public UsuarioService(
             UsuarioRepository usuarioRepository,
@@ -60,7 +62,8 @@ public class UsuarioService {
             PreferenciaUsuarioRepository preferenciaUsuarioRepository,
             PasswordEncoder passwordEncoder,
             UsuarioMapper usuarioMapper,
-            AuditoriaEventoService auditoriaEventoService) {
+            AuditoriaEventoService auditoriaEventoService,
+            Clock clock) {
         this.usuarioRepository = usuarioRepository;
         this.cargoRepository = cargoRepository;
         this.usuarioCargoRepository = usuarioCargoRepository;
@@ -68,6 +71,7 @@ public class UsuarioService {
         this.passwordEncoder = passwordEncoder;
         this.usuarioMapper = usuarioMapper;
         this.auditoriaEventoService = auditoriaEventoService;
+        this.clock = clock;
     }
 
     @Transactional
@@ -154,7 +158,7 @@ public class UsuarioService {
 
         boolean ativar = Boolean.TRUE.equals(request.ativo());
         usuario.setAtivo(ativar);
-        usuario.setDesativadoEm(ativar ? null : LocalDateTime.now());
+        usuario.setDesativadoEm(ativar ? null : LocalDateTime.now(clock));
         usuarioRepository.save(usuario);
 
         AcaoAuditoria acao = ativar ? AcaoAuditoria.REATIVACAO : AcaoAuditoria.DESATIVACAO;

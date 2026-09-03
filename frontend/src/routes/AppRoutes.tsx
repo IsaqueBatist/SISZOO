@@ -16,6 +16,9 @@ import { RouteErrorBoundary } from './RouteErrorBoundary'
 // ida à rede sem reduzir o que precisa carregar de qualquer forma.
 const TrocarSenha = lazy(() => import('../features/auth/TrocarSenha').then((m) => ({ default: m.TrocarSenha })))
 const Dashboard = lazy(() => import('../features/dashboard/Dashboard').then((m) => ({ default: m.Dashboard })))
+const AlertaVacinasDetalhe = lazy(() =>
+  import('../features/alertas/AlertaVacinasDetalhe').then((m) => ({ default: m.AlertaVacinasDetalhe })),
+)
 const Animais = lazy(() => import('../features/animais/Animais').then((m) => ({ default: m.Animais })))
 const FichaAnimal = lazy(() => import('../features/animais/FichaAnimal').then((m) => ({ default: m.FichaAnimal })))
 const CadastrarAnimal = lazy(() =>
@@ -57,6 +60,7 @@ export function AppRoutes() {
               }
             >
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/alertas/vacinas" element={<AlertaVacinasDetalhe />} />
               <Route path="/animais" element={<Animais />} />
               <Route path="/animais/:id" element={<FichaAnimal />} />
               <Route element={<RotaEscritaAnimais />}>
