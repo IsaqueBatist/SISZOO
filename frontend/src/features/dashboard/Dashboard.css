@@ -1,5 +1,6 @@
-/* Portado do <style> inline de docs/prototipo/dashboard.html (só o necessário
-   para o grid de KPIs — os gráficos completos ficam para uma tarefa futura). */
+/* Portado do <style> inline de docs/prototipo/dashboard.html (grid de KPIs +
+   grid de Alertas Críticos — os gráficos completos ficam para uma tarefa
+   futura). */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -7,6 +8,17 @@
 }
 @media (max-width: 1280px) {
   .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.alerts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+@media (max-width: 1280px) {
+  .alerts-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
