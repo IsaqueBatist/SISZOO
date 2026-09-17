@@ -26,6 +26,8 @@ export type IconName =
   | 'check'
   | 'bell'
   | 'user'
+  | 'pill'
+  | 'scissors'
 
 interface IconProps {
   name: IconName
@@ -55,6 +57,8 @@ const STROKE_PATHS: Partial<Record<IconName, string>> = {
   check: '<polyline points="20 6 9 17 4 12"/>',
   bell: '<path d="M18 16v-5a6 6 0 0 0-12 0v5l-2 2h16l-2-2z"/><path d="M10 21a2 2 0 0 0 4 0"/>',
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 4-7 8-7s7 2 8 7"/>',
+  pill: '<rect x="3" y="8" width="18" height="8" rx="4" transform="rotate(-30 12 12)"/><line x1="9" y1="9" x2="15" y2="15" transform="rotate(-30 12 12)"/>',
+  scissors: '<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8" y2="16"/><line x1="20" y1="20" x2="14" y2="14"/>',
 }
 
 const FILL_PATHS: Partial<Record<IconName, string>> = {

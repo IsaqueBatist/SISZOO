@@ -1,10 +1,10 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { useMutation } from '@tanstack/react-query'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { setAuthToken } from '../../lib/http'
 import { roleKeyFromCargos, type RoleKey } from '../../lib/nav'
-import { login as loginRequest } from './authApi'
 import type { LoginRequest, Usuario } from './auth.types'
+import { login as loginRequest } from './authApi'
 
 export const SESSION_STORAGE_KEY = 'siszoo_auth'
 
