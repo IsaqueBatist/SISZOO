@@ -12,7 +12,7 @@ interface ModalRegistrarVacinaProps {
   animalId: string
   // Presente quando a ação é "Corrigir" um registro existente: o POST novo
   // aponta `retificaId` para ele, em vez de criar uma vacinação
-  // independente (registros clínicos são imutáveis — ver docs/CLAUDE.md).
+  // independente (registros clínicos são imutáveis).
   retifica?: Vacinacao
   onFechar: () => void
   onSucesso: () => void

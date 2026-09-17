@@ -702,7 +702,7 @@ function construirAnimalMock(id: string, body: AnimalRequest, existente: Animal 
   }
 }
 
-// Registros clínicos (ver docs/CLAUDE.md): o mock guarda os campos crus +
+// Registros clínicos: o mock guarda os campos crus +
 // `retificaId`, e deriva `retificadoPorId`/`statusRegistro` do mesmo jeito
 // que o mapper real do backend faz — nunca armazenados diretamente.
 type RegistroClinicoBruto = { id: string; retificaId: string | null }

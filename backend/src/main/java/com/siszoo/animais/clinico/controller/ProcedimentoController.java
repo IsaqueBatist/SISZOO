@@ -19,7 +19,7 @@ import com.siszoo.comum.dto.PaginaResponse;
 
 import jakarta.validation.Valid;
 
-// Somente GET/POST: registro clinico imutavel (CLAUDE.md). Ver VacinacaoController.
+// Somente GET/POST: registro clinico imutavel (regra de negocio). Ver VacinacaoController.
 @RestController
 @RequestMapping("/api/procedimentos")
 public class ProcedimentoController {

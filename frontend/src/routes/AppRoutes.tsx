@@ -10,7 +10,7 @@ import { RotaGestaoBaias } from './RotaGestaoBaias'
 import { RotaProtegida } from './RotaProtegida'
 import { RouteErrorBoundary } from './RouteErrorBoundary'
 
-// Code-splitting por rota (máquinas do CCZ têm ~2GB RAM — ver frontend/CLAUDE.md):
+// Code-splitting por rota (máquinas do CCZ têm ~2GB RAM):
 // só as telas atrás de login, carregadas sob demanda. Login fica fora porque
 // é a primeira tela de toda sessão — lazy nela só adicionaria uma
 // ida à rede sem reduzir o que precisa carregar de qualquer forma.

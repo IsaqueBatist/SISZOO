@@ -26,7 +26,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// Registro clinico imutavel (CLAUDE.md): sem setters de negocio chamados apos
+// Registro clinico imutavel (regra de negocio): sem setters de negocio chamados apos
 // o insert original. Correcao = nova linha com `retifica` apontando para esta.
 @Entity
 @Table(name = "vacinacao")

@@ -36,7 +36,7 @@ import com.siszoo.usuarios.service.AuditoriaEventoService;
 
 import jakarta.persistence.criteria.Predicate;
 
-// Sem metodo atualizar/excluir: registro clinico imutavel (CLAUDE.md).
+// Sem metodo atualizar/excluir: registro clinico imutavel (regra de negocio).
 // Transicoes de status (ATIVA->CONCLUIDA/SUSPENSA/CANCELADA) tambem passam
 // por criar() com `retificaId`, nao ha metodo separado para isso. Ver
 // VacinacaoService para o mecanismo de retificacao.

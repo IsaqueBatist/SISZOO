@@ -224,7 +224,7 @@ export function FichaAnimal() {
             {/* Só a aba ativa é montada: cada aba dispara sua própria query (e a
                 timeline faz merge de 3), então montar as 5 de uma vez faria
                 requisições desnecessárias para abas que o usuário nem abriu —
-                contraria "evitar N+1"/leveza do CLAUDE.md. Diferente do
+                contraria "evitar N+1"/leveza exigida pela infra. Diferente do
                 protótipo estático (que mantém todas no DOM e só esconde via
                 CSS), aqui cada troca de aba desmonta a anterior. */}
             <div className="tab-content">

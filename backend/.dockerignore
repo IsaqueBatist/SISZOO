@@ -2,7 +2,6 @@ target/
 .git
 .gitignore
 .gitattributes
-CLAUDE.md
 SPEC.md
 *.md
 .idea

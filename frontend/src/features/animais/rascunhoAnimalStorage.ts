@@ -1,5 +1,5 @@
 // Rascunho local do formulário de animal em IndexedDB nativo (sem
-// dependência) — exigência do frontend/CLAUDE.md para formulários longos
+// dependência) — exigência de negócio para formulários longos
 // ("cadastro de animal"), já que a rede do CCZ é instável e o form não pode
 // perder dados preenchidos numa queda de conexão.
 const NOME_BANCO = 'siszoo-rascunhos'
