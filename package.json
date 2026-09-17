@@ -1,0 +1,12 @@
+{
+  "name": "siszoo-tools",
+  "private": true,
+  "scripts": {
+    "db:seed": "node scripts/seed-test-data.mjs"
+  },
+  "devDependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "pg": "^8.13.1"
+  }
+}
