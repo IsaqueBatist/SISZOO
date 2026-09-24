@@ -15,7 +15,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import com.siszoo.animais.clinico.entity.Vacinacao;
 
-// Sem metodo de update/delete: registro clinico imutavel (CLAUDE.md). Ver
+// Sem metodo de update/delete: registro clinico imutavel (regra de negocio). Ver
 // com.siszoo.animais.clinico.service.VacinacaoService para o mecanismo de
 // retificacao (novo registro + `retifica`), e RegistrosClinicosSemMutacaoTest
 // para o teste que trava essa garantia por reflection.

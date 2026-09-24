@@ -27,7 +27,7 @@ import jakarta.persistence.criteria.Predicate;
 
 // Catalogo (nao registro clinico): diferente de Vacinacao/Procedimento/Prescricao,
 // medicamento e mutavel — editar e desativar aqui nao violam a regra de
-// imutabilidade do CLAUDE.md, que vale so para os registros clinicos em si.
+// imutabilidade de negocio, que vale so para os registros clinicos em si.
 @Service
 public class MedicamentoService {
 

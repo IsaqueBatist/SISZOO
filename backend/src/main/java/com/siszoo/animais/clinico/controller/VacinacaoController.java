@@ -19,7 +19,7 @@ import com.siszoo.comum.dto.PaginaResponse;
 
 import jakarta.validation.Valid;
 
-// Somente GET/POST: registro clinico imutavel (CLAUDE.md). Nao existe
+// Somente GET/POST: registro clinico imutavel (regra de negocio). Nao existe
 // @PutMapping/@PatchMapping/@DeleteMapping aqui de proposito — o Spring MVC
 // ja devolve 405 para esses verbos nesta rota sem nenhum codigo adicional.
 // Correcao = novo POST com `retificaId` (ver CriarVacinacaoRequest).

@@ -36,7 +36,7 @@ import com.siszoo.usuarios.service.AuditoriaEventoService;
 
 import jakarta.persistence.criteria.Predicate;
 
-// Sem metodo atualizar/excluir: registro clinico imutavel (CLAUDE.md). Ver
+// Sem metodo atualizar/excluir: registro clinico imutavel (regra de negocio). Ver
 // VacinacaoService para o mecanismo de retificacao.
 @Service
 public class ProcedimentoService {

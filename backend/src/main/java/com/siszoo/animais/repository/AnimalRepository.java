@@ -20,7 +20,7 @@ public interface AnimalRepository extends JpaRepository<Animal, UUID>, JpaSpecif
 
     // Agregação única (GROUP BY) para evitar N+1 ao calcular a ocupação de
     // várias baias na listagem (DER §3.3): uma query por baia degradaria a
-    // paginação em máquinas com ~2GB RAM (CLAUDE.md, restrições de infra).
+    // paginação em máquinas com ~2GB RAM (restrições de infra).
     @Query("SELECT a.baia.id AS baiaId, COUNT(a) AS total FROM Animal a "
             + "WHERE a.baia.id IN :baiaIds AND a.status.codigo NOT IN :codigosExcluidos "
             + "GROUP BY a.baia.id")

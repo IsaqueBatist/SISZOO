@@ -14,7 +14,7 @@ import com.siszoo.animais.clinico.repository.PrescricaoRepository;
 import com.siszoo.animais.clinico.repository.ProcedimentoRepository;
 import com.siszoo.animais.clinico.repository.VacinacaoRepository;
 
-// Prova por reflection que os registros clinicos imutaveis (CLAUDE.md: "nunca
+// Prova por reflection que os registros clinicos imutaveis (regra de negocio: "nunca
 // UPDATE/DELETE") nao tem caminho de mutacao no codigo: nem os services nem
 // os repositorios declaram metodo de atualizacao/exclusao. E um guarda de
 // regressao real — falha se alguem adicionar um `atualizar`/`excluir` depois

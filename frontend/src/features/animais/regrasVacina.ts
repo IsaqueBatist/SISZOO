@@ -1,5 +1,5 @@
 // Alerta de reforço vacinal: 7 dias de antecedência. Valor consistente em
-// toda fonte do projeto que o menciona — docs/CLAUDE.md (regra crítica),
+// toda fonte do projeto que o menciona — regra de negócio crítica,
 // docs/entrevista_09jan2026.md ("alertas de vacina com 7 dias") e os
 // protótipos configuracoes.html/dashboard.html/design-system.html. Hoje já
 // existe GET /api/alertas/vacinas (com.siszoo.alertas) para o alerta
