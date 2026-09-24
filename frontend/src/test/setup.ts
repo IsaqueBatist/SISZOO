@@ -11,6 +11,7 @@ configure({ asyncUtilTimeout: 3000 })
 import {
   resetAnimaisMock,
   resetBaiasMock,
+  resetOcorrenciasMock,
   resetPreferenciasMock,
   resetPrescricoesMock,
   resetProcedimentosMock,
@@ -31,5 +32,6 @@ afterEach(() => {
   resetVacinacoesMock()
   resetProcedimentosMock()
   resetPrescricoesMock()
+  resetOcorrenciasMock()
 })
 afterAll(() => server.close())

@@ -15,6 +15,7 @@ import type { LoginRequest, LoginResponse } from '../features/auth/auth.types'
 import { API_BASE_URL } from '../lib/env'
 import type { CriarUsuarioRequest, UsuarioListItem } from '../features/usuarios/usuarios.types'
 import type { PreferenciaUsuario } from '../features/configuracoes/configuracoes.types'
+import type { EncerrarOcorrenciaRequest, MovimentacaoOcorrencia, Ocorrencia } from '../features/ocorrencias/ocorrencias.types'
 
 // Usado só pelos testes automatizados (mocks/server.ts) — o dev browser
 // (mocks/browser.ts) não intercepta mais login/senha/usuários, que já existem
@@ -909,6 +910,276 @@ export function resetPrescricoesMock() {
   prescricoesMock = seedPrescricoesMock()
 }
 
+// PROVISÓRIO: mock autoral da feature de ocorrências (T28) — o backend real
+// (T25/T26) ainda não existe (com.siszoo.ocorrencias só tem pastas .gitkeep).
+// Contrato modelado a partir de docs/DER.md §3.4, ver ocorrencias.types.ts.
+const OCORRENCIA_ABERTA_ID = 'h5000000-0000-0000-0000-000000000001'
+const OCORRENCIA_SIGILOSA_MASCARADA_ID = 'h5000000-0000-0000-0000-000000000002'
+const OCORRENCIA_SIGILOSA_ADMIN_ID = 'h5000000-0000-0000-0000-000000000003'
+const OCORRENCIA_PROCESSO_PENDENTE_ID = 'h5000000-0000-0000-0000-000000000004'
+const OCORRENCIA_ENCERRADA_ID = 'h5000000-0000-0000-0000-000000000005'
+
+function seedOcorrenciasMock(): Ocorrencia[] {
+  const agente = { nome: usuariosMock[3].nome, sobrenome: usuariosMock[3].sobrenome }
+  const veterinaria = { nome: usuariosMock[0].nome, sobrenome: usuariosMock[0].sobrenome }
+
+  return [
+    {
+      id: OCORRENCIA_ABERTA_ID,
+      protocolo: '089/2026',
+      tipoOcorrencia: 'zoonose',
+      statusOcorrencia: 'aberta',
+      dataAbertura: '2026-05-20',
+      horaAbertura: '10:32',
+      endereco: 'Rua das Acácias, 145',
+      bairro: 'Vila Esperança',
+      pontoReferencia: 'Esquina com a Rua dos Ipês',
+      descricao:
+        'Munícipe relata cão de pelagem caramelo com sinais comportamentais incomuns: salivação excessiva, ataxia e hipersensibilidade a luz e ruídos. O animal não é de sua propriedade.',
+      urgente: false,
+      sigilosa: false,
+      registradoPorNome: `${agente.nome} ${agente.sobrenome}`,
+      providenciaTomada: null,
+      descricaoEncerramento: null,
+      encerradaEm: null,
+      processoVinculado: null,
+      denunciante: {
+        nome: 'Maria Souza Oliveira',
+        cpf: '123.456.789-00',
+        telefone: '(11) 9 8765-4321',
+        email: 'maria.souza@email.com',
+        cep: '13301-000',
+        endereco: 'Rua dos Ipês, 220',
+        bairroResidencial: 'Vila Esperança',
+      },
+      denunciado: null,
+      movimentacoes: [
+        {
+          id: 'h6000000-0000-0000-0000-000000000001',
+          tipoMovimentacao: 'registrada',
+          data: '2026-05-20T10:32:00Z',
+          descricao: 'Denúncia recebida via telefone (0800-CCZ-ITU).',
+          usuarioNome: `${agente.nome} ${agente.sobrenome}`,
+        },
+      ],
+      anexos: [],
+      criadoEm: '2026-05-20T10:32:00Z',
+      atualizadoEm: '2026-05-20T10:32:00Z',
+    },
+    {
+      id: OCORRENCIA_SIGILOSA_MASCARADA_ID,
+      protocolo: '090/2026',
+      tipoOcorrencia: 'irregular',
+      statusOcorrencia: 'aberta',
+      dataAbertura: '2026-05-21',
+      horaAbertura: '09:10',
+      endereco: 'Rua das Palmeiras, 300',
+      bairro: 'Jardim Bela Vista',
+      pontoReferencia: null,
+      descricao: 'Denúncia de maus-tratos a animal em quintal vizinho. Denunciante pediu sigilo.',
+      urgente: false,
+      sigilosa: true,
+      registradoPorNome: `${agente.nome} ${agente.sobrenome}`,
+      providenciaTomada: null,
+      descricaoEncerramento: null,
+      encerradaEm: null,
+      processoVinculado: null,
+      // Simula a resposta que o backend real devolveria para um perfil ≠
+      // admin numa ocorrência sigilosa: campos pessoais nulos (DER.md §3.4).
+      denunciante: {
+        nome: null,
+        cpf: null,
+        telefone: null,
+        email: null,
+        cep: null,
+        endereco: null,
+        bairroResidencial: null,
+      },
+      denunciado: null,
+      movimentacoes: [
+        {
+          id: 'h6000000-0000-0000-0000-000000000002',
+          tipoMovimentacao: 'registrada',
+          data: '2026-05-21T09:10:00Z',
+          descricao: 'Denúncia registrada via formulário interno.',
+          usuarioNome: `${agente.nome} ${agente.sobrenome}`,
+        },
+      ],
+      anexos: [],
+      criadoEm: '2026-05-21T09:10:00Z',
+      atualizadoEm: '2026-05-21T09:10:00Z',
+    },
+    {
+      id: OCORRENCIA_SIGILOSA_ADMIN_ID,
+      protocolo: '091/2026',
+      tipoOcorrencia: 'irregular',
+      statusOcorrencia: 'aberta',
+      dataAbertura: '2026-05-21',
+      horaAbertura: '09:10',
+      endereco: 'Rua das Palmeiras, 300',
+      bairro: 'Jardim Bela Vista',
+      pontoReferencia: null,
+      descricao: 'Denúncia de maus-tratos a animal em quintal vizinho. Denunciante pediu sigilo.',
+      urgente: false,
+      sigilosa: true,
+      registradoPorNome: `${agente.nome} ${agente.sobrenome}`,
+      providenciaTomada: null,
+      descricaoEncerramento: null,
+      encerradaEm: null,
+      processoVinculado: null,
+      // Mesma ocorrência sigilosa acima, mas simulando a resposta que o
+      // backend real devolveria a um perfil admin: campos pessoais visíveis.
+      // Ver "Simplificação assumida" no plano da T28 — o mock não decide
+      // isso por request, decide por qual id é consultado.
+      denunciante: {
+        nome: 'João Pereira Lima',
+        cpf: '987.654.321-00',
+        telefone: '(11) 9 1234-5678',
+        email: 'joao.pereira@email.com',
+        cep: '13302-100',
+        endereco: 'Rua das Camélias, 88',
+        bairroResidencial: 'Jardim Bela Vista',
+      },
+      denunciado: null,
+      movimentacoes: [
+        {
+          id: 'h6000000-0000-0000-0000-000000000003',
+          tipoMovimentacao: 'registrada',
+          data: '2026-05-21T09:10:00Z',
+          descricao: 'Denúncia registrada via formulário interno.',
+          usuarioNome: `${agente.nome} ${agente.sobrenome}`,
+        },
+      ],
+      anexos: [],
+      criadoEm: '2026-05-21T09:10:00Z',
+      atualizadoEm: '2026-05-21T09:10:00Z',
+    },
+    {
+      id: OCORRENCIA_PROCESSO_PENDENTE_ID,
+      protocolo: '045/2026',
+      tipoOcorrencia: 'zoonose',
+      statusOcorrencia: 'em_atendimento',
+      dataAbertura: '2026-05-18',
+      horaAbertura: '08:00',
+      endereco: 'Avenida Brasil, 900',
+      bairro: 'Centro',
+      pontoReferencia: 'Próximo ao mercado municipal',
+      descricao: 'Cão errante com suspeita de raiva, amostra encaminhada para investigação laboratorial.',
+      urgente: true,
+      sigilosa: false,
+      registradoPorNome: `${agente.nome} ${agente.sobrenome}`,
+      providenciaTomada: null,
+      descricaoEncerramento: null,
+      encerradaEm: null,
+      processoVinculado: {
+        id: 'h7000000-0000-0000-0000-000000000001',
+        protocolo: '045/2026',
+        statusProcesso: 'Aguardando resultado',
+        resultadoPendente: true,
+      },
+      denunciante: {
+        nome: 'Carla Mendes',
+        cpf: '111.222.333-44',
+        telefone: '(11) 9 2222-3333',
+        email: 'carla.mendes@email.com',
+        cep: '13300-000',
+        endereco: 'Avenida Brasil, 850',
+        bairroResidencial: 'Centro',
+      },
+      denunciado: null,
+      movimentacoes: [
+        {
+          id: 'h6000000-0000-0000-0000-000000000004',
+          tipoMovimentacao: 'processo_vinculado',
+          data: '2026-05-18T14:32:00Z',
+          descricao: 'Vinculação automática com investigação laboratorial — animal amostrado para teste de raiva.',
+          usuarioNome: `Dra. ${veterinaria.nome} ${veterinaria.sobrenome}`,
+        },
+        {
+          id: 'h6000000-0000-0000-0000-000000000005',
+          tipoMovimentacao: 'registrada',
+          data: '2026-05-18T08:00:00Z',
+          descricao: 'Denúncia recebida via telefone (0800-CCZ-ITU).',
+          usuarioNome: `${agente.nome} ${agente.sobrenome}`,
+        },
+      ],
+      anexos: [],
+      criadoEm: '2026-05-18T08:00:00Z',
+      atualizadoEm: '2026-05-18T14:32:00Z',
+    },
+    {
+      id: OCORRENCIA_ENCERRADA_ID,
+      protocolo: '070/2026',
+      tipoOcorrencia: 'agressivo',
+      statusOcorrencia: 'encerrada',
+      dataAbertura: '2026-05-10',
+      horaAbertura: '11:00',
+      endereco: 'Rua dos Girassóis, 40',
+      bairro: 'Parque das Flores',
+      pontoReferencia: null,
+      descricao: 'Cão de grande porte solto, sem coleira, rondando escola municipal.',
+      urgente: false,
+      sigilosa: false,
+      registradoPorNome: `${agente.nome} ${agente.sobrenome}`,
+      providenciaTomada: 'captura_remocao',
+      descricaoEncerramento: 'Animal capturado e encaminhado ao CCZ para observação.',
+      encerradaEm: '2026-05-12T16:00:00Z',
+      processoVinculado: null,
+      denunciante: {
+        nome: 'Escola Municipal Parque das Flores',
+        cpf: null,
+        telefone: '(11) 4023-0000',
+        email: null,
+        cep: '13303-000',
+        endereco: 'Rua dos Girassóis, 10',
+        bairroResidencial: 'Parque das Flores',
+      },
+      denunciado: null,
+      movimentacoes: [
+        {
+          id: 'h6000000-0000-0000-0000-000000000006',
+          tipoMovimentacao: 'encerrada',
+          data: '2026-05-12T16:00:00Z',
+          descricao: 'Providência: Captura e remoção do animal.',
+          usuarioNome: `${veterinaria.nome} ${veterinaria.sobrenome}`,
+        },
+        {
+          id: 'h6000000-0000-0000-0000-000000000007',
+          tipoMovimentacao: 'equipe_despachada',
+          data: '2026-05-11T09:00:00Z',
+          descricao: 'Equipe de captura despachada ao local.',
+          usuarioNome: 'Sistema',
+        },
+        {
+          id: 'h6000000-0000-0000-0000-000000000008',
+          tipoMovimentacao: 'registrada',
+          data: '2026-05-10T11:00:00Z',
+          descricao: 'Denúncia recebida presencialmente.',
+          usuarioNome: `${agente.nome} ${agente.sobrenome}`,
+        },
+      ],
+      anexos: [
+        {
+          id: 'h8000000-0000-0000-0000-000000000001',
+          nome: 'Foto do animal.jpg',
+          url: '#',
+          tamanho: 2_500_000,
+          mimeType: 'image/jpeg',
+          criadoEm: '2026-05-10T11:05:00Z',
+        },
+      ],
+      criadoEm: '2026-05-10T11:00:00Z',
+      atualizadoEm: '2026-05-12T16:00:00Z',
+    },
+  ]
+}
+
+let ocorrenciasMock: Ocorrencia[] = seedOcorrenciasMock()
+
+export function resetOcorrenciasMock() {
+  ocorrenciasMock = seedOcorrenciasMock()
+}
+
 function paginar<T>(itens: T[], pagina: number, tamanho: number) {
   const totalItens = itens.length
   const totalPaginas = Math.max(Math.ceil(totalItens / tamanho), 1)
@@ -1298,5 +1569,52 @@ export const handlers = [
     const tamanho = Number(url.searchParams.get('tamanho') ?? '20')
     const filtrados = medicamentosMock.filter((item) => ativoParam === null || item.ativo === (ativoParam === 'true'))
     return HttpResponse.json(paginar(filtrados, pagina, tamanho))
+  }),
+
+  http.get(`${API_BASE_URL}/ocorrencias/:id`, ({ params }) => {
+    const ocorrencia = ocorrenciasMock.find((item) => item.id === params.id)
+    if (!ocorrencia) {
+      return HttpResponse.json({ mensagem: 'Ocorrencia nao encontrada' }, { status: 404 })
+    }
+    return HttpResponse.json(ocorrencia)
+  }),
+
+  http.patch(`${API_BASE_URL}/ocorrencias/:id/encerrar`, async ({ params, request }) => {
+    const ocorrencia = ocorrenciasMock.find((item) => item.id === params.id)
+    if (!ocorrencia) {
+      return HttpResponse.json({ mensagem: 'Ocorrencia nao encontrada' }, { status: 404 })
+    }
+
+    if (ocorrencia.processoVinculado?.resultadoPendente) {
+      return HttpResponse.json(
+        { mensagem: 'Não é possível encerrar: há processo sanitário vinculado aguardando resultado.' },
+        { status: 409 },
+      )
+    }
+
+    const body = (await request.json()) as EncerrarOcorrenciaRequest
+    const agora = new Date().toISOString()
+    const novaMovimentacao: MovimentacaoOcorrencia = {
+      id: crypto.randomUUID(),
+      tipoMovimentacao: 'encerrada',
+      data: agora,
+      descricao: null,
+      // Mesma simplificação de `vacinacoesMock`/`procedimentosMock`: o mock
+      // não decodifica o token, então credita sempre o usuário 0 (Stéphanie
+      // Lima) como quem encerrou.
+      usuarioNome: `${usuariosMock[0].nome} ${usuariosMock[0].sobrenome}`,
+    }
+
+    const ocorrenciaAtualizada: Ocorrencia = {
+      ...ocorrencia,
+      statusOcorrencia: 'encerrada',
+      providenciaTomada: body.providenciaTomada,
+      descricaoEncerramento: body.descricaoEncerramento ?? null,
+      encerradaEm: agora,
+      movimentacoes: [...ocorrencia.movimentacoes, novaMovimentacao],
+      atualizadoEm: agora,
+    }
+    ocorrenciasMock = ocorrenciasMock.map((item) => (item.id === ocorrencia.id ? ocorrenciaAtualizada : item))
+    return HttpResponse.json(ocorrenciaAtualizada)
   }),
 ]
