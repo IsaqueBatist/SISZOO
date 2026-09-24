@@ -1187,6 +1187,59 @@ function paginar<T>(itens: T[], pagina: number, tamanho: number) {
   return { itens: itens.slice(inicio, inicio + tamanho), pagina, tamanho, totalItens, totalPaginas }
 }
 
+// Separado do array `handlers` abaixo porque o módulo `ocorrencias` ainda não
+// tem backend real (T25/T26) — `mocks/browser.ts` importa só este array para
+// que `npm run dev` também sirva a tela mockada, sem reativar o bypass dos
+// módulos que já têm backend de verdade (usuarios, animais, baias, clínico).
+export const ocorrenciasHandlers = [
+  http.get(`${API_BASE_URL}/ocorrencias/:id`, ({ params }) => {
+    const ocorrencia = ocorrenciasMock.find((item) => item.id === params.id)
+    if (!ocorrencia) {
+      return HttpResponse.json({ mensagem: 'Ocorrencia nao encontrada' }, { status: 404 })
+    }
+    return HttpResponse.json(ocorrencia)
+  }),
+
+  http.patch(`${API_BASE_URL}/ocorrencias/:id/encerrar`, async ({ params, request }) => {
+    const ocorrencia = ocorrenciasMock.find((item) => item.id === params.id)
+    if (!ocorrencia) {
+      return HttpResponse.json({ mensagem: 'Ocorrencia nao encontrada' }, { status: 404 })
+    }
+
+    if (ocorrencia.processoVinculado?.resultadoPendente) {
+      return HttpResponse.json(
+        { mensagem: 'Não é possível encerrar: há processo sanitário vinculado aguardando resultado.' },
+        { status: 409 },
+      )
+    }
+
+    const body = (await request.json()) as EncerrarOcorrenciaRequest
+    const agora = new Date().toISOString()
+    const novaMovimentacao: MovimentacaoOcorrencia = {
+      id: crypto.randomUUID(),
+      tipoMovimentacao: 'encerrada',
+      data: agora,
+      descricao: null,
+      // Mesma simplificação de `vacinacoesMock`/`procedimentosMock`: o mock
+      // não decodifica o token, então credita sempre o usuário 0 (Stéphanie
+      // Lima) como quem encerrou.
+      usuarioNome: `${usuariosMock[0].nome} ${usuariosMock[0].sobrenome}`,
+    }
+
+    const ocorrenciaAtualizada: Ocorrencia = {
+      ...ocorrencia,
+      statusOcorrencia: 'encerrada',
+      providenciaTomada: body.providenciaTomada,
+      descricaoEncerramento: body.descricaoEncerramento ?? null,
+      encerradaEm: agora,
+      movimentacoes: [...ocorrencia.movimentacoes, novaMovimentacao],
+      atualizadoEm: agora,
+    }
+    ocorrenciasMock = ocorrenciasMock.map((item) => (item.id === ocorrencia.id ? ocorrenciaAtualizada : item))
+    return HttpResponse.json(ocorrenciaAtualizada)
+  }),
+]
+
 export const handlers = [
   http.get(`${API_BASE_URL}/health`, () => {
     return HttpResponse.json({ status: 'ok' })
@@ -1571,50 +1624,5 @@ export const handlers = [
     return HttpResponse.json(paginar(filtrados, pagina, tamanho))
   }),
 
-  http.get(`${API_BASE_URL}/ocorrencias/:id`, ({ params }) => {
-    const ocorrencia = ocorrenciasMock.find((item) => item.id === params.id)
-    if (!ocorrencia) {
-      return HttpResponse.json({ mensagem: 'Ocorrencia nao encontrada' }, { status: 404 })
-    }
-    return HttpResponse.json(ocorrencia)
-  }),
-
-  http.patch(`${API_BASE_URL}/ocorrencias/:id/encerrar`, async ({ params, request }) => {
-    const ocorrencia = ocorrenciasMock.find((item) => item.id === params.id)
-    if (!ocorrencia) {
-      return HttpResponse.json({ mensagem: 'Ocorrencia nao encontrada' }, { status: 404 })
-    }
-
-    if (ocorrencia.processoVinculado?.resultadoPendente) {
-      return HttpResponse.json(
-        { mensagem: 'Não é possível encerrar: há processo sanitário vinculado aguardando resultado.' },
-        { status: 409 },
-      )
-    }
-
-    const body = (await request.json()) as EncerrarOcorrenciaRequest
-    const agora = new Date().toISOString()
-    const novaMovimentacao: MovimentacaoOcorrencia = {
-      id: crypto.randomUUID(),
-      tipoMovimentacao: 'encerrada',
-      data: agora,
-      descricao: null,
-      // Mesma simplificação de `vacinacoesMock`/`procedimentosMock`: o mock
-      // não decodifica o token, então credita sempre o usuário 0 (Stéphanie
-      // Lima) como quem encerrou.
-      usuarioNome: `${usuariosMock[0].nome} ${usuariosMock[0].sobrenome}`,
-    }
-
-    const ocorrenciaAtualizada: Ocorrencia = {
-      ...ocorrencia,
-      statusOcorrencia: 'encerrada',
-      providenciaTomada: body.providenciaTomada,
-      descricaoEncerramento: body.descricaoEncerramento ?? null,
-      encerradaEm: agora,
-      movimentacoes: [...ocorrencia.movimentacoes, novaMovimentacao],
-      atualizadoEm: agora,
-    }
-    ocorrenciasMock = ocorrenciasMock.map((item) => (item.id === ocorrencia.id ? ocorrenciaAtualizada : item))
-    return HttpResponse.json(ocorrenciaAtualizada)
-  }),
+  ...ocorrenciasHandlers,
 ]
