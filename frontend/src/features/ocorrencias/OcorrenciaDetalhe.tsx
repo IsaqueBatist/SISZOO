@@ -183,7 +183,7 @@ export function OcorrenciaDetalhe() {
         </div>
 
         <div className="col gap-4">
-          {ocorrencia.processoVinculado && (
+          {ocorrencia.processoVinculado ? (
             <div className="vinc-card">
               <h4>Processo Sanitário Vinculado</h4>
               <div className="proto-big">{ocorrencia.processoVinculado.protocolo}</div>
@@ -191,6 +191,13 @@ export function OcorrenciaDetalhe() {
                 {ocorrencia.processoVinculado.resultadoPendente ? 'Aguardando resultado' : ocorrencia.processoVinculado.statusProcesso}
               </div>
             </div>
+          ) : (
+            // Único ponto de entrada da RN2 ("vindo de /ocorrencias/:id, o
+            // vínculo já vem preenchido e travado") — sem este link não
+            // existe caminho de UI até /processos/novo com vínculo pronto.
+            <Link to={`/processos/novo?ocorrencia=${ocorrencia.id}`} className="btn btn-outline btn-sm">
+              Abrir Processo Sanitário
+            </Link>
           )}
 
           <CardEncerramento ocorrencia={ocorrencia} podeEncerrar={podeEncerrar} />
