@@ -141,14 +141,7 @@ export interface CriarOcorrenciaRequest {
     endereco?: string
     observacoes?: string
   } | null
+  // `File` puro (não `data:` URI em base64): mais barato em memória e
+  // compatível com um futuro upload real via `multipart/form-data`.
   anexos: File[]
-}
-
-// Estado local do formulário de cadastro (não é o payload enviado — ver
-// CriarOcorrenciaRequest.anexos). Guarda o `File` puro (não `data:` URI em
-// base64: mais barato em memória e compatível com um futuro upload real via
-// `multipart/form-data`). `id` é só para key de lista/remoção antes do envio.
-export interface NovoAnexo {
-  id: string
-  arquivo: File
 }
