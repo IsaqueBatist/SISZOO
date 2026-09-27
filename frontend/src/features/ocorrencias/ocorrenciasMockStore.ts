@@ -111,7 +111,9 @@ function seedOcorrenciasMock(): Ocorrencia[] {
     },
     {
       id: OCORRENCIA_PROCESSO_PENDENTE_ID,
-      protocolo: '045/2026',
+      // Protocolo distinto do processo sanitário vinculado (linha 131) de
+      // propósito — são sequências independentes, não pode coincidir.
+      protocolo: '092/2026',
       tipoOcorrencia: 'zoonose',
       statusOcorrencia: 'em_atendimento',
       dataAbertura: '2026-05-18',
