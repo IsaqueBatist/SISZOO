@@ -1,8 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { isAxiosError } from 'axios'
 import { useState, type FormEvent } from 'react'
 import { useForm } from 'react-hook-form'
 import { encerramentoFormSchema, PROVIDENCIA_OPCOES, type EncerramentoFormValues } from './encerramentoFormSchema'
+import { ErroNegocioOcorrencia } from './ocorrenciasApi'
 import type { Ocorrencia, ProvidenciaTomada } from './ocorrencias.types'
 import { useEncerrarOcorrenciaMutation } from './useOcorrencias'
 
@@ -59,12 +59,9 @@ export function CardEncerramento({ ocorrencia, podeEncerrar }: CardEncerramentoP
         descricaoEncerramento: dados.descricaoEncerramento,
       })
     } catch (erro) {
-      if (isAxiosError(erro)) {
-        const mensagem = (erro.response?.data as { mensagem?: string } | undefined)?.mensagem
-        if (erro.response?.status === 409 && mensagem) {
-          setSubmitError(mensagem)
-          return
-        }
+      if (erro instanceof ErroNegocioOcorrencia) {
+        setSubmitError(erro.message)
+        return
       }
       setSubmitError('Não foi possível encerrar a ocorrência. Tente novamente.')
     }

@@ -1,12 +1,16 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
+import { AuthProvider, SESSION_STORAGE_KEY } from '../auth/AuthContext'
+import type { Usuario } from '../auth/auth.types'
 import { CardEncerramento } from './CardEncerramento'
 import type { Ocorrencia } from './ocorrencias.types'
 
-// Mesmo id semeado em mocks/handlers.ts (OCORRENCIA_ABERTA_ID) — necessário
-// só no teste que de fato dispara o PATCH /ocorrencias/:id/encerrar via MSW.
+// Mesmo id semeado em ./ocorrenciasMockStore.ts (OCORRENCIA_ABERTA_ID) —
+// necessário só no teste que de fato chama encerrarOcorrencia() contra o
+// store mockado.
 const OCORRENCIA_ABERTA_ID = 'h5000000-0000-0000-0000-000000000001'
 
 function criarOcorrencia(sobrescrever: Partial<Ocorrencia> = {}): Ocorrencia {
@@ -39,10 +43,24 @@ function criarOcorrencia(sobrescrever: Partial<Ocorrencia> = {}): Ocorrencia {
 }
 
 function renderCard(ocorrencia: Ocorrencia, podeEncerrar: boolean) {
+  const usuario: Usuario = {
+    id: 'a1b2c3d4-0000-0000-0000-000000000001',
+    nome: 'Stéphanie',
+    sobrenome: 'Lima',
+    email: 'stephanie.lima@itu.sp.gov.br',
+    cargos: ['Administrador'],
+    senhaAlteradaEm: '2026-01-10T12:00:00Z',
+  }
+  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario }))
+
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
-      <CardEncerramento ocorrencia={ocorrencia} podeEncerrar={podeEncerrar} />
+      <MemoryRouter>
+        <AuthProvider>
+          <CardEncerramento ocorrencia={ocorrencia} podeEncerrar={podeEncerrar} />
+        </AuthProvider>
+      </MemoryRouter>
     </QueryClientProvider>,
   )
 }

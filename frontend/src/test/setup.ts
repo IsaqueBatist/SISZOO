@@ -11,13 +11,13 @@ configure({ asyncUtilTimeout: 3000 })
 import {
   resetAnimaisMock,
   resetBaiasMock,
-  resetOcorrenciasMock,
   resetPreferenciasMock,
   resetPrescricoesMock,
   resetProcedimentosMock,
   resetUsuariosMock,
   resetVacinacoesMock,
 } from '../mocks/handlers'
+import { resetOcorrenciasMock } from '../features/ocorrencias/ocorrenciasMockStore'
 
 // TODO: migrar para 'error' quando as integrações reais de API existirem,
 // para acusar chamadas HTTP não-mockadas nos testes.

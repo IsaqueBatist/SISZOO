@@ -1,11 +1,15 @@
 import { setupWorker } from 'msw/browser'
-import { ocorrenciasHandlers } from './handlers'
 
-// Login, troca de senha e CRUD de usuários (módulo usuarios), animais, baias
-// e o clínico já existem de verdade no backend — para esses, o worker do dev
-// bypassa (onUnhandledRequest: 'bypass' em main.tsx) e o request vai direto
-// para a API real. `ocorrencias` (T28) ainda não tem backend (T25/T26), então
-// o worker do dev mocka só esse módulo, reaproveitando os mesmos handlers dos
-// testes automatizados (mocks/handlers.ts / mocks/server.ts). Ponto de
-// extensão para o próximo módulo que nascer só mockado (ex.: processos).
-export const worker = setupWorker(...ocorrenciasHandlers)
+// Login, troca de senha e CRUD de usuários (módulo usuarios) já existem de
+// verdade no backend — o worker do dev sobe sem handlers e todo request passa
+// direto para a API real (onUnhandledRequest: 'bypass' em main.tsx). Os
+// handlers completos continuam em mocks/handlers.ts, usados só pelos testes
+// automatizados (mocks/server.ts, ligado em test/setup.ts), que não sobem um
+// backend Spring/Postgres de verdade.
+// `ocorrencias` (T27/T28) não usa mais este worker — o mock desse módulo
+// virou um store local em memória (ver
+// features/ocorrencias/ocorrenciasMockStore.ts), sem service worker, depois
+// que o MSW não interceptou de forma confiável em `npm run dev`.
+// Mantido como ponto de extensão para mocks temporários de módulos futuros
+// (processos, relatórios) enquanto não tiverem backend.
+export const worker = setupWorker()

@@ -107,3 +107,48 @@ export interface EncerrarOcorrenciaRequest {
   providenciaTomada: ProvidenciaTomada
   descricaoEncerramento?: string
 }
+
+export interface OcorrenciasFiltro {
+  tipoOcorrencia?: TipoOcorrencia
+  statusOcorrencia?: StatusOcorrencia
+  q?: string
+  pagina: number
+  tamanho: number
+}
+
+export interface CriarOcorrenciaRequest {
+  tipoOcorrencia: TipoOcorrencia
+  dataAbertura: string
+  horaAbertura?: string
+  endereco: string
+  bairro: string
+  pontoReferencia?: string
+  descricao: string
+  sigilosa: boolean
+  denunciante: {
+    nome?: string
+    cpf?: string
+    telefone?: string
+    email?: string
+    cep?: string
+    endereco?: string
+    bairroResidencial?: string
+  }
+  denunciado: {
+    nome?: string
+    cpf?: string
+    telefone?: string
+    endereco?: string
+    observacoes?: string
+  } | null
+  anexos: File[]
+}
+
+// Estado local do formulário de cadastro (não é o payload enviado — ver
+// CriarOcorrenciaRequest.anexos). Guarda o `File` puro (não `data:` URI em
+// base64: mais barato em memória e compatível com um futuro upload real via
+// `multipart/form-data`). `id` é só para key de lista/remoção antes do envio.
+export interface NovoAnexo {
+  id: string
+  arquivo: File
+}

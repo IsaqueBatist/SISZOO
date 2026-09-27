@@ -7,10 +7,9 @@ import { AuthProvider, SESSION_STORAGE_KEY } from '../auth/AuthContext'
 import type { Usuario } from '../auth/auth.types'
 import { OcorrenciaDetalhe } from './OcorrenciaDetalhe'
 
-// Ids semeados em ../../mocks/handlers.ts (seedOcorrenciasMock).
+// Ids semeados em ./ocorrenciasMockStore.ts (seedOcorrenciasMock).
 const OCORRENCIA_ABERTA_ID = 'h5000000-0000-0000-0000-000000000001'
-const OCORRENCIA_SIGILOSA_MASCARADA_ID = 'h5000000-0000-0000-0000-000000000002'
-const OCORRENCIA_SIGILOSA_ADMIN_ID = 'h5000000-0000-0000-0000-000000000003'
+const OCORRENCIA_SIGILOSA_ID = 'h5000000-0000-0000-0000-000000000002'
 const OCORRENCIA_ENCERRADA_ID = 'h5000000-0000-0000-0000-000000000005'
 
 function renderDetalhe(ocorrenciaId: string, cargos: string[]) {
@@ -48,16 +47,16 @@ describe('OcorrenciaDetalhe', () => {
   })
 
   it('mostra o placeholder "Sigiloso" para uma ocorrência sigilosa vista por perfil não-admin, sem quebrar o layout', async () => {
-    renderDetalhe(OCORRENCIA_SIGILOSA_MASCARADA_ID, ['Agente Sanitário'])
+    renderDetalhe(OCORRENCIA_SIGILOSA_ID, ['Agente Sanitário'])
 
     await screen.findByRole('heading', { name: 'Ocorrência 090/2026', level: 1 })
     expect(screen.getAllByText('Sigiloso').length).toBeGreaterThan(0)
   })
 
-  it('mostra os dados reais do denunciante para uma ocorrência sigilosa vista por Admin', async () => {
-    renderDetalhe(OCORRENCIA_SIGILOSA_ADMIN_ID, ['Administrador'])
+  it('mostra os dados reais do denunciante para a mesma ocorrência sigilosa vista por Admin', async () => {
+    renderDetalhe(OCORRENCIA_SIGILOSA_ID, ['Administrador'])
 
-    await screen.findByRole('heading', { name: 'Ocorrência 091/2026', level: 1 })
+    await screen.findByRole('heading', { name: 'Ocorrência 090/2026', level: 1 })
     expect(screen.getByText('João Pereira Lima')).toBeInTheDocument()
     expect(screen.queryByText('Sigiloso')).not.toBeInTheDocument()
   })
