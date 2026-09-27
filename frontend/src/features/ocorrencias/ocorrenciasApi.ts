@@ -4,6 +4,7 @@ import {
   buscarOcorrenciaMockPorId,
   criarOcorrenciaMock,
   encerrarOcorrenciaMock,
+  iniciarAtendimentoMock,
   listarOcorrenciasMock,
 } from './ocorrenciasMockStore'
 import type { CriarOcorrenciaRequest, EncerrarOcorrenciaRequest, Ocorrencia, OcorrenciasFiltro } from './ocorrencias.types'
@@ -51,6 +52,13 @@ export async function buscarOcorrenciaPorId(id: string, roleKey: RoleKey): Promi
 export async function criarOcorrencia(payload: CriarOcorrenciaRequest, autorNome: string): Promise<Ocorrencia> {
   await esperar(DELAY_MS)
   return criarOcorrenciaMock(payload, autorNome)
+}
+
+export async function iniciarAtendimento(id: string, autorNome: string): Promise<Ocorrencia> {
+  await esperar(DELAY_MS)
+  const atualizada = iniciarAtendimentoMock(id, autorNome)
+  if (!atualizada) throw new Error('Não foi possível iniciar o atendimento.')
+  return atualizada
 }
 
 export async function encerrarOcorrencia(

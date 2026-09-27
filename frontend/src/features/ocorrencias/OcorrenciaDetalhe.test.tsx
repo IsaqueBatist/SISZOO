@@ -10,6 +10,7 @@ import { OcorrenciaDetalhe } from './OcorrenciaDetalhe'
 // Ids semeados em ./ocorrenciasMockStore.ts (seedOcorrenciasMock).
 const OCORRENCIA_ABERTA_ID = 'h5000000-0000-0000-0000-000000000001'
 const OCORRENCIA_SIGILOSA_ID = 'h5000000-0000-0000-0000-000000000002'
+const OCORRENCIA_EM_ATENDIMENTO_ID = 'h5000000-0000-0000-0000-000000000004'
 const OCORRENCIA_ENCERRADA_ID = 'h5000000-0000-0000-0000-000000000005'
 
 function renderDetalhe(ocorrenciaId: string, cargos: string[]) {
@@ -100,5 +101,36 @@ describe('OcorrenciaDetalhe', () => {
     expect(await screen.findByText('Ocorrência encerrada')).toBeInTheDocument()
     expect(screen.queryByLabelText('Providência tomada')).not.toBeInTheDocument()
     expect(screen.getByText('Sem ação necessária')).toBeInTheDocument()
+  })
+
+  it('mostra "Iniciar Atendimento" para Admin/Agente quando a ocorrência está aberta', async () => {
+    renderDetalhe(OCORRENCIA_ABERTA_ID, ['Agente Sanitário'])
+
+    expect(await screen.findByRole('button', { name: 'Iniciar Atendimento' })).toBeInTheDocument()
+  })
+
+  it('não mostra "Iniciar Atendimento" para o perfil Veterinário', async () => {
+    renderDetalhe(OCORRENCIA_ABERTA_ID, ['Veterinário'])
+
+    await screen.findByRole('heading', { name: 'Ocorrência 089/2026', level: 1 })
+    expect(screen.queryByRole('button', { name: 'Iniciar Atendimento' })).not.toBeInTheDocument()
+  })
+
+  it('não mostra "Iniciar Atendimento" quando a ocorrência já não está aberta', async () => {
+    renderDetalhe(OCORRENCIA_EM_ATENDIMENTO_ID, ['Administrador'])
+
+    await screen.findByRole('heading', { name: 'Ocorrência 092/2026', level: 1 })
+    expect(screen.queryByRole('button', { name: 'Iniciar Atendimento' })).not.toBeInTheDocument()
+  })
+
+  it('inicia o atendimento: o badge muda para "Em atendimento" e entra uma movimentação na timeline', async () => {
+    const user = userEvent.setup()
+    renderDetalhe(OCORRENCIA_ABERTA_ID, ['Administrador'])
+
+    await user.click(await screen.findByRole('button', { name: 'Iniciar Atendimento' }))
+
+    expect(await screen.findByText('Em atendimento')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Iniciar Atendimento' })).not.toBeInTheDocument()
+    expect(screen.getByText('Ocorrência movida para "Em atendimento".')).toBeInTheDocument()
   })
 })

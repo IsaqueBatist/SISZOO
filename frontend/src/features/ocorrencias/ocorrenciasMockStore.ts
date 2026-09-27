@@ -402,6 +402,34 @@ export function encerrarOcorrenciaMock(
   return { ok: true, ocorrencia: structuredClone(atualizada) }
 }
 
+// Único destino possível hoje é 'aberta' → 'em_atendimento' — não há tipo de
+// movimentação dedicado no catálogo do DER.md §3.4 para essa transição, só
+// os já existentes (registrada/equipe_despachada/processo_vinculado/
+// aguardando_resultado/encerrada/nota_interna), então usa 'nota_interna'
+// (o catch-all do catálogo) com uma descrição explícita, em vez de inventar
+// um valor fora do DER.
+export function iniciarAtendimentoMock(id: string, autorNome: string): Ocorrencia | null {
+  const atual = ocorrenciasMock.find((item) => item.id === id)
+  if (!atual || atual.statusOcorrencia !== 'aberta') return null
+
+  const agora = new Date().toISOString()
+  const novaMovimentacao: MovimentacaoOcorrencia = {
+    id: crypto.randomUUID(),
+    tipoMovimentacao: 'nota_interna',
+    data: agora,
+    descricao: 'Ocorrência movida para "Em atendimento".',
+    usuarioNome: autorNome,
+  }
+  const atualizada: Ocorrencia = {
+    ...atual,
+    statusOcorrencia: 'em_atendimento',
+    movimentacoes: [...atual.movimentacoes, novaMovimentacao],
+    atualizadoEm: agora,
+  }
+  ocorrenciasMock = ocorrenciasMock.map((item) => (item.id === id ? atualizada : item))
+  return structuredClone(atualizada)
+}
+
 // Chamada por processosMockStore.ts::criarProcessoMock quando um processo é
 // criado com vínculo — reflexo bidirecional exigido pela T32 (o DER modela
 // `ocorrencia.processo_sanitario_id`/`processoVinculado` como consequência da

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../auth/AuthContext'
-import { buscarOcorrenciaPorId, criarOcorrencia, encerrarOcorrencia, listarOcorrencias } from './ocorrenciasApi'
+import { buscarOcorrenciaPorId, criarOcorrencia, encerrarOcorrencia, iniciarAtendimento, listarOcorrencias } from './ocorrenciasApi'
 import type { CriarOcorrenciaRequest, EncerrarOcorrenciaRequest, OcorrenciasFiltro } from './ocorrencias.types'
 
 const OCORRENCIAS_QUERY_KEY = ['ocorrencias']
@@ -28,6 +28,15 @@ export function useCriarOcorrenciaMutation() {
   const { user } = useAuth()
   return useMutation({
     mutationFn: (payload: CriarOcorrenciaRequest) => criarOcorrencia(payload, `${user?.nome} ${user?.sobrenome}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: OCORRENCIAS_QUERY_KEY }),
+  })
+}
+
+export function useIniciarAtendimentoMutation(id: string) {
+  const queryClient = useQueryClient()
+  const { user } = useAuth()
+  return useMutation({
+    mutationFn: () => iniciarAtendimento(id, `${user?.nome} ${user?.sobrenome}`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: OCORRENCIAS_QUERY_KEY }),
   })
 }
