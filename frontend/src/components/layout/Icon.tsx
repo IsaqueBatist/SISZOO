@@ -28,6 +28,8 @@ export type IconName =
   | 'user'
   | 'pill'
   | 'scissors'
+  | 'bat'
+  | 'dog'
 
 interface IconProps {
   name: IconName
@@ -64,6 +66,10 @@ const STROKE_PATHS: Partial<Record<IconName, string>> = {
 const FILL_PATHS: Partial<Record<IconName, string>> = {
   paw: '<circle cx="6" cy="9" r="2"/><circle cx="10" cy="5" r="2"/><circle cx="14" cy="5" r="2"/><circle cx="18" cy="9" r="2"/><path d="M12 11c-3 0-5 2.5-5 5 0 2 1.5 3 3 3 1 0 1.5-.5 2-.5s1 .5 2 .5c1.5 0 3-1 3-3 0-2.5-2-5-5-5z"/>',
   heart: '<path d="M12 21s-7-4.5-9-9c-1.5-3.5 1-7 4.5-7 2 0 3.5 1 4.5 2.5C13 6 14.5 5 16.5 5 20 5 22.5 8.5 21 12c-2 4.5-9 9-9 9z"/>',
+  // Portados de docs/prototipo/assets/icons.js (tipos "morcegos"/"agressivo"
+  // da listagem/cadastro de ocorrência — T27).
+  bat: '<path d="M12 6c-2 0-3 1-4 3-2-1-4-1-5 0 1 2 3 3 4 4-2 1-3 3-3 5l4-1 1 2 3-2 3 2 1-2 4 1c0-2-1-4-3-5 1-1 3-2 4-4-1-1-3-1-5 0-1-2-2-3-4-3z"/>',
+  dog: '<path d="M5 8l-1 4 1 6h3l1-3h6l1 3h3l1-6-1-4-3 1-3-1h-4l-3-1-1 1z"/><circle cx="10" cy="11" r="0.6" fill="currentColor"/><circle cx="14" cy="11" r="0.6" fill="currentColor"/>',
 }
 
 export function Icon({ name, size = 18 }: IconProps) {

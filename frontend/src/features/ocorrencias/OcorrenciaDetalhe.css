@@ -1,0 +1,46 @@
+/* Portado do <style> inline de docs/prototipo/ocorrencia.html. Classes já
+   compartilhadas pelo design system (.card, .badge, .timeline/.timeline-item,
+   .form-grid, .kv-list) ficam em components.css — não duplicadas aqui. */
+
+.det-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--space-5);
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  .det-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.map-stub {
+  height: 100px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: linear-gradient(135deg, var(--color-surface-alt) 0%, var(--color-bg) 100%);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.vinc-card {
+  border: 1px solid var(--color-info-border);
+  background: var(--color-info-bg);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+.vinc-card h4 {
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: var(--color-info);
+}
+.vinc-card .proto-big {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}

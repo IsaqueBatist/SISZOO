@@ -43,8 +43,8 @@ soft-delete (`ativa=false`, 200), sem bloqueio mesmo com animais alocados.
 Para reverter, use "Ativar/reativar baia" (`PATCH /status`).
 
 A pasta **Registros Clínicos** (vacinações, procedimentos, prescrições) reúne
-os três recursos porque compartilham o mesmo padrão de imutabilidade
-(CLAUDE.md): nenhum dos três controllers tem `PUT`/`PATCH`/`DELETE` — "Tentar
+os três recursos porque compartilham o mesmo padrão de imutabilidade:
+nenhum dos três controllers tem `PUT`/`PATCH`/`DELETE` — "Tentar
 atualizar vacinação (405)" mostra que o Spring MVC já rejeita esses verbos
 sozinho, sem código de bloqueio adicional. Correção de um registro (inclusive
 mudança de status de prescrição) é sempre um novo `POST` no mesmo endpoint com

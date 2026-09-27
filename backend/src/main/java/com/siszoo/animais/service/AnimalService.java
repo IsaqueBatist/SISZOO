@@ -152,7 +152,7 @@ public class AnimalService {
     }
 
     // Microchip e o identificador fisico implantado no animal: uma vez definido, e
-    // permanente (regra critica do CLAUDE.md sobre imutabilidade de identificadores/
+    // permanente (regra critica de negocio sobre imutabilidade de identificadores/
     // registros criticos). O PUT so pode ACEITAR um microchip quando o animal ainda
     // nao tem um; se ja tem, qualquer valor diferente do atual e rejeitado.
     private void aplicarMicrochipNaAtualizacao(Animal animal, String microchipRequest) {

@@ -14,7 +14,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import com.siszoo.animais.clinico.entity.Prescricao;
 
-// Sem metodo de update/delete: registro clinico imutavel (CLAUDE.md). Ver
+// Sem metodo de update/delete: registro clinico imutavel (regra de negocio). Ver
 // VacinacaoRepository.
 public interface PrescricaoRepository extends JpaRepository<Prescricao, UUID>, JpaSpecificationExecutor<Prescricao> {
 

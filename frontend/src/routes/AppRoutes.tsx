@@ -6,11 +6,12 @@ import { ThemeProvider } from '../lib/ThemeProvider'
 import { EmConstrucao } from '../pages/EmConstrucao'
 import { RotaAdmin } from './RotaAdmin'
 import { RotaEscritaAnimais } from './RotaEscritaAnimais'
+import { RotaEscritaOcorrencias } from './RotaEscritaOcorrencias'
 import { RotaGestaoBaias } from './RotaGestaoBaias'
 import { RotaProtegida } from './RotaProtegida'
 import { RouteErrorBoundary } from './RouteErrorBoundary'
 
-// Code-splitting por rota (máquinas do CCZ têm ~2GB RAM — ver frontend/CLAUDE.md):
+// Code-splitting por rota (máquinas do CCZ têm ~2GB RAM):
 // só as telas atrás de login, carregadas sob demanda. Login fica fora porque
 // é a primeira tela de toda sessão — lazy nela só adicionaria uma
 // ida à rede sem reduzir o que precisa carregar de qualquer forma.
@@ -26,6 +27,13 @@ const CadastrarAnimal = lazy(() =>
 )
 const EditarAnimal = lazy(() => import('../features/animais/EditarAnimal').then((m) => ({ default: m.EditarAnimal })))
 const GestaoBaias = lazy(() => import('../features/baias/GestaoBaias').then((m) => ({ default: m.GestaoBaias })))
+const Ocorrencias = lazy(() => import('../features/ocorrencias/Ocorrencias').then((m) => ({ default: m.Ocorrencias })))
+const OcorrenciaDetalhe = lazy(() =>
+  import('../features/ocorrencias/OcorrenciaDetalhe').then((m) => ({ default: m.OcorrenciaDetalhe })),
+)
+const CadastrarOcorrencia = lazy(() =>
+  import('../features/ocorrencias/CadastrarOcorrencia').then((m) => ({ default: m.CadastrarOcorrencia })),
+)
 const Perfil = lazy(() => import('../features/perfil/Perfil').then((m) => ({ default: m.Perfil })))
 const Configuracoes = lazy(() =>
   import('../features/configuracoes/Configuracoes').then((m) => ({ default: m.Configuracoes })),
@@ -69,6 +77,11 @@ export function AppRoutes() {
               </Route>
               <Route element={<RotaGestaoBaias />}>
                 <Route path="/baias" element={<GestaoBaias />} />
+              </Route>
+              <Route path="/ocorrencias" element={<Ocorrencias />} />
+              <Route path="/ocorrencias/:id" element={<OcorrenciaDetalhe />} />
+              <Route element={<RotaEscritaOcorrencias />}>
+                <Route path="/ocorrencias/novo" element={<CadastrarOcorrencia />} />
               </Route>
               <Route path="/perfil" element={<Perfil />} />
               <Route path="/configuracoes" element={<Configuracoes />} />

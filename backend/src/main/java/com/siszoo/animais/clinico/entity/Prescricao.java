@@ -26,7 +26,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// Registro clinico imutavel (CLAUDE.md), inclusive para transicoes de
+// Registro clinico imutavel (regra de negocio), inclusive para transicoes de
 // status (ATIVA->CONCLUIDA/SUSPENSA/CANCELADA): tambem viram uma nova linha
 // com `retifica`, nunca um UPDATE na linha anterior. Ver Vacinacao.
 @Entity

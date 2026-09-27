@@ -1,8 +1,8 @@
 -- Módulo 2 — Registros clínicos imutáveis (docs/modulo2-animais.dbml:
 -- Vacinacao, Procedimento, Prescricao)
 --
--- CLAUDE.md (regra crítica): "Registros clínicos ... são IMUTÁVEIS: nunca
--- UPDATE/DELETE. Correção = novo registro + evento de auditoria."
+-- Regra de negócio crítica: registros clínicos são IMUTÁVEIS: nunca
+-- UPDATE/DELETE. Correção = novo registro + evento de auditoria.
 --
 -- Mecanismo: cada tabela tem `retifica_id`, uma FK nullable e auto-
 -- referenciada, preenchida SÓ no INSERT da linha nova que corrige uma

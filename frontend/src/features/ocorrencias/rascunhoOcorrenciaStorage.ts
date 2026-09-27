@@ -1,15 +1,14 @@
-// Rascunho local do formulário de animal em IndexedDB nativo (sem
-// dependência) — exigência de negócio para formulários longos
-// ("cadastro de animal"), já que a rede do CCZ é instável e o form não pode
-// perder dados preenchidos numa queda de conexão.
+// Rascunho local do formulário de cadastro de ocorrência em IndexedDB
+// nativo (mesma infraestrutura de rascunhoAnimalStorage.ts, store próprio) —
+// exigência de negócio para formulários longos ("cadastro de ocorrência",
+// frontend/CLAUDE.md), já que a rede do CCZ é instável. T27 não inclui
+// edição de ocorrência existente, então há uma única chave fixa ('novo'),
+// diferente do rascunho de animal (que distingue criação de edição por id).
 const NOME_BANCO = 'siszoo-rascunhos'
-const NOME_STORE = 'animais'
+const NOME_STORE = 'ocorrencias'
 const VERSAO_BANCO = 1
 const DEBOUNCE_MS = 800
-
-export function chaveRascunhoAnimal(id: string | undefined): string {
-  return id ? `editar:${id}` : 'novo'
-}
+const CHAVE_RASCUNHO = 'novo'
 
 function indexedDbDisponivel(): boolean {
   return typeof indexedDB !== 'undefined'
@@ -28,13 +27,13 @@ function abrirBanco(): Promise<IDBDatabase> {
   })
 }
 
-export async function salvarRascunhoAnimal<T>(chave: string, valores: T): Promise<void> {
+export async function salvarRascunhoOcorrencia<T>(valores: T): Promise<void> {
   if (!indexedDbDisponivel()) return
   try {
     const banco = await abrirBanco()
     await new Promise<void>((resolve, reject) => {
       const transacao = banco.transaction(NOME_STORE, 'readwrite')
-      transacao.objectStore(NOME_STORE).put(valores, chave)
+      transacao.objectStore(NOME_STORE).put(valores, CHAVE_RASCUNHO)
       transacao.oncomplete = () => resolve()
       transacao.onerror = () => reject(transacao.error)
     })
@@ -45,13 +44,13 @@ export async function salvarRascunhoAnimal<T>(chave: string, valores: T): Promis
   }
 }
 
-export async function carregarRascunhoAnimal<T>(chave: string): Promise<T | null> {
+export async function carregarRascunhoOcorrencia<T>(): Promise<T | null> {
   if (!indexedDbDisponivel()) return null
   try {
     const banco = await abrirBanco()
     const valor = await new Promise<T | null>((resolve, reject) => {
       const transacao = banco.transaction(NOME_STORE, 'readonly')
-      const requisicao = transacao.objectStore(NOME_STORE).get(chave)
+      const requisicao = transacao.objectStore(NOME_STORE).get(CHAVE_RASCUNHO)
       requisicao.onsuccess = () => resolve((requisicao.result as T | undefined) ?? null)
       requisicao.onerror = () => reject(requisicao.error)
     })
@@ -62,13 +61,13 @@ export async function carregarRascunhoAnimal<T>(chave: string): Promise<T | null
   }
 }
 
-export async function removerRascunhoAnimal(chave: string): Promise<void> {
+export async function removerRascunhoOcorrencia(): Promise<void> {
   if (!indexedDbDisponivel()) return
   try {
     const banco = await abrirBanco()
     await new Promise<void>((resolve, reject) => {
       const transacao = banco.transaction(NOME_STORE, 'readwrite')
-      transacao.objectStore(NOME_STORE).delete(chave)
+      transacao.objectStore(NOME_STORE).delete(CHAVE_RASCUNHO)
       transacao.oncomplete = () => resolve()
       transacao.onerror = () => reject(transacao.error)
     })
@@ -78,16 +77,13 @@ export async function removerRascunhoAnimal(chave: string): Promise<void> {
   }
 }
 
-const timeoutsAgendados = new Map<string, ReturnType<typeof setTimeout>>()
+let timeoutAgendado: ReturnType<typeof setTimeout> | null = null
 
-// Debounce por chave: evita gravar no IndexedDB a cada tecla digitada.
-export function agendarSalvarRascunhoAnimal<T>(chave: string, valores: T): void {
-  const timeoutAnterior = timeoutsAgendados.get(chave)
-  if (timeoutAnterior) clearTimeout(timeoutAnterior)
-
-  const novoTimeout = setTimeout(() => {
-    timeoutsAgendados.delete(chave)
-    void salvarRascunhoAnimal(chave, valores)
+// Debounce: evita gravar no IndexedDB a cada tecla digitada/anexo adicionado.
+export function agendarSalvarRascunhoOcorrencia<T>(valores: T): void {
+  if (timeoutAgendado) clearTimeout(timeoutAgendado)
+  timeoutAgendado = setTimeout(() => {
+    timeoutAgendado = null
+    void salvarRascunhoOcorrencia(valores)
   }, DEBOUNCE_MS)
-  timeoutsAgendados.set(chave, novoTimeout)
 }
