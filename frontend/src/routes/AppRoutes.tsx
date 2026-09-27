@@ -7,6 +7,7 @@ import { EmConstrucao } from '../pages/EmConstrucao'
 import { RotaAdmin } from './RotaAdmin'
 import { RotaEscritaAnimais } from './RotaEscritaAnimais'
 import { RotaEscritaOcorrencias } from './RotaEscritaOcorrencias'
+import { RotaEscritaProcessos } from './RotaEscritaProcessos'
 import { RotaGestaoBaias } from './RotaGestaoBaias'
 import { RotaProtegida } from './RotaProtegida'
 import { RouteErrorBoundary } from './RouteErrorBoundary'
@@ -33,6 +34,9 @@ const OcorrenciaDetalhe = lazy(() =>
 )
 const CadastrarOcorrencia = lazy(() =>
   import('../features/ocorrencias/CadastrarOcorrencia').then((m) => ({ default: m.CadastrarOcorrencia })),
+)
+const CadastrarProcesso = lazy(() =>
+  import('../features/processos/CadastrarProcesso').then((m) => ({ default: m.CadastrarProcesso })),
 )
 const Perfil = lazy(() => import('../features/perfil/Perfil').then((m) => ({ default: m.Perfil })))
 const Configuracoes = lazy(() =>
@@ -82,6 +86,9 @@ export function AppRoutes() {
               <Route path="/ocorrencias/:id" element={<OcorrenciaDetalhe />} />
               <Route element={<RotaEscritaOcorrencias />}>
                 <Route path="/ocorrencias/novo" element={<CadastrarOcorrencia />} />
+              </Route>
+              <Route element={<RotaEscritaProcessos />}>
+                <Route path="/processos/novo" element={<CadastrarProcesso />} />
               </Route>
               <Route path="/perfil" element={<Perfil />} />
               <Route path="/configuracoes" element={<Configuracoes />} />

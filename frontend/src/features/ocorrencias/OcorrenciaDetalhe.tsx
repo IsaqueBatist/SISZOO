@@ -1,12 +1,44 @@
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Icon } from '../../components/layout/Icon'
 import { useAuth } from '../auth/AuthContext'
 import { CardDenunciante } from './CardDenunciante'
 import { CardEncerramento } from './CardEncerramento'
 import { MovimentacoesTimeline } from './MovimentacoesTimeline'
+import type { Ocorrencia } from './ocorrencias.types'
 import './OcorrenciaDetalhe.css'
 import { badgeDeStatus, labelDeTipo } from './statusBadge'
-import { useOcorrenciaQuery } from './useOcorrencias'
+import { useIniciarAtendimentoMutation, useOcorrenciaQuery } from './useOcorrencias'
+
+// Botão próprio (não inline em OcorrenciaDetalhe) porque a mutation só pode
+// ser chamada depois que `ocorrencia` já existe — mesmo motivo de
+// CardEncerramento ser um componente à parte: chamar o hook direto em
+// OcorrenciaDetalhe violaria a regra dos hooks (ele fica depois do
+// early-return de loading/erro).
+function BotaoIniciarAtendimento({ ocorrencia, podeEscrever }: { ocorrencia: Ocorrencia; podeEscrever: boolean }) {
+  const [erro, setErro] = useState<string | null>(null)
+  const mutation = useIniciarAtendimentoMutation(ocorrencia.id)
+
+  if (!podeEscrever || ocorrencia.statusOcorrencia !== 'aberta') return null
+
+  async function handleClick() {
+    setErro(null)
+    try {
+      await mutation.mutateAsync()
+    } catch {
+      setErro('Não foi possível iniciar o atendimento. Tente novamente.')
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+      <button type="button" className="btn btn-secondary btn-sm" onClick={handleClick} disabled={mutation.isPending}>
+        {mutation.isPending ? 'Iniciando…' : 'Iniciar Atendimento'}
+      </button>
+      {erro && <span className="err">{erro}</span>}
+    </div>
+  )
+}
 
 const FUSO_ITU = 'America/Sao_Paulo'
 
@@ -23,7 +55,7 @@ function formatarTamanho(bytes: number): string {
 export function OcorrenciaDetalhe() {
   const { id } = useParams<{ id: string }>()
   const { roleKey } = useAuth()
-  const podeEncerrar = roleKey === 'admin' || roleKey === 'agente'
+  const podeEscrever = roleKey === 'admin' || roleKey === 'agente'
 
   const { data: ocorrencia, isLoading, isError } = useOcorrenciaQuery(id)
 
@@ -67,6 +99,9 @@ export function OcorrenciaDetalhe() {
           <p className="subtitle">
             {labelDeTipo(ocorrencia.tipoOcorrencia)} · {ocorrencia.bairro}
           </p>
+        </div>
+        <div className="actions">
+          <BotaoIniciarAtendimento ocorrencia={ocorrencia} podeEscrever={podeEscrever} />
         </div>
       </div>
 
@@ -183,7 +218,7 @@ export function OcorrenciaDetalhe() {
         </div>
 
         <div className="col gap-4">
-          {ocorrencia.processoVinculado && (
+          {ocorrencia.processoVinculado ? (
             <div className="vinc-card">
               <h4>Processo Sanitário Vinculado</h4>
               <div className="proto-big">{ocorrencia.processoVinculado.protocolo}</div>
@@ -191,9 +226,16 @@ export function OcorrenciaDetalhe() {
                 {ocorrencia.processoVinculado.resultadoPendente ? 'Aguardando resultado' : ocorrencia.processoVinculado.statusProcesso}
               </div>
             </div>
+          ) : (
+            // Único ponto de entrada da RN2 ("vindo de /ocorrencias/:id, o
+            // vínculo já vem preenchido e travado") — sem este link não
+            // existe caminho de UI até /processos/novo com vínculo pronto.
+            <Link to={`/processos/novo?ocorrencia=${ocorrencia.id}`} className="btn btn-outline btn-sm">
+              Abrir Processo Sanitário
+            </Link>
           )}
 
-          <CardEncerramento ocorrencia={ocorrencia} podeEncerrar={podeEncerrar} />
+          <CardEncerramento ocorrencia={ocorrencia} podeEncerrar={podeEscrever} />
 
           <div className="card">
             <div className="card-header">

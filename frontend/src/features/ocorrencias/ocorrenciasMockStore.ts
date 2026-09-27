@@ -6,6 +6,7 @@ import type {
   MovimentacaoOcorrencia,
   Ocorrencia,
   OcorrenciasFiltro,
+  ProcessoVinculado,
 } from './ocorrencias.types'
 
 // PROVISÓRIO: mock autoral da feature de ocorrências — o backend real
@@ -399,4 +400,43 @@ export function encerrarOcorrenciaMock(
   // cache do TanStack Query de uma leitura anterior mudaria "por baixo".
   ocorrenciasMock = ocorrenciasMock.map((item) => (item.id === id ? atualizada : item))
   return { ok: true, ocorrencia: structuredClone(atualizada) }
+}
+
+// Único destino possível hoje é 'aberta' → 'em_atendimento' — não há tipo de
+// movimentação dedicado no catálogo do DER.md §3.4 para essa transição, só
+// os já existentes (registrada/equipe_despachada/processo_vinculado/
+// aguardando_resultado/encerrada/nota_interna), então usa 'nota_interna'
+// (o catch-all do catálogo) com uma descrição explícita, em vez de inventar
+// um valor fora do DER.
+export function iniciarAtendimentoMock(id: string, autorNome: string): Ocorrencia | null {
+  const atual = ocorrenciasMock.find((item) => item.id === id)
+  if (!atual || atual.statusOcorrencia !== 'aberta') return null
+
+  const agora = new Date().toISOString()
+  const novaMovimentacao: MovimentacaoOcorrencia = {
+    id: crypto.randomUUID(),
+    tipoMovimentacao: 'nota_interna',
+    data: agora,
+    descricao: 'Ocorrência movida para "Em atendimento".',
+    usuarioNome: autorNome,
+  }
+  const atualizada: Ocorrencia = {
+    ...atual,
+    statusOcorrencia: 'em_atendimento',
+    movimentacoes: [...atual.movimentacoes, novaMovimentacao],
+    atualizadoEm: agora,
+  }
+  ocorrenciasMock = ocorrenciasMock.map((item) => (item.id === id ? atualizada : item))
+  return structuredClone(atualizada)
+}
+
+// Chamada por processosMockStore.ts::criarProcessoMock quando um processo é
+// criado com vínculo — reflexo bidirecional exigido pela T32 (o DER modela
+// `ocorrencia.processo_sanitario_id`/`processoVinculado` como consequência da
+// criação do processo, não o contrário). Não é refatoração da feature de
+// ocorrências, é uma adição pontual: sem essa função, `encerrarOcorrenciaMock`
+// nunca veria o processo pendente (regra 13) para uma ocorrência vinculada
+// depois da T32.
+export function vincularProcessoNaOcorrenciaMock(ocorrenciaId: string, processoVinculado: ProcessoVinculado): void {
+  ocorrenciasMock = ocorrenciasMock.map((item) => (item.id === ocorrenciaId ? { ...item, processoVinculado } : item))
 }
