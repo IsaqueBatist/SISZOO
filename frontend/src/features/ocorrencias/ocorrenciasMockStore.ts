@@ -19,6 +19,12 @@ const OCORRENCIA_ABERTA_ID = 'h5000000-0000-0000-0000-000000000001'
 const OCORRENCIA_SIGILOSA_ID = 'h5000000-0000-0000-0000-000000000002'
 const OCORRENCIA_PROCESSO_PENDENTE_ID = 'h5000000-0000-0000-0000-000000000004'
 const OCORRENCIA_ENCERRADA_ID = 'h5000000-0000-0000-0000-000000000005'
+// Usada só pela T33 (frontend/src/features/processos/processosMockStore.ts,
+// PROCESSO_SIGILOSO_ID) para exercitar RN4 (sigilo) num processo vinculado
+// de ponta a ponta, sem tocar OCORRENCIA_SIGILOSA_ID — essa continua livre
+// de processo porque SeletorOcorrencia.test.tsx depende dela estar
+// selecionável.
+const OCORRENCIA_SIGILOSA_COM_PROCESSO_ID = 'h5000000-0000-0000-0000-000000000006'
 
 const AGENTE_PADRAO = 'Rafael Santos'
 const VETERINARIA_PADRAO = 'Stéphanie Lima'
@@ -228,6 +234,59 @@ function seedOcorrenciasMock(): Ocorrencia[] {
       ],
       criadoEm: '2026-05-10T11:00:00Z',
       atualizadoEm: '2026-05-12T16:00:00Z',
+    },
+    {
+      id: OCORRENCIA_SIGILOSA_COM_PROCESSO_ID,
+      protocolo: '095/2026',
+      tipoOcorrencia: 'zoonose',
+      statusOcorrencia: 'em_atendimento',
+      dataAbertura: '2026-05-22',
+      horaAbertura: '12:50',
+      endereco: 'Rua das Camélias, 12',
+      bairro: 'Jardim Bela Vista',
+      pontoReferencia: null,
+      descricao: 'Denunciante relata gato com sinais neurológicos após contato com animal silvestre. Pediu sigilo.',
+      urgente: false,
+      sigilosa: true,
+      registradoPorNome: AGENTE_PADRAO,
+      providenciaTomada: null,
+      descricaoEncerramento: null,
+      encerradaEm: null,
+      processoVinculado: {
+        id: 'p1000000-0000-0000-0000-000000000005',
+        protocolo: '005/2026',
+        statusProcesso: 'aguardando_resultado',
+        resultadoPendente: true,
+      },
+      denunciante: {
+        nome: 'Renata Costa Almeida',
+        cpf: '222.333.444-55',
+        telefone: '(11) 9 3333-4444',
+        email: 'renata.almeida@email.com',
+        cep: '13302-200',
+        endereco: 'Rua das Camélias, 12',
+        bairroResidencial: 'Jardim Bela Vista',
+      },
+      denunciado: null,
+      movimentacoes: [
+        {
+          id: 'h6000000-0000-0000-0000-000000000009',
+          tipoMovimentacao: 'processo_vinculado',
+          data: '2026-05-22T13:00:00Z',
+          descricao: 'Vinculação com investigação laboratorial — amostra coletada para febre maculosa.',
+          usuarioNome: `Dra. ${VETERINARIA_PADRAO}`,
+        },
+        {
+          id: 'h6000000-0000-0000-0000-000000000010',
+          tipoMovimentacao: 'registrada',
+          data: '2026-05-22T12:50:00Z',
+          descricao: 'Denúncia recebida via formulário interno.',
+          usuarioNome: AGENTE_PADRAO,
+        },
+      ],
+      anexos: [],
+      criadoEm: '2026-05-22T12:50:00Z',
+      atualizadoEm: '2026-05-22T13:00:00Z',
     },
   ]
 }

@@ -267,7 +267,10 @@ export function ProcessoForm({ ocorrenciaIdDaUrl }: ProcessoFormProps) {
     try {
       const novo = await mutation.mutateAsync(paraRequisicao(dados))
       await removerRascunhoProcesso()
-      navigate(`/ocorrencias${novo.ocorrenciaVinculado ? `/${novo.ocorrenciaVinculado.id}` : ''}`)
+      // T33 introduziu o detalhe do processo — o destino pós-submit deixa de
+      // bifurcar entre /ocorrencias e /ocorrencias/:id (provisório da T32) e
+      // passa a ser sempre o processo recém-criado.
+      navigate(`/processos/${novo.id}`)
     } catch (erro) {
       setSubmitError(erro instanceof ErroNegocioProcesso ? erro.message : 'Não foi possível registrar o processo. Tente novamente.')
     }

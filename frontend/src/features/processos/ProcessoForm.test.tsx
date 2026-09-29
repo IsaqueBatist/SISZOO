@@ -42,6 +42,7 @@ function renderCadastrar(initialEntry = '/processos/novo') {
             <Route path="/ocorrencias" element={<div>Lista de ocorrências</div>} />
             <Route path="/ocorrencias/:id" element={<div>Detalhe da ocorrência</div>} />
             <Route path="/processos/novo" element={<CadastrarProcesso />} />
+            <Route path="/processos/:id" element={<div>Detalhe do processo</div>} />
           </Routes>
         </AuthProvider>
       </MemoryRouter>
@@ -69,6 +70,7 @@ function processoFake(overrides: Partial<Processo> = {}): Processo {
     criadoPorNome: 'Ana Silva',
     criadoEm: '2026-05-20T10:00:00Z',
     atualizadoEm: '2026-05-20T10:00:00Z',
+    documentos: [],
     ...overrides,
   }
 }
@@ -211,7 +213,7 @@ describe('ProcessoForm — wizard de cadastro', () => {
     expect(payload.amostras[0]).toMatchObject({ origem: 'externo', especieId: 'canino', sexo: 'macho' })
     expect(payload.amostras[0]).not.toHaveProperty('animalId')
 
-    expect(await screen.findByText('Lista de ocorrências')).toBeInTheDocument()
+    expect(await screen.findByText('Detalhe do processo')).toBeInTheDocument()
   })
 
   it('amostra "animal do canil": payload não carrega os dados do modo abandonado', async () => {

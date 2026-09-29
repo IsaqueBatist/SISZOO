@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
@@ -69,8 +69,11 @@ describe('Ocorrencias', () => {
   it('mostra "Sigiloso" na coluna denunciante para perfil não-admin, sem quebrar o layout', async () => {
     renderLista(['Agente Sanitário'])
 
-    await screen.findByText('090/2026')
-    expect(screen.getByText('Sigiloso')).toBeInTheDocument()
+    const linha = (await screen.findByText('090/2026')).closest('tr') as HTMLElement
+    // getAllByText porque o seed da T33 (095/2026) também é sigiloso —
+    // "Sigiloso" não é mais único na página, então a asserção escopa pra
+    // linha da ocorrência 090/2026 especificamente.
+    expect(within(linha).getByText('Sigiloso')).toBeInTheDocument()
     expect(screen.queryByText('João Pereira Lima')).not.toBeInTheDocument()
   })
 
@@ -91,6 +94,14 @@ describe('Ocorrencias', () => {
 
     const link = screen.getByRole('link', { name: /ver ocorrência 089\/2026/i })
     expect(link).toHaveAttribute('href', '/ocorrencias/h5000000-0000-0000-0000-000000000001')
+  })
+
+  it('a coluna "Processo Vinc." é um link pro detalhe do processo (T33)', async () => {
+    renderLista(['Administrador'])
+    await screen.findByText('092/2026')
+
+    const link = screen.getByRole('link', { name: '045/2026' })
+    expect(link).toHaveAttribute('href', '/processos/h7000000-0000-0000-0000-000000000001')
   })
 
   it('não mostra o botão "Registrar Ocorrência" para o perfil Veterinário', async () => {

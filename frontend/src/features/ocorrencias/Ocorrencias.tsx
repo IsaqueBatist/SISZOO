@@ -218,9 +218,9 @@ export function Ocorrencias() {
                       </td>
                       <td>
                         {ocorrencia.processoVinculado ? (
-                          <span className="mono" style={{ fontWeight: 600 }}>
+                          <Link to={`/processos/${ocorrencia.processoVinculado.id}`} className="mono" style={{ fontWeight: 600 }}>
                             {ocorrencia.processoVinculado.protocolo}
-                          </span>
+                          </Link>
                         ) : (
                           <span className="muted">—</span>
                         )}

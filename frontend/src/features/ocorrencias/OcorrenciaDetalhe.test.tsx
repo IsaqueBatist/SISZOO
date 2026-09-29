@@ -123,6 +123,14 @@ describe('OcorrenciaDetalhe', () => {
     expect(screen.queryByRole('button', { name: 'Iniciar Atendimento' })).not.toBeInTheDocument()
   })
 
+  it('o card de processo vinculado é um link pro detalhe do processo (T33)', async () => {
+    renderDetalhe(OCORRENCIA_EM_ATENDIMENTO_ID, ['Administrador'])
+
+    await screen.findByRole('heading', { name: 'Ocorrência 092/2026', level: 1 })
+    const link = screen.getByRole('link', { name: /Processo Sanitário Vinculado/ })
+    expect(link).toHaveAttribute('href', '/processos/h7000000-0000-0000-0000-000000000001')
+  })
+
   it('inicia o atendimento: o badge muda para "Em atendimento" e entra uma movimentação na timeline', async () => {
     const user = userEvent.setup()
     renderDetalhe(OCORRENCIA_ABERTA_ID, ['Administrador'])

@@ -219,13 +219,13 @@ export function OcorrenciaDetalhe() {
 
         <div className="col gap-4">
           {ocorrencia.processoVinculado ? (
-            <div className="vinc-card">
+            <Link to={`/processos/${ocorrencia.processoVinculado.id}`} className="vinc-card" style={{ display: 'block' }}>
               <h4>Processo Sanitário Vinculado</h4>
               <div className="proto-big">{ocorrencia.processoVinculado.protocolo}</div>
               <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 6 }}>
                 {ocorrencia.processoVinculado.resultadoPendente ? 'Aguardando resultado' : ocorrencia.processoVinculado.statusProcesso}
               </div>
-            </div>
+            </Link>
           ) : (
             // Único ponto de entrada da RN2 ("vindo de /ocorrencias/:id, o
             // vínculo já vem preenchido e travado") — sem este link não
