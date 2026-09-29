@@ -17,6 +17,22 @@ export type MaterialBiologico = 'tecido_encefalico' | 'soro' | 'sangue' | 'saliv
 
 export type NivelContato = 'direta' | 'indireta'
 
+// PROVISÓRIO / [EXTRAPOLAÇÃO]: DER.md §3.5 modela resultado laboratorial e documentos como
+// parte de processo_sanitario/documento_processo, mas o contrato do T32 não os incluía
+// (backend ainda não existe). Campos adicionados na T33 para o detalhe somente-leitura;
+// revalidar contra o DTO real quando o backend nascer.
+export type ResultadoLaboratorial =
+  | 'aguardando'
+  | 'positivo'
+  | 'negativo'
+  | 'inconclusivo'
+  | 'material_inadequado'
+  | 'nao_realizado'
+
+export type DesfechoAnimal = 'em_acompanhamento' | 'obito_natural' | 'obito_eutanasia' | 'obito_outro'
+
+export type TipoDocumentoProcesso = 'ficha_investigacao' | 'termo_envio' | 'foto_coleta' | 'outro'
+
 export type Sintoma =
   | 'apatia'
   | 'alt_comportamental'
@@ -54,6 +70,18 @@ export interface ProcessoResponsavel {
   endereco?: string
   bairroResidencial?: string
   bairroOcorrencia?: string
+}
+
+// PROVISÓRIO / [EXTRAPOLAÇÃO] — ver comentário de ResultadoLaboratorial acima.
+export interface DocumentoProcesso {
+  id: string
+  nome: string
+  url: string
+  tipo: TipoDocumentoProcesso
+  tamanho: number
+  mimeType: string
+  criadoEm: string
+  criadoPorNome: string
 }
 
 // Campos de identificação do animal_amostrado (DER.md:559-580) — no modo
@@ -119,4 +147,21 @@ export interface Processo {
   criadoPorNome: string
   criadoEm: string
   atualizadoEm: string
+  // PROVISÓRIO / [EXTRAPOLAÇÃO] — ver comentário de ResultadoLaboratorial acima.
+  galNumero?: string
+  sinanNumero?: string
+  cid?: string
+  dataEnvioAmostras?: string
+  previsaoRetorno?: string
+  resultadoLaboratorial?: ResultadoLaboratorial
+  dataResultado?: string
+  desfechoAnimal?: DesfechoAnimal
+  documentos: DocumentoProcesso[]
+}
+
+export interface ProcessosFiltro {
+  doenca?: Doenca
+  statusProcesso?: StatusProcesso
+  pagina: number
+  tamanho: number
 }

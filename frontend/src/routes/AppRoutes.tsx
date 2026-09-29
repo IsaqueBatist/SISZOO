@@ -35,6 +35,10 @@ const OcorrenciaDetalhe = lazy(() =>
 const CadastrarOcorrencia = lazy(() =>
   import('../features/ocorrencias/CadastrarOcorrencia').then((m) => ({ default: m.CadastrarOcorrencia })),
 )
+const Processos = lazy(() => import('../features/processos/Processos').then((m) => ({ default: m.Processos })))
+const ProcessoDetalhe = lazy(() =>
+  import('../features/processos/ProcessoDetalhe').then((m) => ({ default: m.ProcessoDetalhe })),
+)
 const CadastrarProcesso = lazy(() =>
   import('../features/processos/CadastrarProcesso').then((m) => ({ default: m.CadastrarProcesso })),
 )
@@ -87,6 +91,8 @@ export function AppRoutes() {
               <Route element={<RotaEscritaOcorrencias />}>
                 <Route path="/ocorrencias/novo" element={<CadastrarOcorrencia />} />
               </Route>
+              <Route path="/processos" element={<Processos />} />
+              <Route path="/processos/:id" element={<ProcessoDetalhe />} />
               <Route element={<RotaEscritaProcessos />}>
                 <Route path="/processos/novo" element={<CadastrarProcesso />} />
               </Route>

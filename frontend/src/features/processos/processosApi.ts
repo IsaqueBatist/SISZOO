@@ -1,5 +1,7 @@
-import { criarProcessoMock } from './processosMockStore'
-import type { CriarProcessoRequest, Processo } from './processos.types'
+import type { RoleKey } from '../../lib/nav'
+import type { PaginaResponse } from '../usuarios/usuarios.types'
+import { buscarProcessoMockPorId, criarProcessoMock, listarProcessosMock } from './processosMockStore'
+import type { CriarProcessoRequest, Processo, ProcessosFiltro } from './processos.types'
 
 // PROVISÓRIO: o módulo `processos` ainda não tem backend real (só pastas
 // .gitkeep em com.siszoo.processos). Segue literalmente o padrão ATUAL de
@@ -33,4 +35,14 @@ export async function criarProcesso(payload: CriarProcessoRequest, autorNome: st
     throw new ErroNegocioProcesso('Ocorrência não encontrada.')
   }
   return resultado.processo
+}
+
+export async function listarProcessos(filtro: ProcessosFiltro, roleKey: RoleKey): Promise<PaginaResponse<Processo>> {
+  await esperar(DELAY_MS)
+  return listarProcessosMock(filtro, roleKey)
+}
+
+export async function buscarProcessoPorId(id: string, roleKey: RoleKey): Promise<Processo | null> {
+  await esperar(DELAY_MS)
+  return buscarProcessoMockPorId(id, roleKey)
 }

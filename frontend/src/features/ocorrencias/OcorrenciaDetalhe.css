@@ -1,18 +1,7 @@
 /* Portado do <style> inline de docs/prototipo/ocorrencia.html. Classes já
    compartilhadas pelo design system (.card, .badge, .timeline/.timeline-item,
-   .form-grid, .kv-list) ficam em components.css — não duplicadas aqui. */
-
-.det-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: var(--space-5);
-  align-items: start;
-}
-@media (max-width: 1100px) {
-  .det-grid {
-    grid-template-columns: 1fr;
-  }
-}
+   .form-grid, .kv-list, .det-grid) ficam em components.css — não duplicadas
+   aqui. */
 
 .map-stub {
   height: 100px;

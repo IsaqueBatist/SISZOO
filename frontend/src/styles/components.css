@@ -778,6 +778,21 @@ table.data .row-num { color: var(--color-text-muted); font-size: 11px; font-fami
 .kv-list .kv-row:first-child { padding-top: 0; }
 .tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
 
+/* Layout de detalhe (coluna principal + coluna lateral) — usado por
+   OcorrenciaDetalhe.tsx e ProcessoDetalhe.tsx, promovido de
+   OcorrenciaDetalhe.css para cá quando passou a ser compartilhado. */
+.det-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--space-5);
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  .det-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Grid helpers */
 .grid { display: grid; gap: var(--space-4); }
 .grid-2 { grid-template-columns: repeat(2, 1fr); }
