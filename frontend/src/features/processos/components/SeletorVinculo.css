@@ -1,0 +1,105 @@
+/* Estilos da linha de busca/seleção de ocorrência↔processo, compartilhados
+   por SeletorOcorrencia.tsx e SeletorProcessoExistente.tsx — movidos de
+   ProcessoForm.css para cá porque esses dois componentes também são usados
+   FORA do wizard (ProcessoDetalhe.tsx, OcorrenciaDetalhe.tsx, vínculo pós-
+   criação), que não carregava aquele CSS e deixava a lista sem nenhum
+   estilo (sem feedback visual de seleção, badge sem respiro, etc.). O
+   import mora no componente que usa as classes, não na página, para que a
+   lista fique estilizada em qualquer lugar onde for renderizada. */
+
+.occur-search {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.occur-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 460px;
+  overflow-y: auto;
+}
+.occur-row {
+  display: grid;
+  grid-template-columns: 110px 1fr auto auto;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: border-color 120ms, background 120ms;
+}
+.occur-row:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+.occur-row.selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+  box-shadow: 0 0 0 3px rgba(27, 94, 32, 0.1);
+}
+.occur-row .proto {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 14px;
+}
+.occur-row .summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.occur-row .summary .head {
+  font-weight: 600;
+  font-size: 14px;
+}
+.occur-row .summary .sec {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.occur-row .pick {
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--color-border-strong);
+  border-radius: 50%;
+  display: inline-block;
+  position: relative;
+}
+.occur-row.selected .pick {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+}
+.occur-row.selected .pick::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  background: #fff;
+  border-radius: 50%;
+}
+
+.vinculo-display {
+  padding: 12px 14px;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.vinculo-display.empty {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.empty-search {
+  padding: 22px 16px;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  background: var(--color-surface-alt);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  margin-bottom: 14px;
+}

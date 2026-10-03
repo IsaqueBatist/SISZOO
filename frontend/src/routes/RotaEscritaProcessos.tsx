@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from 'react-router-dom'
-import { useAuth } from '../features/auth/AuthContext'
+import { useAuth } from '@/features/auth/hooks/AuthContext'
 
 // PROCESSOS_SANITARIOS:escrita (V3__seed_cargos.sql) é concedida aos 3
 // perfis (Administrador, Veterinário e Agente Sanitário) — só a exclusão é

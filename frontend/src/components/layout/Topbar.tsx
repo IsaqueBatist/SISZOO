@@ -1,6 +1,6 @@
 import { useLocation } from 'react-router-dom'
 import { NAV_ALL, ROLES, isNavGroup } from '../../lib/nav'
-import { useAuth } from '../../features/auth/AuthContext'
+import { useAuth } from '@/features/auth/hooks/AuthContext'
 import { Icon } from './Icon'
 
 function currentCrumbLabel(pathname: string): string {

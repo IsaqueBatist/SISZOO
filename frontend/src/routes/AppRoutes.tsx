@@ -1,8 +1,8 @@
 import { Suspense, lazy } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from '../components/layout/Layout'
-import { Login } from '../features/auth/Login'
-import { ThemeProvider } from '../lib/ThemeProvider'
+import { Login } from '@/features/auth/components/Login'
+import { ThemeProvider } from '@/components/ThemeProvider'
 import { EmConstrucao } from '../pages/EmConstrucao'
 import { RotaAdmin } from './RotaAdmin'
 import { RotaEscritaAnimais } from './RotaEscritaAnimais'
@@ -16,33 +16,53 @@ import { RouteErrorBoundary } from './RouteErrorBoundary'
 // só as telas atrás de login, carregadas sob demanda. Login fica fora porque
 // é a primeira tela de toda sessão — lazy nela só adicionaria uma
 // ida à rede sem reduzir o que precisa carregar de qualquer forma.
-const TrocarSenha = lazy(() => import('../features/auth/TrocarSenha').then((m) => ({ default: m.TrocarSenha })))
-const Dashboard = lazy(() => import('../features/dashboard/Dashboard').then((m) => ({ default: m.Dashboard })))
+const TrocarSenha = lazy(() =>
+  import('@/features/auth/components/TrocarSenha').then((m) => ({ default: m.TrocarSenha })),
+)
+const Dashboard = lazy(() =>
+  import('@/features/dashboard/components/Dashboard').then((m) => ({ default: m.Dashboard })),
+)
 const AlertaVacinasDetalhe = lazy(() =>
-  import('../features/alertas/AlertaVacinasDetalhe').then((m) => ({ default: m.AlertaVacinasDetalhe })),
+  import('@/features/alertas/components/AlertaVacinasDetalhe').then((m) => ({ default: m.AlertaVacinasDetalhe })),
 )
-const Animais = lazy(() => import('../features/animais/Animais').then((m) => ({ default: m.Animais })))
-const FichaAnimal = lazy(() => import('../features/animais/FichaAnimal').then((m) => ({ default: m.FichaAnimal })))
+const Animais = lazy(() => import('@/features/animais/components/Animais').then((m) => ({ default: m.Animais })))
+const FichaAnimal = lazy(() =>
+  import('@/features/animais/components/FichaAnimal').then((m) => ({ default: m.FichaAnimal })),
+)
 const CadastrarAnimal = lazy(() =>
-  import('../features/animais/CadastrarAnimal').then((m) => ({ default: m.CadastrarAnimal })),
+  import('@/features/animais/components/CadastrarAnimal').then((m) => ({ default: m.CadastrarAnimal })),
 )
-const EditarAnimal = lazy(() => import('../features/animais/EditarAnimal').then((m) => ({ default: m.EditarAnimal })))
-const GestaoBaias = lazy(() => import('../features/baias/GestaoBaias').then((m) => ({ default: m.GestaoBaias })))
-const Ocorrencias = lazy(() => import('../features/ocorrencias/Ocorrencias').then((m) => ({ default: m.Ocorrencias })))
+const EditarAnimal = lazy(() =>
+  import('@/features/animais/components/EditarAnimal').then((m) => ({ default: m.EditarAnimal })),
+)
+const GestaoBaias = lazy(() =>
+  import('@/features/baias/components/GestaoBaias').then((m) => ({ default: m.GestaoBaias })),
+)
+const Ocorrencias = lazy(() =>
+  import('@/features/ocorrencias/components/Ocorrencias').then((m) => ({ default: m.Ocorrencias })),
+)
 const OcorrenciaDetalhe = lazy(() =>
-  import('../features/ocorrencias/OcorrenciaDetalhe').then((m) => ({ default: m.OcorrenciaDetalhe })),
+  import('@/features/ocorrencias/components/OcorrenciaDetalhe').then((m) => ({ default: m.OcorrenciaDetalhe })),
 )
 const CadastrarOcorrencia = lazy(() =>
-  import('../features/ocorrencias/CadastrarOcorrencia').then((m) => ({ default: m.CadastrarOcorrencia })),
+  import('@/features/ocorrencias/components/CadastrarOcorrencia').then((m) => ({ default: m.CadastrarOcorrencia })),
+)
+const Processos = lazy(() =>
+  import('@/features/processos/components/Processos').then((m) => ({ default: m.Processos })),
+)
+const ProcessoDetalhe = lazy(() =>
+  import('@/features/processos/components/ProcessoDetalhe').then((m) => ({ default: m.ProcessoDetalhe })),
 )
 const CadastrarProcesso = lazy(() =>
-  import('../features/processos/CadastrarProcesso').then((m) => ({ default: m.CadastrarProcesso })),
+  import('@/features/processos/components/CadastrarProcesso').then((m) => ({ default: m.CadastrarProcesso })),
 )
-const Perfil = lazy(() => import('../features/perfil/Perfil').then((m) => ({ default: m.Perfil })))
+const Perfil = lazy(() => import('@/features/perfil/components/Perfil').then((m) => ({ default: m.Perfil })))
 const Configuracoes = lazy(() =>
-  import('../features/configuracoes/Configuracoes').then((m) => ({ default: m.Configuracoes })),
+  import('@/features/configuracoes/components/Configuracoes').then((m) => ({ default: m.Configuracoes })),
 )
-const Usuarios = lazy(() => import('../features/usuarios/Usuarios').then((m) => ({ default: m.Usuarios })))
+const Usuarios = lazy(() =>
+  import('@/features/usuarios/components/Usuarios').then((m) => ({ default: m.Usuarios })),
+)
 
 function CarregandoRota() {
   return (
@@ -87,6 +107,8 @@ export function AppRoutes() {
               <Route element={<RotaEscritaOcorrencias />}>
                 <Route path="/ocorrencias/novo" element={<CadastrarOcorrencia />} />
               </Route>
+              <Route path="/processos" element={<Processos />} />
+              <Route path="/processos/:id" element={<ProcessoDetalhe />} />
               <Route element={<RotaEscritaProcessos />}>
                 <Route path="/processos/novo" element={<CadastrarProcesso />} />
               </Route>

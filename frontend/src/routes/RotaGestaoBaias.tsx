@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from 'react-router-dom'
-import { useAuth } from '../features/auth/AuthContext'
+import { useAuth } from '@/features/auth/hooks/AuthContext'
 
 // `nav.ts` só inclui 'baias' no access de admin/vet (Agente Sanitário não vê
 // "Gestão de Baias" no menu, mesmo tendo GESTAO_ANIMAIS:leitura na API) — a

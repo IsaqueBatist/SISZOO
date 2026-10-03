@@ -17,7 +17,7 @@ import {
   resetUsuariosMock,
   resetVacinacoesMock,
 } from '../mocks/handlers'
-import { resetOcorrenciasMock } from '../features/ocorrencias/ocorrenciasMockStore'
+import { resetOcorrenciasMock } from '@/features/ocorrencias/api/ocorrenciasMockStore'
 
 // TODO: migrar para 'error' quando as integrações reais de API existirem,
 // para acusar chamadas HTTP não-mockadas nos testes.

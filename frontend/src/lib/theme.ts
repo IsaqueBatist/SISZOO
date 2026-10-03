@@ -1,4 +1,4 @@
-import type { DensidadeUsuario, PreferenciaUsuario, TemaUsuario } from '../features/configuracoes/configuracoes.types'
+import type { DensidadeUsuario, PreferenciaUsuario, TemaUsuario } from '@/features/configuracoes/types/configuracoes.types'
 
 // Variáveis CSS já definidas em styles/tokens.css — aqui só trocamos os
 // valores em runtime (mesma técnica de docs/prototipo/assets/tweaks.js).

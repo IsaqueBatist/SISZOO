@@ -482,7 +482,7 @@ erDiagram
 | `data_abertura`             | date             | \*     |                                                                                            |
 | `doenca_id`                 | FK `doenca`      | \*     |                                                                                            |
 | `laboratorio_id`            | FK `laboratorio` | \*     |                                                                                            |
-| `ocorrencia_id`             | FK `ocorrencia`  | ?      | **0 ou 1 ocorrência vinculada** — definida na etapa 1 do wizard, **imutável** após criação |
+| `ocorrencia_id`             | FK `ocorrencia`  | ?      | **0 ou 1 ocorrência vinculada** — normalmente definida na etapa 1 do wizard; pode ser definida depois da criação se o processo ainda não tiver vínculo (ver regras) |
 | `status_processo_id`        | FK               | \*     |                                                                                            |
 | `urgente`                   | boolean          | \*     | derivado de "contato humano-animal" em algum `animal_amostrado`                            |
 | `gal_numero`                | varchar(40)      | ?      | nº do GAL                                                                                  |
@@ -500,7 +500,7 @@ erDiagram
 
 **Regras**
 
-- Vínculo com ocorrência é definido **na etapa 1 do wizard de cadastro** e fica **bloqueado para edição** depois.
+- Vínculo com ocorrência é normalmente definido **na etapa 1 do wizard de cadastro**. **Emenda (2026-10-03, decisão de produto)**: se o processo for criado sem vínculo (ou a ocorrência ficar sem processo), o vínculo pode ser definido **uma única vez, depois da criação**, a partir do detalhe de qualquer um dos dois lados — mas só quando **nenhum dos dois** já tiver vínculo. Uma vez que o vínculo existe (definido na criação ou depois), ele fica **bloqueado para edição/troca** — não é possível desfazer nem substituir por outro.
 - Quando criado a partir do botão "Abrir Processo Sanitário" dentro da ocorrência, a etapa 1 é pré-preenchida.
 - Ao registrar `resultado_laboratorial` = `positivo` ou `inconclusivo`:
   - dispara notificação ao munícipe (e-mail / SMS quando integrado)
@@ -695,7 +695,7 @@ Campos: `id`, `codigo`, `nome`, `tipo` ("padrão raiva", "multidoenças", "apoio
 | `animal` → `adocao`                           | 1:0..1                    | unique constraint em `animal_id`                   |
 | `ocorrencia` → `denunciante`                  | 1:0..1                    |                                                    |
 | `ocorrencia` → `denunciado`                   | 1:0..1                    |                                                    |
-| `ocorrencia` → `processo_sanitario`           | 1:0..1                    | **definido no wizard, imutável**                   |
+| `ocorrencia` → `processo_sanitario`           | 1:0..1                    | normalmente definido no wizard; pode ser definido depois se nenhum dos dois lados já tiver vínculo (emenda 2026-10-03) — uma vez definido, imutável |
 | `processo_sanitario` → `animal_amostrado`     | 1:N                       | mín. 1                                             |
 | `animal_amostrado` → `animal`                 | N:0..1                    | **opcional** — animal cadastrado OU dados próprios |
 | `animal_amostrado` → `sintoma`                | N:M via `amostra_sintoma` |                                                    |
@@ -732,7 +732,7 @@ Campos: `id`, `codigo`, `nome`, `tipo` ("padrão raiva", "multidoenças", "apoio
 ### Processo sanitário
 
 14. Protocolo `NNN/AAAA` gerado pelo sistema (fixo).
-15. Vínculo com ocorrência: definido na **etapa 1 do wizard**, opcional, **imutável** após gravação.
+15. Vínculo com ocorrência: opcional; normalmente definido na **etapa 1 do wizard**, mas pode ser definido **uma única vez, depois da criação**, a partir do detalhe de qualquer um dos dois lados, desde que nenhum dos dois já tenha vínculo (emenda 2026-10-03 — decisão de produto, não cobre troca de um vínculo já existente). Uma vez definido (na criação ou depois), o vínculo em si é **imutável** — não pode ser trocado por outro.
 16. Animal amostrado: pode referenciar `animal` do canil OU registrar dados próprios.
 17. Campos clínicos da amostragem (`data_coleta`, `material_biologico`, sintomas, contato humano) são sempre próprios da amostragem — não puxam da ficha.
 18. Contato humano-animal em qualquer amostra → processo marcado urgente.
