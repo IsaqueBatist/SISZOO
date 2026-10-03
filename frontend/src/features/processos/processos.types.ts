@@ -162,6 +162,24 @@ export interface Processo {
 export interface ProcessosFiltro {
   doenca?: Doenca
   statusProcesso?: StatusProcesso
+  q?: string
   pagina: number
   tamanho: number
+}
+
+export interface EnviarAmostrasRequest {
+  previsaoRetorno?: string
+}
+
+export interface RegistrarResultadoRequest {
+  resultadoLaboratorial: Exclude<ResultadoLaboratorial, 'aguardando'>
+  desfechoAnimal?: DesfechoAnimal
+}
+
+// `arquivo` é o `File` puro (não `data:` URI em base64), mesma decisão já
+// tomada em ocorrencias.types.ts::CriarOcorrenciaRequest.anexos — mais
+// barato em memória e compatível com um futuro upload multipart/form-data.
+export interface AnexarDocumentoRequest {
+  tipo: TipoDocumentoProcesso
+  arquivo: File
 }

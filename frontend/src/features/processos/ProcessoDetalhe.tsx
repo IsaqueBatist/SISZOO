@@ -1,9 +1,14 @@
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Icon } from '../../components/layout/Icon'
-import { DOENCA_OPCOES, labelDeDoenca, labelDeLaboratorio, SINTOMA_OPCOES } from './processosCatalogos'
-import type { AmostraAnimal } from './processos.types'
+import { useAuth } from '../auth/AuthContext'
+import { CardAnexarDocumento } from './CardAnexarDocumento'
+import { CardStatusProcesso } from './CardStatusProcesso'
+import { DOENCA_OPCOES, labelDeDesfecho, labelDeDoenca, labelDeDocumento, labelDeLaboratorio, SINTOMA_OPCOES } from './processosCatalogos'
+import type { AmostraAnimal, OcorrenciaParaVinculo, Processo } from './processos.types'
+import { SeletorOcorrencia } from './SeletorOcorrencia'
 import { badgeDeResultado, badgeDeStatusProcesso, classeDeDoenca } from './statusBadge'
-import { useProcessoQuery } from './useProcessos'
+import { useProcessoQuery, useVincularExistentesMutation } from './useProcessos'
 
 const FUSO_ITU = 'America/Sao_Paulo'
 
@@ -19,13 +24,6 @@ function formatarTamanho(bytes: number): string {
 
 function labelDeSintoma(valor: string): string {
   return SINTOMA_OPCOES.find((item) => item.valor === valor)?.label ?? valor
-}
-
-const DESFECHO_LABEL: Record<string, string> = {
-  em_acompanhamento: 'Em acompanhamento',
-  obito_natural: 'Óbito — Natural',
-  obito_eutanasia: 'Óbito — Eutanásia',
-  obito_outro: 'Óbito — Outro',
 }
 
 const TIPO_ABRIGO_LABEL: Record<string, string> = {
@@ -120,8 +118,60 @@ function CardAmostra({ amostra, indice }: { amostra: AmostraAnimal; indice: numb
   )
 }
 
+// Componente próprio (mesmo motivo de BotaoIniciarAtendimento em
+// OcorrenciaDetalhe.tsx): a mutation só pode ser chamada depois que
+// `processo` já existe, então não dá pra chamar o hook direto em
+// ProcessoDetalhe (ficaria depois do early-return de loading/erro).
+// Reaproveita SeletorOcorrencia.tsx como está (mesmo componente do wizard),
+// só fora do contexto de wizard: `travado` fixo em `false`, e `onSelecionar`
+// chama a mutation direto em vez de popular um campo de RHF.
+function CardVincularOcorrencia({ processo, podeEscrever }: { processo: Processo; podeEscrever: boolean }) {
+  const [aberto, setAberto] = useState(false)
+  const [erro, setErro] = useState<string | undefined>(undefined)
+  const mutation = useVincularExistentesMutation(processo.id)
+
+  if (!podeEscrever) return null
+
+  async function handleSelecionar(ocorrencia: OcorrenciaParaVinculo) {
+    setErro(undefined)
+    try {
+      await mutation.mutateAsync(ocorrencia.id)
+      setAberto(false)
+    } catch (erroCapturado) {
+      setErro(erroCapturado instanceof Error ? erroCapturado.message : 'Não foi possível vincular a ocorrência.')
+    }
+  }
+
+  if (!aberto) {
+    return (
+      <button type="button" className="btn btn-ghost btn-sm" onClick={() => setAberto(true)}>
+        Vincular uma ocorrência já cadastrada
+      </button>
+    )
+  }
+
+  return (
+    <SeletorOcorrencia
+      vinculoDecisao=""
+      ocorrenciaId={null}
+      travado={false}
+      ocorrenciaVinculada={null}
+      erro={erro}
+      onSelecionar={handleSelecionar}
+      onPular={() => {
+        setAberto(false)
+        setErro(undefined)
+      }}
+      textoAjuda="Busque e selecione a ocorrência que deve ser vinculada a este processo."
+      textoBotaoPular="Cancelar"
+    />
+  )
+}
+
 export function ProcessoDetalhe() {
   const { id } = useParams<{ id: string }>()
+  const { roleKey } = useAuth()
+  const podeEscrever = roleKey === 'admin' || roleKey === 'vet' || roleKey === 'agente'
   const { data: processo, isLoading, isError } = useProcessoQuery(id)
 
   if (isLoading) {
@@ -242,9 +292,12 @@ export function ProcessoDetalhe() {
             </div>
             <div className="card-body">
               {processo.ocorrenciaVinculado === null ? (
-                <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
-                  Este processo não está vinculado a nenhuma ocorrência.
-                </p>
+                <div className="col gap-2">
+                  <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
+                    Este processo não está vinculado a nenhuma ocorrência.
+                  </p>
+                  <CardVincularOcorrencia processo={processo} podeEscrever={podeEscrever} />
+                </div>
               ) : (
                 <div className="form-grid">
                   <div className="field">
@@ -335,8 +388,19 @@ export function ProcessoDetalhe() {
                   </div>
                   <div className="field full">
                     <label>Desfecho do animal</label>
-                    <div>{processo.desfechoAnimal ? DESFECHO_LABEL[processo.desfechoAnimal] : '—'}</div>
+                    <div>{processo.desfechoAnimal ? labelDeDesfecho(processo.desfechoAnimal) : '—'}</div>
                   </div>
+                  {(processo.resultadoLaboratorial === 'positivo' || processo.resultadoLaboratorial === 'inconclusivo') && (
+                    <div className="field full">
+                      <div className="alert warning" role="alert">
+                        <span className="bullet" />
+                        <div className="alert-content">
+                          Resultado {badgeDeResultado(processo.resultadoLaboratorial).label.toLowerCase()} — notificação
+                          automática seria enviada ao munícipe e à Vigilância Epidemiológica de Itu (DER.md, regra 19).
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
@@ -346,6 +410,8 @@ export function ProcessoDetalhe() {
               )}
             </div>
           </div>
+
+          <CardStatusProcesso processo={processo} podeEscrever={podeEscrever} />
 
           <div className="card">
             <div className="card-header">
@@ -363,11 +429,12 @@ export function ProcessoDetalhe() {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 500 }}>{doc.nome}</div>
                     <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
-                      {formatarTamanho(doc.tamanho)} · {formatarData(doc.criadoEm)}
+                      {labelDeDocumento(doc.tipo)} · {formatarTamanho(doc.tamanho)} · {formatarData(doc.criadoEm)}
                     </div>
                   </div>
                 </div>
               ))}
+              <CardAnexarDocumento processo={processo} podeEscrever={podeEscrever} />
             </div>
           </div>
         </div>

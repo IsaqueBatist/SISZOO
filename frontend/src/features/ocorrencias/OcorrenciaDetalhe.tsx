@@ -2,13 +2,14 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Icon } from '../../components/layout/Icon'
 import { useAuth } from '../auth/AuthContext'
+import { SeletorProcessoExistente } from '../processos/SeletorProcessoExistente'
 import { CardDenunciante } from './CardDenunciante'
 import { CardEncerramento } from './CardEncerramento'
 import { MovimentacoesTimeline } from './MovimentacoesTimeline'
 import type { Ocorrencia } from './ocorrencias.types'
 import './OcorrenciaDetalhe.css'
 import { badgeDeStatus, labelDeTipo } from './statusBadge'
-import { useIniciarAtendimentoMutation, useOcorrenciaQuery } from './useOcorrencias'
+import { useIniciarAtendimentoMutation, useOcorrenciaQuery, useVincularProcessoExistenteMutation } from './useOcorrencias'
 
 // Botão próprio (não inline em OcorrenciaDetalhe) porque a mutation só pode
 // ser chamada depois que `ocorrencia` já existe — mesmo motivo de
@@ -37,6 +38,50 @@ function BotaoIniciarAtendimento({ ocorrencia, podeEscrever }: { ocorrencia: Oco
       </button>
       {erro && <span className="err">{erro}</span>}
     </div>
+  )
+}
+
+// Mesmo motivo de BotaoIniciarAtendimento acima — componente próprio porque
+// a mutation precisa de `ocorrencia.id` já garantido. Emenda ao DER.md
+// (2026-10-03): o vínculo pode ser definido depois da criação quando nenhum
+// dos dois lados já tem processo/ocorrência vinculados — nunca pra trocar um
+// vínculo existente (por isso só aparece quando `processoVinculado` é
+// `null`, ao lado do link "Abrir Processo Sanitário" já existente).
+function CardVincularProcesso({ ocorrencia, podeEscrever }: { ocorrencia: Ocorrencia; podeEscrever: boolean }) {
+  const [aberto, setAberto] = useState(false)
+  const [erro, setErro] = useState<string | null>(null)
+  const mutation = useVincularProcessoExistenteMutation(ocorrencia.id)
+
+  if (!podeEscrever) return null
+
+  async function handleSelecionar(processoId: string) {
+    setErro(null)
+    try {
+      await mutation.mutateAsync(processoId)
+      setAberto(false)
+    } catch (erroCapturado) {
+      setErro(erroCapturado instanceof Error ? erroCapturado.message : 'Não foi possível vincular o processo.')
+    }
+  }
+
+  if (!aberto) {
+    return (
+      <button type="button" className="btn btn-ghost btn-sm" onClick={() => setAberto(true)}>
+        ou vincular um processo já cadastrado
+      </button>
+    )
+  }
+
+  return (
+    <SeletorProcessoExistente
+      onSelecionar={handleSelecionar}
+      onCancelar={() => {
+        setAberto(false)
+        setErro(null)
+      }}
+      enviando={mutation.isPending}
+      erro={erro}
+    />
   )
 }
 
@@ -227,12 +272,17 @@ export function OcorrenciaDetalhe() {
               </div>
             </Link>
           ) : (
-            // Único ponto de entrada da RN2 ("vindo de /ocorrencias/:id, o
-            // vínculo já vem preenchido e travado") — sem este link não
-            // existe caminho de UI até /processos/novo com vínculo pronto.
-            <Link to={`/processos/novo?ocorrencia=${ocorrencia.id}`} className="btn btn-outline btn-sm">
-              Abrir Processo Sanitário
-            </Link>
+            <div className="col gap-2">
+              {/* Ponto de entrada original da RN2 ("vindo de /ocorrencias/:id,
+                  o vínculo já vem preenchido e travado") — continua valendo
+                  pra criar processo NOVO já vinculado. A emenda de
+                  2026-10-03 adiciona um segundo caminho logo abaixo, pra
+                  vincular um processo JÁ EXISTENTE sem criar outro. */}
+              <Link to={`/processos/novo?ocorrencia=${ocorrencia.id}`} className="btn btn-outline btn-sm">
+                Abrir Processo Sanitário
+              </Link>
+              <CardVincularProcesso ocorrencia={ocorrencia} podeEscrever={podeEscrever} />
+            </div>
           )}
 
           <CardEncerramento ocorrencia={ocorrencia} podeEncerrar={podeEscrever} />

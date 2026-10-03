@@ -1,9 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../auth/AuthContext'
-import { buscarOcorrenciaPorId, criarOcorrencia, encerrarOcorrencia, iniciarAtendimento, listarOcorrencias } from './ocorrenciasApi'
+import {
+  buscarOcorrenciaPorId,
+  criarOcorrencia,
+  encerrarOcorrencia,
+  iniciarAtendimento,
+  listarOcorrencias,
+  vincularProcessoExistente,
+} from './ocorrenciasApi'
 import type { CriarOcorrenciaRequest, EncerrarOcorrenciaRequest, OcorrenciasFiltro } from './ocorrencias.types'
 
 const OCORRENCIAS_QUERY_KEY = ['ocorrencias']
+const PROCESSOS_QUERY_KEY = ['processos']
 
 export function useOcorrenciasQuery(filtro: OcorrenciasFiltro) {
   const { roleKey } = useAuth()
@@ -38,6 +46,19 @@ export function useIniciarAtendimentoMutation(id: string) {
   return useMutation({
     mutationFn: () => iniciarAtendimento(id, `${user?.nome} ${user?.sobrenome}`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: OCORRENCIAS_QUERY_KEY }),
+  })
+}
+
+export function useVincularProcessoExistenteMutation(id: string) {
+  const queryClient = useQueryClient()
+  const { roleKey } = useAuth()
+  return useMutation({
+    mutationFn: (processoId: string) => vincularProcessoExistente(id, processoId, roleKey),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: OCORRENCIAS_QUERY_KEY })
+      // O vínculo também altera `ocorrenciaVinculado` do lado do processo.
+      queryClient.invalidateQueries({ queryKey: PROCESSOS_QUERY_KEY })
+    },
   })
 }
 

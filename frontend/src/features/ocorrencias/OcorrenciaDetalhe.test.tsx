@@ -2,9 +2,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { AuthProvider, SESSION_STORAGE_KEY } from '../auth/AuthContext'
 import type { Usuario } from '../auth/auth.types'
+import { PROCESSO_SIGILOSO_ID, registrarResultadoMock, resetProcessosMock } from '../processos/processosMockStore'
 import { OcorrenciaDetalhe } from './OcorrenciaDetalhe'
 
 // Ids semeados em ./ocorrenciasMockStore.ts (seedOcorrenciasMock).
@@ -12,6 +13,11 @@ const OCORRENCIA_ABERTA_ID = 'h5000000-0000-0000-0000-000000000001'
 const OCORRENCIA_SIGILOSA_ID = 'h5000000-0000-0000-0000-000000000002'
 const OCORRENCIA_EM_ATENDIMENTO_ID = 'h5000000-0000-0000-0000-000000000004'
 const OCORRENCIA_ENCERRADA_ID = 'h5000000-0000-0000-0000-000000000005'
+// 095/2026, vinculada a PROCESSO_SIGILOSO_ID (../processos/processosMockStore.ts) —
+// par usado só para exercitar o fechamento da regra 13 (resultadoPendente) abaixo.
+const OCORRENCIA_SIGILOSA_COM_PROCESSO_ID = 'h5000000-0000-0000-0000-000000000006'
+// 006/2026, aberto, sem ocorrência vinculada (../processos/processosMockStore.ts).
+const PROCESSO_SEM_VINCULO_ID = 'p1000000-0000-0000-0000-000000000006'
 
 function renderDetalhe(ocorrenciaId: string, cargos: string[]) {
   const usuario: Usuario = {
@@ -39,6 +45,14 @@ function renderDetalhe(ocorrenciaId: string, cargos: string[]) {
 }
 
 describe('OcorrenciaDetalhe', () => {
+  // ocorrenciasMock já é resetado globalmente no afterEach de
+  // ../../test/setup.ts — processosMock não faz parte dessa lista e
+  // precisa de reset explícito aqui (mesmo padrão de
+  // ../processos/ProcessoDetalhe.test.tsx).
+  beforeEach(() => {
+    resetProcessosMock()
+  })
+
   it('renderiza os dados gerais, denunciante, movimentações e anexos', async () => {
     renderDetalhe(OCORRENCIA_ENCERRADA_ID, ['Administrador'])
 
@@ -140,5 +154,36 @@ describe('OcorrenciaDetalhe', () => {
     expect(await screen.findByText('Em atendimento')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Iniciar Atendimento' })).not.toBeInTheDocument()
     expect(screen.getByText('Ocorrência movida para "Em atendimento".')).toBeInTheDocument()
+  })
+
+  // Fecha o loop da regra 13: antes desta entrega nada zerava
+  // `resultadoPendente` do lado da ocorrência, então "Encerrar" ficava
+  // bloqueado para sempre numa ocorrência vinculada a um processo. Aqui o
+  // resultado é registrado direto no mock store (ação que mora na tela do
+  // processo, não na da ocorrência) para então verificar o reflexo na tela
+  // de ocorrência.
+  it('processo vinculado com resultado registrado libera "Encerrar ocorrência" (regra 13)', async () => {
+    registrarResultadoMock(PROCESSO_SIGILOSO_ID, { resultadoLaboratorial: 'negativo' })
+    renderDetalhe(OCORRENCIA_SIGILOSA_COM_PROCESSO_ID, ['Administrador'])
+
+    await screen.findByRole('heading', { name: 'Ocorrência 095/2026', level: 1 })
+    expect(screen.getByRole('button', { name: 'Encerrar ocorrência' })).toBeEnabled()
+    expect(screen.queryByText('Disponível após resultado do processo')).not.toBeInTheDocument()
+  })
+
+  it('vincula um processo já cadastrado a uma ocorrência sem vínculo', async () => {
+    const user = userEvent.setup()
+    renderDetalhe(OCORRENCIA_ABERTA_ID, ['Administrador'])
+
+    await screen.findByRole('heading', { name: 'Ocorrência 089/2026', level: 1 })
+    expect(screen.getByRole('link', { name: 'Abrir Processo Sanitário' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'ou vincular um processo já cadastrado' }))
+    await user.click(await screen.findByText('006/2026'))
+    await user.click(screen.getByRole('button', { name: 'Vincular processo selecionado' }))
+
+    expect(await screen.findByRole('link', { name: /Processo Sanitário Vinculado/ })).toHaveAttribute(
+      'href',
+      `/processos/${PROCESSO_SEM_VINCULO_ID}`,
+    )
   })
 })

@@ -3,13 +3,16 @@ import { buscarOcorrenciaMockPorId, vincularProcessoNaOcorrenciaMock } from '../
 import type { PaginaResponse } from '../usuarios/usuarios.types'
 import type {
   AmostraAnimal,
+  AnexarDocumentoRequest,
   CriarProcessoRequest,
   Doenca,
   DocumentoProcesso,
+  EnviarAmostrasRequest,
   MaterialBiologico,
   OcorrenciaParaVinculo,
   Processo,
   ProcessosFiltro,
+  RegistrarResultadoRequest,
   StatusProcesso,
 } from './processos.types'
 
@@ -436,10 +439,12 @@ export function criarProcessoMock(payload: CriarProcessoRequest, autorNome: stri
 
 export function listarProcessosMock(filtro: ProcessosFiltro, roleKey: RoleKey): PaginaResponse<Processo> {
   const mascarados = processosMock.map((item) => mascarar(item, roleKey))
+  const q = filtro.q?.trim().toLowerCase()
   const filtrados = mascarados.filter((item) => {
     const combinaDoenca = !filtro.doenca || item.doenca === filtro.doenca
     const combinaStatus = !filtro.statusProcesso || item.statusProcesso === filtro.statusProcesso
-    return combinaDoenca && combinaStatus
+    const combinaBusca = !q || item.protocolo.toLowerCase().includes(q) || item.responsavel.nome.toLowerCase().includes(q)
+    return combinaDoenca && combinaStatus && combinaBusca
   })
   // RN3: urgentes no topo (independente do status, ver §2.4 do plano),
   // critério secundário = data de abertura desc. Ordena o conjunto inteiro
@@ -455,4 +460,149 @@ export function listarProcessosMock(filtro: ProcessosFiltro, roleKey: RoleKey): 
 export function buscarProcessoMockPorId(id: string, roleKey: RoleKey): Processo | null {
   const encontrado = processosMock.find((item) => item.id === id)
   return encontrado ? mascarar(encontrado, roleKey) : null
+}
+
+// Repassa o status/resultado atualizado do processo pro lado da ocorrência
+// vinculada (quando existe), reaproveitando `vincularProcessoNaOcorrenciaMock`
+// — a mesma função usada na criação, chamada de novo aqui só pra sobrescrever
+// os campos que mudaram. `resultadoPendente` é a peça que faltava pra regra
+// 13 ("não pode encerrar com processo pendente") algum dia virar `false`:
+// antes desta mudança, nada no sistema zerava esse campo depois da criação.
+function sincronizarVinculoNaOcorrencia(processo: Processo): void {
+  if (!processo.ocorrenciaVinculado) return
+  vincularProcessoNaOcorrenciaMock(processo.ocorrenciaVinculado.id, {
+    id: processo.id,
+    protocolo: processo.protocolo,
+    statusProcesso: processo.statusProcesso,
+    resultadoPendente: !processo.resultadoLaboratorial,
+  })
+}
+
+export type ResultadoTransicaoProcesso =
+  | { ok: true; processo: Processo }
+  | { ok: false; motivo: 'nao_encontrado' | 'status_invalido' }
+
+// DER.md não define os gatilhos de cada transição de status — ver "Riscos e
+// pendências" do plano. aberto → aguardando_resultado.
+export function enviarAmostrasMock(id: string, payload: EnviarAmostrasRequest): ResultadoTransicaoProcesso {
+  const atual = processosMock.find((item) => item.id === id)
+  if (!atual) return { ok: false, motivo: 'nao_encontrado' }
+  if (atual.statusProcesso !== 'aberto') return { ok: false, motivo: 'status_invalido' }
+
+  const agora = new Date().toISOString()
+  const atualizado: Processo = {
+    ...atual,
+    statusProcesso: 'aguardando_resultado',
+    dataEnvioAmostras: agora,
+    previsaoRetorno: payload.previsaoRetorno ?? atual.previsaoRetorno,
+    atualizadoEm: agora,
+  }
+  processosMock = processosMock.map((item) => (item.id === id ? atualizado : item))
+  sincronizarVinculoNaOcorrencia(atualizado)
+  return { ok: true, processo: structuredClone(atualizado) }
+}
+
+// aguardando_resultado → com_resultado. Write-once: o guard de status já
+// impede uma segunda chamada no fluxo normal (uma vez registrado, o
+// processo não está mais em 'aguardando_resultado'), então não precisa de
+// um motivo de rejeição à parte pra "já registrado" — reaproveita
+// 'status_invalido'. Registros clínicos são imutáveis (CLAUDE.md raiz);
+// corrigir um resultado errado ficaria fora do escopo desta entrega (exigiria
+// um fluxo de retificação, como `ModalRegistrarVacina.tsx`).
+export function registrarResultadoMock(id: string, payload: RegistrarResultadoRequest): ResultadoTransicaoProcesso {
+  const atual = processosMock.find((item) => item.id === id)
+  if (!atual) return { ok: false, motivo: 'nao_encontrado' }
+  if (atual.statusProcesso !== 'aguardando_resultado') return { ok: false, motivo: 'status_invalido' }
+
+  const agora = new Date().toISOString()
+  const atualizado: Processo = {
+    ...atual,
+    statusProcesso: 'com_resultado',
+    resultadoLaboratorial: payload.resultadoLaboratorial,
+    dataResultado: agora,
+    desfechoAnimal: payload.desfechoAnimal,
+    atualizadoEm: agora,
+  }
+  processosMock = processosMock.map((item) => (item.id === id ? atualizado : item))
+  sincronizarVinculoNaOcorrencia(atualizado)
+  return { ok: true, processo: structuredClone(atualizado) }
+}
+
+// com_resultado → concluido.
+export function concluirProcessoMock(id: string): ResultadoTransicaoProcesso {
+  const atual = processosMock.find((item) => item.id === id)
+  if (!atual) return { ok: false, motivo: 'nao_encontrado' }
+  if (atual.statusProcesso !== 'com_resultado') return { ok: false, motivo: 'status_invalido' }
+
+  const agora = new Date().toISOString()
+  const atualizado: Processo = { ...atual, statusProcesso: 'concluido', atualizadoEm: agora }
+  processosMock = processosMock.map((item) => (item.id === id ? atualizado : item))
+  sincronizarVinculoNaOcorrencia(atualizado)
+  return { ok: true, processo: structuredClone(atualizado) }
+}
+
+export type ResultadoAnexoDocumento =
+  | { ok: true; processo: Processo }
+  | { ok: false; motivo: 'nao_encontrado' }
+
+// `url: URL.createObjectURL` só é válida na aba atual — some ao recarregar a
+// página, mesma simplificação já aceita em ocorrenciasMockStore.ts.
+export function anexarDocumentoMock(
+  id: string,
+  payload: AnexarDocumentoRequest,
+  autorNome: string,
+): ResultadoAnexoDocumento {
+  const atual = processosMock.find((item) => item.id === id)
+  if (!atual) return { ok: false, motivo: 'nao_encontrado' }
+
+  const agora = new Date().toISOString()
+  const novoDocumento: DocumentoProcesso = {
+    id: crypto.randomUUID(),
+    nome: payload.arquivo.name,
+    url: URL.createObjectURL(payload.arquivo),
+    tipo: payload.tipo,
+    tamanho: payload.arquivo.size,
+    mimeType: payload.arquivo.type,
+    criadoEm: agora,
+    criadoPorNome: autorNome,
+  }
+  const atualizado: Processo = { ...atual, documentos: [...atual.documentos, novoDocumento], atualizadoEm: agora }
+  processosMock = processosMock.map((item) => (item.id === id ? atualizado : item))
+  return { ok: true, processo: structuredClone(atualizado) }
+}
+
+export type ResultadoVinculoPosterior =
+  | { ok: true; processo: Processo }
+  | {
+      ok: false
+      motivo: 'processo_nao_encontrado' | 'ocorrencia_nao_encontrada' | 'processo_ja_vinculado' | 'ocorrencia_ja_vinculada'
+    }
+
+// Emenda ao DER.md (2026-10-03): vínculo pode ser definido uma única vez
+// depois da criação, de qualquer um dos dois lados, mas só quando NENHUM dos
+// dois já tem vínculo — nunca para trocar um vínculo existente por outro.
+// Função única serve as duas direções de UI (ProcessoDetalhe e
+// OcorrenciaDetalhe chamam a mesma coisa, só mudando quem é "o lado que
+// iniciou a ação").
+export function vincularExistentesMock(processoId: string, ocorrenciaId: string): ResultadoVinculoPosterior {
+  const processo = processosMock.find((item) => item.id === processoId)
+  if (!processo) return { ok: false, motivo: 'processo_nao_encontrado' }
+  if (processo.ocorrenciaVinculado) return { ok: false, motivo: 'processo_ja_vinculado' }
+
+  const ocorrencia = buscarOcorrenciaMockPorId(ocorrenciaId, 'admin')
+  if (!ocorrencia) return { ok: false, motivo: 'ocorrencia_nao_encontrada' }
+  if (ocorrencia.processoVinculado) return { ok: false, motivo: 'ocorrencia_ja_vinculada' }
+
+  const agora = new Date().toISOString()
+  const atualizado: Processo = { ...processo, ocorrenciaVinculado: paraResumoVinculo(ocorrenciaId), atualizadoEm: agora }
+  processosMock = processosMock.map((item) => (item.id === processoId ? atualizado : item))
+
+  vincularProcessoNaOcorrenciaMock(ocorrenciaId, {
+    id: processo.id,
+    protocolo: processo.protocolo,
+    statusProcesso: processo.statusProcesso,
+    resultadoPendente: !processo.resultadoLaboratorial,
+  })
+
+  return { ok: true, processo: structuredClone(atualizado) }
 }

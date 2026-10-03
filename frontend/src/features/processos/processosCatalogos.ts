@@ -1,11 +1,14 @@
 import type {
+  DesfechoAnimal,
   Doenca,
   Laboratorio,
   MaterialBiologico,
+  ResultadoLaboratorial,
   Sintoma,
   StatusClinicoAmostra,
   StatusProcesso,
   TipoAbrigo,
+  TipoDocumentoProcesso,
 } from './processos.types'
 
 // Rótulos e opções fixas dos catálogos de docs/DER.md §3.5 — não vêm de
@@ -62,6 +65,39 @@ export const SINTOMA_OPCOES: { valor: Sintoma; label: string }[] = [
   { valor: 'vomito', label: 'Vômito' },
   { valor: 'aumento_linfonodo', label: 'Aumento de linfonodo' },
 ]
+
+export const DOCUMENTO_OPCOES: { valor: TipoDocumentoProcesso; label: string }[] = [
+  { valor: 'ficha_investigacao', label: 'Ficha de investigação' },
+  { valor: 'termo_envio', label: 'Termo de envio' },
+  { valor: 'foto_coleta', label: 'Foto da coleta' },
+  { valor: 'outro', label: 'Outro' },
+]
+
+export const DESFECHO_ANIMAL_OPCOES: { valor: DesfechoAnimal; label: string }[] = [
+  { valor: 'em_acompanhamento', label: 'Em acompanhamento' },
+  { valor: 'obito_natural', label: 'Óbito — Natural' },
+  { valor: 'obito_eutanasia', label: 'Óbito — Eutanásia' },
+  { valor: 'obito_outro', label: 'Óbito — Outro' },
+]
+
+// Exclui `aguardando` — não é uma opção de SELEÇÃO ao registrar resultado
+// (é o estado "antes de registrar", representado por
+// `resultadoLaboratorial` ainda `undefined`, nunca gravado explicitamente).
+export const RESULTADO_OPCOES: { valor: Exclude<ResultadoLaboratorial, 'aguardando'>; label: string }[] = [
+  { valor: 'positivo', label: 'Positivo' },
+  { valor: 'negativo', label: 'Negativo' },
+  { valor: 'inconclusivo', label: 'Inconclusivo' },
+  { valor: 'material_inadequado', label: 'Material inadequado' },
+  { valor: 'nao_realizado', label: 'Não realizado' },
+]
+
+export function labelDeDocumento(valor: TipoDocumentoProcesso): string {
+  return DOCUMENTO_OPCOES.find((item) => item.valor === valor)?.label ?? valor
+}
+
+export function labelDeDesfecho(valor: DesfechoAnimal): string {
+  return DESFECHO_ANIMAL_OPCOES.find((item) => item.valor === valor)?.label ?? valor
+}
 
 const STATUS_PROCESSO_LABEL: Record<StatusProcesso, string> = {
   aberto: 'Aberto',

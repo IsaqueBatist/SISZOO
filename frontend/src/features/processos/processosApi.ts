@@ -1,7 +1,23 @@
 import type { RoleKey } from '../../lib/nav'
 import type { PaginaResponse } from '../usuarios/usuarios.types'
-import { buscarProcessoMockPorId, criarProcessoMock, listarProcessosMock } from './processosMockStore'
-import type { CriarProcessoRequest, Processo, ProcessosFiltro } from './processos.types'
+import {
+  anexarDocumentoMock,
+  buscarProcessoMockPorId,
+  concluirProcessoMock,
+  criarProcessoMock,
+  enviarAmostrasMock,
+  listarProcessosMock,
+  registrarResultadoMock,
+  vincularExistentesMock,
+} from './processosMockStore'
+import type {
+  AnexarDocumentoRequest,
+  CriarProcessoRequest,
+  EnviarAmostrasRequest,
+  Processo,
+  ProcessosFiltro,
+  RegistrarResultadoRequest,
+} from './processos.types'
 
 // PROVISÓRIO: o módulo `processos` ainda não tem backend real (só pastas
 // .gitkeep em com.siszoo.processos). Segue literalmente o padrão ATUAL de
@@ -45,4 +61,47 @@ export async function listarProcessos(filtro: ProcessosFiltro, roleKey: RoleKey)
 export async function buscarProcessoPorId(id: string, roleKey: RoleKey): Promise<Processo | null> {
   await esperar(DELAY_MS)
   return buscarProcessoMockPorId(id, roleKey)
+}
+
+export async function enviarAmostras(id: string, payload: EnviarAmostrasRequest): Promise<Processo> {
+  await esperar(DELAY_MS)
+  const resultado = enviarAmostrasMock(id, payload)
+  if (!resultado.ok) throw new ErroNegocioProcesso('Não foi possível enviar as amostras ao laboratório.')
+  return resultado.processo
+}
+
+export async function registrarResultado(id: string, payload: RegistrarResultadoRequest): Promise<Processo> {
+  await esperar(DELAY_MS)
+  const resultado = registrarResultadoMock(id, payload)
+  if (!resultado.ok) throw new ErroNegocioProcesso('Não foi possível registrar o resultado.')
+  return resultado.processo
+}
+
+export async function concluirProcesso(id: string): Promise<Processo> {
+  await esperar(DELAY_MS)
+  const resultado = concluirProcessoMock(id)
+  if (!resultado.ok) throw new ErroNegocioProcesso('Não foi possível concluir o processo.')
+  return resultado.processo
+}
+
+export async function anexarDocumento(id: string, payload: AnexarDocumentoRequest, autorNome: string): Promise<Processo> {
+  await esperar(DELAY_MS)
+  const resultado = anexarDocumentoMock(id, payload, autorNome)
+  if (!resultado.ok) throw new ErroNegocioProcesso('Não foi possível anexar o documento.')
+  return resultado.processo
+}
+
+export async function vincularExistentes(processoId: string, ocorrenciaId: string): Promise<Processo> {
+  await esperar(DELAY_MS)
+  const resultado = vincularExistentesMock(processoId, ocorrenciaId)
+  if (!resultado.ok) {
+    const mensagens: Record<typeof resultado.motivo, string> = {
+      processo_nao_encontrado: 'Processo não encontrado.',
+      ocorrencia_nao_encontrada: 'Ocorrência não encontrada.',
+      processo_ja_vinculado: 'Este processo já tem uma ocorrência vinculada.',
+      ocorrencia_ja_vinculada: 'Esta ocorrência já tem um processo sanitário vinculado.',
+    }
+    throw new ErroNegocioProcesso(mensagens[resultado.motivo])
+  }
+  return resultado.processo
 }

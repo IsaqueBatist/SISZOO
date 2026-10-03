@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { badgeDeStatus, labelDeTipo } from '../ocorrencias/statusBadge'
 import { useOcorrenciasQuery } from '../ocorrencias/useOcorrencias'
 import type { OcorrenciaParaVinculo, VinculoDecisao } from './processos.types'
+import './SeletorVinculo.css'
 
 const TAMANHO_PAGINA = 20
 
@@ -13,6 +14,13 @@ interface SeletorOcorrenciaProps {
   erro?: string
   onSelecionar: (ocorrencia: OcorrenciaParaVinculo) => void
   onPular: () => void
+  // Reaproveitado fora do wizard (ProcessoDetalhe.tsx, vínculo pós-criação —
+  // emenda ao DER.md de 2026-10-03): nesse uso não existe "pular etapa", é
+  // "cancelar a busca", e não faz sentido falar em "wizard" no texto de
+  // ajuda. Opcionais com o texto original como default, pra não mudar nada
+  // no uso dentro do wizard.
+  textoAjuda?: string
+  textoBotaoPular?: string
 }
 
 // RN2: uma vez decidida (ocorrência selecionada OU "Pular esta etapa"), a
@@ -26,6 +34,8 @@ export function SeletorOcorrencia({
   erro,
   onSelecionar,
   onPular,
+  textoAjuda,
+  textoBotaoPular = 'Pular esta etapa',
 }: SeletorOcorrenciaProps) {
   const [busca, setBusca] = useState('')
 
@@ -55,8 +65,12 @@ export function SeletorOcorrencia({
   return (
     <div>
       <p className="hint" style={{ marginBottom: 16 }}>
-        Se este processo está sendo aberto a partir de uma denúncia ou ocorrência registrada, selecione-a abaixo. Caso
-        contrário, clique em <strong>Pular esta etapa</strong>.
+        {textoAjuda ?? (
+          <>
+            Se este processo está sendo aberto a partir de uma denúncia ou ocorrência registrada, selecione-a abaixo.
+            Caso contrário, clique em <strong>{textoBotaoPular}</strong>.
+          </>
+        )}
       </p>
       <div className="occur-search">
         <input
@@ -119,7 +133,7 @@ export function SeletorOcorrencia({
       {erro && <span className="err">{erro}</span>}
       <div className="flex gap-2" style={{ marginTop: 16 }}>
         <button type="button" className="btn btn-outline" onClick={onPular}>
-          Pular esta etapa
+          {textoBotaoPular}
         </button>
       </div>
     </div>
