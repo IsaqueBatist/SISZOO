@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from 'react-router-dom'
-import { useAuth } from '../features/auth/AuthContext'
+import { useAuth } from '@/features/auth/hooks/AuthContext'
 
 // OCORRENCIAS_DENUNCIAS:escrita (V3__seed_cargos.sql) só é concedida a
 // Administrador e Agente Sanitário — Veterinário tem apenas leitura nesse

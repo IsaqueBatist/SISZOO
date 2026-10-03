@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from 'react-router-dom'
-import { useAuth } from '../features/auth/AuthContext'
+import { useAuth } from '@/features/auth/hooks/AuthContext'
 
 export function RotaAdmin() {
   const { roleKey } = useAuth()

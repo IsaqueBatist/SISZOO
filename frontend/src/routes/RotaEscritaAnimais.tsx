@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from 'react-router-dom'
-import { useAuth } from '../features/auth/AuthContext'
+import { useAuth } from '@/features/auth/hooks/AuthContext'
 
 // GESTAO_ANIMAIS:escrita (V3__seed_cargos.sql) só é concedida a Administrador
 // e Veterinário — Agente Sanitário tem apenas leitura e recebe 403 do backend

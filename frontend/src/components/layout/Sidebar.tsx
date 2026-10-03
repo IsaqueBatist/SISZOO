@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { ROLES, getNavForRole, isNavGroup } from '../../lib/nav'
-import { useAuth } from '../../features/auth/AuthContext'
+import { useAuth } from '@/features/auth/hooks/AuthContext'
 import { Icon } from './Icon'
 
 interface SidebarProps {

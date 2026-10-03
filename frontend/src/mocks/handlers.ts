@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw'
-import type { Animal, AnimalRequest, Baia, BaiaRequest, CatalogosAnimal } from '../features/animais/animais.types'
-import { VACINAS, TIPOS_PROCEDIMENTO } from '../features/animais/catalogoClinico'
+import type { Animal, AnimalRequest, Baia, BaiaRequest, CatalogosAnimal } from '@/features/animais/types/animais.types'
+import { VACINAS, TIPOS_PROCEDIMENTO } from '@/features/animais/utils/catalogoClinico'
 import type {
   CriarPrescricaoRequest,
   CriarProcedimentoRequest,
@@ -10,11 +10,11 @@ import type {
   Procedimento,
   StatusRegistroClinico,
   Vacinacao,
-} from '../features/animais/historico.types'
-import type { LoginRequest, LoginResponse } from '../features/auth/auth.types'
+} from '@/features/animais/types/historico.types'
+import type { LoginRequest, LoginResponse } from '@/features/auth/types/auth.types'
 import { API_BASE_URL } from '../lib/env'
-import type { CriarUsuarioRequest, UsuarioListItem } from '../features/usuarios/usuarios.types'
-import type { PreferenciaUsuario } from '../features/configuracoes/configuracoes.types'
+import type { CriarUsuarioRequest, UsuarioListItem } from '@/features/usuarios/types/usuarios.types'
+import type { PreferenciaUsuario } from '@/features/configuracoes/types/configuracoes.types'
 
 // Usado só pelos testes automatizados (mocks/server.ts) — o dev browser
 // (mocks/browser.ts) não intercepta mais login/senha/usuários, que já existem

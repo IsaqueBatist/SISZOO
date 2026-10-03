@@ -3,8 +3,8 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it } from 'vitest'
 import { RotaProtegida } from './RotaProtegida'
-import { AuthProvider, SESSION_STORAGE_KEY } from '../features/auth/AuthContext'
-import type { Usuario } from '../features/auth/auth.types'
+import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
+import type { Usuario } from '@/features/auth/types/auth.types'
 
 const USUARIO_EXEMPLO: Usuario = {
   id: 'a1b2c3d4-0000-0000-0000-000000000099',

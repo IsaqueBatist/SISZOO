@@ -8,7 +8,7 @@ import { setupWorker } from 'msw/browser'
 // backend Spring/Postgres de verdade.
 // `ocorrencias` (T27/T28) não usa mais este worker — o mock desse módulo
 // virou um store local em memória (ver
-// features/ocorrencias/ocorrenciasMockStore.ts), sem service worker, depois
+// features/ocorrencias/api/ocorrenciasMockStore.ts), sem service worker, depois
 // que o MSW não interceptou de forma confiável em `npm run dev`.
 // Mantido como ponto de extensão para mocks temporários de módulos futuros
 // (processos, relatórios) enquanto não tiverem backend.

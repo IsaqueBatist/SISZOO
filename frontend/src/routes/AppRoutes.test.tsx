@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it } from 'vitest'
 import { AppRoutes } from './AppRoutes'
-import { AuthProvider, SESSION_STORAGE_KEY } from '../features/auth/AuthContext'
+import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
 import { CREDENCIAIS_VALIDAS } from '../mocks/handlers'
 
 function renderApp(initialEntry = '/login') {
