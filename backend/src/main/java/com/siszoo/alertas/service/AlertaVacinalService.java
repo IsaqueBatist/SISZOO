@@ -19,6 +19,7 @@ import com.siszoo.alertas.mapper.AlertaVacinalMapper;
 import com.siszoo.animais.clinico.entity.Vacinacao;
 import com.siszoo.animais.clinico.repository.VacinacaoRepository;
 import com.siszoo.animais.entity.Animal;
+import com.siszoo.animais.entity.StatusAnimal;
 
 // Ponto de extensao: listarAlertasVacinais() nao depende de nada da camada
 // HTTP, entao um futuro @Scheduled pode chama-la diretamente. Nao ha
@@ -48,7 +49,8 @@ public class AlertaVacinalService {
         // par (animal, vacina) ja vem resolvida pela query (ver comentario em
         // VacinacaoRepository.findVigentesParaAlertaVacinal) — aqui so falta
         // calcular data_validade/dias restantes/severidade e filtrar a janela.
-        List<Vacinacao> vigentes = vacinacaoRepository.findVigentesParaAlertaVacinal();
+        List<Vacinacao> vigentes =
+                vacinacaoRepository.findVigentesParaAlertaVacinal(StatusAnimal.CODIGOS_FORA_DA_CUSTODIA);
         if (vigentes.isEmpty()) {
             return List.of();
         }
