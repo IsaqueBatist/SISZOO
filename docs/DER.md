@@ -4,6 +4,8 @@
 
 > Documento de referência derivado das **15 telas + Design System** do protótipo navegável. Use-o para comparar com seu schema atual e validar cobertura.
 
+> **Estado do schema (V8).** As tabelas de usuários/acesso, animais, baias, registros clínicos (`vacinacao`, `procedimento`, `prescricao`) e seus catálogos estão descritas aqui **como existem nas migrations** (`backend/src/main/resources/db/migration`, V1–V8). As demais (ocorrências, processo sanitário, relatórios, `adocao`, `exame`, anexos) ainda **não têm tabela**: são o modelo-alvo, a validar na implementação de cada módulo.
+
 **Convenções**
 
 - `PK` chave primária · `FK` chave estrangeira · `?` opcional (nullable) · `*` obrigatório
@@ -18,14 +20,14 @@
 
 | Tela                                                                 | Módulo                 | Entidades-chave                                                                                                  |
 | -------------------------------------------------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `login.html`                                                         | Autenticação           | `usuario`, `sessao`                                                                                              |
+| `login.html`                                                         | Autenticação           | `usuario` (JWT stateless — sessão não é persistida)                                                              |
 | `dashboard.html`                                                     | Agregações             | views/derivadas de quase tudo                                                                                    |
 | `alerta.html`                                                        | Alertas (detalhe)      | `alerta_*` (computado)                                                                                           |
-| `animais.html` / `animal.html` / `cadastrar-animal.html`             | Animais                | `animal`, `vacinacao`, `procedimento`, `medicacao`, `exame`, `adocao`                                            |
+| `animais.html` / `animal.html` / `cadastrar-animal.html`             | Animais                | `animal`, `vacinacao`, `procedimento`, `prescricao`, `exame`, `adocao`                                           |
 | `ocorrencias.html` / `ocorrencia.html` / `cadastrar-ocorrencia.html` | Ocorrências            | `ocorrencia`, `denunciante`, `denunciado`, `movimentacao_ocorrencia`, `anexo_ocorrencia`                         |
 | `processos.html` / `processo.html` / `cadastrar-processo.html`       | Processos Sanitários   | `processo_sanitario`, `responsavel_processo`, `animal_amostrado`, `documento_processo`, `resultado_laboratorial` |
 | `baias.html`                                                         | Infraestrutura         | `baia`                                                                                                           |
-| `usuarios.html`                                                      | Administração          | `usuario`, `perfil`                                                                                              |
+| `usuarios.html`                                                      | Administração          | `usuario`, `cargo`, `usuario_cargo`                                                                              |
 | `relatorios.html` + `relatorios/*`                                   | Relatórios             | `relatorio_gerado`, `tipo_relatorio`                                                                             |
 | `configuracoes.html`                                                 | Preferências/catálogos | `preferencia_usuario`, `catalogo_*`, `auditoria_evento`                                                          |
 
@@ -39,7 +41,6 @@
 erDiagram
 
   %% ============ USUÁRIOS / SEGURANÇA ============
-  USUARIO ||--o{ SESSAO : "abre"
   USUARIO ||--o{ USUARIO_CARGO : "recebe"
   CARGO ||--o{ USUARIO_CARGO : "concedido via"
   USUARIO ||--|| PREFERENCIA_USUARIO : "configura"
@@ -53,17 +54,22 @@ erDiagram
   ANIMAL }o--o| BAIA : "ocupa"
   ANIMAL ||--o{ VACINACAO : "recebeu"
   ANIMAL ||--o{ PROCEDIMENTO : "passou"
-  ANIMAL ||--o{ MEDICACAO : "toma"
+  ANIMAL ||--o{ PRESCRICAO : "toma"
   ANIMAL ||--o{ EXAME : "tem"
   ANIMAL ||--o| ADOCAO : "foi adotado em"
   ANIMAL ||--o{ ANIMAL_AMOSTRADO : "é amostrado em"
   ANIMAL ||--o{ ANEXO_ANIMAL : "tem"
 
   VACINACAO }o--|| VACINA : "do tipo"
-  VACINACAO }o--|| USUARIO : "aplicada por"
+  VACINACAO }o--o| USUARIO : "aplicada por"
+  VACINACAO |o--o| VACINACAO : "retifica"
   PROCEDIMENTO }o--|| TIPO_PROCEDIMENTO : "do tipo"
-  PROCEDIMENTO }o--|| USUARIO : "executado por"
-  MEDICACAO }o--|| USUARIO : "prescrita por"
+  PROCEDIMENTO }o--o| USUARIO : "executado por"
+  PROCEDIMENTO |o--o| PROCEDIMENTO : "retifica"
+  PRESCRICAO }o--|| MEDICAMENTO : "de"
+  PRESCRICAO }o--o| USUARIO : "prescrita por"
+  PRESCRICAO |o--o| PRESCRICAO : "retifica"
+  MEDICAMENTO }o--|| CATEGORIA_FARMACOLOGICA : "da categoria"
   EXAME }o--|| LABORATORIO : "executado em"
 
   %% ============ BAIA / INFRAESTRUTURA ============
@@ -182,18 +188,7 @@ erDiagram
 | relatorios  | R     | R   | R      |
 | usuarios    | RWD   | —   | —      |
 
-#### `sessao`
-
-| Campo          | Tipo         | Obrig. | Observações |
-| -------------- | ------------ | ------ | ----------- |
-| `id`           | uuid PK      | \*     |             |
-| `usuario_id`   | FK `usuario` | \*     |             |
-| `token_hash`   | varchar(512) | \*     |             |
-| `ip`           | varchar(45)  | ?      |             |
-| `user_agent`   | text         | ?      |             |
-| `criada_em`    | timestamp    | \*     |             |
-| `expira_em`    | timestamp    | \*     |             |
-| `encerrada_em` | timestamp    | ?      |             |
+> **Sem tabela de sessão.** A autenticação é JWT stateless (`SessionCreationPolicy.STATELESS`): o token não é persistido. A tabela `sessao` criada em V2 nunca foi usada e foi removida em V8.
 
 #### `preferencia_usuario`
 
@@ -266,63 +261,91 @@ erDiagram
 
 `recolhimento`, `abandono`, `entrega_voluntaria`, `resgate`, `apreensao_judicial`.
 
+> **Registros clínicos (`vacinacao`, `procedimento`, `prescricao`) são imutáveis.** Não há alteração nem exclusão: uma correção é um registro novo com `retifica_id` apontando para o original, que fica preservado; cada registro aceita uma única retificação (`UNIQUE (retifica_id)` → 409). O autor (`*_por_id`) é nulo só em dado legado e não pode ser removido fisicamente enquanto referenciado (`ON DELETE RESTRICT`, V7). Catálogo completo de regras (RN-C01…RN-C06, RN-A01…): `docs/regras-negocio-clinico.md`.
+
 #### `vacinacao`
 
-| Campo            | Tipo         | Obrig. | Observações                                 |
-| ---------------- | ------------ | ------ | ------------------------------------------- |
-| `id`             | uuid PK      | \*     |                                             |
-| `animal_id`      | FK `animal`  | \*     |                                             |
-| `vacina_id`      | FK `vacina`  | \*     |                                             |
-| `data_aplicacao` | date         | \*     |                                             |
-| `data_validade`  | date         | \*     | calculada = aplicação + intervalo da vacina |
-| `dose`           | varchar(20)  | ?      | "1ª", "Reforço"                             |
-| `lote`           | varchar(40)  | ?      |                                             |
-| `veterinario_id` | FK `usuario` | \*     |                                             |
-| `observacoes`    | text         | ?      |                                             |
-| `criado_em`      | timestamp    | \*     |                                             |
+| Campo             | Tipo            | Obrig. | Observações                                                                                              |
+| ----------------- | --------------- | ------ | -------------------------------------------------------------------------------------------------------- |
+| `id`              | uuid PK         | \*     |                                                                                                          |
+| `animal_id`       | FK `animal`     | \*     |                                                                                                          |
+| `vacina_id`       | FK `vacina`     | \*     |                                                                                                          |
+| `aplicado_por_id` | FK `usuario`    | ?      | usuário autenticado no registro · `ON DELETE RESTRICT`                                                   |
+| `data_aplicacao`  | date            | \*     | não pode ser futura (RN-C06)                                                                             |
+| `numero_dose`     | integer         | ?      |                                                                                                          |
+| `dose_quantidade` | decimal(8,3)    | \*     |                                                                                                          |
+| `dose_unidade`    | enum            | \*     | `MILIGRAMA`, `MICROGRAMA`, `GRAMA`, `MILILITRO`, `UNIDADE_INTERNACIONAL` · obrigatória em linha nova (`CHECK … NOT VALID`, V7); legados podem ser nulos (RN-C05) |
+| `lote`            | varchar(100)    | ?      |                                                                                                          |
+| `observacoes`     | text            | ?      |                                                                                                          |
+| `retifica_id`     | FK `vacinacao`  | ?      | único (`uq_vacinacao_retifica_id`)                                                                       |
+| `criado_em`       | timestamp       | \*     |                                                                                                          |
 
 **Regras**
 
-- Alerta `vacina_vencendo` quando `data_validade - hoje ≤ 7d`.
-- Alerta `vacina_vencida` quando `data_validade < hoje`.
+- Não há coluna de validade: o vencimento é derivado de `data_aplicacao + vacina.intervalo_meses`, considerando só a aplicação vigente (fim da cadeia de retificação, mais recente por vacina/animal — RN-A02).
+- Alerta `vacina_vencendo` quando o vencimento derivado cai em até 7 dias; `vacina_vencida` quando já passou.
 
 #### `vacina` (catálogo)
 
-| Campo                                                                                                                                                          | Tipo |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| `id` PK · `nome` (Antirrábica, V10, V8, V4 felinos, Giárdia, Gripe canina, FeLV, Leishmaniose) · `especie_aplicavel` (canino/felino/ambos) · `intervalo_meses` |
+| Campo             | Tipo         | Obrig. | Observações                                                                                     |
+| ----------------- | ------------ | ------ | ----------------------------------------------------------------------------------------------- |
+| `id`              | uuid PK      | \*     |                                                                                                 |
+| `codigo`          | varchar(30)  | \*     | único (`antirrabica`, `v10`, `v8`, `v4_felinos`, `giardia`, `gripe_canina`, `felv`, `leishmaniose`) |
+| `nome`            | varchar(100) | \*     |                                                                                                 |
+| `intervalo_meses` | integer      | ?      | seed provisório de 12 meses (pendente CCZ)                                                      |
+| `ativo`           | boolean      | \*     | default `true`                                                                                  |
+
+> Vínculo vacina–espécie (`especie_aplicavel`) não existe no schema — pendente de decisão do CCZ.
 
 #### `procedimento`
 
-| Campo                  | Tipo                   | Obrig. | Observações                |
-| ---------------------- | ---------------------- | ------ | -------------------------- |
-| `id`                   | uuid PK                | \*     |                            |
-| `animal_id`            | FK `animal`            | \*     |                            |
-| `tipo_procedimento_id` | FK `tipo_procedimento` | \*     |                            |
-| `data`                 | timestamp              | \*     |                            |
-| `descricao`            | text                   | ?      |                            |
-| `veterinario_id`       | FK `usuario`           | \*     |                            |
-| `resultado`            | text                   | ?      | "Sem intercorrência", etc. |
-| `anexo_url`            | text                   | ?      | laudo                      |
+| Campo                  | Tipo                   | Obrig. | Observações                                     |
+| ---------------------- | ---------------------- | ------ | ----------------------------------------------- |
+| `id`                   | uuid PK                | \*     |                                                 |
+| `animal_id`            | FK `animal`            | \*     |                                                 |
+| `tipo_procedimento_id` | FK `tipo_procedimento` | \*     |                                                 |
+| `executado_por_id`     | FK `usuario`           | ?      | usuário autenticado no registro · `ON DELETE RESTRICT` |
+| `data`                 | date                   | \*     |                                                 |
+| `descricao`            | text                   | ?      |                                                 |
+| `resultado`            | text                   | ?      | "Sem intercorrência", etc.                      |
+| `retifica_id`          | FK `procedimento`      | ?      | único (`uq_procedimento_retifica_id`)           |
+| `criado_em`            | timestamp              | \*     |                                                 |
+
+> Anexo de laudo (`anexo_url`) ainda não modelado.
 
 #### `tipo_procedimento` (catálogo)
 
-`atendimento_clinico`, `castracao`, `cirurgia_maior`, `vacinacao` (link bidirecional opcional com `vacinacao`).
+`id` uuid PK · `codigo` varchar(30) único · `nome` varchar(100) · `ativo` boolean (default `true`).
 
-#### `medicacao`
+Valores: `atendimento_clinico`, `castracao`, `cirurgia_maior`, `vacinacao`.
 
-| Campo               | Tipo         | Obrig. |
-| ------------------- | ------------ | ------ | ----------------------------------------------- |
-| `id`                | uuid PK      | \*     |
-| `animal_id`         | FK `animal`  | \*     |
-| `medicamento`       | varchar(120) | \*     |
-| `dose`              | varchar(60)  | \*     |
-| `via_administracao` | enum         | ?      | `oral`, `intramuscular`, `subcutanea`, `topica` |
-| `data_inicio`       | date         | \*     |
-| `data_fim_prevista` | date         | ?      |
-| `data_fim_real`     | date         | ?      |
-| `veterinario_id`    | FK `usuario` | \*     |
-| `status`            | enum         | \*     | `ativa`, `encerrada`, `cancelada`               |
+#### `prescricao`
+
+| Campo                 | Tipo               | Obrig. | Observações                                                       |
+| --------------------- | ------------------ | ------ | ----------------------------------------------------------------- |
+| `id`                  | uuid PK            | \*     |                                                                   |
+| `animal_id`           | FK `animal`        | \*     |                                                                   |
+| `prescrito_por_id`    | FK `usuario`       | ?      | usuário autenticado no registro · `ON DELETE RESTRICT`            |
+| `medicamento_id`      | FK `medicamento`   | \*     |                                                                   |
+| `data_inicio`         | date               | \*     | pode ser futura (início programado)                               |
+| `data_fim_prevista`   | date               | ?      |                                                                   |
+| `data_fim_real`       | date               | ?      |                                                                   |
+| `frequencia_aplicada` | integer            | \*     | lida junto com `unidade_frequencia`                               |
+| `unidade_frequencia`  | enum               | \*     | `HORAS`, `DIAS`                                                   |
+| `dose_quantidade`     | decimal(8,3)       | \*     |                                                                   |
+| `dose_unidade`        | enum               | \*     | `MILIGRAMA`, `MICROGRAMA`, `GRAMA`, `MILILITRO`, `UNIDADE_INTERNACIONAL` |
+| `via_administracao`   | enum               | \*     | `ORAL`, `INTRAVENOSA`, `INTRAMUSCULAR`, `SUBCUTANEA`, `TOPICA`    |
+| `status`              | enum               | \*     | `ATIVA`, `CONCLUIDA`, `SUSPENSA`, `CANCELADA`                     |
+| `retifica_id`         | FK `prescricao`    | ?      | único (`uq_prescricao_retifica_id`) · encerrar = retificar        |
+| `criado_em`           | timestamp          | \*     |                                                                   |
+
+#### `medicamento` (catálogo)
+
+`id` uuid PK · `nome` varchar(100) · `categoria_id` FK `categoria_farmacologica` · `ativo` boolean (default `true`).
+
+#### `categoria_farmacologica` (catálogo)
+
+`id` uuid PK · `nome` varchar(100) único · `ativo` boolean (default `true`).
 
 #### `exame`
 
@@ -368,7 +391,7 @@ erDiagram
 
 | Campo          | Tipo           | Obrig. | Observações                                                                      |
 | -------------- | -------------- | ------ | -------------------------------------------------------------------------------- |
-| `id`           | smallint PK    | \*     |                                                                                  |
+| `id`           | uuid PK        | \*     |                                                                                  |
 | `nome`         | varchar(40)    | \*     | "Baia 3", "Gatil A", "Externa 2"                                                 |
 | `tipo_baia_id` | FK `tipo_baia` | \*     | interna / gatil / externa                                                        |
 | `capacidade`   | smallint       | \*     | **própria de cada baia** (não há mais "padrão global")                           |
@@ -654,10 +677,10 @@ Campos: `id`, `codigo`, `nome`, `tipo` ("padrão raiva", "multidoenças", "apoio
 
 **Queries de origem** (referência):
 
-- `vacina_vencendo`: `vacinacao WHERE data_validade BETWEEN now() AND now() + 7d`
+- `vacina_vencendo`: `vacinacao` vigente (`VacinacaoRepository#findVigentesParaAlertaVacinal`) com `data_aplicacao + vacina.intervalo_meses` entre hoje e hoje + 7d — regras RN-A01… em `docs/regras-negocio-clinico.md`
 - `sem_avaliacao_30d`: `animal WHERE max(procedimento.data) < now() - 30d`
 - `baia_superlotada`: `baia WHERE atual_ocupacao > capacidade`
-- `medicacao_ativa`: `medicacao WHERE status = 'ativa' AND data_fim_prevista BETWEEN now() AND now() + 7d`
+- `medicacao_ativa`: `prescricao WHERE status = 'ATIVA' AND data_fim_prevista BETWEEN now() AND now() + 7d`
 - `ficha_incompleta`: `animal WHERE ficha_completa = false`
 - `nao_castrado`: `animal WHERE esterilizado = false AND status = 'disponivel_adocao'`
 
@@ -689,7 +712,8 @@ Campos: `id`, `codigo`, `nome`, `tipo` ("padrão raiva", "multidoenças", "apoio
 
 | Origem                                        | Destino                   | Cardinalidade                                      | Notas |
 | --------------------------------------------- | ------------------------- | -------------------------------------------------- | ----- |
-| `usuario` → `perfil`                          | N:1                       | obrigatório                                        |
+| `usuario` → `cargo`                           | N:N via `usuario_cargo`   | um usuário pode acumular cargos                    |
+| `vacinacao`/`procedimento`/`prescricao` → si mesma | 0..1:0..1 via `retifica_id` | retificação única (UNIQUE) |
 | `animal` → `baia`                             | N:1 (opcional)            | animal pode estar em trânsito                      |
 | `animal` → `vacinacao`                        | 1:N                       |                                                    |
 | `animal` → `adocao`                           | 1:0..1                    | unique constraint em `animal_id`                   |
