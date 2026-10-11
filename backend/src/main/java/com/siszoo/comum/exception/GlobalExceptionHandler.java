@@ -1,5 +1,11 @@
 package com.siszoo.comum.exception;
 
+import java.util.Comparator;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -7,6 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.siszoo.animais.clinico.exception.CategoriaFarmacologicaInvalidaException;
+import com.siszoo.animais.clinico.exception.DataAplicacaoFuturaException;
 import com.siszoo.animais.clinico.exception.MedicamentoInvalidoException;
 import com.siszoo.animais.clinico.exception.MedicamentoNaoEncontradoException;
 import com.siszoo.animais.clinico.exception.PrescricaoNaoEncontradaException;
@@ -37,6 +44,8 @@ import com.siszoo.usuarios.exception.UsuarioNaoPodeDesativarASiMesmoException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(CredencialInvalidaException.class)
     public ResponseEntity<ErroResponse> handleCredencialInvalida() {
@@ -80,10 +89,27 @@ public class GlobalExceptionHandler {
                 .body(new ErroResponse("Notificacao de alertas criticos nao pode ser desativada"));
     }
 
+    // `campos` lista cada campo rejeitado (ordenado pelo nome, para o corpo ser
+    // deterministico) — o cliente sabe o que corrigir sem depender do texto.
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErroResponse> handleValidacao() {
+    public ResponseEntity<ErroResponse> handleValidacao(MethodArgumentNotValidException ex) {
+        List<ErroResponse.CampoInvalido> campos = ex.getBindingResult().getFieldErrors().stream()
+                .map(erro -> new ErroResponse.CampoInvalido(erro.getField(), erro.getDefaultMessage()))
+                .sorted(Comparator.comparing(ErroResponse.CampoInvalido::campo))
+                .toList();
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
-                .body(new ErroResponse("Dados invalidos"));
+                .body(new ErroResponse("Dados invalidos", campos));
+    }
+
+    // Ultima barreira: uma constraint do banco (NOT NULL, UNIQUE, FK, CHECK)
+    // barrou a escrita. O corpo e generico de proposito — a mensagem da
+    // excecao traz SQL, nomes de tabela/constraint e valores da linha, que
+    // ficam so no log do servidor.
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErroResponse> handleViolacaoIntegridade(DataIntegrityViolationException ex) {
+        log.warn("Violacao de integridade de dados barrada pelo banco", ex);
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErroResponse("Operacao viola uma regra de integridade dos dados"));
     }
 
     @ExceptionHandler(MicrochipJaCadastradoException.class)
@@ -186,6 +212,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroResponse> handleRetificacaoAnimalDivergente() {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
                 .body(new ErroResponse("Registro retificado pertence a outro animal"));
+    }
+
+    @ExceptionHandler(DataAplicacaoFuturaException.class)
+    public ResponseEntity<ErroResponse> handleDataAplicacaoFutura() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Data de aplicacao nao pode ser futura"));
     }
 
     @ExceptionHandler(RegistroJaRetificadoException.class)
