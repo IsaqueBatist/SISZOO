@@ -3,59 +3,69 @@ package com.siszoo.animais.clinico.controller;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.comparesEqualTo;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.context.annotation.Import;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.siszoo.animais.clinico.dto.CriarVacinacaoRequest;
+import com.siszoo.animais.clinico.entity.UnidadeDose;
 import com.siszoo.animais.clinico.entity.Vacinacao;
+import com.siszoo.animais.clinico.repository.VacinaRepository;
 import com.siszoo.animais.clinico.repository.VacinacaoRepository;
-import com.siszoo.animais.dto.CriarAnimalRequest;
+import com.siszoo.animais.repository.AnimalRepository;
 import com.siszoo.comum.AbstractIntegrationTest;
-import com.siszoo.usuarios.dto.LoginRequest;
+import com.siszoo.comum.ApiTesteFixture;
+import com.siszoo.comum.RelogioTesteConfig;
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.AuditoriaEvento;
-import com.siszoo.usuarios.entity.Cargo;
 import com.siszoo.usuarios.entity.Usuario;
-import com.siszoo.usuarios.entity.UsuarioCargo;
 import com.siszoo.usuarios.repository.AuditoriaEventoRepository;
-import com.siszoo.usuarios.repository.CargoRepository;
-import com.siszoo.usuarios.repository.UsuarioCargoRepository;
-import com.siszoo.usuarios.repository.UsuarioRepository;
 
 import io.restassured.http.ContentType;
-import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
+// Relogio fixo (RelogioTesteConfig): RN-C06 compara dataAplicacao com
+// LocalDate.now(clock) em Sao Paulo; LocalDate.now() da JVM (UTC na CI)
+// viraria "amanha" a partir das 21:00 locais e quebraria os testes. A virada
+// do dia em si e coberta por RegrasFusoHorarioIT.
+@Import(RelogioTesteConfig.class)
 class VacinacaoControllerIT extends AbstractIntegrationTest {
 
-    private static final UUID CARGO_ADMINISTRADOR_ID = UUID.fromString("00000000-0000-4000-8000-000000000001");
-    private static final UUID CARGO_AGENTE_SANITARIO_ID = UUID.fromString("00000000-0000-4000-8000-000000000003");
     private static final String EMAIL_ADMIN = "teste.admin.vacinacoes@itu.sp.gov.br";
-    private static final String SENHA_ADMIN = "SenhaAdmin123";
+    private static final LocalDate HOJE = RelogioTesteConfig.HOJE;
 
     @Autowired
-    private UsuarioRepository usuarioRepository;
+    private ApiTesteFixture fixture;
 
     @Autowired
-    private CargoRepository cargoRepository;
+    private JdbcTemplate jdbcTemplate;
 
     @Autowired
-    private UsuarioCargoRepository usuarioCargoRepository;
+    private AnimalRepository animalRepository;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    private VacinaRepository vacinaRepository;
 
     @Autowired
     private VacinacaoRepository vacinacaoRepository;
@@ -69,41 +79,27 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
     private String tokenAdmin;
 
     @BeforeEach
-    void seedAdmin() {
-        if (usuarioRepository.findByEmail(EMAIL_ADMIN).isEmpty()) {
-            Usuario admin = new Usuario();
-            admin.setEmail(EMAIL_ADMIN);
-            admin.setSenha(passwordEncoder.encode(SENHA_ADMIN));
-            admin.setNome("Admin");
-            admin.setSobrenome("Vacinacoes");
-            usuarioRepository.save(admin);
-
-            Cargo cargoAdministrador = cargoRepository.findById(CARGO_ADMINISTRADOR_ID).orElseThrow();
-            UsuarioCargo vinculo = new UsuarioCargo();
-            vinculo.setUsuario(admin);
-            vinculo.setCargo(cargoAdministrador);
-            usuarioCargoRepository.save(vinculo);
-        }
-
-        tokenAdmin = login(EMAIL_ADMIN, SENHA_ADMIN);
+    void autenticarAdmin() {
+        tokenAdmin = fixture.tokenAdmin(EMAIL_ADMIN, "Vacinacoes");
     }
 
     @Test
     void deveCriarVacinacaoComSucesso() {
-        String animalId = criarAnimalViaApi();
+        String animalId = fixture.criarAnimal(tokenAdmin);
 
         given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + tokenAdmin)
                 .body(new CriarVacinacaoRequest(
-                        UUID.fromString(animalId), "antirrabica", LocalDate.now(), 1,
-                        new BigDecimal("1.000"), null, "LOTE-1", "Sem intercorrencias", null))
+                        UUID.fromString(animalId), "antirrabica", HOJE, 1,
+                        new BigDecimal("1.000"), UnidadeDose.MILILITRO, "LOTE-1", "Sem intercorrencias", null))
                 .when()
                 .post("/api/vacinacoes")
                 .then()
                 .statusCode(200)
                 .body("vacinaCodigo", equalTo("antirrabica"))
                 .body("vacinaNome", equalTo("Antirrábica"))
+                .body("doseUnidade", equalTo("MILILITRO"))
                 .body("statusRegistro", equalTo("ATIVO"))
                 .body("retificaId", nullValue())
                 .body("retificadoPorId", nullValue());
@@ -111,18 +107,19 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
 
     @Test
     void deveRetornar422QuandoVacinaInvalida() {
-        String animalId = criarAnimalViaApi();
+        String animalId = fixture.criarAnimal(tokenAdmin);
 
         given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + tokenAdmin)
                 .body(new CriarVacinacaoRequest(
-                        UUID.fromString(animalId), "vacina-inexistente", LocalDate.now(), 1,
-                        new BigDecimal("1.000"), null, null, null, null))
+                        UUID.fromString(animalId), "vacina-inexistente", HOJE, 1,
+                        new BigDecimal("1.000"), UnidadeDose.MILILITRO, null, null, null))
                 .when()
                 .post("/api/vacinacoes")
                 .then()
-                .statusCode(422);
+                .statusCode(422)
+                .body("mensagem", equalTo("Vacina informada nao existe"));
     }
 
     @Test
@@ -136,8 +133,9 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("[RN-C01] PUT/PATCH/DELETE em vacinacao retornam 405")
     void deveRetornar405ParaPutPatchEDelete() {
-        String id = criarVacinacaoViaApi(criarAnimalViaApi(), null).path("id");
+        String id = fixture.criarVacinacao(tokenAdmin, fixture.criarAnimal(tokenAdmin), HOJE, null);
 
         given().header("Authorization", "Bearer " + tokenAdmin).when().put("/api/vacinacoes/" + id)
                 .then().statusCode(405);
@@ -149,26 +147,21 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
 
     @Test
     void deveRetornar403QuandoAgenteSanitarioTentaCriarVacinacao() {
-        String tokenAgente = criarUsuarioComCargoERetornarToken(
-                "teste.agente.vacinacoes@itu.sp.gov.br", "SenhaAgente123", CARGO_AGENTE_SANITARIO_ID);
-        String animalId = criarAnimalViaApi();
+        String tokenAgente = fixture.tokenComCargo(
+                "teste.agente.vacinacoes@itu.sp.gov.br", "Teste", "Vacinacoes",
+                ApiTesteFixture.CARGO_AGENTE_SANITARIO_ID);
+        String animalId = fixture.criarAnimal(tokenAdmin);
 
-        given()
-                .contentType(ContentType.JSON)
-                .header("Authorization", "Bearer " + tokenAgente)
-                .body(new CriarVacinacaoRequest(
-                        UUID.fromString(animalId), "antirrabica", LocalDate.now(), 1,
-                        new BigDecimal("1.000"), null, null, null, null))
-                .when()
-                .post("/api/vacinacoes")
+        fixture.postarVacinacao(tokenAgente, animalId, HOJE, UnidadeDose.MILILITRO, null)
                 .then()
                 .statusCode(403);
     }
 
     @Test
+    @DisplayName("[RN-C02][RN-C03] retificacao preserva o original e gera ATUALIZACAO com antes/depois")
     void deveRetificarSemAlterarOriginalEGerarUmEventoDeAuditoria() {
-        String animalId = criarAnimalViaApi();
-        String idOriginal = criarVacinacaoViaApi(animalId, null).path("id");
+        String animalId = fixture.criarAnimal(tokenAdmin);
+        String idOriginal = fixture.criarVacinacao(tokenAdmin, animalId, HOJE, null);
 
         Vacinacao original = vacinacaoRepository.findById(UUID.fromString(idOriginal)).orElseThrow();
         BigDecimal doseOriginal = original.getDoseQuantidade();
@@ -180,8 +173,8 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + tokenAdmin)
                 .body(new CriarVacinacaoRequest(
-                        UUID.fromString(animalId), "antirrabica", LocalDate.now(), 1,
-                        new BigDecimal("2.000"), null, "LOTE-CORRIGIDO", "Dose corrigida",
+                        UUID.fromString(animalId), "antirrabica", HOJE, 1,
+                        new BigDecimal("2.000"), UnidadeDose.MILILITRO, "LOTE-CORRIGIDO", "Dose corrigida",
                         UUID.fromString(idOriginal)))
                 .when()
                 .post("/api/vacinacoes")
@@ -191,7 +184,7 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
                 .body("doseQuantidade", equalTo(2.0f))
                 .extract().response().path("id");
 
-        assertThat(idCorrecao, org.hamcrest.Matchers.not(equalTo(idOriginal)));
+        assertThat(idCorrecao, not(equalTo(idOriginal)));
 
         // A linha original nao pode ter sido alterada por UPDATE algum.
         Vacinacao originalReconsultada = vacinacaoRepository.findById(UUID.fromString(idOriginal)).orElseThrow();
@@ -238,105 +231,130 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("[RN-C02] retificacao de registro de outro animal retorna 422")
     void deveRetornar422QuandoRetificaApontaParaRegistroDeOutroAnimal() {
-        String idVacinacao = criarVacinacaoViaApi(criarAnimalViaApi(), null).path("id");
-        String outroAnimalId = criarAnimalViaApi();
+        String idVacinacao = fixture.criarVacinacao(tokenAdmin, fixture.criarAnimal(tokenAdmin), HOJE, null);
+        String outroAnimalId = fixture.criarAnimal(tokenAdmin);
 
-        given()
-                .contentType(ContentType.JSON)
-                .header("Authorization", "Bearer " + tokenAdmin)
-                .body(new CriarVacinacaoRequest(
-                        UUID.fromString(outroAnimalId), "antirrabica", LocalDate.now(), 1,
-                        new BigDecimal("1.000"), null, null, null, UUID.fromString(idVacinacao)))
-                .when()
-                .post("/api/vacinacoes")
+        fixture.postarVacinacao(tokenAdmin, outroAnimalId, HOJE, UnidadeDose.MILILITRO, idVacinacao)
                 .then()
-                .statusCode(422);
+                .statusCode(422)
+                .body("mensagem", equalTo("Registro retificado pertence a outro animal"));
     }
 
     @Test
+    @DisplayName("[RN-C02] registro ja retificado nao pode ser retificado de novo (409)")
     void deveRetornar409QuandoRegistroJaFoiRetificado() {
-        String animalId = criarAnimalViaApi();
-        String idOriginal = criarVacinacaoViaApi(animalId, null).path("id");
-        criarVacinacaoViaApi(animalId, idOriginal);
+        String animalId = fixture.criarAnimal(tokenAdmin);
+        String idOriginal = fixture.criarVacinacao(tokenAdmin, animalId, HOJE, null);
+        fixture.criarVacinacao(tokenAdmin, animalId, HOJE, idOriginal);
 
-        given()
-                .contentType(ContentType.JSON)
-                .header("Authorization", "Bearer " + tokenAdmin)
-                .body(new CriarVacinacaoRequest(
-                        UUID.fromString(animalId), "antirrabica", LocalDate.now(), 1,
-                        new BigDecimal("3.000"), null, null, null, UUID.fromString(idOriginal)))
-                .when()
-                .post("/api/vacinacoes")
+        fixture.postarVacinacao(tokenAdmin, animalId, HOJE, UnidadeDose.MILILITRO, idOriginal)
                 .then()
-                .statusCode(409);
+                .statusCode(409)
+                .body("mensagem", equalTo("Registro ja foi retificado por outro"));
     }
 
-    private io.restassured.response.Response criarVacinacaoViaApi(String animalId, String retificaId) {
-        return given()
-                .contentType(ContentType.JSON)
-                .header("Authorization", "Bearer " + tokenAdmin)
-                .body(new CriarVacinacaoRequest(
-                        UUID.fromString(animalId), "antirrabica", LocalDate.now(), 1,
-                        new BigDecimal("1.000"), null, "LOTE-1", null,
-                        retificaId == null ? null : UUID.fromString(retificaId)))
-                .when()
-                .post("/api/vacinacoes")
+    @Test
+    @DisplayName("[RN-C06] dataAplicacao = hoje e aceita")
+    void deveAceitarDataAplicacaoHoje() {
+        fixture.postarVacinacao(tokenAdmin, fixture.criarAnimal(tokenAdmin), HOJE, UnidadeDose.MILILITRO, null)
                 .then()
                 .statusCode(200)
-                .extract()
-                .response();
+                .body("dataAplicacao", equalTo(HOJE.toString()));
     }
 
-    private String criarAnimalViaApi() {
-        CriarAnimalRequest request = new CriarAnimalRequest(
-                "Animal Vacinacao", "canino", "macho", null, null, null, null, null, null, null,
-                microchipUnico(), false, null, "disponivel_adocao", "resgate", LocalDateTime.now(),
-                null, null, null);
+    @Test
+    @DisplayName("[RN-C06] dataAplicacao = ontem e aceita")
+    void deveAceitarDataAplicacaoOntem() {
+        LocalDate ontem = HOJE.minusDays(1);
 
-        return given()
-                .contentType(ContentType.JSON)
-                .header("Authorization", "Bearer " + tokenAdmin)
-                .body(request)
-                .when()
-                .post("/api/animais")
+        fixture.postarVacinacao(tokenAdmin, fixture.criarAnimal(tokenAdmin), ontem, UnidadeDose.MILILITRO, null)
                 .then()
                 .statusCode(200)
-                .extract()
-                .path("id");
+                .body("dataAplicacao", equalTo(ontem.toString()));
     }
 
-    private String microchipUnico() {
-        return "MC" + UUID.randomUUID().toString().substring(0, 20);
-    }
-
-    private String criarUsuarioComCargoERetornarToken(String email, String senha, UUID cargoId) {
-        if (usuarioRepository.findByEmail(email).isEmpty()) {
-            Usuario usuario = new Usuario();
-            usuario.setEmail(email);
-            usuario.setSenha(passwordEncoder.encode(senha));
-            usuario.setNome("Teste");
-            usuario.setSobrenome("Vacinacoes");
-            usuarioRepository.save(usuario);
-
-            Cargo cargo = cargoRepository.findById(cargoId).orElseThrow();
-            UsuarioCargo vinculo = new UsuarioCargo();
-            vinculo.setUsuario(usuario);
-            vinculo.setCargo(cargo);
-            usuarioCargoRepository.save(vinculo);
-        }
-        return login(email, senha);
-    }
-
-    private String login(String email, String senha) {
-        return given()
-                .contentType(ContentType.JSON)
-                .body(new LoginRequest(email, senha))
-                .when()
-                .post("/api/auth/login")
+    @Test
+    @DisplayName("[RN-C06] dataAplicacao = amanha retorna 422")
+    void deveRetornar422QuandoDataAplicacaoFutura() {
+        fixture.postarVacinacao(
+                        tokenAdmin, fixture.criarAnimal(tokenAdmin), HOJE.plusDays(1), UnidadeDose.MILILITRO, null)
                 .then()
-                .statusCode(200)
-                .extract()
-                .path("token");
+                .statusCode(422)
+                .body("mensagem", equalTo("Data de aplicacao nao pode ser futura"));
+    }
+
+    @Test
+    @DisplayName("[RN-C06] retificacao com dataAplicacao = amanha retorna 422 e nao retifica o original")
+    void deveRetornar422QuandoRetificacaoTemDataAplicacaoFutura() {
+        String animalId = fixture.criarAnimal(tokenAdmin);
+        String idOriginal = fixture.criarVacinacao(tokenAdmin, animalId, HOJE, null);
+
+        fixture.postarVacinacao(tokenAdmin, animalId, HOJE.plusDays(1), UnidadeDose.MILILITRO, idOriginal)
+                .then()
+                .statusCode(422)
+                .body("mensagem", equalTo("Data de aplicacao nao pode ser futura"));
+
+        assertThat(vacinacaoRepository.existsByRetificaId(UUID.fromString(idOriginal)), equalTo(false));
+    }
+
+    // O mesmo POST com unidade e aceito (deveAceitarDataAplicacaoHoje): so a
+    // ausencia de doseUnidade explica o 422, e `campos` aponta exatamente ela.
+    @Test
+    @DisplayName("[RN-C05] vacinacao sem doseUnidade retorna 422 apontando o campo doseUnidade")
+    void deveRetornar422QuandoDoseUnidadeAusente() {
+        fixture.postarVacinacao(tokenAdmin, fixture.criarAnimal(tokenAdmin), HOJE, null, null)
+                .then()
+                .statusCode(422)
+                .body("mensagem", equalTo("Dados invalidos"))
+                .body("campos.campo", contains("doseUnidade"));
+    }
+
+    // Sem @Transactional no metodo: cada chamada do JdbcTemplate roda em
+    // autocommit na propria conexao, entao o erro de FK do DELETE nao deixa
+    // uma transacao PostgreSQL abortada para as releituras seguintes.
+    @Test
+    @DisplayName("[RN-C04] autor referenciado por vacinacao nao pode ser excluido fisicamente")
+    void naoDeveExcluirFisicamenteUsuarioAutorDeVacinacao() {
+        Usuario autor = fixture.criarUsuarioSemCargo(
+                "teste.autor." + UUID.randomUUID().toString().substring(0, 8) + "@itu.sp.gov.br",
+                "Autor", "Vacinacao");
+
+        // Autor so e referenciado por esta vacinacao (o animal e criado pelo
+        // admin): a unica FK que pode barrar o DELETE e fk_vacinacao_usuario.
+        Vacinacao vacinacao = new Vacinacao();
+        vacinacao.setAnimal(animalRepository.findById(UUID.fromString(fixture.criarAnimal(tokenAdmin))).orElseThrow());
+        vacinacao.setVacina(vacinaRepository.findByCodigo("antirrabica").orElseThrow());
+        vacinacao.setAplicadoPor(autor);
+        vacinacao.setDataAplicacao(HOJE);
+        vacinacao.setDoseQuantidade(new BigDecimal("1.000"));
+        vacinacao.setDoseUnidade(UnidadeDose.MILILITRO);
+        vacinacaoRepository.save(vacinacao);
+
+        DataIntegrityViolationException erro = assertThrows(DataIntegrityViolationException.class,
+                () -> jdbcTemplate.update("DELETE FROM usuario WHERE id = ?", autor.getId()));
+        assertThat(erro.getMessage(), containsString("fk_vacinacao_usuario"));
+
+        UUID aplicadoPorId = jdbcTemplate.queryForObject(
+                "SELECT aplicado_por_id FROM vacinacao WHERE id = ?", UUID.class, vacinacao.getId());
+        assertThat(aplicadoPorId, equalTo(autor.getId()));
+    }
+
+    @Test
+    @DisplayName("[RN-C04] FKs de autor dos tres registros clinicos sao ON DELETE RESTRICT")
+    void fksDeAutorDosRegistrosClinicosDevemSerRestrict() {
+        Map<String, String> tipoDeletePorConstraint = jdbcTemplate.queryForList("""
+                SELECT conname, confdeltype::text AS confdeltype FROM pg_constraint
+                WHERE conname IN ('fk_vacinacao_usuario', 'fk_procedimento_usuario', 'fk_prescricao_usuario')
+                """).stream()
+                .collect(Collectors.toMap(
+                        linha -> (String) linha.get("conname"), linha -> (String) linha.get("confdeltype")));
+
+        // 'r' = RESTRICT no catalogo do PostgreSQL (pg_constraint.confdeltype).
+        assertThat(tipoDeletePorConstraint, equalTo(Map.of(
+                "fk_vacinacao_usuario", "r",
+                "fk_procedimento_usuario", "r",
+                "fk_prescricao_usuario", "r")));
     }
 }

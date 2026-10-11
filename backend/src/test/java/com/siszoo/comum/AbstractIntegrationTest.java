@@ -10,7 +10,9 @@ import io.restassured.RestAssured;
 import org.junit.jupiter.api.BeforeEach;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(TestcontainersConfiguration.class)
+// ApiTesteFixture vem aqui (e nao em cada classe) para nao multiplicar
+// contextos Spring em cache — a chave do contexto inclui os @Import.
+@Import({TestcontainersConfiguration.class, ApiTesteFixture.class})
 @ActiveProfiles("test")
 public abstract class AbstractIntegrationTest {
 
