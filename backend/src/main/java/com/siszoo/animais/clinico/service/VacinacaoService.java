@@ -1,5 +1,7 @@
 package com.siszoo.animais.clinico.service;
 
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +19,7 @@ import com.siszoo.animais.clinico.dto.CriarVacinacaoRequest;
 import com.siszoo.animais.clinico.dto.VacinacaoResponse;
 import com.siszoo.animais.clinico.entity.Vacina;
 import com.siszoo.animais.clinico.entity.Vacinacao;
+import com.siszoo.animais.clinico.exception.DataAplicacaoFuturaException;
 import com.siszoo.animais.clinico.exception.RegistroJaRetificadoException;
 import com.siszoo.animais.clinico.exception.RetificacaoAnimalDivergenteException;
 import com.siszoo.animais.clinico.exception.VacinaInvalidaException;
@@ -48,6 +51,7 @@ public class VacinacaoService {
     private final UsuarioRepository usuarioRepository;
     private final VacinacaoMapper vacinacaoMapper;
     private final AuditoriaEventoService auditoriaEventoService;
+    private final Clock clock;
 
     public VacinacaoService(
             VacinacaoRepository vacinacaoRepository,
@@ -55,13 +59,15 @@ public class VacinacaoService {
             AnimalRepository animalRepository,
             UsuarioRepository usuarioRepository,
             VacinacaoMapper vacinacaoMapper,
-            AuditoriaEventoService auditoriaEventoService) {
+            AuditoriaEventoService auditoriaEventoService,
+            Clock clock) {
         this.vacinacaoRepository = vacinacaoRepository;
         this.vacinaRepository = vacinaRepository;
         this.animalRepository = animalRepository;
         this.usuarioRepository = usuarioRepository;
         this.vacinacaoMapper = vacinacaoMapper;
         this.auditoriaEventoService = auditoriaEventoService;
+        this.clock = clock;
     }
 
     @Transactional
@@ -70,6 +76,14 @@ public class VacinacaoService {
                 .orElseThrow(AnimalNaoEncontradoException::new);
         Usuario usuarioAutenticado = usuarioRepository.findById(usuarioAutenticadoId)
                 .orElseThrow(UsuarioNaoEncontradoException::new);
+
+        // RN-C06: vale tambem para retificacao (mesmo caminho). Validado aqui
+        // com o Clock do projeto, nao com @PastOrPresent (relogio proprio do
+        // Bean Validation, que ignoraria o fuso de ClockConfig e o Clock fixo
+        // dos testes).
+        if (request.dataAplicacao().isAfter(LocalDate.now(clock))) {
+            throw new DataAplicacaoFuturaException();
+        }
 
         Vacinacao anterior = request.retificaId() != null
                 ? validarRetificacao(request.retificaId(), animal.getId())
