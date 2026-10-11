@@ -2,7 +2,6 @@ package com.siszoo.animais.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -16,8 +15,8 @@ import com.siszoo.animais.entity.MotivoEntrada;
 import com.siszoo.animais.entity.StatusAnimal;
 import com.siszoo.animais.entity.TipoBaia;
 import com.siszoo.comum.AbstractIntegrationTest;
+import com.siszoo.comum.ApiTesteFixture;
 import com.siszoo.usuarios.entity.Usuario;
-import com.siszoo.usuarios.repository.UsuarioRepository;
 
 // @Transactional mantém a sessão Hibernate aberta durante o teste, necessário
 // para acessar os proxies @ManyToOne(LAZY) de Animal (especie/status/etc.)
@@ -45,7 +44,7 @@ class AnimalRepositoryIT extends AbstractIntegrationTest {
     private TipoBaiaRepository tipoBaiaRepository;
 
     @Autowired
-    private UsuarioRepository usuarioRepository;
+    private ApiTesteFixture fixture;
 
     @Test
     void deveTerCatalogosSeedados() {
@@ -61,7 +60,7 @@ class AnimalRepositoryIT extends AbstractIntegrationTest {
 
     @Test
     void devePersistirAnimalComTodasAsFks() {
-        Usuario usuario = criarUsuario("veterinario.teste1@itu.sp.gov.br");
+        Usuario usuario = fixture.criarUsuarioSemCargo("veterinario.teste1@itu.sp.gov.br", "Veterinario", "Teste");
         Baia baia = criarBaia();
         Especie especie = especieRepository.findByCodigo("canino").orElseThrow();
         StatusAnimal status = statusAnimalRepository.findByCodigo("disponivel_adocao").orElseThrow();
@@ -73,7 +72,7 @@ class AnimalRepositoryIT extends AbstractIntegrationTest {
         animal.setSexo("macho");
         animal.setStatus(status);
         animal.setMotivoEntrada(motivoEntrada);
-        animal.setDataEntrada(LocalDateTime.now());
+        animal.setDataEntrada(fixture.agora());
         animal.setBaia(baia);
         animal.setCriadoPor(usuario);
         animalRepository.save(animal);
@@ -89,7 +88,7 @@ class AnimalRepositoryIT extends AbstractIntegrationTest {
 
     @Test
     void devePersistirAnimalSemBaiaPorEstarEmTransito() {
-        Usuario usuario = criarUsuario("veterinario.teste2@itu.sp.gov.br");
+        Usuario usuario = fixture.criarUsuarioSemCargo("veterinario.teste2@itu.sp.gov.br", "Veterinario", "Teste");
         Especie especie = especieRepository.findByCodigo("felino").orElseThrow();
         StatusAnimal status = statusAnimalRepository.findByCodigo("em_quarentena").orElseThrow();
         MotivoEntrada motivoEntrada = motivoEntradaRepository.findByCodigo("abandono").orElseThrow();
@@ -100,7 +99,7 @@ class AnimalRepositoryIT extends AbstractIntegrationTest {
         animal.setSexo("femea");
         animal.setStatus(status);
         animal.setMotivoEntrada(motivoEntrada);
-        animal.setDataEntrada(LocalDateTime.now());
+        animal.setDataEntrada(fixture.agora());
         animal.setBaia(null);
         animal.setCriadoPor(usuario);
         animalRepository.save(animal);
@@ -108,15 +107,6 @@ class AnimalRepositoryIT extends AbstractIntegrationTest {
         Animal encontrado = animalRepository.findById(animal.getId()).orElseThrow();
 
         assertThat(encontrado.getBaia()).isNull();
-    }
-
-    private Usuario criarUsuario(String email) {
-        Usuario usuario = new Usuario();
-        usuario.setEmail(email);
-        usuario.setSenha("hash-fake-de-teste");
-        usuario.setNome("Veterinario");
-        usuario.setSobrenome("Teste");
-        return usuarioRepository.save(usuario);
     }
 
     private Baia criarBaia() {

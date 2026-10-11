@@ -11,7 +11,8 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,6 +25,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.siszoo.comum.AbstractIntegrationTest;
+import com.siszoo.comum.ApiTesteFixture;
 import com.siszoo.usuarios.dto.LoginRequest;
 import com.siszoo.usuarios.dto.TrocarSenhaRequest;
 import com.siszoo.usuarios.entity.AcaoAuditoria;
@@ -62,9 +64,18 @@ class AuthControllerIT extends AbstractIntegrationTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private ApiTesteFixture fixture;
+
+    @Autowired
+    private Clock clock;
+
     @Value("${siszoo.jwt.secret}")
     private String jwtSecret;
 
+    // Seed sem fixture.tokenComCargo de proposito: ele faria login aqui, e esse
+    // LOGIN extra satisfaria sozinho a asserção de auditoria do login abaixo.
+    // A senha também é o objeto do teste, então fica explícita.
     @BeforeEach
     void seedUsuarioDeTeste() {
         if (usuarioRepository.findByEmail(EMAIL_TESTE).isPresent()) {
@@ -103,7 +114,7 @@ class AuthControllerIT extends AbstractIntegrationTest {
         SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
         Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
 
-        assertThat(claims.getExpiration().getTime(), greaterThan(System.currentTimeMillis()));
+        assertThat(claims.getExpiration().getTime(), greaterThan(Instant.now(clock).toEpochMilli()));
 
         @SuppressWarnings("unchecked")
         List<String> cargos = claims.get("cargos", List.class);
@@ -117,7 +128,7 @@ class AuthControllerIT extends AbstractIntegrationTest {
         usuario.setSenha(passwordEncoder.encode(SENHA_TESTE));
         usuario.setNome("Teste");
         usuario.setSobrenome("SenhaAlterada");
-        usuario.setSenhaAlteradaEm(LocalDateTime.now());
+        usuario.setSenhaAlteradaEm(fixture.agora());
         usuarioRepository.save(usuario);
 
         given()
@@ -172,7 +183,7 @@ class AuthControllerIT extends AbstractIntegrationTest {
         usuario.setSobrenome("TrocaSenha");
         usuarioRepository.save(usuario);
 
-        String token = obterToken(email, senhaAtual);
+        String token = fixture.login(email, senhaAtual);
 
         given()
                 .contentType(ContentType.JSON)
@@ -199,7 +210,7 @@ class AuthControllerIT extends AbstractIntegrationTest {
         usuario.setSobrenome("TrocaSenhaDivergente");
         usuarioRepository.save(usuario);
 
-        String token = obterToken(email, senhaAtual);
+        String token = fixture.login(email, senhaAtual);
 
         given()
                 .contentType(ContentType.JSON)
@@ -222,7 +233,7 @@ class AuthControllerIT extends AbstractIntegrationTest {
         usuario.setSobrenome("TrocaSenhaCurta");
         usuarioRepository.save(usuario);
 
-        String token = obterToken(email, senhaAtual);
+        String token = fixture.login(email, senhaAtual);
 
         given()
                 .contentType(ContentType.JSON)
@@ -243,17 +254,5 @@ class AuthControllerIT extends AbstractIntegrationTest {
                 .post("/api/auth/senha")
                 .then()
                 .statusCode(401);
-    }
-
-    private String obterToken(String email, String senha) {
-        return given()
-                .contentType(ContentType.JSON)
-                .body(new LoginRequest(email, senha))
-                .when()
-                .post("/api/auth/login")
-                .then()
-                .statusCode(200)
-                .extract()
-                .path("token");
     }
 }

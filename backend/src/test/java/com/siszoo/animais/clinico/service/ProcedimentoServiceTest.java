@@ -37,6 +37,10 @@ import com.siszoo.usuarios.service.AuditoriaEventoService;
 @ExtendWith(MockitoExtension.class)
 class ProcedimentoServiceTest {
 
+    // Data fixa (nao LocalDate.now()): o service nao le relogio, a data e so
+    // dado do request — fixa-la deixa o teste deterministico.
+    private static final LocalDate HOJE = LocalDate.of(2026, 9, 10);
+
     @Mock
     private ProcedimentoRepository procedimentoRepository;
 
@@ -121,11 +125,11 @@ class ProcedimentoServiceTest {
     }
 
     private CriarProcedimentoRequest requestSemRetificacao(UUID animalId) {
-        return new CriarProcedimentoRequest(animalId, "castracao", LocalDate.now(), "Descricao", "Resultado", null);
+        return new CriarProcedimentoRequest(animalId, "castracao", HOJE, "Descricao", "Resultado", null);
     }
 
     private CriarProcedimentoRequest requestComRetificacao(UUID animalId, UUID retificaId) {
-        return new CriarProcedimentoRequest(animalId, "castracao", LocalDate.now(), "Descricao", "Resultado", retificaId);
+        return new CriarProcedimentoRequest(animalId, "castracao", HOJE, "Descricao", "Resultado", retificaId);
     }
 
     private Animal animalComId(UUID id) {
@@ -143,6 +147,6 @@ class ProcedimentoServiceTest {
     private ProcedimentoResponse respostaQualquer() {
         return new ProcedimentoResponse(
                 UUID.randomUUID(), UUID.randomUUID(), "castracao", "Castração",
-                null, null, LocalDate.now(), "Descricao", "Resultado", null, null, "ATIVO", null);
+                null, null, HOJE, "Descricao", "Resultado", null, null, "ATIVO", null);
     }
 }
