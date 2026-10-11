@@ -81,7 +81,7 @@ class PrescricaoServiceTest {
 
         assertThat(resultado).isEqualTo(response);
         verify(prescricaoRepository).save(any(Prescricao.class));
-        verify(auditoriaEventoService).registrar(usuario, AcaoAuditoria.CRIACAO, "prescricao", null, response);
+        verify(auditoriaEventoService).registrar(usuario, AcaoAuditoria.CRIACAO, "prescricao", null, null, response);
     }
 
     @Test

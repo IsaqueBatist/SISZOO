@@ -107,7 +107,7 @@ public class UsuarioService {
         preferenciaUsuarioRepository.save(preferencias);
 
         UsuarioResponse response = usuarioMapper.toResponse(usuario);
-        auditoriaEventoService.registrar(usuario, AcaoAuditoria.CRIACAO, "usuario", null, response);
+        auditoriaEventoService.registrar(usuario, AcaoAuditoria.CRIACAO, "usuario", usuario.getId(), null, response);
 
         return response;
     }
@@ -162,7 +162,7 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
 
         AcaoAuditoria acao = ativar ? AcaoAuditoria.REATIVACAO : AcaoAuditoria.DESATIVACAO;
-        auditoriaEventoService.registrar(usuario, acao, "usuario", null, null);
+        auditoriaEventoService.registrar(usuario, acao, "usuario", usuario.getId(), null, null);
 
         return usuarioMapper.toResponse(usuario);
     }
@@ -188,7 +188,7 @@ public class UsuarioService {
         antes.put("telefone", telefoneAnterior);
         Map<String, String> depois = new HashMap<>();
         depois.put("telefone", telefoneNovo);
-        auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "usuario", antes, depois);
+        auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "usuario", usuario.getId(), antes, depois);
 
         return usuarioMapper.toResponse(usuario);
     }

@@ -47,6 +47,11 @@ public class AuditoriaEvento {
     @Column(nullable = false, length = 100)
     private String entidade;
 
+    // Polimórfica: id do registro de `entidade`, sem FK. Nula nos eventos
+    // anteriores à V9 (sem backfill por decisão de projeto).
+    @Column(name = "entidade_id")
+    private UUID entidadeId;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "payload_antes")
     private String payloadAntes;

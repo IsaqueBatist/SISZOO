@@ -1,5 +1,7 @@
 package com.siszoo.usuarios.service;
 
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -33,11 +35,13 @@ public class AuditoriaEventoService {
     }
 
     @Transactional
-    public void registrar(Usuario usuario, AcaoAuditoria acao, String entidade, Object payloadAntes, Object payloadDepois) {
+    public void registrar(Usuario usuario, AcaoAuditoria acao, String entidade, UUID entidadeId,
+            Object payloadAntes, Object payloadDepois) {
         AuditoriaEvento evento = new AuditoriaEvento();
         evento.setUsuario(usuario);
         evento.setAcao(acao);
         evento.setEntidade(entidade);
+        evento.setEntidadeId(entidadeId);
         evento.setPayloadAntes(serializar(payloadAntes));
         evento.setPayloadDepois(serializar(payloadDepois));
         auditoriaEventoRepository.save(evento);

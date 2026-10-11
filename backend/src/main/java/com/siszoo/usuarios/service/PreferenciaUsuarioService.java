@@ -63,7 +63,7 @@ public class PreferenciaUsuarioService {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(UsuarioNaoEncontradoException::new);
         PreferenciaUsuarioResponse response = preferenciaUsuarioMapper.toResponse(preferencias);
-        auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "preferencia_usuario", null, response);
+        auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "preferencia_usuario", preferencias.getId(), null, response);
 
         return response;
     }

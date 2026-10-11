@@ -105,10 +105,10 @@ public class VacinacaoService {
         VacinacaoResponse response = vacinacaoMapper.toResponse(vacinacao, null);
 
         if (anterior != null) {
-            auditoriaEventoService.registrar(usuarioAutenticado, AcaoAuditoria.ATUALIZACAO, "vacinacao",
+            auditoriaEventoService.registrar(usuarioAutenticado, AcaoAuditoria.ATUALIZACAO, "vacinacao", vacinacao.getId(),
                     vacinacaoMapper.toResponse(anterior, null), response);
         } else {
-            auditoriaEventoService.registrar(usuarioAutenticado, AcaoAuditoria.CRIACAO, "vacinacao", null, response);
+            auditoriaEventoService.registrar(usuarioAutenticado, AcaoAuditoria.CRIACAO, "vacinacao", vacinacao.getId(), null, response);
         }
 
         return response;

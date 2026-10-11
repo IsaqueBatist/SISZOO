@@ -87,12 +87,13 @@ class VacinacaoServiceTest {
         when(usuarioRepository.findById(usuarioId)).thenReturn(Optional.of(usuario));
         when(vacinaRepository.findByCodigo("antirrabica")).thenReturn(Optional.of(vacina));
         when(vacinacaoMapper.toResponse(any(Vacinacao.class), isNull())).thenReturn(response);
+        UUID novoId = simularIdGeradoNoSave();
 
         VacinacaoResponse resultado = vacinacaoService.criar(requestSemRetificacao(animalId), usuarioId);
 
         assertThat(resultado).isEqualTo(response);
         verify(vacinacaoRepository).save(any(Vacinacao.class));
-        verify(auditoriaEventoService).registrar(usuario, AcaoAuditoria.CRIACAO, "vacinacao", null, response);
+        verify(auditoriaEventoService).registrar(usuario, AcaoAuditoria.CRIACAO, "vacinacao", novoId, null, response);
     }
 
     @Test
@@ -121,11 +122,23 @@ class VacinacaoServiceTest {
             Vacinacao argumento = invocation.getArgument(0);
             return argumento == anterior ? respostaAntes : respostaDepois;
         });
+        UUID novoId = simularIdGeradoNoSave();
 
         VacinacaoResponse resultado = vacinacaoService.criar(requestComRetificacao(animalId, retificaId), usuarioId);
 
         assertThat(resultado).isEqualTo(respostaDepois);
-        verify(auditoriaEventoService).registrar(usuario, AcaoAuditoria.ATUALIZACAO, "vacinacao", respostaAntes, respostaDepois);
+        // entidadeId e o do NOVO registro (V2), nao o do retificado.
+        verify(auditoriaEventoService).registrar(usuario, AcaoAuditoria.ATUALIZACAO, "vacinacao", novoId, respostaAntes, respostaDepois);
+    }
+
+    private UUID simularIdGeradoNoSave() {
+        UUID novoId = UUID.randomUUID();
+        when(vacinacaoRepository.save(any(Vacinacao.class))).thenAnswer(invocation -> {
+            Vacinacao salva = invocation.getArgument(0);
+            salva.setId(novoId);
+            return salva;
+        });
+        return novoId;
     }
 
     @Test
@@ -148,7 +161,7 @@ class VacinacaoServiceTest {
                 .isInstanceOf(RetificacaoAnimalDivergenteException.class);
 
         verify(vacinacaoRepository, never()).save(any());
-        verify(auditoriaEventoService, never()).registrar(any(), any(), any(), any(), any());
+        verify(auditoriaEventoService, never()).registrar(any(), any(), any(), any(), any(), any());
     }
 
     @Test

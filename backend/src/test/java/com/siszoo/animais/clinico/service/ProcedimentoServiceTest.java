@@ -75,7 +75,7 @@ class ProcedimentoServiceTest {
 
         assertThat(resultado).isEqualTo(response);
         verify(procedimentoRepository).save(any(Procedimento.class));
-        verify(auditoriaEventoService).registrar(usuario, AcaoAuditoria.CRIACAO, "procedimento", null, response);
+        verify(auditoriaEventoService).registrar(usuario, AcaoAuditoria.CRIACAO, "procedimento", null, null, response);
     }
 
     @Test

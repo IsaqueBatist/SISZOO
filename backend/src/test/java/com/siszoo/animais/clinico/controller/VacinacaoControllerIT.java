@@ -238,6 +238,21 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
         assertThat(depois.get("doseQuantidade").decimalValue(), comparesEqualTo(new BigDecimal("2.000")));
         assertThat(antes.get("id").asString(), equalTo(idOriginal));
         assertThat(depois.get("id").asString(), equalTo(idCorrecao));
+        // entidade_id aponta para o NOVO registro (V2), o mesmo de payload_depois.
+        assertThat(evento.getEntidadeId(), equalTo(UUID.fromString(idCorrecao)));
+    }
+
+    @Test
+    @DisplayName("[Issue #2] criacao grava entidade_id = id da vacinacao criada")
+    void deveGravarEntidadeIdNoEventoDeCriacao() {
+        String idVacinacao = fixture.criarVacinacao(tokenAdmin, fixture.criarAnimal(tokenAdmin), HOJE, null);
+
+        List<AuditoriaEvento> eventos = auditoriaEventoRepository.findAll().stream()
+                .filter(e -> "vacinacao".equals(e.getEntidade()) && e.getAcao() == AcaoAuditoria.CRIACAO)
+                .filter(e -> UUID.fromString(idVacinacao).equals(e.getEntidadeId()))
+                .toList();
+        assertThat(eventos, hasSize(1));
+        assertThat(objectMapper.readTree(eventos.get(0).getPayloadDepois()).get("id").asString(), equalTo(idVacinacao));
     }
 
     @Test
