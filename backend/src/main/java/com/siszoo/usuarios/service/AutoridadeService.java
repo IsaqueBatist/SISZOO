@@ -15,6 +15,8 @@ import com.siszoo.usuarios.repository.CargoPermissaoRepository;
 @Service
 public class AutoridadeService {
 
+    private static final String FEATURE_GERAL = "geral";
+
     private final CargoPermissaoRepository cargoPermissaoRepository;
 
     public AutoridadeService(CargoPermissaoRepository cargoPermissaoRepository) {
@@ -29,17 +31,26 @@ public class AutoridadeService {
         List<CargoPermissao> permissoes = cargoPermissaoRepository.findByCargoNomeIn(nomesCargos);
         Set<GrantedAuthority> autoridades = new HashSet<>();
         for (CargoPermissao permissao : permissoes) {
-            String modulo = permissao.getModulo().name();
+            String prefixo = prefixo(permissao);
             if (permissao.isLeitura()) {
-                autoridades.add(new SimpleGrantedAuthority(modulo + ":leitura"));
+                autoridades.add(new SimpleGrantedAuthority(prefixo + ":leitura"));
             }
             if (permissao.isEscrita()) {
-                autoridades.add(new SimpleGrantedAuthority(modulo + ":escrita"));
+                autoridades.add(new SimpleGrantedAuthority(prefixo + ":escrita"));
             }
             if (permissao.isExclusao()) {
-                autoridades.add(new SimpleGrantedAuthority(modulo + ":exclusao"));
+                autoridades.add(new SimpleGrantedAuthority(prefixo + ":exclusao"));
             }
         }
         return autoridades;
+    }
+
+    // Feature 'geral' e o acesso ao modulo inteiro (MODULO:acao, formato
+    // historico das @PreAuthorize). Qualquer outra feature gera uma autoridade
+    // propria (MODULO:feature:acao) e nunca concede o modulo inteiro — ex.:
+    // OCORRENCIAS_DENUNCIAS:denunciante_sigiloso:leitura (V10).
+    private static String prefixo(CargoPermissao permissao) {
+        String modulo = permissao.getModulo().name();
+        return FEATURE_GERAL.equals(permissao.getFeature()) ? modulo : modulo + ":" + permissao.getFeature();
     }
 }
