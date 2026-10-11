@@ -12,12 +12,18 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import javax.sql.DataSource;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -42,6 +48,7 @@ import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.repository.AuditoriaEventoRepository;
 
 import io.restassured.http.ContentType;
+import io.restassured.response.Response;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
@@ -60,6 +67,9 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private DataSource dataSource;
 
     @Autowired
     private AnimalRepository animalRepository;
@@ -253,6 +263,62 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
                 .then()
                 .statusCode(409)
                 .body("mensagem", equalTo("Registro ja foi retificado por outro"));
+    }
+
+    // Corrida real, sem mock: uma transacao paralela insere a retificacao e
+    // segura o commit. A requisicao passa pela pre-checagem do service (nao
+    // enxerga a linha nao commitada) e o INSERT dela fica preso no indice
+    // unico de retifica_id; o commit da paralela a faz violar
+    // uq_vacinacao_retifica_id, que o handler deve traduzir no mesmo 409 da
+    // pre-checagem, e nao no 409 generico de integridade.
+    @Test
+    @DisplayName("[RN-C02] retificacao concorrente do mesmo registro responde 409 com mensagem especifica")
+    void deveRetornar409ComMensagemEspecificaQuandoRetificacaoConcorrenteViolaUnicidade() throws Exception {
+        String animalId = fixture.criarAnimal(tokenAdmin);
+        String idOriginal = fixture.criarVacinacao(tokenAdmin, animalId, HOJE, null);
+
+        try (Connection concorrente = dataSource.getConnection()) {
+            concorrente.setAutoCommit(false);
+            try (PreparedStatement insert = concorrente.prepareStatement("""
+                    INSERT INTO vacinacao (animal_id, vacina_id, data_aplicacao, dose_quantidade, dose_unidade, retifica_id)
+                    SELECT ?, id, ?, 1.000, 'MILILITRO', ? FROM vacina WHERE codigo = 'antirrabica'
+                    """)) {
+                insert.setObject(1, UUID.fromString(animalId));
+                insert.setObject(2, HOJE);
+                insert.setObject(3, UUID.fromString(idOriginal));
+                insert.executeUpdate();
+            }
+
+            CompletableFuture<Response> requisicao = CompletableFuture.supplyAsync(() ->
+                    fixture.postarVacinacao(tokenAdmin, animalId, HOJE, UnidadeDose.MILILITRO, idOriginal));
+
+            aguardarInsertBloqueadoEmVacinacao(requisicao);
+            concorrente.commit();
+
+            requisicao.get(30, TimeUnit.SECONDS)
+                    .then()
+                    .statusCode(409)
+                    .body("mensagem", equalTo("Registro ja foi retificado por outro"));
+        }
+    }
+
+    private void aguardarInsertBloqueadoEmVacinacao(CompletableFuture<Response> requisicao) throws InterruptedException {
+        long limite = System.nanoTime() + TimeUnit.SECONDS.toNanos(30);
+        while (System.nanoTime() < limite) {
+            if (requisicao.isDone()) {
+                throw new AssertionError("A requisicao terminou sem esperar a transacao concorrente: "
+                        + requisicao.join().asString());
+            }
+            Integer bloqueados = jdbcTemplate.queryForObject("""
+                    SELECT count(*) FROM pg_stat_activity
+                    WHERE wait_event_type = 'Lock' AND query ILIKE 'insert into vacinacao%'
+                    """, Integer.class);
+            if (bloqueados != null && bloqueados > 0) {
+                return;
+            }
+            Thread.sleep(50);
+        }
+        throw new AssertionError("O INSERT da requisicao nao chegou a esperar o indice unico de retifica_id");
     }
 
     @Test

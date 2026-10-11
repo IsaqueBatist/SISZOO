@@ -2,7 +2,10 @@ package com.siszoo.comum.exception;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
+import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -46,6 +49,9 @@ import com.siszoo.usuarios.exception.UsuarioNaoPodeDesativarASiMesmoException;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    private static final Set<String> CONSTRAINTS_RETIFICACAO_UNICA = Set.of(
+            "uq_vacinacao_retifica_id", "uq_procedimento_retifica_id", "uq_prescricao_retifica_id");
 
     @ExceptionHandler(CredencialInvalidaException.class)
     public ResponseEntity<ErroResponse> handleCredencialInvalida() {
@@ -104,12 +110,28 @@ public class GlobalExceptionHandler {
     // Ultima barreira: uma constraint do banco (NOT NULL, UNIQUE, FK, CHECK)
     // barrou a escrita. O corpo e generico de proposito — a mensagem da
     // excecao traz SQL, nomes de tabela/constraint e valores da linha, que
-    // ficam so no log do servidor.
+    // ficam so no log do servidor. Excecao: a unicidade de retifica_id so
+    // dispara quando duas retificacoes do mesmo registro passam juntas pela
+    // pre-checagem do service (RN-C02); a resposta e a mesma desse caminho.
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErroResponse> handleViolacaoIntegridade(DataIntegrityViolationException ex) {
         log.warn("Violacao de integridade de dados barrada pelo banco", ex);
+        String constraint = nomeDaConstraint(ex);
+        // Set.of rejeita contains(null): sem nome de constraint, segue o generico.
+        if (constraint != null && CONSTRAINTS_RETIFICACAO_UNICA.contains(constraint)) {
+            return handleRegistroJaRetificado();
+        }
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ErroResponse("Operacao viola uma regra de integridade dos dados"));
+    }
+
+    private static String nomeDaConstraint(Throwable ex) {
+        for (Throwable causa = ex; causa != null; causa = causa.getCause()) {
+            if (causa instanceof ConstraintViolationException violacao && violacao.getConstraintName() != null) {
+                return violacao.getConstraintName().toLowerCase(Locale.ROOT);
+            }
+        }
+        return null;
     }
 
     @ExceptionHandler(MicrochipJaCadastradoException.class)
