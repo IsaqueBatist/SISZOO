@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useAuth } from '@/features/auth/hooks/AuthContext'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import { ModalRegistrarProcedimento } from './ModalRegistrarProcedimento'
 import { useProcedimentosQuery } from '../hooks/useHistoricoAnimal'
 import type { Procedimento } from '../types/historico.types'

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useAuth } from '@/features/auth/hooks/AuthContext'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import { ModalRegistrarVacina } from './ModalRegistrarVacina'
 import { badgeReforcoVacina } from '../utils/regrasVacina'
 import { useVacinacoesQuery } from '../hooks/useHistoricoAnimal'

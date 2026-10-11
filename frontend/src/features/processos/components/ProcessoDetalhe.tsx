@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Icon } from '@/components/layout/Icon'
-import { useAuth } from '@/features/auth/hooks/AuthContext'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import { CardAnexarDocumento } from './CardAnexarDocumento'
 import { CardStatusProcesso } from './CardStatusProcesso'
 import { DOENCA_OPCOES, labelDeDesfecho, labelDeDoenca, labelDeDocumento, labelDeLaboratorio, SINTOMA_OPCOES } from '../utils/processosCatalogos'

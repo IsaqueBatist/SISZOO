@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Icon } from '@/components/layout/Icon'
-import { useAuth } from '@/features/auth/hooks/AuthContext'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useAnimaisQuery, useBaiasAtivasQuery, useCatalogosAnimaisQuery } from '../hooks/useAnimais'
 import { badgeDeEspecie, badgeDeStatus } from '../utils/statusBadge'
 import type { Animal, Pelagem, Porte, Sexo } from '../types/animais.types'

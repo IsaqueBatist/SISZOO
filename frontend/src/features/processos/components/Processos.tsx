@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '@/components/layout/Icon'
-import { useAuth } from '@/features/auth/hooks/AuthContext'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import { DOENCA_OPCOES, labelDeDoenca } from '../utils/processosCatalogos'
 import type { Doenca, StatusProcesso } from '../types/processos.types'
 import { badgeDeStatusProcesso, classeDeDoenca } from '../utils/statusBadge'
