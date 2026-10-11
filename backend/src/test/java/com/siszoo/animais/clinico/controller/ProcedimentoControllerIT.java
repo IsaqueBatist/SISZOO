@@ -13,47 +13,28 @@ import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.siszoo.animais.clinico.dto.CriarProcedimentoRequest;
 import com.siszoo.animais.clinico.entity.Procedimento;
 import com.siszoo.animais.clinico.repository.ProcedimentoRepository;
-import com.siszoo.animais.dto.CriarAnimalRequest;
 import com.siszoo.comum.AbstractIntegrationTest;
-import com.siszoo.usuarios.dto.LoginRequest;
+import com.siszoo.comum.ApiTesteFixture;
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.AuditoriaEvento;
-import com.siszoo.usuarios.entity.Cargo;
-import com.siszoo.usuarios.entity.Usuario;
-import com.siszoo.usuarios.entity.UsuarioCargo;
 import com.siszoo.usuarios.repository.AuditoriaEventoRepository;
-import com.siszoo.usuarios.repository.CargoRepository;
-import com.siszoo.usuarios.repository.UsuarioCargoRepository;
-import com.siszoo.usuarios.repository.UsuarioRepository;
 
 import io.restassured.http.ContentType;
 import tools.jackson.databind.ObjectMapper;
 
 class ProcedimentoControllerIT extends AbstractIntegrationTest {
 
-    private static final UUID CARGO_ADMINISTRADOR_ID = UUID.fromString("00000000-0000-4000-8000-000000000001");
-    private static final UUID CARGO_AGENTE_SANITARIO_ID = UUID.fromString("00000000-0000-4000-8000-000000000003");
     private static final String EMAIL_ADMIN = "teste.admin.procedimentos@itu.sp.gov.br";
-    private static final String SENHA_ADMIN = "SenhaAdmin123";
 
     @Autowired
-    private UsuarioRepository usuarioRepository;
-
-    @Autowired
-    private CargoRepository cargoRepository;
-
-    @Autowired
-    private UsuarioCargoRepository usuarioCargoRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private ApiTesteFixture fixture;
 
     @Autowired
     private ProcedimentoRepository procedimentoRepository;
@@ -65,36 +46,23 @@ class ProcedimentoControllerIT extends AbstractIntegrationTest {
     private ObjectMapper objectMapper;
 
     private String tokenAdmin;
+    private LocalDate hoje;
 
     @BeforeEach
-    void seedAdmin() {
-        if (usuarioRepository.findByEmail(EMAIL_ADMIN).isEmpty()) {
-            Usuario admin = new Usuario();
-            admin.setEmail(EMAIL_ADMIN);
-            admin.setSenha(passwordEncoder.encode(SENHA_ADMIN));
-            admin.setNome("Admin");
-            admin.setSobrenome("Procedimentos");
-            usuarioRepository.save(admin);
-
-            Cargo cargoAdministrador = cargoRepository.findById(CARGO_ADMINISTRADOR_ID).orElseThrow();
-            UsuarioCargo vinculo = new UsuarioCargo();
-            vinculo.setUsuario(admin);
-            vinculo.setCargo(cargoAdministrador);
-            usuarioCargoRepository.save(vinculo);
-        }
-
-        tokenAdmin = login(EMAIL_ADMIN, SENHA_ADMIN);
+    void autenticarAdmin() {
+        tokenAdmin = fixture.tokenAdmin(EMAIL_ADMIN, "Procedimentos");
+        hoje = fixture.hoje();
     }
 
     @Test
     void deveCriarProcedimentoComSucesso() {
-        String animalId = criarAnimalViaApi();
+        String animalId = fixture.criarAnimal(tokenAdmin);
 
         given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + tokenAdmin)
                 .body(new CriarProcedimentoRequest(
-                        UUID.fromString(animalId), "castracao", LocalDate.now(), "Castracao de rotina",
+                        UUID.fromString(animalId), "castracao", hoje, "Castracao de rotina",
                         "Sem intercorrencia", null))
                 .when()
                 .post("/api/procedimentos")
@@ -106,17 +74,18 @@ class ProcedimentoControllerIT extends AbstractIntegrationTest {
 
     @Test
     void deveRetornar422QuandoTipoProcedimentoInvalido() {
-        String animalId = criarAnimalViaApi();
+        String animalId = fixture.criarAnimal(tokenAdmin);
 
         given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + tokenAdmin)
                 .body(new CriarProcedimentoRequest(
-                        UUID.fromString(animalId), "tipo-inexistente", LocalDate.now(), null, null, null))
+                        UUID.fromString(animalId), "tipo-inexistente", hoje, null, null, null))
                 .when()
                 .post("/api/procedimentos")
                 .then()
-                .statusCode(422);
+                .statusCode(422)
+                .body("mensagem", equalTo("Tipo de procedimento informado nao existe"));
     }
 
     @Test
@@ -130,8 +99,9 @@ class ProcedimentoControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("[RN-C01] PUT/PATCH/DELETE em procedimento retornam 405")
     void deveRetornar405ParaPutPatchEDelete() {
-        String id = criarProcedimentoViaApi(criarAnimalViaApi(), null).path("id");
+        String id = criarProcedimentoViaApi(fixture.criarAnimal(tokenAdmin), null).path("id");
 
         given().header("Authorization", "Bearer " + tokenAdmin).when().put("/api/procedimentos/" + id)
                 .then().statusCode(405);
@@ -143,14 +113,15 @@ class ProcedimentoControllerIT extends AbstractIntegrationTest {
 
     @Test
     void deveRetornar403QuandoAgenteSanitarioTentaCriarProcedimento() {
-        String tokenAgente = criarUsuarioComCargoERetornarToken(
-                "teste.agente.procedimentos@itu.sp.gov.br", "SenhaAgente123", CARGO_AGENTE_SANITARIO_ID);
-        String animalId = criarAnimalViaApi();
+        String tokenAgente = fixture.tokenComCargo(
+                "teste.agente.procedimentos@itu.sp.gov.br", "Teste", "Procedimentos",
+                ApiTesteFixture.CARGO_AGENTE_SANITARIO_ID);
+        String animalId = fixture.criarAnimal(tokenAdmin);
 
         given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + tokenAgente)
-                .body(new CriarProcedimentoRequest(UUID.fromString(animalId), "castracao", LocalDate.now(), null, null, null))
+                .body(new CriarProcedimentoRequest(UUID.fromString(animalId), "castracao", hoje, null, null, null))
                 .when()
                 .post("/api/procedimentos")
                 .then()
@@ -158,8 +129,9 @@ class ProcedimentoControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("[RN-C02][RN-C03] retificacao de procedimento preserva o original e gera ATUALIZACAO")
     void deveRetificarSemAlterarOriginalEGerarUmEventoDeAuditoria() {
-        String animalId = criarAnimalViaApi();
+        String animalId = fixture.criarAnimal(tokenAdmin);
         String idOriginal = criarProcedimentoViaApi(animalId, null).path("id");
 
         Procedimento original = procedimentoRepository.findById(UUID.fromString(idOriginal)).orElseThrow();
@@ -170,7 +142,7 @@ class ProcedimentoControllerIT extends AbstractIntegrationTest {
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + tokenAdmin)
                 .body(new CriarProcedimentoRequest(
-                        UUID.fromString(animalId), "castracao", LocalDate.now(), "Descricao corrigida",
+                        UUID.fromString(animalId), "castracao", hoje, "Descricao corrigida",
                         "Resultado corrigido", UUID.fromString(idOriginal)))
                 .when()
                 .post("/api/procedimentos")
@@ -201,8 +173,9 @@ class ProcedimentoControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("[RN-C02] procedimento ja retificado nao pode ser retificado de novo (409)")
     void deveRetornar409QuandoRegistroJaFoiRetificado() {
-        String animalId = criarAnimalViaApi();
+        String animalId = fixture.criarAnimal(tokenAdmin);
         String idOriginal = criarProcedimentoViaApi(animalId, null).path("id");
         criarProcedimentoViaApi(animalId, idOriginal);
 
@@ -210,11 +183,12 @@ class ProcedimentoControllerIT extends AbstractIntegrationTest {
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + tokenAdmin)
                 .body(new CriarProcedimentoRequest(
-                        UUID.fromString(animalId), "castracao", LocalDate.now(), null, null, UUID.fromString(idOriginal)))
+                        UUID.fromString(animalId), "castracao", hoje, null, null, UUID.fromString(idOriginal)))
                 .when()
                 .post("/api/procedimentos")
                 .then()
-                .statusCode(409);
+                .statusCode(409)
+                .body("mensagem", equalTo("Registro ja foi retificado por outro"));
     }
 
     private io.restassured.response.Response criarProcedimentoViaApi(String animalId, String retificaId) {
@@ -222,7 +196,7 @@ class ProcedimentoControllerIT extends AbstractIntegrationTest {
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + tokenAdmin)
                 .body(new CriarProcedimentoRequest(
-                        UUID.fromString(animalId), "castracao", LocalDate.now(), "Descricao original", "Resultado original",
+                        UUID.fromString(animalId), "castracao", hoje, "Descricao original", "Resultado original",
                         retificaId == null ? null : UUID.fromString(retificaId)))
                 .when()
                 .post("/api/procedimentos")
@@ -230,57 +204,5 @@ class ProcedimentoControllerIT extends AbstractIntegrationTest {
                 .statusCode(200)
                 .extract()
                 .response();
-    }
-
-    private String criarAnimalViaApi() {
-        CriarAnimalRequest request = new CriarAnimalRequest(
-                "Animal Procedimento", "canino", "macho", null, null, null, null, null, null, null,
-                microchipUnico(), false, null, "disponivel_adocao", "resgate", LocalDateTime.now(),
-                null, null, null);
-
-        return given()
-                .contentType(ContentType.JSON)
-                .header("Authorization", "Bearer " + tokenAdmin)
-                .body(request)
-                .when()
-                .post("/api/animais")
-                .then()
-                .statusCode(200)
-                .extract()
-                .path("id");
-    }
-
-    private String microchipUnico() {
-        return "MC" + UUID.randomUUID().toString().substring(0, 20);
-    }
-
-    private String criarUsuarioComCargoERetornarToken(String email, String senha, UUID cargoId) {
-        if (usuarioRepository.findByEmail(email).isEmpty()) {
-            Usuario usuario = new Usuario();
-            usuario.setEmail(email);
-            usuario.setSenha(passwordEncoder.encode(senha));
-            usuario.setNome("Teste");
-            usuario.setSobrenome("Procedimentos");
-            usuarioRepository.save(usuario);
-
-            Cargo cargo = cargoRepository.findById(cargoId).orElseThrow();
-            UsuarioCargo vinculo = new UsuarioCargo();
-            vinculo.setUsuario(usuario);
-            vinculo.setCargo(cargo);
-            usuarioCargoRepository.save(vinculo);
-        }
-        return login(email, senha);
-    }
-
-    private String login(String email, String senha) {
-        return given()
-                .contentType(ContentType.JSON)
-                .body(new LoginRequest(email, senha))
-                .when()
-                .post("/api/auth/login")
-                .then()
-                .statusCode(200)
-                .extract()
-                .path("token");
     }
 }

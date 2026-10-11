@@ -1,6 +1,8 @@
 import { http, HttpResponse } from 'msw'
+import type { AlertaVacinalAnimal, AlertaVacinalItem } from '@/features/alertas/types/alertas.types'
 import type { Animal, AnimalRequest, Baia, BaiaRequest, CatalogosAnimal } from '@/features/animais/types/animais.types'
 import { VACINAS, TIPOS_PROCEDIMENTO } from '@/features/animais/utils/catalogoClinico'
+import { DIAS_ANTECEDENCIA_ALERTA_VACINA, diasAteVencimento, hojeEmItu } from '@/features/animais/utils/regrasVacina'
 import type {
   CriarPrescricaoRequest,
   CriarProcedimentoRequest,
@@ -9,6 +11,7 @@ import type {
   Prescricao,
   Procedimento,
   StatusRegistroClinico,
+  UnidadeDose,
   Vacinacao,
 } from '@/features/animais/types/historico.types'
 import type { LoginRequest, LoginResponse } from '@/features/auth/types/auth.types'
@@ -823,6 +826,22 @@ function seedVacinacoesMock(): VacinacaoMockInterna[] {
   ]
 }
 
+// Seed V5 do backend: toda vacina do catálogo tem intervalo_meses = 12
+// (provisório, pendente de decisão do CCZ — ver docs/regras-negocio-clinico.md).
+const INTERVALO_MESES_SEED_V5 = 12
+
+// Mesmos códigos de StatusAnimal.CODIGOS_FORA_DA_CUSTODIA (RN-A05).
+const STATUS_FORA_DA_CUSTODIA = ['adotado', 'obito_natural', 'obito_eutanasia', 'transferido']
+
+// Mesma aritmética de LocalDate.plusMonths do backend: se o dia não existe no
+// mês de destino, fica no último dia do mês (31/01 + 1 mês = 28 ou 29/02),
+// em vez de transbordar para o mês seguinte como Date faz.
+function somarMesesIso(isoDate: string, meses: number): string {
+  const [ano, mes, dia] = isoDate.split('-').map(Number)
+  const ultimoDiaDoMesDestino = new Date(Date.UTC(ano, mes - 1 + meses + 1, 0)).getUTCDate()
+  return new Date(Date.UTC(ano, mes - 1 + meses, Math.min(dia, ultimoDiaDoMesDestino))).toISOString().slice(0, 10)
+}
+
 let vacinacoesMock: VacinacaoMockInterna[] = seedVacinacoesMock()
 
 export function resetVacinacoesMock() {
@@ -1199,7 +1218,19 @@ export const handlers = [
   }),
 
   http.post(`${API_BASE_URL}/vacinacoes`, async ({ request }) => {
-    const body = (await request.json()) as CriarVacinacaoRequest
+    // doseUnidade opcional aqui de propósito: o mock precisa aceitar o corpo
+    // sem ela para responder o 422 como o backend real.
+    const body = (await request.json()) as Omit<CriarVacinacaoRequest, 'doseUnidade'> & { doseUnidade?: UnidadeDose }
+    // Mesmos 422 do backend: Bean Validation (RN-C05) e VacinacaoService (RN-C06).
+    if (!body.doseUnidade) {
+      return HttpResponse.json(
+        { mensagem: 'Dados invalidos', campos: [{ campo: 'doseUnidade', mensagem: 'não deve ser nulo' }] },
+        { status: 422 },
+      )
+    }
+    if (body.dataAplicacao > hojeEmItu()) {
+      return HttpResponse.json({ mensagem: 'Data de aplicacao nao pode ser futura' }, { status: 422 })
+    }
     const novo: VacinacaoMockInterna = {
       id: crypto.randomUUID(),
       animalId: body.animalId,
@@ -1208,10 +1239,10 @@ export const handlers = [
       aplicadoPorId: usuariosMock[0].id,
       aplicadoPorNome: `${usuariosMock[0].nome} ${usuariosMock[0].sobrenome}`,
       dataAplicacao: body.dataAplicacao,
-      dataValidade: null,
+      dataValidade: somarMesesIso(body.dataAplicacao, INTERVALO_MESES_SEED_V5),
       numeroDose: body.numeroDose ?? null,
       doseQuantidade: body.doseQuantidade,
-      doseUnidade: body.doseUnidade ?? null,
+      doseUnidade: body.doseUnidade,
       lote: body.lote ?? null,
       observacoes: body.observacoes ?? null,
       retificaId: body.retificaId ?? null,
@@ -1220,6 +1251,60 @@ export const handlers = [
     vacinacoesMock = [...vacinacoesMock, novo]
     const [comStatus] = derivarStatusRegistro([novo])
     return HttpResponse.json(comStatus, { status: 201 })
+  }),
+
+  // Espelha GET /api/alertas/vacinas (AlertaVacinalService): só o fim da
+  // cadeia de retificação e a aplicação mais recente de cada (animal, vacina)
+  // (RN-A02), só animais sob custódia (RN-A05), janela até hoje+7 (RN-A01).
+  http.get(`${API_BASE_URL}/alertas/vacinas`, () => {
+    const hoje = hojeEmItu()
+    const vigentes = new Map<string, VacinacaoMockInterna>()
+    derivarStatusRegistro(vacinacoesMock)
+      .filter((item) => item.statusRegistro === 'ATIVO' && item.dataValidade !== null)
+      .forEach((item) => {
+        const chave = `${item.animalId}|${item.vacinaCodigo}`
+        const atual = vigentes.get(chave)
+        const maisRecente =
+          !atual ||
+          item.dataAplicacao > atual.dataAplicacao ||
+          (item.dataAplicacao === atual.dataAplicacao && item.criadoEm > atual.criadoEm)
+        if (maisRecente) vigentes.set(chave, item)
+      })
+
+    const porAnimal = new Map<string, AlertaVacinalAnimal>()
+    for (const vacinacao of vigentes.values()) {
+      const animal = animaisMock.find((item) => item.id === vacinacao.animalId)
+      if (!animal || STATUS_FORA_DA_CUSTODIA.includes(animal.statusCodigo)) continue
+      const dataValidade = vacinacao.dataValidade as string
+      const diasRestantes = diasAteVencimento(dataValidade, hoje)
+      if (diasRestantes > DIAS_ANTECEDENCIA_ALERTA_VACINA) continue
+
+      const item: AlertaVacinalItem = {
+        vacinacaoId: vacinacao.id,
+        vacinaId: vacinacao.vacinaCodigo,
+        vacinaNome: vacinacao.vacinaNome,
+        dataAplicacao: vacinacao.dataAplicacao,
+        dataValidade,
+        diasRestantes,
+        severidade: diasRestantes < 0 ? 'VENCIDA' : 'A_VENCER',
+        veterinarioNome: vacinacao.aplicadoPorNome,
+      }
+      const existente = porAnimal.get(animal.id)
+      if (existente) {
+        existente.vacinas.push(item)
+      } else {
+        porAnimal.set(animal.id, {
+          animalId: animal.id,
+          animalNome: animal.nome,
+          animalMicrochip: animal.microchip,
+          animalEspecieNome: animal.especieNome,
+          animalSexo: animal.sexo,
+          animalBaiaNome: animal.baiaNome,
+          vacinas: [item],
+        })
+      }
+    }
+    return HttpResponse.json([...porAnimal.values()])
   }),
 
   http.get(`${API_BASE_URL}/procedimentos`, ({ request }) => {

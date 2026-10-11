@@ -2,9 +2,11 @@ import { useState, type FormEvent } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Icon } from '@/components/layout/Icon'
+import { mensagemDeRegraDaApi } from '@/lib/erroApi'
 import { VACINAS } from '../utils/catalogoClinico'
 import { vacinacaoFormSchema, type VacinacaoFormValues } from '../schemas/historicoFormSchemas'
 import { LABELS_UNIDADE_DOSE } from '../utils/historicoLabels'
+import { hojeEmItu } from '../utils/regrasVacina'
 import { useCriarVacinacaoMutation } from '../hooks/useHistoricoAnimal'
 import type { Vacinacao } from '../types/historico.types'
 
@@ -56,8 +58,11 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
         retificaId: retifica?.id,
       })
       onSucesso()
-    } catch {
-      setSubmitError(`Não foi possível ${retifica ? 'corrigir' : 'registrar'} a vacinação. Tente novamente.`)
+    } catch (erro) {
+      setSubmitError(
+        mensagemDeRegraDaApi(erro) ??
+          `Não foi possível ${retifica ? 'corrigir' : 'registrar'} a vacinação. Tente novamente.`,
+      )
     }
   }
 
@@ -120,6 +125,7 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
                     id="vac-data"
                     className={`input${errors.dataAplicacao ? ' error' : ''}`}
                     type="date"
+                    max={hojeEmItu()}
                     {...register('dataAplicacao')}
                   />
                   {errors.dataAplicacao && <span className="err">{errors.dataAplicacao.message}</span>}
@@ -153,10 +159,12 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
                   {errors.doseQuantidade && <span className="err">{errors.doseQuantidade.message}</span>}
                 </div>
                 <div className="field">
-                  <label htmlFor="vac-dose-unidade">Unidade</label>
+                  <label htmlFor="vac-dose-unidade">
+                    Unidade <span className="req">*</span>
+                  </label>
                   <select
                     id="vac-dose-unidade"
-                    className="select"
+                    className={`select${errors.doseUnidade ? ' error' : ''}`}
                     {...register('doseUnidade', { setValueAs: (v) => (v === '' ? undefined : v) })}
                   >
                     <option value="">—</option>
@@ -166,6 +174,7 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
                       </option>
                     ))}
                   </select>
+                  {errors.doseUnidade && <span className="err">{errors.doseUnidade.message}</span>}
                 </div>
               </div>
 

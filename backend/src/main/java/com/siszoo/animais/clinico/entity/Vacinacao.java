@@ -62,6 +62,9 @@ public class Vacinacao {
     @Column(name = "dose_quantidade", nullable = false, precision = 8, scale = 3)
     private BigDecimal doseQuantidade;
 
+    // Sem nullable=false de proposito: registros legados (anteriores a T24)
+    // podem nao ter unidade (V7, CHECK NOT VALID). Todo registro novo e
+    // obrigado a ter — @NotNull em CriarVacinacaoRequest e o CHECK do banco.
     @Enumerated(EnumType.STRING)
     @Column(name = "dose_unidade", length = 30)
     private UnidadeDose doseUnidade;

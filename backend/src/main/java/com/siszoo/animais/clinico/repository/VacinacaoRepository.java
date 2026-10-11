@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.siszoo.animais.clinico.entity.Vacinacao;
 
@@ -45,11 +46,15 @@ public interface VacinacaoRepository extends JpaRepository<Vacinacao, UUID>, Jpa
     // NOT EXISTS garante exatamente uma linha vencedora por par, mesmo numa
     // cadeia de retificacao com mais de um elo (A retificado por B,
     // retificado por C: A e B ficam de fora, so C sobra).
+    // RN-A05: so animais sob custodia do CCZ geram alerta — o chamador passa
+    // StatusAnimal.CODIGOS_FORA_DA_CUSTODIA (fonte unica, tambem usada pela
+    // ocupacao de baia) em vez de repetir os codigos aqui.
     @EntityGraph(attributePaths = {"animal", "animal.especie", "animal.baia", "vacina", "aplicadoPor"})
     @Query("""
             SELECT v FROM Vacinacao v
             WHERE v.vacina.intervaloMeses IS NOT NULL
               AND v.vacina.ativo = true
+              AND v.animal.status.codigo NOT IN :codigosForaDaCustodia
               AND NOT EXISTS (SELECT 1 FROM Vacinacao r WHERE r.retifica = v)
               AND NOT EXISTS (
                   SELECT 1 FROM Vacinacao maisRecente
@@ -62,5 +67,6 @@ public interface VacinacaoRepository extends JpaRepository<Vacinacao, UUID>, Jpa
                          OR (maisRecente.dataAplicacao = v.dataAplicacao AND maisRecente.criadoEm = v.criadoEm AND maisRecente.id > v.id))
               )
             """)
-    List<Vacinacao> findVigentesParaAlertaVacinal();
+    List<Vacinacao> findVigentesParaAlertaVacinal(
+            @Param("codigosForaDaCustodia") Collection<String> codigosForaDaCustodia);
 }

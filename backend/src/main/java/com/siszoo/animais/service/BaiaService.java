@@ -22,6 +22,7 @@ import com.siszoo.animais.dto.AtualizarStatusBaiaRequest;
 import com.siszoo.animais.dto.BaiaResponse;
 import com.siszoo.animais.dto.CriarBaiaRequest;
 import com.siszoo.animais.entity.Baia;
+import com.siszoo.animais.entity.StatusAnimal;
 import com.siszoo.animais.entity.TipoBaia;
 import com.siszoo.animais.exception.BaiaNaoEncontradaException;
 import com.siszoo.animais.exception.TipoBaiaInvalidoException;
@@ -39,9 +40,9 @@ public class BaiaService {
 
     private static final Logger log = LoggerFactory.getLogger(BaiaService.class);
 
-    // DER §3.3: status que removem o animal da contagem de ocupação da baia.
-    private static final Set<String> STATUS_FORA_DA_OCUPACAO =
-            Set.of("adotado", "obito_natural", "obito_eutanasia", "transferido");
+    // DER §3.3: status que removem o animal da contagem de ocupação da baia —
+    // os mesmos que o tiram da custódia do CCZ (fonte única em StatusAnimal).
+    private static final Set<String> STATUS_FORA_DA_OCUPACAO = StatusAnimal.CODIGOS_FORA_DA_CUSTODIA;
 
     private final BaiaRepository baiaRepository;
     private final TipoBaiaRepository tipoBaiaRepository;

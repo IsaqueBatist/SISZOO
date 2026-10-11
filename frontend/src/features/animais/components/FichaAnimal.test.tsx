@@ -138,6 +138,8 @@ describe('FichaAnimal', () => {
     await user.selectOptions(within(modal).getByLabelText(/^vacina/i), 'v8')
     fireEvent.change(within(modal).getByLabelText(/data de aplicação/i), { target: { value: '2026-05-01' } })
     await user.type(within(modal).getByLabelText(/quantidade da dose/i), '1')
+    // Unidade obrigatória desde a T24 (RN-C05).
+    await user.selectOptions(within(modal).getByLabelText(/^unidade/i), 'MILILITRO')
     await user.click(within(modal).getByRole('button', { name: /^registrar vacina$/i }))
 
     await waitFor(() => expect(screen.queryByRole('heading', { name: 'Registrar vacina' })).not.toBeInTheDocument())
