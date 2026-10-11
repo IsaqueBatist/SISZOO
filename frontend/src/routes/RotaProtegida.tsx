@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { useAuth } from '@/features/auth/hooks/AuthContext'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 
 export function RotaProtegida() {
   const { token, user } = useAuth()

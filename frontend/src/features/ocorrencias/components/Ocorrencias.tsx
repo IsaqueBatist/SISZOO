@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '@/components/layout/Icon'
-import { useAuth } from '@/features/auth/hooks/AuthContext'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import type { StatusOcorrencia, TipoOcorrencia } from '../types/ocorrencias.types'
 import { badgeDeStatus, iconeDeTipo, labelDeTipo } from '../utils/statusBadge'
 import { useOcorrenciasQuery } from '../hooks/useOcorrencias'

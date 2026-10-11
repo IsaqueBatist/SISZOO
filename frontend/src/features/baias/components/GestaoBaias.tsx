@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '@/components/layout/Icon'
-import { useAuth } from '@/features/auth/hooks/AuthContext'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import {
   useAlterarStatusBaiaMutation,
   useBaiasQuery,

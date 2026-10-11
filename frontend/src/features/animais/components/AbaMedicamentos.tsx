@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Icon } from '@/components/layout/Icon'
-import { useAuth } from '@/features/auth/hooks/AuthContext'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import { ModalRegistrarMedicamento } from './ModalRegistrarMedicamento'
 import { LABELS_STATUS_PRESCRICAO, LABELS_UNIDADE_DOSE, LABELS_UNIDADE_FREQUENCIA, LABELS_VIA_ADMINISTRACAO } from '../utils/historicoLabels'
 import { usePrescricoesQuery } from '../hooks/useHistoricoAnimal'

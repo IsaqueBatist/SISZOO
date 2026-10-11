@@ -1,10 +1,11 @@
 import { useMutation } from '@tanstack/react-query'
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { setAuthToken } from '@/lib/http'
-import { roleKeyFromCargos, type RoleKey } from '@/lib/nav'
+import { roleKeyFromCargos } from '@/lib/nav'
 import type { LoginRequest, Usuario } from '../types/auth.types'
 import { login as loginRequest } from '../api/authApi'
+import { AuthContext, type AuthContextValue } from './authContextValue'
 
 export const SESSION_STORAGE_KEY = 'siszoo_auth'
 
@@ -12,19 +13,6 @@ interface SessaoArmazenada {
   token: string
   usuario: Usuario
 }
-
-interface AuthContextValue {
-  user: Usuario | null
-  token: string | null
-  roleKey: RoleKey
-  login: (credenciais: LoginRequest) => Promise<void>
-  logout: () => void
-  marcarSenhaAlterada: (senhaAlteradaEm: string) => void
-  isLoading: boolean
-  error: unknown
-}
-
-const AuthContext = createContext<AuthContextValue | null>(null)
 
 function lerSessaoArmazenada(): SessaoArmazenada | null {
   try {
@@ -105,12 +93,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
-
-export function useAuth(): AuthContextValue {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth deve ser usado dentro de um AuthProvider')
-  }
-  return context
 }

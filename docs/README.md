@@ -21,8 +21,8 @@ renderiza o diagrama entidade-relacionamento automaticamente.
 
 | Módulo                   | Arquivo                                  | Tabelas principais                                            |
 | ------------------------ | ---------------------------------------- | ------------------------------------------------------------- |
-| 1 — Usuários & Acesso    | `diagramas/modulo1-usuarios-acesso.dbml` | Usuario, Sessao, Cargo, CargoPermissao, AuditoriaEvento       |
-| 2 — Animais              | `diagramas/modulo2-animais.dbml`         | Animal, Baia, Vacinacao, Procedimento, Medicacao              |
+| 1 — Usuários & Acesso    | `diagramas/modulo1-usuarios-acesso.dbml` | Usuario, Cargo, CargoPermissao, AuditoriaEvento               |
+| 2 — Animais              | `diagramas/modulo2-animais.dbml`         | Animal, Baia, Vacinacao, Procedimento, Prescricao             |
 | 3 — Ocorrências          | `diagramas/modulo3-ocorrencias.dbml`     | Ocorrencia, Denunciante, Denunciado, Movimentacao             |
 | 4 — Processos Sanitários | `diagramas/modulo4-processos.dbml`       | ProcessoSanitario, ResponsavelProcesso, ResultadoLaboratorial |
 | 5 — Relatórios           | `diagramas/modulo5-relatorios.dbml`      | RelatorioGerado                                               |

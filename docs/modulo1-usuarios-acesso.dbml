@@ -1,6 +1,6 @@
 // ══════════════════════════════════════════════════════
 // MÓDULO 01 — USUÁRIOS & ACESSO
-// Tabelas: Usuario, Sessao, Cargo, UsuarioCargo,
+// Tabelas: Usuario, Cargo, UsuarioCargo,
 //          CargoPermissao, PreferenciaUsuario,
 //          AuditoriaEvento
 // Enums:   Modulo, TemaUsuario, DensidadeUsuario,
@@ -59,24 +59,6 @@ Table Usuario {
 
   indexes {
     email [unique]
-  }
-}
-
-// ── Sessão ─────────────────────────────────────────────
-
-Table Sessao {
-  id           uuid         [pk, not null, default: `gen_random_uuid()`]
-  usuario_id   uuid         [not null, ref: > Usuario.id]
-  token_hash   varchar(512) [not null, unique]
-  ip           varchar(45)
-  user_agent   text
-  criada_em    timestamp    [not null, default: `now()`]
-  expira_em    timestamp    [not null]
-  encerrada_em timestamp
-
-  indexes {
-    token_hash [unique]
-    usuario_id
   }
 }
 
@@ -147,7 +129,6 @@ Table AuditoriaEvento {
 
 TableGroup Usuarios_Acesso {
   Usuario
-  Sessao
   Cargo
   UsuarioCargo
   CargoPermissao

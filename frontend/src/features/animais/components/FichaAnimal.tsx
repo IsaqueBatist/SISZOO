@@ -1,7 +1,7 @@
 import { useState, type KeyboardEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Icon } from '@/components/layout/Icon'
-import { useAuth } from '@/features/auth/hooks/AuthContext'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import { AbaExames } from './AbaExames'
 import { AbaHistorico } from './AbaHistorico'
 import { AbaMedicamentos } from './AbaMedicamentos'
