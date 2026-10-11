@@ -1,14 +1,23 @@
 import { z } from 'zod'
+import { hojeEmItu } from '../utils/regrasVacina'
 
 // Campos e limites espelham com.siszoo.animais.clinico.dto.CriarVacinacaoRequest.
 export const vacinacaoFormSchema = z.object({
   vacina: z.string().min(1, 'Selecione a vacina.'),
-  dataAplicacao: z.string().min(1, 'Informe a data de aplicação.'),
+  // RN-C06: mesma regra do backend (VacinacaoService), com "hoje" no fuso de
+  // Itu. Datas ISO (AAAA-MM-DD) comparam certo como texto. "Hoje" é lido a
+  // cada validação, não fixado no carregamento do módulo.
+  dataAplicacao: z
+    .string()
+    .min(1, 'Informe a data de aplicação.')
+    .refine((data) => data <= hojeEmItu(), 'A data de aplicação não pode ser futura.'),
   numeroDose: z.number().int().positive('Deve ser maior que zero.').optional(),
   doseQuantidade: z.number({ message: 'Informe a quantidade da dose.' }).positive('A dose deve ser maior que zero.'),
-  doseUnidade: z
-    .enum(['MILIGRAMA', 'MICROGRAMA', 'GRAMA', 'MILILITRO', 'UNIDADE_INTERNACIONAL'])
-    .optional(),
+  // Obrigatória desde a T24 (RN-C05, @NotNull no backend) — mesma regra e
+  // mensagem da prescrição.
+  doseUnidade: z.enum(['MILIGRAMA', 'MICROGRAMA', 'GRAMA', 'MILILITRO', 'UNIDADE_INTERNACIONAL'], {
+    message: 'Selecione a unidade da dose.',
+  }),
   lote: z.string().trim().max(100, 'Máximo de 100 caracteres.').optional(),
   observacoes: z.string().trim().optional(),
 })

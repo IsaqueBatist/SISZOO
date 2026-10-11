@@ -38,7 +38,7 @@ export interface CriarVacinacaoRequest {
   dataAplicacao: string
   numeroDose?: number
   doseQuantidade: number
-  doseUnidade?: UnidadeDose
+  doseUnidade: UnidadeDose
   lote?: string
   observacoes?: string
   retificaId?: string
