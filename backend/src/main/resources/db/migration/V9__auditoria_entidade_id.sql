@@ -1,0 +1,13 @@
+-- Issue #2 — vínculo do evento de auditoria com o registro de origem.
+--
+-- entidade_id é polimórfica por design: o alvo é identificado pelo par
+-- (entidade, entidade_id), onde `entidade` é texto livre ("vacinacao",
+-- "usuario", ...). Por isso não há FK — uma FK real exigiria discriminar a
+-- tabela de destino.
+--
+-- Nullable e sem default: eventos anteriores a esta migration permanecem com
+-- entidade_id nulo. Sem backfill por decisão de projeto — não se extrai id
+-- dos payloads JSON do histórico.
+--
+-- V9 pressupõe V8__remove_tabela_sessao (branch de limpeza) mesclada antes.
+ALTER TABLE auditoria_evento ADD COLUMN entidade_id uuid NULL;

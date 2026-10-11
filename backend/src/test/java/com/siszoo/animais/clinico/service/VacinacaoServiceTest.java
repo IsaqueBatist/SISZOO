@@ -92,7 +92,7 @@ class VacinacaoServiceTest {
 
         assertThat(resultado).isEqualTo(response);
         verify(vacinacaoRepository).save(any(Vacinacao.class));
-        verify(auditoriaEventoService).registrar(usuario, AcaoAuditoria.CRIACAO, "vacinacao", null, response);
+        verify(auditoriaEventoService).registrar(usuario, AcaoAuditoria.CRIACAO, "vacinacao", null, null, response);
     }
 
     @Test
@@ -125,7 +125,7 @@ class VacinacaoServiceTest {
         VacinacaoResponse resultado = vacinacaoService.criar(requestComRetificacao(animalId, retificaId), usuarioId);
 
         assertThat(resultado).isEqualTo(respostaDepois);
-        verify(auditoriaEventoService).registrar(usuario, AcaoAuditoria.ATUALIZACAO, "vacinacao", respostaAntes, respostaDepois);
+        verify(auditoriaEventoService).registrar(usuario, AcaoAuditoria.ATUALIZACAO, "vacinacao", null, respostaAntes, respostaDepois);
     }
 
     @Test
@@ -148,7 +148,7 @@ class VacinacaoServiceTest {
                 .isInstanceOf(RetificacaoAnimalDivergenteException.class);
 
         verify(vacinacaoRepository, never()).save(any());
-        verify(auditoriaEventoService, never()).registrar(any(), any(), any(), any(), any());
+        verify(auditoriaEventoService, never()).registrar(any(), any(), any(), any(), any(), any());
     }
 
     @Test

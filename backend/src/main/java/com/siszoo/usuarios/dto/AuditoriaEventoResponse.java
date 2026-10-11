@@ -10,5 +10,6 @@ public record AuditoriaEventoResponse(
         String usuarioEmail,
         AcaoAuditoria acao,
         String entidade,
+        UUID entidadeId,
         LocalDateTime ocorreuEm) {
 }

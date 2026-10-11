@@ -87,10 +87,10 @@ public class ProcedimentoService {
         ProcedimentoResponse response = procedimentoMapper.toResponse(procedimento, null);
 
         if (anterior != null) {
-            auditoriaEventoService.registrar(usuarioAutenticado, AcaoAuditoria.ATUALIZACAO, "procedimento",
+            auditoriaEventoService.registrar(usuarioAutenticado, AcaoAuditoria.ATUALIZACAO, "procedimento", procedimento.getId(),
                     procedimentoMapper.toResponse(anterior, null), response);
         } else {
-            auditoriaEventoService.registrar(usuarioAutenticado, AcaoAuditoria.CRIACAO, "procedimento", null, response);
+            auditoriaEventoService.registrar(usuarioAutenticado, AcaoAuditoria.CRIACAO, "procedimento", procedimento.getId(), null, response);
         }
 
         return response;

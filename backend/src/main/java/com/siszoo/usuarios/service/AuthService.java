@@ -50,7 +50,7 @@ public class AuthService {
                 .filter(candidato -> passwordEncoder.matches(request.senha(), candidato.getSenha()))
                 .orElseThrow(CredencialInvalidaException::new);
 
-        auditoriaEventoService.registrar(usuario, AcaoAuditoria.LOGIN, "usuario", null, null);
+        auditoriaEventoService.registrar(usuario, AcaoAuditoria.LOGIN, "usuario", usuario.getId(), null, null);
 
         String token = jwtService.gerarToken(usuario);
         return new LoginResponse(token, usuarioMapper.toResponse(usuario));
@@ -69,6 +69,6 @@ public class AuthService {
         usuario.setSenhaAlteradaEm(LocalDateTime.now(clock));
         usuarioRepository.save(usuario);
 
-        auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "usuario", null, null);
+        auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "usuario", usuario.getId(), null, null);
     }
 }

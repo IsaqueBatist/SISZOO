@@ -54,6 +54,7 @@ class AuditoriaEventoServiceIT extends AbstractIntegrationTest {
                 usuario,
                 AcaoAuditoria.ATUALIZACAO,
                 "usuario",
+                null,
                 Map.of("ativo", true),
                 Map.of("ativo", false));
 
@@ -73,7 +74,7 @@ class AuditoriaEventoServiceIT extends AbstractIntegrationTest {
 
     @Test
     void deveRegistrarEventoSemUsuarioEComPayloadsNulos() {
-        auditoriaEventoService.registrar(null, AcaoAuditoria.LOGOUT, "usuario", null, null);
+        auditoriaEventoService.registrar(null, AcaoAuditoria.LOGOUT, "usuario", null, null, null);
 
         AuditoriaEvento evento = auditoriaEventoRepository.findAll().stream()
                 .filter(e -> e.getUsuario() == null && e.getAcao() == AcaoAuditoria.LOGOUT)
@@ -88,8 +89,8 @@ class AuditoriaEventoServiceIT extends AbstractIntegrationTest {
     void deveListarEventosPaginadosDoMaisRecenteParaOMaisAntigo() {
         Usuario usuario = criarUsuario("teste.auditoria.listagem@itu.sp.gov.br");
 
-        auditoriaEventoService.registrar(usuario, AcaoAuditoria.CRIACAO, "usuario", null, null);
-        auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "usuario", null, null);
+        auditoriaEventoService.registrar(usuario, AcaoAuditoria.CRIACAO, "usuario", null, null, null);
+        auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "usuario", null, null, null);
 
         PaginaResponse<AuditoriaEventoResponse> pagina = auditoriaEventoService.listar(0, 50);
         List<AuditoriaEventoResponse> itens = pagina.itens();

@@ -95,10 +95,10 @@ public class PrescricaoService {
         PrescricaoResponse response = prescricaoMapper.toResponse(prescricao, null);
 
         if (anterior != null) {
-            auditoriaEventoService.registrar(usuarioAutenticado, AcaoAuditoria.ATUALIZACAO, "prescricao",
+            auditoriaEventoService.registrar(usuarioAutenticado, AcaoAuditoria.ATUALIZACAO, "prescricao", prescricao.getId(),
                     prescricaoMapper.toResponse(anterior, null), response);
         } else {
-            auditoriaEventoService.registrar(usuarioAutenticado, AcaoAuditoria.CRIACAO, "prescricao", null, response);
+            auditoriaEventoService.registrar(usuarioAutenticado, AcaoAuditoria.CRIACAO, "prescricao", prescricao.getId(), null, response);
         }
 
         return response;
