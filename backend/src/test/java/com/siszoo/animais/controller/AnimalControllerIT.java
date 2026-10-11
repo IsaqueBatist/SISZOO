@@ -7,13 +7,11 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.siszoo.animais.dto.AtualizarAnimalRequest;
 import com.siszoo.animais.dto.CriarAnimalRequest;
@@ -21,34 +19,16 @@ import com.siszoo.animais.entity.Baia;
 import com.siszoo.animais.repository.BaiaRepository;
 import com.siszoo.animais.repository.TipoBaiaRepository;
 import com.siszoo.comum.AbstractIntegrationTest;
-import com.siszoo.usuarios.dto.LoginRequest;
-import com.siszoo.usuarios.entity.Cargo;
-import com.siszoo.usuarios.entity.Usuario;
-import com.siszoo.usuarios.entity.UsuarioCargo;
-import com.siszoo.usuarios.repository.CargoRepository;
-import com.siszoo.usuarios.repository.UsuarioCargoRepository;
-import com.siszoo.usuarios.repository.UsuarioRepository;
+import com.siszoo.comum.ApiTesteFixture;
 
 import io.restassured.http.ContentType;
 
 class AnimalControllerIT extends AbstractIntegrationTest {
 
-    private static final UUID CARGO_ADMINISTRADOR_ID = UUID.fromString("00000000-0000-4000-8000-000000000001");
-    private static final UUID CARGO_AGENTE_SANITARIO_ID = UUID.fromString("00000000-0000-4000-8000-000000000003");
     private static final String EMAIL_ADMIN = "teste.admin.animais@itu.sp.gov.br";
-    private static final String SENHA_ADMIN = "SenhaAdmin123";
 
     @Autowired
-    private UsuarioRepository usuarioRepository;
-
-    @Autowired
-    private CargoRepository cargoRepository;
-
-    @Autowired
-    private UsuarioCargoRepository usuarioCargoRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private ApiTesteFixture fixture;
 
     @Autowired
     private BaiaRepository baiaRepository;
@@ -59,23 +39,8 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     private String tokenAdmin;
 
     @BeforeEach
-    void seedAdmin() {
-        if (usuarioRepository.findByEmail(EMAIL_ADMIN).isEmpty()) {
-            Usuario admin = new Usuario();
-            admin.setEmail(EMAIL_ADMIN);
-            admin.setSenha(passwordEncoder.encode(SENHA_ADMIN));
-            admin.setNome("Admin");
-            admin.setSobrenome("Animais");
-            usuarioRepository.save(admin);
-
-            Cargo cargoAdministrador = cargoRepository.findById(CARGO_ADMINISTRADOR_ID).orElseThrow();
-            UsuarioCargo vinculo = new UsuarioCargo();
-            vinculo.setUsuario(admin);
-            vinculo.setCargo(cargoAdministrador);
-            usuarioCargoRepository.save(vinculo);
-        }
-
-        tokenAdmin = login(EMAIL_ADMIN, SENHA_ADMIN);
+    void autenticarAdmin() {
+        tokenAdmin = fixture.tokenAdmin(EMAIL_ADMIN, "Animais");
     }
 
     @Test
@@ -83,7 +48,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
         Baia baia = criarBaia("Baia AnimalControllerIT 1");
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Rex", "canino", "macho", "SRD", "Preto", "curta", "medio", null, "2 anos", null,
-                microchipUnico(), false, null, "disponivel_adocao", "resgate", LocalDateTime.now(),
+                fixture.microchipUnico(), false, null, "disponivel_adocao", "resgate", fixture.agora(),
                 baia.getId(), null, null);
 
         given()
@@ -120,7 +85,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
 
     @Test
     void deveRetornar409QuandoMicrochipDuplicado() {
-        String microchip = microchipUnico();
+        String microchip = fixture.microchipUnico();
 
         given()
                 .contentType(ContentType.JSON)
@@ -145,7 +110,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     void deveRetornar422QuandoEspecieInvalida() {
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Rex", "especie-inexistente", "macho", null, null, null, null, null, null, null,
-                null, false, null, "disponivel_adocao", "resgate", LocalDateTime.now(), null, null, null);
+                null, false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null);
 
         given()
                 .contentType(ContentType.JSON)
@@ -161,7 +126,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     void deveRetornar422QuandoStatusInvalido() {
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                null, false, null, "status-inexistente", "resgate", LocalDateTime.now(), null, null, null);
+                null, false, null, "status-inexistente", "resgate", fixture.agora(), null, null, null);
 
         given()
                 .contentType(ContentType.JSON)
@@ -177,7 +142,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     void deveRetornar422QuandoMotivoEntradaInvalido() {
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                null, false, null, "disponivel_adocao", "motivo-inexistente", LocalDateTime.now(), null, null, null);
+                null, false, null, "disponivel_adocao", "motivo-inexistente", fixture.agora(), null, null, null);
 
         given()
                 .contentType(ContentType.JSON)
@@ -193,7 +158,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     void deveRetornar422QuandoBaiaInvalida() {
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                null, false, null, "disponivel_adocao", "resgate", LocalDateTime.now(), UUID.randomUUID(), null, null);
+                null, false, null, "disponivel_adocao", "resgate", fixture.agora(), UUID.randomUUID(), null, null);
 
         given()
                 .contentType(ContentType.JSON)
@@ -209,10 +174,10 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     void deveListarComFiltroStatusEEspecie() {
         criarAnimalViaApi(new CriarAnimalRequest(
                 "Mimi", "felino", "femea", null, null, null, null, null, null, null,
-                microchipUnico(), false, null, "em_quarentena", "abandono", LocalDateTime.now(), null, null, null));
+                fixture.microchipUnico(), false, null, "em_quarentena", "abandono", fixture.agora(), null, null, null));
         criarAnimalViaApi(new CriarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                microchipUnico(), false, null, "disponivel_adocao", "resgate", LocalDateTime.now(), null, null, null));
+                fixture.microchipUnico(), false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null));
 
         given()
                 .header("Authorization", "Bearer " + tokenAdmin)
@@ -247,7 +212,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
 
         AtualizarAnimalRequest atualizacao = new AtualizarAnimalRequest(
                 "Rex Atualizado", "canino", "macho", null, null, null, null, null, null, null,
-                null, false, null, "em_tratamento", "resgate", LocalDateTime.now(), null, null, null);
+                null, false, null, "em_tratamento", "resgate", fixture.agora(), null, null, null);
 
         given()
                 .contentType(ContentType.JSON)
@@ -271,12 +236,12 @@ class AnimalControllerIT extends AbstractIntegrationTest {
 
     @Test
     void deveRejeitarAlteracaoDeMicrochip() {
-        String microchipOriginal = microchipUnico();
+        String microchipOriginal = fixture.microchipUnico();
         String id = criarAnimalViaApi(animalMinimo(microchipOriginal)).path("id");
 
         AtualizarAnimalRequest atualizacao = new AtualizarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                microchipUnico(), false, null, "disponivel_adocao", "resgate", LocalDateTime.now(), null, null, null);
+                fixture.microchipUnico(), false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null);
 
         given()
                 .contentType(ContentType.JSON)
@@ -299,11 +264,11 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     @Test
     void deveDefinirMicrochipQuandoAusente() {
         String id = criarAnimalViaApi(animalMinimo(null)).path("id");
-        String novoMicrochip = microchipUnico();
+        String novoMicrochip = fixture.microchipUnico();
 
         AtualizarAnimalRequest atualizacao = new AtualizarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                novoMicrochip, false, null, "disponivel_adocao", "resgate", LocalDateTime.now(), null, null, null);
+                novoMicrochip, false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null);
 
         given()
                 .contentType(ContentType.JSON)
@@ -326,8 +291,8 @@ class AnimalControllerIT extends AbstractIntegrationTest {
 
     @Test
     void deveRetornar403QuandoAgenteSanitarioTentaCriarE200QuandoLista() {
-        String tokenAgente = criarUsuarioComCargoERetornarToken(
-                "teste.agente.animais@itu.sp.gov.br", "SenhaAgente123", CARGO_AGENTE_SANITARIO_ID);
+        String tokenAgente = fixture.tokenComCargo(
+                "teste.agente.animais@itu.sp.gov.br", "Teste", "Perfil", ApiTesteFixture.CARGO_AGENTE_SANITARIO_ID);
 
         given()
                 .contentType(ContentType.JSON)
@@ -363,7 +328,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     private CriarAnimalRequest animalMinimo(String microchip) {
         return new CriarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                microchip, false, null, "disponivel_adocao", "resgate", LocalDateTime.now(), null, null, null);
+                microchip, false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null);
     }
 
     private io.restassured.response.Response criarAnimalViaApi(CriarAnimalRequest request) {
@@ -379,45 +344,11 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .response();
     }
 
-    private String microchipUnico() {
-        return "MC" + UUID.randomUUID().toString().substring(0, 20);
-    }
-
     private Baia criarBaia(String nome) {
         Baia baia = new Baia();
         baia.setNome(nome);
         baia.setTipoBaia(tipoBaiaRepository.findByCodigo("interna").orElseThrow());
         baia.setCapacidade((short) 5);
         return baiaRepository.save(baia);
-    }
-
-    private String criarUsuarioComCargoERetornarToken(String email, String senha, UUID cargoId) {
-        if (usuarioRepository.findByEmail(email).isEmpty()) {
-            Usuario usuario = new Usuario();
-            usuario.setEmail(email);
-            usuario.setSenha(passwordEncoder.encode(senha));
-            usuario.setNome("Teste");
-            usuario.setSobrenome("Perfil");
-            usuarioRepository.save(usuario);
-
-            Cargo cargo = cargoRepository.findById(cargoId).orElseThrow();
-            UsuarioCargo vinculo = new UsuarioCargo();
-            vinculo.setUsuario(usuario);
-            vinculo.setCargo(cargo);
-            usuarioCargoRepository.save(vinculo);
-        }
-        return login(email, senha);
-    }
-
-    private String login(String email, String senha) {
-        return given()
-                .contentType(ContentType.JSON)
-                .body(new LoginRequest(email, senha))
-                .when()
-                .post("/api/auth/login")
-                .then()
-                .statusCode(200)
-                .extract()
-                .path("token");
     }
 }

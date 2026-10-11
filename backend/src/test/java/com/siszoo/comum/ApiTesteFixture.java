@@ -61,6 +61,14 @@ public class ApiTesteFixture {
         return LocalDate.now(clock);
     }
 
+    public LocalDateTime agora() {
+        return LocalDateTime.now(clock);
+    }
+
+    public String microchipUnico() {
+        return "MC" + UUID.randomUUID().toString().substring(0, 20);
+    }
+
     // Idempotente: o banco de teste e compartilhado entre metodos (sem
     // rollback), entao so cria o usuario na primeira chamada por e-mail.
     public String tokenComCargo(String email, String nome, String sobrenome, UUID cargoId) {
@@ -71,7 +79,7 @@ public class ApiTesteFixture {
             vinculo.setCargo(cargoRepository.findById(cargoId).orElseThrow());
             usuarioCargoRepository.save(vinculo);
         }
-        return login(email);
+        return login(email, SENHA_PADRAO);
     }
 
     public String tokenAdmin(String email, String sobrenome) {
@@ -94,8 +102,7 @@ public class ApiTesteFixture {
     public String criarAnimal(String token, String status) {
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Animal de Teste", "canino", "macho", null, null, null, null, null, null, null,
-                "MC" + UUID.randomUUID().toString().substring(0, 20), false, null, status, "resgate",
-                LocalDateTime.now(clock), null, null, null);
+                microchipUnico(), false, null, status, "resgate", agora(), null, null, null);
 
         return given()
                 .contentType(ContentType.JSON)
@@ -148,10 +155,12 @@ public class ApiTesteFixture {
         return resposta.stream().filter(item -> animalId.equals(item.get("animalId"))).findFirst();
     }
 
-    private String login(String email) {
+    // Senha explicita para usuarios criados fora do fixture — o AuthControllerIT
+    // controla a senha de proposito, porque ela e o objeto do teste.
+    public String login(String email, String senha) {
         return given()
                 .contentType(ContentType.JSON)
-                .body(new LoginRequest(email, SENHA_PADRAO))
+                .body(new LoginRequest(email, senha))
                 .when()
                 .post("/api/auth/login")
                 .then()

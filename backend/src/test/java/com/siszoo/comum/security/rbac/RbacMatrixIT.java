@@ -2,7 +2,6 @@ package com.siszoo.comum.security.rbac;
 
 import static io.restassured.RestAssured.given;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -11,17 +10,10 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.siszoo.animais.dto.CriarAnimalRequest;
 import com.siszoo.comum.AbstractIntegrationTest;
-import com.siszoo.usuarios.dto.LoginRequest;
-import com.siszoo.usuarios.entity.Cargo;
-import com.siszoo.usuarios.entity.Usuario;
-import com.siszoo.usuarios.entity.UsuarioCargo;
-import com.siszoo.usuarios.repository.CargoRepository;
-import com.siszoo.usuarios.repository.UsuarioCargoRepository;
-import com.siszoo.usuarios.repository.UsuarioRepository;
+import com.siszoo.comum.ApiTesteFixture;
 
 import io.restassured.http.ContentType;
 
@@ -35,21 +27,11 @@ import io.restassured.http.ContentType;
 })
 class RbacMatrixIT extends AbstractIntegrationTest {
 
-    private static final String SENHA_TESTE = "SenhaValida123";
     private static final String ROTA_USUARIOS = "/api/teste/rbac/usuarios";
     private static final String ROTA_ANIMAIS = "/api/animais";
 
     @Autowired
-    private UsuarioRepository usuarioRepository;
-
-    @Autowired
-    private CargoRepository cargoRepository;
-
-    @Autowired
-    private UsuarioCargoRepository usuarioCargoRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private ApiTesteFixture fixture;
 
     private enum Perfil {
         ADMINISTRADOR("00000000-0000-4000-8000-000000000001", "administrador.rbac@itu.sp.gov.br"),
@@ -124,33 +106,10 @@ class RbacMatrixIT extends AbstractIntegrationTest {
     private CriarAnimalRequest animalValidoParaTeste() {
         return new CriarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null, null,
-                false, null, "disponivel_adocao", "resgate", LocalDateTime.now(), null, null, null);
+                false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null);
     }
 
     private String tokenPara(Perfil perfil) {
-        if (usuarioRepository.findByEmail(perfil.email).isEmpty()) {
-            Usuario usuario = new Usuario();
-            usuario.setEmail(perfil.email);
-            usuario.setSenha(passwordEncoder.encode(SENHA_TESTE));
-            usuario.setNome("Teste");
-            usuario.setSobrenome("Rbac");
-            usuarioRepository.save(usuario);
-
-            Cargo cargo = cargoRepository.findById(perfil.cargoId).orElseThrow();
-            UsuarioCargo vinculo = new UsuarioCargo();
-            vinculo.setUsuario(usuario);
-            vinculo.setCargo(cargo);
-            usuarioCargoRepository.save(vinculo);
-        }
-
-        return given()
-                .contentType(ContentType.JSON)
-                .body(new LoginRequest(perfil.email, SENHA_TESTE))
-                .when()
-                .post("/api/auth/login")
-                .then()
-                .statusCode(200)
-                .extract()
-                .path("token");
+        return fixture.tokenComCargo(perfil.email, "Teste", "Rbac", perfil.cargoId);
     }
 }

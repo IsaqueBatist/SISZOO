@@ -42,6 +42,10 @@ import com.siszoo.usuarios.service.AuditoriaEventoService;
 @ExtendWith(MockitoExtension.class)
 class PrescricaoServiceTest {
 
+    // Data fixa (nao LocalDate.now()): o service nao le relogio, a data e so
+    // dado do request — fixa-la deixa o teste deterministico.
+    private static final LocalDate HOJE = LocalDate.of(2026, 9, 10);
+
     @Mock
     private PrescricaoRepository prescricaoRepository;
 
@@ -132,13 +136,13 @@ class PrescricaoServiceTest {
 
     private CriarPrescricaoRequest requestSemRetificacao(UUID animalId, UUID medicamentoId) {
         return new CriarPrescricaoRequest(
-                animalId, medicamentoId, LocalDate.now(), null, null, 8, UnidadeFrequencia.HORAS,
+                animalId, medicamentoId, HOJE, null, null, 8, UnidadeFrequencia.HORAS,
                 new BigDecimal("10.000"), UnidadeDose.MILIGRAMA, ViaAdministracao.ORAL, StatusPrescricao.ATIVA, null);
     }
 
     private CriarPrescricaoRequest requestComRetificacao(UUID animalId, UUID medicamentoId, UUID retificaId) {
         return new CriarPrescricaoRequest(
-                animalId, medicamentoId, LocalDate.now(), null, null, 8, UnidadeFrequencia.HORAS,
+                animalId, medicamentoId, HOJE, null, null, 8, UnidadeFrequencia.HORAS,
                 new BigDecimal("10.000"), UnidadeDose.MILIGRAMA, ViaAdministracao.ORAL, StatusPrescricao.ATIVA, retificaId);
     }
 
@@ -157,7 +161,7 @@ class PrescricaoServiceTest {
     private PrescricaoResponse respostaQualquer() {
         return new PrescricaoResponse(
                 UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "Amoxicilina",
-                null, null, LocalDate.now(), null, null, 8, UnidadeFrequencia.HORAS,
+                null, null, HOJE, null, null, 8, UnidadeFrequencia.HORAS,
                 new BigDecimal("10.000"), UnidadeDose.MILIGRAMA, ViaAdministracao.ORAL, StatusPrescricao.ATIVA,
                 null, null, "ATIVO", null);
     }

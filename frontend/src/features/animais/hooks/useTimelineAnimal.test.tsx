@@ -4,16 +4,16 @@ import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { API_BASE_URL } from '@/lib/env'
 import { server } from '@/mocks/server'
+import { adicionarDiasIso } from '@/test/datas'
 import { useTimelineAnimal } from './useTimelineAnimal'
 import type { Prescricao, Procedimento, Vacinacao } from '../types/historico.types'
 
 const ANIMAL_ID = 'timeline-teste-0000-0000-000000000001'
 
-function addDiasIso(dias: number): string {
-  const data = new Date()
-  data.setUTCDate(data.getUTCDate() + dias)
-  return data.toISOString().slice(0, 10)
-}
+// Âncora fixa: o hook só compara datas entre si (não lê "hoje"), então
+// qualquer dia serve — fixo deixa o cenário determinístico.
+const HOJE = '2026-09-10'
+const CRIADO_EM = `${HOJE}T15:00:00.000Z`
 
 // 25 vacinas (mais que uma página de 20) com datas estritamente decrescentes
 // (-1 a -25 dias) e 2 procedimentos cujas datas caem perto da fronteira
@@ -31,7 +31,7 @@ function seedVacinasGrandes(): Vacinacao[] {
       vacinaNome: `V${dias}`,
       aplicadoPorId: null,
       aplicadoPorNome: null,
-      dataAplicacao: addDiasIso(-dias),
+      dataAplicacao: adicionarDiasIso(HOJE, -dias),
       dataValidade: null,
       numeroDose: null,
       doseQuantidade: 1,
@@ -41,7 +41,7 @@ function seedVacinasGrandes(): Vacinacao[] {
       retificaId: null,
       retificadoPorId: null,
       statusRegistro: 'ATIVO',
-      criadoEm: new Date().toISOString(),
+      criadoEm: CRIADO_EM,
     }
   })
 }
@@ -55,13 +55,13 @@ function seedProcedimentosFronteira(): Procedimento[] {
       tipoProcedimentoNome: 'P20',
       executadoPorId: null,
       executadoPorNome: null,
-      data: addDiasIso(-20),
+      data: adicionarDiasIso(HOJE, -20),
       descricao: null,
       resultado: null,
       retificaId: null,
       retificadoPorId: null,
       statusRegistro: 'ATIVO',
-      criadoEm: new Date().toISOString(),
+      criadoEm: CRIADO_EM,
     },
     {
       id: 'proc-21',
@@ -70,13 +70,13 @@ function seedProcedimentosFronteira(): Procedimento[] {
       tipoProcedimentoNome: 'P21',
       executadoPorId: null,
       executadoPorNome: null,
-      data: addDiasIso(-21),
+      data: adicionarDiasIso(HOJE, -21),
       descricao: null,
       resultado: null,
       retificaId: null,
       retificadoPorId: null,
       statusRegistro: 'ATIVO',
-      criadoEm: new Date().toISOString(),
+      criadoEm: CRIADO_EM,
     },
   ]
 }
