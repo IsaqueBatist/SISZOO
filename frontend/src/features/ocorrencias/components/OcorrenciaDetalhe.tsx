@@ -7,13 +7,15 @@ import { statusHttpDoErro } from '@/lib/erroApi'
 import { AvisoAnexosPendentes } from './AvisoAnexosPendentes'
 import { CardDenunciante } from './CardDenunciante'
 import { CardEncerramento } from './CardEncerramento'
+import { CardProcessoVinculado } from './CardProcessoVinculado'
+import { FormNota } from './FormNota'
 import { MovimentacoesTimeline } from './MovimentacoesTimeline'
 import type { AnexoOcorrencia, Ocorrencia } from '../types/ocorrencias.types'
 import './OcorrenciaDetalhe.css'
 import { baixarAnexo } from '../api/ocorrenciasApi'
-import { badgeDeStatus, labelDeStatusProcesso } from '../utils/statusBadge'
+import { badgeDeStatus } from '../utils/statusBadge'
 import { formatarData, formatarHora } from '../utils/datas'
-import { formatarProtocoloOcorrencia, formatarProtocoloProcesso } from '../utils/protocolo'
+import { formatarProtocoloOcorrencia } from '../utils/protocolo'
 import { useIniciarAtendimentoMutation, useOcorrenciaQuery } from '../hooks/useOcorrencias'
 import { useAnexosPendentes } from '../hooks/useAnexosPendentes'
 
@@ -153,6 +155,7 @@ export function OcorrenciaDetalhe() {
   const { id } = useParams<{ id: string }>()
   const { roleKey } = useAuth()
   const podeEscrever = roleKey === 'admin' || roleKey === 'agente'
+  const podeAvancarProcesso = roleKey === 'admin' || roleKey === 'agente' || roleKey === 'vet'
 
   const { data: ocorrencia, isLoading, isError } = useOcorrenciaQuery(id)
 
@@ -321,27 +324,14 @@ export function OcorrenciaDetalhe() {
               <h3>Histórico de Movimentações</h3>
             </div>
             <div className="card-body">
+              {podeEscrever && ocorrencia.statusOcorrencia !== 'ENCERRADA' && <FormNota ocorrenciaId={ocorrencia.id} />}
               <MovimentacoesTimeline movimentacoes={ocorrencia.movimentacoes} />
             </div>
           </div>
         </div>
 
         <div className="col gap-4">
-          {ocorrencia.processoVinculado ? (
-            // Sem link para /processos/:id: aquela tela ainda é de demonstração (D40).
-            <div className="vinc-card" style={{ display: 'block' }}>
-              <h4>Processo Sanitário Vinculado</h4>
-              <div className="proto-big">{formatarProtocoloProcesso(ocorrencia.processoVinculado.protocolo)}</div>
-              <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 6 }}>
-                {labelDeStatusProcesso(ocorrencia.processoVinculado.statusProcesso)}
-              </div>
-            </div>
-          ) : (
-            // D40: o processo é aberto por esta tela pela API real (bloco do
-            // detalhe); o wizard e o "vincular existente" do mock de processos
-            // não alteram mais ocorrências reais.
-            <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Nenhum processo sanitário vinculado.</p>
-          )}
+          <CardProcessoVinculado ocorrencia={ocorrencia} podeAbrir={podeEscrever} podeAvancar={podeAvancarProcesso} />
 
           <CardEncerramento ocorrencia={ocorrencia} podeEncerrar={podeEscrever} />
 

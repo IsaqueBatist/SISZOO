@@ -1,4 +1,5 @@
 import type { IconName } from '@/components/layout/Icon'
+import type { StatusProcesso } from '../types/ocorrencias.types'
 
 export interface Badge {
   classe: string
@@ -27,6 +28,19 @@ const STATUS_PROCESSO_LABEL: Record<string, string> = {
 
 export function labelDeStatusProcesso(status: string): string {
   return STATUS_PROCESSO_LABEL[status] ?? status
+}
+
+// O backend só aceita o status seguinte (ProcessoSanitarioService); null no
+// último.
+const PROXIMO_STATUS_PROCESSO: Record<StatusProcesso, StatusProcesso | null> = {
+  ABERTO: 'AGUARDANDO_RESULTADO',
+  AGUARDANDO_RESULTADO: 'COM_RESULTADO',
+  COM_RESULTADO: 'CONCLUIDO',
+  CONCLUIDO: null,
+}
+
+export function proximoStatusProcesso(status: StatusProcesso): StatusProcesso | null {
+  return PROXIMO_STATUS_PROCESSO[status]
 }
 
 // Rótulos idênticos aos de docs/prototipo/cadastrar-ocorrencia.html.
