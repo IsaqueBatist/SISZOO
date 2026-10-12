@@ -1,40 +1,27 @@
 import { z } from 'zod'
-import type { ProvidenciaTomada, StatusOcorrencia } from '../types/ocorrencias.types'
-
-// Opções do catálogo `providencia_tomada` (docs/DER.md §3.4), na ordem do
-// protótipo docs/prototipo/ocorrencia.html. `registro_indevido` é a D34.
-export const PROVIDENCIA_OPCOES: readonly { valor: ProvidenciaTomada; label: string }[] = [
-  { valor: 'orientacao_municipe', label: 'Orientação ao munícipe' },
-  { valor: 'encaminhamento_gepar', label: 'Encaminhamento ao GEPAR' },
-  { valor: 'abertura_processo', label: 'Abertura de processo sanitário' },
-  { valor: 'captura_remocao', label: 'Captura e remoção do animal' },
-  { valor: 'sem_acao', label: 'Sem ação necessária' },
-  { valor: 'outro', label: 'Outro (descrever abaixo)' },
-  { valor: 'registro_indevido', label: 'Registro duplicado/indevido' },
-]
+import type { CatalogoItem, StatusOcorrencia } from '../types/ocorrencias.types'
 
 // D5: direto de ABERTA para ENCERRADA só com estas providências (mesmo
 // conjunto de ProvidenciaTomada.java no backend, que é quem valida de fato).
-const PROVIDENCIAS_SEM_ATENDIMENTO: readonly ProvidenciaTomada[] = ['sem_acao', 'orientacao_municipe', 'registro_indevido']
+// O catálogo /ocorrencias/catalogos traz só código e nome, sem essa regra —
+// por isso o filtro fica aqui, pelo código.
+const PROVIDENCIAS_SEM_ATENDIMENTO: readonly string[] = ['sem_acao', 'orientacao_municipe', 'registro_indevido']
 
-export function providenciasPermitidas(status: StatusOcorrencia) {
+export function providenciasPermitidas(status: StatusOcorrencia, providencias: CatalogoItem[]): CatalogoItem[] {
   if (status === 'ABERTA') {
-    return PROVIDENCIA_OPCOES.filter((opcao) => PROVIDENCIAS_SEM_ATENDIMENTO.includes(opcao.valor))
+    return providencias.filter((providencia) => PROVIDENCIAS_SEM_ATENDIMENTO.includes(providencia.codigo))
   }
-  return PROVIDENCIA_OPCOES
+  return providencias
 }
 
-const VALORES_PROVIDENCIA = PROVIDENCIA_OPCOES.map((opcao) => opcao.valor)
-
-// `providenciaTomada` obrigatória (DER.md §3.4, regra 12); z.enum já rejeita
-// a string vazia do <option> placeholder. `descricaoEncerramento` só é
-// obrigatória quando a providência é "outro" — validado em superRefine
-// porque depende do valor de outro campo.
+// `providenciaTomada` obrigatória (DER.md §3.4, regra 12): a string vazia é
+// o <option> placeholder; as opções vêm do catálogo do backend, que valida o
+// código de fato. `descricaoEncerramento` só é obrigatória quando a
+// providência é "outro" — validado em superRefine porque depende do valor de
+// outro campo.
 export const encerramentoFormSchema = z
   .object({
-    providenciaTomada: z.enum(VALORES_PROVIDENCIA as [string, ...string[]], {
-      message: 'Selecione a providência tomada.',
-    }),
+    providenciaTomada: z.string().min(1, 'Selecione a providência tomada.'),
     descricaoEncerramento: z.string().trim().optional(),
   })
   .superRefine((dados, ctx) => {

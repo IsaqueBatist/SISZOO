@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { mensagemDeRegraDaApi } from '@/lib/erroApi'
 import { encerramentoFormSchema, providenciasPermitidas, type EncerramentoFormValues } from '../schemas/encerramentoFormSchema'
 import type { Ocorrencia, ProvidenciaTomada } from '../types/ocorrencias.types'
-import { useEncerrarOcorrenciaMutation } from '../hooks/useOcorrencias'
+import { useCatalogosOcorrenciaQuery, useEncerrarOcorrenciaMutation } from '../hooks/useOcorrencias'
 import { formatarData } from '../utils/datas'
 
 interface CardEncerramentoProps {
@@ -15,6 +15,9 @@ interface CardEncerramentoProps {
 export function CardEncerramento({ ocorrencia, podeEncerrar }: CardEncerramentoProps) {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const mutation = useEncerrarOcorrenciaMutation(ocorrencia.id)
+  // Catálogo com staleTime infinito (useOcorrencias.ts): baixado uma vez por
+  // sessão, o que importa com a internet instável do CCZ.
+  const catalogos = useCatalogosOcorrenciaQuery()
 
   const {
     register,
@@ -109,6 +112,13 @@ export function CardEncerramento({ ocorrencia, podeEncerrar }: CardEncerramentoP
     )
   }
 
+  const providencias = catalogos.data
+    ? providenciasPermitidas(ocorrencia.statusOcorrencia, catalogos.data.providencias)
+    : []
+  // Sem catálogo (erro ou lista vazia) não há o que escolher: o encerramento
+  // fica travado até a lista carregar, nunca liberado com o select vazio.
+  const catalogoIndisponivel = catalogos.isError || (catalogos.isSuccess && providencias.length === 0)
+
   return (
     <div className="card">
       <div className="card-header">
@@ -116,6 +126,24 @@ export function CardEncerramento({ ocorrencia, podeEncerrar }: CardEncerramentoP
       </div>
       <div className="card-body">
         <form onSubmit={aoEnviar} noValidate>
+          {catalogoIndisponivel && (
+            <div className="alert danger" role="alert" style={{ marginBottom: 12 }}>
+              <span className="bullet" />
+              <div className="alert-content">
+                Não foi possível carregar a lista de providências.
+                <div style={{ marginTop: 8 }}>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline"
+                    onClick={() => void catalogos.refetch()}
+                    disabled={catalogos.isFetching}
+                  >
+                    {catalogos.isFetching ? 'Carregando…' : 'Tentar novamente'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           {submitError && (
             <div className="alert danger" role="alert" style={{ marginBottom: 12 }}>
               <span className="bullet" />
@@ -127,14 +155,15 @@ export function CardEncerramento({ ocorrencia, podeEncerrar }: CardEncerramentoP
             <select
               id="enc-providencia"
               className={`select${errors.providenciaTomada ? ' error' : ''}`}
+              disabled={providencias.length === 0}
               {...register('providenciaTomada')}
             >
               <option value="" disabled>
-                Selecione...
+                {catalogos.isPending ? 'Carregando…' : 'Selecione...'}
               </option>
-              {providenciasPermitidas(ocorrencia.statusOcorrencia).map((opcao) => (
-                <option key={opcao.valor} value={opcao.valor}>
-                  {opcao.label}
+              {providencias.map((providencia) => (
+                <option key={providencia.codigo} value={providencia.codigo}>
+                  {providencia.nome}
                 </option>
               ))}
             </select>
@@ -154,7 +183,7 @@ export function CardEncerramento({ ocorrencia, podeEncerrar }: CardEncerramentoP
             />
             {errors.descricaoEncerramento && <span className="err">{errors.descricaoEncerramento.message}</span>}
           </div>
-          <button type="submit" className="btn btn-danger w-full" disabled={mutation.isPending}>
+          <button type="submit" className="btn btn-danger w-full" disabled={mutation.isPending || providencias.length === 0}>
             {mutation.isPending ? 'Encerrando…' : 'Encerrar ocorrência'}
           </button>
         </form>
