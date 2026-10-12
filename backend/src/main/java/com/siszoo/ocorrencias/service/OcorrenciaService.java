@@ -105,6 +105,8 @@ import jakarta.persistence.criteria.Subquery;
 public class OcorrenciaService {
 
     private static final String ENTIDADE_AUDITORIA = "ocorrencia";
+    private static final String ENTIDADE_ANEXO = "anexo_ocorrencia";
+    private static final String ENTIDADE_DENUNCIANTE = "denunciante";
     private static final int MAXIMO_ANEXOS = 5;
     private static final int TAMANHO_MAXIMO_ANEXO = 5 * 1024 * 1024;
     private static final int TAMANHO_MAXIMO_NOME_ANEXO = 255;
@@ -487,13 +489,17 @@ public class OcorrenciaService {
         anexoConteudoRepository.save(registroConteudo);
 
         AnexoOcorrenciaResponse response = ocorrenciaMapper.toAnexoResponse(anexo);
-        auditoriaEventoService.registrar(autor, AcaoAuditoria.CRIACAO, "anexo_ocorrencia", anexo.getId(), null, response);
+        auditoriaEventoService.registrar(autor, AcaoAuditoria.CRIACAO, ENTIDADE_ANEXO, anexo.getId(), null, response);
         return response;
     }
 
     // D14/D30: em ocorrencia sigilosa (avaliado agora, no download), o
-    // conteudo so sai para quem tem denunciante_sigiloso.
-    @Transactional(readOnly = true)
+    // conteudo so sai para quem tem denunciante_sigiloso — e cada entrega gera
+    // VISUALIZACAO (T26). Sem readOnly: numa transacao readOnly o INSERT da
+    // auditoria (REQUIRED, participa desta) seria descartado sem erro
+    // (FlushMode.MANUAL) ou recusado pelo PostgreSQL (25006). Na mesma
+    // transacao, falha da auditoria desfaz tudo e o arquivo nao sai.
+    @Transactional
     public ArquivoAnexo baixarAnexo(UUID id, UUID anexoId, PermissoesOcorrencia permissoes) {
         Ocorrencia ocorrencia = ocorrenciaRepository.findById(id).orElseThrow(OcorrenciaNaoEncontradaException::new);
         AnexoOcorrencia anexo = anexoRepository.findByIdAndOcorrenciaId(anexoId, id)
@@ -503,18 +509,27 @@ public class OcorrenciaService {
         }
         AnexoOcorrenciaConteudo conteudo = anexoConteudoRepository.findById(anexo.getId())
                 .orElseThrow(AnexoNaoEncontradoException::new);
+        if (ocorrencia.isSigilosa()) {
+            registrarVisualizacao(permissoes, ENTIDADE_ANEXO, anexo.getId(), id);
+        }
         return new ArquivoAnexo(anexo.getNome(), anexo.getMimeType(), conteudo.getConteudo());
     }
 
     // ── Consultas ────────────────────────────────────────
 
-    // Ponto unico de leitura do detalhe: a auditoria de acesso a denunciante
-    // sigiloso (VISUALIZACAO) entra aqui na T26.
-    @Transactional(readOnly = true)
+    // Ponto unico de leitura do detalhe. Quem recebe o denunciante completo
+    // de ocorrencia sigilosa gera VISUALIZACAO (T26), uma por requisicao, sem
+    // deduplicacao. Sem readOnly pelo mesmo motivo de baixarAnexo.
+    @Transactional
     public OcorrenciaResponse buscarPorId(UUID id, PermissoesOcorrencia permissoes) {
         Ocorrencia ocorrencia = ocorrenciaRepository.findDetalheById(id)
                 .orElseThrow(OcorrenciaNaoEncontradaException::new);
-        return montarResposta(ocorrencia, permissoes);
+        Denunciante denunciante = denuncianteRepository.findByOcorrenciaId(id).orElse(null);
+        OcorrenciaResponse resposta = montarResposta(ocorrencia, denunciante, permissoes);
+        if (ocorrencia.isSigilosa() && permissoes.podeVerSigilo() && denunciante != null) {
+            registrarVisualizacao(permissoes, ENTIDADE_DENUNCIANTE, denunciante.getId(), id);
+        }
+        return resposta;
     }
 
     @Transactional(readOnly = true)
@@ -548,10 +563,16 @@ public class OcorrenciaService {
     // ── Apoio ────────────────────────────────────────────
 
     private OcorrenciaResponse montarResposta(Ocorrencia ocorrencia, PermissoesOcorrencia permissoes) {
+        return montarResposta(ocorrencia, denuncianteRepository.findByOcorrenciaId(ocorrencia.getId()).orElse(null),
+                permissoes);
+    }
+
+    private OcorrenciaResponse montarResposta(Ocorrencia ocorrencia, Denunciante denunciante,
+            PermissoesOcorrencia permissoes) {
         UUID id = ocorrencia.getId();
         return ocorrenciaMapper.toResponse(
                 ocorrencia,
-                denuncianteRepository.findByOcorrenciaId(id).orElse(null),
+                denunciante,
                 denunciadoRepository.findByOcorrenciaId(id).orElse(null),
                 processoRepository.findByOcorrenciaId(id).orElse(null),
                 movimentacaoRepository.findByOcorrenciaIdOrderByDataDescCriadoEmDesc(id),
@@ -570,6 +591,14 @@ public class OcorrenciaService {
         movimentacao.setData(LocalDateTime.now(clock));
         movimentacao.setDescricao(descricao);
         movimentacaoRepository.save(movimentacao);
+    }
+
+    // T26: acesso autorizado a dado de denunciante sigiloso. O payload so leva
+    // o id da ocorrencia — nenhum dado pessoal (D23).
+    private void registrarVisualizacao(PermissoesOcorrencia permissoes, String entidade, UUID entidadeId,
+            UUID ocorrenciaId) {
+        auditoriaEventoService.registrar(buscarUsuario(permissoes.usuarioId()), AcaoAuditoria.VISUALIZACAO,
+                entidade, entidadeId, null, Map.of("ocorrenciaId", ocorrenciaId));
     }
 
     private Ocorrencia travar(UUID id) {
