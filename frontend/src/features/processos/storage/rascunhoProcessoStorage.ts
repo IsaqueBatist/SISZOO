@@ -1,16 +1,15 @@
-// Rascunho local do wizard de processo sanitário em IndexedDB nativo (mesma
-// infraestrutura de rascunhoAnimalStorage.ts / rascunhoOcorrenciaStorage.ts,
-// store próprio) — exigência de negócio para formulários longos ("wizard de
-// processo", frontend/CLAUDE.md), já que a rede do CCZ é instável. T32 não
-// inclui edição de processo existente, então há uma única chave fixa
-// ('novo'), igual ao rascunho de ocorrência.
+// Rascunho local do wizard de processo sanitário em IndexedDB nativo (banco
+// compartilhado com os outros rascunhos, lib/rascunhoDb.ts) — exigência de
+// negócio para formulários longos ("wizard de processo"), já que a rede do
+// CCZ é instável. T32 não inclui edição de processo existente, então há uma
+// única chave fixa ('novo'), igual ao rascunho de ocorrência.
 //
 // O objeto salvo também guarda `etapaAtual` e `ocorrenciaId`/`vinculoDecisao`
 // (via RascunhoProcesso<T>) para que o rascunho restaurado reabra na etapa
 // certa e com o vínculo da RN2 respeitado — não é só o formulário puro.
-const NOME_BANCO = 'siszoo-rascunhos'
-const NOME_STORE = 'processos'
-const VERSAO_BANCO = 1
+import { carregarRascunho, removerRascunho, salvarRascunho } from '@/lib/rascunhoDb'
+
+const STORE = 'processos'
 const DEBOUNCE_MS = 800
 const CHAVE_RASCUNHO = 'novo'
 
@@ -19,71 +18,16 @@ export interface RascunhoProcesso<T> {
   valores: T
 }
 
-function indexedDbDisponivel(): boolean {
-  return typeof indexedDB !== 'undefined'
+export function salvarRascunhoProcesso<T>(valores: RascunhoProcesso<T>): Promise<void> {
+  return salvarRascunho(STORE, CHAVE_RASCUNHO, valores)
 }
 
-function abrirBanco(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const requisicao = indexedDB.open(NOME_BANCO, VERSAO_BANCO)
-    requisicao.onupgradeneeded = () => {
-      if (!requisicao.result.objectStoreNames.contains(NOME_STORE)) {
-        requisicao.result.createObjectStore(NOME_STORE)
-      }
-    }
-    requisicao.onsuccess = () => resolve(requisicao.result)
-    requisicao.onerror = () => reject(requisicao.error)
-  })
+export function carregarRascunhoProcesso<T>(): Promise<RascunhoProcesso<T> | null> {
+  return carregarRascunho<RascunhoProcesso<T>>(STORE, CHAVE_RASCUNHO)
 }
 
-export async function salvarRascunhoProcesso<T>(valores: RascunhoProcesso<T>): Promise<void> {
-  if (!indexedDbDisponivel()) return
-  try {
-    const banco = await abrirBanco()
-    await new Promise<void>((resolve, reject) => {
-      const transacao = banco.transaction(NOME_STORE, 'readwrite')
-      transacao.objectStore(NOME_STORE).put(valores, CHAVE_RASCUNHO)
-      transacao.oncomplete = () => resolve()
-      transacao.onerror = () => reject(transacao.error)
-    })
-    banco.close()
-  } catch {
-    // Rascunho é um "nice to have": falha de IndexedDB (modo privado, quota,
-    // navegador sem suporte) nunca deve quebrar o formulário.
-  }
-}
-
-export async function carregarRascunhoProcesso<T>(): Promise<RascunhoProcesso<T> | null> {
-  if (!indexedDbDisponivel()) return null
-  try {
-    const banco = await abrirBanco()
-    const valor = await new Promise<RascunhoProcesso<T> | null>((resolve, reject) => {
-      const transacao = banco.transaction(NOME_STORE, 'readonly')
-      const requisicao = transacao.objectStore(NOME_STORE).get(CHAVE_RASCUNHO)
-      requisicao.onsuccess = () => resolve((requisicao.result as RascunhoProcesso<T> | undefined) ?? null)
-      requisicao.onerror = () => reject(requisicao.error)
-    })
-    banco.close()
-    return valor
-  } catch {
-    return null
-  }
-}
-
-export async function removerRascunhoProcesso(): Promise<void> {
-  if (!indexedDbDisponivel()) return
-  try {
-    const banco = await abrirBanco()
-    await new Promise<void>((resolve, reject) => {
-      const transacao = banco.transaction(NOME_STORE, 'readwrite')
-      transacao.objectStore(NOME_STORE).delete(CHAVE_RASCUNHO)
-      transacao.oncomplete = () => resolve()
-      transacao.onerror = () => reject(transacao.error)
-    })
-    banco.close()
-  } catch {
-    // idem: melhor esforço, não propaga erro.
-  }
+export function removerRascunhoProcesso(): Promise<void> {
+  return removerRascunho(STORE, CHAVE_RASCUNHO)
 }
 
 let timeoutAgendado: ReturnType<typeof setTimeout> | null = null

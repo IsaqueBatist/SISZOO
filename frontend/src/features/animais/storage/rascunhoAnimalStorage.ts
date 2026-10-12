@@ -1,81 +1,27 @@
 // Rascunho local do formulário de animal em IndexedDB nativo (sem
 // dependência) — exigência de negócio para formulários longos
 // ("cadastro de animal"), já que a rede do CCZ é instável e o form não pode
-// perder dados preenchidos numa queda de conexão.
-const NOME_BANCO = 'siszoo-rascunhos'
-const NOME_STORE = 'animais'
-const VERSAO_BANCO = 1
+// perder dados preenchidos numa queda de conexão. O banco é compartilhado
+// com os outros rascunhos (lib/rascunhoDb.ts).
+import { carregarRascunho, removerRascunho, salvarRascunho } from '@/lib/rascunhoDb'
+
+const STORE = 'animais'
 const DEBOUNCE_MS = 800
 
 export function chaveRascunhoAnimal(id: string | undefined): string {
   return id ? `editar:${id}` : 'novo'
 }
 
-function indexedDbDisponivel(): boolean {
-  return typeof indexedDB !== 'undefined'
+export function salvarRascunhoAnimal<T>(chave: string, valores: T): Promise<void> {
+  return salvarRascunho(STORE, chave, valores)
 }
 
-function abrirBanco(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const requisicao = indexedDB.open(NOME_BANCO, VERSAO_BANCO)
-    requisicao.onupgradeneeded = () => {
-      if (!requisicao.result.objectStoreNames.contains(NOME_STORE)) {
-        requisicao.result.createObjectStore(NOME_STORE)
-      }
-    }
-    requisicao.onsuccess = () => resolve(requisicao.result)
-    requisicao.onerror = () => reject(requisicao.error)
-  })
+export function carregarRascunhoAnimal<T>(chave: string): Promise<T | null> {
+  return carregarRascunho<T>(STORE, chave)
 }
 
-export async function salvarRascunhoAnimal<T>(chave: string, valores: T): Promise<void> {
-  if (!indexedDbDisponivel()) return
-  try {
-    const banco = await abrirBanco()
-    await new Promise<void>((resolve, reject) => {
-      const transacao = banco.transaction(NOME_STORE, 'readwrite')
-      transacao.objectStore(NOME_STORE).put(valores, chave)
-      transacao.oncomplete = () => resolve()
-      transacao.onerror = () => reject(transacao.error)
-    })
-    banco.close()
-  } catch {
-    // Rascunho é um "nice to have": falha de IndexedDB (modo privado, quota,
-    // navegador sem suporte) nunca deve quebrar o formulário.
-  }
-}
-
-export async function carregarRascunhoAnimal<T>(chave: string): Promise<T | null> {
-  if (!indexedDbDisponivel()) return null
-  try {
-    const banco = await abrirBanco()
-    const valor = await new Promise<T | null>((resolve, reject) => {
-      const transacao = banco.transaction(NOME_STORE, 'readonly')
-      const requisicao = transacao.objectStore(NOME_STORE).get(chave)
-      requisicao.onsuccess = () => resolve((requisicao.result as T | undefined) ?? null)
-      requisicao.onerror = () => reject(requisicao.error)
-    })
-    banco.close()
-    return valor
-  } catch {
-    return null
-  }
-}
-
-export async function removerRascunhoAnimal(chave: string): Promise<void> {
-  if (!indexedDbDisponivel()) return
-  try {
-    const banco = await abrirBanco()
-    await new Promise<void>((resolve, reject) => {
-      const transacao = banco.transaction(NOME_STORE, 'readwrite')
-      transacao.objectStore(NOME_STORE).delete(chave)
-      transacao.oncomplete = () => resolve()
-      transacao.onerror = () => reject(transacao.error)
-    })
-    banco.close()
-  } catch {
-    // idem: melhor esforço, não propaga erro.
-  }
+export function removerRascunhoAnimal(chave: string): Promise<void> {
+  return removerRascunho(STORE, chave)
 }
 
 const timeoutsAgendados = new Map<string, ReturnType<typeof setTimeout>>()
