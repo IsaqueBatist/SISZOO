@@ -536,7 +536,7 @@ public class OcorrenciaService {
     public PaginaResponse<OcorrenciaResumoResponse> listar(String tipo, StatusOcorrencia status, String q,
             int pagina, int tamanho, PermissoesOcorrencia permissoes) {
         Page<Ocorrencia> paginaOcorrencias = ocorrenciaRepository.findAll(
-                construirFiltro(tipo, status, q, permissoes.podeVerSigilo()),
+                construirFiltro(tipo, status, q),
                 PageRequest.of(pagina, tamanho, ORDEM_LISTAGEM));
 
         List<UUID> ids = paginaOcorrencias.getContent().stream().map(Ocorrencia::getId).toList();
@@ -547,6 +547,8 @@ public class OcorrenciaService {
                 : processoRepository.findByOcorrenciaIdIn(ids).stream()
                         .collect(Collectors.toMap(p -> p.getOcorrencia().getId(), Function.identity()));
 
+        // A listagem nao gera VISUALIZACAO: nao entrega dado de denunciante
+        // de ocorrencia sigilosa a ninguem (o mapper devolve o nome null).
         return PaginaResponse.de(paginaOcorrencias.map(o -> ocorrenciaMapper.toResumo(
                 o, denunciantes.get(o.getId()), processos.get(o.getId()), permissoes.podeVerSigilo())));
     }
@@ -658,8 +660,7 @@ public class OcorrenciaService {
         denunciado.setObservacoes(request.observacoes());
     }
 
-    private Specification<Ocorrencia> construirFiltro(String tipo, StatusOcorrencia status, String q,
-            boolean podeVerSigilo) {
+    private Specification<Ocorrencia> construirFiltro(String tipo, StatusOcorrencia status, String q) {
         return (root, query, cb) -> {
             List<Predicate> predicados = new ArrayList<>();
             if (StringUtils.hasText(tipo)) {
@@ -671,21 +672,19 @@ public class OcorrenciaService {
             if (StringUtils.hasText(q)) {
                 String termo = "%" + PREFIXO_PROTOCOLO.matcher(q).replaceFirst("").trim().toLowerCase() + "%";
 
-                // O nome do denunciante so entra na busca onde a pessoa poderia
-                // ve-lo; senao a busca confirmaria a identidade de um
-                // denunciante sigiloso por canal lateral (D14).
+                // O nome do denunciante de ocorrencia sigilosa nunca entra na
+                // busca, para nenhum perfil (T26, revisao da D14): a listagem
+                // nao o devolve nem o audita, entao a busca nao pode confirmar
+                // a identidade por canal lateral. Protocolo e bairro continuam.
                 Subquery<UUID> porDenunciante = query.subquery(UUID.class);
                 var denunciante = porDenunciante.from(Denunciante.class);
                 porDenunciante.select(denunciante.get("ocorrencia").get("id"))
                         .where(cb.like(cb.lower(denunciante.get("nome")), termo));
-                Predicate denuncianteVisivel = podeVerSigilo
-                        ? cb.conjunction()
-                        : cb.isFalse(root.get("sigilosa"));
 
                 predicados.add(cb.or(
                         cb.like(cb.lower(root.get("protocolo")), termo),
                         cb.like(cb.lower(root.get("bairro")), termo),
-                        cb.and(denuncianteVisivel, root.get("id").in(porDenunciante))));
+                        cb.and(cb.isFalse(root.get("sigilosa")), root.get("id").in(porDenunciante))));
             }
             return cb.and(predicados.toArray(new Predicate[0]));
         };

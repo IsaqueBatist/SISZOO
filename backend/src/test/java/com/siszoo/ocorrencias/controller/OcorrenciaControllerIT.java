@@ -166,17 +166,42 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("[D14] busca pelo nome real de denunciante sigiloso: Admin e Agente encontram, leitor sem a feature nao")
+    @DisplayName("[D14/T26] busca pelo nome real de denunciante sigiloso nao encontra para ninguem; pelo protocolo encontra")
     void buscaPorNomeNaoVazaSigilo() {
         String nome = "Nomebusca" + UUID.randomUUID().toString().substring(0, 8);
         Map<String, Object> corpo = corpo();
         corpo.put("sigilosa", true);
         corpo.put("denunciante", Map.of("nome", nome));
-        criar(tokenAgente, corpo).then().statusCode(200);
+        String protocolo = criar(tokenAgente, corpo).then().statusCode(200).extract().path("protocolo");
 
-        assertThat(listar(tokenAdmin, nome).path("totalItens"), equalTo(1));
-        assertThat(listar(tokenAgente, nome).path("totalItens"), equalTo(1));
-        assertThat(listar(tokenLeitor, nome).path("totalItens"), equalTo(0));
+        for (String token : List.of(tokenAdmin, tokenAgente, tokenLeitor)) {
+            assertThat(listar(token, nome).path("totalItens"), equalTo(0));
+            assertThat(listar(token, protocolo).path("totalItens"), equalTo(1));
+        }
+    }
+
+    @Test
+    @DisplayName("[D14/T26] listagem: nome do denunciante null em sigilosa para todos os perfis; real em nao sigilosa")
+    void listagemNaoExpoeDenuncianteSigiloso() {
+        String bairro = "BairroLista" + UUID.randomUUID().toString().substring(0, 8);
+        Map<String, Object> sigilosa = corpo();
+        sigilosa.put("bairro", bairro);
+        sigilosa.put("sigilosa", true);
+        sigilosa.put("denunciante", Map.of("nome", "Sigiloso Lista " + bairro));
+        String idSigilosa = idDe(criar(tokenAgente, sigilosa));
+        Map<String, Object> publica = corpo();
+        publica.put("bairro", bairro);
+        publica.put("denunciante", Map.of("nome", "Publico Lista " + bairro));
+        String idPublica = idDe(criar(tokenAgente, publica));
+
+        for (String token : List.of(tokenAdmin, tokenAgente, tokenLeitor)) {
+            Response lista = listar(token, bairro);
+            assertThat(lista.path("totalItens"), equalTo(2));
+            assertThat(lista.path("itens.find { it.id == '" + idSigilosa + "' }.denuncianteNome"), nullValue());
+            assertThat(lista.path("itens.find { it.id == '" + idPublica + "' }.denuncianteNome"),
+                    equalTo("Publico Lista " + bairro));
+            assertThat(lista.asString(), not(containsString("Sigiloso Lista")));
+        }
     }
 
     // ── Edicao (D10) ─────────────────────────────────────

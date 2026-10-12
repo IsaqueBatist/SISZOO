@@ -91,9 +91,13 @@ public interface OcorrenciaMapper {
                 ocorrencia.getAtualizadoEm());
     }
 
+    // Listagem (T26, revisao da D14): o nome do denunciante de ocorrencia
+    // sigilosa e null para todos os perfis — so o detalhe o entrega, a quem
+    // tem a permissao, e la o acesso e auditado (VISUALIZACAO).
+    // podeVerSigilo segue apenas para o campo podeVerDenunciante.
     default OcorrenciaResumoResponse toResumo(Ocorrencia ocorrencia, Denunciante denunciante,
             ProcessoSanitario processo, boolean podeVerSigilo) {
-        DenuncianteResponse visivel = denuncianteVisivel(ocorrencia, denunciante, podeVerSigilo);
+        String denuncianteNome = denunciante == null || ocorrencia.isSigilosa() ? null : denunciante.getNome();
         return new OcorrenciaResumoResponse(
                 ocorrencia.getId(),
                 ocorrencia.getProtocolo(),
@@ -105,7 +109,7 @@ public interface OcorrenciaMapper {
                 ocorrencia.isUrgente(),
                 ocorrencia.isSigilosa(),
                 ocorrencia.isAnonima(),
-                visivel == null ? null : visivel.nome(),
+                denuncianteNome,
                 processo == null ? null : processo.getProtocolo(),
                 podeVerSigilo);
     }

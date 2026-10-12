@@ -5,7 +5,8 @@ import java.util.UUID;
 
 import com.siszoo.ocorrencias.entity.StatusOcorrencia;
 
-// Linha da listagem. denuncianteNome segue a mesma mascara do detalhe (D14).
+// Linha da listagem. denuncianteNome e null em ocorrencia sigilosa para todos
+// os perfis (T26, revisao da D14): o nome so sai no detalhe, que e auditado.
 public record OcorrenciaResumoResponse(
         UUID id,
         String protocolo,
