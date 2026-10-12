@@ -5,41 +5,17 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
+import { criarOcorrenciaFixture } from '@/mocks/ocorrenciasFixtures'
 import { CardEncerramento } from './CardEncerramento'
-import type { Ocorrencia } from '../types/ocorrencias.types'
+import type { Ocorrencia, ProcessoVinculado } from '../types/ocorrencias.types'
 
-// Mesmo id semeado em ./ocorrenciasMockStore.ts (OCORRENCIA_ABERTA_ID) —
-// necessário só no teste que de fato chama encerrarOcorrencia() contra o
-// store mockado.
-const OCORRENCIA_ABERTA_ID = 'h5000000-0000-0000-0000-000000000001'
-
+// O POST de encerramento cai no handler fixo de ../../../mocks/ocorrenciasHandlers.ts.
 function criarOcorrencia(sobrescrever: Partial<Ocorrencia> = {}): Ocorrencia {
-  return {
-    id: OCORRENCIA_ABERTA_ID,
-    protocolo: '089/2026',
-    tipoOcorrencia: 'zoonose',
-    statusOcorrencia: 'aberta',
-    dataAbertura: '2026-05-20',
-    horaAbertura: '10:32',
-    endereco: 'Rua das Acácias, 145',
-    bairro: 'Vila Esperança',
-    pontoReferencia: null,
-    descricao: 'Descrição de teste.',
-    urgente: false,
-    sigilosa: false,
-    registradoPorNome: 'Rafael Santos',
-    providenciaTomada: null,
-    descricaoEncerramento: null,
-    encerradaEm: null,
-    processoVinculado: null,
-    denunciante: null,
-    denunciado: null,
-    movimentacoes: [],
-    anexos: [],
-    criadoEm: '2026-05-20T10:32:00Z',
-    atualizadoEm: '2026-05-20T10:32:00Z',
-    ...sobrescrever,
-  }
+  return criarOcorrenciaFixture(sobrescrever)
+}
+
+function processo(statusProcesso: ProcessoVinculado['statusProcesso']): ProcessoVinculado {
+  return { id: 'p1', protocolo: '045/2026', statusProcesso, urgente: false }
 }
 
 function renderCard(ocorrencia: Ocorrencia, podeEncerrar: boolean) {
@@ -77,7 +53,7 @@ describe('CardEncerramento', () => {
 
   it('exige descrição quando a providência é "Outro" e libera o envio quando ela é preenchida', async () => {
     const user = userEvent.setup()
-    renderCard(criarOcorrencia(), true)
+    renderCard(criarOcorrencia({ statusOcorrencia: 'EM_ATENDIMENTO' }), true)
 
     await user.selectOptions(screen.getByLabelText('Providência tomada'), 'Outro (descrever abaixo)')
     await user.click(screen.getByRole('button', { name: 'Encerrar ocorrência' }))
@@ -90,6 +66,32 @@ describe('CardEncerramento', () => {
     expect(screen.queryByText('Descreva a providência tomada quando selecionar "Outro".')).not.toBeInTheDocument()
   })
 
+  it('em ocorrência ABERTA, só oferece as providências de encerramento direto (D5)', () => {
+    renderCard(criarOcorrencia({ statusOcorrencia: 'ABERTA' }), true)
+
+    const opcoes = Array.from((screen.getByLabelText('Providência tomada') as HTMLSelectElement).options)
+      .filter((opcao) => opcao.value !== '')
+      .map((opcao) => opcao.value)
+    expect(opcoes).toEqual(['orientacao_municipe', 'sem_acao', 'registro_indevido'])
+  })
+
+  it('em ocorrência EM_ATENDIMENTO, oferece todas as providências, inclusive "Registro duplicado/indevido" (D34)', () => {
+    renderCard(criarOcorrencia({ statusOcorrencia: 'EM_ATENDIMENTO' }), true)
+
+    const opcoes = Array.from((screen.getByLabelText('Providência tomada') as HTMLSelectElement).options)
+      .filter((opcao) => opcao.value !== '')
+      .map((opcao) => opcao.value)
+    expect(opcoes).toEqual([
+      'orientacao_municipe',
+      'encaminhamento_gepar',
+      'abertura_processo',
+      'captura_remocao',
+      'sem_acao',
+      'outro',
+      'registro_indevido',
+    ])
+  })
+
   it('permite encerrar com uma providência simples selecionada', async () => {
     const user = userEvent.setup()
     renderCard(criarOcorrencia(), true)
@@ -100,17 +102,21 @@ describe('CardEncerramento', () => {
     await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument())
   })
 
-  it('não mostra o formulário quando há processo sanitário pendente de resultado', () => {
-    renderCard(
-      criarOcorrencia({
-        processoVinculado: { id: 'p1', protocolo: '045/2026', statusProcesso: 'Aguardando resultado', resultadoPendente: true },
-      }),
-      true,
-    )
+  it.each(['ABERTO', 'AGUARDANDO_RESULTADO', 'COM_RESULTADO'] as const)(
+    'não mostra o formulário quando o processo vinculado está %s, ainda não concluído (D12)',
+    (statusProcesso) => {
+      renderCard(criarOcorrencia({ statusOcorrencia: 'EM_ATENDIMENTO', processoVinculado: processo(statusProcesso) }), true)
 
-    expect(screen.queryByLabelText('Providência tomada')).not.toBeInTheDocument()
-    expect(screen.getByText('Disponível após resultado do processo')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Encerrar ocorrência' })).toBeDisabled()
+      expect(screen.queryByLabelText('Providência tomada')).not.toBeInTheDocument()
+      expect(screen.getByText('Disponível após a conclusão do processo')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Encerrar ocorrência' })).toBeDisabled()
+    },
+  )
+
+  it('libera o formulário quando o processo vinculado está CONCLUIDO', () => {
+    renderCard(criarOcorrencia({ statusOcorrencia: 'EM_ATENDIMENTO', processoVinculado: processo('CONCLUIDO') }), true)
+
+    expect(screen.getByLabelText('Providência tomada')).toBeInTheDocument()
   })
 
   it('não mostra o formulário quando o perfil não tem permissão para encerrar', () => {
@@ -123,21 +129,21 @@ describe('CardEncerramento', () => {
   it('mostra os dados de encerramento em modo somente-leitura quando a ocorrência já está encerrada', () => {
     renderCard(
       criarOcorrencia({
-        statusOcorrencia: 'encerrada',
+        statusOcorrencia: 'ENCERRADA',
         providenciaTomada: 'captura_remocao',
+        providenciaTomadaNome: 'Captura e remoção',
         descricaoEncerramento: 'Animal capturado.',
-        encerradaEm: '2026-05-12T16:00:00Z',
-        movimentacoes: [
-          { id: 'm1', tipoMovimentacao: 'encerrada', data: '2026-05-12T16:00:00Z', descricao: null, usuarioNome: 'Stéphanie Lima' },
-        ],
+        encerradaEm: '2026-05-12T13:00:00.004432',
+        encerradaPorNome: 'Stéphanie Lima',
       }),
       true,
     )
 
     expect(screen.queryByLabelText('Providência tomada')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Encerrar ocorrência' })).not.toBeInTheDocument()
-    expect(screen.getByText('Captura e remoção do animal')).toBeInTheDocument()
+    expect(screen.getByText('Captura e remoção')).toBeInTheDocument()
     expect(screen.getByText('Animal capturado.')).toBeInTheDocument()
+    expect(screen.getByText('12/05/2026')).toBeInTheDocument()
     expect(screen.getByText('Stéphanie Lima')).toBeInTheDocument()
   })
 })

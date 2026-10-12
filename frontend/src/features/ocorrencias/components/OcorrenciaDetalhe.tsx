@@ -2,12 +2,16 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { statusHttpDoErro } from '@/lib/erroApi'
 import { CardDenunciante } from './CardDenunciante'
 import { CardEncerramento } from './CardEncerramento'
 import { MovimentacoesTimeline } from './MovimentacoesTimeline'
-import type { Ocorrencia } from '../types/ocorrencias.types'
+import type { AnexoOcorrencia, Ocorrencia } from '../types/ocorrencias.types'
 import './OcorrenciaDetalhe.css'
-import { badgeDeStatus, labelDeTipo } from '../utils/statusBadge'
+import { baixarAnexo } from '../api/ocorrenciasApi'
+import { badgeDeStatus, labelDeStatusProcesso } from '../utils/statusBadge'
+import { formatarData, formatarHora } from '../utils/datas'
+import { formatarProtocoloOcorrencia, formatarProtocoloProcesso } from '../utils/protocolo'
 import { useIniciarAtendimentoMutation, useOcorrenciaQuery } from '../hooks/useOcorrencias'
 
 // Botão próprio (não inline em OcorrenciaDetalhe) porque a mutation só pode
@@ -19,7 +23,7 @@ function BotaoIniciarAtendimento({ ocorrencia, podeEscrever }: { ocorrencia: Oco
   const [erro, setErro] = useState<string | null>(null)
   const mutation = useIniciarAtendimentoMutation(ocorrencia.id)
 
-  if (!podeEscrever || ocorrencia.statusOcorrencia !== 'aberta') return null
+  if (!podeEscrever || ocorrencia.statusOcorrencia !== 'ABERTA') return null
 
   async function handleClick() {
     setErro(null)
@@ -40,16 +44,81 @@ function BotaoIniciarAtendimento({ ocorrencia, podeEscrever }: { ocorrencia: Oco
   )
 }
 
-const FUSO_ITU = 'America/Sao_Paulo'
-
-function formatarData(iso: string): string {
-  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: FUSO_ITU }).format(
-    new Date(iso),
-  )
-}
-
 function formatarTamanho(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+// O download precisa do token, então não dá para usar <a href> direto: baixa
+// o Blob, cria um object URL só para o clique e o revoga logo depois.
+function salvarBlob(blob: Blob, nomeArquivo: string) {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = nomeArquivo
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 0)
+}
+
+// Anexo de ocorrência sigilosa é restrito a quem pode ver o denunciante (o
+// backend responde 403 para os demais): o cadeado só antecipa isso na tela.
+function ListaAnexos({ ocorrencia }: { ocorrencia: Ocorrencia }) {
+  const [erro, setErro] = useState<string | null>(null)
+  const restrito = ocorrencia.sigilosa && !ocorrencia.podeVerDenunciante
+
+  async function baixar(anexo: AnexoOcorrencia) {
+    setErro(null)
+    try {
+      salvarBlob(await baixarAnexo(ocorrencia.id, anexo.id), anexo.nome)
+    } catch (falha) {
+      setErro(statusHttpDoErro(falha) === 403 ? 'Anexo restrito' : 'Não foi possível baixar o anexo. Tente novamente.')
+    }
+  }
+
+  return (
+    <div className="card">
+      <div className="card-header">
+        <h3>Anexos</h3>
+      </div>
+      <div className="card-body" style={{ padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {erro && (
+          <div className="alert danger" role="alert">
+            <span className="bullet" />
+            <div className="alert-content">{erro}</div>
+          </div>
+        )}
+        {ocorrencia.anexos.length === 0 && (
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', padding: '4px 6px' }}>Nenhum anexo registrado.</p>
+        )}
+        {ocorrencia.anexos.map((anexo) => (
+          <div key={anexo.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 6, fontSize: 13 }}>
+            <Icon name="clipboard" size={16} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 500 }}>{anexo.nome}</div>
+              <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
+                {formatarTamanho(anexo.tamanho)} · {formatarData(anexo.criadoEm)}
+              </div>
+            </div>
+            {restrito ? (
+              <span role="img" aria-label="restrito" title="Anexo restrito" style={{ color: 'var(--color-text-muted)' }}>
+                <Icon name="lock" size={14} />
+              </span>
+            ) : (
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm btn-icon-only"
+                aria-label={`Baixar ${anexo.nome}`}
+                onClick={() => void baixar(anexo)}
+              >
+                <Icon name="chevronDown" size={14} />
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 export function OcorrenciaDetalhe() {
@@ -94,10 +163,11 @@ export function OcorrenciaDetalhe() {
                 <Icon name="lock" size={12} /> Sigilosa
               </span>
             )}
+            {ocorrencia.anonima && <span className="badge badge-neutral">Anônima</span>}
           </div>
-          <h1 style={{ fontFamily: 'var(--font-mono)', letterSpacing: 0 }}>Ocorrência {ocorrencia.protocolo}</h1>
+          <h1 style={{ fontFamily: 'var(--font-mono)', letterSpacing: 0 }}>Ocorrência {formatarProtocoloOcorrencia(ocorrencia.protocolo)}</h1>
           <p className="subtitle">
-            {labelDeTipo(ocorrencia.tipoOcorrencia)} · {ocorrencia.bairro}
+            {ocorrencia.tipoOcorrenciaNome} · {ocorrencia.bairro}
           </p>
         </div>
         <div className="actions">
@@ -117,7 +187,7 @@ export function OcorrenciaDetalhe() {
                   <label>Tipo</label>
                   <div>
                     <span className="badge" style={{ background: 'var(--color-danger-bg)', color: 'var(--color-danger)' }}>
-                      {labelDeTipo(ocorrencia.tipoOcorrencia)}
+                      {ocorrencia.tipoOcorrenciaNome}
                     </span>
                   </div>
                 </div>
@@ -125,7 +195,7 @@ export function OcorrenciaDetalhe() {
                   <label>Data / hora</label>
                   <div className="mono" style={{ fontSize: 14 }}>
                     {formatarData(ocorrencia.dataAbertura)}
-                    {ocorrencia.horaAbertura ? ` · ${ocorrencia.horaAbertura}` : ''}
+                    {ocorrencia.horaAbertura ? ` · ${formatarHora(ocorrencia.horaAbertura)}` : ''}
                   </div>
                 </div>
                 <div className="field full">
@@ -166,7 +236,11 @@ export function OcorrenciaDetalhe() {
             </div>
           </div>
 
-          <CardDenunciante sigilosa={ocorrencia.sigilosa} denunciante={ocorrencia.denunciante} />
+          <CardDenunciante
+            mascarado={ocorrencia.sigilosa && !ocorrencia.podeVerDenunciante}
+            anonima={ocorrencia.anonima}
+            denunciante={ocorrencia.denunciante}
+          />
 
           <div className="card">
             <div className="card-header">
@@ -219,13 +293,14 @@ export function OcorrenciaDetalhe() {
 
         <div className="col gap-4">
           {ocorrencia.processoVinculado ? (
-            <Link to={`/processos/${ocorrencia.processoVinculado.id}`} className="vinc-card" style={{ display: 'block' }}>
+            // Sem link para /processos/:id: aquela tela ainda é de demonstração (D40).
+            <div className="vinc-card" style={{ display: 'block' }}>
               <h4>Processo Sanitário Vinculado</h4>
-              <div className="proto-big">{ocorrencia.processoVinculado.protocolo}</div>
+              <div className="proto-big">{formatarProtocoloProcesso(ocorrencia.processoVinculado.protocolo)}</div>
               <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 6 }}>
-                {ocorrencia.processoVinculado.resultadoPendente ? 'Aguardando resultado' : ocorrencia.processoVinculado.statusProcesso}
+                {labelDeStatusProcesso(ocorrencia.processoVinculado.statusProcesso)}
               </div>
-            </Link>
+            </div>
           ) : (
             // D40: o processo é aberto por esta tela pela API real (bloco do
             // detalhe); o wizard e o "vincular existente" do mock de processos
@@ -235,32 +310,7 @@ export function OcorrenciaDetalhe() {
 
           <CardEncerramento ocorrencia={ocorrencia} podeEncerrar={podeEscrever} />
 
-          <div className="card">
-            <div className="card-header">
-              <h3>Anexos</h3>
-            </div>
-            <div className="card-body" style={{ padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {ocorrencia.anexos.length === 0 && (
-                <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', padding: '4px 6px' }}>
-                  Nenhum anexo registrado.
-                </p>
-              )}
-              {ocorrencia.anexos.map((anexo) => (
-                <div key={anexo.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 6, fontSize: 13 }}>
-                  <Icon name="clipboard" size={16} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 500 }}>{anexo.nome}</div>
-                    <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
-                      {formatarTamanho(anexo.tamanho)} · {formatarData(anexo.criadoEm)}
-                    </div>
-                  </div>
-                  <a href={anexo.url} className="btn btn-ghost btn-sm btn-icon-only" aria-label={`Baixar ${anexo.nome}`}>
-                    <Icon name="chevronDown" size={14} />
-                  </a>
-                </div>
-              ))}
-            </div>
-          </div>
+          <ListaAnexos ocorrencia={ocorrencia} />
         </div>
       </div>
     </>

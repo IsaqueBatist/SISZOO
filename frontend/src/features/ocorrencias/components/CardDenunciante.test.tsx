@@ -25,30 +25,38 @@ const DENUNCIANTE_MASCARADO: Denunciante = {
 
 describe('CardDenunciante', () => {
   it('exibe os dados do denunciante quando não sigilosa', () => {
-    render(<CardDenunciante sigilosa={false} denunciante={DENUNCIANTE_COMPLETO} />)
+    render(<CardDenunciante mascarado={false} anonima={false} denunciante={DENUNCIANTE_COMPLETO} />)
 
     expect(screen.getByText('Maria Souza Oliveira')).toBeInTheDocument()
     expect(screen.getByText('123.456.789-00')).toBeInTheDocument()
     expect(screen.getByText('maria.souza@email.com')).toBeInTheDocument()
   })
 
-  it('exibe o placeholder "Sigiloso" quando a ocorrência é sigilosa e os campos vêm null, sem quebrar o layout', () => {
-    render(<CardDenunciante sigilosa={true} denunciante={DENUNCIANTE_MASCARADO} />)
+  it('exibe o placeholder "Sigiloso" quando o denunciante vem mascarado (sigilosa sem permissão) e os campos vêm null, sem quebrar o layout', () => {
+    render(<CardDenunciante mascarado={true} anonima={false} denunciante={DENUNCIANTE_MASCARADO} />)
 
     expect(screen.getAllByText('Sigiloso').length).toBeGreaterThan(0)
     expect(screen.queryByText('Maria Souza Oliveira')).not.toBeInTheDocument()
   })
 
-  it('exibe "—" (não "Sigiloso") quando o campo é null mas a ocorrência não é sigilosa', () => {
-    render(<CardDenunciante sigilosa={false} denunciante={DENUNCIANTE_MASCARADO} />)
+  it('exibe "—" (não "Sigiloso") quando o campo é null mas o denunciante não está mascarado', () => {
+    render(<CardDenunciante mascarado={false} anonima={false} denunciante={DENUNCIANTE_MASCARADO} />)
 
     expect(screen.queryByText('Sigiloso')).not.toBeInTheDocument()
     expect(screen.getAllByText('—').length).toBeGreaterThan(0)
   })
 
   it('mostra estado vazio quando não há denunciante registrado', () => {
-    render(<CardDenunciante sigilosa={false} denunciante={null} />)
+    render(<CardDenunciante mascarado={false} anonima={false} denunciante={null} />)
 
     expect(screen.getByText('Nenhum denunciante registrado para esta ocorrência.')).toBeInTheDocument()
+  })
+
+  it('mostra o aviso de denúncia anônima, sem campos nem placeholder "Sigiloso"', () => {
+    render(<CardDenunciante mascarado={false} anonima={true} denunciante={null} />)
+
+    expect(screen.getByText(/Denúncia anônima/)).toBeInTheDocument()
+    expect(screen.queryByText('Sigiloso')).not.toBeInTheDocument()
+    expect(screen.queryByText('CPF')).not.toBeInTheDocument()
   })
 })

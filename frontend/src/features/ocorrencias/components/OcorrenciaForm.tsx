@@ -15,13 +15,9 @@ import {
   salvarRascunhoOcorrencia,
 } from '../storage/rascunhoOcorrenciaStorage'
 import { iconeDeTipo, labelDeTipo } from '../utils/statusBadge'
+import { hojeIso } from '../utils/datas'
+import { enviarAnexo } from '../api/ocorrenciasApi'
 import { useCriarOcorrenciaMutation } from '../hooks/useOcorrencias'
-
-const FUSO_ITU = 'America/Sao_Paulo'
-
-function hojeIso(): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: FUSO_ITU }).format(new Date())
-}
 
 function valoresVazios(): OcorrenciaFormValues {
   return {
@@ -41,7 +37,8 @@ function valoresVazios(): OcorrenciaFormValues {
 }
 
 // Monta o payload real a partir dos valores do form — strings vazias viram
-// `undefined` (campo opcional ausente), nunca enviadas como "".
+// `undefined` (campo opcional ausente), nunca enviadas como "". Anexos não
+// vão no JSON: cada arquivo é um POST multipart depois do cadastro (D15).
 function paraRequisicao(valores: OcorrenciaFormValues): CriarOcorrenciaRequest {
   return {
     tipoOcorrencia: valores.tipoOcorrencia as CriarOcorrenciaRequest['tipoOcorrencia'],
@@ -51,7 +48,9 @@ function paraRequisicao(valores: OcorrenciaFormValues): CriarOcorrenciaRequest {
     bairro: valores.bairro,
     pontoReferencia: valores.pontoReferencia || undefined,
     descricao: valores.descricao,
+    urgente: false,
     sigilosa: valores.sigilosa,
+    anonima: false,
     denunciante: {
       nome: valores.denunciante.nome || undefined,
       cpf: valores.denunciante.cpf || undefined,
@@ -69,8 +68,7 @@ function paraRequisicao(valores: OcorrenciaFormValues): CriarOcorrenciaRequest {
           endereco: valores.denunciado.endereco || undefined,
           observacoes: valores.denunciado.observacoes || undefined,
         }
-      : null,
-    anexos: valores.anexos,
+      : undefined,
   }
 }
 
@@ -190,6 +188,9 @@ export function OcorrenciaForm() {
   async function onSubmit(dados: OcorrenciaFormValues) {
     try {
       const nova = await mutation.mutateAsync(paraRequisicao(dados))
+      for (const arquivo of dados.anexos) {
+        await enviarAnexo(nova.id, arquivo)
+      }
       await removerRascunhoOcorrencia()
       navigate(`/ocorrencias/${nova.id}`)
     } catch {

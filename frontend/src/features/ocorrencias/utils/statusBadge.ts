@@ -5,14 +5,28 @@ export interface Badge {
   label: string
 }
 
+// Chaves em maiúsculas (códigos da API, StatusOcorrencia). O mock de
+// processos (D40) ainda usa minúsculas nas ocorrências de demonstração — a
+// busca normaliza para servir os dois.
 const STATUS_BADGE_MAP: Record<string, Badge> = {
-  aberta: { classe: 'badge-process-open', label: 'Aberta' },
-  em_atendimento: { classe: 'badge-process-awaiting', label: 'Em atendimento' },
-  encerrada: { classe: 'badge-process-closed', label: 'Encerrada' },
+  ABERTA: { classe: 'badge-process-open', label: 'Aberta' },
+  EM_ATENDIMENTO: { classe: 'badge-process-awaiting', label: 'Em atendimento' },
+  ENCERRADA: { classe: 'badge-process-closed', label: 'Encerrada' },
 }
 
 export function badgeDeStatus(status: string): Badge {
-  return STATUS_BADGE_MAP[status] ?? { classe: 'badge-neutral', label: status }
+  return STATUS_BADGE_MAP[status.toUpperCase()] ?? { classe: 'badge-neutral', label: status }
+}
+
+const STATUS_PROCESSO_LABEL: Record<string, string> = {
+  ABERTO: 'Aberto',
+  AGUARDANDO_RESULTADO: 'Aguardando resultado',
+  COM_RESULTADO: 'Com resultado',
+  CONCLUIDO: 'Concluído',
+}
+
+export function labelDeStatusProcesso(status: string): string {
+  return STATUS_PROCESSO_LABEL[status] ?? status
 }
 
 // Rótulos idênticos aos de docs/prototipo/cadastrar-ocorrencia.html.

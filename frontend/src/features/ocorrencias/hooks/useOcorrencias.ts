@@ -1,57 +1,130 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useAuth } from '@/features/auth/hooks/useAuth'
 import {
+  abrirProcesso,
+  adicionarNota,
+  atualizarOcorrencia,
+  avancarStatusProcesso,
+  buscarCatalogosOcorrencia,
   buscarOcorrenciaPorId,
   criarOcorrencia,
   encerrarOcorrencia,
+  enviarAnexo,
   iniciarAtendimento,
   listarOcorrencias,
 } from '../api/ocorrenciasApi'
-import type { CriarOcorrenciaRequest, EncerrarOcorrenciaRequest, OcorrenciasFiltro } from '../types/ocorrencias.types'
+import type {
+  AtualizarOcorrenciaRequest,
+  CriarOcorrenciaRequest,
+  EncerrarOcorrenciaRequest,
+  Ocorrencia,
+  OcorrenciasFiltro,
+  StatusProcesso,
+} from '../types/ocorrencias.types'
 
 const OCORRENCIAS_QUERY_KEY = ['ocorrencias']
 
+function chaveDetalhe(id: string) {
+  return ['ocorrencias', 'detalhe', id]
+}
+
 export function useOcorrenciasQuery(filtro: OcorrenciasFiltro) {
-  const { roleKey } = useAuth()
   return useQuery({
-    queryKey: ['ocorrencias', 'lista', filtro, roleKey],
-    queryFn: () => listarOcorrencias(filtro, roleKey),
+    queryKey: ['ocorrencias', 'lista', filtro],
+    queryFn: () => listarOcorrencias(filtro),
     placeholderData: (dadosAnteriores) => dadosAnteriores,
   })
 }
 
 export function useOcorrenciaQuery(id: string | undefined) {
-  const { roleKey } = useAuth()
   return useQuery({
-    queryKey: ['ocorrencias', 'detalhe', id, roleKey],
-    queryFn: () => buscarOcorrenciaPorId(id as string, roleKey),
+    queryKey: chaveDetalhe(id as string),
+    queryFn: () => buscarOcorrenciaPorId(id as string),
     enabled: Boolean(id),
   })
 }
 
-export function useCriarOcorrenciaMutation() {
+export function useCatalogosOcorrenciaQuery() {
+  return useQuery({
+    queryKey: ['ocorrencias', 'catalogos'],
+    queryFn: buscarCatalogosOcorrencia,
+    staleTime: Infinity,
+  })
+}
+
+// As mutations que devolvem a ocorrência atualizada gravam essa resposta no
+// cache do detalhe (é o estado que o backend acabou de gravar) e invalidam
+// só as listagens.
+function useAtualizarCacheDaOcorrencia() {
   const queryClient = useQueryClient()
-  const { user } = useAuth()
+  return (ocorrencia: Ocorrencia) => {
+    queryClient.setQueryData(chaveDetalhe(ocorrencia.id), ocorrencia)
+    void queryClient.invalidateQueries({ queryKey: ['ocorrencias', 'lista'] })
+  }
+}
+
+export function useCriarOcorrenciaMutation() {
+  const atualizarCache = useAtualizarCacheDaOcorrencia()
   return useMutation({
-    mutationFn: (payload: CriarOcorrenciaRequest) => criarOcorrencia(payload, `${user?.nome} ${user?.sobrenome}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: OCORRENCIAS_QUERY_KEY }),
+    mutationFn: (payload: CriarOcorrenciaRequest) => criarOcorrencia(payload),
+    onSuccess: atualizarCache,
+  })
+}
+
+export function useAtualizarOcorrenciaMutation(id: string) {
+  const atualizarCache = useAtualizarCacheDaOcorrencia()
+  return useMutation({
+    mutationFn: (payload: AtualizarOcorrenciaRequest) => atualizarOcorrencia(id, payload),
+    onSuccess: atualizarCache,
   })
 }
 
 export function useIniciarAtendimentoMutation(id: string) {
-  const queryClient = useQueryClient()
-  const { user } = useAuth()
+  const atualizarCache = useAtualizarCacheDaOcorrencia()
   return useMutation({
-    mutationFn: () => iniciarAtendimento(id, `${user?.nome} ${user?.sobrenome}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: OCORRENCIAS_QUERY_KEY }),
+    mutationFn: () => iniciarAtendimento(id),
+    onSuccess: atualizarCache,
   })
 }
 
 export function useEncerrarOcorrenciaMutation(id: string) {
-  const queryClient = useQueryClient()
-  const { user } = useAuth()
+  const atualizarCache = useAtualizarCacheDaOcorrencia()
   return useMutation({
-    mutationFn: (payload: EncerrarOcorrenciaRequest) => encerrarOcorrencia(id, payload, `${user?.nome} ${user?.sobrenome}`),
+    mutationFn: (payload: EncerrarOcorrenciaRequest) => encerrarOcorrencia(id, payload),
+    onSuccess: atualizarCache,
+  })
+}
+
+export function useAdicionarNotaMutation(id: string) {
+  const atualizarCache = useAtualizarCacheDaOcorrencia()
+  return useMutation({
+    mutationFn: (descricao: string) => adicionarNota(id, descricao),
+    onSuccess: atualizarCache,
+  })
+}
+
+// Anexo e processo devolvem outro recurso: recarregam o detalhe da ocorrência.
+export function useEnviarAnexoMutation(id: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (arquivo: File) => enviarAnexo(id, arquivo),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: chaveDetalhe(id) }),
+  })
+}
+
+export function useAbrirProcessoMutation(ocorrenciaId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ dataAbertura, urgente }: { dataAbertura: string; urgente: boolean }) =>
+      abrirProcesso(ocorrenciaId, dataAbertura, urgente),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: OCORRENCIAS_QUERY_KEY }),
+  })
+}
+
+export function useAvancarStatusProcessoMutation(ocorrenciaId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ processoId, status }: { processoId: string; status: StatusProcesso }) =>
+      avancarStatusProcesso(processoId, status),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: chaveDetalhe(ocorrenciaId) }),
   })
 }
