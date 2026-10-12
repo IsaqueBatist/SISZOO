@@ -136,17 +136,33 @@ describe('Ocorrencias', () => {
     expect(screen.queryByText('João Pereira Lima')).not.toBeInTheDocument()
   })
 
-  it('mostra o nome do denunciante sigiloso quando o backend libera a visão (podeVerDenunciante=true)', async () => {
+  it.each([
+    ['Administrador', ['Administrador']],
+    ['Agente Sanitário', ['Agente Sanitário']],
+  ])('mostra "Sigiloso" na sigilosa também para %s, com a permissão (T26: a listagem não traz o nome)', async (_perfil, cargos) => {
     server.use(
       http.get(`${API_BASE_URL}/ocorrencias`, () =>
         HttpResponse.json(pagina([paraResumoFixture(ocorrenciaSigilosaVisivel())])),
       ),
     )
-    renderLista(['Agente Sanitário'])
+    renderLista(cargos)
 
     const linha = (await screen.findByText('OC 090/2026')).closest('tr') as HTMLElement
-    expect(within(linha).getByText('João Pereira Lima')).toBeInTheDocument()
-    expect(within(linha).queryByText('Sigiloso')).not.toBeInTheDocument()
+    expect(within(linha).getByText('Sigiloso')).toBeInTheDocument()
+    expect(screen.queryByText('João Pereira Lima')).not.toBeInTheDocument()
+  })
+
+  it('mostra "Sigiloso" mesmo se a linha trouxer um nome (o front não depende do backend para esconder)', async () => {
+    server.use(
+      http.get(`${API_BASE_URL}/ocorrencias`, () =>
+        HttpResponse.json(pagina([{ ...paraResumoFixture(ocorrenciaSigilosaVisivel()), denuncianteNome: 'João Pereira Lima' }])),
+      ),
+    )
+    renderLista(['Administrador'])
+
+    const linha = (await screen.findByText('OC 090/2026')).closest('tr') as HTMLElement
+    expect(within(linha).getByText('Sigiloso')).toBeInTheDocument()
+    expect(screen.queryByText('João Pereira Lima')).not.toBeInTheDocument()
   })
 
   it('mostra "Anônima" na coluna denunciante da denúncia anônima', async () => {
@@ -154,6 +170,7 @@ describe('Ocorrencias', () => {
 
     const linha = (await screen.findByText('OC 091/2026')).closest('tr') as HTMLElement
     expect(within(linha).getByText('Anônima')).toBeInTheDocument()
+    expect(within(linha).queryByText('Sigiloso')).not.toBeInTheDocument()
   })
 
   it('o link "Ver" aponta para o detalhe da ocorrência certa', async () => {

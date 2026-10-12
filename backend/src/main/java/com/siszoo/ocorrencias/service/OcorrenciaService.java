@@ -105,6 +105,8 @@ import jakarta.persistence.criteria.Subquery;
 public class OcorrenciaService {
 
     private static final String ENTIDADE_AUDITORIA = "ocorrencia";
+    private static final String ENTIDADE_ANEXO = "anexo_ocorrencia";
+    private static final String ENTIDADE_DENUNCIANTE = "denunciante";
     private static final int MAXIMO_ANEXOS = 5;
     private static final int TAMANHO_MAXIMO_ANEXO = 5 * 1024 * 1024;
     private static final int TAMANHO_MAXIMO_NOME_ANEXO = 255;
@@ -487,13 +489,17 @@ public class OcorrenciaService {
         anexoConteudoRepository.save(registroConteudo);
 
         AnexoOcorrenciaResponse response = ocorrenciaMapper.toAnexoResponse(anexo);
-        auditoriaEventoService.registrar(autor, AcaoAuditoria.CRIACAO, "anexo_ocorrencia", anexo.getId(), null, response);
+        auditoriaEventoService.registrar(autor, AcaoAuditoria.CRIACAO, ENTIDADE_ANEXO, anexo.getId(), null, response);
         return response;
     }
 
     // D14/D30: em ocorrencia sigilosa (avaliado agora, no download), o
-    // conteudo so sai para quem tem denunciante_sigiloso.
-    @Transactional(readOnly = true)
+    // conteudo so sai para quem tem denunciante_sigiloso — e cada entrega gera
+    // VISUALIZACAO (T26). Sem readOnly: numa transacao readOnly o INSERT da
+    // auditoria (REQUIRED, participa desta) seria descartado sem erro
+    // (FlushMode.MANUAL) ou recusado pelo PostgreSQL (25006). Na mesma
+    // transacao, falha da auditoria desfaz tudo e o arquivo nao sai.
+    @Transactional
     public ArquivoAnexo baixarAnexo(UUID id, UUID anexoId, PermissoesOcorrencia permissoes) {
         Ocorrencia ocorrencia = ocorrenciaRepository.findById(id).orElseThrow(OcorrenciaNaoEncontradaException::new);
         AnexoOcorrencia anexo = anexoRepository.findByIdAndOcorrenciaId(anexoId, id)
@@ -503,25 +509,34 @@ public class OcorrenciaService {
         }
         AnexoOcorrenciaConteudo conteudo = anexoConteudoRepository.findById(anexo.getId())
                 .orElseThrow(AnexoNaoEncontradoException::new);
+        if (ocorrencia.isSigilosa()) {
+            registrarVisualizacao(permissoes, ENTIDADE_ANEXO, anexo.getId(), id);
+        }
         return new ArquivoAnexo(anexo.getNome(), anexo.getMimeType(), conteudo.getConteudo());
     }
 
     // ── Consultas ────────────────────────────────────────
 
-    // Ponto unico de leitura do detalhe: a auditoria de acesso a denunciante
-    // sigiloso (VISUALIZACAO) entra aqui na T26.
-    @Transactional(readOnly = true)
+    // Ponto unico de leitura do detalhe. Quem recebe o denunciante completo
+    // de ocorrencia sigilosa gera VISUALIZACAO (T26), uma por requisicao, sem
+    // deduplicacao. Sem readOnly pelo mesmo motivo de baixarAnexo.
+    @Transactional
     public OcorrenciaResponse buscarPorId(UUID id, PermissoesOcorrencia permissoes) {
         Ocorrencia ocorrencia = ocorrenciaRepository.findDetalheById(id)
                 .orElseThrow(OcorrenciaNaoEncontradaException::new);
-        return montarResposta(ocorrencia, permissoes);
+        Denunciante denunciante = denuncianteRepository.findByOcorrenciaId(id).orElse(null);
+        OcorrenciaResponse resposta = montarResposta(ocorrencia, denunciante, permissoes);
+        if (ocorrencia.isSigilosa() && permissoes.podeVerSigilo() && denunciante != null) {
+            registrarVisualizacao(permissoes, ENTIDADE_DENUNCIANTE, denunciante.getId(), id);
+        }
+        return resposta;
     }
 
     @Transactional(readOnly = true)
     public PaginaResponse<OcorrenciaResumoResponse> listar(String tipo, StatusOcorrencia status, String q,
             int pagina, int tamanho, PermissoesOcorrencia permissoes) {
         Page<Ocorrencia> paginaOcorrencias = ocorrenciaRepository.findAll(
-                construirFiltro(tipo, status, q, permissoes.podeVerSigilo()),
+                construirFiltro(tipo, status, q),
                 PageRequest.of(pagina, tamanho, ORDEM_LISTAGEM));
 
         List<UUID> ids = paginaOcorrencias.getContent().stream().map(Ocorrencia::getId).toList();
@@ -532,6 +547,8 @@ public class OcorrenciaService {
                 : processoRepository.findByOcorrenciaIdIn(ids).stream()
                         .collect(Collectors.toMap(p -> p.getOcorrencia().getId(), Function.identity()));
 
+        // A listagem nao gera VISUALIZACAO: nao entrega dado de denunciante
+        // de ocorrencia sigilosa a ninguem (o mapper devolve o nome null).
         return PaginaResponse.de(paginaOcorrencias.map(o -> ocorrenciaMapper.toResumo(
                 o, denunciantes.get(o.getId()), processos.get(o.getId()), permissoes.podeVerSigilo())));
     }
@@ -548,10 +565,16 @@ public class OcorrenciaService {
     // ── Apoio ────────────────────────────────────────────
 
     private OcorrenciaResponse montarResposta(Ocorrencia ocorrencia, PermissoesOcorrencia permissoes) {
+        return montarResposta(ocorrencia, denuncianteRepository.findByOcorrenciaId(ocorrencia.getId()).orElse(null),
+                permissoes);
+    }
+
+    private OcorrenciaResponse montarResposta(Ocorrencia ocorrencia, Denunciante denunciante,
+            PermissoesOcorrencia permissoes) {
         UUID id = ocorrencia.getId();
         return ocorrenciaMapper.toResponse(
                 ocorrencia,
-                denuncianteRepository.findByOcorrenciaId(id).orElse(null),
+                denunciante,
                 denunciadoRepository.findByOcorrenciaId(id).orElse(null),
                 processoRepository.findByOcorrenciaId(id).orElse(null),
                 movimentacaoRepository.findByOcorrenciaIdOrderByDataDescCriadoEmDesc(id),
@@ -570,6 +593,14 @@ public class OcorrenciaService {
         movimentacao.setData(LocalDateTime.now(clock));
         movimentacao.setDescricao(descricao);
         movimentacaoRepository.save(movimentacao);
+    }
+
+    // T26: acesso autorizado a dado de denunciante sigiloso. O payload so leva
+    // o id da ocorrencia — nenhum dado pessoal (D23).
+    private void registrarVisualizacao(PermissoesOcorrencia permissoes, String entidade, UUID entidadeId,
+            UUID ocorrenciaId) {
+        auditoriaEventoService.registrar(buscarUsuario(permissoes.usuarioId()), AcaoAuditoria.VISUALIZACAO,
+                entidade, entidadeId, null, Map.of("ocorrenciaId", ocorrenciaId));
     }
 
     private Ocorrencia travar(UUID id) {
@@ -629,8 +660,7 @@ public class OcorrenciaService {
         denunciado.setObservacoes(request.observacoes());
     }
 
-    private Specification<Ocorrencia> construirFiltro(String tipo, StatusOcorrencia status, String q,
-            boolean podeVerSigilo) {
+    private Specification<Ocorrencia> construirFiltro(String tipo, StatusOcorrencia status, String q) {
         return (root, query, cb) -> {
             List<Predicate> predicados = new ArrayList<>();
             if (StringUtils.hasText(tipo)) {
@@ -642,21 +672,19 @@ public class OcorrenciaService {
             if (StringUtils.hasText(q)) {
                 String termo = "%" + PREFIXO_PROTOCOLO.matcher(q).replaceFirst("").trim().toLowerCase() + "%";
 
-                // O nome do denunciante so entra na busca onde a pessoa poderia
-                // ve-lo; senao a busca confirmaria a identidade de um
-                // denunciante sigiloso por canal lateral (D14).
+                // O nome do denunciante de ocorrencia sigilosa nunca entra na
+                // busca, para nenhum perfil (T26, revisao da D14): a listagem
+                // nao o devolve nem o audita, entao a busca nao pode confirmar
+                // a identidade por canal lateral. Protocolo e bairro continuam.
                 Subquery<UUID> porDenunciante = query.subquery(UUID.class);
                 var denunciante = porDenunciante.from(Denunciante.class);
                 porDenunciante.select(denunciante.get("ocorrencia").get("id"))
                         .where(cb.like(cb.lower(denunciante.get("nome")), termo));
-                Predicate denuncianteVisivel = podeVerSigilo
-                        ? cb.conjunction()
-                        : cb.isFalse(root.get("sigilosa"));
 
                 predicados.add(cb.or(
                         cb.like(cb.lower(root.get("protocolo")), termo),
                         cb.like(cb.lower(root.get("bairro")), termo),
-                        cb.and(denuncianteVisivel, root.get("id").in(porDenunciante))));
+                        cb.and(cb.isFalse(root.get("sigilosa")), root.get("id").in(porDenunciante))));
             }
             return cb.and(predicados.toArray(new Predicate[0]));
         };

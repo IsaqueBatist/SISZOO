@@ -338,8 +338,9 @@ export function ocorrenciaAbertaFixture(): Ocorrencia {
   return criarOcorrenciaFixture()
 }
 
-// Projeção campo a campo do detalhe para a linha da listagem (sem regra:
-// `denuncianteNome` já vem nulo na sigilosa mascarada e na anônima).
+// Projeção campo a campo do detalhe para a linha da listagem, como o backend
+// a monta: `denuncianteNome` é nulo em toda sigilosa, para qualquer perfil
+// (T26, revisão da D14), e na anônima (não há denunciante).
 export function paraResumoFixture(ocorrencia: Ocorrencia): OcorrenciaResumo {
   return {
     id: ocorrencia.id,
@@ -352,7 +353,7 @@ export function paraResumoFixture(ocorrencia: Ocorrencia): OcorrenciaResumo {
     urgente: ocorrencia.urgente,
     sigilosa: ocorrencia.sigilosa,
     anonima: ocorrencia.anonima,
-    denuncianteNome: ocorrencia.denunciante?.nome ?? null,
+    denuncianteNome: ocorrencia.sigilosa ? null : (ocorrencia.denunciante?.nome ?? null),
     processoProtocolo: ocorrencia.processoVinculado?.protocolo ?? null,
     podeVerDenunciante: ocorrencia.podeVerDenunciante,
   }
