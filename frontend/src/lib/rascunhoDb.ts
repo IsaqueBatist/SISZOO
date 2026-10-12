@@ -20,8 +20,8 @@ function indexedDbDisponivel(): boolean {
 
 // Todas as chaves levam o id do usuário logado na frente ('<usuarioId>:novo'):
 // o banco é do navegador, não da sessão, e um computador do CCZ é usado por
-// várias pessoas. Rascunhos antigos sem esse prefixo ficam inalcançáveis e
-// não são migrados.
+// várias pessoas. Rascunhos antigos sem esse prefixo ficam inalcançáveis (não
+// são migrados) e somem no próximo logout (limparRascunhos).
 export function chaveComEscopo(usuarioId: string, chave: string): string {
   return `${usuarioId}:${chave}`
 }
@@ -118,4 +118,25 @@ export function cancelarSalvamentoAgendado(store: StoreRascunho, chave: string):
   const agendado = salvamentosAgendados.get(id)
   if (agendado) clearTimeout(agendado)
   salvamentosAgendados.delete(id)
+}
+
+// Logout manual: apaga rascunhos e anexos pendentes de TODOS os usuários
+// deste navegador (inclusive chaves antigas sem escopo) e cancela os
+// salvamentos ainda agendados, que recriariam o rascunho logo depois.
+export async function limparRascunhos(): Promise<void> {
+  for (const agendado of salvamentosAgendados.values()) clearTimeout(agendado)
+  salvamentosAgendados.clear()
+  if (!indexedDbDisponivel()) return
+  try {
+    const banco = await abrirBancoRascunhos()
+    await new Promise<void>((resolve, reject) => {
+      const transacao = banco.transaction([...STORES_RASCUNHO], 'readwrite')
+      for (const store of STORES_RASCUNHO) transacao.objectStore(store).clear()
+      transacao.oncomplete = () => resolve()
+      transacao.onerror = () => reject(transacao.error)
+    })
+    banco.close()
+  } catch {
+    // idem
+  }
 }
