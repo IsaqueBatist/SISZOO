@@ -38,7 +38,7 @@ function renderRota(initialEntry = '/ocorrencias/novo') {
 }
 
 describe('RotaEscritaOcorrencias', () => {
-  it('Veterinário é redirecionado para /ocorrencias (só tem leitura no backend)', () => {
+  it('Veterinário é redirecionado para /ocorrencias (sem escrita no módulo)', () => {
     autenticarComCargos(['Veterinário'])
 
     renderRota()

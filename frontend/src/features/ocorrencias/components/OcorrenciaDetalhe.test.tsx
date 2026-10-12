@@ -84,7 +84,7 @@ describe('OcorrenciaDetalhe', () => {
     expect(screen.queryByText('Sigiloso')).not.toBeInTheDocument()
   })
 
-  it('não mostra o formulário de encerramento para o perfil Veterinário (só leitura)', async () => {
+  it('não mostra o formulário de encerramento para o perfil Veterinário (sem escrita)', async () => {
     renderDetalhe(OCORRENCIA_ABERTA_ID, ['Veterinário'])
 
     await screen.findByRole('heading', { name: 'Ocorrência OC 089/2026', level: 1 })
