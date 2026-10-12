@@ -23,7 +23,7 @@ import { useAnexosPendentes } from '../hooks/useAnexosPendentes'
 // IndexedDB deste navegador) podem ser reenviados daqui também.
 function AnexosPendentesDaOcorrencia({ ocorrenciaId }: { ocorrenciaId: string }) {
   const queryClient = useQueryClient()
-  const { pendencia, falhas, enviando, enviar, descartar } = useAnexosPendentes()
+  const { pendencia, falhas, reenvioInutil, enviando, enviar, descartar } = useAnexosPendentes()
 
   if (!pendencia || pendencia.ocorrenciaId !== ocorrenciaId) return null
 
@@ -37,6 +37,7 @@ function AnexosPendentesDaOcorrencia({ ocorrenciaId }: { ocorrenciaId: string })
     <AvisoAnexosPendentes
       pendencia={pendencia}
       falhas={falhas}
+      reenvioInutil={reenvioInutil}
       enviando={enviando}
       onReenviar={() => void reenviar()}
       onDescartar={() => void descartar()}

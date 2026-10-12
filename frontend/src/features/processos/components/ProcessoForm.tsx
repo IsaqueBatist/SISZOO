@@ -13,6 +13,7 @@ import type { AmostraAnimal, CriarProcessoRequest, OcorrenciaParaVinculo } from 
 import {
   agendarSalvarRascunhoProcesso,
   carregarRascunhoProcesso,
+  chaveRascunhoProcesso,
   removerRascunhoProcesso,
   salvarRascunhoProcesso,
   type RascunhoProcesso,
@@ -132,6 +133,7 @@ interface ProcessoFormProps {
 export function ProcessoForm({ ocorrenciaIdDaUrl }: ProcessoFormProps) {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const chaveRascunho = chaveRascunhoProcesso(user?.id ?? '')
   const mutation = useCriarProcessoMutation()
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
@@ -183,7 +185,7 @@ export function ProcessoForm({ ocorrenciaIdDaUrl }: ProcessoFormProps) {
 
   useEffect(() => {
     let cancelado = false
-    carregarRascunhoProcesso<ProcessoFormValues>().then((salvo) => {
+    carregarRascunhoProcesso<ProcessoFormValues>(chaveRascunho).then((salvo) => {
       if (cancelado) return
       if (salvo) {
         const divergem = ocorrenciaIdDaUrl != null && salvo.valores.ocorrenciaId != null && salvo.valores.ocorrenciaId !== ocorrenciaIdDaUrl
@@ -209,7 +211,7 @@ export function ProcessoForm({ ocorrenciaIdDaUrl }: ProcessoFormProps) {
     // callback com closure obsoleto pode sobrescrever um rascunho real.
     if (!prontoParaAutoSalvar) return
     const inscricao = watch((valoresAtuais) => {
-      agendarSalvarRascunhoProcesso({ etapaAtual: step, valores: valoresAtuais as ProcessoFormValues })
+      agendarSalvarRascunhoProcesso(chaveRascunho, { etapaAtual: step, valores: valoresAtuais as ProcessoFormValues })
     })
     return () => inscricao.unsubscribe()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -228,7 +230,7 @@ export function ProcessoForm({ ocorrenciaIdDaUrl }: ProcessoFormProps) {
   }
 
   async function handleDescartarRascunho() {
-    await removerRascunhoProcesso()
+    await removerRascunhoProcesso(chaveRascunho)
     setRascunhoSalvo(null)
     setConflitoRascunho(false)
     if (ocorrenciaIdDaUrl) {
@@ -255,7 +257,7 @@ export function ProcessoForm({ ocorrenciaIdDaUrl }: ProcessoFormProps) {
     const proximo = (step + 1) as 2 | 3 | 4
     setStep(proximo)
     if (step === 1) setVinculoTravado(true)
-    await salvarRascunhoProcesso({ etapaAtual: proximo, valores: getValues() })
+    await salvarRascunhoProcesso(chaveRascunho, { etapaAtual: proximo, valores: getValues() })
   }
 
   function voltar(etapa?: 1 | 2 | 3) {
@@ -265,7 +267,7 @@ export function ProcessoForm({ ocorrenciaIdDaUrl }: ProcessoFormProps) {
   async function onSubmit(dados: ProcessoFormValues) {
     try {
       const novo = await mutation.mutateAsync(paraRequisicao(dados))
-      await removerRascunhoProcesso()
+      await removerRascunhoProcesso(chaveRascunho)
       // T33 introduziu o detalhe do processo — o destino pós-submit deixa de
       // bifurcar entre /ocorrencias e /ocorrencias/:id (provisório da T32) e
       // passa a ser sempre o processo recém-criado.

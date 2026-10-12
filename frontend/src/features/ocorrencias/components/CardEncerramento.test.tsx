@@ -1,15 +1,19 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
-import { criarOcorrenciaFixture } from '@/mocks/ocorrenciasFixtures'
+import { API_BASE_URL } from '@/lib/env'
+import { server } from '@/mocks/server'
+import { CATALOGOS_OCORRENCIA_FIXTURE, criarOcorrenciaFixture } from '@/mocks/ocorrenciasFixtures'
 import { CardEncerramento } from './CardEncerramento'
 import type { Ocorrencia, ProcessoVinculado } from '../types/ocorrencias.types'
 
-// O POST de encerramento cai no handler fixo de ../../../mocks/ocorrenciasHandlers.ts.
+// O POST de encerramento e o GET /ocorrencias/catalogos caem nos handlers
+// fixos de ../../../mocks/ocorrenciasHandlers.ts.
 function criarOcorrencia(sobrescrever: Partial<Ocorrencia> = {}): Ocorrencia {
   return criarOcorrenciaFixture(sobrescrever)
 }
@@ -41,11 +45,21 @@ function renderCard(ocorrencia: Ocorrencia, podeEncerrar: boolean) {
   )
 }
 
+// As opções vêm do catálogo (assíncrono): espera o select habilitar.
+async function codigosDasOpcoes(): Promise<string[]> {
+  const select = screen.getByLabelText('Providência tomada') as HTMLSelectElement
+  await waitFor(() => expect(select).toBeEnabled())
+  return Array.from(select.options)
+    .filter((opcao) => opcao.value !== '')
+    .map((opcao) => opcao.value)
+}
+
 describe('CardEncerramento', () => {
   it('bloqueia o envio quando nenhuma providência é selecionada', async () => {
     const user = userEvent.setup()
     renderCard(criarOcorrencia(), true)
 
+    await codigosDasOpcoes()
     await user.click(screen.getByRole('button', { name: 'Encerrar ocorrência' }))
 
     expect(await screen.findByText('Selecione a providência tomada.')).toBeInTheDocument()
@@ -55,7 +69,8 @@ describe('CardEncerramento', () => {
     const user = userEvent.setup()
     renderCard(criarOcorrencia({ statusOcorrencia: 'EM_ATENDIMENTO' }), true)
 
-    await user.selectOptions(screen.getByLabelText('Providência tomada'), 'Outro (descrever abaixo)')
+    await codigosDasOpcoes()
+    await user.selectOptions(screen.getByLabelText('Providência tomada'), 'Outro')
     await user.click(screen.getByRole('button', { name: 'Encerrar ocorrência' }))
     expect(await screen.findByText('Descreva a providência tomada quando selecionar "Outro".')).toBeInTheDocument()
 
@@ -66,22 +81,16 @@ describe('CardEncerramento', () => {
     expect(screen.queryByText('Descreva a providência tomada quando selecionar "Outro".')).not.toBeInTheDocument()
   })
 
-  it('em ocorrência ABERTA, só oferece as providências de encerramento direto (D5)', () => {
+  it('em ocorrência ABERTA, só oferece as providências de encerramento direto (D5)', async () => {
     renderCard(criarOcorrencia({ statusOcorrencia: 'ABERTA' }), true)
 
-    const opcoes = Array.from((screen.getByLabelText('Providência tomada') as HTMLSelectElement).options)
-      .filter((opcao) => opcao.value !== '')
-      .map((opcao) => opcao.value)
-    expect(opcoes).toEqual(['orientacao_municipe', 'sem_acao', 'registro_indevido'])
+    expect(await codigosDasOpcoes()).toEqual(['orientacao_municipe', 'sem_acao', 'registro_indevido'])
   })
 
-  it('em ocorrência EM_ATENDIMENTO, oferece todas as providências, inclusive "Registro duplicado/indevido" (D34)', () => {
+  it('em ocorrência EM_ATENDIMENTO, oferece todas as providências do catálogo, inclusive "Registro duplicado/indevido" (D34)', async () => {
     renderCard(criarOcorrencia({ statusOcorrencia: 'EM_ATENDIMENTO' }), true)
 
-    const opcoes = Array.from((screen.getByLabelText('Providência tomada') as HTMLSelectElement).options)
-      .filter((opcao) => opcao.value !== '')
-      .map((opcao) => opcao.value)
-    expect(opcoes).toEqual([
+    expect(await codigosDasOpcoes()).toEqual([
       'orientacao_municipe',
       'encaminhamento_gepar',
       'abertura_processo',
@@ -96,10 +105,62 @@ describe('CardEncerramento', () => {
     const user = userEvent.setup()
     renderCard(criarOcorrencia(), true)
 
+    await codigosDasOpcoes()
     await user.selectOptions(screen.getByLabelText('Providência tomada'), 'Orientação ao munícipe')
     await user.click(screen.getByRole('button', { name: 'Encerrar ocorrência' }))
 
     await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument())
+  })
+
+  it('usa os nomes do catálogo do backend nas opções', async () => {
+    renderCard(criarOcorrencia({ statusOcorrencia: 'EM_ATENDIMENTO' }), true)
+
+    await codigosDasOpcoes()
+    expect(screen.getByRole('option', { name: 'Captura e remoção' })).toHaveValue('captura_remocao')
+  })
+
+  it('enquanto o catálogo carrega, o select e o botão ficam desabilitados', () => {
+    renderCard(criarOcorrencia(), true)
+
+    expect(screen.getByLabelText('Providência tomada')).toBeDisabled()
+    expect(screen.getByRole('option', { name: 'Carregando…' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Encerrar ocorrência' })).toBeDisabled()
+  })
+
+  it('catálogo com erro: mostra o aviso, não libera o encerramento e "Tentar novamente" recarrega', async () => {
+    const user = userEvent.setup()
+    let disponivel = false
+    server.use(
+      http.get(`${API_BASE_URL}/ocorrencias/catalogos`, () =>
+        disponivel
+          ? HttpResponse.json(CATALOGOS_OCORRENCIA_FIXTURE)
+          : new HttpResponse(null, { status: 503 }),
+      ),
+    )
+    renderCard(criarOcorrencia(), true)
+
+    expect(await screen.findByText('Não foi possível carregar a lista de providências.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Providência tomada')).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Encerrar ocorrência' })).toBeDisabled()
+
+    disponivel = true
+    await user.click(screen.getByRole('button', { name: 'Tentar novamente' }))
+
+    expect(await codigosDasOpcoes()).toEqual(['orientacao_municipe', 'sem_acao', 'registro_indevido'])
+    expect(screen.queryByText('Não foi possível carregar a lista de providências.')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Encerrar ocorrência' })).toBeEnabled()
+  })
+
+  it('catálogo sem providências: trata como indisponível, sem liberar o encerramento', async () => {
+    server.use(
+      http.get(`${API_BASE_URL}/ocorrencias/catalogos`, () =>
+        HttpResponse.json({ ...CATALOGOS_OCORRENCIA_FIXTURE, providencias: [] }),
+      ),
+    )
+    renderCard(criarOcorrencia(), true)
+
+    expect(await screen.findByText('Não foi possível carregar a lista de providências.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Encerrar ocorrência' })).toBeDisabled()
   })
 
   it.each(['ABERTO', 'AGUARDANDO_RESULTADO', 'COM_RESULTADO'] as const)(

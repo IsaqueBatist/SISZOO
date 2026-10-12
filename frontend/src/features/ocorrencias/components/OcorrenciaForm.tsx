@@ -174,7 +174,7 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
   const { user } = useAuth()
   const emEdicao = ocorrencia !== undefined
   const mascarado = emEdicao && ocorrencia.sigilosa && !ocorrencia.podeVerDenunciante
-  const chaveRascunho = chaveRascunhoOcorrencia(ocorrencia?.id)
+  const chaveRascunho = chaveRascunhoOcorrencia(user?.id ?? '', ocorrencia?.id)
   const mutation = useCriarOcorrenciaMutation()
   const mutationAtualizar = useAtualizarOcorrenciaMutation(ocorrencia?.id ?? '')
   const anexosPendentes = useAnexosPendentes()
@@ -298,8 +298,8 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
     }
 
     autosaveSuspenso.current = true
-    cancelarRascunhoAgendadoOcorrencia()
-    await removerRascunhoOcorrencia()
+    cancelarRascunhoAgendadoOcorrencia(chaveRascunho)
+    await removerRascunhoOcorrencia(chaveRascunho)
 
     if (dados.anexos.length === 0) {
       navigate(`/ocorrencias/${nova.id}`)
@@ -332,7 +332,7 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
       return
     }
     autosaveSuspenso.current = true
-    cancelarRascunhoAgendadoOcorrencia()
+    cancelarRascunhoAgendadoOcorrencia(chaveRascunho)
     await removerRascunhoOcorrencia(chaveRascunho)
     navigate(`/ocorrencias/${original.id}`)
   }
@@ -395,6 +395,7 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
         <AvisoAnexosPendentes
           pendencia={anexosPendentes.pendencia}
           falhas={anexosPendentes.falhas}
+          reenvioInutil={anexosPendentes.reenvioInutil}
           enviando={anexosPendentes.enviando}
           onReenviar={() => void handleReenviarAnexos()}
           onDescartar={() => void anexosPendentes.descartar()}

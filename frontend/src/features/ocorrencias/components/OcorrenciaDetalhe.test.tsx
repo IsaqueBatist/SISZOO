@@ -146,7 +146,11 @@ describe('OcorrenciaDetalhe', () => {
     renderDetalhe(OCORRENCIA_ABERTA_ID, ['Administrador'])
 
     await screen.findByRole('heading', { name: 'Ocorrência OC 089/2026', level: 1 })
-    await user.selectOptions(screen.getByLabelText('Providência tomada'), 'Sem ação necessária')
+    // Opções vêm do catálogo (GET /ocorrencias/catalogos).
+    await user.selectOptions(
+      screen.getByLabelText('Providência tomada'),
+      await screen.findByRole('option', { name: 'Sem ação necessária' }),
+    )
     await user.click(screen.getByRole('button', { name: 'Encerrar ocorrência' }))
 
     expect(await screen.findByText('Ocorrência encerrada')).toBeInTheDocument()
@@ -165,7 +169,11 @@ describe('OcorrenciaDetalhe', () => {
     renderDetalhe(OCORRENCIA_ABERTA_ID, ['Administrador'])
 
     await screen.findByRole('heading', { name: 'Ocorrência OC 089/2026', level: 1 })
-    await user.selectOptions(screen.getByLabelText('Providência tomada'), 'Sem ação necessária')
+    // Opções vêm do catálogo (GET /ocorrencias/catalogos).
+    await user.selectOptions(
+      screen.getByLabelText('Providência tomada'),
+      await screen.findByRole('option', { name: 'Sem ação necessária' }),
+    )
     await user.click(screen.getByRole('button', { name: 'Encerrar ocorrência' }))
 
     expect(await screen.findByText('Transicao de status invalida')).toBeInTheDocument()

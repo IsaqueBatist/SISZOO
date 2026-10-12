@@ -18,6 +18,14 @@ function indexedDbDisponivel(): boolean {
   return typeof indexedDB !== 'undefined'
 }
 
+// Todas as chaves levam o id do usuário logado na frente ('<usuarioId>:novo'):
+// o banco é do navegador, não da sessão, e um computador do CCZ é usado por
+// várias pessoas. Rascunhos antigos sem esse prefixo ficam inalcançáveis (não
+// são migrados) e somem no próximo logout (limparRascunhos).
+export function chaveComEscopo(usuarioId: string, chave: string): string {
+  return `${usuarioId}:${chave}`
+}
+
 export function abrirBancoRascunhos(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const requisicao = indexedDB.open(NOME_BANCO, VERSAO_BANCO)
@@ -34,7 +42,7 @@ export function abrirBancoRascunhos(): Promise<IDBDatabase> {
 }
 
 // Rascunho é melhor esforço: falha de IndexedDB (modo privado, quota,
-// navegador sem suporte) nunca deve quebrar o formulário — por isso as três
+// navegador sem suporte) nunca deve quebrar o formulário — por isso todas as
 // operações engolem o erro.
 export async function salvarRascunho<T>(store: StoreRascunho, chave: string, valores: T): Promise<void> {
   if (!indexedDbDisponivel()) return
@@ -76,6 +84,54 @@ export async function removerRascunho(store: StoreRascunho, chave: string): Prom
     await new Promise<void>((resolve, reject) => {
       const transacao = banco.transaction(store, 'readwrite')
       transacao.objectStore(store).delete(chave)
+      transacao.oncomplete = () => resolve()
+      transacao.onerror = () => reject(transacao.error)
+    })
+    banco.close()
+  } catch {
+    // idem
+  }
+}
+
+const salvamentosAgendados = new Map<string, ReturnType<typeof setTimeout>>()
+
+function idAgendamento(store: StoreRascunho, chave: string): string {
+  return `${store}|${chave}`
+}
+
+// Debounce por store+chave: evita gravar no IndexedDB a cada tecla digitada.
+// Fica aqui (e não em cada feature) para que o logout cancele tudo de uma vez.
+export function agendarSalvarRascunho<T>(store: StoreRascunho, chave: string, valores: T, atrasoMs: number): void {
+  cancelarSalvamentoAgendado(store, chave)
+  const id = idAgendamento(store, chave)
+  salvamentosAgendados.set(
+    id,
+    setTimeout(() => {
+      salvamentosAgendados.delete(id)
+      void salvarRascunho(store, chave, valores)
+    }, atrasoMs),
+  )
+}
+
+export function cancelarSalvamentoAgendado(store: StoreRascunho, chave: string): void {
+  const id = idAgendamento(store, chave)
+  const agendado = salvamentosAgendados.get(id)
+  if (agendado) clearTimeout(agendado)
+  salvamentosAgendados.delete(id)
+}
+
+// Logout manual: apaga rascunhos e anexos pendentes de TODOS os usuários
+// deste navegador (inclusive chaves antigas sem escopo) e cancela os
+// salvamentos ainda agendados, que recriariam o rascunho logo depois.
+export async function limparRascunhos(): Promise<void> {
+  for (const agendado of salvamentosAgendados.values()) clearTimeout(agendado)
+  salvamentosAgendados.clear()
+  if (!indexedDbDisponivel()) return
+  try {
+    const banco = await abrirBancoRascunhos()
+    await new Promise<void>((resolve, reject) => {
+      const transacao = banco.transaction([...STORES_RASCUNHO], 'readwrite')
+      for (const store of STORES_RASCUNHO) transacao.objectStore(store).clear()
       transacao.oncomplete = () => resolve()
       transacao.onerror = () => reject(transacao.error)
     })

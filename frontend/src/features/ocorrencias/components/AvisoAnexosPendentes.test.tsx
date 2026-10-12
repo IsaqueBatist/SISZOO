@@ -104,6 +104,57 @@ describe('aviso de anexos pendentes (D15)', () => {
     expect(removerAnexosPendentes).toHaveBeenCalledTimes(1)
   })
 
+  it('422 no reenvio (tipo detectado nos bytes): mostra a mensagem da API, explica que reenviar não resolve e deixa só "Descartar"', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.post(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_ABERTA_ID}/anexos`, () =>
+        HttpResponse.json({ mensagem: 'Anexo deve ser JPG, PNG ou PDF com ate 5 MB' }, { status: 422 }),
+      ),
+    )
+    renderEm('/ocorrencias/novo')
+
+    await user.click(await screen.findByRole('button', { name: 'Reenviar' }))
+
+    expect(await screen.findByText('b.png: Anexo deve ser JPG, PNG ou PDF com ate 5 MB')).toBeInTheDocument()
+    expect(screen.getByText(/reenviar não vai resolver/)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Reenviar' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Registrar Ocorrência' })).toBeDisabled()
+
+    await user.click(screen.getByRole('button', { name: 'Descartar' }))
+
+    expect(removerAnexosPendentes).toHaveBeenCalledTimes(1)
+    expect(screen.queryByText(/Há anexos pendentes/)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Registrar Ocorrência' })).toBeEnabled()
+  })
+
+  it('413 no reenvio (tamanho): também é recusa definitiva', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.post(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_ABERTA_ID}/anexos`, () => new HttpResponse(null, { status: 413 })),
+    )
+    renderEm('/ocorrencias/novo')
+
+    await user.click(await screen.findByRole('button', { name: 'Reenviar' }))
+
+    expect(await screen.findByText('b.png: Arquivo excede o tamanho máximo de 5 MB')).toBeInTheDocument()
+    expect(screen.getByText(/reenviar não vai resolver/)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Reenviar' })).not.toBeInTheDocument()
+  })
+
+  it('falha de rede/5xx no reenvio: continua oferecendo "Reenviar", sem a orientação de recusa', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.post(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_ABERTA_ID}/anexos`, () => new HttpResponse(null, { status: 503 })),
+    )
+    renderEm('/ocorrencias/novo')
+
+    await user.click(await screen.findByRole('button', { name: 'Reenviar' }))
+
+    expect(await screen.findByText(/b.png: Não foi possível enviar o anexo/)).toBeInTheDocument()
+    expect(screen.queryByText(/reenviar não vai resolver/)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reenviar' })).toBeEnabled()
+  })
+
   it('no detalhe de outra ocorrência: não mostra o aviso', async () => {
     renderEm(`/ocorrencias/${OCORRENCIA_ENCERRADA_ID}`)
 
