@@ -395,6 +395,7 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
         <AvisoAnexosPendentes
           pendencia={anexosPendentes.pendencia}
           falhas={anexosPendentes.falhas}
+          reenvioInutil={anexosPendentes.reenvioInutil}
           enviando={anexosPendentes.enviando}
           onReenviar={() => void handleReenviarAnexos()}
           onDescartar={() => void anexosPendentes.descartar()}

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { statusHttpDoErro } from '@/lib/erroApi'
 import { enviarAnexo } from '../api/ocorrenciasApi'
 import {
   carregarAnexosPendentes,
@@ -12,6 +13,14 @@ import { mensagemErroEnvioAnexo } from '../utils/anexoOcorrencia'
 export interface FalhaEnvioAnexo {
   nome: string
   mensagem: string
+  // 422 (tipo detectado nos bytes, limite de anexos) ou 413 (tamanho): o
+  // mesmo arquivo vai ser recusado de novo, reenviar não resolve.
+  definitiva: boolean
+}
+
+function recusaDefinitiva(erro: unknown): boolean {
+  const status = statusHttpDoErro(erro)
+  return status === 422 || status === 413
 }
 
 // D15: envio em duas fases. A ocorrência já existe no backend; aqui só sobem
@@ -24,6 +33,9 @@ export function useAnexosPendentes() {
   const usuarioId = user?.id ?? null
   const [pendencia, setPendencia] = useState<AnexosPendentesOcorrencia | null>(null)
   const [falhas, setFalhas] = useState<FalhaEnvioAnexo[]>([])
+  // Todos os arquivos que sobraram foram recusados em definitivo: a única
+  // saída é "Descartar".
+  const [reenvioInutil, setReenvioInutil] = useState(false)
   const [enviando, setEnviando] = useState(false)
 
   useEffect(() => {
@@ -43,8 +55,10 @@ export function useAnexosPendentes() {
       if (!usuarioId) return false
       setEnviando(true)
       setFalhas([])
+      setReenvioInutil(false)
       let restantes = [...aEnviar.anexos]
       const novasFalhas: FalhaEnvioAnexo[] = []
+      const recusados = new Set<File>()
       await salvarAnexosPendentes(usuarioId, { ...aEnviar, anexos: restantes })
       setPendencia({ ...aEnviar, anexos: restantes })
 
@@ -54,7 +68,9 @@ export function useAnexosPendentes() {
           restantes = restantes.filter((item) => item !== arquivo)
           await salvarAnexosPendentes(usuarioId, { ...aEnviar, anexos: restantes })
         } catch (erro) {
-          novasFalhas.push({ nome: arquivo.name, mensagem: mensagemErroEnvioAnexo(erro) })
+          const definitiva = recusaDefinitiva(erro)
+          if (definitiva) recusados.add(arquivo)
+          novasFalhas.push({ nome: arquivo.name, mensagem: mensagemErroEnvioAnexo(erro), definitiva })
         }
       }
 
@@ -65,6 +81,7 @@ export function useAnexosPendentes() {
         setPendencia({ ...aEnviar, anexos: restantes })
       }
       setFalhas(novasFalhas)
+      setReenvioInutil(restantes.length > 0 && restantes.every((arquivo) => recusados.has(arquivo)))
       setEnviando(false)
       return restantes.length === 0
     },
@@ -76,7 +93,8 @@ export function useAnexosPendentes() {
     if (usuarioId) await removerAnexosPendentes(usuarioId)
     setPendencia(null)
     setFalhas([])
+    setReenvioInutil(false)
   }, [usuarioId])
 
-  return { pendencia, falhas, enviando, enviar, descartar }
+  return { pendencia, falhas, reenvioInutil, enviando, enviar, descartar }
 }
