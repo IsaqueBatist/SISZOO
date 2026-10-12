@@ -57,6 +57,9 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
     private String tokenAdmin;
     private String tokenAgente;
     private String tokenVet;
+    // Le o modulo sem denunciante_sigiloso: o perfil que recebe a mascara (D14).
+    // Nenhum cargo real e assim desde a V11 (Vet sem acesso a ocorrencias).
+    private String tokenLeitor;
 
     @BeforeEach
     void autenticar() {
@@ -65,6 +68,7 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
                 ApiTesteFixture.CARGO_AGENTE_SANITARIO_ID);
         tokenVet = fixture.tokenComCargo("vet.ocorrencias@itu.sp.gov.br", "Vet", "Ocorrencias",
                 ApiTesteFixture.CARGO_VETERINARIO_ID);
+        tokenLeitor = fixture.tokenLeitorOcorrencias("leitor.ocorrencias@itu.sp.gov.br", "Ocorrencias");
     }
 
     // ── Cadastro, leitura e acesso ───────────────────────
@@ -86,7 +90,7 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("Sem token: 401; id inexistente: 404; Vet escrevendo: 403; DELETE: 405")
+    @DisplayName("Sem token: 401; id inexistente: 404; Vet lendo ou escrevendo: 403 (V11); DELETE: 405")
     void deveAplicarAcessoBasico() {
         given().when().get(ROTA).then().statusCode(401);
         given().header("Authorization", "Bearer " + tokenAdmin)
@@ -94,6 +98,9 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
         criar(tokenVet, corpo()).then().statusCode(403);
 
         String id = idDe(criar(tokenAdmin, corpo()));
+        comToken(tokenVet).when().get(ROTA).then().statusCode(403);
+        comToken(tokenVet).when().get(ROTA + "/" + id).then().statusCode(403);
+        comToken(tokenVet).when().get(ROTA + "/catalogos").then().statusCode(403);
         given().header("Authorization", "Bearer " + tokenAdmin)
                 .when().delete(ROTA + "/" + id).then().statusCode(405);
     }
@@ -135,7 +142,8 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
     // ── Sigilo (D14) ─────────────────────────────────────
 
     @Test
-    @DisplayName("[D14] sigilosa: Admin e Agente veem o denunciante, Vet recebe null; denunciado nunca e mascarado")
+    @DisplayName("[D14] sigilosa: Admin e Agente veem o denunciante, leitor sem a feature recebe null, Vet 403;"
+            + " denunciado nunca e mascarado")
     void sigiloPorPerfil() {
         String nome = "Denunciante Sigiloso " + UUID.randomUUID();
         Map<String, Object> corpo = corpo();
@@ -146,18 +154,19 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
 
         Response admin = detalhe(tokenAdmin, id);
         Response agente = detalhe(tokenAgente, id);
-        Response vet = detalhe(tokenVet, id);
+        Response leitor = detalhe(tokenLeitor, id);
 
         assertThat(admin.path("denunciante.nome"), equalTo(nome));
         assertThat(agente.path("denunciante.nome"), equalTo(nome));
-        assertThat(vet.path("denunciante.nome"), nullValue());
-        assertThat(vet.path("denunciante.cpf"), nullValue());
-        assertThat(vet.path("podeVerDenunciante"), equalTo(false));
-        assertThat(vet.path("denunciado.nome"), equalTo("Vizinho Denunciado"));
+        assertThat(leitor.path("denunciante.nome"), nullValue());
+        assertThat(leitor.path("denunciante.cpf"), nullValue());
+        assertThat(leitor.path("podeVerDenunciante"), equalTo(false));
+        assertThat(leitor.path("denunciado.nome"), equalTo("Vizinho Denunciado"));
+        comToken(tokenVet).when().get(ROTA + "/" + id).then().statusCode(403);
     }
 
     @Test
-    @DisplayName("[D14] busca pelo nome real de denunciante sigiloso: Admin e Agente encontram, Vet nao")
+    @DisplayName("[D14] busca pelo nome real de denunciante sigiloso: Admin e Agente encontram, leitor sem a feature nao")
     void buscaPorNomeNaoVazaSigilo() {
         String nome = "Nomebusca" + UUID.randomUUID().toString().substring(0, 8);
         Map<String, Object> corpo = corpo();
@@ -167,7 +176,7 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
 
         assertThat(listar(tokenAdmin, nome).path("totalItens"), equalTo(1));
         assertThat(listar(tokenAgente, nome).path("totalItens"), equalTo(1));
-        assertThat(listar(tokenVet, nome).path("totalItens"), equalTo(0));
+        assertThat(listar(tokenLeitor, nome).path("totalItens"), equalTo(0));
     }
 
     // ── Edicao (D10) ─────────────────────────────────────
@@ -482,7 +491,7 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
             anexar(tokenAgente, id, "foto" + i + ".png", PNG).then().statusCode(200);
         }
         anexar(tokenAgente, id, "foto6.png", PNG).then().statusCode(422);
-        assertThat(detalhe(tokenVet, id).path("anexos"), hasSize(5));
+        assertThat(detalhe(tokenLeitor, id).path("anexos"), hasSize(5));
     }
 
     @Test
@@ -499,13 +508,15 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("[D30] download em sigilosa: Admin e Agente 200, Vet 403; troca de sigilo vale na hora")
+    @DisplayName("[D30] download em sigilosa: Admin e Agente 200, leitor sem a feature 403; troca de sigilo vale na hora;"
+            + " Vet 403 sempre (V11)")
     void downloadDeAnexoPorSigilo() {
         Map<String, Object> corpo = corpo();
         String id = idDe(criar(tokenAgente, corpo));
         String anexoId = anexar(tokenAgente, id, "foto.png", PNG).path("id");
 
-        baixar(tokenVet, id, anexoId).then().statusCode(200);
+        baixar(tokenLeitor, id, anexoId).then().statusCode(200);
+        baixar(tokenVet, id, anexoId).then().statusCode(403);
 
         Map<String, Object> sigilosa = corpoPut(corpo);
         sigilosa.put("sigilosa", true);
@@ -513,13 +524,13 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
 
         baixar(tokenAdmin, id, anexoId).then().statusCode(200);
         baixar(tokenAgente, id, anexoId).then().statusCode(200);
-        baixar(tokenVet, id, anexoId).then().statusCode(403);
-        assertThat(detalhe(tokenVet, id).path("anexos"), hasSize(1));
+        baixar(tokenLeitor, id, anexoId).then().statusCode(403);
+        assertThat(detalhe(tokenLeitor, id).path("anexos"), hasSize(1));
 
         Map<String, Object> publica = corpoPut(corpo);
         publica.put("sigilosa", false);
         atualizar(tokenAgente, id, publica).then().statusCode(200);
-        baixar(tokenVet, id, anexoId).then().statusCode(200);
+        baixar(tokenLeitor, id, anexoId).then().statusCode(200);
     }
 
     @Test

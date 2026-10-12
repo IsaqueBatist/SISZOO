@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.boot.test.context.TestComponent;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.siszoo.animais.clinico.dto.CriarVacinacaoRequest;
@@ -37,12 +38,17 @@ public class ApiTesteFixture {
     public static final UUID CARGO_ADMINISTRADOR_ID = UUID.fromString("00000000-0000-4000-8000-000000000001");
     public static final UUID CARGO_VETERINARIO_ID = UUID.fromString("00000000-0000-4000-8000-000000000002");
     public static final UUID CARGO_AGENTE_SANITARIO_ID = UUID.fromString("00000000-0000-4000-8000-000000000003");
+    // Cargo que so existe nos testes: le ocorrencias sem denunciante_sigiloso.
+    // Nenhum cargo real tem esse perfil desde a V11 (o Veterinario perdeu o
+    // acesso ao modulo); ele mantem a cobertura da mascara do denunciante (D14).
+    public static final UUID CARGO_LEITOR_OCORRENCIAS_ID = UUID.fromString("00000000-0000-4000-8000-0000000000f1");
     private static final String SENHA_PADRAO = "SenhaTeste123";
 
     private final UsuarioRepository usuarioRepository;
     private final CargoRepository cargoRepository;
     private final UsuarioCargoRepository usuarioCargoRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JdbcTemplate jdbcTemplate;
     private final Clock clock;
 
     public ApiTesteFixture(
@@ -50,11 +56,13 @@ public class ApiTesteFixture {
             CargoRepository cargoRepository,
             UsuarioCargoRepository usuarioCargoRepository,
             PasswordEncoder passwordEncoder,
+            JdbcTemplate jdbcTemplate,
             Clock clock) {
         this.usuarioRepository = usuarioRepository;
         this.cargoRepository = cargoRepository;
         this.usuarioCargoRepository = usuarioCargoRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jdbcTemplate = jdbcTemplate;
         this.clock = clock;
     }
 
@@ -85,6 +93,18 @@ public class ApiTesteFixture {
 
     public String tokenAdmin(String email, String sobrenome) {
         return tokenComCargo(email, "Admin", sobrenome, CARGO_ADMINISTRADOR_ID);
+    }
+
+    // OCORRENCIAS_DENUNCIAS:leitura e nada mais (sem escrita e sem a feature
+    // denunciante_sigiloso). Idempotente, como o seed da V3.
+    public String tokenLeitorOcorrencias(String email, String sobrenome) {
+        jdbcTemplate.update("INSERT INTO cargo (id, nome, descricao) VALUES (?, 'Leitor de Ocorrências (teste)',"
+                + " 'Cargo de teste: leitura de ocorrências sem denunciante_sigiloso.') ON CONFLICT (id) DO NOTHING",
+                CARGO_LEITOR_OCORRENCIAS_ID);
+        jdbcTemplate.update("INSERT INTO cargo_permissao (cargo_id, modulo, feature, leitura, escrita, exclusao)"
+                + " VALUES (?, 'OCORRENCIAS_DENUNCIAS', 'geral', true, false, false)"
+                + " ON CONFLICT (cargo_id, modulo, feature) DO NOTHING", CARGO_LEITOR_OCORRENCIAS_ID);
+        return tokenComCargo(email, "Leitor", sobrenome, CARGO_LEITOR_OCORRENCIAS_ID);
     }
 
     public Usuario criarUsuarioSemCargo(String email, String nome, String sobrenome) {
