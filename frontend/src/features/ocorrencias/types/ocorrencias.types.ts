@@ -1,11 +1,11 @@
-// PROVISÓRIO: não existe com.siszoo.ocorrencias.dto.OcorrenciaResponse no
-// backend ainda (módulo `ocorrencias` só tem pastas .gitkeep — ver plano da
-// T28). Tipos modelados a partir de docs/DER.md §3.4 (Ocorrências) até o
-// contrato real existir; revalidar campo a campo quando o backend nascer.
+// Contrato da API de ocorrências (T25, backend com.siszoo.ocorrencias.dto).
+// Datas sem fuso, já no horário do CCZ: LocalDate "2026-10-11",
+// LocalDateTime "2026-10-11T19:28:59.97", LocalTime "10:30:00" — formatar com
+// ../utils/datas.ts, nunca com new Date.
 
 export type TipoOcorrencia = 'zoonose' | 'morcegos' | 'irregular' | 'agressivo' | 'outros'
 
-export type StatusOcorrencia = 'aberta' | 'em_atendimento' | 'encerrada'
+export type StatusOcorrencia = 'ABERTA' | 'EM_ATENDIMENTO' | 'ENCERRADA'
 
 export type ProvidenciaTomada =
   | 'orientacao_municipe'
@@ -14,18 +14,21 @@ export type ProvidenciaTomada =
   | 'captura_remocao'
   | 'sem_acao'
   | 'outro'
+  | 'registro_indevido'
 
 export type TipoMovimentacao =
-  | 'registrada'
-  | 'equipe_despachada'
-  | 'processo_vinculado'
-  | 'aguardando_resultado'
-  | 'encerrada'
-  | 'nota_interna'
+  | 'REGISTRADA'
+  | 'EQUIPE_DESPACHADA'
+  | 'PROCESSO_VINCULADO'
+  | 'AGUARDANDO_RESULTADO'
+  | 'ENCERRADA'
+  | 'NOTA_INTERNA'
 
-// Campos pessoais vêm `null` quando `ocorrencia.sigilosa = true` e o perfil
-// autenticado não é admin (DER.md §3.4, regra da tabela `denunciante`) — o
-// mascaramento é decidido inteiramente pelo backend, nunca pelo frontend.
+export type StatusProcesso = 'ABERTO' | 'AGUARDANDO_RESULTADO' | 'COM_RESULTADO' | 'CONCLUIDO'
+
+// Em ocorrência sigilosa, os campos vêm todos `null` para quem não tem a
+// permissão de sigilo (D14) — o mascaramento é do backend; o front só lê
+// `podeVerDenunciante` para decidir o que exibir e o que enviar.
 export interface Denunciante {
   nome: string | null
   cpf: string | null
@@ -47,39 +50,36 @@ export interface Denunciado {
 export interface MovimentacaoOcorrencia {
   id: string
   tipoMovimentacao: TipoMovimentacao
+  statusAnterior: StatusOcorrencia | null
+  statusNovo: StatusOcorrencia | null
   data: string
   descricao: string | null
-  // PROVISÓRIO (enriquecimento id→nome, sem confirmação contra DTO real —
-  // precedente: Animal.criadoPorNome em animais.types.ts). DER.md só lista
-  // `usuario_id` (FK crua). Pode vir "Sistema" para movimentações automáticas.
+  usuarioId: string
   usuarioNome: string
 }
 
+// Só metadados: o conteúdo é baixado com token em
+// GET /ocorrencias/{id}/anexos/{anexoId}.
 export interface AnexoOcorrencia {
   id: string
   nome: string
-  url: string
-  tamanho: number
   mimeType: string
+  tamanho: number
   criadoEm: string
 }
 
-// PROVISÓRIO: o módulo `processos` também não tem nenhum código (só
-// .gitkeep). Campo baseado na FK `ocorrencia.processo_sanitario_id` do
-// DER.md (§3.4) e criado só para viabilizar a regra 13 (bloqueio de
-// encerramento com processo pendente de resultado) — revalidar contra o DTO
-// real de processo sanitário quando esse módulo existir.
 export interface ProcessoVinculado {
   id: string
   protocolo: string
-  statusProcesso: string
-  resultadoPendente: boolean
+  statusProcesso: StatusProcesso
+  urgente: boolean
 }
 
 export interface Ocorrencia {
   id: string
   protocolo: string
   tipoOcorrencia: TipoOcorrencia
+  tipoOcorrenciaNome: string
   statusOcorrencia: StatusOcorrencia
   dataAbertura: string
   horaAbertura: string | null
@@ -89,33 +89,71 @@ export interface Ocorrencia {
   descricao: string
   urgente: boolean
   sigilosa: boolean
-  // PROVISÓRIO (enriquecimento id→nome — ver MovimentacaoOcorrencia.usuarioNome).
+  anonima: boolean
+  latitude: number | null
+  longitude: number | null
+  registradoPorId: string
   registradoPorNome: string
   providenciaTomada: ProvidenciaTomada | null
+  providenciaTomadaNome: string | null
   descricaoEncerramento: string | null
   encerradaEm: string | null
+  encerradaPorNome: string | null
   processoVinculado: ProcessoVinculado | null
   denunciante: Denunciante | null
   denunciado: Denunciado | null
   movimentacoes: MovimentacaoOcorrencia[]
   anexos: AnexoOcorrencia[]
+  podeVerDenunciante: boolean
   criadoEm: string
   atualizadoEm: string
 }
 
-export interface EncerrarOcorrenciaRequest {
-  providenciaTomada: ProvidenciaTomada
-  descricaoEncerramento?: string
+// Linha da listagem (OcorrenciaResumoResponse).
+export interface OcorrenciaResumo {
+  id: string
+  protocolo: string
+  tipoOcorrencia: TipoOcorrencia
+  tipoOcorrenciaNome: string
+  statusOcorrencia: StatusOcorrencia
+  dataAbertura: string
+  bairro: string
+  urgente: boolean
+  sigilosa: boolean
+  anonima: boolean
+  denuncianteNome: string | null
+  processoProtocolo: string | null
+  podeVerDenunciante: boolean
 }
 
 export interface OcorrenciasFiltro {
-  tipoOcorrencia?: TipoOcorrencia
-  statusOcorrencia?: StatusOcorrencia
+  tipo?: TipoOcorrencia
+  status?: StatusOcorrencia
   q?: string
   pagina: number
   tamanho: number
 }
 
+export interface DenuncianteRequest {
+  nome?: string
+  cpf?: string
+  telefone?: string
+  email?: string
+  cep?: string
+  endereco?: string
+  bairroResidencial?: string
+}
+
+export interface DenunciadoRequest {
+  nome?: string
+  cpf?: string
+  telefone?: string
+  endereco?: string
+  observacoes?: string
+}
+
+// Anexos não vão no JSON: cada arquivo é um POST multipart depois do
+// cadastro (D15).
 export interface CriarOcorrenciaRequest {
   tipoOcorrencia: TipoOcorrencia
   dataAbertura: string
@@ -124,24 +162,53 @@ export interface CriarOcorrenciaRequest {
   bairro: string
   pontoReferencia?: string
   descricao: string
+  urgente: boolean
   sigilosa: boolean
-  denunciante: {
-    nome?: string
-    cpf?: string
-    telefone?: string
-    email?: string
-    cep?: string
-    endereco?: string
-    bairroResidencial?: string
-  }
-  denunciado: {
-    nome?: string
-    cpf?: string
-    telefone?: string
-    endereco?: string
-    observacoes?: string
-  } | null
-  // `File` puro (não `data:` URI em base64): mais barato em memória e
-  // compatível com um futuro upload real via `multipart/form-data`.
-  anexos: File[]
+  anonima: boolean
+  denunciante?: DenuncianteRequest
+  denunciado?: DenunciadoRequest
+}
+
+// PUT (D10): as flags vão sempre; os blocos só quando alterados (ausente =
+// sem alteração, presente = substitui o bloco inteiro).
+export interface AtualizarOcorrenciaRequest {
+  tipoOcorrencia: TipoOcorrencia
+  dataAbertura: string
+  horaAbertura?: string
+  endereco: string
+  bairro: string
+  pontoReferencia?: string
+  descricao: string
+  urgente: boolean
+  sigilosa: boolean
+  anonima: boolean
+  denunciante?: DenuncianteRequest
+  denunciado?: DenunciadoRequest
+}
+
+export interface EncerrarOcorrenciaRequest {
+  providenciaTomada: ProvidenciaTomada
+  descricaoEncerramento?: string
+}
+
+export interface CatalogoItem {
+  codigo: string
+  nome: string
+}
+
+export interface CatalogosOcorrencia {
+  tiposOcorrencia: CatalogoItem[]
+  providencias: CatalogoItem[]
+}
+
+// Processo sanitário mínimo (PR1, D2/D18) — aberto e avançado pela tela da
+// ocorrência (D40).
+export interface ProcessoSanitario {
+  id: string
+  protocolo: string
+  dataAbertura: string
+  ocorrenciaId: string | null
+  urgente: boolean
+  statusProcesso: StatusProcesso
+  criadoEm: string
 }

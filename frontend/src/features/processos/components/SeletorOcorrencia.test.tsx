@@ -6,7 +6,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
-import { resetOcorrenciasMock } from '@/features/ocorrencias/api/ocorrenciasMockStore'
+import { resetOcorrenciasDemonstracao } from '../api/ocorrenciasDemonstracao'
 import { SeletorOcorrencia } from './SeletorOcorrencia'
 import type { OcorrenciaParaVinculo, VinculoDecisao } from '../types/processos.types'
 
@@ -67,7 +67,7 @@ function renderSeletor(cargos: string[]) {
 describe('SeletorOcorrencia', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    resetOcorrenciasMock()
+    resetOcorrenciasDemonstracao()
   })
 
   it('mostra o nome do denunciante para Administrador em ocorrência sigilosa', async () => {

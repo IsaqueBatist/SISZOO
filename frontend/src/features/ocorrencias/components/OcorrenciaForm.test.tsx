@@ -1,10 +1,14 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
+import { API_BASE_URL } from '@/lib/env'
+import { server } from '@/mocks/server'
+import { ANEXO_CRIADO_FIXTURE, ocorrenciaCriadaFixture } from '@/mocks/ocorrenciasFixtures'
 import { CadastrarOcorrencia } from './CadastrarOcorrencia'
 
 function renderForm() {
@@ -33,6 +37,8 @@ function renderForm() {
   )
 }
 
+const MENSAGEM_NOME_OBRIGATORIO = 'Informe o nome do denunciante ou marque a ocorrência como sigilosa ou anônima.'
+
 async function preencherCamposObrigatorios(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText(/Endereço da ocorrência/i), 'Rua Teste, 10')
   await user.type(screen.getByLabelText(/^Bairro/i), 'Bairro Teste')
@@ -57,16 +63,48 @@ describe('OcorrenciaForm', () => {
 
     await preencherCamposObrigatorios(user)
     await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
-    expect(await screen.findByText('Informe o nome do denunciante ou marque a ocorrência como sigilosa.')).toBeInTheDocument()
+    expect(await screen.findByText(MENSAGEM_NOME_OBRIGATORIO)).toBeInTheDocument()
 
     await user.click(screen.getByLabelText('Ocorrência sigilosa'))
     await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
 
-    await waitFor(() =>
-      expect(
-        screen.queryByText('Informe o nome do denunciante ou marque a ocorrência como sigilosa.'),
-      ).not.toBeInTheDocument(),
-    )
+    await waitFor(() => expect(screen.queryByText(MENSAGEM_NOME_OBRIGATORIO)).not.toBeInTheDocument())
+  })
+
+  it('não exige o nome do denunciante quando a denúncia é anônima (D19)', async () => {
+    const user = userEvent.setup()
+    renderForm()
+
+    await preencherCamposObrigatorios(user)
+    await user.click(screen.getByLabelText('Denunciante anônimo'))
+    await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
+
+    expect(await screen.findByText('Detalhe da ocorrência recém-criada')).toBeInTheDocument()
+  })
+
+  it('anônima esconde o bloco do denunciante, limpa o que foi digitado e desabilita o sigilo (D32)', async () => {
+    const user = userEvent.setup()
+    renderForm()
+
+    await user.type(screen.getByLabelText(/Nome completo/i), 'Fulano de Tal')
+    await user.click(screen.getByLabelText('Denunciante anônimo'))
+
+    expect(screen.queryByLabelText(/Nome completo/i)).not.toBeInTheDocument()
+    expect(screen.getByText('Denúncia anônima: nenhum dado do denunciante é registrado.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Ocorrência sigilosa')).toBeDisabled()
+
+    await user.click(screen.getByLabelText('Denunciante anônimo'))
+    expect(screen.getByLabelText(/Nome completo/i)).toHaveValue('')
+    expect(screen.getByLabelText('Ocorrência sigilosa')).toBeEnabled()
+  })
+
+  it('sigilosa desabilita a opção de denunciante anônimo (D32)', async () => {
+    const user = userEvent.setup()
+    renderForm()
+
+    await user.click(screen.getByLabelText('Ocorrência sigilosa'))
+
+    expect(screen.getByLabelText('Denunciante anônimo')).toBeDisabled()
   })
 
   it('mostra/esconde a seção do denunciado ao alternar o toggle "existe denunciado"', async () => {
@@ -129,5 +167,135 @@ describe('OcorrenciaForm', () => {
     await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
 
     expect(await screen.findByText('Detalhe da ocorrência recém-criada')).toBeInTheDocument()
+  })
+
+  it('envia as flags sempre e nunca manda anexos no JSON nem o bloco do denunciante da anônima', async () => {
+    const user = userEvent.setup()
+    const corpos: Record<string, unknown>[] = []
+    server.use(
+      http.post(`${API_BASE_URL}/ocorrencias`, async ({ request }) => {
+        corpos.push((await request.json()) as Record<string, unknown>)
+        return HttpResponse.json(ocorrenciaCriadaFixture(), { status: 201 })
+      }),
+    )
+    renderForm()
+
+    await preencherCamposObrigatorios(user)
+    await user.click(screen.getByLabelText('Urgente (contato humano-animal)'))
+    await user.click(screen.getByLabelText('Denunciante anônimo'))
+    await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
+
+    await screen.findByText('Detalhe da ocorrência recém-criada')
+    expect(corpos).toHaveLength(1)
+    expect(corpos[0]).toMatchObject({ urgente: true, sigilosa: false, anonima: true })
+    expect(corpos[0]).not.toHaveProperty('anexos')
+    expect(corpos[0]).not.toHaveProperty('denunciante')
+  })
+
+  it('mostra a mensagem do backend quando o cadastro é recusado (422)', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.post(`${API_BASE_URL}/ocorrencias`, () =>
+        HttpResponse.json({ mensagem: 'Data de abertura nao pode ser futura' }, { status: 422 }),
+      ),
+    )
+    renderForm()
+
+    await preencherCamposObrigatorios(user)
+    await user.type(screen.getByLabelText(/Nome completo/i), 'Fulano de Tal')
+    await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
+
+    expect(await screen.findByText('Data de abertura nao pode ser futura')).toBeInTheDocument()
+  })
+
+  describe('anexos em duas fases (D15)', () => {
+    // Conta as chamadas; a 2ª chamada de upload (o 2º arquivo — o envio é
+    // sequencial) falha com `statusFalha`. O nome do arquivo não dá para ler
+    // no handler: no jsdom o File chega ao MSW como um Blob anônimo
+    // (filename="blob"), então "só o pendente" é conferido pela lista do aviso
+    // e pela contagem de chamadas do reenvio.
+    function contarChamadas(statusFalha: number) {
+      const contagem = { cadastros: 0, uploads: 0, camposArquivo: 0 }
+      server.use(
+        http.post(`${API_BASE_URL}/ocorrencias`, () => {
+          contagem.cadastros += 1
+          return HttpResponse.json(ocorrenciaCriadaFixture(), { status: 201 })
+        }),
+        http.post(`${API_BASE_URL}/ocorrencias/:id/anexos`, async ({ request }) => {
+          contagem.uploads += 1
+          if ((await request.text()).includes('name="arquivo"')) contagem.camposArquivo += 1
+          if (contagem.uploads === 2) {
+            return HttpResponse.json({ mensagem: 'Arquivo excede o tamanho maximo de 5 MB' }, { status: statusFalha })
+          }
+          return HttpResponse.json(ANEXO_CRIADO_FIXTURE, { status: 201 })
+        }),
+      )
+      return contagem
+    }
+
+    async function registrarComDoisAnexos(user: ReturnType<typeof userEvent.setup>) {
+      await preencherCamposObrigatorios(user)
+      await user.type(screen.getByLabelText(/Nome completo/i), 'Fulano de Tal')
+      await user.upload(screen.getByLabelText('Adicionar anexo'), [
+        new File(['a'], 'a.png', { type: 'image/png' }),
+        new File(['b'], 'b.png', { type: 'image/png' }),
+      ])
+      await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
+    }
+
+    it('falha no 2º anexo: avisa, e o reenvio manda só o pendente, sem novo POST /ocorrencias', async () => {
+      const user = userEvent.setup()
+      const contagem = contarChamadas(500)
+      renderForm()
+
+      await registrarComDoisAnexos(user)
+
+      const aviso = await screen.findByText(/Há anexos pendentes da ocorrência OC 100\/2026/)
+      expect(within(aviso).getByText('b.png')).toBeInTheDocument()
+      expect(within(aviso).queryByText('a.png')).not.toBeInTheDocument()
+      expect(screen.getByText(/b\.png: Não foi possível enviar o anexo/)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Registrar Ocorrência' })).toBeDisabled()
+      expect(contagem).toEqual({ cadastros: 1, uploads: 2, camposArquivo: 2 })
+
+      await user.click(screen.getByRole('button', { name: 'Reenviar' }))
+
+      expect(await screen.findByText('Detalhe da ocorrência recém-criada')).toBeInTheDocument()
+      expect(contagem).toEqual({ cadastros: 1, uploads: 3, camposArquivo: 3 })
+    })
+
+    it('mostra "Arquivo excede o tamanho máximo de 5 MB" quando o backend responde 413', async () => {
+      const user = userEvent.setup()
+      contarChamadas(413)
+      renderForm()
+
+      await registrarComDoisAnexos(user)
+
+      expect(await screen.findByText('b.png: Arquivo excede o tamanho máximo de 5 MB')).toBeInTheDocument()
+    })
+
+    it('limpa o formulário depois do cadastro, para não registrar a mesma ocorrência de novo', async () => {
+      const user = userEvent.setup()
+      contarChamadas(500)
+      renderForm()
+
+      await registrarComDoisAnexos(user)
+
+      await screen.findByText(/Há anexos pendentes/)
+      expect(screen.getByLabelText(/Endereço da ocorrência/i)).toHaveValue('')
+      expect(screen.getByLabelText(/Nome completo/i)).toHaveValue('')
+    })
+
+    it('"Descartar" some com o aviso e libera um novo cadastro', async () => {
+      const user = userEvent.setup()
+      const contagem = contarChamadas(500)
+      renderForm()
+
+      await registrarComDoisAnexos(user)
+      await user.click(await screen.findByRole('button', { name: 'Descartar' }))
+
+      expect(screen.queryByText(/Há anexos pendentes/)).not.toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Registrar Ocorrência' })).toBeEnabled()
+      expect(contagem.uploads).toBe(2)
+    })
   })
 })

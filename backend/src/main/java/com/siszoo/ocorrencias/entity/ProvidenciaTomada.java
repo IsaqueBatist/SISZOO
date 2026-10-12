@@ -1,0 +1,46 @@
+package com.siszoo.ocorrencias.entity;
+
+import java.util.Set;
+import java.util.UUID;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name = "providencia_tomada")
+@Getter
+@Setter
+@NoArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+public class ProvidenciaTomada {
+
+    // DER §3.4: providencia "outro" exige descricao_encerramento.
+    public static final String CODIGO_OUTRO = "outro";
+
+    // D5: as unicas providencias que permitem encerrar direto de ABERTA
+    // (sem passar por EM_ATENDIMENTO). registro_indevido vem da D34.
+    public static final Set<String> CODIGOS_ENCERRAMENTO_DIRETO =
+            Set.of("sem_acao", "orientacao_municipe", "registro_indevido");
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @EqualsAndHashCode.Include
+    private UUID id;
+
+    @Column(nullable = false, unique = true, length = 30)
+    private String codigo;
+
+    @Column(nullable = false, length = 100)
+    private String nome;
+
+    @Column(nullable = false)
+    private boolean ativo = true;
+}

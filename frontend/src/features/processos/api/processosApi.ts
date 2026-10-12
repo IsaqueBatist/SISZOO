@@ -10,24 +10,24 @@ import {
   registrarResultadoMock,
   vincularExistentesMock,
 } from './processosMockStore'
+import { buscarOcorrenciaDemonstracao, listarOcorrenciasDisponiveisDemonstracao } from './ocorrenciasDemonstracao'
 import type {
   AnexarDocumentoRequest,
   CriarProcessoRequest,
   EnviarAmostrasRequest,
+  OcorrenciaParaVinculo,
   Processo,
   ProcessosFiltro,
   RegistrarResultadoRequest,
 } from '../types/processos.types'
 
-// PROVISÓRIO: o módulo `processos` ainda não tem backend real (só pastas
-// .gitkeep em com.siszoo.processos). Segue literalmente o padrão ATUAL de
-// ocorrenciasApi.ts (commit 7fa8cfe): import estático do mock store,
-// devolvido embrulhado em Promise, SEM gate de `import.meta.env.PROD`. Esse
-// gate já existiu em ocorrências e foi removido de propósito, porque o único
-// "build de produção" que existe hoje é o próprio ambiente Docker de
-// verificação do projeto — excluir o mock dele quebraria a forma de testar o
-// sistema. Quando o backend nascer, cada função troca o corpo por uma
-// chamada `http.get/post`, sem mudar a assinatura pública nem os hooks que a
+// DEMONSTRAÇÃO (D40): as telas de processos seguem sobre o mock em memória
+// (processosMockStore.ts), devolvido embrulhado em Promise, SEM gate de
+// `import.meta.env.PROD` — o build de produção é o próprio ambiente Docker de
+// verificação, e excluir o mock dele quebraria essas telas. O processo mínimo
+// real (T25) é criado e avançado pela tela da ocorrência, não por aqui.
+// Quando a task de processos chegar, cada função troca o corpo por uma
+// chamada `http`, sem mudar a assinatura pública nem os hooks que a
 // consomem.
 
 export class ErroNegocioProcesso extends Error {}
@@ -61,6 +61,21 @@ export async function listarProcessos(filtro: ProcessosFiltro, roleKey: RoleKey)
 export async function buscarProcessoPorId(id: string, roleKey: RoleKey): Promise<Processo | null> {
   await esperar(DELAY_MS)
   return buscarProcessoMockPorId(id, roleKey)
+}
+
+// Ocorrências fictícias do mock de processos (D40): o wizard e o detalhe de
+// processo não leem nem alteram ocorrências reais.
+export async function listarOcorrenciasParaVinculo(q: string | undefined, roleKey: RoleKey): Promise<OcorrenciaParaVinculo[]> {
+  await esperar(DELAY_MS)
+  return listarOcorrenciasDisponiveisDemonstracao(q, roleKey)
+}
+
+export async function buscarOcorrenciaParaVinculo(
+  id: string,
+  roleKey: RoleKey,
+): Promise<ReturnType<typeof buscarOcorrenciaDemonstracao>> {
+  await esperar(DELAY_MS)
+  return buscarOcorrenciaDemonstracao(id, roleKey)
 }
 
 export async function enviarAmostras(id: string, payload: EnviarAmostrasRequest): Promise<Processo> {

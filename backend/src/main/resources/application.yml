@@ -1,6 +1,11 @@
 spring:
   application:
     name: siszoo-backend
+  # Anexos de ocorrencia (T25): ate 5 MB por arquivo, um arquivo por requisicao.
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
 
 siszoo:
   cors:

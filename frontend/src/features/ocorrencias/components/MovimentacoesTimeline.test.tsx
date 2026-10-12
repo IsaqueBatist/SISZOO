@@ -3,9 +3,13 @@ import { describe, expect, it } from 'vitest'
 import { MovimentacoesTimeline } from './MovimentacoesTimeline'
 import type { MovimentacaoOcorrencia } from '../types/ocorrencias.types'
 
+// Datas no formato da API: LocalDateTime sem fuso, já no horário do CCZ.
 function movimentacao(sobrescrever: Partial<MovimentacaoOcorrencia> & Pick<MovimentacaoOcorrencia, 'id' | 'tipoMovimentacao' | 'data'>): MovimentacaoOcorrencia {
   return {
+    statusAnterior: null,
+    statusNovo: null,
     descricao: null,
+    usuarioId: 'u1000000-0000-0000-0000-000000000001',
     usuarioNome: 'Rafael Santos',
     ...sobrescrever,
   }
@@ -14,9 +18,9 @@ function movimentacao(sobrescrever: Partial<MovimentacaoOcorrencia> & Pick<Movim
 describe('MovimentacoesTimeline', () => {
   it('ordena as movimentações por data decrescente, mesmo recebendo a lista fora de ordem', () => {
     const movimentacoes: MovimentacaoOcorrencia[] = [
-      movimentacao({ id: '1', tipoMovimentacao: 'registrada', data: '2026-05-10T11:00:00Z' }),
-      movimentacao({ id: '2', tipoMovimentacao: 'encerrada', data: '2026-05-12T16:00:00Z' }),
-      movimentacao({ id: '3', tipoMovimentacao: 'equipe_despachada', data: '2026-05-11T09:00:00Z' }),
+      movimentacao({ id: '1', tipoMovimentacao: 'REGISTRADA', data: '2026-05-10T08:00:00' }),
+      movimentacao({ id: '2', tipoMovimentacao: 'ENCERRADA', data: '2026-05-12T13:00:00.123456' }),
+      movimentacao({ id: '3', tipoMovimentacao: 'EQUIPE_DESPACHADA', data: '2026-05-11T06:00:00.5' }),
     ]
 
     render(<MovimentacoesTimeline movimentacoes={movimentacoes} />)
@@ -28,12 +32,12 @@ describe('MovimentacoesTimeline', () => {
     expect(titulos).toEqual(['Ocorrência encerrada', 'Equipe despachada', 'Ocorrência registrada'])
   })
 
-  it('formata data/hora em DD/MM/AAAA e exibe o autor de cada movimentação', () => {
+  it('formata data/hora em DD/MM/AAAA · HH:mm sem deslocar fuso e exibe o autor de cada movimentação', () => {
     render(
       <MovimentacoesTimeline
         movimentacoes={[
-          movimentacao({ id: '1', tipoMovimentacao: 'registrada', data: '2026-05-10T11:00:00Z', usuarioNome: 'Rafael Santos' }),
-          movimentacao({ id: '2', tipoMovimentacao: 'equipe_despachada', data: '2026-05-11T09:00:00Z', usuarioNome: 'Sistema' }),
+          movimentacao({ id: '1', tipoMovimentacao: 'REGISTRADA', data: '2026-05-10T08:00:00.004432', usuarioNome: 'Rafael Santos' }),
+          movimentacao({ id: '2', tipoMovimentacao: 'EQUIPE_DESPACHADA', data: '2026-05-11T06:00:00', usuarioNome: 'Sistema' }),
         ]}
       />,
     )
@@ -41,6 +45,37 @@ describe('MovimentacoesTimeline', () => {
     expect(screen.getByText('10/05/2026 · 08:00')).toBeInTheDocument()
     expect(screen.getByText('Por Rafael Santos')).toBeInTheDocument()
     expect(screen.getByText('Por Sistema')).toBeInTheDocument()
+  })
+
+  it('mostra a transição de status quando a movimentação muda o status', () => {
+    render(
+      <MovimentacoesTimeline
+        movimentacoes={[
+          movimentacao({
+            id: '1',
+            tipoMovimentacao: 'EQUIPE_DESPACHADA',
+            data: '2026-05-11T06:00:00',
+            statusAnterior: 'ABERTA',
+            statusNovo: 'EM_ATENDIMENTO',
+          }),
+        ]}
+      />,
+    )
+
+    expect(screen.getByText(/Aberta → Em atendimento/)).toBeInTheDocument()
+  })
+
+  it('mostra nota interna com a descrição', () => {
+    render(
+      <MovimentacoesTimeline
+        movimentacoes={[
+          movimentacao({ id: '1', tipoMovimentacao: 'NOTA_INTERNA', data: '2026-05-11T06:00:00', descricao: 'Morador ausente.' }),
+        ]}
+      />,
+    )
+
+    expect(screen.getByText('Nota interna')).toBeInTheDocument()
+    expect(screen.getByText(/Morador ausente\./)).toBeInTheDocument()
   })
 
   it('mostra estado vazio amigável quando não há movimentações', () => {

@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import com.siszoo.animais.clinico.exception.CategoriaFarmacologicaInvalidaException;
 import com.siszoo.animais.clinico.exception.DataAplicacaoFuturaException;
@@ -36,6 +37,26 @@ import com.siszoo.animais.exception.MotivoEntradaInvalidoException;
 import com.siszoo.animais.exception.StatusAnimalInvalidoException;
 import com.siszoo.animais.exception.TipoBaiaInvalidoException;
 import com.siszoo.comum.dto.ErroResponse;
+import com.siszoo.ocorrencias.exception.AnexoInvalidoException;
+import com.siszoo.ocorrencias.exception.AnexoNaoEncontradoException;
+import com.siszoo.ocorrencias.exception.AnonimaESigilosaException;
+import com.siszoo.ocorrencias.exception.AnonimatoIrreversivelException;
+import com.siszoo.ocorrencias.exception.DataAberturaFuturaException;
+import com.siszoo.ocorrencias.exception.DenuncianteEmDenunciaAnonimaException;
+import com.siszoo.ocorrencias.exception.DescricaoEncerramentoObrigatoriaException;
+import com.siszoo.ocorrencias.exception.EncerramentoComProcessoPendenteException;
+import com.siszoo.ocorrencias.exception.LimiteAnexosAtingidoException;
+import com.siszoo.ocorrencias.exception.NomeDenuncianteObrigatorioException;
+import com.siszoo.ocorrencias.exception.OcorrenciaEncerradaException;
+import com.siszoo.ocorrencias.exception.OcorrenciaNaoEncontradaException;
+import com.siszoo.ocorrencias.exception.ProvidenciaInvalidaException;
+import com.siszoo.ocorrencias.exception.ProvidenciaObrigatoriaException;
+import com.siszoo.ocorrencias.exception.TipoOcorrenciaInvalidoException;
+import com.siszoo.ocorrencias.exception.TransicaoStatusInvalidaException;
+import com.siszoo.ocorrencias.exception.UrgenciaDefinidaPeloProcessoException;
+import com.siszoo.ocorrencias.exception.VinculoJaExistenteException;
+import com.siszoo.processos.exception.ProcessoNaoEncontradoException;
+import com.siszoo.processos.exception.TransicaoStatusProcessoInvalidaException;
 import com.siszoo.usuarios.exception.CargoInvalidoException;
 import com.siszoo.usuarios.exception.CredencialInvalidaException;
 import com.siszoo.usuarios.exception.CrmvObrigatorioException;
@@ -258,5 +279,133 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroResponse> handleCategoriaFarmacologicaInvalida() {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
                 .body(new ErroResponse("Categoria farmacologica informada nao existe"));
+    }
+
+    @ExceptionHandler(OcorrenciaNaoEncontradaException.class)
+    public ResponseEntity<ErroResponse> handleOcorrenciaNaoEncontrada() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErroResponse("Ocorrencia nao encontrada"));
+    }
+
+    @ExceptionHandler(AnexoNaoEncontradoException.class)
+    public ResponseEntity<ErroResponse> handleAnexoNaoEncontrado() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErroResponse("Anexo nao encontrado"));
+    }
+
+    @ExceptionHandler(ProcessoNaoEncontradoException.class)
+    public ResponseEntity<ErroResponse> handleProcessoNaoEncontrado() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErroResponse("Processo sanitario nao encontrado"));
+    }
+
+    @ExceptionHandler(TipoOcorrenciaInvalidoException.class)
+    public ResponseEntity<ErroResponse> handleTipoOcorrenciaInvalido() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Tipo de ocorrencia informado nao existe"));
+    }
+
+    @ExceptionHandler(ProvidenciaInvalidaException.class)
+    public ResponseEntity<ErroResponse> handleProvidenciaInvalida() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Providencia informada nao existe"));
+    }
+
+    @ExceptionHandler(ProvidenciaObrigatoriaException.class)
+    public ResponseEntity<ErroResponse> handleProvidenciaObrigatoria() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Providencia tomada e obrigatoria no encerramento"));
+    }
+
+    @ExceptionHandler(DescricaoEncerramentoObrigatoriaException.class)
+    public ResponseEntity<ErroResponse> handleDescricaoEncerramentoObrigatoria() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Descricao do encerramento e obrigatoria quando a providencia e Outro"));
+    }
+
+    @ExceptionHandler(TransicaoStatusInvalidaException.class)
+    public ResponseEntity<ErroResponse> handleTransicaoStatusInvalida() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Transicao de status nao permitida para a ocorrencia"));
+    }
+
+    @ExceptionHandler(TransicaoStatusProcessoInvalidaException.class)
+    public ResponseEntity<ErroResponse> handleTransicaoStatusProcessoInvalida() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Transicao de status nao permitida para o processo"));
+    }
+
+    @ExceptionHandler(OcorrenciaEncerradaException.class)
+    public ResponseEntity<ErroResponse> handleOcorrenciaEncerrada() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Ocorrencia encerrada nao pode ser alterada"));
+    }
+
+    @ExceptionHandler(EncerramentoComProcessoPendenteException.class)
+    public ResponseEntity<ErroResponse> handleEncerramentoComProcessoPendente() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Ocorrencia com processo sanitario vinculado nao concluido nao pode ser encerrada"));
+    }
+
+    @ExceptionHandler(NomeDenuncianteObrigatorioException.class)
+    public ResponseEntity<ErroResponse> handleNomeDenuncianteObrigatorio() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Nome do denunciante e obrigatorio quando a denuncia nao e anonima nem sigilosa"));
+    }
+
+    @ExceptionHandler(DataAberturaFuturaException.class)
+    public ResponseEntity<ErroResponse> handleDataAberturaFutura() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Data de abertura nao pode ser futura"));
+    }
+
+    @ExceptionHandler(DenuncianteEmDenunciaAnonimaException.class)
+    public ResponseEntity<ErroResponse> handleDenuncianteEmDenunciaAnonima() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Denuncia anonima nao aceita dados do denunciante"));
+    }
+
+    @ExceptionHandler(AnonimaESigilosaException.class)
+    public ResponseEntity<ErroResponse> handleAnonimaESigilosa() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Denuncia nao pode ser anonima e sigilosa ao mesmo tempo"));
+    }
+
+    @ExceptionHandler(AnonimatoIrreversivelException.class)
+    public ResponseEntity<ErroResponse> handleAnonimatoIrreversivel() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Denuncia identificada nao pode passar a anonima"));
+    }
+
+    @ExceptionHandler(UrgenciaDefinidaPeloProcessoException.class)
+    public ResponseEntity<ErroResponse> handleUrgenciaDefinidaPeloProcesso() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Urgencia definida pelo processo vinculado nao pode ser desmarcada"));
+    }
+
+    @ExceptionHandler(AnexoInvalidoException.class)
+    public ResponseEntity<ErroResponse> handleAnexoInvalido() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Anexo deve ser JPG, PNG ou PDF com ate 5 MB"));
+    }
+
+    @ExceptionHandler(LimiteAnexosAtingidoException.class)
+    public ResponseEntity<ErroResponse> handleLimiteAnexosAtingido() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Limite de 5 anexos por ocorrencia atingido"));
+    }
+
+    // Upload acima de spring.servlet.multipart.max-file-size (5 MB, anexos de
+    // ocorrencia): o Spring recusa antes de chegar ao service.
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErroResponse> handleMaxUploadSizeExceeded() {
+        return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)
+                .body(new ErroResponse("Arquivo excede o tamanho maximo de 5 MB"));
+    }
+
+    @ExceptionHandler(VinculoJaExistenteException.class)
+    public ResponseEntity<ErroResponse> handleVinculoJaExistente() {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErroResponse("Ocorrencia ou processo ja possui vinculo"));
     }
 }

@@ -1,97 +1,92 @@
-import type { RoleKey } from '@/lib/nav'
+import { http } from '@/lib/http'
 import type { PaginaResponse } from '@/features/usuarios/types/usuarios.types'
-import {
-  buscarOcorrenciaMockPorId,
-  criarOcorrenciaMock,
-  encerrarOcorrenciaMock,
-  iniciarAtendimentoMock,
-  listarOcorrenciasMock,
-} from './ocorrenciasMockStore'
 import type {
+  AnexoOcorrencia,
+  AtualizarOcorrenciaRequest,
+  CatalogosOcorrencia,
   CriarOcorrenciaRequest,
   EncerrarOcorrenciaRequest,
   Ocorrencia,
+  OcorrenciaResumo,
   OcorrenciasFiltro,
+  ProcessoSanitario,
+  StatusProcesso,
 } from '../types/ocorrencias.types'
-// Reaproveita o wrapper já pronto de processos (validação + mensagens de
-// erro) em vez de chamar processosMockStore diretamente daqui — evita
-// duplicar o mapeamento de erro em dois lugares. Import cross-feature na
-// direção oposta da que já existia (processosMockStore já importa de
-// ocorrenciasMockStore); sem ciclo, porque a camada de API não é importada
-// por nenhum store.
-import { vincularExistentes } from '@/features/processos/api/processosApi'
 
-// PROVISÓRIO: o módulo `ocorrencias` ainda não tem backend real (T25/T26).
-// Em vez de chamar `http` (axios) como as outras features, esta camada
-// devolve o resultado do store mockado (`ocorrenciasMockStore.ts`)
-// embrulhado em Promise, para manter a mesma forma assíncrona que
-// `useQuery`/`useMutation` esperam. Quando o backend nascer, cada função
-// troca o corpo por uma chamada `http.get/post/patch`, sem mudar a
-// assinatura pública nem os hooks que a consomem.
-//
-// Chega a ser tentador excluir esse mock do bundle "de produção" (`vite
-// build`) — cheguei a fazer isso via import() dinâmico guardado por
-// `import.meta.env.PROD` numa versão anterior. Na prática, o único build de
-// produção que existe hoje É o ambiente de verificação do projeto
-// (`docker compose up` builda a imagem de frontend com `npm run build` e
-// serve via nginx — ver `frontend/Dockerfile`), então excluir o mock desse
-// build só quebra a própria forma de testar o sistema. Revisitar quando
-// existir uma distinção real entre "build de demonstração" e "produção".
+// API real de ocorrências (T25). Sem perfil no front: sigilo e permissões
+// são decididos pelo backend, que devolve `podeVerDenunciante` e responde
+// 403/422 quando a ação não é permitida.
 
-export class ErroNegocioOcorrencia extends Error {}
-
-// Delay pequeno só para loading/skeleton aparecerem de verdade num teste
-// manual — nunca usado pelos testes automatizados, que mockam este módulo
-// inteiro via `vi.mock` quando precisam exercitar erro.
-function esperar(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+export async function listarOcorrencias(filtro: OcorrenciasFiltro): Promise<PaginaResponse<OcorrenciaResumo>> {
+  const { data } = await http.get<PaginaResponse<OcorrenciaResumo>>('/ocorrencias', {
+    params: {
+      tipo: filtro.tipo,
+      status: filtro.status,
+      q: filtro.q,
+      pagina: filtro.pagina,
+      tamanho: filtro.tamanho,
+    },
+  })
+  return data
 }
 
-const DELAY_MS = 250
-
-export async function listarOcorrencias(filtro: OcorrenciasFiltro, roleKey: RoleKey): Promise<PaginaResponse<Ocorrencia>> {
-  await esperar(DELAY_MS)
-  return listarOcorrenciasMock(filtro, roleKey)
+export async function buscarOcorrenciaPorId(id: string): Promise<Ocorrencia> {
+  const { data } = await http.get<Ocorrencia>(`/ocorrencias/${id}`)
+  return data
 }
 
-export async function buscarOcorrenciaPorId(id: string, roleKey: RoleKey): Promise<Ocorrencia> {
-  await esperar(DELAY_MS)
-  const encontrada = buscarOcorrenciaMockPorId(id, roleKey)
-  if (!encontrada) throw new Error('Ocorrência não encontrada.')
-  return encontrada
+export async function buscarCatalogosOcorrencia(): Promise<CatalogosOcorrencia> {
+  const { data } = await http.get<CatalogosOcorrencia>('/ocorrencias/catalogos')
+  return data
 }
 
-export async function criarOcorrencia(payload: CriarOcorrenciaRequest, autorNome: string): Promise<Ocorrencia> {
-  await esperar(DELAY_MS)
-  return criarOcorrenciaMock(payload, autorNome)
+export async function criarOcorrencia(payload: CriarOcorrenciaRequest): Promise<Ocorrencia> {
+  const { data } = await http.post<Ocorrencia>('/ocorrencias', payload)
+  return data
 }
 
-export async function iniciarAtendimento(id: string, autorNome: string): Promise<Ocorrencia> {
-  await esperar(DELAY_MS)
-  const atualizada = iniciarAtendimentoMock(id, autorNome)
-  if (!atualizada) throw new Error('Não foi possível iniciar o atendimento.')
-  return atualizada
+export async function atualizarOcorrencia(id: string, payload: AtualizarOcorrenciaRequest): Promise<Ocorrencia> {
+  const { data } = await http.put<Ocorrencia>(`/ocorrencias/${id}`, payload)
+  return data
 }
 
-export async function vincularProcessoExistente(ocorrenciaId: string, processoId: string, roleKey: RoleKey): Promise<Ocorrencia> {
-  await vincularExistentes(processoId, ocorrenciaId)
-  const atualizada = buscarOcorrenciaMockPorId(ocorrenciaId, roleKey)
-  if (!atualizada) throw new Error('Ocorrência não encontrada.')
-  return atualizada
+// D5: por este endpoint só ABERTA -> EM_ATENDIMENTO.
+export async function iniciarAtendimento(id: string): Promise<Ocorrencia> {
+  const { data } = await http.patch<Ocorrencia>(`/ocorrencias/${id}/status`, { status: 'EM_ATENDIMENTO' })
+  return data
 }
 
-export async function encerrarOcorrencia(
-  id: string,
-  payload: EncerrarOcorrenciaRequest,
-  autorNome: string,
-): Promise<Ocorrencia> {
-  await esperar(DELAY_MS)
-  const resultado = encerrarOcorrenciaMock(id, payload, autorNome)
-  if (!resultado.ok) {
-    if (resultado.motivo === 'processo_pendente') {
-      throw new ErroNegocioOcorrencia('Não é possível encerrar: há processo sanitário vinculado aguardando resultado.')
-    }
-    throw new Error('Ocorrência não encontrada.')
-  }
-  return resultado.ocorrencia
+export async function encerrarOcorrencia(id: string, payload: EncerrarOcorrenciaRequest): Promise<Ocorrencia> {
+  const { data } = await http.post<Ocorrencia>(`/ocorrencias/${id}/encerramento`, payload)
+  return data
+}
+
+export async function adicionarNota(id: string, descricao: string): Promise<Ocorrencia> {
+  const { data } = await http.post<Ocorrencia>(`/ocorrencias/${id}/notas`, { descricao })
+  return data
+}
+
+export async function enviarAnexo(id: string, arquivo: File): Promise<AnexoOcorrencia> {
+  const formulario = new FormData()
+  formulario.append('arquivo', arquivo)
+  const { data } = await http.post<AnexoOcorrencia>(`/ocorrencias/${id}/anexos`, formulario)
+  return data
+}
+
+// O download precisa do token (não dá para usar um <a href> direto): baixa o
+// conteúdo como Blob e quem chama cria e revoga o object URL.
+export async function baixarAnexo(id: string, anexoId: string): Promise<Blob> {
+  const { data } = await http.get<Blob>(`/ocorrencias/${id}/anexos/${anexoId}`, { responseType: 'blob' })
+  return data
+}
+
+// D40: o processo mínimo é aberto e avançado pela tela da ocorrência.
+export async function abrirProcesso(ocorrenciaId: string, dataAbertura: string, urgente: boolean): Promise<ProcessoSanitario> {
+  const { data } = await http.post<ProcessoSanitario>('/processos', { dataAbertura, urgente, ocorrenciaId })
+  return data
+}
+
+export async function avancarStatusProcesso(processoId: string, status: StatusProcesso): Promise<ProcessoSanitario> {
+  const { data } = await http.patch<ProcessoSanitario>(`/processos/${processoId}/status`, { status })
+  return data
 }

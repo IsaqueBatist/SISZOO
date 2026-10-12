@@ -35,6 +35,7 @@ import io.restassured.response.Response;
 public class ApiTesteFixture {
 
     public static final UUID CARGO_ADMINISTRADOR_ID = UUID.fromString("00000000-0000-4000-8000-000000000001");
+    public static final UUID CARGO_VETERINARIO_ID = UUID.fromString("00000000-0000-4000-8000-000000000002");
     public static final UUID CARGO_AGENTE_SANITARIO_ID = UUID.fromString("00000000-0000-4000-8000-000000000003");
     private static final String SENHA_PADRAO = "SenhaTeste123";
 

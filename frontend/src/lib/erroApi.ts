@@ -11,3 +11,11 @@ export function mensagemDeRegraDaApi(erro: unknown): string | null {
   const mensagem = (erro.response?.data as { mensagem?: unknown } | undefined)?.mensagem
   return typeof mensagem === 'string' && mensagem.trim() !== '' ? mensagem : null
 }
+
+// Status HTTP de um erro do axios (null para erro de rede ou não-HTTP). Para
+// as telas que tratam um status específico fora de 409/422 — ex.: 403 de
+// anexo restrito e 413 de arquivo grande em ocorrências.
+export function statusHttpDoErro(erro: unknown): number | null {
+  if (!isAxiosError(erro)) return null
+  return erro.response?.status ?? null
+}

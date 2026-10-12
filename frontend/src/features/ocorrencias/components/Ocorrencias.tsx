@@ -2,22 +2,26 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import type { StatusOcorrencia, TipoOcorrencia } from '../types/ocorrencias.types'
+import type { OcorrenciaResumo, StatusOcorrencia, TipoOcorrencia } from '../types/ocorrencias.types'
 import { badgeDeStatus, iconeDeTipo, labelDeTipo } from '../utils/statusBadge'
+import { formatarData } from '../utils/datas'
+import { formatarProtocoloOcorrencia, formatarProtocoloProcesso } from '../utils/protocolo'
 import { useOcorrenciasQuery } from '../hooks/useOcorrencias'
 
 const TAMANHO_PAGINA = 20
-const FUSO_ITU = 'America/Sao_Paulo'
 const LINHAS_SKELETON = [0, 1, 2, 3, 4]
 const COLUNAS_TABELA = ['protocolo', 'data', 'tipo', 'bairro', 'denunciante', 'status', 'processo', 'acoes']
 
 const TIPOS_OCORRENCIA: TipoOcorrencia[] = ['zoonose', 'morcegos', 'irregular', 'agressivo', 'outros']
-const STATUS_OCORRENCIA: StatusOcorrencia[] = ['aberta', 'em_atendimento', 'encerrada']
+const STATUS_OCORRENCIA: StatusOcorrencia[] = ['ABERTA', 'EM_ATENDIMENTO', 'ENCERRADA']
 
-function formatarData(iso: string): string {
-  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: FUSO_ITU }).format(
-    new Date(iso),
-  )
+// Quem pode ver o denunciante é decidido pelo backend (podeVerDenunciante);
+// a anônima não tem denunciante para ninguém (D32).
+function ColunaDenunciante({ ocorrencia }: { ocorrencia: OcorrenciaResumo }) {
+  const textoMudo = { fontStyle: 'italic', color: 'var(--color-text-muted)' } as const
+  if (ocorrencia.anonima) return <span style={textoMudo}>Anônima</span>
+  if (ocorrencia.sigilosa && !ocorrencia.podeVerDenunciante) return <span style={textoMudo}>Sigiloso</span>
+  return <>{ocorrencia.denuncianteNome ?? '—'}</>
 }
 
 export function Ocorrencias() {
@@ -46,8 +50,8 @@ export function Ocorrencias() {
   }
 
   const { data, isLoading, isError } = useOcorrenciasQuery({
-    tipoOcorrencia: (tipoFiltro || undefined) as TipoOcorrencia | undefined,
-    statusOcorrencia: (statusFiltro || undefined) as StatusOcorrencia | undefined,
+    tipo: (tipoFiltro || undefined) as TipoOcorrencia | undefined,
+    status: (statusFiltro || undefined) as StatusOcorrencia | undefined,
     q: buscaDebounced || undefined,
     pagina,
     tamanho: TAMANHO_PAGINA,
@@ -186,10 +190,10 @@ export function Ocorrencias() {
                     <tr key={ocorrencia.id}>
                       <td>
                         <span className="mono" style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                          {ocorrencia.protocolo}
+                          {formatarProtocoloOcorrencia(ocorrencia.protocolo)}
                         </span>
                         {ocorrencia.urgente && (
-                          <span className="badge badge-urgent" style={{ marginLeft: 6 }}>
+                          <span className="badge badge-urgent" style={{ marginLeft: 6 }} title="Urgente" aria-label="Urgente">
                             🚨
                           </span>
                         )}
@@ -202,25 +206,22 @@ export function Ocorrencias() {
                       <td>
                         <span className="occur-type" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
                           <Icon name={iconeDeTipo(ocorrencia.tipoOcorrencia)} size={14} />
-                          {labelDeTipo(ocorrencia.tipoOcorrencia)}
+                          {ocorrencia.tipoOcorrenciaNome}
                         </span>
                       </td>
                       <td>{ocorrencia.bairro}</td>
                       <td>
-                        {ocorrencia.sigilosa ? (
-                          <span style={{ fontStyle: 'italic', color: 'var(--color-text-muted)' }}>Sigiloso</span>
-                        ) : (
-                          (ocorrencia.denunciante?.nome ?? '—')
-                        )}
+                        <ColunaDenunciante ocorrencia={ocorrencia} />
                       </td>
                       <td>
                         <span className={`badge ${statusBadge.classe}`}>{statusBadge.label}</span>
                       </td>
                       <td>
-                        {ocorrencia.processoVinculado ? (
-                          <Link to={`/processos/${ocorrencia.processoVinculado.id}`} className="mono" style={{ fontWeight: 600 }}>
-                            {ocorrencia.processoVinculado.protocolo}
-                          </Link>
+                        {/* Sem link: a tela de processos ainda é de demonstração (D40). */}
+                        {ocorrencia.processoProtocolo ? (
+                          <span className="mono" style={{ fontWeight: 600 }}>
+                            {formatarProtocoloProcesso(ocorrencia.processoProtocolo)}
+                          </span>
                         ) : (
                           <span className="muted">—</span>
                         )}
@@ -230,7 +231,7 @@ export function Ocorrencias() {
                           to={`/ocorrencias/${ocorrencia.id}`}
                           className="btn btn-ghost btn-sm btn-icon-only"
                           title="Ver"
-                          aria-label={`Ver ocorrência ${ocorrencia.protocolo}`}
+                          aria-label={`Ver ocorrência ${formatarProtocoloOcorrencia(ocorrencia.protocolo)}`}
                         >
                           <Icon name="eye" size={14} />
                         </Link>

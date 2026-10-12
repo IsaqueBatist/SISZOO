@@ -16,6 +16,7 @@ import type {
 } from '@/features/animais/types/historico.types'
 import type { LoginRequest, LoginResponse } from '@/features/auth/types/auth.types'
 import { API_BASE_URL } from '../lib/env'
+import { ocorrenciasHandlers } from './ocorrenciasHandlers'
 import type { CriarUsuarioRequest, UsuarioListItem } from '@/features/usuarios/types/usuarios.types'
 import type { PreferenciaUsuario } from '@/features/configuracoes/types/configuracoes.types'
 
@@ -1384,4 +1385,6 @@ export const handlers = [
     const filtrados = medicamentosMock.filter((item) => ativoParam === null || item.ativo === (ativoParam === 'true'))
     return HttpResponse.json(paginar(filtrados, pagina, tamanho))
   }),
+
+  ...ocorrenciasHandlers,
 ]

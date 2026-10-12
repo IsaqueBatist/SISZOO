@@ -5,7 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
-import { resetOcorrenciasMock } from '@/features/ocorrencias/api/ocorrenciasMockStore'
+import { resetOcorrenciasDemonstracao } from '../api/ocorrenciasDemonstracao'
 import { CadastrarProcesso } from './CadastrarProcesso'
 import type { CriarProcessoRequest, Processo } from '../types/processos.types'
 import { resetProcessosMock } from '../api/processosMockStore'
@@ -102,7 +102,7 @@ async function preencherAmostraExternaMinima(user: ReturnType<typeof userEvent.s
 describe('ProcessoForm — wizard de cadastro', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    resetOcorrenciasMock()
+    resetOcorrenciasDemonstracao()
     resetProcessosMock()
   })
 

@@ -4,7 +4,7 @@
 
 > Documento de referência derivado das **15 telas + Design System** do protótipo navegável. Use-o para comparar com seu schema atual e validar cobertura.
 
-> **Estado do schema (V8).** As tabelas de usuários/acesso, animais, baias, registros clínicos (`vacinacao`, `procedimento`, `prescricao`) e seus catálogos estão descritas aqui **como existem nas migrations** (`backend/src/main/resources/db/migration`, V1–V8). As demais (ocorrências, processo sanitário, relatórios, `adocao`, `exame`, anexos) ainda **não têm tabela**: são o modelo-alvo, a validar na implementação de cada módulo.
+> **Estado do schema (V10).** As tabelas de usuários/acesso, animais, baias, registros clínicos (`vacinacao`, `procedimento`, `prescricao`), ocorrências (§3.4) e seus catálogos estão descritas aqui **como existem nas migrations** (`backend/src/main/resources/db/migration`, V1–V10). `processo_sanitario` existe em versão mínima (§3.5). As demais (relatórios, `adocao`, `exame`, anexos de animal e de processo) ainda **não têm tabela**: são o modelo-alvo, a validar na implementação de cada módulo.
 
 **Convenções**
 
@@ -77,7 +77,6 @@ erDiagram
 
   %% ============ OCORRÊNCIAS ============
   OCORRENCIA }o--|| TIPO_OCORRENCIA : "classificada como"
-  OCORRENCIA }o--|| STATUS_OCORRENCIA : "está"
   OCORRENCIA }o--o| PROVIDENCIA_TOMADA : "encerrada com"
   OCORRENCIA }o--|| USUARIO : "registrada por"
   OCORRENCIA }o--o| USUARIO : "encerrada por"
@@ -85,7 +84,7 @@ erDiagram
   OCORRENCIA ||--o| DENUNCIADO : "aponta"
   OCORRENCIA ||--o{ MOVIMENTACAO_OCORRENCIA : "histórico"
   OCORRENCIA ||--o{ ANEXO_OCORRENCIA : "anexos"
-  OCORRENCIA ||--o| PROCESSO_SANITARIO : "gera"
+  PROCESSO_SANITARIO |o--o| OCORRENCIA : "vinculado a"
 
   %% ============ PROCESSO SANITÁRIO ============
   PROCESSO_SANITARIO }o--|| DOENCA : "investiga"
@@ -143,7 +142,8 @@ erDiagram
 
 - E-mail deve casar regex `^[a-z.]+@itu\.sp\.gov\.br$` (institucional).
 - Cargo `recepcionista` foi removido do escopo — não criar mais.
-- Apenas cargo `Administrador` pode criar / desativar usuários e ver dados de denunciante em ocorrências sigilosas.
+- Apenas cargo `Administrador` pode criar / desativar usuários.
+- Dados de denunciante em ocorrências sigilosas: só quem tem a permissão `OCORRENCIAS_DENUNCIAS:denunciante_sigiloso:leitura` — Administrador e Agente Sanitário (V10).
 - Nenhum usuário, incluindo Administrador, pode desativar a si mesmo (bloqueado no backend, HTTP 422).
 
 #### `cargo`
@@ -177,6 +177,8 @@ erDiagram
 | `exclusao` | boolean      | \*     |                                                                                            |
 
 Único: (`cargo_id`, `modulo`, `feature`).
+
+A feature `geral` gera a autoridade do módulo inteiro (`MODULO:leitura|escrita|exclusao`). Qualquer outra feature gera uma autoridade própria (`MODULO:feature:acao`) e nunca concede o módulo inteiro. Primeira feature além de `geral` (V10): `OCORRENCIAS_DENUNCIAS` / `denunciante_sigiloso`, só leitura, para Administrador e Agente Sanitário.
 
 **Matriz padrão** (referência):
 
@@ -412,50 +414,74 @@ Valores: `atendimento_clinico`, `castracao`, `cirurgia_maior`, `vacinacao`.
 
 ### 3.4 Ocorrências
 
+> **Estado do schema (V10, T25).** As tabelas abaixo existem como descritas (`V10__schema_ocorrencias.sql`). Enums da aplicação são `varchar` + `CHECK` em maiúsculas (mesma convenção de `prescricao.status`, V6); catálogos são tabela-domínio com `codigo` único (V4).
+
 #### `ocorrencia`
 
 | Campo                    | Tipo                    | Obrig. | Observações                                                                   |
 | ------------------------ | ----------------------- | ------ | ----------------------------------------------------------------------------- |
 | `id`                     | uuid PK                 | \*     |                                                                               |
-| `protocolo`              | varchar(20)             | \*     | Formato fixo `NNN/AAAA` (gerado pelo sistema, não configurável)               |
-| `tipo_ocorrencia_id`     | FK                      | \*     |                                                                               |
-| `status_ocorrencia_id`   | FK                      | \*     |                                                                               |
-| `data_abertura`          | date                    | \*     |                                                                               |
+| `protocolo`              | varchar(20)             | \*     | Único · `NNN/AAAA` gerado no servidor (ver `protocolo_sequencia`)             |
+| `tipo_ocorrencia_id`     | FK `tipo_ocorrencia`    | \*     |                                                                               |
+| `status_ocorrencia`      | varchar(20)             | \*     | `ABERTA`, `EM_ATENDIMENTO`, `ENCERRADA` · default `ABERTA`                    |
+| `data_abertura`          | date                    | \*     | não pode ser futura (validado no servidor)                                    |
 | `hora_abertura`          | time                    | ?      |                                                                               |
 | `endereco`               | varchar(255)            | \*     |                                                                               |
 | `bairro`                 | varchar(80)             | \*     | **Campo livre** (não há catálogo — sem filtro por bairro na listagem)         |
 | `ponto_referencia`       | varchar(255)            | ?      |                                                                               |
 | `descricao`              | text                    | \*     |                                                                               |
-| `urgente`                | boolean                 | \*     | default `false`                                                               |
-| `sigilosa`               | boolean                 | \*     | default `false` — quando `true`, esconder dados do denunciante para não-admin |
-| `registrado_por_id`      | FK `usuario`            | \*     |                                                                               |
+| `urgente`                | boolean                 | \*     | default `false` · informado no cadastro; o processo vinculado pode marcar     |
+| `sigilosa`               | boolean                 | \*     | default `false` — o CCZ conhece o denunciante e protege a identidade          |
+| `anonima`                | boolean                 | \*     | default `false` — ninguém conhece o denunciante · `CHECK (NOT (anonima AND sigilosa))` |
+| `latitude`               | decimal(9,6)            | ?      | `CHECK` entre -90 e 90                                                        |
+| `longitude`              | decimal(9,6)            | ?      | `CHECK` entre -180 e 180                                                      |
+| `registrado_por_id`      | FK `usuario`            | \*     | `ON DELETE RESTRICT`                                                          |
 | `providencia_tomada_id`  | FK `providencia_tomada` | ?      | preenchido no encerramento                                                    |
 | `descricao_encerramento` | text                    | ?      | obrigatório quando providência = `outro`                                      |
-| `encerrada_em`           | timestamp               | ?      |                                                                               |
-| `encerrada_por_id`       | FK `usuario`            | ?      |                                                                               |
-| `processo_sanitario_id`  | FK `processo_sanitario` | ?      | 1:1 opcional (uma ocorrência → 0 ou 1 processo)                               |
-| `latitude`               | decimal(9,6)            | ?      |                                                                               |
-| `longitude`              | decimal(9,6)            | ?      |                                                                               |
+| `encerrada_em`           | timestamp               | ?      | data de negócio, gravada pelo servidor com o `Clock` do projeto               |
+| `encerrada_por_id`       | FK `usuario`            | ?      | `ON DELETE RESTRICT`                                                          |
 | `criado_em`              | timestamp               | \*     |                                                                               |
 | `atualizado_em`          | timestamp               | \*     |                                                                               |
 
+> **Sem `processo_sanitario_id`.** O vínculo com processo mora só em `processo_sanitario.ocorrencia_id` (único, opcional); o lado da ocorrência é obtido por junção.
+
+`CHECK` de encerramento: os campos de encerramento existem se, e somente se, a ocorrência está encerrada — `ENCERRADA` exige `providencia_tomada_id`, `encerrada_em` e `encerrada_por_id`; os demais status exigem os três nulos e `descricao_encerramento` nula.
+
 **Regras**
 
-- Encerramento exige `providencia_tomada_id`. Se providência = `outro`, `descricao_encerramento` é obrigatório.
-- Não pode encerrar enquanto houver `processo_sanitario` vinculado sem resultado registrado.
-- `protocolo` é gerado server-side com sequência anual — prefixo fixo, **não configurável** pelo usuário.
+- **Status** só muda pelos endpoints de status e de encerramento, e toda mudança grava uma linha em `movimentacao_ocorrencia` na mesma transação. Transições permitidas:
+
+  | De → Para | Permitido | Movimentação |
+  | --- | --- | --- |
+  | (cadastro) → `ABERTA` | sim | `REGISTRADA` |
+  | `ABERTA` → `EM_ATENDIMENTO` | sim | `EQUIPE_DESPACHADA` |
+  | `EM_ATENDIMENTO` → `ENCERRADA` | sim | `ENCERRADA` |
+  | `ABERTA` → `ENCERRADA` | só com providência `sem_acao`, `orientacao_municipe` ou `registro_indevido` | `ENCERRADA` |
+  | `EM_ATENDIMENTO` → `ABERTA`, `ENCERRADA` → qualquer, mesmo status | não | — |
+
+- Encerramento exige `providencia_tomada_id`. Se providência = `outro`, `descricao_encerramento` é obrigatória.
+- Não pode encerrar enquanto houver `processo_sanitario` vinculado com `status_processo` diferente de `CONCLUIDO`.
+- `protocolo` é gerado server-side, com sequência por ano e por entidade — prefixo fixo, **não configurável** pelo usuário. O ano é o do registro, não o de `data_abertura`; acima de 999 o número cresce (`1000/2026`). Na interface, o protocolo é exibido como `OC NNN/AAAA` (ocorrência) e `PS NNN/AAAA` (processo); a busca aceita o número com ou sem o prefixo.
+- **Sem exclusão.** Não há `DELETE` de ocorrência (a API responde 405).
+- **Edição** (até o encerramento): campos descritivos, `urgente` e os blocos de denunciante e denunciado (ausente = sem alteração; presente = substitui o bloco inteiro). Grava só auditoria `ATUALIZACAO`, sem movimentação. `sigilosa` só é alterada por quem tem a permissão `denunciante_sigiloso`.
+- **Urgência:** marcada no cadastro e editável até o encerramento. Ao vincular um processo urgente, a ocorrência passa a urgente; desmarcar a urgência que o processo vinculado definiu é recusado. A listagem traz urgentes primeiro.
+- **Denúncia anônima:** não aceita nenhum dado do denunciante (não existe linha em `denunciante`). Só pode passar de anônima para identificada, por quem tem a permissão `denunciante_sigiloso`, junto com os dados do denunciante; o caminho inverso é recusado.
+- **Notas internas:** a timeline aceita notas (`NOTA_INTERNA`) sem mudança de status, até o encerramento.
+- **Anexos e correções depois do encerramento** não são permitidos (limitação conhecida).
 
 #### `tipo_ocorrencia` (catálogo)
 
-`zoonose`, `morcegos`, `irregular`, `agressivo`, `outros`.
-
-#### `status_ocorrencia` (catálogo)
-
-`aberta`, `em_atendimento`, `encerrada`.
+`id` uuid PK · `codigo` varchar(30) único · `nome` varchar(100) · `ativo` boolean (default `true`).
+Seed: `zoonose`, `morcegos`, `irregular`, `agressivo`, `outros`.
 
 #### `providencia_tomada` (catálogo)
 
-`orientacao_municipe`, `encaminhamento_gepar`, `abertura_processo`, `captura_remocao`, `sem_acao`, `outro`.
+`id` uuid PK · `codigo` varchar(30) único · `nome` varchar(100) · `ativo` boolean (default `true`).
+Seed: `orientacao_municipe`, `encaminhamento_gepar`, `abertura_processo`, `captura_remocao`, `sem_acao`, `outro`, `registro_indevido`.
+
+> `registro_indevido` ("Registro duplicado/indevido") não constava do levantamento original: encerra ocorrências registradas em duplicidade ou por engano. **O dashboard deve excluí-la das contagens.**
+
+> Não há catálogo `status_ocorrencia`: o status é coluna `varchar` + `CHECK` em `ocorrencia`.
 
 #### `denunciante`
 
@@ -463,7 +489,7 @@ Valores: `atendimento_clinico`, `castracao`, `cirurgia_maior`, `vacinacao`.
 | -------------------- | ------------ | ------ | ------------------------------------- |
 | `id`                 | uuid PK      | \*     |
 | `ocorrencia_id`      | FK (único)   | \*     |
-| `nome`               | varchar(150) | ?      | obrigatório quando `sigilosa = false` |
+| `nome`               | varchar(150) | ?      | obrigatório quando a ocorrência não é sigilosa nem anônima |
 | `cpf`                | varchar(14)  | ?      |
 | `telefone`           | varchar(20)  | ?      |
 | `email`              | varchar(150) | ?      |
@@ -471,11 +497,11 @@ Valores: `atendimento_clinico`, `castracao`, `cirurgia_maior`, `vacinacao`.
 | `endereco`           | varchar(255) | ?      |
 | `bairro_residencial` | varchar(80)  | ?      |
 
-**Regra:** consulta retorna `null` para campos pessoais quando `ocorrencia.sigilosa = true` e `usuario.perfil != admin`.
+**Regra:** em ocorrência sigilosa, a consulta retorna `null` nos campos pessoais para quem **não tem** a permissão `OCORRENCIAS_DENUNCIAS:denunciante_sigiloso:leitura` (hoje, o Veterinário). Administrador e Agente Sanitário têm a permissão. A busca da listagem só compara o nome do denunciante onde a pessoa poderia vê-lo. Os dados pessoais do denunciante não entram nos snapshots de auditoria (registra-se só que foram alterados).
 
 #### `denunciado`
 
-`id`, `ocorrencia_id` FK (único), `nome`, `cpf`, `telefone`, `endereco`, `observacoes` — todos opcionais.
+`id`, `ocorrencia_id` FK (único), `nome` varchar(150), `cpf` varchar(14), `telefone` varchar(20), `endereco` varchar(255), `observacoes` text — todos opcionais (mesmos tamanhos do denunciante). Nunca é mascarado.
 
 #### `movimentacao_ocorrencia`
 
@@ -483,20 +509,35 @@ Valores: `atendimento_clinico`, `castracao`, `cirurgia_maior`, `vacinacao`.
 | ------------------- | ------------ | ------ | ------------------------------------------------------------------------------------------------------------ |
 | `id`                | uuid PK      | \*     |
 | `ocorrencia_id`     | FK           | \*     |
-| `tipo_movimentacao` | enum         | \*     | `registrada`, `equipe_despachada`, `processo_vinculado`, `aguardando_resultado`, `encerrada`, `nota_interna` |
-| `data`              | timestamp    | \*     |
-| `descricao`         | text         | ?      |
-| `usuario_id`        | FK `usuario` | \*     |
+| `usuario_id`        | FK `usuario` | \*     | `ON DELETE RESTRICT` |
+| `tipo_movimentacao` | varchar(30)  | \*     | `REGISTRADA`, `EQUIPE_DESPACHADA`, `PROCESSO_VINCULADO`, `AGUARDANDO_RESULTADO`, `ENCERRADA`, `NOTA_INTERNA` |
+| `status_anterior`   | varchar(20)  | ?      | preenchido só nas movimentações que mudam o status |
+| `status_novo`       | varchar(20)  | ?      | idem |
+| `data`              | timestamp    | \*     | data de negócio, gravada pelo servidor |
+| `descricao`         | text         | ?      | obrigatória em `NOTA_INTERNA` |
+| `criado_em`         | timestamp    | \*     |
 
-#### `anexo_ocorrencia`
+Um `CHECK` amarra cada tipo à sua transição (tabela de regras de `ocorrencia`); `PROCESSO_VINCULADO`, `AGUARDANDO_RESULTADO` e `NOTA_INTERNA` têm `status_anterior` e `status_novo` nulos. Linhas são só inseridas, nunca alteradas.
 
-`id`, `ocorrencia_id` FK, `nome`, `url`, `tamanho`, `mime_type`, `criado_em`, `criado_por_id`.
+#### `anexo_ocorrencia` e `anexo_ocorrencia_conteudo`
+
+`anexo_ocorrencia` (metadados): `id`, `ocorrencia_id` FK, `nome` varchar(255), `mime_type` (`image/jpeg`, `image/png`, `application/pdf`), `tamanho` integer (> 0 e ≤ 5 MB), `criado_por_id` FK `usuario`, `criado_em`.
+
+`anexo_ocorrencia_conteudo`: `anexo_id` PK/FK `anexo_ocorrencia`, `conteudo` bytea. O conteúdo fica em tabela separada e só é lido no download; listagem e detalhe nunca o consultam.
+
+**Regras:** no máximo 5 anexos por ocorrência; o tipo é detectado pelos bytes do arquivo. Em ocorrência sigilosa, o download é recusado (403) para quem não tem a permissão `denunciante_sigiloso`, avaliado no momento do download; os metadados aparecem para todos com leitura.
+
+#### `protocolo_sequencia`
+
+`entidade` varchar(20) (`OCORRENCIA`, `PROCESSO`) · `ano` integer · `ultimo` integer · PK (`entidade`, `ano`). Uma sequência por ano e por entidade: ocorrência e processo numeram de forma independente, e cada tabela garante a unicidade do seu `protocolo`.
 
 ---
 
 ### 3.5 Processo Sanitário
 
 #### `processo_sanitario`
+
+> **Estado do schema (V10).** Existe só uma **versão mínima**, criada pela T25 para o vínculo com a ocorrência: `id`, `protocolo` varchar(20) único, `data_abertura`, `ocorrencia_id` (FK `ocorrencia`, **único, opcional** — único lado do vínculo), `urgente` (informado no cadastro, até existirem as amostras), `status_processo` varchar(30) (`ABERTO`, `AGUARDANDO_RESULTADO`, `COM_RESULTADO`, `CONCLUIDO`; avança um passo por vez, provisoriamente sem resultado nem notificação), `criado_por_id`, `criado_em`, `atualizado_em`. A tabela abaixo é o modelo-alvo da task de processos. Vincular processo a ocorrência exige também `OCORRENCIAS_DENUNCIAS:escrita`.
 
 | Campo                       | Tipo             | Obrig. | Observações                                                                                |
 | --------------------------- | ---------------- | ------ | ------------------------------------------------------------------------------------------ |
@@ -704,6 +745,7 @@ Campos: `id`, `codigo`, `nome`, `tipo` ("padrão raiva", "multidoenças", "apoio
 **Regras**
 
 - Toda operação `CRIACAO`/`ATUALIZACAO`/`DESATIVACAO`/`REATIVACAO` em entidades de negócio gera evento.
+- Snapshots de ocorrência (`payload_antes`/`payload_depois`) não contêm dados pessoais do denunciante; registram só se o bloco foi alterado (T25).
 - ⚠️ **Ponto em aberto**: o enum `acao` atual não tem um valor equivalente a "visualização" — a regra crítica de LGPD (acesso do Admin a dados de denunciante sigiloso deve gerar evento de auditoria) ainda não tem uma ação correspondente no schema. Precisa de decisão de produto antes de T08+ (adicionar valor ao enum, ou modelar de outra forma).
 
 ---
@@ -719,7 +761,7 @@ Campos: `id`, `codigo`, `nome`, `tipo` ("padrão raiva", "multidoenças", "apoio
 | `animal` → `adocao`                           | 1:0..1                    | unique constraint em `animal_id`                   |
 | `ocorrencia` → `denunciante`                  | 1:0..1                    |                                                    |
 | `ocorrencia` → `denunciado`                   | 1:0..1                    |                                                    |
-| `ocorrencia` → `processo_sanitario`           | 1:0..1                    | normalmente definido no wizard; pode ser definido depois se nenhum dos dois lados já tiver vínculo (emenda 2026-10-03) — uma vez definido, imutável |
+| `ocorrencia` → `processo_sanitario`           | 1:0..1                    | vínculo só em `processo_sanitario.ocorrencia_id` (único); normalmente definido no wizard; pode ser definido depois se nenhum dos dois lados já tiver vínculo (emenda 2026-10-03) — uma vez definido, imutável |
 | `processo_sanitario` → `animal_amostrado`     | 1:N                       | mín. 1                                             |
 | `animal_amostrado` → `animal`                 | N:0..1                    | **opcional** — animal cadastrado OU dados próprios |
 | `animal_amostrado` → `sintoma`                | N:M via `amostra_sintoma` |                                                    |
@@ -735,7 +777,7 @@ Campos: `id`, `codigo`, `nome`, `tipo` ("padrão raiva", "multidoenças", "apoio
 
 1. Login somente com e-mail `@itu.sp.gov.br`.
 2. Perfil `recepcionista` **não existe** (fora do escopo).
-3. Admin é o único com acesso a `usuarios`, criação/desativação e dados de denunciante sigiloso.
+3. Admin é o único com acesso a `usuarios` e criação/desativação. Dados de denunciante sigiloso: Administrador e Agente Sanitário (permissão `denunciante_sigiloso`).
 4. Sistema é **PT-BR único**; data **DD/MM/AAAA**; fuso **America/São_Paulo** — nenhum desses é configurável.
 
 ### Animais e baias
@@ -749,9 +791,9 @@ Campos: `id`, `codigo`, `nome`, `tipo` ("padrão raiva", "multidoenças", "apoio
 
 9. Protocolo `NNN/AAAA` é gerado pelo sistema (prefixo fixo, **não configurável**).
 10. Bairro é campo livre — sem catálogo, sem filtro por valor controlado na listagem.
-11. Ocorrência sigilosa: dados pessoais do denunciante são ocultados para perfis ≠ admin.
+11. Ocorrência sigilosa: dados pessoais do denunciante e anexos são ocultados para quem não tem a permissão `denunciante_sigiloso` (hoje, o Veterinário). Denúncia anônima é distinta de sigilosa e não guarda denunciante.
 12. Encerramento: `providencia_tomada` obrigatória; quando = `outro`, `descricao_encerramento` é obrigatória.
-13. Não pode encerrar ocorrência com processo sanitário pendente de resultado.
+13. Não pode encerrar ocorrência com processo sanitário vinculado que não esteja `CONCLUIDO`.
 
 ### Processo sanitário
 
@@ -787,8 +829,8 @@ Campos: `id`, `codigo`, `nome`, `tipo` ("padrão raiva", "multidoenças", "apoio
 | `motivo_entrada`         | Recolhimento, Abandono, Entrega voluntária, Resgate, Apreensão judicial                                                                                                             |
 | `tipo_baia`              | Interna, Gatil, Externa                                                                                                                                                             |
 | `tipo_ocorrencia`        | Suspeita de Zoonose, Infestação de Morcegos, Criação Irregular, Animal Agressivo, Outros                                                                                            |
-| `status_ocorrencia`      | Aberta, Em Atendimento, Encerrada                                                                                                                                                   |
-| `providencia_tomada`     | Orientação ao munícipe, Encaminhamento ao GEPAR, Abertura de processo sanitário, Captura e remoção, Sem ação necessária, **Outro**                                                  |
+| `status_ocorrencia`      | Aberta, Em Atendimento, Encerrada (coluna `varchar` + `CHECK`, sem tabela de catálogo)                                                                                              |
+| `providencia_tomada`     | Orientação ao munícipe, Encaminhamento ao GEPAR, Abertura de processo sanitário, Captura e remoção, Sem ação necessária, **Outro**, Registro duplicado/indevido                     |
 | `doenca`                 | Raiva, Esporotricose, Leishmaniose Visceral, Leptospirose, Febre Maculosa, Febre Amarela                                                                                            |
 | `laboratorio`            | Pasteur — SP, IAL — Sorocaba, CCZ — SP, ITU-LL01                                                                                                                                    |
 | `status_processo`        | Aberto, Aguardando Resultado, Com Resultado, Concluído                                                                                                                              |

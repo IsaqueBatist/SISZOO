@@ -78,7 +78,7 @@ describe('OcorrenciaForm — autosave do rascunho', () => {
     await waitFor(() => expect(agendarSalvarRascunhoOcorrencia).toHaveBeenCalled())
   })
 
-  it('agenda salvar com exatamente as 11 chaves de OcorrenciaFormValues', async () => {
+  it('agenda salvar com exatamente as 14 chaves de OcorrenciaFormValues', async () => {
     vi.mocked(carregarRascunhoOcorrencia).mockResolvedValue(null)
 
     const user = userEvent.setup()
@@ -97,7 +97,9 @@ describe('OcorrenciaForm — autosave do rascunho', () => {
         'bairro',
         'pontoReferencia',
         'descricao',
+        'urgente',
         'sigilosa',
+        'anonima',
         'denunciante',
         'denunciadoAtivo',
         'denunciado',
@@ -124,5 +126,24 @@ describe('OcorrenciaForm — autosave do rascunho', () => {
       (valores) => valores.sigilosa,
     )
     expect(ultimaComSigilo?.denunciante.nome).toBe('')
+  })
+
+  it('não persiste os dados do denunciante no rascunho quando a denúncia é anônima (LGPD)', async () => {
+    vi.mocked(carregarRascunhoOcorrencia).mockResolvedValue(null)
+
+    const user = userEvent.setup()
+    renderForm()
+
+    await user.type(screen.getByLabelText(/Nome completo/i), 'Fulano de Tal')
+    await user.click(screen.getByLabelText('Denunciante anônimo'))
+    await user.type(screen.getByLabelText(/^Bairro/i), 'Bairro Teste')
+
+    await waitFor(() => expect(agendarSalvarRascunhoOcorrencia).toHaveBeenCalled())
+    const chamadas = vi.mocked(agendarSalvarRascunhoOcorrencia).mock.calls
+    const ultimaAnonima = chamadas
+      .map(([valores]) => valores as { anonima: boolean; denunciante: Record<string, string> })
+      .findLast((valores) => valores.anonima)
+    expect(ultimaAnonima).toBeDefined()
+    expect(Object.values(ultimaAnonima!.denunciante).every((valor) => valor === '')).toBe(true)
   })
 })

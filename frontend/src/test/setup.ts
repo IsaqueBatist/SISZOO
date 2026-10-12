@@ -17,11 +17,12 @@ import {
   resetUsuariosMock,
   resetVacinacoesMock,
 } from '../mocks/handlers'
-import { resetOcorrenciasMock } from '@/features/ocorrencias/api/ocorrenciasMockStore'
+import { resetOcorrenciasDemonstracao } from '@/features/processos/api/ocorrenciasDemonstracao'
 
-// TODO: migrar para 'error' quando as integrações reais de API existirem,
-// para acusar chamadas HTTP não-mockadas nos testes.
-beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }))
+// 'error': chamada HTTP sem handler falha o teste em vez de passar com um
+// aviso — toda rota da API usada nos testes precisa de handler em
+// mocks/handlers.ts (ou de um server.use() no próprio teste).
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => {
   server.resetHandlers()
   sessionStorage.clear()
@@ -32,6 +33,6 @@ afterEach(() => {
   resetVacinacoesMock()
   resetProcedimentosMock()
   resetPrescricoesMock()
-  resetOcorrenciasMock()
+  resetOcorrenciasDemonstracao()
 })
 afterAll(() => server.close())

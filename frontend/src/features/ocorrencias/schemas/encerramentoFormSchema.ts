@@ -1,15 +1,28 @@
 import { z } from 'zod'
+import type { ProvidenciaTomada, StatusOcorrencia } from '../types/ocorrencias.types'
 
 // Opções do catálogo `providencia_tomada` (docs/DER.md §3.4), na ordem do
-// protótipo docs/prototipo/ocorrencia.html.
-export const PROVIDENCIA_OPCOES = [
+// protótipo docs/prototipo/ocorrencia.html. `registro_indevido` é a D34.
+export const PROVIDENCIA_OPCOES: readonly { valor: ProvidenciaTomada; label: string }[] = [
   { valor: 'orientacao_municipe', label: 'Orientação ao munícipe' },
   { valor: 'encaminhamento_gepar', label: 'Encaminhamento ao GEPAR' },
   { valor: 'abertura_processo', label: 'Abertura de processo sanitário' },
   { valor: 'captura_remocao', label: 'Captura e remoção do animal' },
   { valor: 'sem_acao', label: 'Sem ação necessária' },
   { valor: 'outro', label: 'Outro (descrever abaixo)' },
-] as const
+  { valor: 'registro_indevido', label: 'Registro duplicado/indevido' },
+]
+
+// D5: direto de ABERTA para ENCERRADA só com estas providências (mesmo
+// conjunto de ProvidenciaTomada.java no backend, que é quem valida de fato).
+const PROVIDENCIAS_SEM_ATENDIMENTO: readonly ProvidenciaTomada[] = ['sem_acao', 'orientacao_municipe', 'registro_indevido']
+
+export function providenciasPermitidas(status: StatusOcorrencia) {
+  if (status === 'ABERTA') {
+    return PROVIDENCIA_OPCOES.filter((opcao) => PROVIDENCIAS_SEM_ATENDIMENTO.includes(opcao.valor))
+  }
+  return PROVIDENCIA_OPCOES
+}
 
 const VALORES_PROVIDENCIA = PROVIDENCIA_OPCOES.map((opcao) => opcao.valor)
 

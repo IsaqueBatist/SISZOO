@@ -1,23 +1,24 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
-import { PROCESSO_SIGILOSO_ID, registrarResultadoMock, resetProcessosMock } from '@/features/processos/api/processosMockStore'
+import { API_BASE_URL } from '@/lib/env'
+import { server } from '@/mocks/server'
+import {
+  ANEXO_ENCERRADA_ID,
+  OCORRENCIA_ABERTA_ID,
+  OCORRENCIA_ANONIMA_ID,
+  OCORRENCIA_ENCERRADA_ID,
+  OCORRENCIA_PROCESSO_PENDENTE_ID,
+  OCORRENCIA_SIGILOSA_ID,
+  ocorrenciaAbertaFixture,
+  ocorrenciaSigilosaVisivel,
+} from '@/mocks/ocorrenciasFixtures'
 import { OcorrenciaDetalhe } from './OcorrenciaDetalhe'
-
-// Ids semeados em ./ocorrenciasMockStore.ts (seedOcorrenciasMock).
-const OCORRENCIA_ABERTA_ID = 'h5000000-0000-0000-0000-000000000001'
-const OCORRENCIA_SIGILOSA_ID = 'h5000000-0000-0000-0000-000000000002'
-const OCORRENCIA_EM_ATENDIMENTO_ID = 'h5000000-0000-0000-0000-000000000004'
-const OCORRENCIA_ENCERRADA_ID = 'h5000000-0000-0000-0000-000000000005'
-// 095/2026, vinculada a PROCESSO_SIGILOSO_ID (../processos/processosMockStore.ts) —
-// par usado só para exercitar o fechamento da regra 13 (resultadoPendente) abaixo.
-const OCORRENCIA_SIGILOSA_COM_PROCESSO_ID = 'h5000000-0000-0000-0000-000000000006'
-// 006/2026, aberto, sem ocorrência vinculada (../processos/processosMockStore.ts).
-const PROCESSO_SEM_VINCULO_ID = 'p1000000-0000-0000-0000-000000000006'
 
 function renderDetalhe(ocorrenciaId: string, cargos: string[]) {
   const usuario: Usuario = {
@@ -44,58 +45,66 @@ function renderDetalhe(ocorrenciaId: string, cargos: string[]) {
   )
 }
 
-describe('OcorrenciaDetalhe', () => {
-  // ocorrenciasMock já é resetado globalmente no afterEach de
-  // ../../test/setup.ts — processosMock não faz parte dessa lista e
-  // precisa de reset explícito aqui (mesmo padrão de
-  // ../processos/ProcessoDetalhe.test.tsx).
-  beforeEach(() => {
-    resetProcessosMock()
-  })
+afterEach(() => {
+  vi.restoreAllMocks()
+})
 
-  it('renderiza os dados gerais, denunciante, movimentações e anexos', async () => {
+describe('OcorrenciaDetalhe', () => {
+  it('renderiza os dados gerais com o prefixo "OC", denunciante, movimentações e anexos', async () => {
     renderDetalhe(OCORRENCIA_ENCERRADA_ID, ['Administrador'])
 
-    expect(await screen.findByRole('heading', { name: 'Ocorrência 070/2026', level: 1 })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Ocorrência OC 070/2026', level: 1 })).toBeInTheDocument()
     expect(screen.getByText('Escola Municipal Parque das Flores')).toBeInTheDocument()
     expect(screen.getByText('Foto do animal.jpg')).toBeInTheDocument()
+    expect(screen.getByText('10/05/2026 · 08:00', { selector: '.mono' })).toBeInTheDocument()
   })
 
-  it('mostra o placeholder "Sigiloso" para uma ocorrência sigilosa vista por perfil não-admin, sem quebrar o layout', async () => {
-    renderDetalhe(OCORRENCIA_SIGILOSA_ID, ['Agente Sanitário'])
+  it('mostra o placeholder "Sigiloso" quando o backend nega a visão do denunciante (podeVerDenunciante=false)', async () => {
+    renderDetalhe(OCORRENCIA_SIGILOSA_ID, ['Veterinário'])
 
-    await screen.findByRole('heading', { name: 'Ocorrência 090/2026', level: 1 })
+    await screen.findByRole('heading', { name: 'Ocorrência OC 090/2026', level: 1 })
     expect(screen.getAllByText('Sigiloso').length).toBeGreaterThan(0)
+    expect(screen.queryByText('João Pereira Lima')).not.toBeInTheDocument()
   })
 
-  it('mostra os dados reais do denunciante para a mesma ocorrência sigilosa vista por Admin', async () => {
+  it('mostra os dados reais do denunciante sigiloso quando o backend libera a visão (podeVerDenunciante=true)', async () => {
+    server.use(http.get(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_SIGILOSA_ID}`, () => HttpResponse.json(ocorrenciaSigilosaVisivel())))
     renderDetalhe(OCORRENCIA_SIGILOSA_ID, ['Administrador'])
 
-    await screen.findByRole('heading', { name: 'Ocorrência 090/2026', level: 1 })
+    await screen.findByRole('heading', { name: 'Ocorrência OC 090/2026', level: 1 })
     expect(screen.getByText('João Pereira Lima')).toBeInTheDocument()
+    expect(screen.queryByText('Sigiloso')).not.toBeInTheDocument()
+  })
+
+  it('mostra a denúncia anônima sem campos de denunciante', async () => {
+    renderDetalhe(OCORRENCIA_ANONIMA_ID, ['Administrador'])
+
+    await screen.findByRole('heading', { name: 'Ocorrência OC 091/2026', level: 1 })
+    expect(screen.getByText(/Denúncia anônima:/)).toBeInTheDocument()
     expect(screen.queryByText('Sigiloso')).not.toBeInTheDocument()
   })
 
   it('não mostra o formulário de encerramento para o perfil Veterinário (só leitura)', async () => {
     renderDetalhe(OCORRENCIA_ABERTA_ID, ['Veterinário'])
 
-    await screen.findByRole('heading', { name: 'Ocorrência 089/2026', level: 1 })
+    await screen.findByRole('heading', { name: 'Ocorrência OC 089/2026', level: 1 })
     expect(screen.queryByLabelText('Providência tomada')).not.toBeInTheDocument()
     expect(screen.getByText('Seu perfil não pode encerrar ocorrências')).toBeInTheDocument()
   })
 
-  it('mostra os dados de encerramento e nenhum formulário para uma ocorrência já encerrada', async () => {
+  it('mostra os dados de encerramento (nome da providência vindo do backend) e nenhum formulário para uma ocorrência já encerrada', async () => {
     renderDetalhe(OCORRENCIA_ENCERRADA_ID, ['Administrador'])
 
-    await screen.findByRole('heading', { name: 'Ocorrência 070/2026', level: 1 })
+    await screen.findByRole('heading', { name: 'Ocorrência OC 070/2026', level: 1 })
     expect(screen.queryByLabelText('Providência tomada')).not.toBeInTheDocument()
-    expect(screen.getByText('Captura e remoção do animal')).toBeInTheDocument()
+    expect(screen.getByText('Captura e remoção')).toBeInTheDocument()
+    expect(screen.getByText('Stéphanie Lima', { selector: '.v' })).toBeInTheDocument()
   })
 
   it('mostra a linha do tempo em ordem cronológica decrescente, com tipo, data e autor', async () => {
     renderDetalhe(OCORRENCIA_ENCERRADA_ID, ['Administrador'])
 
-    await screen.findByRole('heading', { name: 'Ocorrência 070/2026', level: 1 })
+    await screen.findByRole('heading', { name: 'Ocorrência OC 070/2026', level: 1 })
 
     const titulos = screen
       .getAllByText(/Ocorrência encerrada|Equipe despachada|Ocorrência registrada/)
@@ -104,17 +113,62 @@ describe('OcorrenciaDetalhe', () => {
     expect(screen.getByText('12/05/2026 · 13:00')).toBeInTheDocument()
   })
 
-  it('encerra a ocorrência: o form some, os dados somente-leitura aparecem e a movimentação de encerramento entra na timeline', async () => {
+  it('encerra a ocorrência: envia a providência e mostra o estado devolvido pelo backend', async () => {
     const user = userEvent.setup()
+    const corpos: unknown[] = []
+    server.use(
+      http.post(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_ABERTA_ID}/encerramento`, async ({ request }) => {
+        corpos.push(await request.json())
+        const aberta = ocorrenciaAbertaFixture()
+        return HttpResponse.json({
+          ...aberta,
+          statusOcorrencia: 'ENCERRADA',
+          providenciaTomada: 'sem_acao',
+          providenciaTomadaNome: 'Sem ação necessária',
+          encerradaEm: '2026-05-20T11:00:00',
+          encerradaPorNome: 'Usuária Teste',
+          movimentacoes: [
+            ...aberta.movimentacoes,
+            {
+              id: 'h6000000-0000-0000-0000-000000000098',
+              tipoMovimentacao: 'ENCERRADA',
+              statusAnterior: 'ABERTA',
+              statusNovo: 'ENCERRADA',
+              data: '2026-05-20T11:00:00',
+              descricao: 'Providência: Sem ação necessária',
+              usuarioId: 'a1b2c3d4-0000-0000-0000-000000000099',
+              usuarioNome: 'Usuária Teste',
+            },
+          ],
+        })
+      }),
+    )
     renderDetalhe(OCORRENCIA_ABERTA_ID, ['Administrador'])
 
-    await screen.findByRole('heading', { name: 'Ocorrência 089/2026', level: 1 })
+    await screen.findByRole('heading', { name: 'Ocorrência OC 089/2026', level: 1 })
     await user.selectOptions(screen.getByLabelText('Providência tomada'), 'Sem ação necessária')
     await user.click(screen.getByRole('button', { name: 'Encerrar ocorrência' }))
 
     expect(await screen.findByText('Ocorrência encerrada')).toBeInTheDocument()
     expect(screen.queryByLabelText('Providência tomada')).not.toBeInTheDocument()
     expect(screen.getByText('Sem ação necessária')).toBeInTheDocument()
+    expect(corpos).toEqual([{ providenciaTomada: 'sem_acao' }])
+  })
+
+  it('mostra a mensagem do backend quando o encerramento é recusado (422)', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.post(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_ABERTA_ID}/encerramento`, () =>
+        HttpResponse.json({ mensagem: 'Transicao de status invalida' }, { status: 422 }),
+      ),
+    )
+    renderDetalhe(OCORRENCIA_ABERTA_ID, ['Administrador'])
+
+    await screen.findByRole('heading', { name: 'Ocorrência OC 089/2026', level: 1 })
+    await user.selectOptions(screen.getByLabelText('Providência tomada'), 'Sem ação necessária')
+    await user.click(screen.getByRole('button', { name: 'Encerrar ocorrência' }))
+
+    expect(await screen.findByText('Transicao de status invalida')).toBeInTheDocument()
   })
 
   it('mostra "Iniciar Atendimento" para Admin/Agente quando a ocorrência está aberta', async () => {
@@ -126,64 +180,123 @@ describe('OcorrenciaDetalhe', () => {
   it('não mostra "Iniciar Atendimento" para o perfil Veterinário', async () => {
     renderDetalhe(OCORRENCIA_ABERTA_ID, ['Veterinário'])
 
-    await screen.findByRole('heading', { name: 'Ocorrência 089/2026', level: 1 })
+    await screen.findByRole('heading', { name: 'Ocorrência OC 089/2026', level: 1 })
     expect(screen.queryByRole('button', { name: 'Iniciar Atendimento' })).not.toBeInTheDocument()
   })
 
   it('não mostra "Iniciar Atendimento" quando a ocorrência já não está aberta', async () => {
-    renderDetalhe(OCORRENCIA_EM_ATENDIMENTO_ID, ['Administrador'])
+    renderDetalhe(OCORRENCIA_PROCESSO_PENDENTE_ID, ['Administrador'])
 
-    await screen.findByRole('heading', { name: 'Ocorrência 092/2026', level: 1 })
+    await screen.findByRole('heading', { name: 'Ocorrência OC 092/2026', level: 1 })
     expect(screen.queryByRole('button', { name: 'Iniciar Atendimento' })).not.toBeInTheDocument()
   })
 
-  it('o card de processo vinculado é um link pro detalhe do processo (T33)', async () => {
-    renderDetalhe(OCORRENCIA_EM_ATENDIMENTO_ID, ['Administrador'])
+  it('mostra o processo vinculado com prefixo "PS" e status legível, sem link (processos ainda é demonstração, D40)', async () => {
+    renderDetalhe(OCORRENCIA_PROCESSO_PENDENTE_ID, ['Administrador'])
 
-    await screen.findByRole('heading', { name: 'Ocorrência 092/2026', level: 1 })
-    const link = screen.getByRole('link', { name: /Processo Sanitário Vinculado/ })
-    expect(link).toHaveAttribute('href', '/processos/h7000000-0000-0000-0000-000000000001')
+    await screen.findByRole('heading', { name: 'Ocorrência OC 092/2026', level: 1 })
+    expect(screen.getByText('PS 045/2026')).toBeInTheDocument()
+    expect(screen.getByText('Aguardando resultado')).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /Processo Sanitário Vinculado/ })).not.toBeInTheDocument()
   })
 
-  it('inicia o atendimento: o badge muda para "Em atendimento" e entra uma movimentação na timeline', async () => {
+  it('inicia o atendimento: envia EM_ATENDIMENTO, o badge muda e a transição entra na timeline', async () => {
     const user = userEvent.setup()
+    const corpos: unknown[] = []
+    server.use(
+      http.patch(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_ABERTA_ID}/status`, async ({ request }) => {
+        corpos.push(await request.json())
+        const aberta = ocorrenciaAbertaFixture()
+        return HttpResponse.json({
+          ...aberta,
+          statusOcorrencia: 'EM_ATENDIMENTO',
+          movimentacoes: [
+            ...aberta.movimentacoes,
+            {
+              id: 'h6000000-0000-0000-0000-000000000097',
+              tipoMovimentacao: 'EQUIPE_DESPACHADA',
+              statusAnterior: 'ABERTA',
+              statusNovo: 'EM_ATENDIMENTO',
+              data: '2026-05-20T10:50:00',
+              descricao: null,
+              usuarioId: 'a1b2c3d4-0000-0000-0000-000000000099',
+              usuarioNome: 'Usuária Teste',
+            },
+          ],
+        })
+      }),
+    )
     renderDetalhe(OCORRENCIA_ABERTA_ID, ['Administrador'])
 
     await user.click(await screen.findByRole('button', { name: 'Iniciar Atendimento' }))
 
     expect(await screen.findByText('Em atendimento')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Iniciar Atendimento' })).not.toBeInTheDocument()
-    expect(screen.getByText('Ocorrência movida para "Em atendimento".')).toBeInTheDocument()
+    expect(screen.getByText('Equipe despachada')).toBeInTheDocument()
+    expect(screen.getByText(/Aberta → Em atendimento/)).toBeInTheDocument()
+    expect(corpos).toEqual([{ status: 'EM_ATENDIMENTO' }])
   })
 
-  // Fecha o loop da regra 13: antes desta entrega nada zerava
-  // `resultadoPendente` do lado da ocorrência, então "Encerrar" ficava
-  // bloqueado para sempre numa ocorrência vinculada a um processo. Aqui o
-  // resultado é registrado direto no mock store (ação que mora na tela do
-  // processo, não na da ocorrência) para então verificar o reflexo na tela
-  // de ocorrência.
-  it('processo vinculado com resultado registrado libera "Encerrar ocorrência" (regra 13)', async () => {
-    registrarResultadoMock(PROCESSO_SIGILOSO_ID, { resultadoLaboratorial: 'negativo' })
-    renderDetalhe(OCORRENCIA_SIGILOSA_COM_PROCESSO_ID, ['Administrador'])
+  describe('anexos', () => {
+    // jsdom não implementa createObjectURL/revokeObjectURL: são definidos só
+    // no teste de download e restaurados aqui.
+    const urlOriginal = { criar: URL.createObjectURL, revogar: URL.revokeObjectURL }
+    afterEach(() => {
+      URL.createObjectURL = urlOriginal.criar
+      URL.revokeObjectURL = urlOriginal.revogar
+    })
 
-    await screen.findByRole('heading', { name: 'Ocorrência 095/2026', level: 1 })
-    expect(screen.getByRole('button', { name: 'Encerrar ocorrência' })).toBeEnabled()
-    expect(screen.queryByText('Disponível após resultado do processo')).not.toBeInTheDocument()
+    it('baixa o anexo como blob e revoga o object URL depois do clique', async () => {
+      const user = userEvent.setup()
+      const criar = vi.fn(() => 'blob:anexo-1')
+      const revogar = vi.fn()
+      URL.createObjectURL = criar
+      URL.revokeObjectURL = revogar
+      const clique = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+      renderDetalhe(OCORRENCIA_ENCERRADA_ID, ['Administrador'])
+
+      await user.click(await screen.findByRole('button', { name: 'Baixar Foto do animal.jpg' }))
+
+      await waitFor(() => expect(revogar).toHaveBeenCalledWith('blob:anexo-1'))
+      expect(criar).toHaveBeenCalledTimes(1)
+      expect(clique).toHaveBeenCalledTimes(1)
+    })
+
+    it('mostra a mensagem genérica "Anexo restrito" quando o download é negado (403)', async () => {
+      const user = userEvent.setup()
+      server.use(
+        http.get(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_ENCERRADA_ID}/anexos/${ANEXO_ENCERRADA_ID}`, () =>
+          HttpResponse.json({ mensagem: 'Acesso negado' }, { status: 403 }),
+        ),
+      )
+      renderDetalhe(OCORRENCIA_ENCERRADA_ID, ['Administrador'])
+
+      await user.click(await screen.findByRole('button', { name: 'Baixar Foto do animal.jpg' }))
+
+      expect(await screen.findByRole('alert')).toHaveTextContent('Anexo restrito')
+    })
+
+    it('mostra o cadeado e nenhum botão de download em sigilosa sem permissão (podeVerDenunciante=false)', async () => {
+      renderDetalhe(OCORRENCIA_SIGILOSA_ID, ['Veterinário'])
+
+      expect(await screen.findByText('Foto do quintal.jpg')).toBeInTheDocument()
+      expect(screen.getByLabelText('restrito')).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Baixar Foto do quintal.jpg' })).not.toBeInTheDocument()
+    })
+
+    it('libera o download em sigilosa com permissão (podeVerDenunciante=true)', async () => {
+      server.use(http.get(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_SIGILOSA_ID}`, () => HttpResponse.json(ocorrenciaSigilosaVisivel())))
+      renderDetalhe(OCORRENCIA_SIGILOSA_ID, ['Administrador'])
+
+      expect(await screen.findByRole('button', { name: 'Baixar Foto do quintal.jpg' })).toBeInTheDocument()
+      expect(screen.queryByLabelText('restrito')).not.toBeInTheDocument()
+    })
   })
 
-  it('vincula um processo já cadastrado a uma ocorrência sem vínculo', async () => {
-    const user = userEvent.setup()
-    renderDetalhe(OCORRENCIA_ABERTA_ID, ['Administrador'])
+  it('mostra erro e o link de volta quando a ocorrência não existe (404)', async () => {
+    renderDetalhe('h5000000-0000-0000-0000-00000000dead', ['Administrador'])
 
-    await screen.findByRole('heading', { name: 'Ocorrência 089/2026', level: 1 })
-    expect(screen.getByRole('link', { name: 'Abrir Processo Sanitário' })).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'ou vincular um processo já cadastrado' }))
-    await user.click(await screen.findByText('006/2026'))
-    await user.click(screen.getByRole('button', { name: 'Vincular processo selecionado' }))
-
-    expect(await screen.findByRole('link', { name: /Processo Sanitário Vinculado/ })).toHaveAttribute(
-      'href',
-      `/processos/${PROCESSO_SEM_VINCULO_ID}`,
-    )
+    expect(await screen.findByText('Não foi possível carregar esta ocorrência.')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Voltar para Ocorrências/ })).toHaveAttribute('href', '/ocorrencias')
   })
 })

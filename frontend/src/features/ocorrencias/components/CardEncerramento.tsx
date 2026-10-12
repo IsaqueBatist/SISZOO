@@ -1,37 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState, type FormEvent } from 'react'
 import { useForm } from 'react-hook-form'
-import { encerramentoFormSchema, PROVIDENCIA_OPCOES, type EncerramentoFormValues } from '../schemas/encerramentoFormSchema'
-import { ErroNegocioOcorrencia } from '../api/ocorrenciasApi'
+import { mensagemDeRegraDaApi } from '@/lib/erroApi'
+import { encerramentoFormSchema, providenciasPermitidas, type EncerramentoFormValues } from '../schemas/encerramentoFormSchema'
 import type { Ocorrencia, ProvidenciaTomada } from '../types/ocorrencias.types'
 import { useEncerrarOcorrenciaMutation } from '../hooks/useOcorrencias'
+import { formatarData } from '../utils/datas'
 
 interface CardEncerramentoProps {
   ocorrencia: Ocorrencia
   podeEncerrar: boolean
-}
-
-const FUSO_ITU = 'America/Sao_Paulo'
-
-function formatarData(iso: string): string {
-  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: FUSO_ITU }).format(
-    new Date(iso),
-  )
-}
-
-function labelProvidencia(valor: string): string {
-  return PROVIDENCIA_OPCOES.find((opcao) => opcao.valor === valor)?.label ?? valor
-}
-
-// Autor do encerramento não é um campo próprio de `Ocorrencia` (ver
-// "Correções ao contrato" no plano de T28) — é lido da movimentação
-// 'encerrada' mais recente, evitando duplicar o mesmo enriquecimento id→nome
-// em dois lugares para o mesmo dado.
-function autorDoEncerramento(ocorrencia: Ocorrencia): string | null {
-  const movimentacoesEncerramento = ocorrencia.movimentacoes
-    .filter((item) => item.tipoMovimentacao === 'encerrada')
-    .sort((a, b) => (a.data < b.data ? 1 : -1))
-  return movimentacoesEncerramento[0]?.usuarioNome ?? null
 }
 
 export function CardEncerramento({ ocorrencia, podeEncerrar }: CardEncerramentoProps) {
@@ -56,14 +34,10 @@ export function CardEncerramento({ ocorrencia, podeEncerrar }: CardEncerramentoP
     try {
       await mutation.mutateAsync({
         providenciaTomada: dados.providenciaTomada as ProvidenciaTomada,
-        descricaoEncerramento: dados.descricaoEncerramento,
+        descricaoEncerramento: dados.descricaoEncerramento || undefined,
       })
     } catch (erro) {
-      if (erro instanceof ErroNegocioOcorrencia) {
-        setSubmitError(erro.message)
-        return
-      }
-      setSubmitError('Não foi possível encerrar a ocorrência. Tente novamente.')
+      setSubmitError(mensagemDeRegraDaApi(erro) ?? 'Não foi possível encerrar a ocorrência. Tente novamente.')
     }
   }
 
@@ -72,8 +46,7 @@ export function CardEncerramento({ ocorrencia, podeEncerrar }: CardEncerramentoP
     void handleSubmit(onSubmit)(event)
   }
 
-  if (ocorrencia.statusOcorrencia === 'encerrada') {
-    const autor = autorDoEncerramento(ocorrencia)
+  if (ocorrencia.statusOcorrencia === 'ENCERRADA') {
     return (
       <div className="card">
         <div className="card-header">
@@ -83,7 +56,7 @@ export function CardEncerramento({ ocorrencia, podeEncerrar }: CardEncerramentoP
           <div className="kv-list">
             <div className="kv-row">
               <span className="k">Providência</span>
-              <span className="v">{ocorrencia.providenciaTomada ? labelProvidencia(ocorrencia.providenciaTomada) : '—'}</span>
+              <span className="v">{ocorrencia.providenciaTomadaNome ?? '—'}</span>
             </div>
             {ocorrencia.descricaoEncerramento && (
               <div className="kv-row">
@@ -95,10 +68,10 @@ export function CardEncerramento({ ocorrencia, podeEncerrar }: CardEncerramentoP
               <span className="k">Encerrada em</span>
               <span className="v mono">{ocorrencia.encerradaEm ? formatarData(ocorrencia.encerradaEm) : '—'}</span>
             </div>
-            {autor && (
+            {ocorrencia.encerradaPorNome && (
               <div className="kv-row">
                 <span className="k">Encerrada por</span>
-                <span className="v">{autor}</span>
+                <span className="v">{ocorrencia.encerradaPorNome}</span>
               </div>
             )}
           </div>
@@ -107,7 +80,10 @@ export function CardEncerramento({ ocorrencia, podeEncerrar }: CardEncerramentoP
     )
   }
 
-  const processoPendente = ocorrencia.processoVinculado?.resultadoPendente === true
+  // D12: processo vinculado ainda não concluído bloqueia o encerramento (o
+  // backend também recusa com 422).
+  const processoPendente =
+    ocorrencia.processoVinculado !== null && ocorrencia.processoVinculado.statusProcesso !== 'CONCLUIDO'
 
   if (!podeEncerrar || processoPendente) {
     return (
@@ -118,15 +94,15 @@ export function CardEncerramento({ ocorrencia, podeEncerrar }: CardEncerramentoP
         <div className="card-body">
           {processoPendente && (
             <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 12 }}>
-              Esta ocorrência está vinculada a um processo sanitário ativo. O encerramento depende do resultado
-              laboratorial.
+              Esta ocorrência está vinculada a um processo sanitário ainda não concluído. O encerramento só é
+              possível depois que o processo for concluído.
             </p>
           )}
           <button type="button" className="btn btn-danger w-full" disabled>
             Encerrar ocorrência
           </button>
           <p style={{ fontSize: 11, color: 'var(--color-text-muted)', textAlign: 'center', marginTop: 6 }}>
-            {processoPendente ? 'Disponível após resultado do processo' : 'Seu perfil não pode encerrar ocorrências'}
+            {processoPendente ? 'Disponível após a conclusão do processo' : 'Seu perfil não pode encerrar ocorrências'}
           </p>
         </div>
       </div>
@@ -156,7 +132,7 @@ export function CardEncerramento({ ocorrencia, podeEncerrar }: CardEncerramentoP
               <option value="" disabled>
                 Selecione...
               </option>
-              {PROVIDENCIA_OPCOES.map((opcao) => (
+              {providenciasPermitidas(ocorrencia.statusOcorrencia).map((opcao) => (
                 <option key={opcao.valor} value={opcao.valor}>
                   {opcao.label}
                 </option>
