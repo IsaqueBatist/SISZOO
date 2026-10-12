@@ -4,7 +4,7 @@
 
 > Documento de referência derivado das **15 telas + Design System** do protótipo navegável. Use-o para comparar com seu schema atual e validar cobertura.
 
-> **Estado do schema (V11).** As tabelas de usuários/acesso, animais, baias, registros clínicos (`vacinacao`, `procedimento`, `prescricao`), ocorrências (§3.4) e seus catálogos estão descritas aqui **como existem nas migrations** (`backend/src/main/resources/db/migration`, V1–V11; a V11 só corrige a matriz de permissões, §3.1). `processo_sanitario` existe em versão mínima (§3.5). As demais (relatórios, `adocao`, `exame`, anexos de animal e de processo) ainda **não têm tabela**: são o modelo-alvo, a validar na implementação de cada módulo.
+> **Estado do schema (V12).** As tabelas de usuários/acesso, animais, baias, registros clínicos (`vacinacao`, `procedimento`, `prescricao`), ocorrências (§3.4) e seus catálogos estão descritas aqui **como existem nas migrations** (`backend/src/main/resources/db/migration`, V1–V12; a V11 só corrige a matriz de permissões, §3.1, e a V12 só acrescenta a ação de auditoria `VISUALIZACAO`, §3.8). `processo_sanitario` existe em versão mínima (§3.5). As demais (relatórios, `adocao`, `exame`, anexos de animal e de processo) ainda **não têm tabela**: são o modelo-alvo, a validar na implementação de cada módulo.
 
 **Convenções**
 
@@ -500,7 +500,7 @@ Seed: `orientacao_municipe`, `encaminhamento_gepar`, `abertura_processo`, `captu
 | `endereco`           | varchar(255) | ?      |
 | `bairro_residencial` | varchar(80)  | ?      |
 
-**Regra:** em ocorrência sigilosa, a consulta retorna `null` nos campos pessoais para quem lê o módulo e **não tem** a permissão `OCORRENCIAS_DENUNCIAS:denunciante_sigiloso:leitura` (nenhum cargo padrão desde a V11; o Veterinário não acessa o módulo). Administrador e Agente Sanitário têm a permissão. A busca da listagem só compara o nome do denunciante onde a pessoa poderia vê-lo. Os dados pessoais do denunciante não entram nos snapshots de auditoria (registra-se só que foram alterados).
+**Regra:** em ocorrência sigilosa, a consulta retorna `null` nos campos pessoais para quem lê o módulo e **não tem** a permissão `OCORRENCIAS_DENUNCIAS:denunciante_sigiloso:leitura` (nenhum cargo padrão desde a V11; o Veterinário não acessa o módulo). Administrador e Agente Sanitário têm a permissão; cada entrega do denunciante sigiloso a eles é auditada (`VISUALIZACAO`, §3.8). **Listagem (T26):** em ocorrência sigilosa, `denuncianteNome` vem `null` para **todos** os perfis, e a busca da listagem nunca compara o nome do denunciante de sigilosa (protocolo e bairro continuam buscáveis) — o nome só sai no detalhe, que é auditado. Os dados pessoais do denunciante não entram nos snapshots de auditoria (registra-se só que foram alterados).
 
 #### `denunciado`
 
@@ -738,18 +738,27 @@ Campos: `id`, `codigo`, `nome`, `tipo` ("padrão raiva", "multidoenças", "apoio
 | ---------------- | ------------ | ------ | ------------------------------------------------------------------------------------------------- |
 | `id`             | uuid PK      | \*     |
 | `usuario_id`     | FK `usuario` | ?      | nulo se o usuário for excluído (ON DELETE SET NULL)                                                |
-| `acao`           | enum         | \*     | `CRIACAO`, `ATUALIZACAO`, `DESATIVACAO`, `REATIVACAO`, `LOGIN`, `LOGOUT`, `EXPORTACAO`, `ENCERRAMENTO` |
-| `entidade`       | varchar(100) | \*     | nome da tabela                                                                                      |
+| `acao`           | enum         | \*     | `CRIACAO`, `ATUALIZACAO`, `DESATIVACAO`, `REATIVACAO`, `LOGIN`, `LOGOUT`, `EXPORTACAO`, `ENCERRAMENTO`, `VISUALIZACAO` (V12) · `varchar(20)` + `CHECK ck_auditoria_evento_acao` |
+| `entidade`       | varchar(100) | \*     | nome da tabela do registro auditado (ex.: `ocorrencia`, `anexo_ocorrencia`, `denunciante`, `usuario`) |
+| `entidade_id`    | uuid         | ?      | id do registro de `entidade` (V9). Polimórfica, **sem FK**: o alvo é o par (`entidade`, `entidade_id`). Nula nos eventos anteriores à V9 (sem backfill) |
 | `payload_antes`  | jsonb        | ?      | snapshot pré-alteração                                                                              |
 | `payload_depois` | jsonb        | ?      | snapshot pós-alteração                                                                              |
-| `ip`             | varchar(45)  | ?      |                                                                                                      |
+| `ip`             | varchar(45)  | ?      | **não preenchido** hoje por nenhum evento (fica nulo)                                               |
 | `ocorreu_em`     | timestamp    | \*     |                                                                                                      |
 
 **Regras**
 
 - Toda operação `CRIACAO`/`ATUALIZACAO`/`DESATIVACAO`/`REATIVACAO` em entidades de negócio gera evento.
 - Snapshots de ocorrência (`payload_antes`/`payload_depois`) não contêm dados pessoais do denunciante; registram só se o bloco foi alterado (T25).
-- ⚠️ **Ponto em aberto**: o enum `acao` atual não tem um valor equivalente a "visualização" — a regra crítica de LGPD (acesso do Admin a dados de denunciante sigiloso deve gerar evento de auditoria) ainda não tem uma ação correspondente no schema. Precisa de decisão de produto antes de T08+ (adicionar valor ao enum, ou modelar de outra forma).
+- **Acesso a denunciante sigiloso (T26, `VISUALIZACAO`).** Toda requisição que **entrega** dado do denunciante de ocorrência sigilosa a quem tem `denunciante_sigiloso` (Administrador e Agente Sanitário) gera um evento:
+  - detalhe (`GET /api/ocorrencias/{id}`) com denunciante cadastrado → `entidade = 'denunciante'`, `entidade_id` = id do denunciante;
+  - download de anexo (`GET /api/ocorrencias/{id}/anexos/{anexoId}`) → `entidade = 'anexo_ocorrencia'`, `entidade_id` = id do anexo;
+  - `usuario_id` = quem acessou; `payload_antes` nulo; `payload_depois = {"ocorrenciaId": "<uuid>"}` — **nenhum dado pessoal** (nem nome, CPF, telefone, e-mail, CEP ou endereço).
+- Um evento **por requisição, sem deduplicação**: o volume acompanha os refetches do front (o detalhe usa os padrões do TanStack Query — `staleTime 0`, refetch ao focar a janela, ao remontar e ao reconectar — além das invalidações após enviar anexo ou abrir processo). Decisão: aceito.
+- Não geram `VISUALIZACAO`: ocorrência não sigilosa; sigilosa sem denunciante cadastrado; quem lê o módulo sem a permissão (recebe a máscara ou 403 no download); o Veterinário (403, sem acesso ao módulo); 404. A auditoria de **negações** (403) fica para a T43.
+- A listagem não gera evento porque não entrega o nome do denunciante de sigilosa a ninguém (§3.4).
+- **Falha da auditoria nega a entrega:** o evento é gravado na mesma transação da leitura (detalhe e download não são `readOnly`); se o INSERT falhar, tudo é desfeito e a resposta é 500 sem os dados. Numa transação `readOnly` o INSERT seria descartado sem erro (`FlushMode.MANUAL`) ou recusado pelo PostgreSQL (`25006`) — por isso os dois métodos deixaram de ser `readOnly`.
+- **Lacunas conhecidas (fora da T26):** as respostas de cadastro e edição (`POST`/`PUT`/`PATCH`/encerramento/notas/vínculo) devolvem o denunciante completo a quem tem a permissão e não geram `VISUALIZACAO` (as escritas já geram o próprio evento, exceto notas); `POST /{id}/notas` não gera evento de auditoria; a coluna `ip` não é preenchida.
 
 ---
 
@@ -794,7 +803,7 @@ Campos: `id`, `codigo`, `nome`, `tipo` ("padrão raiva", "multidoenças", "apoio
 
 9. Protocolo `NNN/AAAA` é gerado pelo sistema (prefixo fixo, **não configurável**).
 10. Bairro é campo livre — sem catálogo, sem filtro por valor controlado na listagem.
-11. Ocorrência sigilosa: dados pessoais do denunciante e anexos são ocultados para quem lê o módulo sem a permissão `denunciante_sigiloso` (nenhum cargo padrão desde a V11: Administrador e Agente têm a permissão, e o Veterinário não acessa o módulo). Denúncia anônima é distinta de sigilosa e não guarda denunciante.
+11. Ocorrência sigilosa: dados pessoais do denunciante e anexos são ocultados para quem lê o módulo sem a permissão `denunciante_sigiloso` (nenhum cargo padrão desde a V11: Administrador e Agente têm a permissão, e o Veterinário não acessa o módulo). A listagem não mostra o nome do denunciante de sigilosa para ninguém. Todo acesso autorizado ao detalhe e aos anexos de ocorrência sigilosa gera evento de auditoria `VISUALIZACAO` (T26). Denúncia anônima é distinta de sigilosa e não guarda denunciante.
 12. Encerramento: `providencia_tomada` obrigatória; quando = `outro`, `descricao_encerramento` é obrigatória.
 13. Não pode encerrar ocorrência com processo sanitário vinculado que não esteja `CONCLUIDO`.
 
