@@ -15,12 +15,13 @@ const COLUNAS_TABELA = ['protocolo', 'data', 'tipo', 'bairro', 'denunciante', 's
 const TIPOS_OCORRENCIA: TipoOcorrencia[] = ['zoonose', 'morcegos', 'irregular', 'agressivo', 'outros']
 const STATUS_OCORRENCIA: StatusOcorrencia[] = ['ABERTA', 'EM_ATENDIMENTO', 'ENCERRADA']
 
-// Quem pode ver o denunciante é decidido pelo backend (podeVerDenunciante);
-// a anônima não tem denunciante para ninguém (D32).
+// A anônima não tem denunciante para ninguém (D32). Na sigilosa, a listagem
+// não traz o nome para nenhum perfil (T26, revisão da D14) — mesmo quem tem
+// permissão só o vê no detalhe, onde o acesso é auditado.
 function ColunaDenunciante({ ocorrencia }: { ocorrencia: OcorrenciaResumo }) {
   const textoMudo = { fontStyle: 'italic', color: 'var(--color-text-muted)' } as const
   if (ocorrencia.anonima) return <span style={textoMudo}>Anônima</span>
-  if (ocorrencia.sigilosa && !ocorrencia.podeVerDenunciante) return <span style={textoMudo}>Sigiloso</span>
+  if (ocorrencia.sigilosa) return <span style={textoMudo}>Sigiloso</span>
   return <>{ocorrencia.denuncianteNome ?? '—'}</>
 }
 
