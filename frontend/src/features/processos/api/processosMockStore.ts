@@ -1,5 +1,5 @@
 import type { RoleKey } from '@/lib/nav'
-import { buscarOcorrenciaMockPorId, vincularProcessoNaOcorrenciaMock } from '@/features/ocorrencias/api/ocorrenciasMockStore'
+import { buscarOcorrenciaDemonstracao, marcarVinculoDemonstracao } from './ocorrenciasDemonstracao'
 import type { PaginaResponse } from '@/features/usuarios/types/usuarios.types'
 import type {
   AmostraAnimal,
@@ -16,13 +16,14 @@ import type {
   StatusProcesso,
 } from '../types/processos.types'
 
-// PROVISÓRIO: mock autoral da feature de processos — o backend real ainda
-// não existe (com.siszoo.processos só tem pastas .gitkeep). Store local em
-// memória, síncrono, mesmo padrão de ocorrenciasMockStore.ts: sempre devolve
-// cópias (structuredClone), nunca a referência viva do array.
+// DEMONSTRAÇÃO (D40): mock autoral da feature de processos — o backend tem só
+// o processo mínimo da T25, e estas telas (lista, detalhe, wizard) seguem
+// sobre este store local em memória, síncrono: sempre devolve cópias
+// (structuredClone), nunca a referência viva do array. As ocorrências que ele
+// vincula são as fictícias de ./ocorrenciasDemonstracao.ts.
 
-// Id fixo do processo vinculado à ocorrência sigilosa semeada em
-// ocorrenciasMockStore.ts (OCORRENCIA_SIGILOSA_COM_PROCESSO_ID) — usado nos
+// Id fixo do processo vinculado à ocorrência sigilosa de demonstração
+// (OCORRENCIA_SIGILOSA_COM_PROCESSO_ID, ./ocorrenciasDemonstracao.ts) — usado nos
 // dois lados do vínculo para exercitar RN4 (sigilo) de ponta a ponta, sem
 // tocar nas ocorrências já semeadas na T28 (090/2026 continua sem processo,
 // os testes de SeletorOcorrencia dependem dela estar livre).
@@ -337,7 +338,7 @@ function paginar<T>(itens: T[], pagina: number, tamanho: number): PaginaResponse
 }
 
 // RN4: mascara o denunciante da ocorrência vinculada para perfis ≠ admin,
-// mesma convenção de ocorrenciasMockStore.ts::mascarar — nome vira null,
+// mesma convenção de ocorrenciasDemonstracao.ts — nome vira null,
 // "Sigiloso" continua distinguível de "—" porque `sigilosa` não muda.
 function mascarar(processo: Processo, roleKey: RoleKey): Processo {
   if (!processo.ocorrenciaVinculado?.sigilosa || roleKey === 'admin') {
@@ -353,7 +354,7 @@ function mascarar(processo: Processo, roleKey: RoleKey): Processo {
 // (o DER exige lock no backend real). Acima de 999 processos no mesmo ano, o
 // protocolo deixa de ter 3 dígitos exatos (ex.: "1000/2026") em vez de
 // travar; comportamento definido no plano da T32, sem base no DER
-// ([EXTRAPOLAÇÃO]) — mesma decisão já tomada em ocorrenciasMockStore.ts.
+// ([EXTRAPOLAÇÃO]).
 function gerarProximoProtocolo(processos: Processo[]): string {
   const sufixo = `/${new Date().getFullYear()}`
   const maiorSequencia = processos
@@ -367,17 +368,10 @@ function paraResumoVinculo(ocorrenciaId: string): OcorrenciaParaVinculo | null {
   // denunciante para o snapshot somente-leitura salvo no processo — o
   // mascaramento por perfil de quem está OLHANDO o processo acontece na
   // hora de exibir (RN3), não na hora de gravar.
-  const ocorrencia = buscarOcorrenciaMockPorId(ocorrenciaId, 'admin')
+  const ocorrencia = buscarOcorrenciaDemonstracao(ocorrenciaId, 'admin')
   if (!ocorrencia) return null
-  return {
-    id: ocorrencia.id,
-    protocolo: ocorrencia.protocolo,
-    tipoOcorrencia: ocorrencia.tipoOcorrencia,
-    bairro: ocorrencia.bairro,
-    statusOcorrencia: ocorrencia.statusOcorrencia,
-    sigilosa: ocorrencia.sigilosa,
-    denunciante: ocorrencia.denunciante ? { nome: ocorrencia.denunciante.nome } : null,
-  }
+  const { processoVinculado: _ignorado, ...resumo } = ocorrencia
+  return resumo
 }
 
 export type ResultadoCriacaoProcesso =
@@ -390,7 +384,7 @@ export type ResultadoCriacaoProcesso =
 export function criarProcessoMock(payload: CriarProcessoRequest, autorNome: string): ResultadoCriacaoProcesso {
   let ocorrenciaVinculado: OcorrenciaParaVinculo | null = null
   if (payload.ocorrenciaId) {
-    const ocorrencia = buscarOcorrenciaMockPorId(payload.ocorrenciaId, 'admin')
+    const ocorrencia = buscarOcorrenciaDemonstracao(payload.ocorrenciaId, 'admin')
     if (!ocorrencia) return { ok: false, motivo: 'ocorrencia_nao_encontrada' }
     if (ocorrencia.processoVinculado) return { ok: false, motivo: 'ocorrencia_ja_vinculada' }
     ocorrenciaVinculado = paraResumoVinculo(payload.ocorrenciaId)
@@ -423,15 +417,9 @@ export function criarProcessoMock(payload: CriarProcessoRequest, autorNome: stri
   processosMock = [...processosMock, novo]
 
   if (payload.ocorrenciaId) {
-    // Reflexo bidirecional exigido pela tarefa: a ocorrência passa a
-    // enxergar o processo vinculado (alimenta a regra 13 — bloqueio de
-    // encerramento com processo pendente de resultado).
-    vincularProcessoNaOcorrenciaMock(payload.ocorrenciaId, {
-      id: novo.id,
-      protocolo: novo.protocolo,
-      statusProcesso: novo.statusProcesso,
-      resultadoPendente: true,
-    })
+    // Reflexo bidirecional: a ocorrência de demonstração deixa de aparecer
+    // como disponível para vínculo (cardinalidade 0..1).
+    marcarVinculoDemonstracao(payload.ocorrenciaId, { id: novo.id, protocolo: novo.protocolo })
   }
 
   return { ok: true, processo: structuredClone(novo) }
@@ -462,21 +450,6 @@ export function buscarProcessoMockPorId(id: string, roleKey: RoleKey): Processo 
   return encontrado ? mascarar(encontrado, roleKey) : null
 }
 
-// Repassa o status/resultado atualizado do processo pro lado da ocorrência
-// vinculada (quando existe), reaproveitando `vincularProcessoNaOcorrenciaMock`
-// — a mesma função usada na criação, chamada de novo aqui só pra sobrescrever
-// os campos que mudaram. `resultadoPendente` é a peça que faltava pra regra
-// 13 ("não pode encerrar com processo pendente") algum dia virar `false`:
-// antes desta mudança, nada no sistema zerava esse campo depois da criação.
-function sincronizarVinculoNaOcorrencia(processo: Processo): void {
-  if (!processo.ocorrenciaVinculado) return
-  vincularProcessoNaOcorrenciaMock(processo.ocorrenciaVinculado.id, {
-    id: processo.id,
-    protocolo: processo.protocolo,
-    statusProcesso: processo.statusProcesso,
-    resultadoPendente: !processo.resultadoLaboratorial,
-  })
-}
 
 export type ResultadoTransicaoProcesso =
   | { ok: true; processo: Processo }
@@ -498,7 +471,6 @@ export function enviarAmostrasMock(id: string, payload: EnviarAmostrasRequest): 
     atualizadoEm: agora,
   }
   processosMock = processosMock.map((item) => (item.id === id ? atualizado : item))
-  sincronizarVinculoNaOcorrencia(atualizado)
   return { ok: true, processo: structuredClone(atualizado) }
 }
 
@@ -524,7 +496,6 @@ export function registrarResultadoMock(id: string, payload: RegistrarResultadoRe
     atualizadoEm: agora,
   }
   processosMock = processosMock.map((item) => (item.id === id ? atualizado : item))
-  sincronizarVinculoNaOcorrencia(atualizado)
   return { ok: true, processo: structuredClone(atualizado) }
 }
 
@@ -537,7 +508,6 @@ export function concluirProcessoMock(id: string): ResultadoTransicaoProcesso {
   const agora = new Date().toISOString()
   const atualizado: Processo = { ...atual, statusProcesso: 'concluido', atualizadoEm: agora }
   processosMock = processosMock.map((item) => (item.id === id ? atualizado : item))
-  sincronizarVinculoNaOcorrencia(atualizado)
   return { ok: true, processo: structuredClone(atualizado) }
 }
 
@@ -546,7 +516,7 @@ export type ResultadoAnexoDocumento =
   | { ok: false; motivo: 'nao_encontrado' }
 
 // `url: URL.createObjectURL` só é válida na aba atual — some ao recarregar a
-// página, mesma simplificação já aceita em ocorrenciasMockStore.ts.
+// página (simplificação aceita no mock de demonstração).
 export function anexarDocumentoMock(
   id: string,
   payload: AnexarDocumentoRequest,
@@ -589,7 +559,7 @@ export function vincularExistentesMock(processoId: string, ocorrenciaId: string)
   if (!processo) return { ok: false, motivo: 'processo_nao_encontrado' }
   if (processo.ocorrenciaVinculado) return { ok: false, motivo: 'processo_ja_vinculado' }
 
-  const ocorrencia = buscarOcorrenciaMockPorId(ocorrenciaId, 'admin')
+  const ocorrencia = buscarOcorrenciaDemonstracao(ocorrenciaId, 'admin')
   if (!ocorrencia) return { ok: false, motivo: 'ocorrencia_nao_encontrada' }
   if (ocorrencia.processoVinculado) return { ok: false, motivo: 'ocorrencia_ja_vinculada' }
 
@@ -597,12 +567,7 @@ export function vincularExistentesMock(processoId: string, ocorrenciaId: string)
   const atualizado: Processo = { ...processo, ocorrenciaVinculado: paraResumoVinculo(ocorrenciaId), atualizadoEm: agora }
   processosMock = processosMock.map((item) => (item.id === processoId ? atualizado : item))
 
-  vincularProcessoNaOcorrenciaMock(ocorrenciaId, {
-    id: processo.id,
-    protocolo: processo.protocolo,
-    statusProcesso: processo.statusProcesso,
-    resultadoPendente: !processo.resultadoLaboratorial,
-  })
+  marcarVinculoDemonstracao(ocorrenciaId, { id: processo.id, protocolo: processo.protocolo })
 
   return { ok: true, processo: structuredClone(atualizado) }
 }

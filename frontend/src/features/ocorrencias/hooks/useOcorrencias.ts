@@ -6,12 +6,10 @@ import {
   encerrarOcorrencia,
   iniciarAtendimento,
   listarOcorrencias,
-  vincularProcessoExistente,
 } from '../api/ocorrenciasApi'
 import type { CriarOcorrenciaRequest, EncerrarOcorrenciaRequest, OcorrenciasFiltro } from '../types/ocorrencias.types'
 
 const OCORRENCIAS_QUERY_KEY = ['ocorrencias']
-const PROCESSOS_QUERY_KEY = ['processos']
 
 export function useOcorrenciasQuery(filtro: OcorrenciasFiltro) {
   const { roleKey } = useAuth()
@@ -46,19 +44,6 @@ export function useIniciarAtendimentoMutation(id: string) {
   return useMutation({
     mutationFn: () => iniciarAtendimento(id, `${user?.nome} ${user?.sobrenome}`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: OCORRENCIAS_QUERY_KEY }),
-  })
-}
-
-export function useVincularProcessoExistenteMutation(id: string) {
-  const queryClient = useQueryClient()
-  const { roleKey } = useAuth()
-  return useMutation({
-    mutationFn: (processoId: string) => vincularProcessoExistente(id, processoId, roleKey),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: OCORRENCIAS_QUERY_KEY })
-      // O vínculo também altera `ocorrenciaVinculado` do lado do processo.
-      queryClient.invalidateQueries({ queryKey: PROCESSOS_QUERY_KEY })
-    },
   })
 }
 

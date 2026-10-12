@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { badgeDeStatus, labelDeTipo } from '@/features/ocorrencias/utils/statusBadge'
-import { useOcorrenciasQuery } from '@/features/ocorrencias/hooks/useOcorrencias'
+import { useOcorrenciasParaVinculoQuery } from '../hooks/useProcessos'
 import type { OcorrenciaParaVinculo, VinculoDecisao } from '../types/processos.types'
 import './SeletorVinculo.css'
 
@@ -39,12 +39,11 @@ export function SeletorOcorrencia({
 }: SeletorOcorrenciaProps) {
   const [busca, setBusca] = useState('')
 
-  const { data, isLoading } = useOcorrenciasQuery({ q: busca || undefined, pagina: 0, tamanho: TAMANHO_PAGINA })
-  // Uma ocorrência só pode ter 0 ou 1 processo vinculado (DER.md:485,698) —
-  // exclui da lista as que já têm processoVinculado. O mascaramento de
-  // sigilo (RN3) já acontece dentro de listarOcorrenciasMock ANTES do filtro
-  // de busca (ver ocorrenciasMockStore.ts::mascarar) — nada a refazer aqui.
-  const disponiveis = (data?.itens ?? []).filter((item) => !item.processoVinculado)
+  // Ocorrências de demonstração (D40). A lista já vem sem as que têm processo
+  // (vínculo 0..1) e com o denunciante sigiloso mascarado ANTES da busca
+  // (ver ../api/ocorrenciasDemonstracao.ts) — nada a refazer aqui.
+  const { data, isLoading } = useOcorrenciasParaVinculoQuery(busca || undefined)
+  const disponiveis = (data ?? []).slice(0, TAMANHO_PAGINA)
 
   if (travado) {
     return (
@@ -90,15 +89,7 @@ export function SeletorOcorrencia({
           const nomeDenunciante = ocorrencia.sigilosa && !ocorrencia.denunciante?.nome ? 'Denunciante sigiloso' : ocorrencia.denunciante?.nome
 
           function selecionar() {
-            onSelecionar({
-              id: ocorrencia.id,
-              protocolo: ocorrencia.protocolo,
-              tipoOcorrencia: ocorrencia.tipoOcorrencia,
-              bairro: ocorrencia.bairro,
-              statusOcorrencia: ocorrencia.statusOcorrencia,
-              sigilosa: ocorrencia.sigilosa,
-              denunciante: ocorrencia.denunciante ? { nome: ocorrencia.denunciante.nome } : null,
-            })
+            onSelecionar(ocorrencia)
           }
 
           return (

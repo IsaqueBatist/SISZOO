@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { AvisoDemonstracao } from './AvisoDemonstracao'
 import { Link } from 'react-router-dom'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
@@ -50,6 +51,7 @@ export function Processos() {
 
   return (
     <>
+      <AvisoDemonstracao />
       <div className="page-header">
         <div className="title-block">
           <h1>
@@ -187,9 +189,9 @@ export function Processos() {
                       </td>
                       <td>
                         {processo.ocorrenciaVinculado ? (
-                          <Link to={`/ocorrencias/${processo.ocorrenciaVinculado.id}`} className="mono" style={{ fontWeight: 600 }}>
+                          <span className="mono" style={{ fontWeight: 600 }}>
                             {processo.ocorrenciaVinculado.protocolo}
-                          </Link>
+                          </span>
                         ) : (
                           <span className="muted">—</span>
                         )}

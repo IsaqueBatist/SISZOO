@@ -18,6 +18,7 @@ import {
   resetVacinacoesMock,
 } from '../mocks/handlers'
 import { resetOcorrenciasMock } from '@/features/ocorrencias/api/ocorrenciasMockStore'
+import { resetOcorrenciasDemonstracao } from '@/features/processos/api/ocorrenciasDemonstracao'
 
 // TODO: migrar para 'error' quando as integrações reais de API existirem,
 // para acusar chamadas HTTP não-mockadas nos testes.
@@ -33,5 +34,6 @@ afterEach(() => {
   resetProcedimentosMock()
   resetPrescricoesMock()
   resetOcorrenciasMock()
+  resetOcorrenciasDemonstracao()
 })
 afterAll(() => server.close())

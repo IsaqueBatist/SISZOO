@@ -13,13 +13,6 @@ import type {
   Ocorrencia,
   OcorrenciasFiltro,
 } from '../types/ocorrencias.types'
-// Reaproveita o wrapper já pronto de processos (validação + mensagens de
-// erro) em vez de chamar processosMockStore diretamente daqui — evita
-// duplicar o mapeamento de erro em dois lugares. Import cross-feature na
-// direção oposta da que já existia (processosMockStore já importa de
-// ocorrenciasMockStore); sem ciclo, porque a camada de API não é importada
-// por nenhum store.
-import { vincularExistentes } from '@/features/processos/api/processosApi'
 
 // PROVISÓRIO: o módulo `ocorrencias` ainda não tem backend real (T25/T26).
 // Em vez de chamar `http` (axios) como as outras features, esta camada
@@ -70,13 +63,6 @@ export async function iniciarAtendimento(id: string, autorNome: string): Promise
   await esperar(DELAY_MS)
   const atualizada = iniciarAtendimentoMock(id, autorNome)
   if (!atualizada) throw new Error('Não foi possível iniciar o atendimento.')
-  return atualizada
-}
-
-export async function vincularProcessoExistente(ocorrenciaId: string, processoId: string, roleKey: RoleKey): Promise<Ocorrencia> {
-  await vincularExistentes(processoId, ocorrenciaId)
-  const atualizada = buscarOcorrenciaMockPorId(ocorrenciaId, roleKey)
-  if (!atualizada) throw new Error('Ocorrência não encontrada.')
   return atualizada
 }
 

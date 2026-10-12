@@ -1,9 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { AvisoDemonstracao } from './AvisoDemonstracao'
 import { Fragment, useEffect, useState, type FormEvent } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { useOcorrenciaQuery } from '@/features/ocorrencias/hooks/useOcorrencias'
 import { ErroNegocioProcesso } from '../api/processosApi'
 import { AmostraAnimalCard, type AmostraErros } from './AmostraAnimalCard'
 import './ProcessoForm.css'
@@ -19,7 +19,7 @@ import {
 } from '../storage/rascunhoProcessoStorage'
 import { RevisaoProcesso } from './RevisaoProcesso'
 import { SeletorOcorrencia } from './SeletorOcorrencia'
-import { useCriarProcessoMutation } from '../hooks/useProcessos'
+import { useCriarProcessoMutation, useOcorrenciaParaVinculoQuery } from '../hooks/useProcessos'
 
 const FUSO_ITU = 'America/Sao_Paulo'
 
@@ -166,9 +166,8 @@ export function ProcessoForm({ ocorrenciaIdDaUrl }: ProcessoFormProps) {
   // guardada em state próprio — para que ela reapareça sozinha depois de
   // restaurar um rascunho ou de uma entrada via `?ocorrencia=<id>`, sem
   // duplicar o dado nem arriscar ficar desatualizada. O mascaramento de
-  // sigilo (RN3) já vem pronto de useOcorrenciaQuery (mesmo hook usado no
-  // detalhe da ocorrência).
-  const { data: ocorrenciaEncontrada } = useOcorrenciaQuery(valores.ocorrenciaId ?? undefined)
+  // sigilo (RN3) já vem pronto das ocorrências de demonstração (D40).
+  const { data: ocorrenciaEncontrada } = useOcorrenciaParaVinculoQuery(valores.ocorrenciaId ?? undefined)
   const ocorrenciaVinculada: OcorrenciaParaVinculo | null =
     valores.vinculoDecisao === 'vinculado' && ocorrenciaEncontrada
       ? {
@@ -178,7 +177,7 @@ export function ProcessoForm({ ocorrenciaIdDaUrl }: ProcessoFormProps) {
           bairro: ocorrenciaEncontrada.bairro,
           statusOcorrencia: ocorrenciaEncontrada.statusOcorrencia,
           sigilosa: ocorrenciaEncontrada.sigilosa,
-          denunciante: ocorrenciaEncontrada.denunciante ? { nome: ocorrenciaEncontrada.denunciante.nome } : null,
+          denunciante: ocorrenciaEncontrada.denunciante,
         }
       : null
 
@@ -285,6 +284,7 @@ export function ProcessoForm({ ocorrenciaIdDaUrl }: ProcessoFormProps) {
 
   return (
     <div className="wizard-shell">
+      <AvisoDemonstracao />
       <div className="page-header">
         <div className="title-block">
           <Link to="/ocorrencias" className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}>

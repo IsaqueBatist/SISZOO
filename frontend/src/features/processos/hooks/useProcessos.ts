@@ -2,10 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import {
   anexarDocumento,
+  buscarOcorrenciaParaVinculo,
   buscarProcessoPorId,
   concluirProcesso,
   criarProcesso,
   enviarAmostras,
+  listarOcorrenciasParaVinculo,
   listarProcessos,
   registrarResultado,
   vincularExistentes,
@@ -19,7 +21,6 @@ import type {
 } from '../types/processos.types'
 
 const PROCESSOS_QUERY_KEY = ['processos']
-const OCORRENCIAS_QUERY_KEY = ['ocorrencias']
 
 export function useProcessosQuery(filtro: ProcessosFiltro) {
   const { roleKey } = useAuth()
@@ -39,29 +40,37 @@ export function useProcessoQuery(id: string | undefined) {
   })
 }
 
+// Ocorrências de demonstração (D40) sob o prefixo [processos]: toda
+// mutation de processo que muda vínculo já invalida esse prefixo.
+export function useOcorrenciasParaVinculoQuery(busca: string | undefined) {
+  const { roleKey } = useAuth()
+  return useQuery({
+    queryKey: ['processos', 'ocorrenciasDemonstracao', busca, roleKey],
+    queryFn: () => listarOcorrenciasParaVinculo(busca, roleKey),
+  })
+}
+
+export function useOcorrenciaParaVinculoQuery(id: string | undefined) {
+  const { roleKey } = useAuth()
+  return useQuery({
+    queryKey: ['processos', 'ocorrenciaDemonstracao', id, roleKey],
+    queryFn: () => buscarOcorrenciaParaVinculo(id as string, roleKey),
+    enabled: Boolean(id),
+  })
+}
+
 export function useCriarProcessoMutation() {
   const queryClient = useQueryClient()
   const { user } = useAuth()
   return useMutation({
     mutationFn: (payload: CriarProcessoRequest) => criarProcesso(payload, `${user?.nome} ${user?.sobrenome}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: PROCESSOS_QUERY_KEY })
-      // O processo criado pode ter alterado `processoVinculado` da
-      // ocorrência (ver processosMockStore::criarProcessoMock) — invalida
-      // também as queries de ocorrências para refletir isso na tela de
-      // detalhe (badge de urgência, regra 13).
-      queryClient.invalidateQueries({ queryKey: OCORRENCIAS_QUERY_KEY })
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: PROCESSOS_QUERY_KEY }),
   })
 }
 
-// Invalida ambos os prefixos em todas as mutations abaixo: cada uma pode
-// repassar status/resultado pro lado da ocorrência vinculada (ver
-// processosMockStore::sincronizarVinculoNaOcorrencia) ou criar/remover o
-// vínculo em si — mesmo motivo de useCriarProcessoMutation acima.
+// Processos e ocorrências de demonstração vivem sob o mesmo prefixo (D40).
 function invalidarProcessosEOcorrencias(queryClient: ReturnType<typeof useQueryClient>) {
   queryClient.invalidateQueries({ queryKey: PROCESSOS_QUERY_KEY })
-  queryClient.invalidateQueries({ queryKey: OCORRENCIAS_QUERY_KEY })
 }
 
 export function useEnviarAmostrasMutation(id: string) {

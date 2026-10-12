@@ -5,7 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
-import { resetOcorrenciasMock } from '@/features/ocorrencias/api/ocorrenciasMockStore'
+import { resetOcorrenciasDemonstracao } from '../api/ocorrenciasDemonstracao'
 import { CadastrarProcesso } from './CadastrarProcesso'
 import { resetProcessosMock } from '../api/processosMockStore'
 
@@ -62,7 +62,7 @@ function paneDoStep(regex: RegExp) {
 describe('ProcessoForm — autosave do rascunho', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    resetOcorrenciasMock()
+    resetOcorrenciasDemonstracao()
     resetProcessosMock()
   })
 

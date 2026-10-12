@@ -47,7 +47,6 @@ function renderLista(cargos: string[]) {
 
 // Ids/protocolos semeados em ./processosMockStore.ts (seedProcessosMock).
 const PROCESSO_RAIVA_URGENTE_ID = 'p1000000-0000-0000-0000-000000000001'
-const OCORRENCIA_SIGILOSA_ID = 'h5000000-0000-0000-0000-000000000006'
 
 describe('Processos', () => {
   beforeEach(() => {
@@ -179,7 +178,7 @@ describe('Processos', () => {
     expect(link).toHaveAttribute('href', `/processos/${PROCESSO_RAIVA_URGENTE_ID}`)
   })
 
-  it('o link da ocorrência vinculada aponta para /ocorrencias/:id', async () => {
+  it('a ocorrência vinculada (fictícia, D40) aparece sem link para a tela de ocorrências', async () => {
     const user = userEvent.setup()
     renderLista(['Administrador'])
     await screen.findByText('001/2026')
@@ -187,8 +186,9 @@ describe('Processos', () => {
     await user.selectOptions(screen.getByLabelText('Filtrar por doença'), 'Febre Maculosa')
     await screen.findByText('005/2026')
 
-    const link = screen.getByRole('link', { name: '095/2026' })
-    expect(link).toHaveAttribute('href', `/ocorrencias/${OCORRENCIA_SIGILOSA_ID}`)
+    expect(screen.getByText('095/2026')).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: '095/2026' })).not.toBeInTheDocument()
+    expect(screen.getByRole('note', { name: 'Dados de demonstração' })).toBeInTheDocument()
   })
 
   it('mostra o estado vazio com mensagem de filtro quando a combinação não encontra nada', async () => {

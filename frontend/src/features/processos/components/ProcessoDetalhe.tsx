@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { AvisoDemonstracao } from './AvisoDemonstracao'
 import { Link, useParams } from 'react-router-dom'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
@@ -211,6 +212,7 @@ export function ProcessoDetalhe() {
 
   return (
     <>
+      <AvisoDemonstracao />
       <div className="page-header">
         <div className="title-block">
           <Link to="/processos" className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}>
@@ -303,9 +305,9 @@ export function ProcessoDetalhe() {
                   <div className="field">
                     <label>Protocolo</label>
                     <div>
-                      <Link to={`/ocorrencias/${processo.ocorrenciaVinculado.id}`} className="mono" style={{ fontWeight: 600 }}>
+                      <span className="mono" style={{ fontWeight: 600 }}>
                         {processo.ocorrenciaVinculado.protocolo}
-                      </Link>
+                      </span>
                     </div>
                   </div>
                   <div className="field">

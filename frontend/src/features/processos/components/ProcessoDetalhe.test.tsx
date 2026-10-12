@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it } from 'vitest'
@@ -15,8 +15,6 @@ const PROCESSO_SIGILOSO_ID = 'p1000000-0000-0000-0000-000000000005' // 005/2026,
 const PROCESSO_SEM_VINCULO_ID = 'p1000000-0000-0000-0000-000000000006' // 006/2026, aberto, sem ocorrência vinculada
 const PROCESSO_AGUARDANDO_RESULTADO_ID = 'p1000000-0000-0000-0000-000000000008' // 008/2026, aguardando_resultado, sem vínculo
 const PROCESSO_COM_RESULTADO_INCONCLUSIVO_ID = 'p1000000-0000-0000-0000-000000000007' // 007/2026, com_resultado, inconclusivo
-const OCORRENCIA_SIGILOSA_ID = 'h5000000-0000-0000-0000-000000000006'
-// 089/2026, aberta, sem processo vinculado (../ocorrencias/ocorrenciasMockStore.ts)
 // — referenciada abaixo pelo protocolo, não pelo id.
 
 function renderDetalhe(processoId: string, cargos: string[]) {
@@ -45,8 +43,8 @@ function renderDetalhe(processoId: string, cargos: string[]) {
 }
 
 describe('ProcessoDetalhe', () => {
-  // resetOcorrenciasMock já roda globalmente no afterEach de
-  // ../../test/setup.ts — só o mock de processos (que não faz parte dessa
+  // As ocorrências de demonstração já são resetadas globalmente no afterEach
+  // de ../../test/setup.ts — só o mock de processos (que não faz parte dessa
   // lista) precisa de reset explícito aqui.
   beforeEach(() => {
     resetProcessosMock()
@@ -95,8 +93,9 @@ describe('ProcessoDetalhe', () => {
 
     await screen.findByRole('heading', { name: 'Processo 005/2026', level: 1 })
     expect(screen.getByText('Renata Costa Almeida')).toBeInTheDocument()
-    const link = screen.getByRole('link', { name: '095/2026' })
-    expect(link).toHaveAttribute('href', `/ocorrencias/${OCORRENCIA_SIGILOSA_ID}`)
+    expect(screen.getByText('095/2026')).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: '095/2026' })).not.toBeInTheDocument()
+    expect(screen.getByRole('note', { name: 'Dados de demonstração' })).toBeInTheDocument()
   })
 
   it('mostra "Sigiloso" no lugar do denunciante da ocorrência sigilosa para perfil não-admin', async () => {
@@ -234,6 +233,11 @@ describe('ProcessoDetalhe', () => {
     await user.click(screen.getByRole('button', { name: 'Vincular uma ocorrência já cadastrada' }))
     await user.click(await screen.findByText('089/2026'))
 
-    expect(await screen.findByRole('link', { name: '089/2026' })).toBeInTheDocument()
+    // D40: a ocorrência vinculada é fictícia e aparece como texto, sem link.
+    await waitFor(() =>
+      expect(screen.queryByText('Este processo não está vinculado a nenhuma ocorrência.')).not.toBeInTheDocument(),
+    )
+    expect(screen.getByText('089/2026')).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: '089/2026' })).not.toBeInTheDocument()
   })
 })
