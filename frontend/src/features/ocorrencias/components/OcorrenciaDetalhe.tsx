@@ -200,6 +200,12 @@ export function OcorrenciaDetalhe() {
           </p>
         </div>
         <div className="actions">
+          {podeEscrever && ocorrencia.statusOcorrencia !== 'ENCERRADA' && (
+            <Link to={`/ocorrencias/${ocorrencia.id}/editar`} className="btn btn-outline btn-sm">
+              <Icon name="edit" size={14} />
+              Editar
+            </Link>
+          )}
           <BotaoIniciarAtendimento ocorrencia={ocorrencia} podeEscrever={podeEscrever} />
         </div>
       </div>
