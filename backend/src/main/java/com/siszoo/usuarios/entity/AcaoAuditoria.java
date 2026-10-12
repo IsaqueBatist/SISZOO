@@ -8,7 +8,7 @@ public enum AcaoAuditoria {
     LOGIN,
     LOGOUT,
     EXPORTACAO,
-    ENCERRAMENTO;
-
-    // TODO: falta valor "VISUALIZACAO" p/ auditoria LGPD de acesso a denunciante sigiloso (docs/DER.md:683)
+    ENCERRAMENTO,
+    // T26 (V12): acesso autorizado ao denunciante de ocorrencia sigilosa.
+    VISUALIZACAO
 }
