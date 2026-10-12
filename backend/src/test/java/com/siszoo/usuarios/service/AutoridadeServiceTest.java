@@ -33,10 +33,10 @@ class AutoridadeServiceTest {
     @Test
     @DisplayName("[D26] feature 'geral' continua gerando MODULO:acao")
     void featureGeralGeraAutoridadeDoModulo() {
-        when(cargoPermissaoRepository.findByCargoNomeIn(List.of("Veterinário"))).thenReturn(List.of(
+        when(cargoPermissaoRepository.findByCargoNomeIn(List.of("Leitor de Ocorrências"))).thenReturn(List.of(
                 permissao(Modulo.OCORRENCIAS_DENUNCIAS, "geral", true, false, false)));
 
-        assertThat(autoridades("Veterinário")).containsExactly("OCORRENCIAS_DENUNCIAS:leitura");
+        assertThat(autoridades("Leitor de Ocorrências")).containsExactly("OCORRENCIAS_DENUNCIAS:leitura");
     }
 
     @Test
@@ -64,11 +64,11 @@ class AutoridadeServiceTest {
     @Test
     @DisplayName("[D26] linha de feature com escrita nao concede escrita no modulo inteiro")
     void featureNaoConcedeModuloInteiro() {
-        when(cargoPermissaoRepository.findByCargoNomeIn(List.of("Veterinário"))).thenReturn(List.of(
+        when(cargoPermissaoRepository.findByCargoNomeIn(List.of("Leitor de Ocorrências"))).thenReturn(List.of(
                 permissao(Modulo.OCORRENCIAS_DENUNCIAS, "geral", true, false, false),
                 permissao(Modulo.OCORRENCIAS_DENUNCIAS, "denunciante_sigiloso", true, true, true)));
 
-        assertThat(autoridades("Veterinário"))
+        assertThat(autoridades("Leitor de Ocorrências"))
                 .contains("OCORRENCIAS_DENUNCIAS:leitura")
                 .doesNotContain("OCORRENCIAS_DENUNCIAS:escrita", "OCORRENCIAS_DENUNCIAS:exclusao");
     }

@@ -9,6 +9,7 @@ import { RotaEscritaAnimais } from './RotaEscritaAnimais'
 import { RotaEscritaOcorrencias } from './RotaEscritaOcorrencias'
 import { RotaEscritaProcessos } from './RotaEscritaProcessos'
 import { RotaGestaoBaias } from './RotaGestaoBaias'
+import { RotaLeituraOcorrencias } from './RotaLeituraOcorrencias'
 import { RotaProtegida } from './RotaProtegida'
 import { RouteErrorBoundary } from './RouteErrorBoundary'
 
@@ -105,11 +106,13 @@ export function AppRoutes() {
               <Route element={<RotaGestaoBaias />}>
                 <Route path="/baias" element={<GestaoBaias />} />
               </Route>
-              <Route path="/ocorrencias" element={<Ocorrencias />} />
-              <Route path="/ocorrencias/:id" element={<OcorrenciaDetalhe />} />
-              <Route element={<RotaEscritaOcorrencias />}>
-                <Route path="/ocorrencias/novo" element={<CadastrarOcorrencia />} />
-                <Route path="/ocorrencias/:id/editar" element={<EditarOcorrencia />} />
+              <Route element={<RotaLeituraOcorrencias />}>
+                <Route path="/ocorrencias" element={<Ocorrencias />} />
+                <Route path="/ocorrencias/:id" element={<OcorrenciaDetalhe />} />
+                <Route element={<RotaEscritaOcorrencias />}>
+                  <Route path="/ocorrencias/novo" element={<CadastrarOcorrencia />} />
+                  <Route path="/ocorrencias/:id/editar" element={<EditarOcorrencia />} />
+                </Route>
               </Route>
               <Route path="/processos" element={<Processos />} />
               <Route path="/processos/:id" element={<ProcessoDetalhe />} />

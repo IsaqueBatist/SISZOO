@@ -76,9 +76,17 @@ class RbacMatrixIT extends AbstractIntegrationTest {
                 Arguments.of(Perfil.AGENTE_SANITARIO, 403));
     }
 
-    // T25 (V3 + V10): ocorrencias RW para Admin e Agente, R para o Vet; a
-    // feature denunciante_sigiloso (Admin e Agente) libera o denunciante e os
-    // anexos de ocorrencia sigilosa; vincular processo exige escrita em ocorrencias.
+    // T25 (V3 + V10) e V11: ocorrencias RW para Admin e Agente; o Vet nao
+    // acessa o modulo (a V11 zerou a leitura que a V3 concedia). A feature
+    // denunciante_sigiloso (Admin e Agente) libera o denunciante e os anexos de
+    // ocorrencia sigilosa; vincular processo exige escrita em ocorrencias.
+    static Stream<Arguments> lerOcorrenciasPorPerfil() {
+        return Stream.of(
+                Arguments.of(Perfil.ADMINISTRADOR, 200),
+                Arguments.of(Perfil.VETERINARIO, 403),
+                Arguments.of(Perfil.AGENTE_SANITARIO, 200));
+    }
+
     static Stream<Arguments> escreverOcorrenciaPorPerfil() {
         return Stream.of(
                 Arguments.of(Perfil.ADMINISTRADOR, 200),
@@ -86,10 +94,12 @@ class RbacMatrixIT extends AbstractIntegrationTest {
                 Arguments.of(Perfil.AGENTE_SANITARIO, 200));
     }
 
+    // So os perfis com acesso ao modulo; o Vet ja recebe 403 na leitura. A
+    // mascara (leitura sem a feature) e coberta no OcorrenciaControllerIT com
+    // o cargo leitor de teste, ja que nenhum cargo real tem esse perfil.
     static Stream<Arguments> verDenuncianteSigilosoPorPerfil() {
         return Stream.of(
                 Arguments.of(Perfil.ADMINISTRADOR, true),
-                Arguments.of(Perfil.VETERINARIO, false),
                 Arguments.of(Perfil.AGENTE_SANITARIO, true));
     }
 
@@ -140,6 +150,24 @@ class RbacMatrixIT extends AbstractIntegrationTest {
                 .post(ROTA_ANIMAIS)
                 .then()
                 .statusCode(statusEsperado);
+    }
+
+    @ParameterizedTest(name = "{0} ao ler ocorrencias (lista, detalhe, catalogos, anexo) -> status {1}")
+    @MethodSource("lerOcorrenciasPorPerfil")
+    void veterinarioNaoLeOcorrencias(Perfil perfil, int statusEsperado) {
+        String tokenAgente = tokenPara(Perfil.AGENTE_SANITARIO);
+        String id = criarOcorrencia(tokenAgente, false).then().statusCode(200).extract().path("id");
+        String anexoId = given().header("Authorization", "Bearer " + tokenAgente)
+                .multiPart("arquivo", "foto.png", PNG, "image/png")
+                .when().post(ROTA_OCORRENCIAS + "/" + id + "/anexos").then().statusCode(200).extract().path("id");
+        String token = tokenPara(perfil);
+
+        for (String rota : new String[] {ROTA_OCORRENCIAS, ROTA_OCORRENCIAS + "/catalogos",
+                ROTA_OCORRENCIAS + "/" + id, ROTA_OCORRENCIAS + "/" + id + "/anexos/" + anexoId}) {
+            given().header("Authorization", "Bearer " + token)
+                    .when().get(rota)
+                    .then().statusCode(statusEsperado);
+        }
     }
 
     @ParameterizedTest(name = "{0} ao criar ocorrencia -> status {1}")

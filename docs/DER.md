@@ -4,7 +4,7 @@
 
 > Documento de referência derivado das **15 telas + Design System** do protótipo navegável. Use-o para comparar com seu schema atual e validar cobertura.
 
-> **Estado do schema (V10).** As tabelas de usuários/acesso, animais, baias, registros clínicos (`vacinacao`, `procedimento`, `prescricao`), ocorrências (§3.4) e seus catálogos estão descritas aqui **como existem nas migrations** (`backend/src/main/resources/db/migration`, V1–V10). `processo_sanitario` existe em versão mínima (§3.5). As demais (relatórios, `adocao`, `exame`, anexos de animal e de processo) ainda **não têm tabela**: são o modelo-alvo, a validar na implementação de cada módulo.
+> **Estado do schema (V11).** As tabelas de usuários/acesso, animais, baias, registros clínicos (`vacinacao`, `procedimento`, `prescricao`), ocorrências (§3.4) e seus catálogos estão descritas aqui **como existem nas migrations** (`backend/src/main/resources/db/migration`, V1–V11; a V11 só corrige a matriz de permissões, §3.1). `processo_sanitario` existe em versão mínima (§3.5). As demais (relatórios, `adocao`, `exame`, anexos de animal e de processo) ainda **não têm tabela**: são o modelo-alvo, a validar na implementação de cada módulo.
 
 **Convenções**
 
@@ -143,6 +143,7 @@ erDiagram
 - E-mail deve casar regex `^[a-z.]+@itu\.sp\.gov\.br$` (institucional).
 - Cargo `recepcionista` foi removido do escopo — não criar mais.
 - Apenas cargo `Administrador` pode criar / desativar usuários.
+- Veterinário **não acessa** o módulo de ocorrências e denúncias (nem leitura): todos os endpoints de `/api/ocorrencias` respondem 403, e o front oculta o menu e bloqueia as rotas (V11).
 - Dados de denunciante em ocorrências sigilosas: só quem tem a permissão `OCORRENCIAS_DENUNCIAS:denunciante_sigiloso:leitura` — Administrador e Agente Sanitário (V10).
 - Nenhum usuário, incluindo Administrador, pode desativar a si mesmo (bloqueado no backend, HTTP 422).
 
@@ -185,10 +186,12 @@ A feature `geral` gera a autoridade do módulo inteiro (`MODULO:leitura|escrita|
 | Módulo      | Admin | Vet | Agente |
 | ----------- | ----- | --- | ------ |
 | animais     | RWD   | RW  | R      |
-| ocorrencias | RWD   | R   | RW     |
+| ocorrencias | RWD   | —   | RW     |
 | processos   | RWD   | RW  | RW     |
 | relatorios  | R     | R   | R      |
 | usuarios    | RWD   | —   | —      |
+
+> **Correção de acesso (V11, 2026-10-12).** A V3 concedia leitura de `ocorrencias` ao Veterinário por engano. A V11 zera a linha (`leitura`, `escrita` e `exclusao` = `false`) pelo UUID fixo do cargo, sem editar a V3. Era a única linha do Veterinário no módulo (a V10 não lhe dá `denunciante_sigiloso`). As autoridades são resolvidas do banco a cada requisição, então a mudança vale também para tokens já emitidos. O Veterinário continua criando e lendo processos sanitários; vincular processo a ocorrência já exigia `OCORRENCIAS_DENUNCIAS:escrita` (D33).
 
 > **Sem tabela de sessão.** A autenticação é JWT stateless (`SessionCreationPolicy.STATELESS`): o token não é persistido. A tabela `sessao` criada em V2 nunca foi usada e foi removida em V8.
 
@@ -497,7 +500,7 @@ Seed: `orientacao_municipe`, `encaminhamento_gepar`, `abertura_processo`, `captu
 | `endereco`           | varchar(255) | ?      |
 | `bairro_residencial` | varchar(80)  | ?      |
 
-**Regra:** em ocorrência sigilosa, a consulta retorna `null` nos campos pessoais para quem **não tem** a permissão `OCORRENCIAS_DENUNCIAS:denunciante_sigiloso:leitura` (hoje, o Veterinário). Administrador e Agente Sanitário têm a permissão. A busca da listagem só compara o nome do denunciante onde a pessoa poderia vê-lo. Os dados pessoais do denunciante não entram nos snapshots de auditoria (registra-se só que foram alterados).
+**Regra:** em ocorrência sigilosa, a consulta retorna `null` nos campos pessoais para quem lê o módulo e **não tem** a permissão `OCORRENCIAS_DENUNCIAS:denunciante_sigiloso:leitura` (nenhum cargo padrão desde a V11; o Veterinário não acessa o módulo). Administrador e Agente Sanitário têm a permissão. A busca da listagem só compara o nome do denunciante onde a pessoa poderia vê-lo. Os dados pessoais do denunciante não entram nos snapshots de auditoria (registra-se só que foram alterados).
 
 #### `denunciado`
 
@@ -777,7 +780,7 @@ Campos: `id`, `codigo`, `nome`, `tipo` ("padrão raiva", "multidoenças", "apoio
 
 1. Login somente com e-mail `@itu.sp.gov.br`.
 2. Perfil `recepcionista` **não existe** (fora do escopo).
-3. Admin é o único com acesso a `usuarios` e criação/desativação. Dados de denunciante sigiloso: Administrador e Agente Sanitário (permissão `denunciante_sigiloso`).
+3. Admin é o único com acesso a `usuarios` e criação/desativação. Dados de denunciante sigiloso: Administrador e Agente Sanitário (permissão `denunciante_sigiloso`). Veterinário não acessa ocorrências e denúncias (V11).
 4. Sistema é **PT-BR único**; data **DD/MM/AAAA**; fuso **America/São_Paulo** — nenhum desses é configurável.
 
 ### Animais e baias
@@ -791,7 +794,7 @@ Campos: `id`, `codigo`, `nome`, `tipo` ("padrão raiva", "multidoenças", "apoio
 
 9. Protocolo `NNN/AAAA` é gerado pelo sistema (prefixo fixo, **não configurável**).
 10. Bairro é campo livre — sem catálogo, sem filtro por valor controlado na listagem.
-11. Ocorrência sigilosa: dados pessoais do denunciante e anexos são ocultados para quem não tem a permissão `denunciante_sigiloso` (hoje, o Veterinário). Denúncia anônima é distinta de sigilosa e não guarda denunciante.
+11. Ocorrência sigilosa: dados pessoais do denunciante e anexos são ocultados para quem lê o módulo sem a permissão `denunciante_sigiloso` (nenhum cargo padrão desde a V11: Administrador e Agente têm a permissão, e o Veterinário não acessa o módulo). Denúncia anônima é distinta de sigilosa e não guarda denunciante.
 12. Encerramento: `providencia_tomada` obrigatória; quando = `outro`, `descricao_encerramento` é obrigatória.
 13. Não pode encerrar ocorrência com processo sanitário vinculado que não esteja `CONCLUIDO`.
 

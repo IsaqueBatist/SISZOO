@@ -2,6 +2,8 @@ import type { IconName } from '../components/layout/Icon'
 
 // Portado de docs/prototipo/assets/shell.js — manter chaves, labels e
 // access arrays idênticos ao protótipo (fonte da verdade do design system).
+// Divergência deliberada: o Veterinário não acessa 'ocorrencias' (correção de
+// regra de acesso, V11 no backend); o protótipo ainda lista o item para ele.
 
 export type RoleKey = 'admin' | 'vet' | 'agente'
 
@@ -23,7 +25,7 @@ export const ROLES: Record<RoleKey, Role> = {
     label: 'Veterinária',
     short: 'VET',
     badgeCls: 'badge-role-vet',
-    access: ['dashboard', 'animais', 'ocorrencias', 'processos', 'relatorios', 'baias', 'config'],
+    access: ['dashboard', 'animais', 'processos', 'relatorios', 'baias', 'config'],
   },
   agente: {
     label: 'Agente Sanitário',
