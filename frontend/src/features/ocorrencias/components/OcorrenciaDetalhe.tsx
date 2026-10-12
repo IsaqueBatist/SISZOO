@@ -1,8 +1,10 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { statusHttpDoErro } from '@/lib/erroApi'
+import { AvisoAnexosPendentes } from './AvisoAnexosPendentes'
 import { CardDenunciante } from './CardDenunciante'
 import { CardEncerramento } from './CardEncerramento'
 import { MovimentacoesTimeline } from './MovimentacoesTimeline'
@@ -13,6 +15,32 @@ import { badgeDeStatus, labelDeStatusProcesso } from '../utils/statusBadge'
 import { formatarData, formatarHora } from '../utils/datas'
 import { formatarProtocoloOcorrencia, formatarProtocoloProcesso } from '../utils/protocolo'
 import { useIniciarAtendimentoMutation, useOcorrenciaQuery } from '../hooks/useOcorrencias'
+import { useAnexosPendentes } from '../hooks/useAnexosPendentes'
+
+// D15: anexos que não subiram no cadastro desta ocorrência (ficaram no
+// IndexedDB deste navegador) podem ser reenviados daqui também.
+function AnexosPendentesDaOcorrencia({ ocorrenciaId }: { ocorrenciaId: string }) {
+  const queryClient = useQueryClient()
+  const { pendencia, falhas, enviando, enviar, descartar } = useAnexosPendentes()
+
+  if (!pendencia || pendencia.ocorrenciaId !== ocorrenciaId) return null
+
+  async function reenviar() {
+    if (!pendencia) return
+    await enviar(pendencia)
+    await queryClient.invalidateQueries({ queryKey: ['ocorrencias', 'detalhe', ocorrenciaId] })
+  }
+
+  return (
+    <AvisoAnexosPendentes
+      pendencia={pendencia}
+      falhas={falhas}
+      enviando={enviando}
+      onReenviar={() => void reenviar()}
+      onDescartar={() => void descartar()}
+    />
+  )
+}
 
 // Botão próprio (não inline em OcorrenciaDetalhe) porque a mutation só pode
 // ser chamada depois que `ocorrencia` já existe — mesmo motivo de
@@ -150,6 +178,7 @@ export function OcorrenciaDetalhe() {
 
   return (
     <>
+      <AnexosPendentesDaOcorrencia ocorrenciaId={ocorrencia.id} />
       <div className="page-header">
         <div className="title-block">
           <Link to="/ocorrencias" className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}>

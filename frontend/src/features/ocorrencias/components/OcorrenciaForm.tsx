@@ -1,23 +1,28 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { mensagemDeRegraDaApi } from '@/lib/erroApi'
 import { AnexoInvalidoError, MAXIMO_ANEXOS, validarAnexo } from '../utils/anexoOcorrencia'
 import './OcorrenciaForm.css'
 import { ocorrenciaFormSchema, TIPOS_OCORRENCIA_VALORES, type OcorrenciaFormValues } from '../schemas/ocorrenciaFormSchema'
-import type { CriarOcorrenciaRequest } from '../types/ocorrencias.types'
+import type { CriarOcorrenciaRequest, DenuncianteRequest } from '../types/ocorrencias.types'
 import {
   agendarSalvarRascunhoOcorrencia,
+  cancelarRascunhoAgendadoOcorrencia,
   carregarRascunhoOcorrencia,
   removerRascunhoOcorrencia,
   salvarRascunhoOcorrencia,
 } from '../storage/rascunhoOcorrenciaStorage'
 import { iconeDeTipo, labelDeTipo } from '../utils/statusBadge'
 import { hojeIso } from '../utils/datas'
-import { enviarAnexo } from '../api/ocorrenciasApi'
 import { useCriarOcorrenciaMutation } from '../hooks/useOcorrencias'
+import { useAnexosPendentes } from '../hooks/useAnexosPendentes'
+import { AvisoAnexosPendentes } from './AvisoAnexosPendentes'
+
+const DENUNCIANTE_VAZIO = { nome: '', cpf: '', telefone: '', email: '', cep: '', endereco: '', bairroResidencial: '' }
 
 function valoresVazios(): OcorrenciaFormValues {
   return {
@@ -28,8 +33,10 @@ function valoresVazios(): OcorrenciaFormValues {
     bairro: '',
     pontoReferencia: '',
     descricao: '',
+    urgente: false,
     sigilosa: false,
-    denunciante: { nome: '', cpf: '', telefone: '', email: '', cep: '', endereco: '', bairroResidencial: '' },
+    anonima: false,
+    denunciante: { ...DENUNCIANTE_VAZIO },
     denunciadoAtivo: false,
     denunciado: { nome: '', cpf: '', telefone: '', endereco: '', observacoes: '' },
     anexos: [],
@@ -39,6 +46,21 @@ function valoresVazios(): OcorrenciaFormValues {
 // Monta o payload real a partir dos valores do form — strings vazias viram
 // `undefined` (campo opcional ausente), nunca enviadas como "". Anexos não
 // vão no JSON: cada arquivo é um POST multipart depois do cadastro (D15).
+// Anônima nunca manda o bloco (D32); sigilosa sem nenhum dado também não.
+function paraDenuncianteRequest(valores: OcorrenciaFormValues): DenuncianteRequest | undefined {
+  if (valores.anonima) return undefined
+  const bloco: DenuncianteRequest = {
+    nome: valores.denunciante.nome || undefined,
+    cpf: valores.denunciante.cpf || undefined,
+    telefone: valores.denunciante.telefone || undefined,
+    email: valores.denunciante.email || undefined,
+    cep: valores.denunciante.cep || undefined,
+    endereco: valores.denunciante.endereco || undefined,
+    bairroResidencial: valores.denunciante.bairroResidencial || undefined,
+  }
+  return Object.values(bloco).some((valor) => valor !== undefined) ? bloco : undefined
+}
+
 function paraRequisicao(valores: OcorrenciaFormValues): CriarOcorrenciaRequest {
   return {
     tipoOcorrencia: valores.tipoOcorrencia as CriarOcorrenciaRequest['tipoOcorrencia'],
@@ -48,18 +70,10 @@ function paraRequisicao(valores: OcorrenciaFormValues): CriarOcorrenciaRequest {
     bairro: valores.bairro,
     pontoReferencia: valores.pontoReferencia || undefined,
     descricao: valores.descricao,
-    urgente: false,
+    urgente: valores.urgente,
     sigilosa: valores.sigilosa,
-    anonima: false,
-    denunciante: {
-      nome: valores.denunciante.nome || undefined,
-      cpf: valores.denunciante.cpf || undefined,
-      telefone: valores.denunciante.telefone || undefined,
-      email: valores.denunciante.email || undefined,
-      cep: valores.denunciante.cep || undefined,
-      endereco: valores.denunciante.endereco || undefined,
-      bairroResidencial: valores.denunciante.bairroResidencial || undefined,
-    },
+    anonima: valores.anonima,
+    denunciante: paraDenuncianteRequest(valores),
     denunciado: valores.denunciadoAtivo
       ? {
           nome: valores.denunciado.nome || undefined,
@@ -73,20 +87,21 @@ function paraRequisicao(valores: OcorrenciaFormValues): CriarOcorrenciaRequest {
 }
 
 // LGPD: máquinas do CCZ podem ser compartilhadas. Se a ocorrência é
-// sigilosa, os dados do denunciante não são persistidos no IndexedDB —
-// ao restaurar o rascunho, o usuário precisa redigitá-los.
+// sigilosa (ou anônima), os dados do denunciante não são persistidos no
+// IndexedDB — ao restaurar o rascunho, o usuário precisa redigitá-los.
 function paraRascunho(valores: OcorrenciaFormValues): OcorrenciaFormValues {
-  if (!valores.sigilosa) return valores
-  return {
-    ...valores,
-    denunciante: { nome: '', cpf: '', telefone: '', email: '', cep: '', endereco: '', bairroResidencial: '' },
-  }
+  if (!valores.sigilosa && !valores.anonima) return valores
+  return { ...valores, denunciante: { ...DENUNCIANTE_VAZIO } }
 }
 
 export function OcorrenciaForm() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const mutation = useCriarOcorrenciaMutation()
+  const anexosPendentes = useAnexosPendentes()
+  // Suspende o autosave depois do POST: limpar o form não pode recriar o
+  // rascunho de uma ocorrência que já existe no backend.
+  const autosaveSuspenso = useRef(false)
 
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [anexoErro, setAnexoErro] = useState<string | null>(null)
@@ -133,6 +148,7 @@ export function OcorrenciaForm() {
     // hidratação terminar.
     if (!prontoParaAutoSalvar) return
     const inscricao = watch((valoresAtuais) => {
+      if (autosaveSuspenso.current) return
       agendarSalvarRascunhoOcorrencia(paraRascunho(valoresAtuais as OcorrenciaFormValues))
     })
     return () => inscricao.unsubscribe()
@@ -185,16 +201,47 @@ export function OcorrenciaForm() {
     )
   }
 
+  // D15, fase 1: um único POST /ocorrencias. Daqui em diante a ocorrência
+  // existe; o rascunho do form sai e só os anexos ficam pendentes (fase 2).
   async function onSubmit(dados: OcorrenciaFormValues) {
+    let nova
     try {
-      const nova = await mutation.mutateAsync(paraRequisicao(dados))
-      for (const arquivo of dados.anexos) {
-        await enviarAnexo(nova.id, arquivo)
-      }
-      await removerRascunhoOcorrencia()
+      nova = await mutation.mutateAsync(paraRequisicao(dados))
+    } catch (erro) {
+      setSubmitError(mensagemDeRegraDaApi(erro) ?? 'Não foi possível registrar a ocorrência. Tente novamente.')
+      return
+    }
+
+    autosaveSuspenso.current = true
+    cancelarRascunhoAgendadoOcorrencia()
+    await removerRascunhoOcorrencia()
+
+    if (dados.anexos.length === 0) {
       navigate(`/ocorrencias/${nova.id}`)
-    } catch {
-      setSubmitError('Não foi possível registrar a ocorrência. Tente novamente.')
+      return
+    }
+    const todosEnviados = await anexosPendentes.enviar({ ocorrenciaId: nova.id, protocolo: nova.protocolo, anexos: dados.anexos })
+    if (todosEnviados) {
+      navigate(`/ocorrencias/${nova.id}`)
+      return
+    }
+    // Ficou anexo pendente: o form é limpo para que a mesma ocorrência não
+    // seja registrada de novo; o aviso acima oferece Reenviar/Descartar.
+    reset(valoresVazios())
+    autosaveSuspenso.current = false
+  }
+
+  async function handleReenviarAnexos() {
+    const pendencia = anexosPendentes.pendencia
+    if (!pendencia) return
+    if (await anexosPendentes.enviar(pendencia)) navigate(`/ocorrencias/${pendencia.ocorrenciaId}`)
+  }
+
+  function handleAnonimaChange(marcada: boolean, onChange: (valor: boolean) => void) {
+    onChange(marcada)
+    if (marcada) {
+      setValue('sigilosa', false)
+      setValue('denunciante', { ...DENUNCIANTE_VAZIO })
     }
   }
 
@@ -216,6 +263,16 @@ export function OcorrenciaForm() {
           </p>
         </div>
       </div>
+
+      {anexosPendentes.pendencia && (
+        <AvisoAnexosPendentes
+          pendencia={anexosPendentes.pendencia}
+          falhas={anexosPendentes.falhas}
+          enviando={anexosPendentes.enviando}
+          onReenviar={() => void handleReenviarAnexos()}
+          onDescartar={() => void anexosPendentes.descartar()}
+        />
+      )}
 
       {rascunhoDisponivel && (
         <div className="alert info" role="alert">
@@ -340,6 +397,12 @@ export function OcorrenciaForm() {
                   />
                   {errors.descricao && <span className="err">{errors.descricao.message}</span>}
                 </div>
+                <div className="field full">
+                  <label className="flex gap-2" style={{ alignItems: 'center', cursor: 'pointer' }}>
+                    <input type="checkbox" {...register('urgente')} />
+                    Urgente (contato humano-animal)
+                  </label>
+                </div>
               </div>
             </div>
           </div>
@@ -347,74 +410,107 @@ export function OcorrenciaForm() {
           <div className="card">
             <div className="card-header">
               <h3>3. Dados do Denunciante</h3>
-              <div className="switch-row">
-                <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Ocorrência sigilosa</span>
-                <Controller
-                  name="sigilosa"
-                  control={control}
-                  render={({ field }) => (
-                    <label className="switch">
-                      <input
-                        type="checkbox"
-                        checked={field.value}
-                        onChange={(event) => field.onChange(event.target.checked)}
-                        aria-label="Ocorrência sigilosa"
-                      />
-                      <span className="slider" />
-                    </label>
-                  )}
-                />
+              <div className="flex gap-4" style={{ flexWrap: 'wrap' }}>
+                <div className="switch-row">
+                  <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Ocorrência sigilosa</span>
+                  <Controller
+                    name="sigilosa"
+                    control={control}
+                    render={({ field }) => (
+                      <label className="switch">
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          disabled={valores.anonima}
+                          onChange={(event) => field.onChange(event.target.checked)}
+                          aria-label="Ocorrência sigilosa"
+                        />
+                        <span className="slider" />
+                      </label>
+                    )}
+                  />
+                </div>
+                <div className="switch-row">
+                  <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Denunciante anônimo</span>
+                  <Controller
+                    name="anonima"
+                    control={control}
+                    render={({ field }) => (
+                      <label className="switch">
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          disabled={valores.sigilosa}
+                          onChange={(event) => handleAnonimaChange(event.target.checked, field.onChange)}
+                          aria-label="Denunciante anônimo"
+                        />
+                        <span className="slider" />
+                      </label>
+                    )}
+                  />
+                </div>
               </div>
             </div>
             <div className="card-body">
+              {errors.anonima && (
+                <span className="err" style={{ display: 'block', marginBottom: 12 }}>
+                  {errors.anonima.message}
+                </span>
+              )}
               {valores.sigilosa && (
                 <div className="alert warning" role="alert" style={{ marginBottom: 12 }}>
                   <span className="bullet" />
                   <div className="alert-content">
-                    Os dados do denunciante não serão exibidos a outros usuários, exceto Administradores.
+                    Os dados do denunciante só serão exibidos a Administradores e Agentes Sanitários.
                   </div>
                 </div>
               )}
-              <div className="form-grid">
-                <div className="field">
-                  <label htmlFor="den-nome">
-                    Nome completo {!valores.sigilosa && <span className="req">*</span>}
-                  </label>
-                  <input
-                    id="den-nome"
-                    className={`input${errors.denunciante?.nome ? ' error' : ''}`}
-                    type="text"
-                    {...register('denunciante.nome')}
-                  />
-                  {errors.denunciante?.nome && <span className="err">{errors.denunciante.nome.message}</span>}
+              {valores.anonima ? (
+                <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
+                  Denúncia anônima: nenhum dado do denunciante é registrado.
+                </p>
+              ) : (
+                <div className="form-grid">
+                  <div className="field">
+                    <label htmlFor="den-nome">
+                      Nome completo {!valores.sigilosa && <span className="req">*</span>}
+                    </label>
+                    <input
+                      id="den-nome"
+                      className={`input${errors.denunciante?.nome ? ' error' : ''}`}
+                      type="text"
+                      {...register('denunciante.nome')}
+                    />
+                    {errors.denunciante?.nome && <span className="err">{errors.denunciante.nome.message}</span>}
+                  </div>
+                  <div className="field">
+                    <label htmlFor="den-cpf">CPF</label>
+                    <input id="den-cpf" className="input mono" type="text" placeholder="000.000.000-00" {...register('denunciante.cpf')} />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="den-telefone">Telefone</label>
+                    <input
+                      id="den-telefone"
+                      className="input mono"
+                      type="text"
+                      placeholder="(11) 9 0000-0000"
+                      {...register('denunciante.telefone')}
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="den-email">E-mail</label>
+                    <input id="den-email" className="input" type="email" placeholder="exemplo@email.com" {...register('denunciante.email')} />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="den-cep">CEP</label>
+                    <input id="den-cep" className="input mono" type="text" placeholder="00000-000" {...register('denunciante.cep')} />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="den-endereco">Endereço residencial</label>
+                    <input id="den-endereco" className="input" type="text" placeholder="Logradouro, número" {...register('denunciante.endereco')} />
+                  </div>
                 </div>
-                <div className="field">
-                  <label htmlFor="den-cpf">CPF</label>
-                  <input id="den-cpf" className="input mono" type="text" placeholder="000.000.000-00" {...register('denunciante.cpf')} />
-                </div>
-                <div className="field">
-                  <label htmlFor="den-telefone">Telefone</label>
-                  <input
-                    id="den-telefone"
-                    className="input mono"
-                    type="text"
-                    placeholder="(11) 9 0000-0000"
-                    {...register('denunciante.telefone')}
-                  />
-                </div>
-                <div className="field">
-                  <label htmlFor="den-email">E-mail</label>
-                  <input id="den-email" className="input" type="email" placeholder="exemplo@email.com" {...register('denunciante.email')} />
-                </div>
-                <div className="field">
-                  <label htmlFor="den-cep">CEP</label>
-                  <input id="den-cep" className="input mono" type="text" placeholder="00000-000" {...register('denunciante.cep')} />
-                </div>
-                <div className="field">
-                  <label htmlFor="den-endereco">Endereço residencial</label>
-                  <input id="den-endereco" className="input" type="text" placeholder="Logradouro, número" {...register('denunciante.endereco')} />
-                </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -548,7 +644,12 @@ export function OcorrenciaForm() {
               <button type="button" className="btn btn-outline" onClick={handleSalvarRascunhoAgora}>
                 Salvar rascunho
               </button>
-              <button type="submit" className="btn btn-primary" disabled={mutation.isPending}>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={mutation.isPending || anexosPendentes.enviando || anexosPendentes.pendencia !== null}
+                title={anexosPendentes.pendencia ? 'Resolva os anexos pendentes antes de registrar outra ocorrência' : undefined}
+              >
                 {mutation.isPending ? 'Registrando…' : 'Registrar Ocorrência'}
               </button>
             </div>
