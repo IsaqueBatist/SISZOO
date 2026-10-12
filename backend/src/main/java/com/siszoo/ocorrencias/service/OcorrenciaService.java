@@ -36,8 +36,10 @@ import com.siszoo.ocorrencias.dto.CriarOcorrenciaRequest;
 import com.siszoo.ocorrencias.dto.DenunciadoRequest;
 import com.siszoo.ocorrencias.dto.DenuncianteRequest;
 import com.siszoo.ocorrencias.dto.EncerrarOcorrenciaRequest;
+import com.siszoo.ocorrencias.dto.EntregaAuditada;
 import com.siszoo.ocorrencias.dto.OcorrenciaResponse;
 import com.siszoo.ocorrencias.dto.OcorrenciaResumoResponse;
+import com.siszoo.ocorrencias.dto.VisualizacaoAuditada;
 import com.siszoo.ocorrencias.entity.AnexoOcorrencia;
 import com.siszoo.ocorrencias.entity.AnexoOcorrenciaConteudo;
 import com.siszoo.ocorrencias.entity.Denunciado;
@@ -498,9 +500,11 @@ public class OcorrenciaService {
     // VISUALIZACAO (T26). Sem readOnly: numa transacao readOnly o INSERT da
     // auditoria (REQUIRED, participa desta) seria descartado sem erro
     // (FlushMode.MANUAL) ou recusado pelo PostgreSQL (25006). Na mesma
-    // transacao, falha da auditoria desfaz tudo e o arquivo nao sai.
+    // transacao, falha da auditoria desfaz tudo e o arquivo nao sai. O evento
+    // volta junto com o arquivo: se o controller nao conseguir escreve-lo,
+    // registra ENTREGA_INTERROMPIDA (registrarEntregaInterrompida).
     @Transactional
-    public ArquivoAnexo baixarAnexo(UUID id, UUID anexoId, PermissoesOcorrencia permissoes) {
+    public EntregaAuditada<ArquivoAnexo> baixarAnexo(UUID id, UUID anexoId, PermissoesOcorrencia permissoes) {
         Ocorrencia ocorrencia = ocorrenciaRepository.findById(id).orElseThrow(OcorrenciaNaoEncontradaException::new);
         AnexoOcorrencia anexo = anexoRepository.findByIdAndOcorrenciaId(anexoId, id)
                 .orElseThrow(AnexoNaoEncontradoException::new);
@@ -509,27 +513,40 @@ public class OcorrenciaService {
         }
         AnexoOcorrenciaConteudo conteudo = anexoConteudoRepository.findById(anexo.getId())
                 .orElseThrow(AnexoNaoEncontradoException::new);
-        if (ocorrencia.isSigilosa()) {
-            registrarVisualizacao(permissoes, ENTIDADE_ANEXO, anexo.getId(), id);
-        }
-        return new ArquivoAnexo(anexo.getNome(), anexo.getMimeType(), conteudo.getConteudo());
+        VisualizacaoAuditada visualizacao = ocorrencia.isSigilosa()
+                ? registrarVisualizacao(permissoes, ENTIDADE_ANEXO, anexo.getId(), id)
+                : null;
+        return new EntregaAuditada<>(
+                new ArquivoAnexo(anexo.getNome(), anexo.getMimeType(), conteudo.getConteudo()), visualizacao);
+    }
+
+    // T26: a escrita da resposta de uma leitura auditada falhou depois do
+    // VISUALIZACAO ja commitado (ex.: cliente desconectou). O evento original
+    // nao e alterado — a auditoria so recebe insercoes; este o compensa,
+    // apontando-o em payload_depois.eventoId. Mesmo autor, mesma entidade.
+    @Transactional
+    public void registrarEntregaInterrompida(VisualizacaoAuditada visualizacao, PermissoesOcorrencia permissoes) {
+        auditoriaEventoService.registrar(buscarUsuario(permissoes.usuarioId()), AcaoAuditoria.ENTREGA_INTERROMPIDA,
+                visualizacao.entidade(), visualizacao.entidadeId(), null,
+                Map.of("ocorrenciaId", visualizacao.ocorrenciaId(), "eventoId", visualizacao.eventoId()));
     }
 
     // ── Consultas ────────────────────────────────────────
 
     // Ponto unico de leitura do detalhe. Quem recebe o denunciante completo
     // de ocorrencia sigilosa gera VISUALIZACAO (T26), uma por requisicao, sem
-    // deduplicacao. Sem readOnly pelo mesmo motivo de baixarAnexo.
+    // deduplicacao. Sem readOnly pelo mesmo motivo de baixarAnexo; o evento
+    // volta com a resposta, tambem como em baixarAnexo.
     @Transactional
-    public OcorrenciaResponse buscarPorId(UUID id, PermissoesOcorrencia permissoes) {
+    public EntregaAuditada<OcorrenciaResponse> buscarPorId(UUID id, PermissoesOcorrencia permissoes) {
         Ocorrencia ocorrencia = ocorrenciaRepository.findDetalheById(id)
                 .orElseThrow(OcorrenciaNaoEncontradaException::new);
         Denunciante denunciante = denuncianteRepository.findByOcorrenciaId(id).orElse(null);
         OcorrenciaResponse resposta = montarResposta(ocorrencia, denunciante, permissoes);
-        if (ocorrencia.isSigilosa() && permissoes.podeVerSigilo() && denunciante != null) {
-            registrarVisualizacao(permissoes, ENTIDADE_DENUNCIANTE, denunciante.getId(), id);
-        }
-        return resposta;
+        VisualizacaoAuditada visualizacao = ocorrencia.isSigilosa() && permissoes.podeVerSigilo() && denunciante != null
+                ? registrarVisualizacao(permissoes, ENTIDADE_DENUNCIANTE, denunciante.getId(), id)
+                : null;
+        return new EntregaAuditada<>(resposta, visualizacao);
     }
 
     @Transactional(readOnly = true)
@@ -597,10 +614,11 @@ public class OcorrenciaService {
 
     // T26: acesso autorizado a dado de denunciante sigiloso. O payload so leva
     // o id da ocorrencia — nenhum dado pessoal (D23).
-    private void registrarVisualizacao(PermissoesOcorrencia permissoes, String entidade, UUID entidadeId,
-            UUID ocorrenciaId) {
-        auditoriaEventoService.registrar(buscarUsuario(permissoes.usuarioId()), AcaoAuditoria.VISUALIZACAO,
-                entidade, entidadeId, null, Map.of("ocorrenciaId", ocorrenciaId));
+    private VisualizacaoAuditada registrarVisualizacao(PermissoesOcorrencia permissoes, String entidade,
+            UUID entidadeId, UUID ocorrenciaId) {
+        UUID eventoId = auditoriaEventoService.registrar(buscarUsuario(permissoes.usuarioId()),
+                AcaoAuditoria.VISUALIZACAO, entidade, entidadeId, null, Map.of("ocorrenciaId", ocorrenciaId));
+        return new VisualizacaoAuditada(eventoId, entidade, entidadeId, ocorrenciaId);
     }
 
     private Ocorrencia travar(UUID id) {

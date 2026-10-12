@@ -34,8 +34,10 @@ public class AuditoriaEventoService {
         this.objectMapper = objectMapper;
     }
 
+    // Devolve o id do evento (gerado no persist), para um evento posterior
+    // poder referencia-lo (ex.: ENTREGA_INTERROMPIDA aponta o VISUALIZACAO).
     @Transactional
-    public void registrar(Usuario usuario, AcaoAuditoria acao, String entidade, UUID entidadeId,
+    public UUID registrar(Usuario usuario, AcaoAuditoria acao, String entidade, UUID entidadeId,
             Object payloadAntes, Object payloadDepois) {
         AuditoriaEvento evento = new AuditoriaEvento();
         evento.setUsuario(usuario);
@@ -44,7 +46,7 @@ public class AuditoriaEventoService {
         evento.setEntidadeId(entidadeId);
         evento.setPayloadAntes(serializar(payloadAntes));
         evento.setPayloadDepois(serializar(payloadDepois));
-        auditoriaEventoRepository.save(evento);
+        return auditoriaEventoRepository.save(evento).getId();
     }
 
     @Transactional(readOnly = true)
