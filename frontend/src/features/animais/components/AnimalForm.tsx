@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm, type FieldErrors as RhfFieldErrors } from 'react-hook-form'
 import { z } from 'zod'
 import { Icon } from '@/components/layout/Icon'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import type { Animal, AnimalRequest, CatalogoItem, Pelagem, Porte, Sexo } from '../types/animais.types'
 import {
   CASTRACAO_OPCOES,
@@ -200,7 +201,9 @@ const paraNumeroOuIndefinido = (v: unknown) => {
 
 export function AnimalForm({ animal }: AnimalFormProps) {
   const navigate = useNavigate()
-  const chaveRascunho = chaveRascunhoAnimal(animal?.id)
+  const { user } = useAuth()
+  // Rotas de formulário ficam atrás de RotaProtegida: o usuário sempre existe aqui.
+  const chaveRascunho = chaveRascunhoAnimal(user?.id ?? '', animal?.id)
   const iniciais = animal ? valoresDeAnimal(animal) : valoresVazios()
 
   const [step, setStep] = useState<1 | 2 | 3>(1)

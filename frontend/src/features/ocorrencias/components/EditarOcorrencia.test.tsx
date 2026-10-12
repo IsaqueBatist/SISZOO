@@ -36,9 +36,11 @@ vi.mock('../storage/rascunhoOcorrenciaStorage', async () => {
 
 import { agendarSalvarRascunhoOcorrencia, removerRascunhoOcorrencia } from '../storage/rascunhoOcorrenciaStorage'
 
+const USUARIO_ID = 'a1b2c3d4-0000-0000-0000-000000000002'
+
 function renderEm(rota: string, cargos: string[] = ['Agente Sanitário']) {
   const usuario: Usuario = {
-    id: 'a1b2c3d4-0000-0000-0000-000000000002',
+    id: USUARIO_ID,
     nome: 'Rafael',
     sobrenome: 'Santos',
     email: 'rafael.santos@itu.sp.gov.br',
@@ -112,7 +114,7 @@ describe('EditarOcorrencia', () => {
     expect(corpos[0]).toMatchObject({ endereco: 'Rua Nova, 1', urgente: true, sigilosa: false, anonima: false })
     expect(corpos[0]).not.toHaveProperty('denunciante')
     expect(corpos[0]).not.toHaveProperty('denunciado')
-    expect(removerRascunhoOcorrencia).toHaveBeenCalledWith(`editar:${OCORRENCIA_ABERTA_ID}`)
+    expect(removerRascunhoOcorrencia).toHaveBeenCalledWith(`${USUARIO_ID}:editar:${OCORRENCIA_ABERTA_ID}`)
   })
 
   it('PUT com o denunciante alterado: manda o bloco inteiro, e só ele', async () => {
@@ -234,7 +236,7 @@ describe('EditarOcorrencia', () => {
     await user.type(await screen.findByLabelText(/^Bairro/i), ' 2')
 
     await waitFor(() => expect(agendarSalvarRascunhoOcorrencia).toHaveBeenCalled())
-    expect(vi.mocked(agendarSalvarRascunhoOcorrencia).mock.calls.at(-1)?.[1]).toBe(`editar:${OCORRENCIA_ABERTA_ID}`)
+    expect(vi.mocked(agendarSalvarRascunhoOcorrencia).mock.calls.at(-1)?.[1]).toBe(`${USUARIO_ID}:editar:${OCORRENCIA_ABERTA_ID}`)
   })
 
   it('acesso direto à edição de uma ocorrência encerrada redireciona para o detalhe', async () => {

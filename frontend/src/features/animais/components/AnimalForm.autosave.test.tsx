@@ -3,6 +3,8 @@ import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
+import type { Usuario } from '@/features/auth/types/auth.types'
 import { CadastrarAnimal } from './CadastrarAnimal'
 
 // jsdom não implementa IndexedDB (typeof indexedDB === 'undefined'), então o
@@ -25,15 +27,33 @@ vi.mock('../storage/rascunhoAnimalStorage', async () => {
 
 import { agendarSalvarRascunhoAnimal, carregarRascunhoAnimal } from '../storage/rascunhoAnimalStorage'
 
+const USUARIO_ID = 'a1b2c3d4-0000-0000-0000-000000000001'
+
+// AnimalForm usa o id do usuário logado na chave do rascunho.
+function autenticar() {
+  const usuario: Usuario = {
+    id: USUARIO_ID,
+    nome: 'Stéphanie',
+    sobrenome: 'Lima',
+    email: 'stephanie.lima@itu.sp.gov.br',
+    cargos: ['Administrador'],
+    senhaAlteradaEm: '2026-01-10T12:00:00Z',
+  }
+  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario }))
+}
+
 function renderCadastrar() {
+  autenticar()
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={['/animais/novo']}>
-        <Routes>
-          <Route path="/animais" element={<div>Lista de animais</div>} />
-          <Route path="/animais/novo" element={<CadastrarAnimal />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/animais" element={<div>Lista de animais</div>} />
+            <Route path="/animais/novo" element={<CadastrarAnimal />} />
+          </Routes>
+        </AuthProvider>
       </MemoryRouter>
     </QueryClientProvider>,
   )
@@ -76,7 +96,8 @@ describe('AnimalForm — autosave do rascunho', () => {
     await user.type(screen.getByLabelText(/nome do animal/i), 'Rex')
 
     await waitFor(() => expect(agendarSalvarRascunhoAnimal).toHaveBeenCalled())
-    const [, valoresSalvos] = vi.mocked(agendarSalvarRascunhoAnimal).mock.calls.at(-1)!
+    const [chave, valoresSalvos] = vi.mocked(agendarSalvarRascunhoAnimal).mock.calls.at(-1)!
+    expect(chave).toBe(`${USUARIO_ID}:novo`)
     expect(Object.keys(valoresSalvos as object).sort()).toEqual(
       [
         'nome',

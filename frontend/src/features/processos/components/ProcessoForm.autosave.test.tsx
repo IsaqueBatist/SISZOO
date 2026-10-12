@@ -26,9 +26,11 @@ vi.mock('../storage/rascunhoProcessoStorage', async () => {
 
 import { agendarSalvarRascunhoProcesso, carregarRascunhoProcesso, salvarRascunhoProcesso } from '../storage/rascunhoProcessoStorage'
 
+const USUARIO_ID = 'a1b2c3d4-0000-0000-0000-000000000099'
+
 function autenticar() {
   const usuario: Usuario = {
-    id: 'a1b2c3d4-0000-0000-0000-000000000099',
+    id: USUARIO_ID,
     nome: 'Ana',
     sobrenome: 'Silva',
     email: 'ana.silva@itu.sp.gov.br',
@@ -98,7 +100,10 @@ describe('ProcessoForm — autosave do rascunho', () => {
     await user.click(pane1.getByRole('button', { name: 'Continuar →' }))
 
     await waitFor(() =>
-      expect(salvarRascunhoProcesso).toHaveBeenCalledWith(expect.objectContaining({ etapaAtual: 2 })),
+      expect(salvarRascunhoProcesso).toHaveBeenCalledWith(
+        `${USUARIO_ID}:novo`,
+        expect.objectContaining({ etapaAtual: 2 }),
+      ),
     )
   })
 

@@ -4,6 +4,8 @@ import userEvent from '@testing-library/user-event'
 import { HttpResponse, http } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
+import type { Usuario } from '@/features/auth/types/auth.types'
 import { API_BASE_URL } from '@/lib/env'
 import { server } from '@/mocks/server'
 import { CadastrarAnimal } from './CadastrarAnimal'
@@ -22,29 +24,50 @@ vi.mock('../utils/comprimirImagem', async () => {
 
 const REX_ID = 'b2c3d4e5-0000-0000-0000-000000000001'
 
+const USUARIO_ID = 'a1b2c3d4-0000-0000-0000-000000000001'
+
+// AnimalForm usa o id do usuário logado na chave do rascunho.
+function autenticar() {
+  const usuario: Usuario = {
+    id: USUARIO_ID,
+    nome: 'Stéphanie',
+    sobrenome: 'Lima',
+    email: 'stephanie.lima@itu.sp.gov.br',
+    cargos: ['Administrador'],
+    senhaAlteradaEm: '2026-01-10T12:00:00Z',
+  }
+  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario }))
+}
+
 function renderCadastrar() {
+  autenticar()
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={['/animais/novo']}>
-        <Routes>
-          <Route path="/animais" element={<div>Lista de animais</div>} />
-          <Route path="/animais/novo" element={<CadastrarAnimal />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/animais" element={<div>Lista de animais</div>} />
+            <Route path="/animais/novo" element={<CadastrarAnimal />} />
+          </Routes>
+        </AuthProvider>
       </MemoryRouter>
     </QueryClientProvider>,
   )
 }
 
 function renderEditar(id: string) {
+  autenticar()
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[`/animais/${id}/editar`]}>
-        <Routes>
-          <Route path="/animais" element={<div>Lista de animais</div>} />
-          <Route path="/animais/:id/editar" element={<EditarAnimal />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/animais" element={<div>Lista de animais</div>} />
+            <Route path="/animais/:id/editar" element={<EditarAnimal />} />
+          </Routes>
+        </AuthProvider>
       </MemoryRouter>
     </QueryClientProvider>,
   )
