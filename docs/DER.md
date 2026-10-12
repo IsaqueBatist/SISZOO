@@ -758,6 +758,8 @@ Campos: `id`, `codigo`, `nome`, `tipo` ("padrão raiva", "multidoenças", "apoio
 - Não geram `VISUALIZACAO`: ocorrência não sigilosa; sigilosa sem denunciante cadastrado; quem lê o módulo sem a permissão (recebe a máscara ou 403 no download); o Veterinário (403, sem acesso ao módulo); 404. A auditoria de **negações** (403) fica para a T43.
 - A listagem não gera evento porque não entrega o nome do denunciante de sigilosa a ninguém (§3.4).
 - **Falha da auditoria nega a entrega:** o evento é gravado na mesma transação da leitura (detalhe e download não são `readOnly`); se o INSERT falhar, tudo é desfeito e a resposta é 500 sem os dados. Numa transação `readOnly` o INSERT seria descartado sem erro (`FlushMode.MANUAL`) ou recusado pelo PostgreSQL (`25006`) — por isso os dois métodos deixaram de ser `readOnly`.
+- **Significado de `VISUALIZACAO`:** dado **liberado para envio na resposta** — a autorização foi verificada e o evento foi commitado antes de o corpo ser escrito. **Não** é confirmação de que o cliente recebeu ou leu o dado.
+- **Risco residual aceito:** se a entrega falhar depois do commit (cliente que desconecta, erro ao escrever o corpo), o `VISUALIZACAO` permanece registrado sem que o dado tenha chegado. Não há evento compensatório; a escolha preserva a regra principal — nenhum dado sai sem registro.
 - **Lacunas conhecidas (fora da T26):** as respostas de cadastro e edição (`POST`/`PUT`/`PATCH`/encerramento/notas/vínculo) devolvem o denunciante completo a quem tem a permissão e não geram `VISUALIZACAO` (as escritas já geram o próprio evento, exceto notas); `POST /{id}/notas` não gera evento de auditoria; a coluna `ip` não é preenchida.
 
 ---
