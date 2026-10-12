@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { setAuthToken } from '@/lib/http'
 import { roleKeyFromCargos } from '@/lib/nav'
@@ -52,19 +52,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // quando a sessão expira (401) no meio de um formulário, o mesmo usuário
   // entra de novo e retoma o rascunho — que tem escopo por usuário, então
   // ninguém mais o vê.
-  function encerrarSessao({ apagarRascunhos }: { apagarRascunhos: boolean }) {
-    // Antes de tudo: limparRascunhos cancela já, de forma síncrona, os
-    // salvamentos agendados que recriariam o rascunho.
-    if (apagarRascunhos) void limparRascunhos()
-    setSessao(null)
-    setAuthToken(null)
-    try {
-      sessionStorage.removeItem(SESSION_STORAGE_KEY)
-    } catch {
-      /* sessionStorage indisponível */
-    }
-    void queryClient.cancelQueries().then(() => queryClient.clear())
-  }
+  const encerrarSessao = useCallback(
+    ({ apagarRascunhos }: { apagarRascunhos: boolean }) => {
+      // Antes de tudo: limparRascunhos cancela já, de forma síncrona, os
+      // salvamentos agendados que recriariam o rascunho.
+      if (apagarRascunhos) void limparRascunhos()
+      setSessao(null)
+      setAuthToken(null)
+      try {
+        sessionStorage.removeItem(SESSION_STORAGE_KEY)
+      } catch {
+        /* sessionStorage indisponível */
+      }
+      void queryClient.cancelQueries().then(() => queryClient.clear())
+    },
+    [queryClient],
+  )
 
   function logout() {
     encerrarSessao({ apagarRascunhos: true })
@@ -94,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     window.addEventListener('auth:unauthorized', handleUnauthorized)
     return () => window.removeEventListener('auth:unauthorized', handleUnauthorized)
-  }, [navigate])
+  }, [navigate, encerrarSessao])
 
   const value: AuthContextValue = {
     user: sessao?.usuario ?? null,
