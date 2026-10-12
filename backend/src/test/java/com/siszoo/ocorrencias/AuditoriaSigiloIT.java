@@ -8,30 +8,21 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.function.BooleanSupplier;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.siszoo.comum.AbstractIntegrationTest;
 import com.siszoo.comum.ApiTesteFixture;
 import com.siszoo.comum.RelogioTesteConfig;
-import com.siszoo.ocorrencias.dto.VisualizacaoAuditada;
-import com.siszoo.ocorrencias.service.OcorrenciaService;
-import com.siszoo.ocorrencias.service.PermissoesOcorrencia;
 
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -62,12 +53,6 @@ class AuditoriaSigiloIT extends AbstractIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
-
-    @Autowired
-    private OcorrenciaService ocorrenciaService;
-
-    @LocalServerPort
-    private int porta;
 
     private String tokenAdmin;
     private String tokenAgente;
@@ -109,8 +94,6 @@ class AuditoriaSigiloIT extends AbstractIntegrationTest {
             assertThat(payload.get("ocorrenciaId").asString(), equalTo(id));
         }
         assertThat(eventos("denunciante", denuncianteId, null), hasSize(2));
-        // Entregas completas nao geram evento compensatorio.
-        assertThat(interrupcoesDaOcorrencia(id), equalTo(0));
     }
 
     @Test
@@ -281,89 +264,7 @@ class AuditoriaSigiloIT extends AbstractIntegrationTest {
         assertThat(eventosDaOcorrencia(id), equalTo(0));
     }
 
-    // ── Entrega interrompida: evento compensatorio ───────
-
-    @Test
-    @DisplayName("[T26] ENTREGA_INTERROMPIDA e gravado em transacao propria, aponta o VISUALIZACAO e nao o altera")
-    void entregaInterrompidaPersisteEApontaOEventoOriginal() throws Exception {
-        String marcador = marcador();
-        String id = criarSigilosaComDenunciante(marcador, false);
-        UUID denuncianteId = denuncianteDe(id);
-        UUID adminId = usuarioId(EMAIL_ADMIN);
-        detalhe(tokenAdmin, id).then().statusCode(200);
-        Map<String, Object> original = eventos("denunciante", denuncianteId, adminId).get(0);
-        UUID eventoId = jdbcTemplate.queryForObject("SELECT id FROM auditoria_evento WHERE acao = 'VISUALIZACAO'"
-                + " AND entidade_id = ?", UUID.class, denuncianteId);
-
-        // O caminho do controller (escrita que falha) e coberto no
-        // OcorrenciaControllerEntregaTest; aqui, a persistencia pelo bean real.
-        ocorrenciaService.registrarEntregaInterrompida(
-                new VisualizacaoAuditada(eventoId, "denunciante", denuncianteId, UUID.fromString(id)),
-                new PermissoesOcorrencia(adminId, true, true));
-
-        List<Map<String, Object>> eventos = eventos("denunciante", denuncianteId, adminId);
-        assertThat(eventos, hasSize(2));
-        assertThat(eventos.get(0), equalTo(original));
-        Map<String, Object> compensacao = eventos.get(1);
-        assertThat(compensacao.get("acao"), equalTo("ENTREGA_INTERROMPIDA"));
-        assertThat(compensacao.get("antes"), nullValue());
-        JsonNode payload = objectMapper.readTree((String) compensacao.get("depois"));
-        assertThat(payload.size(), equalTo(2));
-        assertThat(payload.get("ocorrenciaId").asString(), equalTo(id));
-        assertThat(payload.get("eventoId").asString(), equalTo(eventoId.toString()));
-        assertThat((String) compensacao.get("depois"), not(containsString(marcador)));
-    }
-
-    @Test
-    @DisplayName("[T26] cliente que derruba a conexao (RST) no meio do download de 5 MB: VISUALIZACAO + ENTREGA_INTERROMPIDA")
-    void downloadAbortadoPeloClienteGeraCompensacao() throws Exception {
-        String id = criarSigilosaComDenunciante(marcador(), false);
-        byte[] grande = new byte[5 * 1024 * 1024];
-        System.arraycopy(PNG, 0, grande, 0, PNG.length);
-        String anexoId = comToken(tokenAgente).multiPart("arquivo", "grande.png", grande, "image/png")
-                .when().post(ROTA + "/" + id + "/anexos").then().statusCode(200).extract().path("id");
-        UUID anexo = UUID.fromString(anexoId);
-
-        // Buffer de recepcao minimo e nenhuma leitura: o servidor fica preso na
-        // escrita dos 5 MB, e o RST (SO_LINGER 0) a faz falhar.
-        try (Socket socket = new Socket()) {
-            socket.setReceiveBufferSize(1024);
-            socket.connect(new InetSocketAddress("localhost", porta), 5_000);
-            socket.getOutputStream().write(("GET " + ROTA + "/" + id + "/anexos/" + anexoId + " HTTP/1.1\r\n"
-                    + "Host: localhost\r\nAuthorization: Bearer " + tokenAdmin + "\r\nConnection: close\r\n\r\n")
-                    .getBytes(StandardCharsets.US_ASCII));
-            socket.getOutputStream().flush();
-            aguardar(() -> contarAcao("VISUALIZACAO", anexo) == 1);
-            socket.setSoLinger(true, 0);
-        }
-
-        aguardar(() -> contarAcao("ENTREGA_INTERROMPIDA", anexo) == 1);
-        assertThat(contarAcao("VISUALIZACAO", anexo), equalTo(1));
-    }
-
     // ── Apoio ────────────────────────────────────────────
-
-    private Integer contarAcao(String acao, UUID entidadeId) {
-        return jdbcTemplate.queryForObject("SELECT count(*) FROM auditoria_evento WHERE acao = ? AND entidade_id = ?",
-                Integer.class, acao, entidadeId);
-    }
-
-    private Integer interrupcoesDaOcorrencia(String ocorrenciaId) {
-        return jdbcTemplate.queryForObject("SELECT count(*) FROM auditoria_evento"
-                + " WHERE acao = 'ENTREGA_INTERROMPIDA' AND payload_depois ->> 'ocorrenciaId' = ?",
-                Integer.class, ocorrenciaId);
-    }
-
-    // Espera ate 15 s pela condicao (a escrita no servidor e assincrona ao teste).
-    private static void aguardar(BooleanSupplier condicao) throws InterruptedException {
-        long limite = System.nanoTime() + TimeUnit.SECONDS.toNanos(15);
-        while (!condicao.getAsBoolean()) {
-            if (System.nanoTime() > limite) {
-                throw new AssertionError("condicao nao atingida em 15 s");
-            }
-            Thread.sleep(100);
-        }
-    }
 
     private static String marcador() {
         return UUID.randomUUID().toString().substring(0, 8);

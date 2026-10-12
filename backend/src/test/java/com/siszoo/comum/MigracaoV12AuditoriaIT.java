@@ -21,7 +21,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 
-// Exercita a V12 (acoes VISUALIZACAO e ENTREGA_INTERROMPIDA, T26) num schema proprio do mesmo
+// Exercita a V12 (acao VISUALIZACAO, T26) num schema proprio do mesmo
 // PostgreSQL de teste, no padrao de MigracaoV7RegistroClinicoIT: do zero e
 // por atualizacao a partir da V11, com eventos das acoes anteriores.
 class MigracaoV12AuditoriaIT extends AbstractIntegrationTest {
@@ -42,18 +42,17 @@ class MigracaoV12AuditoriaIT extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("[T26] V12 aplica do zero sobre V1-V11 e aceita VISUALIZACAO e ENTREGA_INTERROMPIDA")
+    @DisplayName("[T26] V12 aplica do zero sobre V1-V11 e aceita VISUALIZACAO")
     void v12DeveAplicarDoZero() {
         MigrateResult resultado = migrarAte("12");
 
         assertThat(resultado.success, equalTo(true));
         assertThat(resultado.targetSchemaVersion, equalTo("12"));
         inserirEvento("VISUALIZACAO");
-        inserirEvento("ENTREGA_INTERROMPIDA");
     }
 
     @Test
-    @DisplayName("[T26] V12 sobre V11 preserva os eventos existentes e aceita as 8 acoes anteriores e as duas novas")
+    @DisplayName("[T26] V12 sobre V11 preserva os eventos existentes e aceita as 8 acoes anteriores e VISUALIZACAO")
     void v12DevePreservarEventosEAceitarAcoes() {
         migrarAte("11");
         for (String acao : ACOES_ANTERIORES) {
@@ -71,7 +70,6 @@ class MigracaoV12AuditoriaIT extends AbstractIntegrationTest {
             inserirEvento(acao);
         }
         inserirEvento("VISUALIZACAO");
-        inserirEvento("ENTREGA_INTERROMPIDA");
     }
 
     @Test
@@ -79,7 +77,7 @@ class MigracaoV12AuditoriaIT extends AbstractIntegrationTest {
     void v12DeveRecusarAcaoInvalida() {
         migrarAte("12");
 
-        for (String invalida : List.of("LEITURA", "visualizacao", "ENTREGA", "")) {
+        for (String invalida : List.of("LEITURA", "visualizacao", "")) {
             DataIntegrityViolationException erro =
                     assertThrows(DataIntegrityViolationException.class, () -> inserirEvento(invalida));
             assertThat(erro.getMessage(), containsString("ck_auditoria_evento_acao"));

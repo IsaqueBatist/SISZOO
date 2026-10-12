@@ -1,12 +1,12 @@
 package com.siszoo.ocorrencias.controller;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,18 +29,14 @@ import com.siszoo.ocorrencias.dto.CatalogosOcorrenciaResponse;
 import com.siszoo.ocorrencias.dto.CriarNotaRequest;
 import com.siszoo.ocorrencias.dto.CriarOcorrenciaRequest;
 import com.siszoo.ocorrencias.dto.EncerrarOcorrenciaRequest;
-import com.siszoo.ocorrencias.dto.EntregaAuditada;
 import com.siszoo.ocorrencias.dto.OcorrenciaResponse;
 import com.siszoo.ocorrencias.dto.OcorrenciaResumoResponse;
 import com.siszoo.ocorrencias.dto.VincularProcessoRequest;
-import com.siszoo.ocorrencias.dto.VisualizacaoAuditada;
 import com.siszoo.ocorrencias.entity.StatusOcorrencia;
 import com.siszoo.ocorrencias.service.OcorrenciaService;
 import com.siszoo.ocorrencias.service.PermissoesOcorrencia;
 
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import tools.jackson.databind.ObjectMapper;
 
 // Sem @DeleteMapping de proposito: nao ha exclusao de ocorrencia (D8); o
 // Spring MVC responde 405 para DELETE nesta rota.
@@ -49,11 +45,9 @@ import tools.jackson.databind.ObjectMapper;
 public class OcorrenciaController {
 
     private final OcorrenciaService ocorrenciaService;
-    private final ObjectMapper objectMapper;
 
-    public OcorrenciaController(OcorrenciaService ocorrenciaService, ObjectMapper objectMapper) {
+    public OcorrenciaController(OcorrenciaService ocorrenciaService) {
         this.ocorrenciaService = ocorrenciaService;
-        this.objectMapper = objectMapper;
     }
 
     @GetMapping
@@ -74,20 +68,10 @@ public class OcorrenciaController {
         return ocorrenciaService.catalogos();
     }
 
-    // Detalhe e download escrevem o corpo aqui (e nao pelo retorno do metodo)
-    // para saber se a escrita falhou depois do VISUALIZACAO ja commitado (T26).
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('OCORRENCIAS_DENUNCIAS:leitura')")
-    public void buscarPorId(Authentication authentication, @PathVariable UUID id, HttpServletResponse response)
-            throws IOException {
-        PermissoesOcorrencia permissoes = PermissoesOcorrencia.de(authentication);
-        EntregaAuditada<OcorrenciaResponse> entrega = ocorrenciaService.buscarPorId(id, permissoes);
-        entregar(response, entrega.visualizacao(), permissoes, resposta -> {
-            byte[] json = objectMapper.writeValueAsBytes(entrega.conteudo());
-            resposta.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            resposta.setContentLength(json.length);
-            resposta.getOutputStream().write(json);
-        });
+    public OcorrenciaResponse buscarPorId(Authentication authentication, @PathVariable UUID id) {
+        return ocorrenciaService.buscarPorId(id, PermissoesOcorrencia.de(authentication));
     }
 
     @PostMapping
@@ -140,44 +124,12 @@ public class OcorrenciaController {
 
     @GetMapping("/{id}/anexos/{anexoId}")
     @PreAuthorize("hasAuthority('OCORRENCIAS_DENUNCIAS:leitura')")
-    public void baixarAnexo(Authentication authentication, @PathVariable UUID id, @PathVariable UUID anexoId,
-            HttpServletResponse response) throws IOException {
-        PermissoesOcorrencia permissoes = PermissoesOcorrencia.de(authentication);
-        EntregaAuditada<ArquivoAnexo> entrega = ocorrenciaService.baixarAnexo(id, anexoId, permissoes);
-        ArquivoAnexo arquivo = entrega.conteudo();
-        entregar(response, entrega.visualizacao(), permissoes, resposta -> {
-            resposta.setContentType(arquivo.mimeType());
-            resposta.setHeader(HttpHeaders.CONTENT_DISPOSITION,
-                    ContentDisposition.attachment().filename(arquivo.nome(), StandardCharsets.UTF_8).build().toString());
-            resposta.setContentLength(arquivo.conteudo().length);
-            resposta.getOutputStream().write(arquivo.conteudo());
-        });
-    }
-
-    // Escreve e descarrega o corpo inteiro. Se algo falhar nesse trecho
-    // (serializacao, cliente desconectado), o VISUALIZACAO ja gravado ganha o
-    // evento compensatorio ENTREGA_INTERROMPIDA; a excecao original segue,
-    // com a eventual falha da compensacao anexada como suppressed. O servidor
-    // so sabe que escreveu no socket, nao que o cliente leu tudo.
-    private void entregar(HttpServletResponse response, VisualizacaoAuditada visualizacao,
-            PermissoesOcorrencia permissoes, EscritaDoCorpo escrita) throws IOException {
-        try {
-            escrita.escrever(response);
-            response.flushBuffer();
-        } catch (IOException | RuntimeException falhaNaEntrega) {
-            if (visualizacao != null) {
-                try {
-                    ocorrenciaService.registrarEntregaInterrompida(visualizacao, permissoes);
-                } catch (RuntimeException falhaNaCompensacao) {
-                    falhaNaEntrega.addSuppressed(falhaNaCompensacao);
-                }
-            }
-            throw falhaNaEntrega;
-        }
-    }
-
-    @FunctionalInterface
-    private interface EscritaDoCorpo {
-        void escrever(HttpServletResponse response) throws IOException;
+    public ResponseEntity<byte[]> baixarAnexo(Authentication authentication, @PathVariable UUID id, @PathVariable UUID anexoId) {
+        ArquivoAnexo arquivo = ocorrenciaService.baixarAnexo(id, anexoId, PermissoesOcorrencia.de(authentication));
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(arquivo.mimeType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment().filename(arquivo.nome(), StandardCharsets.UTF_8).build().toString())
+                .body(arquivo.conteudo());
     }
 }
