@@ -14,13 +14,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.siszoo.ocorrencias.service.PermissoesOcorrencia;
 import com.siszoo.processos.dto.AlterarStatusProcessoRequest;
+import com.siszoo.processos.dto.CatalogosProcessoResponse;
 import com.siszoo.processos.dto.CriarProcessoRequest;
 import com.siszoo.processos.dto.ProcessoSanitarioResponse;
 import com.siszoo.processos.service.ProcessoSanitarioService;
 
 import jakarta.validation.Valid;
 
-// Processo sanitario minimo (T25). Com ocorrenciaId, o POST tambem exige
+// Processo sanitario (T25 + T29): criacao completa, detalhe, catalogos e o
+// avanco provisorio de status (D18). Com ocorrenciaId, o POST tambem exige
 // OCORRENCIAS_DENUNCIAS:escrita, checado no service (D33).
 @RestController
 @RequestMapping("/api/processos")
@@ -36,6 +38,12 @@ public class ProcessoSanitarioController {
     @PreAuthorize("hasAuthority('PROCESSOS_SANITARIOS:escrita')")
     public ProcessoSanitarioResponse criar(Authentication authentication, @Valid @RequestBody CriarProcessoRequest request) {
         return processoService.criar(request, PermissoesOcorrencia.de(authentication));
+    }
+
+    @GetMapping("/catalogos")
+    @PreAuthorize("hasAuthority('PROCESSOS_SANITARIOS:leitura')")
+    public CatalogosProcessoResponse catalogos() {
+        return processoService.catalogos();
     }
 
     @GetMapping("/{id}")

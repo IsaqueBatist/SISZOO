@@ -434,16 +434,15 @@ public class OcorrenciaService {
     }
 
     // Pressupoe ocorrencia e processo ja travados, nessa ordem. O vinculo e
-    // imutavel depois de gravado (DER regra 15). Ponto unico dos dois caminhos
-    // de vinculo (POST /api/processos com ocorrenciaId e POST /{id}/processo):
-    // a auditoria ATUALIZACAO registra antes/depois da urgencia (D31).
+    // imutavel depois de gravado (DER regra 15): a entidade recusa um segundo
+    // vinculo e o banco recusa troca ou remocao (V13). Ponto unico dos dois
+    // caminhos de vinculo (POST /api/processos com ocorrenciaId e
+    // POST /{id}/processo): a auditoria ATUALIZACAO registra antes/depois da
+    // urgencia (D31).
     @Transactional
     public void vincular(Ocorrencia ocorrencia, ProcessoSanitario processo, Usuario autor) {
-        if (processo.getOcorrencia() != null) {
-            throw new VinculoJaExistenteException();
-        }
         var antes = ocorrenciaMapper.toSnapshot(ocorrencia, false);
-        processo.setOcorrencia(ocorrencia);
+        processo.vincularOcorrencia(ocorrencia);
         processoRepository.saveAndFlush(processo);
         // D31: o vinculo pode marcar a urgencia, nunca desmarcar.
         if (processo.isUrgente()) {
