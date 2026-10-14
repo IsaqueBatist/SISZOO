@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  abrirProcesso,
   adicionarNota,
   atualizarOcorrencia,
   avancarStatusProcesso,
@@ -20,8 +19,6 @@ import type {
   OcorrenciasFiltro,
   StatusProcesso,
 } from '../types/ocorrencias.types'
-
-const OCORRENCIAS_QUERY_KEY = ['ocorrencias']
 
 function chaveDetalhe(id: string) {
   return ['ocorrencias', 'detalhe', id]
@@ -108,15 +105,6 @@ export function useEnviarAnexoMutation(id: string) {
   return useMutation({
     mutationFn: (arquivo: File) => enviarAnexo(id, arquivo),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: chaveDetalhe(id) }),
-  })
-}
-
-export function useAbrirProcessoMutation(ocorrenciaId: string) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ({ dataAbertura, urgente }: { dataAbertura: string; urgente: boolean }) =>
-      abrirProcesso(ocorrenciaId, dataAbertura, urgente),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: OCORRENCIAS_QUERY_KEY }),
   })
 }
 

@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { mensagemDeRegraDaApi } from '@/lib/erroApi'
 import type { Ocorrencia } from '../types/ocorrencias.types'
-import { useAbrirProcessoMutation, useAvancarStatusProcessoMutation } from '../hooks/useOcorrencias'
-import { hojeIso } from '../utils/datas'
+import { useAvancarStatusProcessoMutation } from '../hooks/useOcorrencias'
 import { formatarProtocoloProcesso } from '../utils/protocolo'
 import { labelDeStatusProcesso, proximoStatusProcesso } from '../utils/statusBadge'
 
@@ -14,23 +13,15 @@ interface CardProcessoVinculadoProps {
   podeAvancar: boolean
 }
 
-// D40: o processo mínimo é aberto e avançado por aqui, pela API real. Sem
+// D40: o status do processo vinculado é avançado por aqui, pela API real. Sem
 // link para /processos/:id — aquela tela ainda é de demonstração.
+// T29: o backend passou a exigir o processo completo (doença, laboratório,
+// responsável e amostras), que este cartão não coleta. "Abrir processo" fica
+// desabilitado até o wizard de processos ser integrado à API (T32/T33).
 export function CardProcessoVinculado({ ocorrencia, podeAbrir, podeAvancar }: CardProcessoVinculadoProps) {
-  const [urgente, setUrgente] = useState(ocorrencia.urgente)
   const [erro, setErro] = useState<string | null>(null)
-  const abrir = useAbrirProcessoMutation(ocorrencia.id)
   const avancar = useAvancarStatusProcessoMutation(ocorrencia.id)
   const processo = ocorrencia.processoVinculado
-
-  async function handleAbrir() {
-    setErro(null)
-    try {
-      await abrir.mutateAsync({ dataAbertura: hojeIso(), urgente })
-    } catch (falha) {
-      setErro(mensagemDeRegraDaApi(falha) ?? 'Não foi possível abrir o processo. Tente novamente.')
-    }
-  }
 
   async function handleAvancar(processoId: string, status: NonNullable<ReturnType<typeof proximoStatusProcesso>>) {
     setErro(null)
@@ -88,16 +79,19 @@ export function CardProcessoVinculado({ ocorrencia, podeAbrir, podeAvancar }: Ca
       </div>
       <div className="card-body">
         <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 10 }}>
-          Nenhum processo sanitário vinculado. O processo é aberto com a data de hoje.
+          Nenhum processo sanitário vinculado.
         </p>
-        <label className="flex gap-2" style={{ alignItems: 'center', fontSize: 13, marginBottom: 10, cursor: 'pointer' }}>
-          <input type="checkbox" checked={urgente} onChange={(event) => setUrgente(event.target.checked)} />
-          Processo urgente
-        </label>
-        <button type="button" className="btn btn-primary btn-sm w-full" disabled={abrir.isPending} onClick={() => void handleAbrir()}>
-          {abrir.isPending ? 'Abrindo…' : 'Abrir processo sanitário'}
+        <button
+          type="button"
+          className="btn btn-primary btn-sm w-full"
+          disabled
+          aria-describedby="abrir-processo-indisponivel"
+        >
+          Abrir processo sanitário
         </button>
-        {alertaErro}
+        <p id="abrir-processo-indisponivel" style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4 }}>
+          Disponível após a integração do módulo de processos
+        </p>
       </div>
     </div>
   )
