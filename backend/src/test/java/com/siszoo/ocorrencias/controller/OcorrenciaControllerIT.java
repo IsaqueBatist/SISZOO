@@ -408,11 +408,10 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
     @Test
     @DisplayName("[D21] processo com dataAbertura futura: 422")
     void processoComDataFutura() {
-        Map<String, Object> corpo = new HashMap<>();
+        Map<String, Object> corpo = fixture.corpoProcesso(null, false);
         corpo.put("dataAbertura", HOJE.plusDays(1).toString());
 
-        comToken(tokenAgente).contentType(ContentType.JSON).body(corpo).when().post("/api/processos")
-                .then().statusCode(422);
+        fixture.postarProcesso(tokenAgente, corpo).then().statusCode(422);
     }
 
     // ── Denuncia anonima (D32) ───────────────────────────
@@ -691,14 +690,9 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
         return comToken(token).when().get(ROTA + "/" + id + "/anexos/" + anexoId);
     }
 
+    // Processo urgente = amostra com contato humano (DER regra 18, T29).
     private Response criarProcesso(String token, boolean urgente, String ocorrenciaId) {
-        Map<String, Object> corpo = new HashMap<>();
-        corpo.put("dataAbertura", HOJE.toString());
-        corpo.put("urgente", urgente);
-        if (ocorrenciaId != null) {
-            corpo.put("ocorrenciaId", ocorrenciaId);
-        }
-        return comToken(token).contentType(ContentType.JSON).body(corpo).when().post("/api/processos");
+        return fixture.postarProcesso(token, ocorrenciaId, urgente);
     }
 
     private Response alterarStatusProcesso(String token, String processoId, String status) {
