@@ -95,8 +95,12 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         Response detalhe = buscar(tokenAgente, resposta.path("id"));
         detalhe.then().statusCode(200);
         assertThat(detalhe.path("protocolo"), equalTo(resposta.path("protocolo")));
+        assertThat(detalhe.path("responsavel.nome"), equalTo("Maria Responsavel"));
         assertThat(detalhe.path("responsavel.cpf"), equalTo("123.456.789-00"));
+        assertThat(detalhe.path("responsavel.email"), equalTo("maria@exemplo.com"));
+        assertThat(detalhe.path("amostras"), hasSize(1));
         assertThat(detalhe.path("amostras[0].id"), equalTo(resposta.path("amostras[0].id")));
+        assertThat(detalhe.path("amostras[0].tipoAbrigo"), equalTo("PERIDOMICILIAR"));
     }
 
     @Test
@@ -126,6 +130,21 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
             fixture.postarProcesso(tokenAgente, corpo).then().statusCode(422);
         }
         assertThat(contar("processo_sanitario"), equalTo(processosAntes));
+    }
+
+    @Test
+    @DisplayName("[T29] data de coleta comparada com o Clock do projeto: amanha 422 com mensagem; hoje aceita")
+    void dataColetaFuturaRecusada() {
+        int processosAntes = contar("processo_sanitario");
+
+        Response futura = fixture.postarProcesso(tokenAgente,
+                comAmostra(Map.of("dataColeta", RelogioTesteConfig.HOJE.plusDays(1).toString())));
+
+        futura.then().statusCode(422);
+        assertThat(futura.path("mensagem"), equalTo("Data de coleta nao pode ser futura"));
+        assertThat(contar("processo_sanitario"), equalTo(processosAntes));
+        fixture.postarProcesso(tokenAgente, comAmostra(Map.of("dataColeta", RelogioTesteConfig.HOJE.toString())))
+                .then().statusCode(200);
     }
 
     @Test
