@@ -1,4 +1,4 @@
-import type { StatusProcesso } from '../types/processos.types'
+import type { CatalogoItem, StatusProcesso } from '../types/processos.types'
 
 export interface Badge {
   classe: string
@@ -14,6 +14,22 @@ const STATUS_PROCESSO_BADGE_MAP: Record<StatusProcesso, Badge> = {
 
 export function badgeDeStatusProcesso(status: StatusProcesso): Badge {
   return STATUS_PROCESSO_BADGE_MAP[status] ?? { classe: 'badge-neutral', label: status }
+}
+
+// Badge do resultado laboratorial (T37), pelo codigo do catalogo
+// (resultadosLaboratoriais de GET /processos/catalogos). "aguardando" so
+// aparece aqui antes do lancamento (nunca e o valor gravado em si).
+const RESULTADO_BADGE_MAP: Record<string, Badge> = {
+  aguardando: { classe: 'badge-awaiting', label: 'Aguardando' },
+  positivo: { classe: 'badge-positive', label: 'Positivo' },
+  negativo: { classe: 'badge-negative', label: 'Negativo' },
+  inconclusivo: { classe: 'badge-inconclusive', label: 'Inconclusivo' },
+  material_inadequado: { classe: 'badge-neutral', label: 'Material inadequado' },
+  nao_realizado: { classe: 'badge-neutral', label: 'Não realizado' },
+}
+
+export function badgeDeResultado(resultado: CatalogoItem): Badge {
+  return RESULTADO_BADGE_MAP[resultado.codigo] ?? { classe: 'badge-neutral', label: resultado.nome }
 }
 
 // Slug da classe CSS `.badge-disease.<slug>` (components.css) pelo código do

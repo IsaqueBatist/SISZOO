@@ -6,6 +6,7 @@ import { SEXO_OPCOES, PELAGEM_OPCOES } from '@/features/animais/schemas/animalFo
 import { formatarData } from '@/features/ocorrencias/utils/datas'
 import { formatarProtocoloOcorrencia, formatarProtocoloProcesso } from '@/features/ocorrencias/utils/protocolo'
 import { mensagemDeRegraDaApi, statusHttpDoErro } from '@/lib/erroApi'
+import { CardResultadoProcesso } from './CardResultadoProcesso'
 import { CardStatusProcesso } from './CardStatusProcesso'
 import { SeletorOcorrencia, type OcorrenciaParaVinculo } from './SeletorOcorrencia'
 import type { AmostraAnimal, Processo } from '../types/processos.types'
@@ -266,14 +267,7 @@ export function ProcessoDetalhe() {
         <div className="col gap-4">
           <CardStatusProcesso processo={processo} podeEscrever={podeEscrever} />
 
-          <div className="card">
-            <div className="card-header">
-              <h3>Resultado Laboratorial</h3>
-            </div>
-            <div className="card-body">
-              <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Nenhum resultado laboratorial registrado.</p>
-            </div>
-          </div>
+          <CardResultadoProcesso processo={processo} podeEscrever={podeEscrever} />
         </div>
       </div>
     </>

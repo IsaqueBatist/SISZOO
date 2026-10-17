@@ -118,7 +118,9 @@ export interface AmostraAnimal {
   sintomas: CatalogoItem[]
 }
 
-// GET /api/processos/{id} (ProcessoSanitarioResponse)
+// GET /api/processos/{id} (ProcessoSanitarioResponse). resultadoLaboratorial/
+// dataResultado/desfechoAnimal (T37) são nulos até o lançamento do
+// resultado; depois de lançados, são write-once (trigger da V14).
 export interface Processo {
   id: string
   protocolo: string
@@ -133,7 +135,27 @@ export interface Processo {
   observacoes: string | null
   responsavel: ResponsavelProcesso | null
   amostras: AmostraAnimal[]
+  resultadoLaboratorial: CatalogoItem | null
+  dataResultado: string | null
+  desfechoAnimal: CatalogoItem | null
   criadoEm: string
+}
+
+// POST /api/processos/{id}/resultado (T37). resultadoLaboratorial/
+// desfechoAnimal são códigos do catálogo (resultadosLaboratoriais/desfechos
+// de CatalogosProcesso) — "aguardando" não é um valor aceito aqui.
+export interface RegistrarResultadoRequest {
+  resultadoLaboratorial: string
+  desfechoAnimal?: string
+}
+
+// GET /api/processos/{id}/historico (T37): mini trilha de auditoria do
+// processo (HistoricoProcessoItemResponse) — sem payload nem dado pessoal.
+export interface HistoricoProcessoItem {
+  id: string
+  usuarioEmail: string | null
+  acao: string
+  ocorreuEm: string
 }
 
 // Linha de GET /api/processos (ProcessoResumoResponse)

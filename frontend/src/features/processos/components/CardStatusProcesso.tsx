@@ -11,13 +11,16 @@ interface CardStatusProcessoProps {
 }
 
 // D18: PATCH /api/processos/{id}/status provisório — avança um passo por vez,
-// sem registrar resultado nem notificar. O registro do resultado (com
-// desfecho e notificação, regra 19) é da task de resultado e ainda não tem
-// endpoint; por isso não há formulário de resultado aqui.
+// sem registrar resultado nem notificar. T37: a transição
+// AGUARDANDO_RESULTADO -> COM_RESULTADO saiu daqui (o backend passou a
+// recusá-la neste endpoint) — agora só acontece pelo lançamento do
+// resultado (CardResultadoProcesso), que grava resultado e desfecho na
+// mesma escrita.
 export function CardStatusProcesso({ processo, podeEscrever }: CardStatusProcessoProps) {
   const [erro, setErro] = useState<string | null>(null)
   const avancar = useAvancarStatusProcessoMutation(processo.id)
   const proximo = proximoStatusProcesso(processo.statusProcesso)
+  const avancoPeloResultado = processo.statusProcesso === 'AGUARDANDO_RESULTADO'
 
   async function handleAvancar() {
     if (!proximo) return
@@ -41,15 +44,16 @@ export function CardStatusProcesso({ processo, podeEscrever }: CardStatusProcess
         {!proximo && (
           <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 6 }}>Processo concluído.</p>
         )}
-        {podeEscrever && proximo && (
+        {avancoPeloResultado && (
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 6 }}>
+            Lance o resultado laboratorial no card ao lado para avançar este processo.
+          </p>
+        )}
+        {podeEscrever && proximo && !avancoPeloResultado && (
           <div style={{ marginTop: 10 }}>
             <button type="button" className="btn btn-outline btn-sm" disabled={avancar.isPending} onClick={() => void handleAvancar()}>
               {avancar.isPending ? 'Avançando…' : 'Avançar status do processo (provisório)'}
             </button>
-            <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4 }}>
-              Próximo: {labelDe(STATUS_PROCESSO_OPCOES, proximo)}. Avança um passo por vez, sem registrar resultado, até a
-              entrega do registro de resultado laboratorial.
-            </p>
           </div>
         )}
         {erro && (
