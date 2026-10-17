@@ -10,19 +10,23 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.siszoo.comum.dto.PaginaResponse;
 import com.siszoo.ocorrencias.service.PermissoesOcorrencia;
 import com.siszoo.processos.dto.AlterarStatusProcessoRequest;
 import com.siszoo.processos.dto.CatalogosProcessoResponse;
 import com.siszoo.processos.dto.CriarProcessoRequest;
+import com.siszoo.processos.dto.ProcessoResumoResponse;
 import com.siszoo.processos.dto.ProcessoSanitarioResponse;
+import com.siszoo.processos.entity.StatusProcesso;
 import com.siszoo.processos.service.ProcessoSanitarioService;
 
 import jakarta.validation.Valid;
 
-// Processo sanitario (T25 + T29): criacao completa, detalhe, catalogos e o
-// avanco provisorio de status (D18). Com ocorrenciaId, o POST tambem exige
+// Processo sanitario (T25 + T29): criacao completa, listagem, detalhe,
+// catalogos e o avanco provisorio de status (D18). Com ocorrenciaId, o POST tambem exige
 // OCORRENCIAS_DENUNCIAS:escrita, checado no service (D33).
 @RestController
 @RequestMapping("/api/processos")
@@ -38,6 +42,16 @@ public class ProcessoSanitarioController {
     @PreAuthorize("hasAuthority('PROCESSOS_SANITARIOS:escrita')")
     public ProcessoSanitarioResponse criar(Authentication authentication, @Valid @RequestBody CriarProcessoRequest request) {
         return processoService.criar(request, PermissoesOcorrencia.de(authentication));
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAuthority('PROCESSOS_SANITARIOS:leitura')")
+    public PaginaResponse<ProcessoResumoResponse> listar(
+            @RequestParam(required = false) String doenca,
+            @RequestParam(required = false) StatusProcesso status,
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(defaultValue = "20") int tamanho) {
+        return processoService.listar(doenca, status, pagina, tamanho);
     }
 
     @GetMapping("/catalogos")

@@ -2,6 +2,7 @@ package com.siszoo.processos.service;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -11,9 +12,13 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.siszoo.animais.dto.CatalogoItemResponse;
 import com.siszoo.animais.entity.Animal;
@@ -22,6 +27,7 @@ import com.siszoo.animais.exception.AnimalNaoEncontradoException;
 import com.siszoo.animais.exception.EspecieInvalidaException;
 import com.siszoo.animais.repository.AnimalRepository;
 import com.siszoo.animais.repository.EspecieRepository;
+import com.siszoo.comum.dto.PaginaResponse;
 import com.siszoo.comum.service.ProtocoloService;
 import com.siszoo.ocorrencias.entity.Ocorrencia;
 import com.siszoo.ocorrencias.exception.DataAberturaFuturaException;
@@ -33,6 +39,7 @@ import com.siszoo.processos.dto.AmostraAnimalResponse;
 import com.siszoo.processos.dto.CatalogosProcessoResponse;
 import com.siszoo.processos.dto.CriarProcessoRequest;
 import com.siszoo.processos.dto.ProcessoAuditoriaSnapshot;
+import com.siszoo.processos.dto.ProcessoResumoResponse;
 import com.siszoo.processos.dto.ProcessoSanitarioResponse;
 import com.siszoo.processos.dto.ResponsavelProcessoRequest;
 import com.siszoo.processos.dto.ResponsavelProcessoResponse;
@@ -68,6 +75,8 @@ import com.siszoo.usuarios.exception.UsuarioNaoEncontradoException;
 import com.siszoo.usuarios.repository.UsuarioRepository;
 import com.siszoo.usuarios.service.AuditoriaEventoService;
 
+import jakarta.persistence.criteria.Predicate;
+
 /**
  * Processo sanitario (T29, DER §3.5): criacao completa — processo, responsavel
  * e pelo menos uma amostra numa unica transacao —, consulta, catalogos e o
@@ -85,6 +94,11 @@ import com.siszoo.usuarios.service.AuditoriaEventoService;
 public class ProcessoSanitarioService {
 
     private static final String ENTIDADE_AUDITORIA = "processo_sanitario";
+
+    // RN3 do front (T32), mesma regra da listagem de ocorrencias (D31):
+    // urgentes primeiro, depois os mais recentes.
+    private static final Sort ORDEM_LISTAGEM = Sort.by(
+            Sort.Order.desc("urgente"), Sort.Order.desc("dataAbertura"), Sort.Order.desc("protocolo"));
 
     private final ProcessoSanitarioRepository processoRepository;
     private final ResponsavelProcessoRepository responsavelRepository;
@@ -307,6 +321,24 @@ public class ProcessoSanitarioService {
 
     // ── Consulta e catalogos ─────────────────────────────
 
+    // Filtros por codigo de doenca e status, urgentes primeiro (ORDEM_LISTAGEM).
+    // Sem filtro por bairro ou texto livre.
+    @Transactional(readOnly = true)
+    public PaginaResponse<ProcessoResumoResponse> listar(String doenca, StatusProcesso status, int pagina, int tamanho) {
+        Specification<ProcessoSanitario> filtro = (root, query, cb) -> {
+            List<Predicate> predicados = new ArrayList<>();
+            if (StringUtils.hasText(doenca)) {
+                predicados.add(cb.equal(root.get("doenca").get("codigo"), doenca));
+            }
+            if (status != null) {
+                predicados.add(cb.equal(root.get("statusProcesso"), status));
+            }
+            return cb.and(predicados.toArray(Predicate[]::new));
+        };
+        return PaginaResponse.de(processoRepository.findAll(filtro, PageRequest.of(pagina, tamanho, ORDEM_LISTAGEM))
+                .map(ProcessoSanitarioService::toResumo));
+    }
+
     @Transactional(readOnly = true)
     public ProcessoSanitarioResponse buscarPorId(UUID id) {
         return toResponse(processoRepository.findById(id).orElseThrow(ProcessoNaoEncontradoException::new));
@@ -368,6 +400,7 @@ public class ProcessoSanitarioService {
                 processo.getProtocolo(),
                 processo.getDataAbertura(),
                 ocorrenciaIdDe(processo),
+                ocorrenciaProtocoloDe(processo),
                 processo.isUrgente(),
                 processo.getStatusProcesso(),
                 new CatalogoItemResponse(processo.getDoenca().getCodigo(), processo.getDoenca().getNome()),
@@ -397,6 +430,22 @@ public class ProcessoSanitarioService {
 
     private static UUID ocorrenciaIdDe(ProcessoSanitario processo) {
         return processo.getOcorrencia() == null ? null : processo.getOcorrencia().getId();
+    }
+
+    private static String ocorrenciaProtocoloDe(ProcessoSanitario processo) {
+        return processo.getOcorrencia() == null ? null : processo.getOcorrencia().getProtocolo();
+    }
+
+    private static ProcessoResumoResponse toResumo(ProcessoSanitario processo) {
+        return new ProcessoResumoResponse(
+                processo.getId(),
+                processo.getProtocolo(),
+                processo.getDataAbertura(),
+                new CatalogoItemResponse(processo.getDoenca().getCodigo(), processo.getDoenca().getNome()),
+                processo.getStatusProcesso(),
+                processo.isUrgente(),
+                ocorrenciaIdDe(processo),
+                ocorrenciaProtocoloDe(processo));
     }
 
     private static ResponsavelProcessoResponse toResponsavelResponse(ResponsavelProcesso responsavel) {
