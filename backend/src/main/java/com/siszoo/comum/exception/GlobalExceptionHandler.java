@@ -55,7 +55,15 @@ import com.siszoo.ocorrencias.exception.TipoOcorrenciaInvalidoException;
 import com.siszoo.ocorrencias.exception.TransicaoStatusInvalidaException;
 import com.siszoo.ocorrencias.exception.UrgenciaDefinidaPeloProcessoException;
 import com.siszoo.ocorrencias.exception.VinculoJaExistenteException;
+import com.siszoo.processos.exception.ContatoHumanoInconsistenteException;
+import com.siszoo.processos.exception.DataColetaFuturaException;
+import com.siszoo.processos.exception.DoencaInvalidaException;
+import com.siszoo.processos.exception.IdentificacaoComAnimalDoCanilException;
+import com.siszoo.processos.exception.IdentificacaoObrigatoriaException;
+import com.siszoo.processos.exception.LaboratorioInvalidoException;
 import com.siszoo.processos.exception.ProcessoNaoEncontradoException;
+import com.siszoo.processos.exception.SintomaInvalidoException;
+import com.siszoo.processos.exception.SintomaSemStatusSintomaticoException;
 import com.siszoo.processos.exception.TransicaoStatusProcessoInvalidaException;
 import com.siszoo.usuarios.exception.CargoInvalidoException;
 import com.siszoo.usuarios.exception.CredencialInvalidaException;
@@ -333,6 +341,54 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroResponse> handleTransicaoStatusProcessoInvalida() {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
                 .body(new ErroResponse("Transicao de status nao permitida para o processo"));
+    }
+
+    @ExceptionHandler(DoencaInvalidaException.class)
+    public ResponseEntity<ErroResponse> handleDoencaInvalida() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Doenca invalida"));
+    }
+
+    @ExceptionHandler(LaboratorioInvalidoException.class)
+    public ResponseEntity<ErroResponse> handleLaboratorioInvalido() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Laboratorio invalido"));
+    }
+
+    @ExceptionHandler(SintomaInvalidoException.class)
+    public ResponseEntity<ErroResponse> handleSintomaInvalido() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Sintoma invalido"));
+    }
+
+    @ExceptionHandler(DataColetaFuturaException.class)
+    public ResponseEntity<ErroResponse> handleDataColetaFutura() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Data de coleta nao pode ser futura"));
+    }
+
+    @ExceptionHandler(IdentificacaoComAnimalDoCanilException.class)
+    public ResponseEntity<ErroResponse> handleIdentificacaoComAnimalDoCanil() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Amostra de animal do canil nao aceita dados de identificacao: eles vem da ficha"));
+    }
+
+    @ExceptionHandler(IdentificacaoObrigatoriaException.class)
+    public ResponseEntity<ErroResponse> handleIdentificacaoObrigatoria() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Amostra de animal de campo exige especie e sexo"));
+    }
+
+    @ExceptionHandler(ContatoHumanoInconsistenteException.class)
+    public ResponseEntity<ErroResponse> handleContatoHumanoInconsistente() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Nivel de contato e agressao sao obrigatorios com contato humano e proibidos sem ele"));
+    }
+
+    @ExceptionHandler(SintomaSemStatusSintomaticoException.class)
+    public ResponseEntity<ErroResponse> handleSintomaSemStatusSintomatico() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Sintomas so podem ser informados em amostra com status clinico sintomatico"));
     }
 
     @ExceptionHandler(OcorrenciaEncerradaException.class)

@@ -205,14 +205,7 @@ class RbacMatrixIT extends AbstractIntegrationTest {
     @MethodSource("vincularProcessoPorPerfil")
     void vinculoExigeEscritaEmOcorrencias(Perfil perfil, int statusEsperado) {
         String id = criarOcorrencia(tokenPara(Perfil.AGENTE_SANITARIO), false).then().statusCode(200).extract().path("id");
-        Map<String, Object> processo = new HashMap<>();
-        processo.put("dataAbertura", fixture.hoje().toString());
-        processo.put("ocorrenciaId", id);
-
-        given().header("Authorization", "Bearer " + tokenPara(perfil))
-                .contentType(ContentType.JSON).body(processo)
-                .when().post("/api/processos")
-                .then().statusCode(statusEsperado);
+        fixture.postarProcesso(tokenPara(perfil), id, false).then().statusCode(statusEsperado);
     }
 
     private Response criarOcorrencia(String token, boolean sigilosa) {

@@ -18,7 +18,6 @@ import {
   ocorrenciaProcessoPendente,
 } from '@/mocks/ocorrenciasFixtures'
 import type { Ocorrencia, StatusProcesso } from '../types/ocorrencias.types'
-import { hojeIso } from '../utils/datas'
 import { OcorrenciaDetalhe } from './OcorrenciaDetalhe'
 
 const ADMIN = ['Administrador']
@@ -150,38 +149,32 @@ describe('nota interna (D37)', () => {
   })
 })
 
-describe('abrir processo (D40)', () => {
+// T29: o backend exige o processo completo; até o wizard de processos ser
+// integrado (T32/T33), "Abrir processo" fica desabilitado e não envia nada.
+describe('abrir processo (D40, T29)', () => {
   it.each([
     ['Administrador', ADMIN],
     ['Agente Sanitário', AGENTE],
-  ])('%s abre o processo com a data de hoje e a urgência marcada, e o cartão passa a mostrar o PS', async (_perfil, cargos) => {
+  ])('%s vê "Abrir processo" desabilitado, com o motivo, e o clique não envia nada', async (_perfil, cargos) => {
     const user = userEvent.setup()
-    const corpos: unknown[] = []
-    let processoAberto = false
+    let chamadas = 0
     server.use(
-      http.post(`${API_BASE_URL}/processos`, async ({ request }) => {
-        corpos.push(await request.json())
-        processoAberto = true
-        return HttpResponse.json(PROCESSO_CRIADO_FIXTURE, { status: 201 })
+      http.post(`${API_BASE_URL}/processos`, () => {
+        chamadas += 1
+        return HttpResponse.json({}, { status: 201 })
       }),
-      http.get(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_ABERTA_ID}`, () =>
-        HttpResponse.json({
-          ...ocorrenciaAbertaFixture(),
-          processoVinculado: processoAberto
-            ? { id: PROCESSO_CRIADO_FIXTURE.id, protocolo: '046/2026', statusProcesso: 'ABERTO', urgente: true }
-            : null,
-        }),
-      ),
     )
     renderDetalhe(OCORRENCIA_ABERTA_ID, cargos)
     await esperarDetalhe('089/2026')
 
-    await user.click(screen.getByLabelText('Processo urgente'))
-    await user.click(screen.getByRole('button', { name: 'Abrir processo sanitário' }))
+    const botao = screen.getByRole('button', { name: 'Abrir processo sanitário' })
+    expect(botao).toBeDisabled()
+    expect(botao).toHaveAccessibleDescription('Disponível após a integração do módulo de processos')
+    expect(screen.queryByLabelText('Processo urgente')).not.toBeInTheDocument()
 
-    expect(await screen.findByText('PS 046/2026')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Abrir processo sanitário' })).not.toBeInTheDocument()
-    expect(corpos).toEqual([{ dataAbertura: hojeIso(), urgente: true, ocorrenciaId: OCORRENCIA_ABERTA_ID }])
+    await user.click(botao)
+
+    expect(chamadas).toBe(0)
   })
 
   it('o Veterinário não vê "Abrir processo" (D33)', async () => {
@@ -197,21 +190,6 @@ describe('abrir processo (D40)', () => {
     await esperarDetalhe('070/2026')
 
     expect(screen.queryByRole('button', { name: 'Abrir processo sanitário' })).not.toBeInTheDocument()
-  })
-
-  it('mostra a mensagem do backend quando a abertura é recusada (409)', async () => {
-    const user = userEvent.setup()
-    server.use(
-      http.post(`${API_BASE_URL}/processos`, () =>
-        HttpResponse.json({ mensagem: 'Ocorrencia ja possui processo vinculado' }, { status: 409 }),
-      ),
-    )
-    renderDetalhe(OCORRENCIA_ABERTA_ID, AGENTE)
-    await esperarDetalhe('089/2026')
-
-    await user.click(screen.getByRole('button', { name: 'Abrir processo sanitário' }))
-
-    expect(await screen.findByText('Ocorrencia ja possui processo vinculado')).toBeInTheDocument()
   })
 })
 

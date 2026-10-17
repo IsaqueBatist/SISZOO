@@ -290,7 +290,7 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
         atualizar(tokenAgente, id, corpoPut(corpo)).then().statusCode(422);
         nota(tokenAgente, id, "depois do encerramento").then().statusCode(422);
         anexar(tokenAgente, id, "foto.png", PNG).then().statusCode(422);
-        String processoId = criarProcesso(tokenAgente, false, null).path("id");
+        String processoId = criarProcesso(tokenAgente, false, null).then().statusCode(200).extract().path("id");
         vincular(tokenAgente, id, processoId).then().statusCode(422);
     }
 
@@ -314,18 +314,26 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
     // ── Processo vinculado (D12, D31, D33) ───────────────
 
     @Test
-    @DisplayName("[D12] processo vinculado nao concluido bloqueia o encerramento; concluido libera")
+    @DisplayName("[D12/D18] processo completo vinculado nao concluido bloqueia o encerramento; concluido libera")
     void encerramentoEsperaProcessoConcluir() {
         String id = idDe(criar(tokenAgente, corpo()));
-        String processoId = criarProcesso(tokenAgente, false, id).path("id");
+        Response processo = criarProcesso(tokenAgente, false, id);
+        processo.then().statusCode(200);
+        assertThat(processo.path("ocorrenciaId"), equalTo(id));
+        assertThat(processo.path("amostras"), hasSize(1));
+        String processoId = processo.path("id");
         alterarStatus(tokenAgente, id, "EM_ATENDIMENTO").then().statusCode(200);
 
         encerrar(tokenAgente, id, Map.of("providenciaTomada", "abertura_processo")).then().statusCode(422);
 
         for (String status : List.of("AGUARDANDO_RESULTADO", "COM_RESULTADO", "CONCLUIDO")) {
-            alterarStatusProcesso(tokenAgente, processoId, status).then().statusCode(200);
+            Response avanco = alterarStatusProcesso(tokenAgente, processoId, status);
+            avanco.then().statusCode(200);
+            assertThat(avanco.path("statusProcesso"), equalTo(status));
         }
-        encerrar(tokenAgente, id, Map.of("providenciaTomada", "abertura_processo")).then().statusCode(200);
+        Response encerrada = encerrar(tokenAgente, id, Map.of("providenciaTomada", "abertura_processo"));
+        encerrada.then().statusCode(200);
+        assertThat(encerrada.path("statusOcorrencia"), equalTo("ENCERRADA"));
     }
 
     @Test
@@ -408,11 +416,10 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
     @Test
     @DisplayName("[D21] processo com dataAbertura futura: 422")
     void processoComDataFutura() {
-        Map<String, Object> corpo = new HashMap<>();
+        Map<String, Object> corpo = fixture.corpoProcesso(null, false);
         corpo.put("dataAbertura", HOJE.plusDays(1).toString());
 
-        comToken(tokenAgente).contentType(ContentType.JSON).body(corpo).when().post("/api/processos")
-                .then().statusCode(422);
+        fixture.postarProcesso(tokenAgente, corpo).then().statusCode(422);
     }
 
     // ── Denuncia anonima (D32) ───────────────────────────
@@ -691,14 +698,9 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
         return comToken(token).when().get(ROTA + "/" + id + "/anexos/" + anexoId);
     }
 
+    // Processo urgente = amostra com contato humano (DER regra 18, T29).
     private Response criarProcesso(String token, boolean urgente, String ocorrenciaId) {
-        Map<String, Object> corpo = new HashMap<>();
-        corpo.put("dataAbertura", HOJE.toString());
-        corpo.put("urgente", urgente);
-        if (ocorrenciaId != null) {
-            corpo.put("ocorrenciaId", ocorrenciaId);
-        }
-        return comToken(token).contentType(ContentType.JSON).body(corpo).when().post("/api/processos");
+        return fixture.postarProcesso(token, ocorrenciaId, urgente);
     }
 
     private Response alterarStatusProcesso(String token, String processoId, String status) {

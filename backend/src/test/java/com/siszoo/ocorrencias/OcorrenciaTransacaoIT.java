@@ -252,14 +252,7 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
     }
 
     private Response criarProcesso(String ocorrenciaId) {
-        Map<String, Object> corpo = new HashMap<>();
-        corpo.put("dataAbertura", RelogioTesteConfig.HOJE.toString());
-        corpo.put("urgente", false);
-        if (ocorrenciaId != null) {
-            corpo.put("ocorrenciaId", ocorrenciaId);
-        }
-        return given().header("Authorization", "Bearer " + tokenAgente).contentType(ContentType.JSON).body(corpo)
-                .when().post("/api/processos");
+        return fixture.postarProcesso(tokenAgente, ocorrenciaId, false);
     }
 
     private Response anexar(String id) {

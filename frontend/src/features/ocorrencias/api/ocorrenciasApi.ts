@@ -80,12 +80,9 @@ export async function baixarAnexo(id: string, anexoId: string): Promise<Blob> {
   return data
 }
 
-// D40: o processo mínimo é aberto e avançado pela tela da ocorrência.
-export async function abrirProcesso(ocorrenciaId: string, dataAbertura: string, urgente: boolean): Promise<ProcessoSanitario> {
-  const { data } = await http.post<ProcessoSanitario>('/processos', { dataAbertura, urgente, ocorrenciaId })
-  return data
-}
-
+// D40: o status do processo vinculado é avançado pela tela da ocorrência. A
+// abertura do processo saiu daqui na T29 (o backend passou a exigir o processo
+// completo) e volta pelo wizard de processos (T32/T33).
 export async function avancarStatusProcesso(processoId: string, status: StatusProcesso): Promise<ProcessoSanitario> {
   const { data } = await http.patch<ProcessoSanitario>(`/processos/${processoId}/status`, { status })
   return data

@@ -4,7 +4,7 @@
 
 > Documento de referência derivado das **15 telas + Design System** do protótipo navegável. Use-o para comparar com seu schema atual e validar cobertura.
 
-> **Estado do schema (V12).** As tabelas de usuários/acesso, animais, baias, registros clínicos (`vacinacao`, `procedimento`, `prescricao`), ocorrências (§3.4) e seus catálogos estão descritas aqui **como existem nas migrations** (`backend/src/main/resources/db/migration`, V1–V12; a V11 só corrige a matriz de permissões, §3.1, e a V12 só acrescenta a ação de auditoria `VISUALIZACAO`, §3.8). `processo_sanitario` existe em versão mínima (§3.5). As demais (relatórios, `adocao`, `exame`, anexos de animal e de processo) ainda **não têm tabela**: são o modelo-alvo, a validar na implementação de cada módulo.
+> **Estado do schema (V13).** As tabelas de usuários/acesso, animais, baias, registros clínicos (`vacinacao`, `procedimento`, `prescricao`), ocorrências (§3.4), processo sanitário (§3.5, exceto `documento_processo`) e seus catálogos estão descritas aqui **como existem nas migrations** (`backend/src/main/resources/db/migration`, V1–V13; a V11 só corrige a matriz de permissões, §3.1, a V12 só acrescenta a ação de auditoria `VISUALIZACAO`, §3.8, e a V13 completa o processo sanitário, T29). As demais (relatórios, `adocao`, `exame`, anexos de animal, `documento_processo`) ainda **não têm tabela**: são o modelo-alvo, a validar na implementação de cada módulo.
 
 **Convenções**
 
@@ -540,41 +540,50 @@ Um `CHECK` amarra cada tipo à sua transição (tabela de regras de `ocorrencia`
 
 #### `processo_sanitario`
 
-> **Estado do schema (V10).** Existe só uma **versão mínima**, criada pela T25 para o vínculo com a ocorrência: `id`, `protocolo` varchar(20) único, `data_abertura`, `ocorrencia_id` (FK `ocorrencia`, **único, opcional** — único lado do vínculo), `urgente` (informado no cadastro, até existirem as amostras), `status_processo` varchar(30) (`ABERTO`, `AGUARDANDO_RESULTADO`, `COM_RESULTADO`, `CONCLUIDO`; avança um passo por vez, provisoriamente sem resultado nem notificação), `criado_por_id`, `criado_em`, `atualizado_em`. A tabela abaixo é o modelo-alvo da task de processos. Vincular processo a ocorrência exige também `OCORRENCIAS_DENUNCIAS:escrita`.
+> **Estado do schema (V13, T29).** As tabelas desta seção existem como descritas, exceto `documento_processo` (fica para a task de documentos). A V10 criou a versão mínima de `processo_sanitario` (T25); a V13 acrescentou as colunas do modelo-alvo. A V13 **só aplica sobre um banco sem processos**: com processos mínimos da T25 (sem doença, laboratório, responsável e amostras), ela para e pede a recriação do banco de desenvolvimento — não há dados reais a preservar (decisão DH-3, `docs/decisoes/T29.md`). Fonte: este DER; o DBML do módulo 4 está desatualizado.
 
-| Campo                       | Tipo             | Obrig. | Observações                                                                                |
-| --------------------------- | ---------------- | ------ | ------------------------------------------------------------------------------------------ |
-| `id`                        | uuid PK          | \*     |                                                                                            |
-| `protocolo`                 | varchar(20)      | \*     | Formato fixo `NNN/AAAA` (gerado, não configurável)                                         |
-| `data_abertura`             | date             | \*     |                                                                                            |
-| `doenca_id`                 | FK `doenca`      | \*     |                                                                                            |
-| `laboratorio_id`            | FK `laboratorio` | \*     |                                                                                            |
-| `ocorrencia_id`             | FK `ocorrencia`  | ?      | **0 ou 1 ocorrência vinculada** — normalmente definida na etapa 1 do wizard; pode ser definida depois da criação se o processo ainda não tiver vínculo (ver regras) |
-| `status_processo_id`        | FK               | \*     |                                                                                            |
-| `urgente`                   | boolean          | \*     | derivado de "contato humano-animal" em algum `animal_amostrado`                            |
-| `gal_numero`                | varchar(40)      | ?      | nº do GAL                                                                                  |
-| `sinan_numero`              | varchar(40)      | ?      | nº da notificação SINAN                                                                    |
-| `cid`                       | varchar(20)      | ?      | "A82" para Raiva, etc.                                                                     |
-| `data_envio_amostras`       | timestamp        | ?      |                                                                                            |
-| `previsao_retorno`          | date             | ?      |                                                                                            |
-| `resultado_laboratorial_id` | FK               | ?      | preenchido quando retorna                                                                  |
-| `data_resultado`            | date             | ?      |                                                                                            |
-| `desfecho_animal_id`        | FK               | ?      |                                                                                            |
-| `observacoes`               | text             | ?      |                                                                                            |
-| `criado_por_id`             | FK `usuario`     | \*     |                                                                                            |
-| `criado_em`                 | timestamp        | \*     |                                                                                            |
-| `atualizado_em`             | timestamp        | \*     |                                                                                            |
+| Campo                       | Tipo                            | Obrig. | Observações                                                                                |
+| --------------------------- | ------------------------------- | ------ | ------------------------------------------------------------------------------------------ |
+| `id`                        | uuid PK                         | \*     |                                                                                            |
+| `protocolo`                 | varchar(20)                     | \*     | Formato fixo `NNN/AAAA` (gerado, não configurável)                                         |
+| `data_abertura`             | date                            | \*     | não pode ser futura                                                                        |
+| `doenca_id`                 | FK `doenca`                     | \*     |                                                                                            |
+| `laboratorio_id`            | FK `laboratorio`                | \*     |                                                                                            |
+| `ocorrencia_id`             | FK `ocorrencia` (único)         | ?      | **0 ou 1 ocorrência vinculada** — normalmente definida na etapa 1 do wizard; pode ser definida depois da criação se o processo ainda não tiver vínculo (ver regras) |
+| `status_processo`           | varchar(30) + `CHECK`           | \*     | `ABERTO`, `AGUARDANDO_RESULTADO`, `COM_RESULTADO`, `CONCLUIDO` · default `ABERTO` (não é catálogo, V10) |
+| `urgente`                   | boolean                         | \*     | derivado pelo servidor: `true` se alguma amostra tem `contato_humano` (não é informado no cadastro) |
+| `gal_numero`                | varchar(40)                     | ?      | nº do GAL                                                                                  |
+| `sinan_numero`              | varchar(40)                     | ?      | nº da notificação SINAN                                                                    |
+| `cid`                       | varchar(20)                     | ?      | **snapshot** de `doenca.cid`, gravado na criação: preserva o CID da época se o catálogo mudar |
+| `data_envio_amostras`       | timestamp                       | ?      |                                                                                            |
+| `previsao_retorno`          | date                            | ?      |                                                                                            |
+| `resultado_laboratorial_id` | FK `resultado_laboratorial`     | ?      | preenchido quando retorna                                                                  |
+| `data_resultado`            | date                            | ?      |                                                                                            |
+| `desfecho_animal_id`        | FK `desfecho_animal`            | ?      |                                                                                            |
+| `observacoes`               | text                            | ?      |                                                                                            |
+| `criado_por_id`             | FK `usuario`                    | \*     | `ON DELETE RESTRICT`                                                                       |
+| `criado_em`                 | timestamp                       | \*     |                                                                                            |
+| `atualizado_em`             | timestamp                       | \*     |                                                                                            |
+
+GAL/SINAN, envio, previsão, resultado e desfecho existem no schema, mas nenhum fluxo da T29 os preenche (task de resultado).
 
 **Regras**
 
-- Vínculo com ocorrência é normalmente definido **na etapa 1 do wizard de cadastro**. **Emenda (2026-10-03, decisão de produto)**: se o processo for criado sem vínculo (ou a ocorrência ficar sem processo), o vínculo pode ser definido **uma única vez, depois da criação**, a partir do detalhe de qualquer um dos dois lados — mas só quando **nenhum dos dois** já tiver vínculo. Uma vez que o vínculo existe (definido na criação ou depois), ele fica **bloqueado para edição/troca** — não é possível desfazer nem substituir por outro.
-- Quando criado a partir do botão "Abrir Processo Sanitário" dentro da ocorrência, a etapa 1 é pré-preenchida.
+- **Criação completa numa requisição** (`POST /api/processos`): processo, `responsavel_processo` e **pelo menos um** `animal_amostrado`, na mesma transação — as etapas do wizard são da interface; o servidor não guarda rascunho. A garantia vale também no banco: constraint triggers adiáveis recusam, no `COMMIT`, processo sem responsável ou sem amostra e a remoção (ou mudança de processo) da última amostra ou do responsável. O service antecipa essa verificação (`SET CONSTRAINTS ALL IMMEDIATE`), e uma violação que chegue ao banco responde 409 genérico.
+- Vínculo com ocorrência é normalmente definido **na etapa 1 do wizard de cadastro**. **Emenda (2026-10-03, decisão de produto)**: se o processo for criado sem vínculo (ou a ocorrência ficar sem processo), o vínculo pode ser definido **uma única vez, depois da criação**, a partir do detalhe de qualquer um dos dois lados — mas só quando **nenhum dos dois** já tiver vínculo. Uma vez que o vínculo existe (definido na criação ou depois), ele fica **bloqueado para edição/troca** — não é possível desfazer nem substituir por outro. Garantias: a entidade só aceita o vínculo uma vez (409), e um trigger da V13 recusa trocar ou remover `ocorrencia_id` já preenchido, para qualquer usuário ou caminho (inclusive SQL manual) — sem exceção para administrador.
+- Vincular processo a ocorrência exige também `OCORRENCIAS_DENUNCIAS:escrita` (D33).
+- Quando criado a partir do botão "Abrir Processo Sanitário" dentro da ocorrência, a etapa 1 é pré-preenchida. **Até a integração do wizard (T32/T33)** esse botão fica desabilitado: o backend exige o processo completo, que o cartão da ocorrência não coleta.
 - Ao registrar `resultado_laboratorial` = `positivo` ou `inconclusivo`:
   - dispara notificação ao munícipe (e-mail / SMS quando integrado)
   - dispara notificação à **Vigilância Epidemiológica de Itu** (regra a validar com CCZ)
-- Processo é considerado `urgente` se ao menos 1 `animal_amostrado.contato_humano = true`.
+- Processo é considerado `urgente` se ao menos 1 `animal_amostrado.contato_humano = true`. Ao vincular, a urgência do processo marca a ocorrência (D31).
+- Auditoria: `CRIACAO` e `ATUALIZACAO` de `processo_sanitario` registram um snapshot **sem nenhum dado pessoal do responsável** (como a D23); as amostras entram.
+
+> **Catálogos do módulo (V13):** tabela-domínio com `id`, `codigo` varchar(30) único, `nome` e `ativo` (default `true`), seed idempotente; a API recebe e devolve o `codigo`. `GET /api/processos/catalogos` devolve doenças, laboratórios, sintomas, resultados e desfechos ativos.
 
 #### `doenca` (catálogo)
+
+`nome` varchar(150) · `cid` varchar(20) opcional.
 
 | codigo                  | nome                  | cid   |
 | ----------------------- | --------------------- | ----- |
@@ -587,16 +596,18 @@ Um `CHECK` amarra cada tipo à sua transição (tabela de regras de `ocorrencia`
 
 #### `laboratorio` (catálogo)
 
-`pasteur_sp`, `ial_sorocaba`, `ccz_sp`, `itu_ll01` (local).
-Campos: `id`, `codigo`, `nome`, `tipo` ("padrão raiva", "multidoenças", "apoio", "local"), `contato`.
+`pasteur_sp`, `ial_sorocaba`, `ccz_sp`, `itu_ll01` (local), com os nomes da §6.
+Campos: `id`, `codigo`, `nome`, `tipo` varchar(50) ("padrão raiva", "multidoenças", "apoio", "local"), `contato` varchar(255), `ativo`. **`tipo` e `contato` ficam nulos no seed** até o CCZ confirmar qual vale para cada laboratório (DH-8).
 
-#### `status_processo` (catálogo)
+#### `status_processo`
 
-`aberto`, `aguardando_resultado`, `com_resultado`, `concluido`.
+Não é catálogo: coluna `processo_sanitario.status_processo` varchar + `CHECK` (V10), valores `ABERTO`, `AGUARDANDO_RESULTADO`, `COM_RESULTADO`, `CONCLUIDO`.
 
 #### `resultado_laboratorial` (catálogo)
 
 `aguardando`, `positivo`, `negativo`, `inconclusivo`, `material_inadequado`, `nao_realizado`.
+
+> **Pendência (task de resultado):** `aguardando` no catálogo e `resultado_laboratorial_id` nulo são duas representações de "sem resultado". A task que registra o resultado deve escolher uma.
 
 #### `desfecho_animal` (catálogo)
 
@@ -604,7 +615,7 @@ Campos: `id`, `codigo`, `nome`, `tipo` ("padrão raiva", "multidoenças", "apoio
 
 #### `responsavel_processo`
 
-> Munícipe responsável pelo animal investigado. Pode ou não ser o mesmo que o `denunciante` da ocorrência vinculada.
+> Munícipe responsável pelo animal investigado. Pode ou não ser o mesmo que o `denunciante` da ocorrência vinculada. Exatamente um por processo (`UNIQUE (processo_id)`, obrigatório na criação). Sem `UNIQUE (cpf)`: o mesmo munícipe pode responder por vários processos, cada um com o próprio registro. `nome` não pode ser vazio (`CHECK`). Os dados pessoais não entram na auditoria.
 
 | Campo                | Tipo         | Obrig. |
 | -------------------- | ------------ | ------ | -------------------------- |
@@ -623,33 +634,41 @@ Campos: `id`, `codigo`, `nome`, `tipo` ("padrão raiva", "multidoenças", "apoio
 
 > **Pode** referenciar um `animal` já cadastrado **ou** ter dados próprios (animal de campo, nunca entrou no canil).
 
-| Campo                      | Tipo         | Obrig. | Observações                                                          |
-| -------------------------- | ------------ | ------ | -------------------------------------------------------------------- |
-| `id`                       | uuid PK      | \*     |                                                                      |
-| `processo_id`              | FK           | \*     |                                                                      |
-| `animal_id`                | FK `animal`  | ?      | **NULL** se animal de campo; **preenchido** se for animal cadastrado |
-| `especie_id`               | FK           | \*     | redundante se `animal_id` preenchido — preservado para snapshot      |
-| `sexo`                     | enum         | \*     |                                                                      |
-| `raca`                     | varchar(80)  | ?      |                                                                      |
-| `coloracao`                | varchar(80)  | ?      |                                                                      |
-| `pelagem`                  | enum         | ?      |                                                                      |
-| `idade_aprox`              | varchar(30)  | ?      |                                                                      |
-| `peso_kg`                  | decimal(5,2) | ?      |                                                                      |
-| `status_clinico`           | enum         | \*     | `sintomatico`, `assintomatico`, `obito`                              |
-| `tipo_abrigo`              | enum         | \*     | `intradomiciliar`, `peridomiciliar`, `silvestre`, `nao_identificado` |
-| `alteracao_comportamental` | text         | ?      |                                                                      |
-| `data_coleta`              | date         | \*     |                                                                      |
-| `material_biologico`       | enum         | \*     | `tecido_encefalico`, `soro`, `sangue`, `saliva`, `urina`             |
-| `contato_humano`           | boolean      | \*     | "Munícipe teve contato físico"                                       |
-| `nivel_contato`            | enum         | ?      | `direta`, `indireta` — quando `contato_humano = true`                |
-| `agrediu_humano`           | boolean      | ?      | quando `contato_humano = true`                                       |
-| `observacoes`              | text         | ?      |                                                                      |
+| Campo                      | Tipo                     | Obrig. | Observações                                                          |
+| -------------------------- | ------------------------ | ------ | -------------------------------------------------------------------- |
+| `id`                       | uuid PK                  | \*     |                                                                      |
+| `processo_id`              | FK `processo_sanitario`  | \*     |                                                                      |
+| `animal_id`                | FK `animal`              | ?      | **NULL** se animal de campo; **preenchido** se for animal cadastrado · `ON DELETE RESTRICT` |
+| `especie_id`               | FK `especie`             | \*     | redundante se `animal_id` preenchido — preservado para snapshot      |
+| `sexo`                     | varchar(20) + `CHECK`    | \*     | `macho`, `femea`, `nao_identificado` — mesmo domínio de `animal` (minúsculas, DH-9) |
+| `raca`                     | varchar(80)              | ?      |                                                                      |
+| `coloracao`                | varchar(80)              | ?      |                                                                      |
+| `pelagem`                  | varchar(10) + `CHECK`    | ?      | `curta`, `longa` — mesmo domínio de `animal`                         |
+| `idade_aprox`              | varchar(30)              | ?      |                                                                      |
+| `peso_kg`                  | decimal(5,2)             | ?      | `> 0`                                                                |
+| `status_clinico`           | varchar(20) + `CHECK`    | \*     | `SINTOMATICO`, `ASSINTOMATICO`, `OBITO`                              |
+| `tipo_abrigo`              | varchar(20) + `CHECK`    | \*     | `INTRADOMICILIAR`, `PERIDOMICILIAR`, `SILVESTRE`, `NAO_IDENTIFICADO` |
+| `alteracao_comportamental` | text                     | ?      |                                                                      |
+| `data_coleta`              | date                     | \*     | não pode ser futura (validado no servidor)                           |
+| `material_biologico`       | varchar(20) + `CHECK`    | \*     | `TECIDO_ENCEFALICO`, `SORO`, `SANGUE`, `SALIVA`, `URINA`             |
+| `contato_humano`           | boolean                  | \*     | "Munícipe teve contato físico"                                       |
+| `nivel_contato`            | varchar(10) + `CHECK`    | ?      | `DIRETA`, `INDIRETA` — quando `contato_humano = true`                |
+| `agrediu_humano`           | boolean                  | ?      | quando `contato_humano = true`                                       |
+| `observacoes`              | text                     | ?      |                                                                      |
+| `criado_em`                | timestamp                | \*     |                                                                      |
 
 **Regras**
 
-- Se `animal_id != null`: os campos de identificação (espécie, sexo, raça, peso, etc.) são **snapshot** no momento da amostragem — não puxam por referência, para preservar histórico.
-- Pelo menos 1 `animal_amostrado` é obrigatório para fechar o processo.
+- **Duas modalidades**, distinguidas só por `animal_id`:
+  - **Animal do canil** (`animal_id` preenchido): o **servidor** copia espécie, sexo, raça, coloração, pelagem, idade e peso da ficha no momento da amostragem (**snapshot**). O request não pode trazer esses campos junto com `animalId` (422). Alterações posteriores na ficha não mudam a amostra; não há sincronização.
+  - **Animal de campo** (`animal_id` nulo): espécie e sexo são obrigatórios (422); os demais campos de identificação são opcionais.
+- Os **campos clínicos** (`status_clinico`, `tipo_abrigo`, `alteracao_comportamental`, `data_coleta`, `material_biologico`, contato, sintomas, `observacoes`) são sempre os informados na amostragem, nunca lidos da ficha (regra 17).
+- Na T29, um animal de **qualquer status** pode ser amostrado (inclusive adotado, transferido e óbito) — ponto a confirmar com o CCZ.
+- `nivel_contato` e `agrediu_humano` existem **se, e somente se**, `contato_humano = true` (`CHECK`).
+- **Sintomas só em amostra `SINTOMATICO`** (validado no servidor, 422).
+- Pelo menos 1 `animal_amostrado` por processo, exigido **na criação** e mantido no banco (ver `processo_sanitario`).
 - `contato_humano = true` em **qualquer** animal amostrado → `processo.urgente = true`.
+- **Pendência de domínio (a confirmar com o CCZ):** restringir `TECIDO_ENCEFALICO` a `status_clinico = OBITO`. Não implementado.
 
 #### `sintoma` (catálogo)
 
@@ -662,7 +681,11 @@ Campos: `id`, `codigo`, `nome`, `tipo` ("padrão raiva", "multidoenças", "apoio
 | `animal_amostrado_id` | FK (PK comp.) |
 | `sintoma_id`          | FK (PK comp.) |
 
+Um sintoma aparece no máximo uma vez por amostra (a API ignora códigos repetidos).
+
 #### `documento_processo`
+
+> **Sem tabela (V13).** Fica inteira para a task de documentos (DH-6). O `url` abaixo diverge do padrão de arquivos do projeto (conteúdo em `bytea` em tabela separada, D9); a task decide.
 
 `id`, `processo_id` FK, `nome`, `url`, `tipo` (`ficha_investigacao`, `termo_envio`, `foto_coleta`, `outro`), `tamanho`, `mime_type`, `criado_em`, `criado_por_id`.
 
@@ -776,10 +799,10 @@ Campos: `id`, `codigo`, `nome`, `tipo` ("padrão raiva", "multidoenças", "apoio
 | `ocorrencia` → `denunciante`                  | 1:0..1                    |                                                    |
 | `ocorrencia` → `denunciado`                   | 1:0..1                    |                                                    |
 | `ocorrencia` → `processo_sanitario`           | 1:0..1                    | vínculo só em `processo_sanitario.ocorrencia_id` (único); normalmente definido no wizard; pode ser definido depois se nenhum dos dois lados já tiver vínculo (emenda 2026-10-03) — uma vez definido, imutável |
-| `processo_sanitario` → `animal_amostrado`     | 1:N                       | mín. 1                                             |
+| `processo_sanitario` → `animal_amostrado`     | 1:N                       | mín. 1 — exigido na criação e mantido por constraint trigger (V13) |
 | `animal_amostrado` → `animal`                 | N:0..1                    | **opcional** — animal cadastrado OU dados próprios |
 | `animal_amostrado` → `sintoma`                | N:M via `amostra_sintoma` |                                                    |
-| `processo_sanitario` → `responsavel_processo` | 1:1                       |                                                    |
+| `processo_sanitario` → `responsavel_processo` | 1:1                       | `UNIQUE (processo_id)`; exigido na criação e mantido por constraint trigger (V13) |
 | `processo_sanitario` → `documento_processo`   | 1:N                       |                                                    |
 | `relatorio_gerado` → `usuario`                | N:1                       | quem gerou                                         |
 

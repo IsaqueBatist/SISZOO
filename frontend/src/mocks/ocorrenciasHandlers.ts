@@ -68,8 +68,6 @@ export const ocorrenciasHandlers = [
     HttpResponse.arrayBuffer(new Uint8Array([0xff, 0xd8, 0xff]).buffer, { headers: { 'Content-Type': 'image/jpeg' } }),
   ),
 
-  http.post(`${API_BASE_URL}/processos`, () => HttpResponse.json(PROCESSO_CRIADO_FIXTURE, { status: 201 })),
-
   http.patch(`${API_BASE_URL}/processos/:id/status`, () =>
     HttpResponse.json({ ...PROCESSO_CRIADO_FIXTURE, statusProcesso: 'AGUARDANDO_RESULTADO' }),
   ),

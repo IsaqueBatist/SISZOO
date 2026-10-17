@@ -8,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import com.siszoo.ocorrencias.entity.Ocorrencia;
+import com.siszoo.ocorrencias.exception.VinculoJaExistenteException;
 import com.siszoo.usuarios.entity.Usuario;
 
 import jakarta.persistence.Column;
@@ -22,14 +23,16 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// Versao minima (T25, D2/D18): so o necessario para o vinculo opcional com a
-// ocorrencia. Doenca, laboratorio, resultado, amostras e documentos ficam para
-// a task de processos. O vinculo mora so aqui (ocorrencia_id UNIQUE NULL).
+// Modelo-alvo do DER §3.5 (T29, V13). Responsavel e amostras ficam fora da
+// entidade (sem colecao nem cascade), gravados pelo service na mesma transacao,
+// como denunciante e anexos na ocorrencia. Resultado, desfecho, GAL/SINAN e
+// datas de envio/resultado sao preenchidos por tasks seguintes.
 @Entity
 @Table(name = "processo_sanitario")
 @Getter
@@ -49,16 +52,58 @@ public class ProcessoSanitario {
     @Column(name = "data_abertura", nullable = false)
     private LocalDate dataAbertura;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "doenca_id", nullable = false)
+    private Doenca doenca;
+
+    // Snapshot de doenca.cid na criacao: preserva o CID da epoca.
+    @Column(length = 20)
+    private String cid;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "laboratorio_id", nullable = false)
+    private Laboratorio laboratorio;
+
+    // Vinculo definido uma unica vez (DER regra 15): so por vincularOcorrencia,
+    // sem setter. O banco recusa troca ou remocao (trigger da V13).
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ocorrencia_id", unique = true)
+    @Setter(AccessLevel.NONE)
     private Ocorrencia ocorrencia;
 
+    // Derivado das amostras (DER regra 18): contato humano em qualquer uma.
     @Column(nullable = false)
     private boolean urgente;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status_processo", nullable = false, length = 30)
     private StatusProcesso statusProcesso = StatusProcesso.ABERTO;
+
+    @Column(name = "gal_numero", length = 40)
+    private String galNumero;
+
+    @Column(name = "sinan_numero", length = 40)
+    private String sinanNumero;
+
+    @Column(name = "data_envio_amostras")
+    private LocalDateTime dataEnvioAmostras;
+
+    @Column(name = "previsao_retorno")
+    private LocalDate previsaoRetorno;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "resultado_laboratorial_id")
+    private ResultadoLaboratorial resultadoLaboratorial;
+
+    @Column(name = "data_resultado")
+    private LocalDate dataResultado;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "desfecho_animal_id")
+    private DesfechoAnimal desfechoAnimal;
+
+    @Column(columnDefinition = "text")
+    private String observacoes;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "criado_por_id", nullable = false)
@@ -71,4 +116,11 @@ public class ProcessoSanitario {
     @UpdateTimestamp
     @Column(name = "atualizado_em", nullable = false)
     private LocalDateTime atualizadoEm;
+
+    public void vincularOcorrencia(Ocorrencia ocorrencia) {
+        if (this.ocorrencia != null) {
+            throw new VinculoJaExistenteException();
+        }
+        this.ocorrencia = ocorrencia;
+    }
 }
