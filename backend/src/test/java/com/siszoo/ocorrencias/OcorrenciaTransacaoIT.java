@@ -6,12 +6,16 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +26,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.AfterEach;
@@ -90,6 +95,9 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
     void removerGatilho() {
         jdbcTemplate.execute("DROP TRIGGER IF EXISTS t25_falhar_movimentacao ON movimentacao_ocorrencia");
         jdbcTemplate.execute("DROP FUNCTION IF EXISTS t25_falhar_movimentacao()");
+        // Segunda barreira (a primeira e o finally do teste): nenhum teste
+        // seguinte herda o relogio de um ano isolado (T30).
+        RelogioTesteConfig.restaurar();
     }
 
     // ── Rollback (D4) ────────────────────────────────────
@@ -181,6 +189,117 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
             assertThat(proximo(servicoNoAno(2093), ProtocoloService.Entidade.OCORRENCIA), equalTo("001/2093"));
         } finally {
             jdbcTemplate.update("DELETE FROM protocolo_sequencia WHERE ano IN (2092, 2093)");
+        }
+    }
+
+    // Virada do ano: o ano do protocolo e o de America/Sao_Paulo (ClockConfig),
+    // nao o de UTC. 2098-01-01T02:00Z ainda e 31/12/2097 23:00 em Sao Paulo
+    // (UTC-3); 03:00Z ja e 01/01/2098 00:00.
+
+    @Test
+    @DisplayName("[D13/T30] virada do ano: UTC ja em 2098 e Sao Paulo ainda em 2097 gera 001/2097")
+    void viradaDoAnoUtcAdiantadoUsaAnoDeSaoPaulo() {
+        jdbcTemplate.update("DELETE FROM protocolo_sequencia WHERE ano IN (2097, 2098)");
+        try {
+            ProtocoloService servico = servicoNoInstante("2098-01-01T02:00:00Z");
+
+            assertThat(proximo(servico, ProtocoloService.Entidade.PROCESSO), equalTo("001/2097"));
+            assertThat(ultimoProtocolo("PROCESSO", 2097), equalTo(1));
+            assertThat(ultimoProtocolo("PROCESSO", 2098), nullValue());
+        } finally {
+            jdbcTemplate.update("DELETE FROM protocolo_sequencia WHERE ano IN (2097, 2098)");
+        }
+    }
+
+    @Test
+    @DisplayName("[D13/T30] virada do ano: UTC e Sao Paulo ja em 2098 gera 001/2098")
+    void viradaDoAnoJaNoAnoNovoEmSaoPaulo() {
+        jdbcTemplate.update("DELETE FROM protocolo_sequencia WHERE ano IN (2097, 2098)");
+        try {
+            ProtocoloService servico = servicoNoInstante("2098-01-01T03:00:00Z");
+
+            assertThat(proximo(servico, ProtocoloService.Entidade.PROCESSO), equalTo("001/2098"));
+            assertThat(ultimoProtocolo("PROCESSO", 2098), equalTo(1));
+            assertThat(ultimoProtocolo("PROCESSO", 2097), nullValue());
+        } finally {
+            jdbcTemplate.update("DELETE FROM protocolo_sequencia WHERE ano IN (2097, 2098)");
+        }
+    }
+
+    // ── Concorrencia do protocolo pela API (T30) ─────────
+    // 8 criacoes: mais de uma para disputar a linha (OCORRENCIA, ano) de
+    // protocolo_sequencia e nao mais que o pool padrao do Hikari (10; o
+    // application.yml nao o configura), para as 8 transacoes estarem abertas ao
+    // mesmo tempo disputando o lock da linha, e nao esperando conexao.
+    private static final int CRIACOES_CONCORRENTES = 8;
+    private static final long TIMEOUT_SEGUNDOS = 30;
+
+    @Test
+    @DisplayName("[T30] POST /api/ocorrencias simultaneos: todos 200, protocolos 001..N do ano, sem duplicata nem lacuna")
+    void ocorrenciasConcorrentesPelaApi() throws Exception {
+        int ano = 2096;
+        // O ano so e usado aqui e o banco do contexto e novo a cada execucao;
+        // ainda assim, nenhuma ocorrencia do ano pode existir (o 001 colidiria
+        // com o UNIQUE de protocolo), e a sequencia do ano e zerada.
+        assertThat("ocorrencias ja existentes em " + ano, jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM ocorrencia WHERE protocolo LIKE ?", Integer.class, "%/" + ano), equalTo(0));
+        jdbcTemplate.update("DELETE FROM protocolo_sequencia WHERE entidade = 'OCORRENCIA' AND ano = ?", ano);
+        RelogioTesteConfig.fixarEm(Instant.parse(ano + "-06-15T15:00:00Z"));
+        CountDownLatch largada = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(CRIACOES_CONCORRENTES);
+        try {
+            // Login depois de ajustar o relogio: o token do @BeforeEach foi
+            // emitido em 2026 e estaria vencido no relogio do ano isolado.
+            String token = fixture.tokenComCargo("agente.concorrencia.ocorrencias@itu.sp.gov.br", "Agente",
+                    "Concorrencia", ApiTesteFixture.CARGO_AGENTE_SANITARIO_ID);
+            // dataAbertura fixa e no passado: o ano do protocolo vem do Clock,
+            // nao da data de abertura (D21), e estas linhas nao sobem para o
+            // topo das listagens dos outros testes (mesmo banco, sem rollback).
+            Map<String, Object> corpo = corpo("Ocorrencia concorrente");
+            corpo.put("dataAbertura", "2026-01-01");
+
+            List<Future<Response>> futuros = new ArrayList<>();
+            for (int i = 0; i < CRIACOES_CONCORRENTES; i++) {
+                futuros.add(executor.submit(() -> {
+                    if (!largada.await(TIMEOUT_SEGUNDOS, TimeUnit.SECONDS)) {
+                        throw new IllegalStateException("largada nao liberada em " + TIMEOUT_SEGUNDOS + " s");
+                    }
+                    return given().header("Authorization", "Bearer " + token).contentType(ContentType.JSON)
+                            .body(corpo).when().post(ROTA);
+                }));
+            }
+            largada.countDown();
+            List<Response> respostas = new ArrayList<>();
+            for (Future<Response> futuro : futuros) {
+                try {
+                    respostas.add(futuro.get(TIMEOUT_SEGUNDOS, TimeUnit.SECONDS));
+                } catch (TimeoutException e) {
+                    fail("POST " + ROTA + " nao terminou em " + TIMEOUT_SEGUNDOS + " s (bloqueio ou deadlock?)");
+                }
+            }
+
+            // Sem depender da ordem: cada resposta 200 com protocolo do ano igual
+            // ao gravado; os numeros, ordenados, sao exatamente 1..N (duplicata ou
+            // lacuna falham); e nao ha no banco outra ocorrencia do ano.
+            List<String> protocolos = new ArrayList<>();
+            List<Integer> numeros = new ArrayList<>();
+            for (Response resposta : respostas) {
+                resposta.then().statusCode(200);
+                String protocolo = resposta.path("protocolo");
+                assertThat(protocolo, matchesPattern("\\d{3,}/" + ano));
+                assertThat(jdbcTemplate.queryForObject("SELECT protocolo FROM ocorrencia WHERE id = CAST(? AS uuid)",
+                        String.class, (String) resposta.path("id")), equalTo(protocolo));
+                protocolos.add(protocolo);
+                numeros.add(Integer.parseInt(protocolo.substring(0, protocolo.indexOf('/'))));
+            }
+            Collections.sort(numeros);
+            assertThat(numeros, equalTo(IntStream.rangeClosed(1, CRIACOES_CONCORRENTES).boxed().toList()));
+            assertThat(jdbcTemplate.queryForList("SELECT protocolo FROM ocorrencia WHERE protocolo LIKE ?",
+                    String.class, "%/" + ano), containsInAnyOrder(protocolos.toArray(String[]::new)));
+        } finally {
+            executor.shutdownNow();
+            executor.awaitTermination(10, TimeUnit.SECONDS);
+            RelogioTesteConfig.restaurar();
         }
     }
 
@@ -276,7 +395,13 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
     }
 
     private ProtocoloService servicoNoAno(int ano) {
-        Clock clock = Clock.fixed(Instant.parse(ano + "-06-15T15:00:00Z"), ZoneId.of("America/Sao_Paulo"));
+        return servicoNoInstante(ano + "-06-15T15:00:00Z");
+    }
+
+    // Fuso escrito aqui, igual ao de ClockConfig: o resultado esperado nunca
+    // depende do fuso da maquina.
+    private ProtocoloService servicoNoInstante(String instante) {
+        Clock clock = Clock.fixed(Instant.parse(instante), ZoneId.of("America/Sao_Paulo"));
         return new ProtocoloService(jdbcTemplate, clock);
     }
 

@@ -10,14 +10,25 @@ import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.IntStream;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -60,6 +71,13 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
                 ApiTesteFixture.CARGO_AGENTE_SANITARIO_ID);
         tokenVet = fixture.tokenComCargo("vet.processos@itu.sp.gov.br", "Vet", "Processos",
                 ApiTesteFixture.CARGO_VETERINARIO_ID);
+    }
+
+    // Segunda barreira (a primeira e o finally de cada teste): nenhum teste
+    // seguinte herda o relogio de um ano isolado (T30).
+    @AfterEach
+    void restaurarRelogio() {
+        RelogioTesteConfig.restaurar();
     }
 
     // ── Criacao e consulta ───────────────────────────────
@@ -365,6 +383,74 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         }
     }
 
+    // ── Concorrencia do protocolo pela API (T30) ─────────
+    // 8 criacoes: mais de uma para disputar a linha (PROCESSO, ano) de
+    // protocolo_sequencia e nao mais que o pool padrao do Hikari (10; o
+    // application.yml nao o configura), para as 8 transacoes estarem abertas ao
+    // mesmo tempo disputando o lock da linha, e nao esperando conexao.
+    private static final int CRIACOES_CONCORRENTES = 8;
+    private static final long TIMEOUT_SEGUNDOS = 30;
+    // Datas de negocio fixas e no passado em relacao ao relogio ajustado: o ano
+    // do protocolo vem do Clock, nao da data de abertura (D21), e as linhas
+    // criadas aqui nao sobem para o topo das listagens dos outros testes, que
+    // usam o mesmo banco sem rollback.
+    private static final String DATA_ANTIGA = "2026-01-01";
+
+    @Test
+    @DisplayName("[T30] POST /api/processos simultaneos sem ocorrencia: todos 200, protocolos 001..N do ano, sem duplicata nem lacuna")
+    void processosConcorrentesSemOcorrencia() throws Exception {
+        int ano = 2094;
+        prepararAnoVazio(ano);
+        RelogioTesteConfig.fixarEm(Instant.parse(ano + "-06-15T15:00:00Z"));
+        try {
+            String token = tokenNoRelogioAjustado();
+            List<Map<String, Object>> corpos = IntStream.range(0, CRIACOES_CONCORRENTES)
+                    .mapToObj(i -> corpoComDataAntiga(null))
+                    .toList();
+
+            List<Response> respostas = postarEmParalelo(token, corpos);
+
+            verificarProtocolosDoAno(respostas, ano);
+            for (Response resposta : respostas) {
+                assertThat(resposta.path("ocorrenciaId"), nullValue());
+            }
+        } finally {
+            RelogioTesteConfig.restaurar();
+        }
+    }
+
+    @Test
+    @DisplayName("[T30] POST /api/processos simultaneos, cada um com sua ocorrencia: protocolos 001..N do ano e vinculo correto")
+    void processosConcorrentesComOcorrencia() throws Exception {
+        int ano = 2095;
+        prepararAnoVazio(ano);
+        RelogioTesteConfig.fixarEm(Instant.parse(ano + "-06-15T15:00:00Z"));
+        try {
+            String token = tokenNoRelogioAjustado();
+            // Uma ocorrencia por processo, criadas antes e em sequencia: a
+            // disputa e so pela sequencia de PROCESSO, nao pelo mesmo vinculo.
+            List<String> ocorrencias = new ArrayList<>();
+            for (int i = 0; i < CRIACOES_CONCORRENTES; i++) {
+                ocorrencias.add(criarOcorrencia(token, DATA_ANTIGA));
+            }
+
+            List<Response> respostas = postarEmParalelo(token,
+                    ocorrencias.stream().map(this::corpoComDataAntiga).toList());
+
+            verificarProtocolosDoAno(respostas, ano);
+            // respostas.get(i) e a resposta do corpo i (ordem de envio, nao de conclusao).
+            for (int i = 0; i < CRIACOES_CONCORRENTES; i++) {
+                String processoId = respostas.get(i).path("id");
+                assertThat(respostas.get(i).path("ocorrenciaId"), equalTo(ocorrencias.get(i)));
+                assertThat(jdbcTemplate.queryForObject(
+                        "SELECT CAST(ocorrencia_id AS text) FROM processo_sanitario WHERE id = CAST(? AS uuid)",
+                        String.class, processoId), equalTo(ocorrencias.get(i)));
+            }
+        } finally {
+            RelogioTesteConfig.restaurar();
+        }
+    }
+
     // ── Catalogos e acesso ───────────────────────────────
 
     @Test
@@ -459,16 +545,102 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
     }
 
     private String criarOcorrencia() {
+        return criarOcorrencia(tokenAgente, RelogioTesteConfig.HOJE.toString());
+    }
+
+    private String criarOcorrencia(String token, String dataAbertura) {
         Map<String, Object> corpo = new HashMap<>();
         corpo.put("tipoOcorrencia", "zoonose");
-        corpo.put("dataAbertura", RelogioTesteConfig.HOJE.toString());
+        corpo.put("dataAbertura", dataAbertura);
         corpo.put("endereco", "Rua Teste, 1");
         corpo.put("bairro", "Centro");
         corpo.put("descricao", "Ocorrencia para processo");
         corpo.put("denunciante", Map.of("nome", "Denunciante Teste"));
-        return given().header("Authorization", "Bearer " + tokenAgente).contentType(ContentType.JSON).body(corpo)
+        return given().header("Authorization", "Bearer " + token).contentType(ContentType.JSON).body(corpo)
                 .when().post("/api/ocorrencias")
                 .then().statusCode(200).extract().path("id");
+    }
+
+    // O ano isolado so e usado pelo seu teste, e o banco do contexto e novo a
+    // cada execucao; mesmo assim confere que nenhum processo do ano existe (o
+    // 001 colidiria com o UNIQUE de protocolo) e zera a sequencia do ano, como
+    // os testes de 2091-2093 do OcorrenciaTransacaoIT.
+    private void prepararAnoVazio(int ano) {
+        assertThat("processos ja existentes em " + ano, jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM processo_sanitario WHERE protocolo LIKE ?", Integer.class, "%/" + ano),
+                equalTo(0));
+        jdbcTemplate.update("DELETE FROM protocolo_sequencia WHERE entidade = 'PROCESSO' AND ano = ?", ano);
+    }
+
+    // Login depois de ajustar o relogio: o token do @BeforeEach foi emitido em
+    // 2026 e estaria vencido no relogio do ano isolado. Usuario proprio, para
+    // nao misturar com os perfis dos outros testes.
+    private String tokenNoRelogioAjustado() {
+        return fixture.tokenComCargo("agente.concorrencia.processos@itu.sp.gov.br", "Agente", "Concorrencia",
+                ApiTesteFixture.CARGO_AGENTE_SANITARIO_ID);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> corpoComDataAntiga(String ocorrenciaId) {
+        Map<String, Object> corpo = fixture.corpoProcesso(ocorrenciaId, false);
+        corpo.put("dataAbertura", DATA_ANTIGA);
+        ((List<Map<String, Object>>) corpo.get("amostras")).get(0).put("dataColeta", DATA_ANTIGA);
+        return corpo;
+    }
+
+    // Todas as requisicoes esperam a mesma largada; a lista devolvida segue a
+    // ordem dos corpos (nao a de conclusao). Uma requisicao que nao termina no
+    // prazo falha o teste em vez de travar a suite.
+    private List<Response> postarEmParalelo(String token, List<Map<String, Object>> corpos) throws Exception {
+        CountDownLatch largada = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(corpos.size());
+        try {
+            List<Future<Response>> futuros = new ArrayList<>();
+            for (Map<String, Object> corpo : corpos) {
+                futuros.add(executor.submit(() -> {
+                    if (!largada.await(TIMEOUT_SEGUNDOS, TimeUnit.SECONDS)) {
+                        throw new IllegalStateException("largada nao liberada em " + TIMEOUT_SEGUNDOS + " s");
+                    }
+                    return fixture.postarProcesso(token, corpo);
+                }));
+            }
+            largada.countDown();
+            List<Response> respostas = new ArrayList<>();
+            for (Future<Response> futuro : futuros) {
+                try {
+                    respostas.add(futuro.get(TIMEOUT_SEGUNDOS, TimeUnit.SECONDS));
+                } catch (TimeoutException e) {
+                    fail("POST " + ROTA + " nao terminou em " + TIMEOUT_SEGUNDOS + " s (bloqueio ou deadlock?)");
+                }
+            }
+            return respostas;
+        } finally {
+            executor.shutdownNow();
+            executor.awaitTermination(10, TimeUnit.SECONDS);
+        }
+    }
+
+    // Sem depender da ordem: cada resposta 200 com protocolo do ano igual ao
+    // gravado; os numeros, ordenados, sao exatamente 1..N (duplicata ou lacuna
+    // falham); e nao ha no banco outro processo do ano alem destes.
+    private void verificarProtocolosDoAno(List<Response> respostas, int ano) {
+        List<String> protocolos = new ArrayList<>();
+        List<Integer> numeros = new ArrayList<>();
+        for (Response resposta : respostas) {
+            resposta.then().statusCode(200);
+            String protocolo = resposta.path("protocolo");
+            assertThat(protocolo, matchesPattern("\\d{3,}/" + ano));
+            assertThat(jdbcTemplate.queryForObject(
+                    "SELECT protocolo FROM processo_sanitario WHERE id = CAST(? AS uuid)",
+                    String.class, (String) resposta.path("id")), equalTo(protocolo));
+            protocolos.add(protocolo);
+            numeros.add(Integer.parseInt(protocolo.substring(0, protocolo.indexOf('/'))));
+        }
+        Collections.sort(numeros);
+        assertThat(numeros, equalTo(IntStream.rangeClosed(1, respostas.size()).boxed().toList()));
+        assertThat(jdbcTemplate.queryForList(
+                "SELECT protocolo FROM processo_sanitario WHERE protocolo LIKE ?", String.class, "%/" + ano),
+                containsInAnyOrder(protocolos.toArray(String[]::new)));
     }
 
     private int contar(String tabela) {
