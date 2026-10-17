@@ -297,6 +297,66 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("[T31] amostra com contato humano: urgente = true no POST, no GET e no banco")
+    void comContatoUrgenteNoPostNoGetENoBanco() {
+        conferirUrgencia(postarComAmostras(true), true);
+    }
+
+    @Test
+    @DisplayName("[T31] amostra sem contato humano: urgente = false no POST, no GET e no banco")
+    void semContatoNaoUrgenteNoPostNoGetENoBanco() {
+        conferirUrgencia(postarComAmostras(false), false);
+    }
+
+    @Test
+    @DisplayName("[T31] tres amostras, nenhuma com contato humano: urgente = false")
+    void tresAmostrasSemContatoNaoUrgente() {
+        conferirUrgencia(postarComAmostras(false, false, false), false);
+    }
+
+    @Test
+    @DisplayName("[T31] tres amostras, so a ultima com contato humano: urgente = true")
+    void soAUltimaDeTresComContatoUrgente() {
+        conferirUrgencia(postarComAmostras(false, false, true), true);
+    }
+
+    // Uma amostra de campo por contato (a da fixture, que ja traz nivel e
+    // agressao quando ha contato), com datas fixas de 2026: os processos
+    // criados aqui nao sobem para o topo das listagens dos outros testes.
+    @SuppressWarnings("unchecked")
+    private Response postarComAmostras(boolean... contatos) {
+        Map<String, Object> corpo = fixture.corpoProcesso(null, false);
+        corpo.put("dataAbertura", DATA_ANTIGA);
+        List<Map<String, Object>> amostras = new ArrayList<>();
+        for (boolean contato : contatos) {
+            Map<String, Object> amostra =
+                    ((List<Map<String, Object>>) fixture.corpoProcesso(null, contato).get("amostras")).get(0);
+            amostra.put("dataColeta", DATA_ANTIGA);
+            amostras.add(amostra);
+        }
+        corpo.put("amostras", amostras);
+
+        Response resposta = fixture.postarProcesso(tokenAgente, corpo);
+        resposta.then().statusCode(200);
+        assertThat(resposta.path("amostras"), hasSize(contatos.length));
+        return resposta;
+    }
+
+    // A mesma urgencia na resposta do POST, no detalhe e na linha gravada.
+    private void conferirUrgencia(Response criado, boolean esperado) {
+        String id = criado.path("id");
+        assertThat(criado.path("urgente"), equalTo(esperado));
+
+        Response detalhe = buscar(tokenAgente, id);
+        detalhe.then().statusCode(200);
+        assertThat(detalhe.path("urgente"), equalTo(esperado));
+
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT urgente FROM processo_sanitario WHERE id = CAST(? AS uuid)", Boolean.class, id),
+                equalTo(esperado));
+    }
+
+    @Test
     @DisplayName("[T29] cid e snapshot de doenca.cid: mudar o catalogo depois nao altera o processo")
     void cidEhSnapshotDaDoenca() {
         String processoId = fixture.postarProcesso(tokenAgente, null, false).then().statusCode(200)
