@@ -15,6 +15,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -642,27 +644,32 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         CountDownLatch largada = new CountDownLatch(1);
         ExecutorService executor = Executors.newFixedThreadPool(corpos.size());
         Throwable falha = null;
-        // Se algo falhar antes do rollback, o close devolve a conexao ao pool
-        // desfazendo o INSERT, e os upserts presos seguem antes do shutdown.
         try (Connection bloqueio = dataSource.getConnection()) {
             bloqueio.setAutoCommit(false);
-            try (PreparedStatement insert = bloqueio.prepareStatement(
-                    "INSERT INTO protocolo_sequencia (entidade, ano, ultimo) VALUES ('PROCESSO', ?, 1)")) {
-                insert.setInt(1, ano);
-                insert.executeUpdate();
-            }
+            int pidBloqueio = pidDe(bloqueio);
             List<Future<Response>> futuros = new ArrayList<>();
-            for (Map<String, Object> corpo : corpos) {
-                futuros.add(executor.submit(() -> {
-                    if (!largada.await(TIMEOUT_SEGUNDOS, TimeUnit.SECONDS)) {
-                        throw new IllegalStateException("largada nao liberada em " + TIMEOUT_SEGUNDOS + " s");
-                    }
-                    return fixture.postarProcesso(token, corpo);
-                }));
+            // O rollback fica no finally: libera os upserts presos (e deixa a
+            // sequencia vazia) tambem quando a espera falha, antes do
+            // encerramento do executor.
+            try {
+                try (PreparedStatement insert = bloqueio.prepareStatement(
+                        "INSERT INTO protocolo_sequencia (entidade, ano, ultimo) VALUES ('PROCESSO', ?, 1)")) {
+                    insert.setInt(1, ano);
+                    insert.executeUpdate();
+                }
+                for (Map<String, Object> corpo : corpos) {
+                    futuros.add(executor.submit(() -> {
+                        if (!largada.await(TIMEOUT_SEGUNDOS, TimeUnit.SECONDS)) {
+                            throw new IllegalStateException("largada nao liberada em " + TIMEOUT_SEGUNDOS + " s");
+                        }
+                        return fixture.postarProcesso(token, corpo);
+                    }));
+                }
+                largada.countDown();
+                aguardarUpsertsBloqueados(futuros, pidBloqueio);
+            } finally {
+                bloqueio.rollback();
             }
-            largada.countDown();
-            aguardarUpsertsBloqueados(futuros);
-            bloqueio.rollback();
 
             List<Response> respostas = new ArrayList<>();
             for (Future<Response> futuro : futuros) {
@@ -694,9 +701,20 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         }
     }
 
+    private static int pidDe(Connection conexao) throws Exception {
+        try (Statement consulta = conexao.createStatement();
+                ResultSet resultado = consulta.executeQuery("SELECT pg_backend_pid()")) {
+            resultado.next();
+            return resultado.getInt(1);
+        }
+    }
+
     // Espera ate as N requisicoes estarem paradas no upsert do protocolo ao
-    // mesmo tempo. Uma requisicao que termina antes nao esperou as demais.
-    private void aguardarUpsertsBloqueados(List<Future<Response>> futuros) throws Exception {
+    // mesmo tempo. Conta so sessoes ativas que esperam a transacao da conexao
+    // bloqueadora (pg_blocking_pids) no INSERT da sequencia; a propria sessao
+    // de polling e a bloqueadora (idle in transaction) ficam de fora por
+    // construcao. Uma requisicao que termina antes nao esperou as demais.
+    private void aguardarUpsertsBloqueados(List<Future<Response>> futuros, int pidBloqueio) throws Exception {
         long limite = System.nanoTime() + TimeUnit.SECONDS.toNanos(TIMEOUT_SEGUNDOS);
         int bloqueados = 0;
         while (System.nanoTime() < limite) {
@@ -707,8 +725,11 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
             }
             bloqueados = jdbcTemplate.queryForObject("""
                     SELECT count(*) FROM pg_stat_activity
-                    WHERE wait_event_type = 'Lock' AND query ILIKE '%insert into protocolo_sequencia%'
-                    """, Integer.class);
+                    WHERE pid <> pg_backend_pid() AND state = 'active'
+                      AND wait_event_type = 'Lock' AND wait_event = 'transactionid'
+                      AND ? = ANY(pg_blocking_pids(pid))
+                      AND query ILIKE '%insert into protocolo_sequencia%'
+                    """, Integer.class, pidBloqueio);
             if (bloqueados == futuros.size()) {
                 return;
             }
