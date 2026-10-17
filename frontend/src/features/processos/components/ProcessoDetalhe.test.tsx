@@ -150,6 +150,9 @@ describe('ProcessoDetalhe — ocorrência vinculada', () => {
     const card = cardDe('Ocorrência Vinculada')
     expect(card.getByText('OC 092/2026')).toBeInTheDocument()
     expect(card.queryByRole('link', { name: 'Ver ocorrência' })).not.toBeInTheDocument()
+    // Nenhum link da página leva ao módulo de ocorrências.
+    const destinos = screen.getAllByRole('link').map((link) => link.getAttribute('href') ?? '')
+    expect(destinos.filter((href) => href.startsWith('/ocorrencias'))).toEqual([])
   })
 
   it('Veterinário não recebe a opção de vínculo posterior (exige escrita em ocorrências, D33)', async () => {
