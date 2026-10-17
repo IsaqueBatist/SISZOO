@@ -6,10 +6,30 @@ spring:
     multipart:
       max-file-size: 5MB
       max-request-size: 6MB
+  # T37: notificacao de resultado (positivo/inconclusivo) ao municipe. Sem
+  # SMTP real configurado, o envio falha ao conectar — o listener engole a
+  # falha (NotificacaoResultadoService), nunca bloqueia o lancamento do
+  # resultado. Timeouts curtos para a thread assincrona nao ficar presa.
+  mail:
+    host: ${SMTP_HOST:localhost}
+    port: ${SMTP_PORT:25}
+    username: ${SMTP_USER:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${SMTP_AUTH:false}
+          starttls:
+            enable: ${SMTP_STARTTLS:false}
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
 
 siszoo:
   cors:
     allowed-origin: ${SISZOO_CORS_ORIGIN:http://localhost:5173}
+  notificacoes:
+    remetente: ${SISZOO_MAIL_FROM:nao-responda@itu.sp.gov.br}
 
 ---
 spring:
