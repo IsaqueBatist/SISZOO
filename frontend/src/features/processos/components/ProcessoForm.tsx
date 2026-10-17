@@ -1,15 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { AvisoDemonstracao } from './AvisoDemonstracao'
+import { isAxiosError } from 'axios'
 import { Fragment, useEffect, useState, type FormEvent } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { ErroNegocioProcesso } from '../api/processosApi'
+import { mensagemDeRegraDaApi, statusHttpDoErro } from '@/lib/erroApi'
 import { AmostraAnimalCard, type AmostraErros } from './AmostraAnimalCard'
 import './ProcessoForm.css'
-import { CAMPOS_STEP, processoFormSchema, type ProcessoFormValues } from '../schemas/processoFormSchema'
-import { DOENCA_OPCOES, LABORATORIO_OPCOES } from '../utils/processosCatalogos'
-import type { AmostraAnimal, CriarProcessoRequest, OcorrenciaParaVinculo } from '../types/processos.types'
+import { CAMPOS_STEP, hojeIso, processoFormSchema, type ProcessoFormValues } from '../schemas/processoFormSchema'
+import type { AmostraAnimalRequest, CriarProcessoRequest } from '../types/processos.types'
 import {
   agendarSalvarRascunhoProcesso,
   carregarRascunhoProcesso,
@@ -19,26 +18,14 @@ import {
   type RascunhoProcesso,
 } from '../storage/rascunhoProcessoStorage'
 import { RevisaoProcesso } from './RevisaoProcesso'
-import { SeletorOcorrencia } from './SeletorOcorrencia'
-import { useCriarProcessoMutation, useOcorrenciaParaVinculoQuery } from '../hooks/useProcessos'
-
-const FUSO_ITU = 'America/Sao_Paulo'
-
-function hojeIso(): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: FUSO_ITU }).format(new Date())
-}
+import { SeletorOcorrencia, type OcorrenciaParaVinculo } from './SeletorOcorrencia'
+import { useCatalogosProcessoQuery, useCriarProcessoMutation } from '../hooks/useProcessos'
 
 function amostraVazia(): ProcessoFormValues['amostras'][number] {
   return {
     origem: 'canil',
     animalId: '',
-    especieId: '',
-    sexo: '' as never,
-    raca: '',
-    coloracao: '',
-    pelagem: '',
-    idadeAprox: '',
-    pesoKg: undefined,
+    animalDescricao: '',
     statusClinico: '' as never,
     tipoAbrigo: '' as never,
     alteracaoComportamental: '',
@@ -56,9 +43,10 @@ function valoresVazios(): ProcessoFormValues {
   return {
     vinculoDecisao: '' as never,
     ocorrenciaId: null,
+    ocorrenciaResumo: null,
     dataAbertura: hojeIso(),
-    doenca: '' as never,
-    laboratorio: '' as never,
+    doenca: '',
+    laboratorio: '',
     responsavel: {
       nome: '',
       cpf: '',
@@ -74,35 +62,41 @@ function valoresVazios(): ProcessoFormValues {
   }
 }
 
-// Monta o payload real a partir dos valores do form. Whitelist explícita por
-// `origem`: independente do que sobrou no estado interno do RHF de uma troca
-// de modo anterior, o payload NUNCA carrega `animalId` para uma amostra
-// "externo" nem inventa campos fora do que cada variante da união prevê.
-function paraAmostraRequisicao(amostra: ProcessoFormValues['amostras'][number]): AmostraAnimal {
-  const identificacao = {
-    sexo: amostra.sexo,
-    raca: amostra.raca || undefined,
-    coloracao: amostra.coloracao || undefined,
-    pelagem: amostra.pelagem || undefined,
-    idadeAprox: amostra.idadeAprox || undefined,
-    pesoKg: amostra.pesoKg,
-  }
+function textoOuIndefinido(valor: string | undefined): string | undefined {
+  const limpo = valor?.trim()
+  return limpo ? limpo : undefined
+}
+
+// Payload de POST /api/processos. Whitelist por modalidade: a amostra do
+// canil leva só o animalId (o servidor copia a identificação da ficha e
+// recusa com 422 se ela vier junto, DH-5); a de campo leva a identificação.
+// Nível de contato e agressão só com contato; sintomas só em SINTOMATICO.
+function paraAmostraRequisicao(amostra: ProcessoFormValues['amostras'][number]): AmostraAnimalRequest {
   const clinico = {
     statusClinico: amostra.statusClinico,
     tipoAbrigo: amostra.tipoAbrigo,
-    alteracaoComportamental: amostra.alteracaoComportamental || undefined,
+    alteracaoComportamental: textoOuIndefinido(amostra.alteracaoComportamental),
     dataColeta: amostra.dataColeta,
     materialBiologico: amostra.materialBiologico,
     contatoHumano: amostra.contatoHumano,
     nivelContato: amostra.contatoHumano ? amostra.nivelContato : undefined,
     agrediuHumano: amostra.contatoHumano ? amostra.agrediuHumano : undefined,
-    observacoes: amostra.observacoes || undefined,
-    sintomas: amostra.sintomas,
+    observacoes: textoOuIndefinido(amostra.observacoes),
+    sintomas: amostra.statusClinico === 'SINTOMATICO' ? amostra.sintomas : [],
   }
   if (amostra.origem === 'canil') {
-    return { origem: 'canil', animalId: amostra.animalId, especieId: amostra.especieId, ...identificacao, ...clinico }
+    return { animalId: amostra.animalId, ...clinico }
   }
-  return { origem: 'externo', especieId: amostra.especieId, ...identificacao, ...clinico }
+  return {
+    especie: amostra.especie,
+    sexo: amostra.sexo,
+    raca: textoOuIndefinido(amostra.raca),
+    coloracao: textoOuIndefinido(amostra.coloracao),
+    pelagem: amostra.pelagem || undefined,
+    idadeAprox: textoOuIndefinido(amostra.idadeAprox),
+    pesoKg: amostra.pesoKg,
+    ...clinico,
+  }
 }
 
 function paraRequisicao(valores: ProcessoFormValues): CriarProcessoRequest {
@@ -112,29 +106,47 @@ function paraRequisicao(valores: ProcessoFormValues): CriarProcessoRequest {
     laboratorio: valores.laboratorio,
     ocorrenciaId: valores.vinculoDecisao === 'vinculado' ? valores.ocorrenciaId : null,
     responsavel: {
-      nome: valores.responsavel.nome,
-      cpf: valores.responsavel.cpf || undefined,
-      telefone: valores.responsavel.telefone || undefined,
-      email: valores.responsavel.email || undefined,
-      cep: valores.responsavel.cep || undefined,
-      endereco: valores.responsavel.endereco || undefined,
-      bairroResidencial: valores.responsavel.bairroResidencial || undefined,
-      bairroOcorrencia: valores.responsavel.bairroOcorrencia || undefined,
+      nome: valores.responsavel.nome.trim(),
+      cpf: textoOuIndefinido(valores.responsavel.cpf),
+      telefone: textoOuIndefinido(valores.responsavel.telefone),
+      email: textoOuIndefinido(valores.responsavel.email),
+      cep: textoOuIndefinido(valores.responsavel.cep),
+      endereco: textoOuIndefinido(valores.responsavel.endereco),
+      bairroResidencial: textoOuIndefinido(valores.responsavel.bairroResidencial),
+      bairroOcorrencia: textoOuIndefinido(valores.responsavel.bairroOcorrencia),
     },
     amostras: valores.amostras.map(paraAmostraRequisicao),
-    observacoes: valores.observacoes || undefined,
+    observacoes: textoOuIndefinido(valores.observacoes),
   }
 }
 
-interface ProcessoFormProps {
-  ocorrenciaIdDaUrl: string | null
+// Mensagem do servidor (409/422) com os campos recusados, quando vierem.
+function mensagemDoErro(erro: unknown): string {
+  if (statusHttpDoErro(erro) === 403) {
+    return 'Você não tem permissão para registrar este processo (vincular a uma ocorrência exige escrita em ocorrências).'
+  }
+  const mensagem = mensagemDeRegraDaApi(erro)
+  if (!mensagem) return 'Não foi possível registrar o processo. Tente novamente.'
+  const campos = isAxiosError(erro)
+    ? (erro.response?.data as { campos?: { campo: string; mensagem: string }[] } | undefined)?.campos
+    : undefined
+  return campos?.length ? `${mensagem}: ${campos.map((c) => `${c.campo} — ${c.mensagem}`).join('; ')}` : mensagem
 }
 
-export function ProcessoForm({ ocorrenciaIdDaUrl }: ProcessoFormProps) {
+interface ProcessoFormProps {
+  // Etapa 1 pré-preenchida e travada (entrada pelo detalhe da ocorrência).
+  ocorrenciaDaUrl: OcorrenciaParaVinculo | null
+  // OCORRENCIAS_DENUNCIAS:escrita (D33): Admin e Agente. O Vet cria processo
+  // sem vínculo.
+  podeVincular: boolean
+}
+
+export function ProcessoForm({ ocorrenciaDaUrl, podeVincular }: ProcessoFormProps) {
   const navigate = useNavigate()
   const { user } = useAuth()
   const chaveRascunho = chaveRascunhoProcesso(user?.id ?? '')
   const mutation = useCriarProcessoMutation()
+  const { data: catalogos, isError: erroCatalogos } = useCatalogosProcessoQuery()
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
   const [vinculoTravado, setVinculoTravado] = useState(false)
@@ -164,37 +176,25 @@ export function ProcessoForm({ ocorrenciaIdDaUrl }: ProcessoFormProps) {
 
   const valores = watch()
 
-  // A resumo da ocorrência vinculada é derivada da própria query — nunca
-  // guardada em state próprio — para que ela reapareça sozinha depois de
-  // restaurar um rascunho ou de uma entrada via `?ocorrencia=<id>`, sem
-  // duplicar o dado nem arriscar ficar desatualizada. O mascaramento de
-  // sigilo (RN3) já vem pronto das ocorrências de demonstração (D40).
-  const { data: ocorrenciaEncontrada } = useOcorrenciaParaVinculoQuery(valores.ocorrenciaId ?? undefined)
-  const ocorrenciaVinculada: OcorrenciaParaVinculo | null =
-    valores.vinculoDecisao === 'vinculado' && ocorrenciaEncontrada
-      ? {
-          id: ocorrenciaEncontrada.id,
-          protocolo: ocorrenciaEncontrada.protocolo,
-          tipoOcorrencia: ocorrenciaEncontrada.tipoOcorrencia,
-          bairro: ocorrenciaEncontrada.bairro,
-          statusOcorrencia: ocorrenciaEncontrada.statusOcorrencia,
-          sigilosa: ocorrenciaEncontrada.sigilosa,
-          denunciante: ocorrenciaEncontrada.denunciante,
-        }
-      : null
+  function aplicarVinculoDaUrl() {
+    if (!ocorrenciaDaUrl) return
+    setValue('vinculoDecisao', 'vinculado')
+    setValue('ocorrenciaId', ocorrenciaDaUrl.id)
+    setValue('ocorrenciaResumo', ocorrenciaDaUrl)
+    setVinculoTravado(true)
+  }
 
   useEffect(() => {
     let cancelado = false
     carregarRascunhoProcesso<ProcessoFormValues>(chaveRascunho).then((salvo) => {
       if (cancelado) return
       if (salvo) {
-        const divergem = ocorrenciaIdDaUrl != null && salvo.valores.ocorrenciaId != null && salvo.valores.ocorrenciaId !== ocorrenciaIdDaUrl
+        const divergem =
+          ocorrenciaDaUrl != null && salvo.valores.ocorrenciaId != null && salvo.valores.ocorrenciaId !== ocorrenciaDaUrl.id
         setRascunhoSalvo(salvo)
         setConflitoRascunho(divergem)
-      } else if (ocorrenciaIdDaUrl) {
-        setValue('vinculoDecisao', 'vinculado')
-        setValue('ocorrenciaId', ocorrenciaIdDaUrl)
-        setVinculoTravado(true)
+      } else {
+        aplicarVinculoDaUrl()
       }
       setProntoParaAutoSalvar(true)
     })
@@ -206,9 +206,9 @@ export function ProcessoForm({ ocorrenciaIdDaUrl }: ProcessoFormProps) {
   }, [])
 
   useEffect(() => {
-    // Mesmo gate de AnimalForm.tsx/OcorrenciaForm.tsx: a assinatura só é
-    // criada depois que a checagem inicial de rascunho termina, senão um
-    // callback com closure obsoleto pode sobrescrever um rascunho real.
+    // A assinatura só é criada depois que a checagem inicial de rascunho
+    // termina, senão um callback com closure obsoleto pode sobrescrever um
+    // rascunho real (mesmo gate de AnimalForm/OcorrenciaForm).
     if (!prontoParaAutoSalvar) return
     const inscricao = watch((valoresAtuais) => {
       agendarSalvarRascunhoProcesso(chaveRascunho, { etapaAtual: step, valores: valoresAtuais as ProcessoFormValues })
@@ -219,12 +219,16 @@ export function ProcessoForm({ ocorrenciaIdDaUrl }: ProcessoFormProps) {
 
   function handleRestaurarRascunho() {
     if (!rascunhoSalvo) return
-    reset(rascunhoSalvo.valores)
-    setStep(rascunhoSalvo.etapaAtual)
-    // Cast: em runtime um rascunho salvo antes de qualquer decisão na etapa 1
-    // ainda pode ter o placeholder "" (mesmo o tipo, como os demais campos
-    // enum do form, "mentindo" que isso nunca acontece — ver amostraVazia()).
-    setVinculoTravado((rascunhoSalvo.valores.vinculoDecisao as string) !== '')
+    // Um rascunho com vínculo não serve a quem não pode vincular (D33).
+    const valoresRestaurados =
+      !podeVincular && rascunhoSalvo.valores.vinculoDecisao === 'vinculado'
+        ? { ...rascunhoSalvo.valores, vinculoDecisao: '' as never, ocorrenciaId: null, ocorrenciaResumo: null }
+        : rascunhoSalvo.valores
+    reset(valoresRestaurados)
+    setStep(valoresRestaurados.vinculoDecisao ? rascunhoSalvo.etapaAtual : 1)
+    // Cast: um rascunho salvo antes de qualquer decisão na etapa 1 ainda
+    // pode ter o placeholder "".
+    setVinculoTravado((valoresRestaurados.vinculoDecisao as string) !== '')
     setRascunhoSalvo(null)
     setConflitoRascunho(false)
   }
@@ -233,21 +237,19 @@ export function ProcessoForm({ ocorrenciaIdDaUrl }: ProcessoFormProps) {
     await removerRascunhoProcesso(chaveRascunho)
     setRascunhoSalvo(null)
     setConflitoRascunho(false)
-    if (ocorrenciaIdDaUrl) {
-      setValue('vinculoDecisao', 'vinculado')
-      setValue('ocorrenciaId', ocorrenciaIdDaUrl)
-      setVinculoTravado(true)
-    }
+    aplicarVinculoDaUrl()
   }
 
   function handleSelecionarOcorrencia(ocorrencia: OcorrenciaParaVinculo) {
     setValue('vinculoDecisao', 'vinculado', { shouldValidate: true })
     setValue('ocorrenciaId', ocorrencia.id, { shouldValidate: true })
+    setValue('ocorrenciaResumo', ocorrencia)
   }
 
   function handlePularVinculo() {
     setValue('vinculoDecisao', 'sem_vinculo', { shouldValidate: true })
     setValue('ocorrenciaId', null, { shouldValidate: true })
+    setValue('ocorrenciaResumo', null)
   }
 
   async function avancar() {
@@ -268,12 +270,9 @@ export function ProcessoForm({ ocorrenciaIdDaUrl }: ProcessoFormProps) {
     try {
       const novo = await mutation.mutateAsync(paraRequisicao(dados))
       await removerRascunhoProcesso(chaveRascunho)
-      // T33 introduziu o detalhe do processo — o destino pós-submit deixa de
-      // bifurcar entre /ocorrencias e /ocorrencias/:id (provisório da T32) e
-      // passa a ser sempre o processo recém-criado.
       navigate(`/processos/${novo.id}`)
     } catch (erro) {
-      setSubmitError(erro instanceof ErroNegocioProcesso ? erro.message : 'Não foi possível registrar o processo. Tente novamente.')
+      setSubmitError(mensagemDoErro(erro))
     }
   }
 
@@ -283,13 +282,13 @@ export function ProcessoForm({ ocorrenciaIdDaUrl }: ProcessoFormProps) {
   }
 
   const amostrasErros = errors.amostras as unknown as (AmostraErros | undefined)[] | undefined
+  const destinoVoltar = ocorrenciaDaUrl ? `/ocorrencias/${ocorrenciaDaUrl.id}` : '/processos'
 
   return (
     <div className="wizard-shell">
-      <AvisoDemonstracao />
       <div className="page-header">
         <div className="title-block">
-          <Link to="/ocorrencias" className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}>
+          <Link to={destinoVoltar} className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}>
             ← Voltar
           </Link>
           <h1>Novo Processo Sanitário</h1>
@@ -311,6 +310,13 @@ export function ProcessoForm({ ocorrenciaIdDaUrl }: ProcessoFormProps) {
           )
         })}
       </div>
+
+      {erroCatalogos && (
+        <div className="alert danger" role="alert">
+          <span className="bullet" />
+          <div className="alert-content">Não foi possível carregar doenças, laboratórios e sintomas. Recarregue a página.</div>
+        </div>
+      )}
 
       {conflitoRascunho && (
         <div className="alert warning" role="alert">
@@ -359,15 +365,29 @@ export function ProcessoForm({ ocorrenciaIdDaUrl }: ProcessoFormProps) {
             <h3>1. Dados e vínculo com ocorrência</h3>
           </div>
           <div className="card-body col gap-4">
-            <SeletorOcorrencia
-              vinculoDecisao={valores.vinculoDecisao}
-              ocorrenciaId={valores.ocorrenciaId}
-              travado={vinculoTravado}
-              ocorrenciaVinculada={ocorrenciaVinculada}
-              erro={errors.vinculoDecisao?.message}
-              onSelecionar={handleSelecionarOcorrencia}
-              onPular={handlePularVinculo}
-            />
+            {podeVincular || vinculoTravado ? (
+              <SeletorOcorrencia
+                vinculoDecisao={valores.vinculoDecisao}
+                ocorrenciaId={valores.ocorrenciaId}
+                travado={vinculoTravado}
+                ocorrenciaVinculada={valores.ocorrenciaResumo}
+                erro={errors.vinculoDecisao?.message}
+                onSelecionar={handleSelecionarOcorrencia}
+                onPular={handlePularVinculo}
+              />
+            ) : (
+              <div>
+                <p className="hint" style={{ marginBottom: 12 }}>
+                  Vincular o processo a uma ocorrência exige permissão de escrita em ocorrências e denúncias. Este processo
+                  será registrado sem vínculo; quem tem a permissão pode vinculá-lo depois, pelo detalhe.
+                </p>
+                <button type="button" className="btn btn-outline" onClick={handlePularVinculo}>
+                  Continuar sem vínculo
+                </button>
+                {valores.vinculoDecisao === 'sem_vinculo' && <span className="hint"> Sem vínculo.</span>}
+                {errors.vinculoDecisao && <span className="err">{errors.vinculoDecisao.message}</span>}
+              </div>
+            )}
             <div className="form-grid">
               <div className="field">
                 <label htmlFor="proc-data-abertura">
@@ -385,13 +405,13 @@ export function ProcessoForm({ ocorrenciaIdDaUrl }: ProcessoFormProps) {
                 <label htmlFor="proc-doenca">
                   Tipo de doença investigada <span className="req">*</span>
                 </label>
-                <select id="proc-doenca" className={`select${errors.doenca ? ' error' : ''}`} defaultValue="" {...register('doenca')}>
+                <select id="proc-doenca" className={`select${errors.doenca ? ' error' : ''}`} {...register('doenca')}>
                   <option value="" disabled>
                     Selecione
                   </option>
-                  {DOENCA_OPCOES.map((opcao) => (
-                    <option key={opcao.valor} value={opcao.valor}>
-                      {opcao.label}
+                  {catalogos?.doencas.map((opcao) => (
+                    <option key={opcao.codigo} value={opcao.codigo}>
+                      {opcao.nome}
                     </option>
                   ))}
                 </select>
@@ -401,22 +421,21 @@ export function ProcessoForm({ ocorrenciaIdDaUrl }: ProcessoFormProps) {
                 <label htmlFor="proc-laboratorio">
                   Laboratório de destino <span className="req">*</span>
                 </label>
-                <select
-                  id="proc-laboratorio"
-                  className={`select${errors.laboratorio ? ' error' : ''}`}
-                  defaultValue=""
-                  {...register('laboratorio')}
-                >
+                <select id="proc-laboratorio" className={`select${errors.laboratorio ? ' error' : ''}`} {...register('laboratorio')}>
                   <option value="" disabled>
                     Selecione
                   </option>
-                  {LABORATORIO_OPCOES.map((opcao) => (
-                    <option key={opcao.valor} value={opcao.valor}>
-                      {opcao.label}
+                  {catalogos?.laboratorios.map((opcao) => (
+                    <option key={opcao.codigo} value={opcao.codigo}>
+                      {opcao.nome}
                     </option>
                   ))}
                 </select>
                 {errors.laboratorio && <span className="err">{errors.laboratorio.message}</span>}
+              </div>
+              <div className="field full">
+                <label htmlFor="proc-observacoes">Observações</label>
+                <textarea id="proc-observacoes" className="textarea" {...register('observacoes')} />
               </div>
             </div>
             <div className="flex gap-2" style={{ marginLeft: 'auto' }}>
@@ -448,6 +467,7 @@ export function ProcessoForm({ ocorrenciaIdDaUrl }: ProcessoFormProps) {
               <div className="field">
                 <label htmlFor="resp-cpf">CPF</label>
                 <input id="resp-cpf" className="input mono" type="text" placeholder="000.000.000-00" {...register('responsavel.cpf')} />
+                {errors.responsavel?.cpf && <span className="err">{errors.responsavel.cpf.message}</span>}
               </div>
               <div className="field">
                 <label htmlFor="resp-telefone">Telefone</label>
@@ -458,22 +478,27 @@ export function ProcessoForm({ ocorrenciaIdDaUrl }: ProcessoFormProps) {
                   placeholder="(11) 9 0000-0000"
                   {...register('responsavel.telefone')}
                 />
+                {errors.responsavel?.telefone && <span className="err">{errors.responsavel.telefone.message}</span>}
               </div>
               <div className="field">
                 <label htmlFor="resp-email">E-mail</label>
                 <input id="resp-email" className="input" type="email" {...register('responsavel.email')} />
+                {errors.responsavel?.email && <span className="err">{errors.responsavel.email.message}</span>}
               </div>
               <div className="field">
                 <label htmlFor="resp-cep">CEP</label>
                 <input id="resp-cep" className="input mono" type="text" placeholder="00000-000" {...register('responsavel.cep')} />
+                {errors.responsavel?.cep && <span className="err">{errors.responsavel.cep.message}</span>}
               </div>
               <div className="field full">
                 <label htmlFor="resp-endereco">Endereço</label>
                 <input id="resp-endereco" className="input" type="text" {...register('responsavel.endereco')} />
+                {errors.responsavel?.endereco && <span className="err">{errors.responsavel.endereco.message}</span>}
               </div>
               <div className="field">
                 <label htmlFor="resp-bairro-res">Bairro residencial</label>
                 <input id="resp-bairro-res" className="input" type="text" {...register('responsavel.bairroResidencial')} />
+                {errors.responsavel?.bairroResidencial && <span className="err">{errors.responsavel.bairroResidencial.message}</span>}
               </div>
               <div className="field">
                 <label htmlFor="resp-bairro-oco">Bairro da ocorrência</label>
@@ -484,6 +509,7 @@ export function ProcessoForm({ ocorrenciaIdDaUrl }: ProcessoFormProps) {
                   placeholder="Local onde o animal estava"
                   {...register('responsavel.bairroOcorrencia')}
                 />
+                {errors.responsavel?.bairroOcorrencia && <span className="err">{errors.responsavel.bairroOcorrencia.message}</span>}
               </div>
             </div>
             <div className="flex gap-2" style={{ marginLeft: 'auto' }}>
@@ -536,7 +562,7 @@ export function ProcessoForm({ ocorrenciaIdDaUrl }: ProcessoFormProps) {
             <h3>4. Revisão</h3>
           </div>
           <div className="card-body col gap-4">
-            <RevisaoProcesso valores={valores} ocorrenciaVinculada={ocorrenciaVinculada} onEditar={voltar} />
+            <RevisaoProcesso valores={valores} catalogos={catalogos} onEditar={voltar} />
             <div className="flex gap-2" style={{ marginLeft: 'auto' }}>
               <button type="button" className="btn btn-ghost" onClick={() => voltar(3)}>
                 ← Voltar

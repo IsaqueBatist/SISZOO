@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { mensagemDeRegraDaApi } from '@/lib/erroApi'
 import type { Ocorrencia } from '../types/ocorrencias.types'
 import { useAvancarStatusProcessoMutation } from '../hooks/useOcorrencias'
@@ -13,11 +14,12 @@ interface CardProcessoVinculadoProps {
   podeAvancar: boolean
 }
 
-// D40: o status do processo vinculado é avançado por aqui, pela API real. Sem
-// link para /processos/:id — aquela tela ainda é de demonstração.
-// T29: o backend passou a exigir o processo completo (doença, laboratório,
-// responsável e amostras), que este cartão não coleta. "Abrir processo" fica
-// desabilitado até o wizard de processos ser integrado à API (T32/T33).
+// D40: o status do processo vinculado é avançado por aqui, pela API real.
+// T29: o processo é aberto pelo wizard real (/processos/novo?ocorrencia=<id>),
+// com a etapa 1 pré-preenchida e travada nesta ocorrência (DER §3.5) — o
+// backend exige o processo completo (doença, laboratório, responsável e
+// amostras), que só o wizard coleta. Abrir exige escrita em ocorrências (D33)
+// e só é oferecido a ocorrência aberta e sem processo (0..1, D20).
 export function CardProcessoVinculado({ ocorrencia, podeAbrir, podeAvancar }: CardProcessoVinculadoProps) {
   const [erro, setErro] = useState<string | null>(null)
   const avancar = useAvancarStatusProcessoMutation(ocorrencia.id)
@@ -45,6 +47,9 @@ export function CardProcessoVinculado({ ocorrencia, podeAbrir, podeAvancar }: Ca
       <div className="vinc-card" style={{ display: 'block' }}>
         <h4>Processo Sanitário Vinculado</h4>
         <div className="proto-big">{formatarProtocoloProcesso(processo.protocolo)}</div>
+        <Link to={`/processos/${processo.id}`} className="btn btn-ghost btn-sm" style={{ marginTop: 6 }}>
+          Ver processo
+        </Link>
         <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 6 }}>
           {labelDeStatusProcesso(processo.statusProcesso)}
         </div>
@@ -59,7 +64,7 @@ export function CardProcessoVinculado({ ocorrencia, podeAbrir, podeAvancar }: Ca
               Avançar status do processo (provisório)
             </button>
             <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4 }}>
-              Próximo: {labelDeStatusProcesso(proximo)}. Até a integração do módulo de processos.
+              Próximo: {labelDeStatusProcesso(proximo)}. Avança um passo por vez, sem registrar resultado.
             </p>
           </div>
         )}
@@ -79,19 +84,12 @@ export function CardProcessoVinculado({ ocorrencia, podeAbrir, podeAvancar }: Ca
       </div>
       <div className="card-body">
         <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 10 }}>
-          Nenhum processo sanitário vinculado.
+          Nenhum processo sanitário vinculado. O processo é registrado com doença, laboratório, responsável e animais
+          amostrados, já vinculado a esta ocorrência.
         </p>
-        <button
-          type="button"
-          className="btn btn-primary btn-sm w-full"
-          disabled
-          aria-describedby="abrir-processo-indisponivel"
-        >
+        <Link to={`/processos/novo?ocorrencia=${ocorrencia.id}`} className="btn btn-primary btn-sm w-full">
           Abrir processo sanitário
-        </button>
-        <p id="abrir-processo-indisponivel" style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4 }}>
-          Disponível após a integração do módulo de processos
-        </p>
+        </Link>
       </div>
     </div>
   )
