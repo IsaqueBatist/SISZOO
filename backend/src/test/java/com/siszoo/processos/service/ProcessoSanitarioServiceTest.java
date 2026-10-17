@@ -28,6 +28,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.AccessDeniedException;
 
@@ -84,6 +85,7 @@ class ProcessoSanitarioServiceTest {
     @Mock private OcorrenciaService ocorrenciaService;
     @Mock private ProtocoloService protocoloService;
     @Mock private AuditoriaEventoService auditoriaEventoService;
+    @Mock private ApplicationEventPublisher eventPublisher;
     @Mock private JdbcTemplate jdbcTemplate;
 
     private ProcessoSanitarioService processoService;
@@ -99,7 +101,7 @@ class ProcessoSanitarioServiceTest {
         processoService = new ProcessoSanitarioService(processoRepository, responsavelRepository, amostraRepository,
                 doencaRepository, laboratorioRepository, sintomaRepository, resultadoRepository, desfechoRepository,
                 especieRepository, animalRepository, usuarioRepository, ocorrenciaService, protocoloService,
-                auditoriaEventoService, jdbcTemplate, clock);
+                auditoriaEventoService, eventPublisher, jdbcTemplate, clock);
         lenient().when(usuarioRepository.findById(usuarioId)).thenReturn(Optional.of(new Usuario()));
     }
 
@@ -107,16 +109,19 @@ class ProcessoSanitarioServiceTest {
         return Stream.of(
                 // atual, pedido, permitido
                 Arguments.of(StatusProcesso.ABERTO, StatusProcesso.AGUARDANDO_RESULTADO, true),
-                Arguments.of(StatusProcesso.AGUARDANDO_RESULTADO, StatusProcesso.COM_RESULTADO, true),
                 Arguments.of(StatusProcesso.COM_RESULTADO, StatusProcesso.CONCLUIDO, true),
                 Arguments.of(StatusProcesso.ABERTO, StatusProcesso.COM_RESULTADO, false),
                 Arguments.of(StatusProcesso.ABERTO, StatusProcesso.CONCLUIDO, false),
                 Arguments.of(StatusProcesso.AGUARDANDO_RESULTADO, StatusProcesso.ABERTO, false),
                 Arguments.of(StatusProcesso.ABERTO, StatusProcesso.ABERTO, false),
-                Arguments.of(StatusProcesso.CONCLUIDO, StatusProcesso.CONCLUIDO, false));
+                Arguments.of(StatusProcesso.CONCLUIDO, StatusProcesso.CONCLUIDO, false),
+                // T37: essa transicao so acontece via POST /resultado agora —
+                // o PATCH /status provisorio (D18) a recusa, mesmo sendo "um
+                // passo", porque pularia o registro do resultado.
+                Arguments.of(StatusProcesso.AGUARDANDO_RESULTADO, StatusProcesso.COM_RESULTADO, false));
     }
 
-    @ParameterizedTest(name = "[D18] {0} -> {1}: permitido = {2}")
+    @ParameterizedTest(name = "[D18/T37] {0} -> {1}: permitido = {2}")
     @MethodSource("transicoes")
     void statusSoAvancaUmPasso(StatusProcesso atual, StatusProcesso pedido, boolean permitido) {
         UUID id = UUID.randomUUID();
