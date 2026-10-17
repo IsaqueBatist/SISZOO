@@ -116,8 +116,10 @@ public class OcorrenciaService {
     private static final Pattern PREFIXO_PROTOCOLO = Pattern.compile("^\\s*oc\\s*(?=\\d)", Pattern.CASE_INSENSITIVE);
 
     // Ordem padrao da listagem (D31): urgentes primeiro, depois as mais recentes.
+    // Desempate pela criacao, nao pelo protocolo: como texto, "999/2026" vem
+    // antes de "1000/2026" (T30).
     private static final Sort ORDEM_LISTAGEM = Sort.by(
-            Sort.Order.desc("urgente"), Sort.Order.desc("dataAbertura"), Sort.Order.desc("protocolo"));
+            Sort.Order.desc("urgente"), Sort.Order.desc("dataAbertura"), Sort.Order.desc("criadoEm"));
 
     private final OcorrenciaRepository ocorrenciaRepository;
     private final TipoOcorrenciaRepository tipoOcorrenciaRepository;

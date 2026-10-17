@@ -493,6 +493,24 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("[D31/T30] mesma urgencia e mesma data de abertura: desempate pela criacao mais recente, nao pelo texto do protocolo")
+    void listagemDesempataPelaCriacao() {
+        // Gravadas direto no banco para fixar protocolo e criado_em. A ordem de
+        // criacao (1000, 998, 999, da mais recente para a mais antiga) difere
+        // do texto do protocolo desc (999, 998, 1000) e do numero desc
+        // (1000, 999, 998): so o desempate por criado_em produz a esperada.
+        // data_abertura antiga e ano 2099 no protocolo isolam estas linhas.
+        inserirOcorrencia("999/2099", "2026-01-01 08:00:00");
+        inserirOcorrencia("998/2099", "2026-01-01 09:00:00");
+        inserirOcorrencia("1000/2099", "2026-01-01 10:00:00");
+
+        Response lista = listar(tokenAgente, "/2099");
+
+        assertThat(lista.path("totalItens"), equalTo(3));
+        assertThat(lista.path("itens.protocolo"), equalTo(List.of("1000/2099", "998/2099", "999/2099")));
+    }
+
+    @Test
     @DisplayName("[D36] busca pelo protocolo com ou sem o prefixo OC")
     void buscaPorProtocoloComPrefixo() {
         Response criada = criar(tokenAgente, corpo());
@@ -714,6 +732,16 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
 
     private int contar(String tabela) {
         return jdbcTemplate.queryForObject("SELECT count(*) FROM " + tabela, Integer.class);
+    }
+
+    // Ocorrencia nao urgente com data_abertura 2026-01-01 e criado_em explicito.
+    private void inserirOcorrencia(String protocolo, String criadoEm) {
+        jdbcTemplate.update("INSERT INTO ocorrencia (protocolo, tipo_ocorrencia_id, data_abertura, endereco, bairro,"
+                + " descricao, registrado_por_id, criado_em)"
+                + " SELECT ?, t.id, DATE '2026-01-01', 'Rua Teste, 1', 'Centro', 'Ordem da listagem', u.id,"
+                + " CAST(? AS timestamp)"
+                + " FROM tipo_ocorrencia t, usuario u WHERE t.codigo = 'zoonose' AND u.email = ?",
+                protocolo, criadoEm, "agente.ocorrencias@itu.sp.gov.br");
     }
 
     private static byte[] pngComTamanho(int tamanho) {
