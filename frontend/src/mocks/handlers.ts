@@ -17,6 +17,7 @@ import type {
 import type { LoginRequest, LoginResponse } from '@/features/auth/types/auth.types'
 import { API_BASE_URL } from '../lib/env'
 import { ocorrenciasHandlers } from './ocorrenciasHandlers'
+import { processosHandlers } from './processosHandlers'
 import type { CriarUsuarioRequest, UsuarioListItem } from '@/features/usuarios/types/usuarios.types'
 import type { PreferenciaUsuario } from '@/features/configuracoes/types/configuracoes.types'
 
@@ -1387,4 +1388,5 @@ export const handlers = [
   }),
 
   ...ocorrenciasHandlers,
+  ...processosHandlers,
 ]

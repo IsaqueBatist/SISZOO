@@ -1,37 +1,41 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
+import { API_BASE_URL } from '@/lib/env'
+import { server } from '@/mocks/server'
+import { OCORRENCIA_ABERTA_ID, OCORRENCIA_PROCESSO_PENDENTE_ID, ocorrenciaAbertaFixture } from '@/mocks/ocorrenciasFixtures'
+import {
+  ANIMAL_AMOSTRADO_ID,
+  PROCESSO_PENDENTE_ID,
+  PROCESSO_SEM_VINCULO_ID,
+  processoFixture,
+  processoSemVinculoFixture,
+} from '@/mocks/processosFixtures'
 import { ProcessoDetalhe } from './ProcessoDetalhe'
-import { resetProcessosMock } from '../api/processosMockStore'
 
-// Ids/protocolos semeados em ./processosMockStore.ts (seedProcessosMock).
-const PROCESSO_URGENTE_ID = 'p1000000-0000-0000-0000-000000000001' // 001/2026, raiva, aberto, urgente
-const PROCESSO_NAO_URGENTE_ID = 'p1000000-0000-0000-0000-000000000003' // 003/2026, leptospirose, concluído
-const PROCESSO_SIGILOSO_ID = 'p1000000-0000-0000-0000-000000000005' // 005/2026, vinculado à ocorrência sigilosa
-const PROCESSO_SEM_VINCULO_ID = 'p1000000-0000-0000-0000-000000000006' // 006/2026, aberto, sem ocorrência vinculada
-const PROCESSO_AGUARDANDO_RESULTADO_ID = 'p1000000-0000-0000-0000-000000000008' // 008/2026, aguardando_resultado, sem vínculo
-const PROCESSO_COM_RESULTADO_INCONCLUSIVO_ID = 'p1000000-0000-0000-0000-000000000007' // 007/2026, com_resultado, inconclusivo
-// — referenciada abaixo pelo protocolo, não pelo id.
+const ADMIN = ['Administrador']
+const AGENTE = ['Agente Sanitário']
+const VET = ['Veterinário']
 
-function renderDetalhe(processoId: string, cargos: string[]) {
+function renderDetalhe(id: string, cargos = ADMIN) {
   const usuario: Usuario = {
     id: 'a1b2c3d4-0000-0000-0000-000000000099',
-    nome: 'Usuária',
-    sobrenome: 'Teste',
-    email: 'usuaria.teste@itu.sp.gov.br',
+    nome: 'Ana',
+    sobrenome: 'Silva',
+    email: 'ana.silva@itu.sp.gov.br',
     cargos,
     senhaAlteradaEm: '2026-01-10T12:00:00Z',
   }
   sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario }))
-
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[`/processos/${processoId}`]}>
+      <MemoryRouter initialEntries={[`/processos/${id}`]}>
         <AuthProvider>
           <Routes>
             <Route path="/processos/:id" element={<ProcessoDetalhe />} />
@@ -42,202 +46,239 @@ function renderDetalhe(processoId: string, cargos: string[]) {
   )
 }
 
-describe('ProcessoDetalhe', () => {
-  // As ocorrências de demonstração já são resetadas globalmente no afterEach
-  // de ../../test/setup.ts — só o mock de processos (que não faz parte dessa
-  // lista) precisa de reset explícito aqui.
-  beforeEach(() => {
-    resetProcessosMock()
+async function esperarDetalhe(protocolo: string) {
+  await screen.findByRole('heading', { name: `Processo PS ${protocolo}`, level: 1 })
+}
+
+function cardDe(titulo: string) {
+  return within(screen.getByRole('heading', { name: titulo }).closest('.card') as HTMLElement)
+}
+
+describe('ProcessoDetalhe — dados', () => {
+  it('mostra os dados do processo, o responsável e a amostra com identificação, campos clínicos e sintomas', async () => {
+    renderDetalhe(PROCESSO_PENDENTE_ID)
+    await esperarDetalhe('045/2026')
+
+    const dados = cardDe('Dados do Processo')
+    expect(dados.getByText('A82')).toBeInTheDocument()
+    expect(dados.getByText('Pasteur — SP')).toBeInTheDocument()
+    expect(dados.getByText('18/05/2026')).toBeInTheDocument()
+    expect(dados.getByText('Animal recolhido em via pública')).toBeInTheDocument()
+
+    const responsavel = cardDe('Responsável / Munícipe')
+    for (const valor of ['Maria da Conceição', '123.456.789-00', '(11) 99999-0000', 'maria@exemplo.com', '13300-000',
+      'Rua das Flores, 10', 'Centro', 'Vila Nova']) {
+      expect(responsavel.getByText(valor)).toBeInTheDocument()
+    }
+
+    const amostra = cardDe('Amostra 1')
+    for (const valor of ['Canino', 'Macho', 'SRD', 'Caramelo', 'Curta', '3 anos', '12.50', 'Sintomático', 'Peridomiciliar',
+      'Tecido encefálico', 'Agressividade sem motivo aparente', 'Apatia, Coriza', 'Coleta pós-óbito']) {
+      expect(amostra.getByText(valor)).toBeInTheDocument()
+    }
+    expect(amostra.getByText(/contato direta/)).toBeInTheDocument()
+    expect(amostra.getByText(/O animal agrediu o munícipe/)).toBeInTheDocument()
+    expect(amostra.getByText('Animal de campo')).toBeInTheDocument()
   })
 
-  it('renderiza as seções com os dados do processo semeado', async () => {
-    renderDetalhe(PROCESSO_URGENTE_ID, ['Administrador'])
+  it('amostra do canil leva à ficha do animal e não tem contato registrado', async () => {
+    renderDetalhe(PROCESSO_SEM_VINCULO_ID)
+    await esperarDetalhe('046/2026')
 
-    expect(await screen.findByRole('heading', { name: 'Processo 001/2026', level: 1 })).toBeInTheDocument()
-    expect(screen.getByText('Dados do Processo')).toBeInTheDocument()
-    expect(screen.getByText('Responsável / Munícipe')).toBeInTheDocument()
-    expect(screen.getByText('Maria Souza Oliveira')).toBeInTheDocument()
-    expect(screen.getByText('Resultado Laboratorial')).toBeInTheDocument()
-    expect(screen.getByText('Documentos')).toBeInTheDocument()
-    expect(screen.getByText('Amostra 1')).toBeInTheDocument()
-    // Doença aparece como rótulo legível, não o valor cru do enum.
-    expect(screen.getByText('Raiva')).toBeInTheDocument()
+    const amostra = cardDe('Amostra 1')
+    expect(amostra.getByRole('link', { name: 'Ver ficha do animal' })).toHaveAttribute('href', `/animais/${ANIMAL_AMOSTRADO_ID}`)
+    expect(amostra.getByText('Sem contato humano-animal registrado nesta amostra.')).toBeInTheDocument()
   })
 
-  it('mostra o resultado laboratorial quando presente no contrato', async () => {
-    renderDetalhe(PROCESSO_NAO_URGENTE_ID, ['Administrador'])
-
-    await screen.findByRole('heading', { name: 'Processo 003/2026', level: 1 })
-    expect(screen.getByText('Negativo')).toBeInTheDocument()
-    expect(screen.getByText('Em acompanhamento')).toBeInTheDocument()
-  })
-
-  it('mostra os documentos anexados quando presentes no contrato', async () => {
-    renderDetalhe(PROCESSO_NAO_URGENTE_ID, ['Administrador'])
-
-    await screen.findByRole('heading', { name: 'Processo 003/2026', level: 1 })
-    expect(screen.getByText('Termo de envio CCZ-SP.pdf')).toBeInTheDocument()
-    expect(screen.getByText('Fotos da coleta.pdf')).toBeInTheDocument()
-  })
-
-  it('mostra estado vazio honesto quando não há resultado nem documentos', async () => {
-    renderDetalhe(PROCESSO_SEM_VINCULO_ID, ['Administrador'])
-
-    await screen.findByRole('heading', { name: 'Processo 006/2026', level: 1 })
-    expect(screen.getByText(/Aguardando resultado do laboratório/)).toBeInTheDocument()
-    expect(screen.getByText('Nenhum documento anexado a este processo.')).toBeInTheDocument()
-  })
-
-  it('mostra o nome do denunciante da ocorrência sigilosa vinculada para Administrador', async () => {
-    renderDetalhe(PROCESSO_SIGILOSO_ID, ['Administrador'])
-
-    await screen.findByRole('heading', { name: 'Processo 005/2026', level: 1 })
-    expect(screen.getByText('Renata Costa Almeida')).toBeInTheDocument()
-    expect(screen.getByText('095/2026')).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: '095/2026' })).not.toBeInTheDocument()
-    expect(screen.getByRole('note', { name: 'Dados de demonstração' })).toBeInTheDocument()
-  })
-
-  it('mostra "Sigiloso" no lugar do denunciante da ocorrência sigilosa para perfil não-admin', async () => {
-    renderDetalhe(PROCESSO_SIGILOSO_ID, ['Agente Sanitário'])
-
-    await screen.findByRole('heading', { name: 'Processo 005/2026', level: 1 })
-    expect(screen.getByText('Sigiloso')).toBeInTheDocument()
-    expect(screen.queryByText('Renata Costa Almeida')).not.toBeInTheDocument()
-  })
-
-  it('mostra estado adequado para processo sem ocorrência vinculada', async () => {
-    renderDetalhe(PROCESSO_SEM_VINCULO_ID, ['Administrador'])
-
-    await screen.findByRole('heading', { name: 'Processo 006/2026', level: 1 })
-    expect(screen.getByText('Este processo não está vinculado a nenhuma ocorrência.')).toBeInTheDocument()
-  })
-
-  it('mostra o banner de urgência quando o processo é urgente', async () => {
-    renderDetalhe(PROCESSO_URGENTE_ID, ['Administrador'])
-
-    await screen.findByRole('heading', { name: 'Processo 001/2026', level: 1 })
+  it('processo urgente mostra o banner de contato humano-animal', async () => {
+    renderDetalhe(PROCESSO_PENDENTE_ID)
+    await esperarDetalhe('045/2026')
     expect(screen.getByText(/Atenção — contato humano-animal confirmado/)).toBeInTheDocument()
   })
 
-  it('não mostra o banner de urgência quando o processo não é urgente', async () => {
-    renderDetalhe(PROCESSO_NAO_URGENTE_ID, ['Administrador'])
-
-    await screen.findByRole('heading', { name: 'Processo 003/2026', level: 1 })
+  it('processo não urgente não mostra o banner', async () => {
+    renderDetalhe(PROCESSO_SEM_VINCULO_ID)
+    await esperarDetalhe('046/2026')
     expect(screen.queryByText(/Atenção — contato humano-animal confirmado/)).not.toBeInTheDocument()
   })
 
-  it('mostra "não encontrado" para um id inexistente, sem quebrar a tela', async () => {
-    renderDetalhe('id-que-nao-existe', ['Administrador'])
+  it('não oferece ações sem backend (enviar amostras, registrar resultado, documentos) nem aviso de demonstração', async () => {
+    renderDetalhe(PROCESSO_PENDENTE_ID)
+    await esperarDetalhe('045/2026')
+
+    expect(screen.queryByRole('button', { name: /Enviar amostras/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Registrar resultado/ })).not.toBeInTheDocument()
+    expect(screen.queryByText(/Documentos/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Dados de demonstração/)).not.toBeInTheDocument()
+    expect(cardDe('Resultado Laboratorial').getByText('Nenhum resultado laboratorial registrado.')).toBeInTheDocument()
+  })
+
+  it('id inexistente (404) mostra "não encontrado"', async () => {
+    renderDetalhe('00000000-0000-0000-0000-000000000000')
 
     expect(await screen.findByText('Processo sanitário não encontrado.')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Voltar para Processos/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '← Voltar para Processos' })).toBeInTheDocument()
   })
 
-  // RN5 original cobria a ausência de QUALQUER controle de edição — essa
-  // entrega expande deliberadamente o escopo (pedido do usuário) para
-  // adicionar as transições de status, o registro de resultado, o anexo de
-  // documento e o vínculo pós-criação. RN5 continua valendo para edição
-  // LIVRE de dados já gravados (amostras, responsável, dados gerais do
-  // processo) — isso nunca existiu e continua não existindo. As novas ações
-  // têm teste positivo próprio abaixo.
-  it('não permite edição livre de amostras/responsável/dados gerais do processo (RN5)', async () => {
-    renderDetalhe(PROCESSO_URGENTE_ID, ['Administrador'])
+  it('falha do servidor mostra erro genérico, não "não encontrado"', async () => {
+    server.use(http.get(`${API_BASE_URL}/processos/:id`, () => HttpResponse.json({ mensagem: 'erro' }, { status: 500 })))
+    renderDetalhe(PROCESSO_PENDENTE_ID)
 
-    await screen.findByRole('heading', { name: 'Processo 001/2026', level: 1 })
-    expect(screen.queryByRole('button', { name: /^editar/i })).not.toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /^editar/i })).not.toBeInTheDocument()
+    expect(await screen.findByText('Não foi possível carregar este processo sanitário. Tente novamente.')).toBeInTheDocument()
+  })
+})
+
+describe('ProcessoDetalhe — ocorrência vinculada', () => {
+  it.each([
+    ['Administrador', ADMIN],
+    ['Agente Sanitário', AGENTE],
+  ])('%s vê o protocolo da ocorrência e o link para ela, sem dados do denunciante', async (_perfil, cargos) => {
+    renderDetalhe(PROCESSO_PENDENTE_ID, cargos)
+    await esperarDetalhe('045/2026')
+
+    const card = cardDe('Ocorrência Vinculada')
+    expect(card.getByText('OC 092/2026')).toBeInTheDocument()
+    expect(card.getByRole('link', { name: 'Ver ocorrência' })).toHaveAttribute('href', `/ocorrencias/${OCORRENCIA_PROCESSO_PENDENTE_ID}`)
+    expect(card.getByText('O vínculo com a ocorrência não pode ser alterado.')).toBeInTheDocument()
+    expect(card.queryByText(/Denunciante/)).not.toBeInTheDocument()
   })
 
-  it('mostra "Enviar amostras ao laboratório" só quando o processo está aberto', async () => {
-    renderDetalhe(PROCESSO_URGENTE_ID, ['Administrador'])
+  it('Veterinário vê o protocolo, mas sem link para a ocorrência (sem acesso ao módulo, V11)', async () => {
+    renderDetalhe(PROCESSO_PENDENTE_ID, VET)
+    await esperarDetalhe('045/2026')
 
-    await screen.findByRole('heading', { name: 'Processo 001/2026', level: 1 })
-    expect(screen.getByRole('button', { name: 'Enviar amostras ao laboratório' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Registrar resultado' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Concluir processo' })).not.toBeInTheDocument()
+    const card = cardDe('Ocorrência Vinculada')
+    expect(card.getByText('OC 092/2026')).toBeInTheDocument()
+    expect(card.queryByRole('link', { name: 'Ver ocorrência' })).not.toBeInTheDocument()
   })
 
-  it('mostra "Registrar resultado" só quando o processo está aguardando resultado', async () => {
-    renderDetalhe(PROCESSO_AGUARDANDO_RESULTADO_ID, ['Administrador'])
+  it('Veterinário não recebe a opção de vínculo posterior (exige escrita em ocorrências, D33)', async () => {
+    renderDetalhe(PROCESSO_SEM_VINCULO_ID, VET)
+    await esperarDetalhe('046/2026')
 
-    await screen.findByRole('heading', { name: 'Processo 008/2026', level: 1 })
-    expect(screen.getByRole('button', { name: 'Registrar resultado' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Enviar amostras ao laboratório' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Concluir processo' })).not.toBeInTheDocument()
-  })
-
-  it('mostra "Concluir processo" só quando o processo já tem resultado', async () => {
-    renderDetalhe(PROCESSO_COM_RESULTADO_INCONCLUSIVO_ID, ['Administrador'])
-
-    await screen.findByRole('heading', { name: 'Processo 007/2026', level: 1 })
-    expect(screen.getByRole('button', { name: 'Concluir processo' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Enviar amostras ao laboratório' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Registrar resultado' })).not.toBeInTheDocument()
-  })
-
-  it('mostra o aviso de notificação (regra 19) quando o resultado é inconclusivo', async () => {
-    renderDetalhe(PROCESSO_COM_RESULTADO_INCONCLUSIVO_ID, ['Administrador'])
-
-    await screen.findByRole('heading', { name: 'Processo 007/2026', level: 1 })
-    expect(screen.getByText(/Vigilância Epidemiológica de Itu/)).toBeInTheDocument()
-  })
-
-  it('não mostra o aviso de notificação quando o resultado é negativo', async () => {
-    renderDetalhe(PROCESSO_NAO_URGENTE_ID, ['Administrador'])
-
-    await screen.findByRole('heading', { name: 'Processo 003/2026', level: 1 })
-    expect(screen.queryByText(/Vigilância Epidemiológica de Itu/)).not.toBeInTheDocument()
-  })
-
-  it('percorre o ciclo completo: enviar amostras → registrar resultado → concluir', async () => {
-    const user = userEvent.setup()
-    renderDetalhe(PROCESSO_SEM_VINCULO_ID, ['Administrador'])
-
-    await screen.findByRole('heading', { name: 'Processo 006/2026', level: 1 })
-    await user.click(screen.getByRole('button', { name: 'Enviar amostras ao laboratório' }))
-
-    await screen.findByRole('button', { name: 'Registrar resultado' })
-    await user.selectOptions(screen.getByLabelText('Resultado laboratorial'), 'negativo')
-    await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
-
-    await screen.findByRole('button', { name: 'Concluir processo' })
-    expect(screen.getByText('Negativo')).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Concluir processo' }))
-
-    await screen.findByText('Concluído')
-    expect(screen.queryByRole('button', { name: 'Concluir processo' })).not.toBeInTheDocument()
-  })
-
-  it('anexa um documento classificado por tipo', async () => {
-    const user = userEvent.setup()
-    renderDetalhe(PROCESSO_URGENTE_ID, ['Administrador'])
-
-    await screen.findByRole('heading', { name: 'Processo 001/2026', level: 1 })
-    await user.selectOptions(screen.getByLabelText('Tipo do documento'), 'termo_envio')
-    const arquivo = new File(['conteudo'], 'termo.pdf', { type: 'application/pdf' })
-    await user.upload(screen.getByLabelText(/^Anexar documento/i), arquivo)
-
-    const nomeArquivo = await screen.findByText('termo.pdf')
-    expect(nomeArquivo).toBeInTheDocument()
-    expect(nomeArquivo.parentElement).toHaveTextContent('Termo de envio')
-  })
-
-  it('vincula uma ocorrência já cadastrada a um processo sem vínculo', async () => {
-    const user = userEvent.setup()
-    renderDetalhe(PROCESSO_SEM_VINCULO_ID, ['Administrador'])
-
-    await screen.findByRole('heading', { name: 'Processo 006/2026', level: 1 })
     expect(screen.getByText('Este processo não está vinculado a nenhuma ocorrência.')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Vincular uma ocorrência já cadastrada' })).not.toBeInTheDocument()
+  })
+
+  it('Agente vincula uma ocorrência já cadastrada: envia o processoId ao endpoint da ocorrência e recarrega o processo', async () => {
+    const corpos: unknown[] = []
+    let vinculado = false
+    server.use(
+      http.post(`${API_BASE_URL}/ocorrencias/:id/processo`, async ({ params, request }) => {
+        expect(params.id).toBe(OCORRENCIA_ABERTA_ID)
+        corpos.push(await request.json())
+        vinculado = true
+        return HttpResponse.json(ocorrenciaAbertaFixture())
+      }),
+      http.get(`${API_BASE_URL}/processos/:id`, () =>
+        HttpResponse.json(
+          vinculado
+            ? { ...processoSemVinculoFixture(), ocorrenciaId: OCORRENCIA_ABERTA_ID, ocorrenciaProtocolo: '089/2026' }
+            : processoSemVinculoFixture(),
+        ),
+      ),
+    )
+    const user = userEvent.setup()
+    renderDetalhe(PROCESSO_SEM_VINCULO_ID, AGENTE)
+    await esperarDetalhe('046/2026')
 
     await user.click(screen.getByRole('button', { name: 'Vincular uma ocorrência já cadastrada' }))
-    await user.click(await screen.findByText('089/2026'))
+    await user.click(await screen.findByText('OC 089/2026'))
 
-    // D40: a ocorrência vinculada é fictícia e aparece como texto, sem link.
-    await waitFor(() =>
-      expect(screen.queryByText('Este processo não está vinculado a nenhuma ocorrência.')).not.toBeInTheDocument(),
+    expect(await cardDe('Ocorrência Vinculada').findByText('O vínculo com a ocorrência não pode ser alterado.')).toBeInTheDocument()
+    expect(cardDe('Ocorrência Vinculada').getByText('OC 089/2026')).toBeInTheDocument()
+    expect(corpos).toEqual([{ processoId: PROCESSO_SEM_VINCULO_ID }])
+  })
+
+  it('vínculo recusado (409) mostra a mensagem do servidor e mantém a escolha aberta', async () => {
+    server.use(
+      http.post(`${API_BASE_URL}/ocorrencias/:id/processo`, () =>
+        HttpResponse.json({ mensagem: 'Ocorrencia ou processo ja possui vinculo' }, { status: 409 }),
+      ),
     )
-    expect(screen.getByText('089/2026')).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: '089/2026' })).not.toBeInTheDocument()
+    const user = userEvent.setup()
+    renderDetalhe(PROCESSO_SEM_VINCULO_ID, ADMIN)
+    await esperarDetalhe('046/2026')
+
+    await user.click(screen.getByRole('button', { name: 'Vincular uma ocorrência já cadastrada' }))
+    await user.click(await screen.findByText('OC 089/2026'))
+
+    expect(await screen.findByText('Ocorrencia ou processo ja possui vinculo')).toBeInTheDocument()
+    expect(screen.getByRole('radiogroup', { name: 'Ocorrências disponíveis para vínculo' })).toBeInTheDocument()
+  })
+})
+
+describe('ProcessoDetalhe — status (provisório, D18)', () => {
+  it.each([
+    ['Administrador', ADMIN],
+    ['Agente Sanitário', AGENTE],
+    ['Veterinário', VET],
+  ])('%s avança um passo e a tela mostra o status devolvido pela API', async (_perfil, cargos) => {
+    const corpos: unknown[] = []
+    server.use(
+      http.patch(`${API_BASE_URL}/processos/:id/status`, async ({ request }) => {
+        corpos.push(await request.json())
+        return HttpResponse.json(processoFixture({ statusProcesso: 'COM_RESULTADO' }))
+      }),
+    )
+    const user = userEvent.setup()
+    renderDetalhe(PROCESSO_PENDENTE_ID, cargos)
+    await esperarDetalhe('045/2026')
+    expect(cardDe('Status do processo').getByText('Aguardando resultado')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Avançar status do processo (provisório)' }))
+
+    expect(await cardDe('Status do processo').findByText('Com resultado')).toBeInTheDocument()
+    expect(corpos).toEqual([{ status: 'COM_RESULTADO' }])
+  })
+
+  it('transição recusada (422) mostra a mensagem do servidor', async () => {
+    server.use(
+      http.patch(`${API_BASE_URL}/processos/:id/status`, () =>
+        HttpResponse.json({ mensagem: 'Transicao de status nao permitida para o processo' }, { status: 422 }),
+      ),
+    )
+    const user = userEvent.setup()
+    renderDetalhe(PROCESSO_PENDENTE_ID)
+    await esperarDetalhe('045/2026')
+
+    await user.click(screen.getByRole('button', { name: 'Avançar status do processo (provisório)' }))
+
+    expect(await screen.findByText('Transicao de status nao permitida para o processo')).toBeInTheDocument()
+  })
+
+  it('o botão fica desabilitado enquanto o avanço está em andamento (sem envio duplicado)', async () => {
+    let chamadas = 0
+    let liberar: () => void = () => {}
+    server.use(
+      http.patch(`${API_BASE_URL}/processos/:id/status`, async () => {
+        chamadas += 1
+        await new Promise<void>((resolve) => {
+          liberar = resolve
+        })
+        return HttpResponse.json(processoFixture({ statusProcesso: 'COM_RESULTADO' }))
+      }),
+    )
+    const user = userEvent.setup()
+    renderDetalhe(PROCESSO_PENDENTE_ID)
+    await esperarDetalhe('045/2026')
+
+    await user.click(screen.getByRole('button', { name: 'Avançar status do processo (provisório)' }))
+    const emAndamento = await screen.findByRole('button', { name: 'Avançando…' })
+    expect(emAndamento).toBeDisabled()
+    await user.click(emAndamento)
+    liberar()
+
+    expect(await cardDe('Status do processo').findByText('Com resultado')).toBeInTheDocument()
+    await waitFor(() => expect(chamadas).toBe(1))
+  })
+
+  it('processo concluído não oferece avanço', async () => {
+    server.use(http.get(`${API_BASE_URL}/processos/:id`, () => HttpResponse.json(processoFixture({ statusProcesso: 'CONCLUIDO' }))))
+    renderDetalhe(PROCESSO_PENDENTE_ID)
+    await esperarDetalhe('045/2026')
+
+    expect(cardDe('Status do processo').getByText('Processo concluído.')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Avançar status do processo (provisório)' })).not.toBeInTheDocument()
   })
 })

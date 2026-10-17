@@ -117,6 +117,14 @@ class RbacMatrixIT extends AbstractIntegrationTest {
                 Arguments.of(Perfil.AGENTE_SANITARIO, 200));
     }
 
+    // PROCESSOS_SANITARIOS:leitura (V3): os tres cargos.
+    static Stream<Arguments> listarProcessosPorPerfil() {
+        return Stream.of(
+                Arguments.of(Perfil.ADMINISTRADOR, 200),
+                Arguments.of(Perfil.VETERINARIO, 200),
+                Arguments.of(Perfil.AGENTE_SANITARIO, 200));
+    }
+
     @ParameterizedTest(name = "{0} ao criar usuário -> status {1}")
     @MethodSource("criarUsuarioPorPerfil")
     void somenteAdminCriaUsuario(Perfil perfil, int statusEsperado) {
@@ -206,6 +214,14 @@ class RbacMatrixIT extends AbstractIntegrationTest {
     void vinculoExigeEscritaEmOcorrencias(Perfil perfil, int statusEsperado) {
         String id = criarOcorrencia(tokenPara(Perfil.AGENTE_SANITARIO), false).then().statusCode(200).extract().path("id");
         fixture.postarProcesso(tokenPara(perfil), id, false).then().statusCode(statusEsperado);
+    }
+
+    @ParameterizedTest(name = "{0} ao listar processos sanitarios -> status {1}")
+    @MethodSource("listarProcessosPorPerfil")
+    void todosOsCargosListamProcessos(Perfil perfil, int statusEsperado) {
+        given().header("Authorization", "Bearer " + tokenPara(perfil))
+                .when().get("/api/processos")
+                .then().statusCode(statusEsperado);
     }
 
     private Response criarOcorrencia(String token, boolean sigilosa) {

@@ -3,7 +3,6 @@ import { API_BASE_URL } from '../lib/env'
 import {
   ANEXO_CRIADO_FIXTURE,
   CATALOGOS_OCORRENCIA_FIXTURE,
-  PROCESSO_CRIADO_FIXTURE,
   ocorrenciaCriadaFixture,
   ocorrenciasFixture,
   resumosFixture,
@@ -66,9 +65,5 @@ export const ocorrenciasHandlers = [
 
   http.get(`${API_BASE_URL}/ocorrencias/:id/anexos/:anexoId`, () =>
     HttpResponse.arrayBuffer(new Uint8Array([0xff, 0xd8, 0xff]).buffer, { headers: { 'Content-Type': 'image/jpeg' } }),
-  ),
-
-  http.patch(`${API_BASE_URL}/processos/:id/status`, () =>
-    HttpResponse.json({ ...PROCESSO_CRIADO_FIXTURE, statusProcesso: 'AGUARDANDO_RESULTADO' }),
   ),
 ]
