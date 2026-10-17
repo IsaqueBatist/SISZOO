@@ -2,6 +2,7 @@ package com.siszoo.processos.service;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.siszoo.animais.dto.CatalogoItemResponse;
+import com.siszoo.animais.clinico.exception.RegistroJaRetificadoException;
 import com.siszoo.animais.entity.Animal;
 import com.siszoo.animais.entity.Especie;
 import com.siszoo.animais.exception.AnimalNaoEncontradoException;
@@ -34,23 +36,33 @@ import com.siszoo.processos.dto.CatalogosProcessoResponse;
 import com.siszoo.processos.dto.CriarProcessoRequest;
 import com.siszoo.processos.dto.ProcessoAuditoriaSnapshot;
 import com.siszoo.processos.dto.ProcessoSanitarioResponse;
+import com.siszoo.processos.dto.RegistrarResultadoRequest;
 import com.siszoo.processos.dto.ResponsavelProcessoRequest;
 import com.siszoo.processos.dto.ResponsavelProcessoResponse;
+import com.siszoo.processos.dto.ResultadoProcessoResponse;
 import com.siszoo.processos.entity.AnimalAmostrado;
 import com.siszoo.processos.entity.Doenca;
 import com.siszoo.processos.entity.Laboratorio;
 import com.siszoo.processos.entity.ProcessoSanitario;
 import com.siszoo.processos.entity.ResponsavelProcesso;
+import com.siszoo.processos.entity.ResultadoLaboratorial;
+import com.siszoo.processos.entity.ResultadoProcesso;
 import com.siszoo.processos.entity.Sintoma;
 import com.siszoo.processos.entity.StatusClinicoAmostra;
 import com.siszoo.processos.entity.StatusProcesso;
 import com.siszoo.processos.exception.ContatoHumanoInconsistenteException;
+import com.siszoo.processos.exception.CorrecaoResultadoNaoPermitidaException;
 import com.siszoo.processos.exception.DataColetaFuturaException;
+import com.siszoo.processos.exception.DataResultadoFuturaException;
 import com.siszoo.processos.exception.DoencaInvalidaException;
 import com.siszoo.processos.exception.IdentificacaoComAnimalDoCanilException;
 import com.siszoo.processos.exception.IdentificacaoObrigatoriaException;
 import com.siszoo.processos.exception.LaboratorioInvalidoException;
 import com.siszoo.processos.exception.ProcessoNaoEncontradoException;
+import com.siszoo.processos.exception.ResultadoInvalidoException;
+import com.siszoo.processos.exception.ResultadoJaRegistradoException;
+import com.siszoo.processos.exception.ResultadoObrigatorioException;
+import com.siszoo.processos.exception.ResultadoRetificadoInvalidoException;
 import com.siszoo.processos.exception.SintomaInvalidoException;
 import com.siszoo.processos.exception.SintomaSemStatusSintomaticoException;
 import com.siszoo.processos.exception.TransicaoStatusProcessoInvalidaException;
@@ -61,6 +73,7 @@ import com.siszoo.processos.repository.LaboratorioRepository;
 import com.siszoo.processos.repository.ProcessoSanitarioRepository;
 import com.siszoo.processos.repository.ResponsavelProcessoRepository;
 import com.siszoo.processos.repository.ResultadoLaboratorialRepository;
+import com.siszoo.processos.repository.ResultadoProcessoRepository;
 import com.siszoo.processos.repository.SintomaRepository;
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.Usuario;
@@ -70,8 +83,8 @@ import com.siszoo.usuarios.service.AuditoriaEventoService;
 
 /**
  * Processo sanitario (T29, DER §3.5): criacao completa — processo, responsavel
- * e pelo menos uma amostra numa unica transacao —, consulta, catalogos e o
- * avanco provisorio de status (D18).
+ * e pelo menos uma amostra numa unica transacao —, consulta, catalogos, o
+ * avanco de status e o registro do resultado laboratorial (T34).
  *
  * <p>Amostras: com {@code animalId}, a identificacao e copiada da ficha do
  * animal neste momento (snapshot) e nunca mais relida; sem ele, vem do
@@ -86,6 +99,10 @@ public class ProcessoSanitarioService {
 
     private static final String ENTIDADE_AUDITORIA = "processo_sanitario";
 
+    // R1 (T29): "sem resultado" e o vigente nulo; o codigo aguardando do
+    // catalogo nao e um resultado lancavel.
+    private static final String RESULTADO_SEM_RESULTADO = "aguardando";
+
     private final ProcessoSanitarioRepository processoRepository;
     private final ResponsavelProcessoRepository responsavelRepository;
     private final AnimalAmostradoRepository amostraRepository;
@@ -93,6 +110,7 @@ public class ProcessoSanitarioService {
     private final LaboratorioRepository laboratorioRepository;
     private final SintomaRepository sintomaRepository;
     private final ResultadoLaboratorialRepository resultadoRepository;
+    private final ResultadoProcessoRepository resultadoProcessoRepository;
     private final DesfechoAnimalRepository desfechoRepository;
     private final EspecieRepository especieRepository;
     private final AnimalRepository animalRepository;
@@ -111,6 +129,7 @@ public class ProcessoSanitarioService {
             LaboratorioRepository laboratorioRepository,
             SintomaRepository sintomaRepository,
             ResultadoLaboratorialRepository resultadoRepository,
+            ResultadoProcessoRepository resultadoProcessoRepository,
             DesfechoAnimalRepository desfechoRepository,
             EspecieRepository especieRepository,
             AnimalRepository animalRepository,
@@ -127,6 +146,7 @@ public class ProcessoSanitarioService {
         this.laboratorioRepository = laboratorioRepository;
         this.sintomaRepository = sintomaRepository;
         this.resultadoRepository = resultadoRepository;
+        this.resultadoProcessoRepository = resultadoProcessoRepository;
         this.desfechoRepository = desfechoRepository;
         this.especieRepository = especieRepository;
         this.animalRepository = animalRepository;
@@ -327,28 +347,102 @@ public class ProcessoSanitarioService {
                         .map(d -> new CatalogoItemResponse(d.getCodigo(), d.getNome())).toList());
     }
 
-    // ── Status (provisorio) ──────────────────────────────
+    // ── Status e resultado (T34) ─────────────────────────
 
-    // Placeholder (D18): so avanca um passo por vez, sem campo de resultado e
-    // sem notificacao por e-mail. A task de resultado substitui este fluxo.
+    // Avanco manual de um passo (StatusProcesso): ABERTO -> AGUARDANDO_RESULTADO
+    // e COM_RESULTADO -> CONCLUIDO. COM_RESULTADO so pelo registro do
+    // resultado (registrarResultado), que substitui o placeholder da D18.
     @Transactional
     public ProcessoSanitarioResponse alterarStatus(UUID id, AlterarStatusProcessoRequest request, UUID usuarioId) {
         ProcessoSanitario processo = processoRepository.findByIdForUpdate(id)
                 .orElseThrow(ProcessoNaoEncontradoException::new);
-        StatusProcesso proximo = processo.getStatusProcesso().proximo()
-                .orElseThrow(TransicaoStatusProcessoInvalidaException::new);
-        if (request.status() != proximo) {
+        StatusProcesso destino = request.status();
+        if (!processo.getStatusProcesso().podeTransicionarPara(destino)) {
             throw new TransicaoStatusProcessoInvalidaException();
+        }
+        if (destino.exigeResultado()) {
+            throw new ResultadoObrigatorioException();
         }
         Usuario autor = usuarioRepository.findById(usuarioId).orElseThrow(UsuarioNaoEncontradoException::new);
         ProcessoAuditoriaSnapshot antes = toSnapshot(processo);
 
-        processo.setStatusProcesso(proximo);
+        processo.setStatusProcesso(destino);
         processoRepository.saveAndFlush(processo);
 
         auditoriaEventoService.registrar(autor, AcaoAuditoria.ATUALIZACAO, ENTIDADE_AUDITORIA, id, antes,
                 toSnapshot(processo));
         return toResponse(processo);
+    }
+
+    // Resultado laboratorial: registro critico imutavel (V14). Sem retificaId,
+    // o primeiro resultado leva AGUARDANDO_RESULTADO a COM_RESULTADO; com ele,
+    // a correcao do vigente, so em COM_RESULTADO (CONCLUIDO e terminal), e o
+    // corrigido fica preservado. O registro, o vigente em processo_sanitario e
+    // a auditoria entram na mesma transacao, sob o lock do processo, que
+    // serializa lancamentos concorrentes no mesmo processo.
+    @Transactional
+    public ProcessoSanitarioResponse registrarResultado(UUID id, RegistrarResultadoRequest request, UUID usuarioId) {
+        // Mesma regra das datas de coleta e de abertura: com o Clock do projeto.
+        if (request.dataResultado().isAfter(LocalDate.now(clock))) {
+            throw new DataResultadoFuturaException();
+        }
+        ProcessoSanitario processo = processoRepository.findByIdForUpdate(id)
+                .orElseThrow(ProcessoNaoEncontradoException::new);
+        ResultadoLaboratorial resultado = resultadoRepository.findByCodigo(request.resultado())
+                .filter(ResultadoLaboratorial::isAtivo)
+                .filter(r -> !RESULTADO_SEM_RESULTADO.equals(r.getCodigo()))
+                .orElseThrow(ResultadoInvalidoException::new);
+        Usuario autor = usuarioRepository.findById(usuarioId).orElseThrow(UsuarioNaoEncontradoException::new);
+
+        ResultadoProcesso registro;
+        if (request.retificaId() == null) {
+            exigirPrimeiroResultado(processo);
+            registro = ResultadoProcesso.registrar(processo, resultado, request.dataResultado(),
+                    request.observacoes(), autor);
+        } else {
+            ResultadoProcesso anterior = resultadoACorrigir(processo, request.retificaId());
+            registro = ResultadoProcesso.retificar(anterior, resultado, request.dataResultado(),
+                    request.observacoes(), autor);
+        }
+        ProcessoAuditoriaSnapshot antes = toSnapshot(processo);
+
+        // O registro vai antes do processo: uma violacao das garantias da V14
+        // (original unico, correcao unica) desfaz tudo sem tocar no status.
+        resultadoProcessoRepository.saveAndFlush(registro);
+        processo.aplicarResultadoVigente(registro);
+        processoRepository.saveAndFlush(processo);
+
+        auditoriaEventoService.registrar(autor, AcaoAuditoria.ATUALIZACAO, ENTIDADE_AUDITORIA, id, antes,
+                toSnapshot(processo));
+        // Ponto unico de gravacao do resultado: a notificacao da T36 (DER
+        // regra 19) dispara quando o vigente PASSA a positivo ou inconclusivo,
+        // inclusive por correcao (antes.resultado() -> registro).
+        return toResponse(processo);
+    }
+
+    private static void exigirPrimeiroResultado(ProcessoSanitario processo) {
+        StatusProcesso atual = processo.getStatusProcesso();
+        if (atual.podeTransicionarPara(StatusProcesso.COM_RESULTADO)) {
+            return;
+        }
+        if (atual == StatusProcesso.COM_RESULTADO) {
+            throw new ResultadoJaRegistradoException();
+        }
+        throw new TransicaoStatusProcessoInvalidaException();
+    }
+
+    // Como RN-C02: so o vigente (ainda nao corrigido) do mesmo processo.
+    private ResultadoProcesso resultadoACorrigir(ProcessoSanitario processo, UUID retificaId) {
+        if (processo.getStatusProcesso() != StatusProcesso.COM_RESULTADO) {
+            throw new CorrecaoResultadoNaoPermitidaException();
+        }
+        ResultadoProcesso anterior = resultadoProcessoRepository.findById(retificaId)
+                .filter(r -> r.getProcesso().getId().equals(processo.getId()))
+                .orElseThrow(ResultadoRetificadoInvalidoException::new);
+        if (resultadoProcessoRepository.existsByRetificaId(retificaId)) {
+            throw new RegistroJaRetificadoException();
+        }
+        return anterior;
     }
 
     // ── Apoio ────────────────────────────────────────────
@@ -376,7 +470,41 @@ public class ProcessoSanitarioService {
                 processo.getObservacoes(),
                 responsavel,
                 amostrasDe(processo),
-                processo.getCriadoEm());
+                processo.getCriadoEm(),
+                processo.getResultadoLaboratorial() == null ? null : new CatalogoItemResponse(
+                        processo.getResultadoLaboratorial().getCodigo(), processo.getResultadoLaboratorial().getNome()),
+                processo.getDataResultado(),
+                resultadosDe(processo));
+    }
+
+    // Historico em ordem de cadeia: o original e, a seguir, cada correcao da
+    // anterior (V14 garante um original e no maximo uma correcao por linha).
+    private List<ResultadoProcessoResponse> resultadosDe(ProcessoSanitario processo) {
+        List<ResultadoProcesso> registros = resultadoProcessoRepository.findByProcessoId(processo.getId());
+        Map<UUID, ResultadoProcesso> correcaoDe = registros.stream()
+                .filter(r -> r.getRetifica() != null)
+                .collect(Collectors.toMap(r -> r.getRetifica().getId(), Function.identity()));
+        List<ResultadoProcessoResponse> cadeia = new ArrayList<>();
+        ResultadoProcesso atual = registros.stream().filter(r -> r.getRetifica() == null).findFirst().orElse(null);
+        while (atual != null) {
+            cadeia.add(toResultadoResponse(atual));
+            atual = correcaoDe.get(atual.getId());
+        }
+        return cadeia;
+    }
+
+    private static ResultadoProcessoResponse toResultadoResponse(ResultadoProcesso registro) {
+        Usuario autor = registro.getRegistradoPor();
+        return new ResultadoProcessoResponse(
+                registro.getId(),
+                new CatalogoItemResponse(registro.getResultadoLaboratorial().getCodigo(),
+                        registro.getResultadoLaboratorial().getNome()),
+                registro.getDataResultado(),
+                registro.getObservacoes(),
+                registro.getRetifica() == null ? null : registro.getRetifica().getId(),
+                autor.getId(),
+                autor.getNome() + " " + autor.getSobrenome(),
+                registro.getRegistradoEm());
     }
 
     // Sem o responsavel: nenhum dado pessoal no evento (como a D23).
@@ -392,7 +520,9 @@ public class ProcessoSanitarioService {
                 processo.getCid(),
                 processo.getLaboratorio().getCodigo(),
                 processo.getObservacoes(),
-                amostrasDe(processo));
+                amostrasDe(processo),
+                processo.getResultadoLaboratorial() == null ? null : processo.getResultadoLaboratorial().getCodigo(),
+                processo.getDataResultado());
     }
 
     private static UUID ocorrenciaIdDe(ProcessoSanitario processo) {

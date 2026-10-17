@@ -9,7 +9,8 @@ import com.siszoo.animais.dto.CatalogoItemResponse;
 import com.siszoo.processos.entity.StatusProcesso;
 
 // Os campos da versao minima (T25) continuam com os mesmos nomes; os da T29
-// sao aditivos.
+// e da T34 sao aditivos. resultado/dataResultado sao o vigente (nulos sem
+// resultado); resultados e o historico, do original a ultima correcao.
 public record ProcessoSanitarioResponse(
         UUID id,
         String protocolo,
@@ -23,5 +24,8 @@ public record ProcessoSanitarioResponse(
         String observacoes,
         ResponsavelProcessoResponse responsavel,
         List<AmostraAnimalResponse> amostras,
-        LocalDateTime criadoEm) {
+        LocalDateTime criadoEm,
+        CatalogoItemResponse resultado,
+        LocalDate dataResultado,
+        List<ResultadoProcessoResponse> resultados) {
 }

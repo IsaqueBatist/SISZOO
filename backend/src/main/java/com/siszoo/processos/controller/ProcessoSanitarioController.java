@@ -17,13 +17,16 @@ import com.siszoo.processos.dto.AlterarStatusProcessoRequest;
 import com.siszoo.processos.dto.CatalogosProcessoResponse;
 import com.siszoo.processos.dto.CriarProcessoRequest;
 import com.siszoo.processos.dto.ProcessoSanitarioResponse;
+import com.siszoo.processos.dto.RegistrarResultadoRequest;
 import com.siszoo.processos.service.ProcessoSanitarioService;
 
 import jakarta.validation.Valid;
 
-// Processo sanitario (T25 + T29): criacao completa, detalhe, catalogos e o
-// avanco provisorio de status (D18). Com ocorrenciaId, o POST tambem exige
-// OCORRENCIAS_DENUNCIAS:escrita, checado no service (D33).
+// Processo sanitario (T25 + T29 + T34): criacao completa, detalhe, catalogos,
+// avanco de status e registro do resultado laboratorial. Com ocorrenciaId, o
+// POST tambem exige OCORRENCIAS_DENUNCIAS:escrita, checado no service (D33).
+// Resultado e imutavel: sem PUT/PATCH/DELETE em /resultados; a correcao e um
+// novo POST com retificaId.
 @RestController
 @RequestMapping("/api/processos")
 public class ProcessoSanitarioController {
@@ -57,5 +60,12 @@ public class ProcessoSanitarioController {
     public ProcessoSanitarioResponse alterarStatus(
             Authentication authentication, @PathVariable UUID id, @Valid @RequestBody AlterarStatusProcessoRequest request) {
         return processoService.alterarStatus(id, request, UUID.fromString(authentication.getName()));
+    }
+
+    @PostMapping("/{id}/resultados")
+    @PreAuthorize("hasAuthority('PROCESSOS_SANITARIOS:escrita')")
+    public ProcessoSanitarioResponse registrarResultado(
+            Authentication authentication, @PathVariable UUID id, @Valid @RequestBody RegistrarResultadoRequest request) {
+        return processoService.registrarResultado(id, request, UUID.fromString(authentication.getName()));
     }
 }
