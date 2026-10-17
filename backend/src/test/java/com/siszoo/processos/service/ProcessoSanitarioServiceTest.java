@@ -18,6 +18,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +32,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.AccessDeniedException;
 
+import com.siszoo.animais.entity.Especie;
 import com.siszoo.animais.repository.AnimalRepository;
 import com.siszoo.animais.repository.EspecieRepository;
 import com.siszoo.comum.service.ProtocoloService;
@@ -205,6 +207,37 @@ class ProcessoSanitarioServiceTest {
         verifyNoInteractions(protocoloService, processoRepository, doencaRepository, ocorrenciaService);
     }
 
+    // ── Urgencia derivada das amostras (DER regra 18) ────
+
+    static Stream<Arguments> contatosDasAmostras() {
+        return Stream.of(
+                Arguments.of("nenhuma amostra com contato", List.of(false, false, false), false),
+                Arguments.of("so uma amostra com contato", List.of(false, true, false), true),
+                Arguments.of("todas as amostras com contato", List.of(true, true, true), true));
+    }
+
+    @ParameterizedTest(name = "[DER 18] {0}: urgente = {2}")
+    @MethodSource("contatosDasAmostras")
+    void urgenciaAtribuidaAntesDoSave(String caso, List<Boolean> contatos, boolean esperado) {
+        when(doencaRepository.findByCodigo("raiva")).thenReturn(Optional.of(doenca()));
+        when(laboratorioRepository.findByCodigo("pasteur_sp")).thenReturn(Optional.of(laboratorio()));
+        when(especieRepository.findByCodigo("canino")).thenReturn(Optional.of(especie()));
+        // O valor no momento do save, nao o do objeto depois de criar().
+        AtomicReference<Boolean> urgenteNoSave = new AtomicReference<>();
+        when(processoRepository.save(any())).thenAnswer(invocacao -> {
+            ProcessoSanitario processo = invocacao.getArgument(0);
+            urgenteNoSave.set(processo.isUrgente());
+            return processo;
+        });
+        List<AmostraAnimalRequest> amostras = contatos.stream()
+                .map(contato -> contato ? amostraComContato() : amostraDeCampo())
+                .toList();
+
+        processoService.criar(request(HOJE, null, amostras), agente());
+
+        assertThat(urgenteNoSave.get()).isEqualTo(esperado);
+    }
+
     // ── Apoio ────────────────────────────────────────────
 
     private PermissoesOcorrencia agente() {
@@ -217,8 +250,27 @@ class ProcessoSanitarioServiceTest {
                 List.of(amostra), null);
     }
 
+    private static CriarProcessoRequest request(LocalDate dataAbertura, UUID ocorrenciaId,
+            List<AmostraAnimalRequest> amostras) {
+        return new CriarProcessoRequest(dataAbertura, "raiva", "pasteur_sp", ocorrenciaId,
+                new ResponsavelProcessoRequest("Responsavel", null, null, null, null, null, null, null),
+                amostras, null);
+    }
+
     private static AmostraAnimalRequest amostraDeCampo() {
         return amostra(null, "canino", "macho", StatusClinicoAmostra.ASSINTOMATICO, HOJE, false, null, null, List.of());
+    }
+
+    private static AmostraAnimalRequest amostraComContato() {
+        return amostra(null, "canino", "macho", StatusClinicoAmostra.ASSINTOMATICO, HOJE, true, NivelContato.DIRETA,
+                false, List.of());
+    }
+
+    private static Especie especie() {
+        Especie especie = new Especie();
+        especie.setCodigo("canino");
+        especie.setNome("Canino");
+        return especie;
     }
 
     private static AmostraAnimalRequest amostra(UUID animalId, String especie, String sexo, StatusClinicoAmostra status,
