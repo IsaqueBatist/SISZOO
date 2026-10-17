@@ -42,6 +42,8 @@ import com.siszoo.comum.AbstractIntegrationTest;
 import com.siszoo.comum.ApiTesteFixture;
 import com.siszoo.comum.RelogioTesteConfig;
 import com.siszoo.comum.service.ProtocoloService;
+import com.siszoo.ocorrencias.entity.Ocorrencia;
+import com.siszoo.ocorrencias.repository.OcorrenciaRepository;
 
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -70,6 +72,9 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private OcorrenciaRepository ocorrenciaRepository;
 
     private String tokenAgente;
 
@@ -190,6 +195,28 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
         } finally {
             jdbcTemplate.update("DELETE FROM protocolo_sequencia WHERE ano IN (2092, 2093)");
         }
+    }
+
+    // updatable = false tira a coluna do UPDATE que o Hibernate gera para a
+    // entidade; nao impede SQL direto (nao ha garantia no banco).
+    @Test
+    @DisplayName("[T30] alterar a ocorrencia pela entidade nao muda o protocolo gravado")
+    void protocoloNaoEntraNoUpdateDaOcorrencia() {
+        Response criada = criar(corpo("Protocolo imutavel"));
+        String id = idDe(criada);
+        String protocolo = criada.path("protocolo");
+
+        transactionTemplate.executeWithoutResult(status -> {
+            Ocorrencia ocorrencia = ocorrenciaRepository.findById(UUID.fromString(id)).orElseThrow();
+            ocorrencia.setProtocolo("000/1999");
+            ocorrencia.setDescricao("Protocolo imutavel, descricao alterada");
+        });
+
+        Map<String, Object> gravada = jdbcTemplate.queryForMap(
+                "SELECT protocolo, descricao FROM ocorrencia WHERE id = CAST(? AS uuid)", id);
+        // A descricao prova que o UPDATE aconteceu; o protocolo ficou fora dele.
+        assertThat(gravada.get("descricao"), equalTo("Protocolo imutavel, descricao alterada"));
+        assertThat(gravada.get("protocolo"), equalTo(protocolo));
     }
 
     // Virada do ano: o ano do protocolo e o de America/Sao_Paulo (ClockConfig),

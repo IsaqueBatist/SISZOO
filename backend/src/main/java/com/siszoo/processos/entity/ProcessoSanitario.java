@@ -46,7 +46,7 @@ public class ProcessoSanitario {
     @EqualsAndHashCode.Include
     private UUID id;
 
-    @Column(nullable = false, unique = true, length = 20)
+    @Column(nullable = false, unique = true, length = 20, updatable = false)
     private String protocolo;
 
     @Column(name = "data_abertura", nullable = false)

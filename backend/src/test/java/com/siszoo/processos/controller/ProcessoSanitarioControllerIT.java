@@ -36,12 +36,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.siszoo.animais.dto.AtualizarAnimalRequest;
 import com.siszoo.animais.dto.CriarAnimalRequest;
 import com.siszoo.comum.AbstractIntegrationTest;
 import com.siszoo.comum.ApiTesteFixture;
 import com.siszoo.comum.RelogioTesteConfig;
+import com.siszoo.processos.entity.ProcessoSanitario;
+import com.siszoo.processos.repository.ProcessoSanitarioRepository;
 
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -59,6 +62,12 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
+
+    @Autowired
+    private ProcessoSanitarioRepository processoRepository;
 
     private String tokenAdmin;
     private String tokenAgente;
@@ -381,6 +390,29 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
                 "maria@exemplo.com", "13300-000", "Rua das Flores", "Centro", "Vila Nova")) {
             assertThat(payload, payload, not(containsString(pessoal)));
         }
+    }
+
+    // updatable = false tira a coluna do UPDATE que o Hibernate gera para a
+    // entidade; nao impede SQL direto (nao ha garantia no banco).
+    @Test
+    @DisplayName("[T30] alterar o processo pela entidade nao muda o protocolo gravado")
+    void protocoloNaoEntraNoUpdateDoProcesso() {
+        Response criado = fixture.postarProcesso(tokenAgente, null, false);
+        criado.then().statusCode(200);
+        String id = criado.path("id");
+        String protocolo = criado.path("protocolo");
+
+        transactionTemplate.executeWithoutResult(status -> {
+            ProcessoSanitario processo = processoRepository.findById(UUID.fromString(id)).orElseThrow();
+            processo.setProtocolo("000/1999");
+            processo.setObservacoes("Observacao alterada");
+        });
+
+        Map<String, Object> gravado = jdbcTemplate.queryForMap(
+                "SELECT protocolo, observacoes FROM processo_sanitario WHERE id = CAST(? AS uuid)", id);
+        // A observacao prova que o UPDATE aconteceu; o protocolo ficou fora dele.
+        assertThat(gravado.get("observacoes"), equalTo("Observacao alterada"));
+        assertThat(gravado.get("protocolo"), equalTo(protocolo));
     }
 
     // ── Concorrencia do protocolo pela API (T30) ─────────

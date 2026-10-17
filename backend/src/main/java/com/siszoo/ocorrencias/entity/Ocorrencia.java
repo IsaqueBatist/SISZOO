@@ -47,7 +47,7 @@ public class Ocorrencia {
     @EqualsAndHashCode.Include
     private UUID id;
 
-    @Column(nullable = false, unique = true, length = 20)
+    @Column(nullable = false, unique = true, length = 20, updatable = false)
     private String protocolo;
 
     @ManyToOne(fetch = FetchType.LAZY)
