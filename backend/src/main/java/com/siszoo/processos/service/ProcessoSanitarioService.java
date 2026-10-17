@@ -96,9 +96,10 @@ public class ProcessoSanitarioService {
     private static final String ENTIDADE_AUDITORIA = "processo_sanitario";
 
     // RN3 do front (T32), mesma regra da listagem de ocorrencias (D31):
-    // urgentes primeiro, depois os mais recentes.
+    // urgentes primeiro, depois os mais recentes. Desempate pela criacao, nao
+    // pelo protocolo: como texto, "999/2026" vem antes de "1000/2026".
     private static final Sort ORDEM_LISTAGEM = Sort.by(
-            Sort.Order.desc("urgente"), Sort.Order.desc("dataAbertura"), Sort.Order.desc("protocolo"));
+            Sort.Order.desc("urgente"), Sort.Order.desc("dataAbertura"), Sort.Order.desc("criadoEm"));
 
     private final ProcessoSanitarioRepository processoRepository;
     private final ResponsavelProcessoRepository responsavelRepository;

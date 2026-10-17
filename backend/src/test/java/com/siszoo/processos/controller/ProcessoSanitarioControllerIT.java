@@ -429,6 +429,30 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         assertThat(ids.indexOf(urgente) < ids.indexOf(comum), equalTo(true));
         List<String> datas = listar(tokenAgente, "?status=ABERTO&tamanho=500").path("itens.findAll { !it.urgente }.dataAbertura");
         assertThat(datas, equalTo(datas.stream().sorted(Comparator.reverseOrder()).toList()));
+
+        // Mesma urgencia e mesma data de abertura: desempate pela criacao mais
+        // recente, nao pelo texto do protocolo. A ordem de criacao (1000, 998,
+        // 999, da mais recente para a mais antiga) difere do texto desc
+        // (999, 998, 1000) e do numero desc (1000, 999, 998).
+        String maisAntigo = criarComProtocolo("999/2099", "2026-01-01 08:00:00");
+        String intermediario = criarComProtocolo("998/2099", "2026-01-01 09:00:00");
+        String maisRecente = criarComProtocolo("1000/2099", "2026-01-01 10:00:00");
+        List<String> desempate = listar(tokenAgente, "?tamanho=500").path("itens.id");
+        assertThat(desempate.stream().filter(List.of(maisAntigo, intermediario, maisRecente)::contains).toList(),
+                equalTo(List.of(maisRecente, intermediario, maisAntigo)));
+    }
+
+    // Processo comum com data_abertura 2026-01-01 (antiga: nao sobe para o topo
+    // das listagens dos outros testes); protocolo e criado_em fixados no banco.
+    @SuppressWarnings("unchecked")
+    private String criarComProtocolo(String protocolo, String criadoEm) {
+        Map<String, Object> corpo = fixture.corpoProcesso(null, false);
+        corpo.put("dataAbertura", "2026-01-01");
+        ((List<Map<String, Object>>) corpo.get("amostras")).get(0).put("dataColeta", "2026-01-01");
+        String id = fixture.postarProcesso(tokenAgente, corpo).then().statusCode(200).extract().path("id");
+        jdbcTemplate.update("UPDATE processo_sanitario SET protocolo = ?, criado_em = CAST(? AS timestamp)"
+                + " WHERE id = CAST(? AS uuid)", protocolo, criadoEm, id);
+        return id;
     }
 
     // ── Catalogos e acesso ───────────────────────────────
