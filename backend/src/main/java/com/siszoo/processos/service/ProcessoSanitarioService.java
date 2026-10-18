@@ -53,7 +53,6 @@ import com.siszoo.processos.entity.StatusProcesso;
 import com.siszoo.processos.exception.ContatoHumanoInconsistenteException;
 import com.siszoo.processos.exception.CorrecaoResultadoNaoPermitidaException;
 import com.siszoo.processos.exception.DataColetaFuturaException;
-import com.siszoo.processos.exception.DataResultadoAnteriorAberturaException;
 import com.siszoo.processos.exception.DataResultadoFuturaException;
 import com.siszoo.processos.exception.DoencaInvalidaException;
 import com.siszoo.processos.exception.IdentificacaoComAnimalDoCanilException;
@@ -387,13 +386,10 @@ public class ProcessoSanitarioService {
         if (request.dataResultado().isAfter(LocalDate.now(clock))) {
             throw new DataResultadoFuturaException();
         }
+        // Sem limite inferior (docs/decisoes/T34.md): a coleta e o laudo podem
+        // anteceder a abertura, que e imutavel depois de gravada.
         ProcessoSanitario processo = processoRepository.findByIdForUpdate(id)
                 .orElseThrow(ProcessoNaoEncontradoException::new);
-        // Limite inferior: o resultado nao antecede a abertura do processo
-        // (vale tambem para a correcao; o registro e imutavel).
-        if (request.dataResultado().isBefore(processo.getDataAbertura())) {
-            throw new DataResultadoAnteriorAberturaException();
-        }
         ResultadoLaboratorial resultado = resultadoRepository.findByCodigo(request.resultado())
                 .filter(ResultadoLaboratorial::isAtivo)
                 .filter(r -> !RESULTADO_SEM_RESULTADO.equals(r.getCodigo()))

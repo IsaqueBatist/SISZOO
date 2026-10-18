@@ -609,31 +609,27 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         lancarResultado(tokenAgente, processoId, Map.of("resultado", "positivo")).then().statusCode(422);
         lancarResultado(tokenAgente, processoId, corpoResultado("positivo", HOJE.plusDays(1), null))
                 .then().statusCode(422).body("mensagem", equalTo("Data do resultado nao pode ser futura"));
-        // Processo aberto hoje: resultado de ontem antecede a abertura.
-        lancarResultado(tokenAgente, processoId, corpoResultado("positivo", HOJE.minusDays(1), null))
-                .then().statusCode(422)
-                .body("mensagem", equalTo("Data do resultado nao pode ser anterior a data de abertura do processo"));
 
         assertSemResultado(processoId, "AGUARDANDO_RESULTADO");
     }
 
+    // Sem limite inferior (docs/decisoes/T34.md): processo registrado no
+    // sistema depois do laudo; a abertura e imutavel e a data real do laudo
+    // precisa ser aceita.
     @Test
-    @DisplayName("[T34] dataResultado >= dataAbertura: na abertura aceita; antes recusada no registro e na correcao")
-    void dataResultadoNaoAntecedeAAbertura() {
-        LocalDate abertura = HOJE.minusDays(3);
-        String processoId = processoAguardandoResultadoAbertoEm(abertura);
+    @DisplayName("[T34] dataResultado anterior a abertura: aceita no registro e na correcao, gravada no banco")
+    void dataResultadoAnteriorAAberturaAceita() {
+        String processoId = processoAguardandoResultado();
 
-        lancarResultado(tokenAgente, processoId, corpoResultado("negativo", abertura.minusDays(1), null))
-                .then().statusCode(422);
-        assertSemResultado(processoId, "AGUARDANDO_RESULTADO");
+        String originalId = lancarResultado(tokenAgente, processoId, corpoResultado("negativo", HOJE.minusDays(5), null))
+                .then().statusCode(200).body("dataResultado", equalTo(HOJE.minusDays(5).toString()))
+                .extract().path("resultados[0].id");
+        lancarResultado(tokenAgente, processoId, corpoResultado("positivo", HOJE.minusDays(2), originalId))
+                .then().statusCode(200).body("dataResultado", equalTo(HOJE.minusDays(2).toString()));
 
-        String originalId = lancarResultado(tokenAgente, processoId, corpoResultado("negativo", abertura, null))
-                .then().statusCode(200).extract().path("resultados[0].id");
-        lancarResultado(tokenAgente, processoId, corpoResultado("positivo", abertura.minusDays(1), originalId))
-                .then().statusCode(422)
-                .body("mensagem", equalTo("Data do resultado nao pode ser anterior a data de abertura do processo"));
-        assertThat(contarResultados(processoId), equalTo(1));
-        assertThat(buscar(tokenAgente, processoId).path("resultado.codigo"), equalTo("negativo"));
+        assertThat(contarResultados(processoId), equalTo(2));
+        assertThat(jdbcTemplate.queryForObject("SELECT CAST(data_resultado AS text) FROM processo_sanitario"
+                + " WHERE id = CAST(? AS uuid)", String.class, processoId), equalTo(HOJE.minusDays(2).toString()));
         assertVigenteCoerente(processoId);
     }
 

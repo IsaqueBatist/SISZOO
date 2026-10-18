@@ -58,7 +58,6 @@ import com.siszoo.ocorrencias.exception.VinculoJaExistenteException;
 import com.siszoo.processos.exception.ContatoHumanoInconsistenteException;
 import com.siszoo.processos.exception.CorrecaoResultadoNaoPermitidaException;
 import com.siszoo.processos.exception.DataColetaFuturaException;
-import com.siszoo.processos.exception.DataResultadoAnteriorAberturaException;
 import com.siszoo.processos.exception.DataResultadoFuturaException;
 import com.siszoo.processos.exception.DoencaInvalidaException;
 import com.siszoo.processos.exception.IdentificacaoComAnimalDoCanilException;
@@ -384,12 +383,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroResponse> handleDataResultadoFutura() {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
                 .body(new ErroResponse("Data do resultado nao pode ser futura"));
-    }
-
-    @ExceptionHandler(DataResultadoAnteriorAberturaException.class)
-    public ResponseEntity<ErroResponse> handleDataResultadoAnteriorAbertura() {
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
-                .body(new ErroResponse("Data do resultado nao pode ser anterior a data de abertura do processo"));
     }
 
     @ExceptionHandler(ResultadoInvalidoException.class)
