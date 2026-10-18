@@ -218,7 +218,6 @@ export function CardResultadoProcesso({ processo, podeEscrever }: CardResultadoP
                 id="proc-data-resultado"
                 className={`input${errors.dataResultado ? ' error' : ''}`}
                 type="date"
-                min={processo.dataAbertura}
                 max={hojeIso()}
                 {...register('dataResultado')}
               />
