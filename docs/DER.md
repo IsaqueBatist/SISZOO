@@ -4,7 +4,7 @@
 
 > Documento de referência derivado das **15 telas + Design System** do protótipo navegável. Use-o para comparar com seu schema atual e validar cobertura.
 
-> **Estado do schema (V14).** As tabelas de usuários/acesso, animais, baias, registros clínicos (`vacinacao`, `procedimento`, `prescricao`), ocorrências (§3.4), processo sanitário (§3.5, exceto `documento_processo`) e seus catálogos estão descritas aqui **como existem nas migrations** (`backend/src/main/resources/db/migration`, V1–V14; a V11 só corrige a matriz de permissões, §3.1, a V12 só acrescenta a ação de auditoria `VISUALIZACAO`, §3.8, a V13 completa o processo sanitário, T29, e a V14 cria o histórico de resultados, T34). As demais (relatórios, `adocao`, `exame`, anexos de animal, `documento_processo`) ainda **não têm tabela**: são o modelo-alvo, a validar na implementação de cada módulo.
+> **Estado do schema (V15).** As tabelas de usuários/acesso, animais, baias, registros clínicos (`vacinacao`, `procedimento`, `prescricao`), ocorrências (§3.4), processo sanitário (§3.5, exceto `documento_processo`) e seus catálogos estão descritas aqui **como existem nas migrations** (`backend/src/main/resources/db/migration`, V1–V15; a V11 só corrige a matriz de permissões, §3.1, a V12 só acrescenta a ação de auditoria `VISUALIZACAO`, §3.8, a V13 completa o processo sanitário, T29, a V14 cria o histórico de resultados, T34, e a V15 completa as garantias desse histórico e reconcilia o legado da D18). As demais (relatórios, `adocao`, `exame`, anexos de animal, `documento_processo`) ainda **não têm tabela**: são o modelo-alvo, a validar na implementação de cada módulo.
 
 **Convenções**
 
@@ -540,7 +540,7 @@ Um `CHECK` amarra cada tipo à sua transição (tabela de regras de `ocorrencia`
 
 #### `processo_sanitario`
 
-> **Estado do schema (V14, T29 e T34).** As tabelas desta seção existem como descritas, exceto `documento_processo` (fica para a task de documentos). A V10 criou a versão mínima de `processo_sanitario` (T25); a V13 acrescentou as colunas do modelo-alvo; a V14 criou `resultado_processo`, o histórico imutável dos resultados (T34). A V13 **só aplica sobre um banco sem processos**: com processos mínimos da T25 (sem doença, laboratório, responsável e amostras), ela para e pede a recriação do banco de desenvolvimento — não há dados reais a preservar (decisão DH-3, `docs/decisoes/T29.md`). Fonte: este DER; o DBML do módulo 4 está desatualizado.
+> **Estado do schema (V15, T29 e T34).** As tabelas desta seção existem como descritas, exceto `documento_processo` (fica para a task de documentos). A V10 criou a versão mínima de `processo_sanitario` (T25); a V13 acrescentou as colunas do modelo-alvo; a V14 criou `resultado_processo`, o histórico imutável dos resultados (T34); a V15 completou as garantias desse histórico (índice por processo, linha que não corrige a si mesma, `TRUNCATE` recusado) e devolveu a `AGUARDANDO_RESULTADO` os processos que o PATCH provisório da D18 deixou em `COM_RESULTADO` sem resultado. A V13 **só aplica sobre um banco sem processos**: com processos mínimos da T25 (sem doença, laboratório, responsável e amostras), ela para e pede a recriação do banco de desenvolvimento — não há dados reais a preservar (decisão DH-3, `docs/decisoes/T29.md`). Fonte: este DER; o DBML do módulo 4 está desatualizado.
 
 | Campo                       | Tipo                            | Obrig. | Observações                                                                                |
 | --------------------------- | ------------------------------- | ------ | ------------------------------------------------------------------------------------------ |
@@ -646,11 +646,12 @@ Não é catálogo: coluna `processo_sanitario.status_processo` varchar + `CHECK`
 | `registrado_por_id`         | FK `usuario`                | \*     | autor do lançamento ou da correção · `ON DELETE RESTRICT`          |
 | `registrado_em`             | timestamp                   | \*     |                                                                    |
 
-**Garantias no banco (V14)**
+**Garantias no banco (V14 e V15)**
 
-- Um único resultado original por processo: índice único parcial `uq_resultado_processo_original (processo_id) WHERE retifica_id IS NULL`. Junto com o `UNIQUE (retifica_id)`, o histórico de cada processo é uma cadeia linear, mesmo sob concorrência. As duas violações respondem 409, com a mesma mensagem do caminho barrado pelo service.
+- Um único resultado original por processo: índice único parcial `uq_resultado_processo_original (processo_id) WHERE retifica_id IS NULL`. Junto com o `UNIQUE (retifica_id)` e o `CHECK` que impede uma linha de corrigir a si mesma (`ck_resultado_processo_retifica_outro`, V15), o histórico de cada processo é uma cadeia linear, mesmo sob concorrência. As violações do original único e da correção única respondem 409, com a mesma mensagem do caminho barrado pelo service.
 - A correção é sempre de um resultado do mesmo processo: FK composta `fk_resultado_processo_retifica (retifica_id, processo_id) → (id, processo_id)`.
-- **Imutável:** um trigger (`tg_resultado_processo_imutavel`) recusa `UPDATE` e `DELETE` de qualquer linha, para qualquer usuário ou caminho, inclusive SQL manual (mesmo princípio do vínculo, DH-7). No código, a entidade não tem setters, as colunas ficam fora do UPDATE (`updatable = false`) e o repositório só declara leituras.
+- **Imutável:** triggers recusam `UPDATE` e `DELETE` de qualquer linha (`tg_resultado_processo_imutavel`, V14) e `TRUNCATE` da tabela, direto ou em cascata (`tg_resultado_processo_sem_truncate`, V15), para qualquer usuário ou caminho, inclusive SQL manual (mesmo princípio do vínculo, DH-7). A única saída é o dono da tabela desativar os triggers (`ALTER TABLE … DISABLE TRIGGER`), fora de qualquer fluxo da aplicação. No código, a entidade não tem setters, as colunas ficam fora do UPDATE (`updatable = false`) e o repositório não declara escrita (herda `save`/`delete` de `JpaRepository`; quem barra é o trigger).
+- Índice `ix_resultado_processo_processo_id` (V15) para a leitura do histórico por processo.
 
 **Pendências (fora da T34)**
 
