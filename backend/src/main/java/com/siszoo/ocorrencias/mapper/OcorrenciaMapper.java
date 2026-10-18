@@ -54,9 +54,13 @@ public interface OcorrenciaMapper {
         return ocorrencia.isSigilosa() && !podeVerSigilo ? DENUNCIANTE_MASCARADO : toDenuncianteResponse(denunciante);
     }
 
+    // entregaDenunciante = false (respostas de mutacao, A04): em ocorrencia
+    // sigilosa o denunciante sai mascarado ate para quem tem a permissao, que
+    // o recebe no GET do detalhe, auditado (VISUALIZACAO). podeVerDenunciante
+    // continua dizendo se o usuario tem a permissao.
     default OcorrenciaResponse toResponse(Ocorrencia ocorrencia, Denunciante denunciante, Denunciado denunciado,
             ProcessoSanitario processo, List<MovimentacaoOcorrencia> movimentacoes, List<AnexoOcorrencia> anexos,
-            boolean podeVerSigilo) {
+            boolean podeVerSigilo, boolean entregaDenunciante) {
         return new OcorrenciaResponse(
                 ocorrencia.getId(),
                 ocorrencia.getProtocolo(),
@@ -82,7 +86,7 @@ public interface OcorrenciaMapper {
                 ocorrencia.getEncerradaEm(),
                 nomeCompleto(ocorrencia.getEncerradaPor()),
                 processo == null ? null : toProcessoVinculadoResponse(processo),
-                denuncianteVisivel(ocorrencia, denunciante, podeVerSigilo),
+                denuncianteVisivel(ocorrencia, denunciante, podeVerSigilo && entregaDenunciante),
                 denunciado == null ? null : toDenunciadoResponse(denunciado),
                 movimentacoes.stream().map(this::toMovimentacaoResponse).toList(),
                 anexos.stream().map(this::toAnexoResponse).toList(),

@@ -61,15 +61,18 @@ function comStatusProcesso(statusProcesso: StatusProcesso): Ocorrencia {
 }
 
 describe('nota interna (D37)', () => {
-  it('adiciona a nota: envia a descrição, mostra a movimentação devolvida e limpa o campo', async () => {
+  // A04: a tela recarrega o detalhe pelo GET depois da nota; o GET devolve o
+  // estado que a nota gravou, como o backend.
+  it('adiciona a nota: envia a descrição, mostra a movimentação recarregada e limpa o campo', async () => {
     const user = userEvent.setup()
     const corpos: unknown[] = []
+    let estado = ocorrenciaAbertaFixture()
     server.use(
+      http.get(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_ABERTA_ID}`, () => HttpResponse.json(estado)),
       http.post(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_ABERTA_ID}/notas`, async ({ request }) => {
         corpos.push(await request.json())
         const aberta = ocorrenciaAbertaFixture()
-        return HttpResponse.json(
-          {
+        estado = {
             ...aberta,
             movimentacoes: [
               ...aberta.movimentacoes,
@@ -84,9 +87,8 @@ describe('nota interna (D37)', () => {
                 usuarioNome: 'Usuária Teste',
               },
             ],
-          },
-          { status: 201 },
-        )
+        }
+        return HttpResponse.json(estado, { status: 201 })
       }),
     )
     renderDetalhe(OCORRENCIA_ABERTA_ID, AGENTE)

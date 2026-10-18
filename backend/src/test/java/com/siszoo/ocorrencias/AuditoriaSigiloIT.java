@@ -264,6 +264,96 @@ class AuditoriaSigiloIT extends AbstractIntegrationTest {
         assertThat(eventosDaOcorrencia(id), equalTo(0));
     }
 
+    // ── Respostas de mutacao (A04) ───────────────────────
+    // Edicao, status, encerramento, notas e vinculo devolvem o denunciante de
+    // sigilosa mascarado ate para o Administrador, sem VISUALIZACAO: o dado
+    // completo so sai pelo detalhe, que registra o acesso.
+
+    @Test
+    @DisplayName("[A04] PUT de sigilosa pelo Admin: resposta mascarada e nenhum VISUALIZACAO")
+    void edicaoDevolveDenuncianteMascarado() {
+        String marcador = marcador();
+        String id = criarSigilosaComDenunciante(marcador, false);
+        Map<String, Object> corpo = new HashMap<>();
+        corpo.put("tipoOcorrencia", "zoonose");
+        corpo.put("dataAbertura", RelogioTesteConfig.HOJE.toString());
+        corpo.put("endereco", "Rua da Ocorrencia, 10");
+        corpo.put("bairro", "Centro");
+        corpo.put("descricao", "Descricao revisada");
+        corpo.put("urgente", false);
+        corpo.put("sigilosa", true);
+        corpo.put("anonima", false);
+
+        Response resposta = comToken(tokenAdmin).contentType(ContentType.JSON).body(corpo)
+                .when().put(ROTA + "/" + id);
+
+        assertMascaradaSemVisualizacao(resposta, marcador, id);
+    }
+
+    @Test
+    @DisplayName("[A04] PATCH de status de sigilosa pelo Admin: resposta mascarada e nenhum VISUALIZACAO")
+    void mudancaDeStatusDevolveDenuncianteMascarado() {
+        String marcador = marcador();
+        String id = criarSigilosaComDenunciante(marcador, false);
+
+        Response resposta = comToken(tokenAdmin).contentType(ContentType.JSON)
+                .body(Map.of("status", "EM_ATENDIMENTO")).when().patch(ROTA + "/" + id + "/status");
+
+        assertMascaradaSemVisualizacao(resposta, marcador, id);
+    }
+
+    @Test
+    @DisplayName("[A04] encerramento de sigilosa pelo Admin: resposta mascarada e nenhum VISUALIZACAO")
+    void encerramentoDevolveDenuncianteMascarado() {
+        String marcador = marcador();
+        String id = criarSigilosaComDenunciante(marcador, false);
+
+        Response resposta = comToken(tokenAdmin).contentType(ContentType.JSON)
+                .body(Map.of("providenciaTomada", "sem_acao")).when().post(ROTA + "/" + id + "/encerramento");
+
+        assertMascaradaSemVisualizacao(resposta, marcador, id);
+    }
+
+    @Test
+    @DisplayName("[A04] nota em sigilosa pelo Admin: resposta mascarada e nenhum VISUALIZACAO")
+    void notaDevolveDenuncianteMascarado() {
+        String marcador = marcador();
+        String id = criarSigilosaComDenunciante(marcador, false);
+
+        Response resposta = comToken(tokenAdmin).contentType(ContentType.JSON)
+                .body(Map.of("descricao", "Nota interna")).when().post(ROTA + "/" + id + "/notas");
+
+        assertMascaradaSemVisualizacao(resposta, marcador, id);
+    }
+
+    @Test
+    @DisplayName("[A04] vinculo de processo a sigilosa pelo Admin: resposta mascarada e nenhum VISUALIZACAO")
+    void vinculoDevolveDenuncianteMascarado() {
+        String marcador = marcador();
+        String id = criarSigilosaComDenunciante(marcador, false);
+        String processoId = fixture.postarProcesso(tokenAdmin, null, false).then().statusCode(200).extract().path("id");
+
+        Response resposta = comToken(tokenAdmin).contentType(ContentType.JSON)
+                .body(Map.of("processoId", processoId)).when().post(ROTA + "/" + id + "/processo");
+
+        assertMascaradaSemVisualizacao(resposta, marcador, id);
+    }
+
+    // A mutacao teve efeito (200), nao entregou nenhum dado pessoal nem gerou
+    // VISUALIZACAO; o detalhe continua entregando o dado ao Admin (D6 intacta).
+    private void assertMascaradaSemVisualizacao(Response resposta, String marcador, String id) {
+        resposta.then().statusCode(200);
+        assertThat(resposta.path("denunciante.nome"), nullValue());
+        assertThat(resposta.path("denunciante.cpf"), nullValue());
+        assertThat(resposta.path("podeVerDenunciante"), equalTo(true));
+        assertThat(resposta.asString(), not(containsString(marcador)));
+        assertThat(resposta.asString(), not(containsString("111.222.333-44")));
+        assertThat(eventosDaOcorrencia(id), equalTo(0));
+
+        assertThat(detalhe(tokenAdmin, id).path("denunciante.nome"), equalTo("Nome " + marcador));
+        assertThat(eventosDaOcorrencia(id), equalTo(1));
+    }
+
     // ── Apoio ────────────────────────────────────────────
 
     private static String marcador() {

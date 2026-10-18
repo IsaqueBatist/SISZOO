@@ -10,6 +10,7 @@ import { API_BASE_URL } from '@/lib/env'
 import { server } from '@/mocks/server'
 import {
   ANEXO_ENCERRADA_ID,
+  DENUNCIANTE_MASCARADO,
   OCORRENCIA_ABERTA_ID,
   OCORRENCIA_ANONIMA_ID,
   OCORRENCIA_ENCERRADA_ID,
@@ -76,6 +77,32 @@ describe('OcorrenciaDetalhe', () => {
     expect(screen.queryByText('Sigiloso')).not.toBeInTheDocument()
   })
 
+  it('[A04] depois de uma mutação, quem tem acesso continua vendo o denunciante sigiloso (resposta mascarada não vai para a tela)', async () => {
+    const user = userEvent.setup()
+    let leiturasDoDetalhe = 0
+    server.use(
+      http.get(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_SIGILOSA_ID}`, () => {
+        leiturasDoDetalhe += 1
+        return HttpResponse.json(ocorrenciaSigilosaVisivel())
+      }),
+      // Como o backend: a resposta da mutação traz o denunciante mascarado
+      // mesmo para quem tem a permissão.
+      http.post(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_SIGILOSA_ID}/notas`, () =>
+        HttpResponse.json({ ...ocorrenciaSigilosaVisivel(), denunciante: DENUNCIANTE_MASCARADO }, { status: 201 }),
+      ),
+    )
+    renderDetalhe(OCORRENCIA_SIGILOSA_ID, ['Administrador'])
+    expect(await screen.findByText('João Pereira Lima')).toBeInTheDocument()
+
+    await user.type(screen.getByLabelText('Nova nota interna'), 'Nota em sigilosa')
+    await user.click(screen.getByRole('button', { name: 'Adicionar nota' }))
+
+    await waitFor(() => expect(leiturasDoDetalhe).toBe(2))
+    await waitFor(() => expect(screen.getByLabelText('Nova nota interna')).toHaveValue(''))
+    expect(screen.getByText('João Pereira Lima')).toBeInTheDocument()
+    expect(screen.queryByText('Sigiloso')).not.toBeInTheDocument()
+  })
+
   it('mostra a denúncia anônima sem campos de denunciante', async () => {
     renderDetalhe(OCORRENCIA_ANONIMA_ID, ['Administrador'])
 
@@ -113,14 +140,18 @@ describe('OcorrenciaDetalhe', () => {
     expect(screen.getByText('12/05/2026 · 13:00')).toBeInTheDocument()
   })
 
-  it('encerra a ocorrência: envia a providência e mostra o estado devolvido pelo backend', async () => {
+  // A04: depois da mutação a tela recarrega o detalhe pelo GET; o handler do
+  // GET devolve o estado que a mutação gravou, como o backend.
+  it('encerra a ocorrência: envia a providência e mostra o estado recarregado do backend', async () => {
     const user = userEvent.setup()
     const corpos: unknown[] = []
+    let estado = ocorrenciaAbertaFixture()
     server.use(
+      http.get(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_ABERTA_ID}`, () => HttpResponse.json(estado)),
       http.post(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_ABERTA_ID}/encerramento`, async ({ request }) => {
         corpos.push(await request.json())
         const aberta = ocorrenciaAbertaFixture()
-        return HttpResponse.json({
+        estado = {
           ...aberta,
           statusOcorrencia: 'ENCERRADA',
           providenciaTomada: 'sem_acao',
@@ -140,7 +171,8 @@ describe('OcorrenciaDetalhe', () => {
               usuarioNome: 'Usuária Teste',
             },
           ],
-        })
+        }
+        return HttpResponse.json(estado)
       }),
     )
     renderDetalhe(OCORRENCIA_ABERTA_ID, ['Administrador'])
@@ -211,11 +243,13 @@ describe('OcorrenciaDetalhe', () => {
   it('inicia o atendimento: envia EM_ATENDIMENTO, o badge muda e a transição entra na timeline', async () => {
     const user = userEvent.setup()
     const corpos: unknown[] = []
+    let estado = ocorrenciaAbertaFixture()
     server.use(
+      http.get(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_ABERTA_ID}`, () => HttpResponse.json(estado)),
       http.patch(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_ABERTA_ID}/status`, async ({ request }) => {
         corpos.push(await request.json())
         const aberta = ocorrenciaAbertaFixture()
-        return HttpResponse.json({
+        estado = {
           ...aberta,
           statusOcorrencia: 'EM_ATENDIMENTO',
           movimentacoes: [
@@ -231,7 +265,8 @@ describe('OcorrenciaDetalhe', () => {
               usuarioNome: 'Usuária Teste',
             },
           ],
-        })
+        }
+        return HttpResponse.json(estado)
       }),
     )
     renderDetalhe(OCORRENCIA_ABERTA_ID, ['Administrador'])
