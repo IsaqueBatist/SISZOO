@@ -1,18 +1,17 @@
 import { useState } from 'react'
-import { Controller, type Control, type UseFormRegister, type UseFormSetValue, type UseFormWatch } from 'react-hook-form'
+import { Controller, type Control, type Path, type UseFormRegister, type UseFormSetValue, type UseFormWatch } from 'react-hook-form'
 import { Icon } from '@/components/layout/Icon'
 import { PELAGEM_OPCOES, SEXO_OPCOES } from '@/features/animais/schemas/animalFormSchema'
 import { useAnimaisQuery, useCatalogosAnimaisQuery } from '@/features/animais/hooks/useAnimais'
+import type { Animal } from '@/features/animais/types/animais.types'
 import type { ProcessoFormValues } from '../schemas/processoFormSchema'
-import { MATERIAL_BIOLOGICO_OPCOES, SINTOMA_OPCOES, STATUS_CLINICO_OPCOES, TIPO_ABRIGO_OPCOES } from '../utils/processosCatalogos'
-import type { Sintoma } from '../types/processos.types'
+import { useCatalogosProcessoQuery } from '../hooks/useProcessos'
+import { MATERIAL_BIOLOGICO_OPCOES, NIVEL_CONTATO_OPCOES, STATUS_CLINICO_OPCOES, TIPO_ABRIGO_OPCOES } from '../utils/processosCatalogos'
 
 const TAMANHO_BUSCA_ANIMAL = 8
 
-// Tipo mínimo do erro de uma amostra — evita lidar com a distribuição de
-// FieldErrors sobre a união discriminada (RHF/TS não distribui bem tipos
-// mapeados sobre union em arrays). Sem `any`: cada campo acessado é tipado
-// explicitamente.
+// Tipo mínimo do erro de uma amostra — o RHF não distribui bem FieldErrors
+// sobre a união discriminada em arrays.
 export interface AmostraErros {
   sexo?: { message?: string }
   statusClinico?: { message?: string }
@@ -20,9 +19,11 @@ export interface AmostraErros {
   dataColeta?: { message?: string }
   materialBiologico?: { message?: string }
   animalId?: { message?: string }
-  especieId?: { message?: string }
+  especie?: { message?: string }
   nivelContato?: { message?: string }
   agrediuHumano?: { message?: string }
+  sintomas?: { message?: string }
+  pesoKg?: { message?: string }
 }
 
 function paraNumeroOuIndefinido(valor: unknown): number | undefined {
@@ -30,6 +31,12 @@ function paraNumeroOuIndefinido(valor: unknown): number | undefined {
   if (typeof valor !== 'string') return undefined
   const limpo = valor.trim()
   return limpo === '' ? undefined : Number(limpo)
+}
+
+// Texto do animal escolhido no cartão e na revisão: a identificação gravada
+// na amostra é copiada da ficha pelo servidor (DH-5), não por aqui.
+function descricaoDoAnimal(animal: Animal): string {
+  return [animal.nome, animal.especieNome, animal.microchip ?? 'sem microchip'].join(' · ')
 }
 
 interface AmostraAnimalCardProps {
@@ -47,65 +54,46 @@ interface AmostraAnimalCardProps {
 export function AmostraAnimalCard({ index, numero, control, register, setValue, watch, erros, podeRemover, onRemover }: AmostraAnimalCardProps) {
   const [buscaAnimal, setBuscaAnimal] = useState('')
   const [mostrarSugestoes, setMostrarSugestoes] = useState(false)
-  const [animalSelecionadoNome, setAnimalSelecionadoNome] = useState('')
 
-  const origem = watch(`amostras.${index}.origem`)
-  const animalId = watch(`amostras.${index}.animalId` as `amostras.${number}.animalId`)
-  const contatoHumano = watch(`amostras.${index}.contatoHumano`)
+  // Os campos de cada modalidade só existem numa das variantes da união; o
+  // caminho é montado aqui e o tipo é afrouxado de propósito.
+  const campo = (nome: string) => `amostras.${index}.${nome}` as Path<ProcessoFormValues>
+  const definir = (nome: string, valor: unknown, validar = false) => setValue(campo(nome), valor as never, { shouldValidate: validar })
 
-  const { data: catalogos } = useCatalogosAnimaisQuery()
+  const amostra = watch(`amostras.${index}`) as ProcessoFormValues['amostras'][number]
+  const origem = amostra.origem
+  const animalId = amostra.origem === 'canil' ? amostra.animalId : ''
+  const animalDescricao = amostra.origem === 'canil' ? amostra.animalDescricao : ''
+
+  const { data: catalogosAnimais } = useCatalogosAnimaisQuery()
+  const { data: catalogosProcesso } = useCatalogosProcessoQuery()
   const { data: resultadoBusca } = useAnimaisQuery({ q: buscaAnimal || undefined, pagina: 0, tamanho: TAMANHO_BUSCA_ANIMAL })
-
-  const prefixo = `amostras.${index}` as const
 
   function selecionarOrigem(novaOrigem: 'canil' | 'externo') {
     if (novaOrigem === origem) return
-    // Troca de modo limpa os campos de identificação — o payload final
-    // (montado em ProcessoForm) só envia os campos do modo atual de
-    // qualquer forma, mas limpar aqui evita mostrar dado obsoleto na tela.
-    setValue(`${prefixo}.origem`, novaOrigem, { shouldValidate: false })
-    setValue(`${prefixo}.especieId`, '', { shouldValidate: false })
-    setValue(`${prefixo}.sexo`, '' as never, { shouldValidate: false })
-    setValue(`${prefixo}.raca`, '', { shouldValidate: false })
-    setValue(`${prefixo}.coloracao`, '', { shouldValidate: false })
-    setValue(`${prefixo}.pelagem`, '', { shouldValidate: false })
-    setValue(`${prefixo}.idadeAprox`, '', { shouldValidate: false })
-    setValue(`${prefixo}.pesoKg`, undefined, { shouldValidate: false })
-    if (novaOrigem === 'externo') {
-      setValue(`${prefixo}.animalId` as `amostras.${number}.animalId`, '', { shouldValidate: false })
+    // Troca de modo descarta os dados do modo anterior: o payload só leva os
+    // campos da modalidade atual (ProcessoForm), e a tela não mostra resto.
+    definir('origem', novaOrigem)
+    if (novaOrigem === 'canil') {
+      definir('animalId', '')
+      definir('animalDescricao', '')
+    } else {
+      for (const nome of ['especie', 'sexo', 'raca', 'coloracao', 'pelagem', 'idadeAprox']) definir(nome, '')
+      definir('pesoKg', undefined)
     }
-    setAnimalSelecionadoNome('')
     setBuscaAnimal('')
   }
 
-  function selecionarAnimal(animal: {
-    id: string
-    nome: string
-    microchip: string | null
-    especieCodigo: string
-    sexo: string
-    raca: string | null
-    coloracao: string | null
-    pelagem: string | null
-    idadeAprox: string | null
-    pesoKg: number | null
-  }) {
-    setValue(`${prefixo}.animalId` as `amostras.${number}.animalId`, animal.id, { shouldValidate: true })
-    setValue(`${prefixo}.especieId`, animal.especieCodigo, { shouldValidate: true })
-    setValue(`${prefixo}.sexo`, animal.sexo as ProcessoFormValues['amostras'][number]['sexo'], { shouldValidate: true })
-    setValue(`${prefixo}.raca`, animal.raca ?? '', { shouldValidate: false })
-    setValue(`${prefixo}.coloracao`, animal.coloracao ?? '', { shouldValidate: false })
-    setValue(`${prefixo}.pelagem`, animal.pelagem ?? '', { shouldValidate: false })
-    setValue(`${prefixo}.idadeAprox`, animal.idadeAprox ?? '', { shouldValidate: false })
-    setValue(`${prefixo}.pesoKg`, animal.pesoKg ?? undefined, { shouldValidate: false })
-    setAnimalSelecionadoNome(`${animal.nome}${animal.microchip ? ` · ${animal.microchip}` : ''}`)
+  function selecionarAnimal(animal: Animal) {
+    definir('animalId', animal.id, true)
+    definir('animalDescricao', descricaoDoAnimal(animal))
     setMostrarSugestoes(false)
     setBuscaAnimal('')
   }
 
   function trocarAnimal() {
-    setValue(`${prefixo}.animalId` as `amostras.${number}.animalId`, '', { shouldValidate: false })
-    setAnimalSelecionadoNome('')
+    definir('animalId', '')
+    definir('animalDescricao', '')
   }
 
   return (
@@ -121,7 +109,7 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
               Já cadastrado
             </button>
             <button type="button" className={origem === 'externo' ? 'active' : ''} onClick={() => selecionarOrigem('externo')}>
-              Novo animal
+              Animal de campo
             </button>
           </div>
           {podeRemover && (
@@ -140,11 +128,8 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
                 <Icon name="paw" size={22} />
               </span>
               <div className="sa-info">
-                <div className="name">{animalSelecionadoNome || 'Animal selecionado'}</div>
-                <div className="meta">
-                  {watch(`${prefixo}.especieId`)} · {watch(`${prefixo}.sexo`)}
-                  {watch(`${prefixo}.raca`) ? ` · ${watch(`${prefixo}.raca`)}` : ''}
-                </div>
+                <div className="name">{animalDescricao || 'Animal selecionado'}</div>
+                <div className="meta">Espécie, sexo, raça, pelagem, idade e peso são copiados da ficha ao registrar.</div>
               </div>
               <button type="button" className="btn btn-outline btn-sm" onClick={trocarAnimal}>
                 ← Trocar animal
@@ -184,31 +169,26 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
       ) : (
         <div className="form-grid">
           <div className="field">
-            <label htmlFor={`${prefixo}-especie`}>
+            <label htmlFor={`amostra-${index}-especie`}>
               Espécie <span className="req">*</span>
             </label>
-            <select
-              id={`${prefixo}-especie`}
-              className={`select${erros?.especieId ? ' error' : ''}`}
-              defaultValue=""
-              {...register(`${prefixo}.especieId`)}
-            >
+            <select id={`amostra-${index}-especie`} className={`select${erros?.especie ? ' error' : ''}`} defaultValue="" {...register(campo('especie'))}>
               <option value="" disabled>
                 Selecione
               </option>
-              {catalogos?.especies.map((especie) => (
+              {catalogosAnimais?.especies.map((especie) => (
                 <option key={especie.codigo} value={especie.codigo}>
                   {especie.nome}
                 </option>
               ))}
             </select>
-            {erros?.especieId && <span className="err">{erros.especieId.message}</span>}
+            {erros?.especie && <span className="err">{erros.especie.message}</span>}
           </div>
           <div className="field">
-            <label htmlFor={`${prefixo}-sexo`}>
+            <label htmlFor={`amostra-${index}-sexo`}>
               Sexo <span className="req">*</span>
             </label>
-            <select id={`${prefixo}-sexo`} className={`select${erros?.sexo ? ' error' : ''}`} defaultValue="" {...register(`${prefixo}.sexo`)}>
+            <select id={`amostra-${index}-sexo`} className={`select${erros?.sexo ? ' error' : ''}`} defaultValue="" {...register(campo('sexo'))}>
               <option value="" disabled>
                 Selecione
               </option>
@@ -221,16 +201,16 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
             {erros?.sexo && <span className="err">{erros.sexo.message}</span>}
           </div>
           <div className="field">
-            <label htmlFor={`${prefixo}-raca`}>Raça</label>
-            <input id={`${prefixo}-raca`} className="input" type="text" {...register(`${prefixo}.raca`)} />
+            <label htmlFor={`amostra-${index}-raca`}>Raça</label>
+            <input id={`amostra-${index}-raca`} className="input" type="text" {...register(campo('raca'))} />
           </div>
           <div className="field">
-            <label htmlFor={`${prefixo}-coloracao`}>Coloração</label>
-            <input id={`${prefixo}-coloracao`} className="input" type="text" {...register(`${prefixo}.coloracao`)} />
+            <label htmlFor={`amostra-${index}-coloracao`}>Coloração</label>
+            <input id={`amostra-${index}-coloracao`} className="input" type="text" {...register(campo('coloracao'))} />
           </div>
           <div className="field">
-            <label htmlFor={`${prefixo}-pelagem`}>Pelagem</label>
-            <select id={`${prefixo}-pelagem`} className="select" defaultValue="" {...register(`${prefixo}.pelagem`)}>
+            <label htmlFor={`amostra-${index}-pelagem`}>Pelagem</label>
+            <select id={`amostra-${index}-pelagem`} className="select" defaultValue="" {...register(campo('pelagem'))}>
               <option value="">—</option>
               {PELAGEM_OPCOES.map((opcao) => (
                 <option key={opcao.valor} value={opcao.valor}>
@@ -240,44 +220,45 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
             </select>
           </div>
           <div className="field">
-            <label htmlFor={`${prefixo}-idade`}>Idade aprox.</label>
-            <input id={`${prefixo}-idade`} className="input" type="text" {...register(`${prefixo}.idadeAprox`)} />
+            <label htmlFor={`amostra-${index}-idade`}>Idade aprox.</label>
+            <input id={`amostra-${index}-idade`} className="input" type="text" {...register(campo('idadeAprox'))} />
           </div>
           <div className="field">
-            <label htmlFor={`${prefixo}-peso`}>Peso (kg)</label>
+            <label htmlFor={`amostra-${index}-peso`}>Peso (kg)</label>
             <input
-              id={`${prefixo}-peso`}
-              className="input"
+              id={`amostra-${index}-peso`}
+              className={`input${erros?.pesoKg ? ' error' : ''}`}
               type="number"
-              step="0.1"
-              {...register(`${prefixo}.pesoKg`, { setValueAs: paraNumeroOuIndefinido })}
+              step="0.01"
+              {...register(campo('pesoKg'), { setValueAs: paraNumeroOuIndefinido })}
             />
+            {erros?.pesoKg && <span className="err">{erros.pesoKg.message}</span>}
           </div>
         </div>
       )}
 
       <div className="form-grid" style={{ marginTop: 14 }}>
         <div className="field">
-          <label htmlFor={`${prefixo}-data-coleta`}>
+          <label htmlFor={`amostra-${index}-data-coleta`}>
             Data de coleta <span className="req">*</span>
           </label>
           <input
-            id={`${prefixo}-data-coleta`}
+            id={`amostra-${index}-data-coleta`}
             className={`input${erros?.dataColeta ? ' error' : ''}`}
             type="date"
-            {...register(`${prefixo}.dataColeta`)}
+            {...register(campo('dataColeta'))}
           />
           {erros?.dataColeta && <span className="err">{erros.dataColeta.message}</span>}
         </div>
         <div className="field">
-          <label htmlFor={`${prefixo}-material`}>
+          <label htmlFor={`amostra-${index}-material`}>
             Material biológico <span className="req">*</span>
           </label>
           <select
-            id={`${prefixo}-material`}
+            id={`amostra-${index}-material`}
             className={`select${erros?.materialBiologico ? ' error' : ''}`}
             defaultValue=""
-            {...register(`${prefixo}.materialBiologico`)}
+            {...register(campo('materialBiologico'))}
           >
             <option value="" disabled>
               Selecione
@@ -291,14 +272,20 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
           {erros?.materialBiologico && <span className="err">{erros.materialBiologico.message}</span>}
         </div>
         <div className="field">
-          <label htmlFor={`${prefixo}-status-clinico`}>
+          <label htmlFor={`amostra-${index}-status-clinico`}>
             Status clínico <span className="req">*</span>
           </label>
           <select
-            id={`${prefixo}-status-clinico`}
+            id={`amostra-${index}-status-clinico`}
             className={`select${erros?.statusClinico ? ' error' : ''}`}
             defaultValue=""
-            {...register(`${prefixo}.statusClinico`)}
+            {...register(campo('statusClinico'), {
+              // T29-3: sintomas só em amostra sintomática — sair de
+              // SINTOMATICO descarta os já marcados.
+              onChange: (event) => {
+                if (event.target.value !== 'SINTOMATICO') definir('sintomas', [])
+              },
+            })}
           >
             <option value="" disabled>
               Selecione
@@ -312,14 +299,14 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
           {erros?.statusClinico && <span className="err">{erros.statusClinico.message}</span>}
         </div>
         <div className="field">
-          <label htmlFor={`${prefixo}-tipo-abrigo`}>
+          <label htmlFor={`amostra-${index}-tipo-abrigo`}>
             Tipo de abrigo <span className="req">*</span>
           </label>
           <select
-            id={`${prefixo}-tipo-abrigo`}
+            id={`amostra-${index}-tipo-abrigo`}
             className={`select${erros?.tipoAbrigo ? ' error' : ''}`}
             defaultValue=""
-            {...register(`${prefixo}.tipoAbrigo`)}
+            {...register(campo('tipoAbrigo'))}
           >
             <option value="" disabled>
               Selecione
@@ -333,57 +320,68 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
           {erros?.tipoAbrigo && <span className="err">{erros.tipoAbrigo.message}</span>}
         </div>
         <div className="field full">
-          <label htmlFor={`${prefixo}-alt-comportamental`}>Alteração comportamental</label>
-          <textarea id={`${prefixo}-alt-comportamental`} className="textarea" {...register(`${prefixo}.alteracaoComportamental`)} />
+          <label htmlFor={`amostra-${index}-alt-comportamental`}>Alteração comportamental</label>
+          <textarea id={`amostra-${index}-alt-comportamental`} className="textarea" {...register(campo('alteracaoComportamental'))} />
         </div>
       </div>
 
-      <div style={{ marginTop: 14 }}>
-        <label className="hint" style={{ display: 'block', marginBottom: 6 }}>
-          Sinais e sintomas observados
-        </label>
-        <Controller
-          name={`${prefixo}.sintomas`}
-          control={control}
-          render={({ field }) => (
-            <div className="checkbox-grid" role="group" aria-label={`Sintomas do animal amostrado ${numero}`}>
-              {SINTOMA_OPCOES.map((opcao) => {
-                const valorAtual = (field.value ?? []) as Sintoma[]
-                const marcado = valorAtual.includes(opcao.valor)
-                return (
-                  <label key={opcao.valor} className={marcado ? 'checked' : ''}>
-                    <input
-                      type="checkbox"
-                      checked={marcado}
-                      onChange={(event) =>
-                        field.onChange(event.target.checked ? [...valorAtual, opcao.valor] : valorAtual.filter((s) => s !== opcao.valor))
-                      }
-                    />
-                    {opcao.label}
-                  </label>
-                )
-              })}
-            </div>
-          )}
-        />
-      </div>
+      {amostra.statusClinico === 'SINTOMATICO' ? (
+        <div style={{ marginTop: 14 }}>
+          <label className="hint" style={{ display: 'block', marginBottom: 6 }}>
+            Sinais e sintomas observados
+          </label>
+          <Controller
+            name={campo('sintomas')}
+            control={control}
+            render={({ field }) => {
+              const valorAtual = (field.value ?? []) as string[]
+              return (
+                <div className="checkbox-grid" role="group" aria-label={`Sintomas do animal amostrado ${numero}`}>
+                  {(catalogosProcesso?.sintomas ?? []).map((sintoma) => {
+                    const marcado = valorAtual.includes(sintoma.codigo)
+                    return (
+                      <label key={sintoma.codigo} className={marcado ? 'checked' : ''}>
+                        <input
+                          type="checkbox"
+                          checked={marcado}
+                          onChange={(event) =>
+                            field.onChange(
+                              event.target.checked ? [...valorAtual, sintoma.codigo] : valorAtual.filter((s) => s !== sintoma.codigo),
+                            )
+                          }
+                        />
+                        {sintoma.nome}
+                      </label>
+                    )
+                  })}
+                </div>
+              )
+            }}
+          />
+          {erros?.sintomas && <span className="err">{erros.sintomas.message}</span>}
+        </div>
+      ) : (
+        <p className="hint" style={{ marginTop: 14 }}>
+          Sinais e sintomas são registrados apenas em amostra com status clínico sintomático.
+        </p>
+      )}
 
       <div style={{ marginTop: 14 }}>
         <div className="switch-row">
           <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Munícipe teve contato físico com o animal</span>
           <Controller
-            name={`${prefixo}.contatoHumano`}
+            name={campo('contatoHumano')}
             control={control}
             render={({ field }) => (
               <label className="switch">
                 <input
                   type="checkbox"
-                  checked={field.value}
+                  checked={Boolean(field.value)}
                   onChange={(event) => {
                     field.onChange(event.target.checked)
                     if (!event.target.checked) {
-                      setValue(`${prefixo}.nivelContato`, undefined, { shouldValidate: false })
-                      setValue(`${prefixo}.agrediuHumano`, undefined, { shouldValidate: false })
+                      definir('nivelContato', undefined)
+                      definir('agrediuHumano', undefined)
                     }
                   }}
                   aria-label="Contato humano-animal"
@@ -394,17 +392,16 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
           />
         </div>
 
-        {contatoHumano && (
+        {amostra.contatoHumano && (
           <>
-            {/* RN4: contato humano em qualquer amostra marca o processo inteiro
-                como urgente — aviso replicado do padrão de docs/prototipo/processo.html. */}
+            {/* DER regra 18: contato humano em qualquer amostra marca o processo como urgente. */}
             <div className="urgency-banner" role="alert" style={{ marginTop: 10 }}>
               <span className="ub-ico">
                 <Icon name="alert" size={22} />
               </span>
               <div>
                 <h3>ATENÇÃO — CONTATO HUMANO-ANIMAL</h3>
-                <p>Este processo será marcado como urgente. Resultado laboratorial será obrigatório antes de encerrar.</p>
+                <p>Este processo será marcado como urgente.</p>
               </div>
             </div>
 
@@ -414,14 +411,14 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
                 <strong>Nível de contato:</strong>
               </span>
               <Controller
-                name={`${prefixo}.nivelContato`}
+                name={campo('nivelContato')}
                 control={control}
                 render={({ field }) => (
                   <div className="flex gap-2" role="radiogroup" aria-label="Nível de contato">
-                    {(['direta', 'indireta'] as const).map((valor) => (
-                      <label key={valor} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <input type="radio" checked={field.value === valor} onChange={() => field.onChange(valor)} />
-                        {valor === 'direta' ? 'Direta' : 'Indireta'}
+                    {NIVEL_CONTATO_OPCOES.map((opcao) => (
+                      <label key={opcao.valor} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <input type="radio" checked={field.value === opcao.valor} onChange={() => field.onChange(opcao.valor)} />
+                        {opcao.label}
                       </label>
                     ))}
                   </div>
@@ -433,7 +430,7 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
                 <strong>Animal agrediu o munícipe?</strong>
               </span>
               <Controller
-                name={`${prefixo}.agrediuHumano`}
+                name={campo('agrediuHumano')}
                 control={control}
                 render={({ field }) => (
                   <div className="flex gap-2" role="radiogroup" aria-label="Animal agrediu o munícipe">
@@ -456,8 +453,8 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
       </div>
 
       <div className="field full" style={{ marginTop: 14 }}>
-        <label htmlFor={`${prefixo}-observacoes`}>Observações</label>
-        <textarea id={`${prefixo}-observacoes`} className="textarea" {...register(`${prefixo}.observacoes`)} />
+        <label htmlFor={`amostra-${index}-observacoes`}>Observações</label>
+        <textarea id={`amostra-${index}-observacoes`} className="textarea" {...register(campo('observacoes'))} />
       </div>
     </div>
   )

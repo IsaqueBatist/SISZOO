@@ -10,6 +10,8 @@ import jakarta.validation.constraints.NotNull;
 // catalogo (positivo, negativo, inconclusivo, material_inadequado,
 // nao_realizado); aguardando nao e resultado. Sem retificaId, e o primeiro
 // resultado do processo; com ele, a correcao do resultado vigente.
+// desfechoAnimal (T37) e opcional e so vale no processo, nao no registro de
+// resultado: fica fora do historico imutavel de resultado_processo.
 public record RegistrarResultadoRequest(
         @NotBlank
         String resultado,
@@ -19,5 +21,7 @@ public record RegistrarResultadoRequest(
 
         String observacoes,
 
-        UUID retificaId) {
+        UUID retificaId,
+
+        String desfechoAnimal) {
 }

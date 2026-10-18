@@ -1,10 +1,34 @@
 import { useState } from 'react'
-import { badgeDeStatus, labelDeTipo } from '@/features/ocorrencias/utils/statusBadge'
-import { useOcorrenciasParaVinculoQuery } from '../hooks/useProcessos'
-import type { OcorrenciaParaVinculo, VinculoDecisao } from '../types/processos.types'
+import { useOcorrenciasQuery } from '@/features/ocorrencias/hooks/useOcorrencias'
+import { badgeDeStatus } from '@/features/ocorrencias/utils/statusBadge'
+import { formatarProtocoloOcorrencia } from '@/features/ocorrencias/utils/protocolo'
+import type { OcorrenciaResumo } from '@/features/ocorrencias/types/ocorrencias.types'
+import type { VinculoDecisao } from '../types/processos.types'
 import './SeletorVinculo.css'
 
 const TAMANHO_PAGINA = 20
+
+// Resumo exibido da ocorrência escolhida (etapa 1, revisão e vínculo posterior).
+export interface OcorrenciaParaVinculo {
+  id: string
+  protocolo: string
+  tipoOcorrenciaNome: string
+  bairro: string
+}
+
+// Ocorrência só pode receber processo se ainda não tem um (0..1) e não está
+// encerrada (D20) — o backend recusa os dois casos com 409/422.
+function disponivelParaVinculo(ocorrencia: OcorrenciaResumo): boolean {
+  return ocorrencia.processoProtocolo === null && ocorrencia.statusOcorrencia !== 'ENCERRADA'
+}
+
+// T26-9/T26-12: na listagem, o nome do denunciante de ocorrência sigilosa
+// vem nulo para todos; mostra "Sigiloso"/"Anônima" no lugar.
+function denuncianteExibido(ocorrencia: OcorrenciaResumo): string | null {
+  if (ocorrencia.anonima) return 'Anônima'
+  if (ocorrencia.sigilosa) return 'Sigiloso'
+  return ocorrencia.denuncianteNome
+}
 
 interface SeletorOcorrenciaProps {
   vinculoDecisao: VinculoDecisao
@@ -14,45 +38,28 @@ interface SeletorOcorrenciaProps {
   erro?: string
   onSelecionar: (ocorrencia: OcorrenciaParaVinculo) => void
   onPular: () => void
-  // Reaproveitado fora do wizard (ProcessoDetalhe.tsx, vínculo pós-criação —
-  // emenda ao DER.md de 2026-10-03): nesse uso não existe "pular etapa", é
-  // "cancelar a busca", e não faz sentido falar em "wizard" no texto de
-  // ajuda. Opcionais com o texto original como default, pra não mudar nada
-  // no uso dentro do wizard.
+  // Fora do wizard (vínculo posterior no detalhe do processo) não existe
+  // "pular etapa": é "cancelar".
   textoAjuda?: string
   textoBotaoPular?: string
 }
 
 // RN2: uma vez decidida (ocorrência selecionada OU "Pular esta etapa"), a
-// etapa 1 vira somente leitura pelo resto do wizard — inclusive ao voltar
-// para vê-la. Não existe, de propósito, nenhum botão "trocar" aqui.
-export function SeletorOcorrencia({
-  vinculoDecisao,
-  ocorrenciaId,
-  travado,
-  ocorrenciaVinculada,
-  erro,
-  onSelecionar,
-  onPular,
-  textoAjuda,
-  textoBotaoPular = 'Pular esta etapa',
-}: SeletorOcorrenciaProps) {
-  const [busca, setBusca] = useState('')
-
-  // Ocorrências de demonstração (D40). A lista já vem sem as que têm processo
-  // (vínculo 0..1) e com o denunciante sigiloso mascarado ANTES da busca
-  // (ver ../api/ocorrenciasDemonstracao.ts) — nada a refazer aqui.
-  const { data, isLoading } = useOcorrenciasParaVinculoQuery(busca || undefined)
-  const disponiveis = (data ?? []).slice(0, TAMANHO_PAGINA)
-
+// etapa 1 vira somente leitura pelo resto do wizard. Não existe, de
+// propósito, nenhum botão "trocar" aqui. Travado, não busca a lista de
+// ocorrências (ela fica em ListaOcorrencias, montada só quando há escolha).
+export function SeletorOcorrencia(props: SeletorOcorrenciaProps) {
+  const { travado, ocorrenciaVinculada, vinculoDecisao } = props
   if (travado) {
     return (
       <div className="vinculo-display" data-testid="vinculo-travado">
         {ocorrenciaVinculada ? (
           <div>
-            <strong className="mono">{ocorrenciaVinculada.protocolo}</strong> — {labelDeTipo(ocorrenciaVinculada.tipoOcorrencia)},{' '}
+            <strong className="mono">{formatarProtocoloOcorrencia(ocorrenciaVinculada.protocolo)}</strong> — {ocorrenciaVinculada.tipoOcorrenciaNome},{' '}
             {ocorrenciaVinculada.bairro}
           </div>
+        ) : vinculoDecisao === 'vinculado' ? (
+          <span className="empty">Carregando a ocorrência vinculada…</span>
         ) : (
           <span className="empty">Nenhuma ocorrência vinculada a este processo.</span>
         )}
@@ -60,6 +67,25 @@ export function SeletorOcorrencia({
       </div>
     )
   }
+  return <ListaOcorrencias {...props} />
+}
+
+function ListaOcorrencias({
+  vinculoDecisao,
+  ocorrenciaId,
+  erro,
+  onSelecionar,
+  onPular,
+  textoAjuda,
+  textoBotaoPular = 'Pular esta etapa',
+}: SeletorOcorrenciaProps) {
+  const [busca, setBusca] = useState('')
+  const { data, isLoading, isError } = useOcorrenciasQuery({
+    q: busca.trim() || undefined,
+    pagina: 0,
+    tamanho: TAMANHO_PAGINA,
+  })
+  const disponiveis = (data?.itens ?? []).filter(disponivelParaVinculo)
 
   return (
     <div>
@@ -82,14 +108,27 @@ export function SeletorOcorrencia({
         />
       </div>
       <div className="occur-list" role="radiogroup" aria-label="Ocorrências disponíveis para vínculo">
-        {!isLoading && disponiveis.length === 0 && <p className="empty-search">Nenhuma ocorrência encontrada.</p>}
+        {isLoading && <p className="empty-search">Carregando ocorrências…</p>}
+        {isError && (
+          <p className="empty-search" role="alert">
+            Não foi possível carregar as ocorrências. Tente novamente.
+          </p>
+        )}
+        {!isLoading && !isError && disponiveis.length === 0 && (
+          <p className="empty-search">Nenhuma ocorrência disponível para vínculo.</p>
+        )}
         {disponiveis.map((ocorrencia) => {
           const statusBadge = badgeDeStatus(ocorrencia.statusOcorrencia)
           const selecionada = vinculoDecisao === 'vinculado' && ocorrenciaId === ocorrencia.id
-          const nomeDenunciante = ocorrencia.sigilosa && !ocorrencia.denunciante?.nome ? 'Denunciante sigiloso' : ocorrencia.denunciante?.nome
+          const denunciante = denuncianteExibido(ocorrencia)
 
           function selecionar() {
-            onSelecionar(ocorrencia)
+            onSelecionar({
+              id: ocorrencia.id,
+              protocolo: ocorrencia.protocolo,
+              tipoOcorrenciaNome: ocorrencia.tipoOcorrenciaNome,
+              bairro: ocorrencia.bairro,
+            })
           }
 
           return (
@@ -107,12 +146,12 @@ export function SeletorOcorrencia({
                 }
               }}
             >
-              <span className="proto mono">{ocorrencia.protocolo}</span>
+              <span className="proto mono">{formatarProtocoloOcorrencia(ocorrencia.protocolo)}</span>
               <span className="summary">
-                <span className="head">{labelDeTipo(ocorrencia.tipoOcorrencia)}</span>
+                <span className="head">{ocorrencia.tipoOcorrenciaNome}</span>
                 <span className="sec">
                   {ocorrencia.bairro}
-                  {nomeDenunciante ? ` · ${nomeDenunciante}` : ''}
+                  {denunciante ? ` · ${denunciante}` : ''}
                 </span>
               </span>
               <span className={`badge ${statusBadge.classe}`}>{statusBadge.label}</span>

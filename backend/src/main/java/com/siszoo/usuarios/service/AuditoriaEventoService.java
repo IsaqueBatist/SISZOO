@@ -1,5 +1,6 @@
 package com.siszoo.usuarios.service;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -52,6 +53,17 @@ public class AuditoriaEventoService {
         Page<AuditoriaEvento> page = auditoriaEventoRepository.findAll(
                 PageRequest.of(pagina, tamanho, Sort.by(Sort.Direction.DESC, "ocorreuEm")));
         return PaginaResponse.de(page.map(auditoriaEventoMapper::toResponse));
+    }
+
+    // T37: mini trilha de auditoria de uma entidade especifica (ex.: um
+    // processo sanitario), sem paginacao — volume pequeno por entidade. Usado
+    // por modulos que nao tem USUARIOS_ACESSO:leitura (so o Administrador
+    // tem), protegidos pela propria autorizacao do modulo chamador.
+    @Transactional(readOnly = true)
+    public List<AuditoriaEventoResponse> listarPorEntidade(String entidade, UUID entidadeId) {
+        return auditoriaEventoRepository.findByEntidadeAndEntidadeIdOrderByOcorreuEmAsc(entidade, entidadeId).stream()
+                .map(auditoriaEventoMapper::toResponse)
+                .toList();
     }
 
     private String serializar(Object payload) {

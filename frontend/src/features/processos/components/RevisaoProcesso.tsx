@@ -1,23 +1,28 @@
-import { labelDeTipo } from '@/features/ocorrencias/utils/statusBadge'
+import { useCatalogosAnimaisQuery } from '@/features/animais/hooks/useAnimais'
+import { SEXO_OPCOES } from '@/features/animais/schemas/animalFormSchema'
+import { formatarProtocoloOcorrencia } from '@/features/ocorrencias/utils/protocolo'
 import type { ProcessoFormValues } from '../schemas/processoFormSchema'
-import { labelDeDoenca, labelDeLaboratorio, MATERIAL_BIOLOGICO_OPCOES, SINTOMA_OPCOES, STATUS_CLINICO_OPCOES, TIPO_ABRIGO_OPCOES } from '../utils/processosCatalogos'
-import type { OcorrenciaParaVinculo } from '../types/processos.types'
+import type { CatalogoItem, CatalogosProcesso } from '../types/processos.types'
+import { labelDe, MATERIAL_BIOLOGICO_OPCOES, NIVEL_CONTATO_OPCOES, STATUS_CLINICO_OPCOES, TIPO_ABRIGO_OPCOES } from '../utils/processosCatalogos'
 
-function labelDe<T extends string>(opcoes: { valor: T; label: string }[], valor: T | undefined): string {
-  if (!valor) return '—'
-  return opcoes.find((opcao) => opcao.valor === valor)?.label ?? valor
+function nomeNoCatalogo(itens: CatalogoItem[] | undefined, codigo: string): string {
+  if (!codigo) return '—'
+  return itens?.find((item) => item.codigo === codigo)?.nome ?? codigo
 }
 
 interface RevisaoProcessoProps {
   valores: ProcessoFormValues
-  ocorrenciaVinculada: OcorrenciaParaVinculo | null
+  catalogos: CatalogosProcesso | undefined
   onEditar: (etapa: 2 | 3) => void
 }
 
 // Etapa 4 — somente leitura. Sem link de edição para a etapa 1 (RN2: o
 // vínculo é imutável depois de definido).
-export function RevisaoProcesso({ valores, ocorrenciaVinculada, onEditar }: RevisaoProcessoProps) {
+export function RevisaoProcesso({ valores, catalogos, onEditar }: RevisaoProcessoProps) {
+  // Prévia da regra 18: quem decide é o servidor, pelas amostras enviadas.
   const urgente = valores.amostras.some((amostra) => amostra.contatoHumano)
+  const ocorrencia = valores.ocorrenciaResumo
+  const { data: catalogosAnimais } = useCatalogosAnimaisQuery()
 
   return (
     <div className="col gap-4">
@@ -31,8 +36,8 @@ export function RevisaoProcesso({ valores, ocorrenciaVinculada, onEditar }: Revi
             <div className="field">
               <label>Vínculo com ocorrência</label>
               <div>
-                {valores.vinculoDecisao === 'vinculado' && ocorrenciaVinculada
-                  ? `${ocorrenciaVinculada.protocolo} — ${labelDeTipo(ocorrenciaVinculada.tipoOcorrencia)}`
+                {valores.vinculoDecisao === 'vinculado' && ocorrencia
+                  ? `${formatarProtocoloOcorrencia(ocorrencia.protocolo)} — ${ocorrencia.tipoOcorrenciaNome}`
                   : 'Sem vínculo'}
               </div>
             </div>
@@ -42,12 +47,18 @@ export function RevisaoProcesso({ valores, ocorrenciaVinculada, onEditar }: Revi
             </div>
             <div className="field">
               <label>Doença investigada</label>
-              <div>{labelDeDoenca(valores.doenca)}</div>
+              <div>{nomeNoCatalogo(catalogos?.doencas, valores.doenca)}</div>
             </div>
             <div className="field">
               <label>Laboratório de destino</label>
-              <div>{labelDeLaboratorio(valores.laboratorio)}</div>
+              <div>{nomeNoCatalogo(catalogos?.laboratorios, valores.laboratorio)}</div>
             </div>
+            {valores.observacoes?.trim() && (
+              <div className="field full">
+                <label>Observações</label>
+                <div>{valores.observacoes}</div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -84,6 +95,10 @@ export function RevisaoProcesso({ valores, ocorrenciaVinculada, onEditar }: Revi
                 {valores.responsavel.bairroResidencial ? ` · ${valores.responsavel.bairroResidencial}` : ''}
               </div>
             </div>
+            <div className="field">
+              <label>Bairro da ocorrência</label>
+              <div>{valores.responsavel.bairroOcorrencia || '—'}</div>
+            </div>
           </div>
         </div>
       </div>
@@ -101,15 +116,17 @@ export function RevisaoProcesso({ valores, ocorrenciaVinculada, onEditar }: Revi
               <div className="am-head-mini">
                 <span className="title">
                   <span className="num-circle">{indice + 1}</span>
-                  {amostra.origem === 'canil' ? 'Animal do canil' : 'Animal externo'}
+                  {amostra.origem === 'canil' ? 'Animal do canil' : 'Animal de campo'}
                 </span>
                 {amostra.contatoHumano && <span className="badge badge-urgent">Contato humano</span>}
               </div>
               <div className="kv-list">
                 <div className="field">
-                  <label>Espécie / sexo</label>
+                  <label>Identificação</label>
                   <div>
-                    {amostra.especieId} · {amostra.sexo}
+                    {amostra.origem === 'canil'
+                      ? `${amostra.animalDescricao || '—'} (dados da ficha)`
+                      : `${nomeNoCatalogo(catalogosAnimais?.especies, amostra.especie)} · ${labelDe(SEXO_OPCOES, amostra.sexo)}`}
                   </div>
                 </div>
                 <div className="field">
@@ -128,9 +145,22 @@ export function RevisaoProcesso({ valores, ocorrenciaVinculada, onEditar }: Revi
                   <label>Data de coleta</label>
                   <div>{amostra.dataColeta}</div>
                 </div>
+                {amostra.contatoHumano && (
+                  <div className="field">
+                    <label>Contato</label>
+                    <div>
+                      {labelDe(NIVEL_CONTATO_OPCOES, amostra.nivelContato)}
+                      {amostra.agrediuHumano ? ' · agrediu o munícipe' : ''}
+                    </div>
+                  </div>
+                )}
                 <div className="field full">
                   <label>Sintomas</label>
-                  <div>{amostra.sintomas.length ? amostra.sintomas.map((s) => labelDe(SINTOMA_OPCOES, s)).join(', ') : '—'}</div>
+                  <div>
+                    {amostra.statusClinico === 'SINTOMATICO' && amostra.sintomas.length
+                      ? amostra.sintomas.map((codigo) => nomeNoCatalogo(catalogos?.sintomas, codigo)).join(', ')
+                      : '—'}
+                  </div>
                 </div>
               </div>
             </div>

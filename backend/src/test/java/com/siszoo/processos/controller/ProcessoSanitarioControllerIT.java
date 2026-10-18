@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -462,6 +463,95 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
                 "maria@exemplo.com", "13300-000", "Rua das Flores", "Centro", "Vila Nova")) {
             assertThat(payload, payload, not(containsString(pessoal)));
         }
+    }
+
+    // ── Listagem ─────────────────────────────────────────
+
+    @Test
+    @DisplayName("[T29] listagem paginada com filtros de doenca e status e protocolo da ocorrencia vinculada")
+    void listagemComFiltros() {
+        given().when().get(ROTA).then().statusCode(401);
+        String ocorrenciaId = criarOcorrencia();
+        Response vinculado = fixture.postarProcesso(tokenAgente, ocorrenciaId, false);
+        String vinculadoId = vinculado.then().statusCode(200).extract().path("id");
+        Map<String, Object> esporotricose = fixture.corpoProcesso(null, false);
+        esporotricose.put("doenca", "esporotricose");
+        String esporotricoseId = fixture.postarProcesso(tokenAgente, esporotricose).then().statusCode(200)
+                .extract().path("id");
+        given().header("Authorization", "Bearer " + tokenAgente).contentType(ContentType.JSON)
+                .body(Map.of("status", "AGUARDANDO_RESULTADO"))
+                .when().patch(ROTA + "/" + esporotricoseId + "/status").then().statusCode(200);
+
+        // O detalhe traz o protocolo da ocorrencia, sem precisar busca-la.
+        String protocoloOcorrencia = given().header("Authorization", "Bearer " + tokenAgente)
+                .when().get("/api/ocorrencias/" + ocorrenciaId).path("protocolo");
+        assertThat(vinculado.path("ocorrenciaProtocolo"), equalTo(protocoloOcorrencia));
+        assertThat(buscar(tokenVet, vinculadoId).path("ocorrenciaProtocolo"), equalTo(protocoloOcorrencia));
+
+        Response pagina = listar(tokenVet, "?tamanho=200");
+        pagina.then().statusCode(200);
+        Map<String, Object> linha = linhaDe(pagina, vinculadoId);
+        assertThat(linha.get("protocolo"), equalTo(vinculado.path("protocolo")));
+        assertThat(linha.get("ocorrenciaId"), equalTo(ocorrenciaId));
+        assertThat(linha.get("ocorrenciaProtocolo"), equalTo(protocoloOcorrencia));
+        assertThat(linha.get("statusProcesso"), equalTo("ABERTO"));
+        assertThat(((Map<?, ?>) linha.get("doenca")).get("codigo"), equalTo("raiva"));
+        // Sem nenhum dado do responsavel (CPF, telefone, e-mail, endereco):
+        // a linha tem exatamente estes campos.
+        assertThat(linha.keySet(), containsInAnyOrder("id", "protocolo", "dataAbertura", "doenca", "statusProcesso",
+                "urgente", "ocorrenciaId", "ocorrenciaProtocolo"));
+        assertThat(pagina.asString(), not(containsString("Responsavel Teste")));
+
+        List<String> soEsporotricose = listar(tokenAgente, "?doenca=esporotricose&tamanho=200").path("itens.doenca.codigo");
+        assertThat(soEsporotricose.isEmpty(), equalTo(false));
+        assertThat(soEsporotricose.stream().allMatch("esporotricose"::equals), equalTo(true));
+        List<String> aguardando = listar(tokenAgente, "?status=AGUARDANDO_RESULTADO&tamanho=200").path("itens.id");
+        assertThat(aguardando.contains(esporotricoseId), equalTo(true));
+        assertThat(aguardando.contains(vinculadoId), equalTo(false));
+
+        Response primeira = listar(tokenAgente, "?pagina=0&tamanho=1");
+        assertThat(primeira.path("itens"), hasSize(1));
+        assertThat(primeira.path("tamanho"), equalTo(1));
+    }
+
+    @Test
+    @DisplayName("[T29] listagem traz urgentes primeiro (RN3 do front, como a D31) e, dentro do grupo, os mais recentes")
+    void listagemUrgentesPrimeiro() {
+        String urgente = fixture.postarProcesso(tokenAgente, null, true).then().statusCode(200).extract().path("id");
+        String comum = fixture.postarProcesso(tokenAgente, null, false).then().statusCode(200).extract().path("id");
+
+        List<Boolean> urgencias = listar(tokenAgente, "?tamanho=500").path("itens.urgente");
+        int ultimoUrgente = urgencias.lastIndexOf(true);
+        int primeiroComum = urgencias.indexOf(false);
+        assertThat(ultimoUrgente < primeiroComum, equalTo(true));
+        List<String> ids = listar(tokenAgente, "?tamanho=500").path("itens.id");
+        assertThat(ids.indexOf(urgente) < ids.indexOf(comum), equalTo(true));
+        List<String> datas = listar(tokenAgente, "?status=ABERTO&tamanho=500").path("itens.findAll { !it.urgente }.dataAbertura");
+        assertThat(datas, equalTo(datas.stream().sorted(Comparator.reverseOrder()).toList()));
+
+        // Mesma urgencia e mesma data de abertura: desempate pela criacao mais
+        // recente, nao pelo texto do protocolo. A ordem de criacao (1000, 998,
+        // 999, da mais recente para a mais antiga) difere do texto desc
+        // (999, 998, 1000) e do numero desc (1000, 999, 998).
+        String maisAntigo = criarComProtocolo("999/2099", "2026-01-01 08:00:00");
+        String intermediario = criarComProtocolo("998/2099", "2026-01-01 09:00:00");
+        String maisRecente = criarComProtocolo("1000/2099", "2026-01-01 10:00:00");
+        List<String> desempate = listar(tokenAgente, "?tamanho=500").path("itens.id");
+        assertThat(desempate.stream().filter(List.of(maisAntigo, intermediario, maisRecente)::contains).toList(),
+                equalTo(List.of(maisRecente, intermediario, maisAntigo)));
+    }
+
+    // Processo comum com data_abertura 2026-01-01 (antiga: nao sobe para o topo
+    // das listagens dos outros testes); protocolo e criado_em fixados no banco.
+    @SuppressWarnings("unchecked")
+    private String criarComProtocolo(String protocolo, String criadoEm) {
+        Map<String, Object> corpo = fixture.corpoProcesso(null, false);
+        corpo.put("dataAbertura", "2026-01-01");
+        ((List<Map<String, Object>>) corpo.get("amostras")).get(0).put("dataColeta", "2026-01-01");
+        String id = fixture.postarProcesso(tokenAgente, corpo).then().statusCode(200).extract().path("id");
+        jdbcTemplate.update("UPDATE processo_sanitario SET protocolo = ?, criado_em = CAST(? AS timestamp)"
+                + " WHERE id = CAST(? AS uuid)", protocolo, criadoEm, id);
+        return id;
     }
 
     // updatable = false tira a coluna do UPDATE que o Hibernate gera para a
@@ -1138,6 +1228,16 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
 
     private Response buscar(String token, String id) {
         return given().header("Authorization", "Bearer " + token).when().get(ROTA + "/" + id);
+    }
+
+    private Response listar(String token, String parametros) {
+        return given().header("Authorization", "Bearer " + token).when().get(ROTA + parametros);
+    }
+
+    // O banco de teste e compartilhado: procura a linha do cenario pelo id.
+    private static Map<String, Object> linhaDe(Response pagina, String id) {
+        List<Map<String, Object>> itens = pagina.path("itens");
+        return itens.stream().filter(item -> id.equals(item.get("id"))).findFirst().orElseThrow();
     }
 
     private static Map<String, Object> responsavelCompleto() {
