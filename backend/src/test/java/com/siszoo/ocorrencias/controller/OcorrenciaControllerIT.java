@@ -314,7 +314,7 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
     // ── Processo vinculado (D12, D31, D33) ───────────────
 
     @Test
-    @DisplayName("[D12/D18] processo completo vinculado nao concluido bloqueia o encerramento; concluido libera")
+    @DisplayName("[D12/T34] processo completo vinculado nao concluido bloqueia o encerramento; concluido libera")
     void encerramentoEsperaProcessoConcluir() {
         String id = idDe(criar(tokenAgente, corpo()));
         Response processo = criarProcesso(tokenAgente, false, id);
@@ -326,11 +326,18 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
 
         encerrar(tokenAgente, id, Map.of("providenciaTomada", "abertura_processo")).then().statusCode(422);
 
-        for (String status : List.of("AGUARDANDO_RESULTADO", "COM_RESULTADO", "CONCLUIDO")) {
-            Response avanco = alterarStatusProcesso(tokenAgente, processoId, status);
-            avanco.then().statusCode(200);
-            assertThat(avanco.path("statusProcesso"), equalTo(status));
-        }
+        // T34: COM_RESULTADO so pelo lancamento do resultado (substitui a D18).
+        alterarStatusProcesso(tokenAgente, processoId, "AGUARDANDO_RESULTADO").then().statusCode(200);
+        encerrar(tokenAgente, id, Map.of("providenciaTomada", "abertura_processo")).then().statusCode(422);
+        Response comResultado = comToken(tokenAgente).contentType(ContentType.JSON)
+                .body(Map.of("resultado", "negativo", "dataResultado", HOJE.toString()))
+                .when().post("/api/processos/" + processoId + "/resultados");
+        comResultado.then().statusCode(200);
+        assertThat(comResultado.path("statusProcesso"), equalTo("COM_RESULTADO"));
+        encerrar(tokenAgente, id, Map.of("providenciaTomada", "abertura_processo")).then().statusCode(422);
+        Response concluido = alterarStatusProcesso(tokenAgente, processoId, "CONCLUIDO");
+        concluido.then().statusCode(200);
+        assertThat(concluido.path("statusProcesso"), equalTo("CONCLUIDO"));
         Response encerrada = encerrar(tokenAgente, id, Map.of("providenciaTomada", "abertura_processo"));
         encerrada.then().statusCode(200);
         assertThat(encerrada.path("statusOcorrencia"), equalTo("ENCERRADA"));

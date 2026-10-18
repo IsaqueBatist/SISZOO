@@ -31,8 +31,9 @@ import lombok.Setter;
 
 // Modelo-alvo do DER §3.5 (T29, V13). Responsavel e amostras ficam fora da
 // entidade (sem colecao nem cascade), gravados pelo service na mesma transacao,
-// como denunciante e anexos na ocorrencia. Resultado, desfecho, GAL/SINAN e
-// datas de envio/resultado sao preenchidos por tasks seguintes.
+// como denunciante e anexos na ocorrencia. O resultado vigente e sua data vem
+// do registro de resultado (T34, historico em ResultadoProcesso); desfecho,
+// GAL/SINAN e datas de envio sao preenchidos por tasks seguintes.
 @Entity
 @Table(name = "processo_sanitario")
 @Getter
@@ -91,11 +92,15 @@ public class ProcessoSanitario {
     @Column(name = "previsao_retorno")
     private LocalDate previsaoRetorno;
 
+    // Resultado vigente (T34): copia do ultimo registro nao retificado de
+    // resultado_processo, gravada so por aplicarResultadoVigente.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "resultado_laboratorial_id")
+    @Setter(AccessLevel.NONE)
     private ResultadoLaboratorial resultadoLaboratorial;
 
     @Column(name = "data_resultado")
+    @Setter(AccessLevel.NONE)
     private LocalDate dataResultado;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -122,5 +127,14 @@ public class ProcessoSanitario {
             throw new VinculoJaExistenteException();
         }
         this.ocorrencia = ocorrencia;
+    }
+
+    // O service valida a transicao antes (StatusProcesso, T34): o primeiro
+    // resultado leva AGUARDANDO_RESULTADO a COM_RESULTADO; a correcao so
+    // acontece em COM_RESULTADO e mantem o status.
+    public void aplicarResultadoVigente(ResultadoProcesso registro) {
+        this.resultadoLaboratorial = registro.getResultadoLaboratorial();
+        this.dataResultado = registro.getDataResultado();
+        this.statusProcesso = StatusProcesso.COM_RESULTADO;
     }
 }
