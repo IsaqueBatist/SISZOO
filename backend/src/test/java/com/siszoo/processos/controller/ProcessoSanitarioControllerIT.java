@@ -609,8 +609,76 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         lancarResultado(tokenAgente, processoId, Map.of("resultado", "positivo")).then().statusCode(422);
         lancarResultado(tokenAgente, processoId, corpoResultado("positivo", HOJE.plusDays(1), null))
                 .then().statusCode(422).body("mensagem", equalTo("Data do resultado nao pode ser futura"));
+        // Processo aberto hoje: resultado de ontem antecede a abertura.
+        lancarResultado(tokenAgente, processoId, corpoResultado("positivo", HOJE.minusDays(1), null))
+                .then().statusCode(422)
+                .body("mensagem", equalTo("Data do resultado nao pode ser anterior a data de abertura do processo"));
 
         assertSemResultado(processoId, "AGUARDANDO_RESULTADO");
+    }
+
+    @Test
+    @DisplayName("[T34] dataResultado >= dataAbertura: na abertura aceita; antes recusada no registro e na correcao")
+    void dataResultadoNaoAntecedeAAbertura() {
+        LocalDate abertura = HOJE.minusDays(3);
+        String processoId = processoAguardandoResultadoAbertoEm(abertura);
+
+        lancarResultado(tokenAgente, processoId, corpoResultado("negativo", abertura.minusDays(1), null))
+                .then().statusCode(422);
+        assertSemResultado(processoId, "AGUARDANDO_RESULTADO");
+
+        String originalId = lancarResultado(tokenAgente, processoId, corpoResultado("negativo", abertura, null))
+                .then().statusCode(200).extract().path("resultados[0].id");
+        lancarResultado(tokenAgente, processoId, corpoResultado("positivo", abertura.minusDays(1), originalId))
+                .then().statusCode(422)
+                .body("mensagem", equalTo("Data do resultado nao pode ser anterior a data de abertura do processo"));
+        assertThat(contarResultados(processoId), equalTo(1));
+        assertThat(buscar(tokenAgente, processoId).path("resultado.codigo"), equalTo("negativo"));
+        assertVigenteCoerente(processoId);
+    }
+
+    // Processo nao e sigiloso (o sigilo e da ocorrencia, T26): a resposta do
+    // processo, inclusive com resultado e historico, nao traz o denunciante
+    // da ocorrencia vinculada, e a consulta nao gera VISUALIZACAO.
+    @Test
+    @DisplayName("[T34/T26] processo vinculado a ocorrencia sigilosa, apos o resultado: GET sem dado do denunciante")
+    void resultadoNaoExpoeDenuncianteSigiloso() {
+        Map<String, Object> ocorrencia = new HashMap<>();
+        ocorrencia.put("tipoOcorrencia", "zoonose");
+        ocorrencia.put("dataAbertura", HOJE.toString());
+        ocorrencia.put("endereco", "Rua Teste, 1");
+        ocorrencia.put("bairro", "Centro");
+        ocorrencia.put("descricao", "Ocorrencia sigilosa com processo");
+        ocorrencia.put("sigilosa", true);
+        ocorrencia.put("denunciante", Map.of("nome", "Denunciante Sigiloso Resultado", "cpf", "987.654.321-00",
+                "telefone", "(11) 98888-7777", "email", "sigiloso.resultado@exemplo.com"));
+        String ocorrenciaId = given().header("Authorization", "Bearer " + tokenAgente).contentType(ContentType.JSON)
+                .body(ocorrencia).when().post("/api/ocorrencias").then().statusCode(200).extract().path("id");
+        String processoId = fixture.postarProcesso(tokenAgente, ocorrenciaId, false).then().statusCode(200)
+                .extract().path("id");
+        alterarStatus(tokenAgente, processoId, "AGUARDANDO_RESULTADO").then().statusCode(200);
+        Response lancado = lancarResultado(tokenAgente, processoId, corpoResultado("positivo", HOJE, null));
+        lancado.then().statusCode(200);
+        int visualizacoesAntes = jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM auditoria_evento WHERE acao = 'VISUALIZACAO'", Integer.class);
+
+        List<String> corpos = new ArrayList<>(List.of(lancado.asString()));
+        for (String token : List.of(tokenVet, tokenAgente, tokenAdmin)) {
+            Response detalhe = buscar(token, processoId);
+            detalhe.then().statusCode(200);
+            assertThat(detalhe.path("ocorrenciaId"), equalTo(ocorrenciaId));
+            assertThat(detalhe.path("resultado.codigo"), equalTo("positivo"));
+            assertThat(detalhe.path("denunciante"), nullValue());
+            corpos.add(detalhe.asString());
+        }
+        for (String corpo : corpos) {
+            for (String pessoal : List.of("denunciante", "Denunciante Sigiloso Resultado", "987.654.321-00",
+                    "(11) 98888-7777", "sigiloso.resultado@exemplo.com")) {
+                assertThat(corpo, not(containsString(pessoal)));
+            }
+        }
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM auditoria_evento WHERE acao = 'VISUALIZACAO'",
+                Integer.class), equalTo(visualizacoesAntes));
     }
 
     @Test
@@ -671,7 +739,7 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
     @Test
     @DisplayName("[T34] correcao: novo registro com retificaId, original intacto, vigente coerente apos cada passo e auditoria")
     void correcaoPorNovoRegistro() {
-        String processoId = processoAguardandoResultado();
+        String processoId = processoAguardandoResultadoAbertoEm(HOJE.minusDays(5));
         String outroProcesso = processoAguardandoResultado();
 
         Response original = lancarResultado(tokenAgente, processoId, corpoResultado("negativo", HOJE.minusDays(2), null));
@@ -881,7 +949,19 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
     private static final LocalDate HOJE = RelogioTesteConfig.HOJE;
 
     private String processoAguardandoResultado() {
-        String id = fixture.postarProcesso(tokenAgente, null, false).then().statusCode(200).extract().path("id");
+        return processoAguardandoResultado(fixture.corpoProcesso(null, false));
+    }
+
+    // Aberto em data anterior a hoje: permite datas de resultado no passado
+    // (dataResultado >= dataAbertura).
+    private String processoAguardandoResultadoAbertoEm(LocalDate abertura) {
+        Map<String, Object> corpo = fixture.corpoProcesso(null, false);
+        corpo.put("dataAbertura", abertura.toString());
+        return processoAguardandoResultado(corpo);
+    }
+
+    private String processoAguardandoResultado(Map<String, Object> corpo) {
+        String id = fixture.postarProcesso(tokenAgente, corpo).then().statusCode(200).extract().path("id");
         alterarStatus(tokenAgente, id, "AGUARDANDO_RESULTADO").then().statusCode(200);
         return id;
     }

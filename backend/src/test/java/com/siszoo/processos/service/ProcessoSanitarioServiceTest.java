@@ -62,6 +62,7 @@ import com.siszoo.processos.entity.TipoAbrigo;
 import com.siszoo.processos.exception.ContatoHumanoInconsistenteException;
 import com.siszoo.processos.exception.CorrecaoResultadoNaoPermitidaException;
 import com.siszoo.processos.exception.DataColetaFuturaException;
+import com.siszoo.processos.exception.DataResultadoAnteriorAberturaException;
 import com.siszoo.processos.exception.DataResultadoFuturaException;
 import com.siszoo.processos.exception.IdentificacaoComAnimalDoCanilException;
 import com.siszoo.processos.exception.IdentificacaoObrigatoriaException;
@@ -107,6 +108,7 @@ class ProcessoSanitarioServiceTest {
     private ProcessoSanitarioService processoService;
 
     private static final LocalDate HOJE = LocalDate.of(2026, 9, 10);
+    private static final LocalDate ABERTURA = HOJE.minusDays(10);
 
     private final UUID usuarioId = UUID.randomUUID();
 
@@ -234,6 +236,31 @@ class ProcessoSanitarioServiceTest {
                 .isInstanceOf(ResultadoInvalidoException.class);
         assertThat(processo.getStatusProcesso()).isEqualTo(StatusProcesso.AGUARDANDO_RESULTADO);
         verify(resultadoProcessoRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void dataResultadoAnteriorAAberturaRecusadaNoRegistroENaCorrecao() {
+        ProcessoSanitario aguardando = processoEm(StatusProcesso.AGUARDANDO_RESULTADO);
+        ProcessoSanitario comResultado = processoEm(StatusProcesso.COM_RESULTADO);
+
+        assertThatThrownBy(() -> processoService.registrarResultado(aguardando.getId(),
+                new RegistrarResultadoRequest("positivo", ABERTURA.minusDays(1), null, null), usuarioId))
+                .isInstanceOf(DataResultadoAnteriorAberturaException.class);
+        assertThatThrownBy(() -> processoService.registrarResultado(comResultado.getId(),
+                new RegistrarResultadoRequest("positivo", ABERTURA.minusDays(1), null, UUID.randomUUID()), usuarioId))
+                .isInstanceOf(DataResultadoAnteriorAberturaException.class);
+        assertThat(aguardando.getStatusProcesso()).isEqualTo(StatusProcesso.AGUARDANDO_RESULTADO);
+        verify(resultadoProcessoRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void dataResultadoIgualAAberturaAceita() {
+        ProcessoSanitario processo = processoEm(StatusProcesso.AGUARDANDO_RESULTADO);
+        when(resultadoRepository.findByCodigo("negativo")).thenReturn(Optional.of(resultado("negativo", true)));
+
+        assertThat(processoService.registrarResultado(processo.getId(),
+                new RegistrarResultadoRequest("negativo", ABERTURA, null, null), usuarioId).dataResultado())
+                .isEqualTo(ABERTURA);
     }
 
     @Test
@@ -466,6 +493,7 @@ class ProcessoSanitarioServiceTest {
     private ProcessoSanitario processoEm(StatusProcesso status) {
         ProcessoSanitario processo = new ProcessoSanitario();
         processo.setId(UUID.randomUUID());
+        processo.setDataAbertura(ABERTURA);
         processo.setStatusProcesso(status);
         processo.setDoenca(doenca());
         processo.setLaboratorio(laboratorio());

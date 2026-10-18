@@ -53,6 +53,7 @@ import com.siszoo.processos.entity.StatusProcesso;
 import com.siszoo.processos.exception.ContatoHumanoInconsistenteException;
 import com.siszoo.processos.exception.CorrecaoResultadoNaoPermitidaException;
 import com.siszoo.processos.exception.DataColetaFuturaException;
+import com.siszoo.processos.exception.DataResultadoAnteriorAberturaException;
 import com.siszoo.processos.exception.DataResultadoFuturaException;
 import com.siszoo.processos.exception.DoencaInvalidaException;
 import com.siszoo.processos.exception.IdentificacaoComAnimalDoCanilException;
@@ -388,6 +389,11 @@ public class ProcessoSanitarioService {
         }
         ProcessoSanitario processo = processoRepository.findByIdForUpdate(id)
                 .orElseThrow(ProcessoNaoEncontradoException::new);
+        // Limite inferior: o resultado nao antecede a abertura do processo
+        // (vale tambem para a correcao; o registro e imutavel).
+        if (request.dataResultado().isBefore(processo.getDataAbertura())) {
+            throw new DataResultadoAnteriorAberturaException();
+        }
         ResultadoLaboratorial resultado = resultadoRepository.findByCodigo(request.resultado())
                 .filter(ResultadoLaboratorial::isAtivo)
                 .filter(r -> !RESULTADO_SEM_RESULTADO.equals(r.getCodigo()))
@@ -415,8 +421,9 @@ public class ProcessoSanitarioService {
         auditoriaEventoService.registrar(autor, AcaoAuditoria.ATUALIZACAO, ENTIDADE_AUDITORIA, id, antes,
                 toSnapshot(processo));
         // Ponto unico de gravacao do resultado: a notificacao da T36 (DER
-        // regra 19) dispara quando o vigente PASSA a positivo ou inconclusivo,
-        // inclusive por correcao (antes.resultado() -> registro).
+        // regra 19) dispara quando o vigente PASSA a positivo, inclusive por
+        // correcao (antes.resultado() -> registro). Se a correcao de um
+        // positivo ja notificado gera e-mail de retificacao e decisao da T36.
         return toResponse(processo);
     }
 
