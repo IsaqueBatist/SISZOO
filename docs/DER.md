@@ -579,7 +579,7 @@ GAL/SINAN, envio, previsão e desfecho existem no schema, mas nenhum fluxo os pr
   - **Correção** (`retificaId`): só em `COM_RESULTADO` (em `CONCLUIDO`, que é terminal, ou antes do resultado → 422) e não muda o status. `retificaId` precisa ser o resultado vigente do mesmo processo: de outro processo ou inexistente → 422; já corrigido → 409 (como RN-C02). O registro corrigido fica preservado.
   - Registro, vigente (`resultado_laboratorial_id`, `data_resultado`, status) e auditoria `ATUALIZACAO` de `processo_sanitario` (snapshot com o resultado vigente antes e depois) gravam numa única transação, sob o lock da linha do processo, que serializa lançamentos concorrentes. Uma falha desfaz tudo.
   - Não há edição nem exclusão de resultado (sem PUT/PATCH/DELETE: 405); ver `resultado_processo`.
-- Ao registrar `resultado_laboratorial` = `positivo` (**revisão de 2026-10-17, decisão de produto: `inconclusivo` deixa de notificar**; a issue #37 ainda cita os dois):
+- Ao registrar `resultado_laboratorial` = `positivo` (**revisão de 2026-10-17, decisão de produto: `inconclusivo` deixa de notificar**, `docs/decisoes/T34.md` T34-4; a issue #37 ainda cita os dois):
   - dispara notificação ao munícipe (e-mail / SMS quando integrado)
   - dispara notificação à **Vigilância Epidemiológica de Itu** (regra a validar com CCZ)
   - **Gancho (T36, ainda não implementado):** a notificação deve disparar quando o resultado **vigente passa a** `positivo`, **inclusive por correção** (ex.: `negativo` corrigido para `positivo`). O ponto único de gravação é `ProcessoSanitarioService.registrarResultado`. A T34 não envia nenhuma notificação.
