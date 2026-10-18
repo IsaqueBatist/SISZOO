@@ -16,7 +16,7 @@ export function badgeDeStatusProcesso(status: StatusProcesso): Badge {
   return STATUS_PROCESSO_BADGE_MAP[status] ?? { classe: 'badge-neutral', label: status }
 }
 
-// Badge do resultado laboratorial (T37), pelo codigo do catalogo
+// Badge do resultado laboratorial (T34), pelo codigo do catalogo
 // (resultadosLaboratoriais de GET /processos/catalogos). "aguardando" so
 // aparece aqui antes do lancamento (nunca e o valor gravado em si).
 const RESULTADO_BADGE_MAP: Record<string, Badge> = {

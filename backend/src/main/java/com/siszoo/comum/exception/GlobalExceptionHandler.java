@@ -56,7 +56,10 @@ import com.siszoo.ocorrencias.exception.TransicaoStatusInvalidaException;
 import com.siszoo.ocorrencias.exception.UrgenciaDefinidaPeloProcessoException;
 import com.siszoo.ocorrencias.exception.VinculoJaExistenteException;
 import com.siszoo.processos.exception.ContatoHumanoInconsistenteException;
+import com.siszoo.processos.exception.CorrecaoResultadoNaoPermitidaException;
 import com.siszoo.processos.exception.DataColetaFuturaException;
+import com.siszoo.processos.exception.DataResultadoAnteriorAberturaException;
+import com.siszoo.processos.exception.DataResultadoFuturaException;
 import com.siszoo.processos.exception.DesfechoInvalidoException;
 import com.siszoo.processos.exception.DoencaInvalidaException;
 import com.siszoo.processos.exception.IdentificacaoComAnimalDoCanilException;
@@ -64,6 +67,9 @@ import com.siszoo.processos.exception.IdentificacaoObrigatoriaException;
 import com.siszoo.processos.exception.LaboratorioInvalidoException;
 import com.siszoo.processos.exception.ProcessoNaoEncontradoException;
 import com.siszoo.processos.exception.ResultadoInvalidoException;
+import com.siszoo.processos.exception.ResultadoJaRegistradoException;
+import com.siszoo.processos.exception.ResultadoObrigatorioException;
+import com.siszoo.processos.exception.ResultadoRetificadoInvalidoException;
 import com.siszoo.processos.exception.SintomaInvalidoException;
 import com.siszoo.processos.exception.SintomaSemStatusSintomaticoException;
 import com.siszoo.processos.exception.TransicaoStatusProcessoInvalidaException;
@@ -82,7 +88,8 @@ public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     private static final Set<String> CONSTRAINTS_RETIFICACAO_UNICA = Set.of(
-            "uq_vacinacao_retifica_id", "uq_procedimento_retifica_id", "uq_prescricao_retifica_id");
+            "uq_vacinacao_retifica_id", "uq_procedimento_retifica_id", "uq_prescricao_retifica_id",
+            "uq_resultado_processo_retifica_id");
 
     @ExceptionHandler(CredencialInvalidaException.class)
     public ResponseEntity<ErroResponse> handleCredencialInvalida() {
@@ -144,6 +151,8 @@ public class GlobalExceptionHandler {
     // ficam so no log do servidor. Excecao: a unicidade de retifica_id so
     // dispara quando duas retificacoes do mesmo registro passam juntas pela
     // pre-checagem do service (RN-C02); a resposta e a mesma desse caminho.
+    // O mesmo vale para o resultado original unico do processo (V14): a
+    // resposta e a do segundo lancamento barrado pelo service.
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErroResponse> handleViolacaoIntegridade(DataIntegrityViolationException ex) {
         log.warn("Violacao de integridade de dados barrada pelo banco", ex);
@@ -151,6 +160,9 @@ public class GlobalExceptionHandler {
         // Set.of rejeita contains(null): sem nome de constraint, segue o generico.
         if (constraint != null && CONSTRAINTS_RETIFICACAO_UNICA.contains(constraint)) {
             return handleRegistroJaRetificado();
+        }
+        if ("uq_resultado_processo_original".equals(constraint)) {
+            return handleResultadoJaRegistrado();
         }
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ErroResponse("Operacao viola uma regra de integridade dos dados"));
@@ -369,6 +381,48 @@ public class GlobalExceptionHandler {
                 .body(new ErroResponse("Data de coleta nao pode ser futura"));
     }
 
+    @ExceptionHandler(DataResultadoFuturaException.class)
+    public ResponseEntity<ErroResponse> handleDataResultadoFutura() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Data do resultado nao pode ser futura"));
+    }
+
+    @ExceptionHandler(DataResultadoAnteriorAberturaException.class)
+    public ResponseEntity<ErroResponse> handleDataResultadoAnteriorAbertura() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Data do resultado nao pode ser anterior a data de abertura do processo"));
+    }
+
+    @ExceptionHandler(ResultadoInvalidoException.class)
+    public ResponseEntity<ErroResponse> handleResultadoInvalido() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Resultado laboratorial invalido: use positivo, negativo, inconclusivo, material_inadequado ou nao_realizado"));
+    }
+
+    @ExceptionHandler(ResultadoJaRegistradoException.class)
+    public ResponseEntity<ErroResponse> handleResultadoJaRegistrado() {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErroResponse("Processo ja tem resultado registrado; para corrigir, informe retificaId do resultado vigente"));
+    }
+
+    @ExceptionHandler(ResultadoObrigatorioException.class)
+    public ResponseEntity<ErroResponse> handleResultadoObrigatorio() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("O status COM_RESULTADO so e alcancado pelo registro do resultado laboratorial"));
+    }
+
+    @ExceptionHandler(ResultadoRetificadoInvalidoException.class)
+    public ResponseEntity<ErroResponse> handleResultadoRetificadoInvalido() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Resultado a corrigir nao existe neste processo"));
+    }
+
+    @ExceptionHandler(CorrecaoResultadoNaoPermitidaException.class)
+    public ResponseEntity<ErroResponse> handleCorrecaoResultadoNaoPermitida() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Resultado so pode ser corrigido com o processo em COM_RESULTADO"));
+    }
+
     @ExceptionHandler(IdentificacaoComAnimalDoCanilException.class)
     public ResponseEntity<ErroResponse> handleIdentificacaoComAnimalDoCanil() {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
@@ -465,12 +519,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroResponse> handleVinculoJaExistente() {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ErroResponse("Ocorrencia ou processo ja possui vinculo"));
-    }
-
-    @ExceptionHandler(ResultadoInvalidoException.class)
-    public ResponseEntity<ErroResponse> handleResultadoInvalido() {
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
-                .body(new ErroResponse("Resultado laboratorial informado nao existe ou nao pode ser lancado"));
     }
 
     @ExceptionHandler(DesfechoInvalidoException.class)

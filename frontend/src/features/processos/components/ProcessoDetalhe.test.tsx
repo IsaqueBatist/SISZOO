@@ -340,31 +340,44 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
     await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
 
     expect(screen.queryByText('Confirmar lançamento do resultado')).not.toBeInTheDocument()
-    expect(await cardDe('Resultado Laboratorial').findByText('Negativo')).toBeInTheDocument()
+    expect(await cardDe('Resultado Laboratorial').findByText('Negativo', { selector: 'span' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Registrar resultado' })).not.toBeInTheDocument()
-    expect(await cardDe('Resultado Laboratorial').findByText(/Processo criado em/)).toBeInTheDocument()
-    expect(cardDe('Resultado Laboratorial').getByText(/Processo atualizado em/)).toBeInTheDocument()
+    expect(await cardDe('Resultado Laboratorial').findByText(/Lançado/)).toBeInTheDocument()
+    expect(cardDe('Resultado Laboratorial').getByText(/registrado por Agente Processos/)).toBeInTheDocument()
   })
 
-  it.each(['positivo', 'inconclusivo'])(
-    'resultado %s: mostra confirmação antes de enviar e o aviso de notificação depois',
-    async (codigo) => {
-      const user = userEvent.setup()
-      renderDetalhe(PROCESSO_PENDENTE_ID, AGENTE)
-      await esperarDetalhe('045/2026')
-      await aguardarOpcoesDeResultado()
+  it('resultado positivo: mostra confirmação antes de enviar e o aviso de notificação depois', async () => {
+    const user = userEvent.setup()
+    renderDetalhe(PROCESSO_PENDENTE_ID, AGENTE)
+    await esperarDetalhe('045/2026')
+    await aguardarOpcoesDeResultado()
 
-      await user.selectOptions(screen.getByLabelText('Resultado laboratorial'), codigo)
-      await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
+    await user.selectOptions(screen.getByLabelText('Resultado laboratorial'), 'positivo')
+    await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
 
-      expect(await screen.findByText('Confirmar lançamento do resultado')).toBeInTheDocument()
-      await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+    expect(await screen.findByText('Confirmar lançamento do resultado')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-      expect(await cardDe('Resultado Laboratorial').findByText('Notificação solicitada ao responsável.')).toBeInTheDocument()
-    },
-  )
+    expect(await cardDe('Resultado Laboratorial').findByText('Notificação solicitada ao responsável.')).toBeInTheDocument()
+  })
 
-  it('confirmação de positivo/inconclusivo pode ser cancelada sem enviar nada', async () => {
+  // Revisão de 2026-10-17 (regra 19, DER): inconclusivo deixou de notificar
+  // — registra direto, sem confirmação nem aviso de notificação.
+  it('resultado inconclusivo: NÃO notifica mais — sem confirmação, registra direto', async () => {
+    const user = userEvent.setup()
+    renderDetalhe(PROCESSO_PENDENTE_ID, AGENTE)
+    await esperarDetalhe('045/2026')
+    await aguardarOpcoesDeResultado()
+
+    await user.selectOptions(screen.getByLabelText('Resultado laboratorial'), 'inconclusivo')
+    await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
+
+    expect(screen.queryByText('Confirmar lançamento do resultado')).not.toBeInTheDocument()
+    expect(await cardDe('Resultado Laboratorial').findByText('Inconclusivo', { selector: 'span' })).toBeInTheDocument()
+    expect(cardDe('Resultado Laboratorial').queryByText('Notificação solicitada ao responsável.')).not.toBeInTheDocument()
+  })
+
+  it('confirmação de positivo pode ser cancelada sem enviar nada', async () => {
     const user = userEvent.setup()
     renderDetalhe(PROCESSO_PENDENTE_ID, AGENTE)
     await esperarDetalhe('045/2026')
@@ -380,7 +393,7 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
   })
 
   it('falha de rede preserva o resultado selecionado e mostra mensagem de tentar de novo', async () => {
-    server.use(http.post(`${API_BASE_URL}/processos/:id/resultado`, () => HttpResponse.error()))
+    server.use(http.post(`${API_BASE_URL}/processos/:id/resultados`, () => HttpResponse.error()))
     const user = userEvent.setup()
     renderDetalhe(PROCESSO_PENDENTE_ID, AGENTE)
     await esperarDetalhe('045/2026')
@@ -400,7 +413,7 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
     renderDetalhe(PROCESSO_PENDENTE_ID)
     await esperarDetalhe('045/2026')
 
-    expect(cardDe('Resultado Laboratorial').getByText('Positivo')).toBeInTheDocument()
+    expect(cardDe('Resultado Laboratorial').getByText('Positivo', { selector: 'span' })).toBeInTheDocument()
     expect(cardDe('Resultado Laboratorial').getByText('Óbito — Eutanásia')).toBeInTheDocument()
     expect(screen.queryByLabelText('Resultado laboratorial')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Registrar resultado' })).not.toBeInTheDocument()

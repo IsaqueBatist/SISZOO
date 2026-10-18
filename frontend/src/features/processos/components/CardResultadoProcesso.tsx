@@ -2,40 +2,29 @@ import { useState, type FormEvent } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { useQueryClient } from '@tanstack/react-query'
-import { formatarData, formatarDataHora } from '@/features/ocorrencias/utils/datas'
+import { formatarData, formatarDataHora, hojeIso } from '@/features/ocorrencias/utils/datas'
 import { mensagemDeRegraDaApi, statusHttpDoErro } from '@/lib/erroApi'
 import { buscarProcessoPorId } from '../api/processosApi'
 import {
   registrarResultadoFormSchema,
   type RegistrarResultadoFormValues,
 } from '../schemas/processoResultadoFormSchema'
-import type { HistoricoProcessoItem, Processo } from '../types/processos.types'
+import type { Processo, ResultadoProcessoItem } from '../types/processos.types'
 import { badgeDeResultado } from '../utils/statusBadge'
-import { useCatalogosProcessoQuery, useHistoricoProcessoQuery, useRegistrarResultadoMutation } from '../hooks/useProcessos'
+import { useCatalogosProcessoQuery, useRegistrarResultadoMutation } from '../hooks/useProcessos'
 
 interface CardResultadoProcessoProps {
   processo: Processo
   podeEscrever: boolean
 }
 
-// Resultados que disparam notificação ao responsável (regra 19 do DER,
-// docs/decisoes/T37.md) — e por isso exigem confirmação antes de enviar.
-const RESULTADOS_QUE_NOTIFICAM = new Set(['positivo', 'inconclusivo'])
+// Regra 19 (DER, revisão 2026-10-17): só positivo notifica o município —
+// inconclusivo deixou de notificar. Dispara inclusive por correção (se o
+// vigente passar a positivo), mas a T37 não oferece correção nesta tela.
+const RESULTADO_QUE_NOTIFICA = 'positivo'
 
-const LABEL_ACAO: Record<string, string> = {
-  CRIACAO: 'Processo criado',
-  ATUALIZACAO: 'Processo atualizado',
-}
-
-function labelDeAcao(acao: string): string {
-  return LABEL_ACAO[acao] ?? acao
-}
-
-function Historico({ processoId }: { processoId: string }) {
-  const { data: itens, isLoading } = useHistoricoProcessoQuery(processoId)
-
-  if (isLoading) return null
-  if (!itens || itens.length === 0) return null
+function Historico({ resultados }: { resultados: ResultadoProcessoItem[] }) {
+  if (resultados.length === 0) return null
 
   return (
     <div className="col gap-1" style={{ marginTop: 'var(--space-3)' }}>
@@ -43,10 +32,12 @@ function Historico({ processoId }: { processoId: string }) {
         Histórico
       </p>
       <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: 'var(--color-text-secondary)' }}>
-        {itens.map((item: HistoricoProcessoItem) => (
+        {resultados.map((item) => (
           <li key={item.id}>
-            {labelDeAcao(item.acao)} em {formatarDataHora(item.ocorreuEm)}
-            {item.usuarioEmail ? ` por ${item.usuarioEmail}` : ''}
+            {item.retificaId ? 'Correção para ' : 'Lançado '}
+            <strong>{item.resultado.nome}</strong> em {formatarData(item.dataResultado)} — registrado por{' '}
+            {item.registradoPorNome} em {formatarDataHora(item.registradoEm)}
+            {item.observacoes ? ` (${item.observacoes})` : ''}
           </li>
         ))}
       </ul>
@@ -54,10 +45,12 @@ function Historico({ processoId }: { processoId: string }) {
   )
 }
 
-// T37 — card "Resultado Laboratorial" do detalhe do processo. Três estados:
-// aguardando envio das amostras (ABERTO), formulário de lançamento
+// T34 + T37 — card "Resultado Laboratorial" do detalhe do processo. Três
+// estados: aguardando envio das amostras (ABERTO), formulário de lançamento
 // (AGUARDANDO_RESULTADO sem resultado ainda) e somente leitura + histórico
-// (depois de lançado — write-once, nunca reedita).
+// (depois de lançado). Correção de um resultado já lançado (retificaId) é
+// suportada pelo backend, mas esta tela não oferece essa ação — só o
+// lançamento inicial.
 export function CardResultadoProcesso({ processo, podeEscrever }: CardResultadoProcessoProps) {
   const [erro, setErro] = useState<string | null>(null)
   const [pendente, setPendente] = useState<RegistrarResultadoFormValues | null>(null)
@@ -73,14 +66,16 @@ export function CardResultadoProcesso({ processo, podeEscrever }: CardResultadoP
     resolver: zodResolver(registrarResultadoFormSchema),
     mode: 'onSubmit',
     reValidateMode: 'onSubmit',
-    defaultValues: { resultadoLaboratorial: '', desfechoAnimal: '' },
+    defaultValues: { resultado: '', dataResultado: hojeIso(), observacoes: '', desfechoAnimal: '' },
   })
 
   async function enviar(dados: RegistrarResultadoFormValues) {
     setErro(null)
     try {
       await mutation.mutateAsync({
-        resultadoLaboratorial: dados.resultadoLaboratorial,
+        resultado: dados.resultado,
+        dataResultado: dados.dataResultado,
+        observacoes: dados.observacoes || undefined,
         desfechoAnimal: dados.desfechoAnimal || undefined,
       })
       setPendente(null)
@@ -94,7 +89,7 @@ export function CardResultadoProcesso({ processo, podeEscrever }: CardResultadoP
         try {
           const atualizado = await buscarProcessoPorId(processo.id)
           queryClient.setQueryData(['processos', 'detalhe', processo.id], atualizado)
-          if (atualizado.resultadoLaboratorial) return
+          if (atualizado.resultado) return
         } catch {
           // Mantém o fluxo de erro abaixo se nem o refetch funcionar.
         }
@@ -104,7 +99,7 @@ export function CardResultadoProcesso({ processo, podeEscrever }: CardResultadoP
   }
 
   function onSubmit(dados: RegistrarResultadoFormValues) {
-    if (RESULTADOS_QUE_NOTIFICAM.has(dados.resultadoLaboratorial)) {
+    if (dados.resultado === RESULTADO_QUE_NOTIFICA) {
       setPendente(dados)
       return
     }
@@ -116,9 +111,9 @@ export function CardResultadoProcesso({ processo, podeEscrever }: CardResultadoP
     void handleSubmit(onSubmit)(event)
   }
 
-  if (processo.resultadoLaboratorial) {
-    const badge = badgeDeResultado(processo.resultadoLaboratorial)
-    const notifica = RESULTADOS_QUE_NOTIFICAM.has(processo.resultadoLaboratorial.codigo)
+  if (processo.resultado) {
+    const badge = badgeDeResultado(processo.resultado)
+    const notificou = processo.resultado.codigo === RESULTADO_QUE_NOTIFICA
     return (
       <div className="card">
         <div className="card-header">
@@ -141,13 +136,13 @@ export function CardResultadoProcesso({ processo, podeEscrever }: CardResultadoP
               <div>{processo.desfechoAnimal ? processo.desfechoAnimal.nome : '—'}</div>
             </div>
           </div>
-          {notifica && (
+          {notificou && (
             <div className="alert warning" role="alert" style={{ marginTop: 'var(--space-3)' }}>
               <span className="bullet" />
               <div className="alert-content">Notificação solicitada ao responsável.</div>
             </div>
           )}
-          <Historico processoId={processo.id} />
+          <Historico resultados={processo.resultados} />
         </div>
       </div>
     )
@@ -202,9 +197,9 @@ export function CardResultadoProcesso({ processo, podeEscrever }: CardResultadoP
               <label htmlFor="proc-resultado">Resultado laboratorial</label>
               <select
                 id="proc-resultado"
-                className={`select${errors.resultadoLaboratorial ? ' error' : ''}`}
+                className={`select${errors.resultado ? ' error' : ''}`}
                 defaultValue=""
-                {...register('resultadoLaboratorial')}
+                {...register('resultado')}
               >
                 <option value="" disabled>
                   Selecione...
@@ -215,7 +210,19 @@ export function CardResultadoProcesso({ processo, podeEscrever }: CardResultadoP
                   </option>
                 ))}
               </select>
-              {errors.resultadoLaboratorial && <span className="err">{errors.resultadoLaboratorial.message}</span>}
+              {errors.resultado && <span className="err">{errors.resultado.message}</span>}
+            </div>
+            <div className="field" style={{ marginBottom: 12 }}>
+              <label htmlFor="proc-data-resultado">Data do resultado</label>
+              <input
+                id="proc-data-resultado"
+                className={`input${errors.dataResultado ? ' error' : ''}`}
+                type="date"
+                min={processo.dataAbertura}
+                max={hojeIso()}
+                {...register('dataResultado')}
+              />
+              {errors.dataResultado && <span className="err">{errors.dataResultado.message}</span>}
             </div>
             <div className="field" style={{ marginBottom: 12 }}>
               <label htmlFor="proc-desfecho">Desfecho do animal</label>
@@ -227,6 +234,10 @@ export function CardResultadoProcesso({ processo, podeEscrever }: CardResultadoP
                   </option>
                 ))}
               </select>
+            </div>
+            <div className="field" style={{ marginBottom: 12 }}>
+              <label htmlFor="proc-observacoes">Observações</label>
+              <textarea id="proc-observacoes" className="textarea" rows={3} {...register('observacoes')} />
             </div>
             <button type="submit" className="btn btn-primary btn-sm" disabled={mutation.isPending}>
               {mutation.isPending ? 'Registrando…' : 'Registrar resultado'}
@@ -245,8 +256,8 @@ export function CardResultadoProcesso({ processo, podeEscrever }: CardResultadoP
               <div className="alert warning" role="alert">
                 <span className="bullet" />
                 <div className="alert-content">
-                  Ao confirmar, o sistema solicitará o envio de uma notificação automática ao responsável pelo animal e
-                  registrará o aviso à Vigilância Epidemiológica de Itu. O resultado não poderá ser editado depois.
+                  Ao confirmar, o sistema solicitará o envio de uma notificação automática ao responsável pelo animal
+                  e à Vigilância Epidemiológica de Itu. O resultado não poderá ser editado depois.
                 </div>
               </div>
             </div>

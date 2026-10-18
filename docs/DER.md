@@ -4,7 +4,7 @@
 
 > Documento de referência derivado das **15 telas + Design System** do protótipo navegável. Use-o para comparar com seu schema atual e validar cobertura.
 
-> **Estado do schema (V13).** As tabelas de usuários/acesso, animais, baias, registros clínicos (`vacinacao`, `procedimento`, `prescricao`), ocorrências (§3.4), processo sanitário (§3.5, exceto `documento_processo`) e seus catálogos estão descritas aqui **como existem nas migrations** (`backend/src/main/resources/db/migration`, V1–V13; a V11 só corrige a matriz de permissões, §3.1, a V12 só acrescenta a ação de auditoria `VISUALIZACAO`, §3.8, e a V13 completa o processo sanitário, T29). As demais (relatórios, `adocao`, `exame`, anexos de animal, `documento_processo`) ainda **não têm tabela**: são o modelo-alvo, a validar na implementação de cada módulo.
+> **Estado do schema (V14).** As tabelas de usuários/acesso, animais, baias, registros clínicos (`vacinacao`, `procedimento`, `prescricao`), ocorrências (§3.4), processo sanitário (§3.5, exceto `documento_processo`) e seus catálogos estão descritas aqui **como existem nas migrations** (`backend/src/main/resources/db/migration`, V1–V14; a V11 só corrige a matriz de permissões, §3.1, a V12 só acrescenta a ação de auditoria `VISUALIZACAO`, §3.8, a V13 completa o processo sanitário, T29, e a V14 cria o histórico de resultados, T34). As demais (relatórios, `adocao`, `exame`, anexos de animal, `documento_processo`) ainda **não têm tabela**: são o modelo-alvo, a validar na implementação de cada módulo.
 
 **Convenções**
 
@@ -540,7 +540,7 @@ Um `CHECK` amarra cada tipo à sua transição (tabela de regras de `ocorrencia`
 
 #### `processo_sanitario`
 
-> **Estado do schema (V13, T29).** As tabelas desta seção existem como descritas, exceto `documento_processo` (fica para a task de documentos). A V10 criou a versão mínima de `processo_sanitario` (T25); a V13 acrescentou as colunas do modelo-alvo. A V13 **só aplica sobre um banco sem processos**: com processos mínimos da T25 (sem doença, laboratório, responsável e amostras), ela para e pede a recriação do banco de desenvolvimento — não há dados reais a preservar (decisão DH-3, `docs/decisoes/T29.md`). Fonte: este DER; o DBML do módulo 4 está desatualizado.
+> **Estado do schema (V14, T29 e T34).** As tabelas desta seção existem como descritas, exceto `documento_processo` (fica para a task de documentos). A V10 criou a versão mínima de `processo_sanitario` (T25); a V13 acrescentou as colunas do modelo-alvo; a V14 criou `resultado_processo`, o histórico imutável dos resultados (T34). A V13 **só aplica sobre um banco sem processos**: com processos mínimos da T25 (sem doença, laboratório, responsável e amostras), ela para e pede a recriação do banco de desenvolvimento — não há dados reais a preservar (decisão DH-3, `docs/decisoes/T29.md`). Fonte: este DER; o DBML do módulo 4 está desatualizado.
 
 | Campo                       | Tipo                            | Obrig. | Observações                                                                                |
 | --------------------------- | ------------------------------- | ------ | ------------------------------------------------------------------------------------------ |
@@ -557,15 +557,15 @@ Um `CHECK` amarra cada tipo à sua transição (tabela de regras de `ocorrencia`
 | `cid`                       | varchar(20)                     | ?      | **snapshot** de `doenca.cid`, gravado na criação: preserva o CID da época se o catálogo mudar |
 | `data_envio_amostras`       | timestamp                       | ?      |                                                                                            |
 | `previsao_retorno`          | date                            | ?      |                                                                                            |
-| `resultado_laboratorial_id` | FK `resultado_laboratorial`     | ?      | preenchido quando retorna                                                                  |
-| `data_resultado`            | date                            | ?      |                                                                                            |
+| `resultado_laboratorial_id` | FK `resultado_laboratorial`     | ?      | resultado **vigente**: cópia do último registro não corrigido de `resultado_processo` (T34); nulo = sem resultado |
+| `data_resultado`            | date                            | ?      | data do resultado vigente (idem)                                                           |
 | `desfecho_animal_id`        | FK `desfecho_animal`            | ?      |                                                                                            |
 | `observacoes`               | text                            | ?      |                                                                                            |
 | `criado_por_id`             | FK `usuario`                    | \*     | `ON DELETE RESTRICT`                                                                       |
 | `criado_em`                 | timestamp                       | \*     |                                                                                            |
 | `atualizado_em`             | timestamp                       | \*     |                                                                                            |
 
-GAL/SINAN, envio, previsão, resultado e desfecho existem no schema, mas nenhum fluxo da T29 os preenche (task de resultado).
+GAL/SINAN, envio e previsão existem no schema, mas nenhum fluxo os preenche. `resultado_laboratorial_id` e `data_resultado` são gravados só pelo registro de resultado (T34), na mesma transação do registro em `resultado_processo`. `desfecho_animal_id` é opcional no mesmo lançamento (T37) — não faz parte do histórico imutável de `resultado_processo`, é só do processo.
 
 **Regras**
 
@@ -574,9 +574,17 @@ GAL/SINAN, envio, previsão, resultado e desfecho existem no schema, mas nenhum 
 - Vincular processo a ocorrência exige também `OCORRENCIAS_DENUNCIAS:escrita` (D33).
 - Quando criado a partir do botão "Abrir Processo Sanitário" dentro da ocorrência, a etapa 1 é pré-preenchida e travada nessa ocorrência (wizard `/processos/novo?ocorrencia=<id>`). O botão só aparece para quem escreve em ocorrências (Administrador e Agente, D33) e só em ocorrência não encerrada e sem processo (D20, 0..1).
 - **Listagem** (`GET /api/processos`): paginada, filtros por código de doença e por status, urgentes primeiro e depois os mais recentes (mesma regra da listagem de ocorrências). A linha e o detalhe trazem `ocorrenciaProtocolo`, para exibir o vínculo sem consultar a ocorrência (que exige acesso ao módulo e audita o sigilo, T26).
-- Ao registrar `resultado_laboratorial` = `positivo` ou `inconclusivo`:
-  - dispara notificação ao munícipe (e-mail / SMS quando integrado)
-  - dispara notificação à **Vigilância Epidemiológica de Itu** (regra a validar com CCZ)
+- **Registro do resultado (T34)** — `POST /api/processos/{id}/resultados` com `resultado` (código do catálogo, obrigatório), `dataResultado` (obrigatória, não pode ser futura pelo relógio do projeto nem anterior à `data_abertura` do processo — 422, também na correção), `observacoes` (opcional), `retificaId` (só na correção) e `desfechoAnimal` (opcional, T37, código do catálogo — grava direto no processo, fora do histórico imutável). Exige `PROCESSOS_SANITARIOS:escrita` (Administrador, Veterinário e Agente, V3), para registrar e para corrigir.
+  - Os cinco resultados lançáveis são `positivo`, `negativo`, `inconclusivo`, `material_inadequado` e `nao_realizado`; todos levam `AGUARDANDO_RESULTADO → COM_RESULTADO`. `aguardando`, código inexistente ou inativo → 422.
+  - Sem `retificaId`: só em `AGUARDANDO_RESULTADO`. Em `ABERTO` ou `CONCLUIDO` → 422; em `COM_RESULTADO` (já há resultado) → 409.
+  - **Correção** (`retificaId`): só em `COM_RESULTADO` (em `CONCLUIDO`, que é terminal, ou antes do resultado → 422) e não muda o status. `retificaId` precisa ser o resultado vigente do mesmo processo: de outro processo ou inexistente → 422; já corrigido → 409 (como RN-C02). O registro corrigido fica preservado.
+  - Registro, vigente (`resultado_laboratorial_id`, `data_resultado`, status, `desfecho_animal_id`) e auditoria `ATUALIZACAO` de `processo_sanitario` (snapshot com o resultado vigente antes e depois) gravam numa única transação, sob o lock da linha do processo, que serializa lançamentos concorrentes. Uma falha desfaz tudo.
+  - Não há edição nem exclusão de resultado (sem PUT/PATCH/DELETE: 405); ver `resultado_processo`.
+- Ao registrar `resultado_laboratorial` = `positivo` (**revisão de 2026-10-17, decisão de produto: `inconclusivo` deixa de notificar**; a issue #37 ainda cita os dois):
+  - **(T37)** dispara notificação ao munícipe (tentativa real por e-mail, assíncrona — depois do commit, nunca bloqueia o lançamento; sem e-mail cadastrado ou com falha de envio, só loga).
+  - **(T37)** dispara notificação à **Vigilância Epidemiológica de Itu** — **mockada**: não há endereço real configurado ainda, só loga a intenção.
+  - A notificação dispara quando o resultado **vigente passa a** `positivo`, **inclusive por correção** (ex.: `negativo` corrigido para `positivo`), no mesmo ponto único de gravação (`ProcessoSanitarioService.registrarResultado`).
+  - **Pendência (T36):** não há nada previsto para a correção de um `positivo` já notificado (ex.: `positivo` corrigido para `negativo`, ou uma segunda correção que volte a `positivo`). A T37 reenvia a mesma notificação sem diferenciar; a T36 decide se isso precisa de um e-mail de retificação diferente ao munícipe e à Vigilância.
 - Processo é considerado `urgente` se ao menos 1 `animal_amostrado.contato_humano = true`. Ao vincular, a urgência do processo marca a ocorrência (D31).
 - Auditoria: `CRIACAO` e `ATUALIZACAO` de `processo_sanitario` registram um snapshot **sem nenhum dado pessoal do responsável** (como a D23); as amostras entram.
 
@@ -604,11 +612,52 @@ Campos: `id`, `codigo`, `nome`, `tipo` varchar(50) ("padrão raiva", "multidoen�
 
 Não é catálogo: coluna `processo_sanitario.status_processo` varchar + `CHECK` (V10), valores `ABERTO`, `AGUARDANDO_RESULTADO`, `COM_RESULTADO`, `CONCLUIDO`.
 
+**Máquina de estados (T34, substitui o avanço provisório da D18).** Só se avança um passo por vez, sem volta (`StatusProcesso.podeTransicionarPara`):
+
+| De                     | Para                   | Como                                                    |
+| ---------------------- | ---------------------- | ------------------------------------------------------- |
+| `ABERTO`               | `AGUARDANDO_RESULTADO` | `PATCH /api/processos/{id}/status`                      |
+| `AGUARDANDO_RESULTADO` | `COM_RESULTADO`        | **só** pelo registro do resultado (`POST …/resultados`) |
+| `COM_RESULTADO`        | `CONCLUIDO`            | `PATCH /api/processos/{id}/status`                      |
+
+- Qualquer outra transição (pular passo, voltar, repetir o status) → 422. Pedir `COM_RESULTADO` pelo PATCH → 422 com mensagem própria: exige o resultado.
+- `CONCLUIDO` é terminal: nenhum avanço, lançamento ou correção.
+- Consequência para a ocorrência (regra 13): só encerra com processo vinculado `CONCLUIDO`, e `CONCLUIDO` passa a exigir um resultado registrado.
+- **Pendência (T37):** a tela de lançamento de resultado ainda não existe. Até lá, o botão provisório "Avançar status" do front para em `AGUARDANDO_RESULTADO` (recebe 422), e um processo vinculado só chega a `CONCLUIDO` (e a ocorrência só encerra) pela API.
+
 #### `resultado_laboratorial` (catálogo)
 
 `aguardando`, `positivo`, `negativo`, `inconclusivo`, `material_inadequado`, `nao_realizado`.
 
-> **Pendência (task de resultado):** `aguardando` no catálogo e `resultado_laboratorial_id` nulo são duas representações de "sem resultado". A task que registra o resultado deve escolher uma.
+> **Decidido (T34, fecha a R1 da T29):** "sem resultado" é `resultado_laboratorial_id` **nulo**. O código `aguardando` continua no catálogo (e em `GET /api/processos/catalogos`), mas não é um resultado lançável: o registro o recusa (422).
+
+#### `resultado_processo`
+
+> Histórico imutável dos resultados laboratoriais do processo (V14, T34). Cada lançamento é uma linha nova; a correção é outra linha com `retifica_id` apontando para a corrigida, que fica preservada (mesmo mecanismo dos registros clínicos, RN-C02). O vigente é a única linha que nenhuma outra corrige, copiado em `processo_sanitario.resultado_laboratorial_id`/`data_resultado`.
+
+| Campo                       | Tipo                        | Obrig. | Observações                                                        |
+| --------------------------- | --------------------------- | ------ | ------------------------------------------------------------------ |
+| `id`                        | uuid PK                     | \*     |                                                                    |
+| `processo_id`               | FK `processo_sanitario`     | \*     |                                                                    |
+| `resultado_laboratorial_id` | FK `resultado_laboratorial` | \*     |                                                                    |
+| `data_resultado`            | date                        | \*     | não pode ser futura nem anterior à abertura do processo (servidor) |
+| `observacoes`               | text                        | ?      |                                                                    |
+| `retifica_id`               | FK `resultado_processo`     | ?      | só na correção; único (`uq_resultado_processo_retifica_id`)        |
+| `registrado_por_id`         | FK `usuario`                | \*     | autor do lançamento ou da correção · `ON DELETE RESTRICT`          |
+| `registrado_em`             | timestamp                   | \*     |                                                                    |
+
+**Garantias no banco (V14)**
+
+- Um único resultado original por processo: índice único parcial `uq_resultado_processo_original (processo_id) WHERE retifica_id IS NULL`. Junto com o `UNIQUE (retifica_id)`, o histórico de cada processo é uma cadeia linear, mesmo sob concorrência. As duas violações respondem 409, com a mesma mensagem do caminho barrado pelo service.
+- A correção é sempre de um resultado do mesmo processo: FK composta `fk_resultado_processo_retifica (retifica_id, processo_id) → (id, processo_id)`.
+- **Imutável:** um trigger (`tg_resultado_processo_imutavel`) recusa `UPDATE` e `DELETE` de qualquer linha, para qualquer usuário ou caminho, inclusive SQL manual (mesmo princípio do vínculo, DH-7). No código, a entidade não tem setters, as colunas ficam fora do UPDATE (`updatable = false`) e o repositório só declara leituras.
+
+**Pendências (fora da T34)**
+
+- Motivo obrigatório da correção: não exigido, pendente de decisão do CCZ (como a retificação clínica, `docs/regras-negocio-clinico.md`). `observacoes` é opcional.
+- Desfecho do animal (`desfecho_animal_id`): fora do registro de resultado; nenhum fluxo o preenche.
+- Notificação (T36): ver o gancho nas regras de `processo_sanitario`.
+- Tela de lançamento e histórico (T37).
 
 #### `desfecho_animal` (catálogo)
 
@@ -840,7 +889,7 @@ Um sintoma aparece no máximo uma vez por amostra (a API ignora códigos repetid
 16. Animal amostrado: pode referenciar `animal` do canil OU registrar dados próprios.
 17. Campos clínicos da amostragem (`data_coleta`, `material_biologico`, sintomas, contato humano) são sempre próprios da amostragem — não puxam da ficha.
 18. Contato humano-animal em qualquer amostra → processo marcado urgente.
-19. Resultado `positivo` ou `inconclusivo` dispara notificação automática ao munícipe e à **Vigilância Epidemiológica de Itu**.
+19. Resultado `positivo` dispara notificação automática ao munícipe e à **Vigilância Epidemiológica de Itu** (revisão de 2026-10-17: `inconclusivo` deixou de notificar; a correção de um positivo já notificado é pendência da T36, §3.5).
 
 ### Relatórios
 

@@ -1,4 +1,10 @@
-import type { AmostraAnimal, CatalogosProcesso, Processo, ProcessoResumo } from '../features/processos/types/processos.types'
+import type {
+  AmostraAnimal,
+  CatalogosProcesso,
+  Processo,
+  ProcessoResumo,
+  ResultadoProcessoItem,
+} from '../features/processos/types/processos.types'
 import { OCORRENCIA_PROCESSO_PENDENTE_ID, PROCESSO_PENDENTE_ID } from './ocorrenciasFixtures'
 
 // Fixtures no formato da API de processos (T29) — só para os testes
@@ -92,32 +98,41 @@ export function processoFixture(sobrescrever: Partial<Processo> = {}): Processo 
       bairroOcorrencia: 'Vila Nova',
     },
     amostras: [amostraFixture()],
-    resultadoLaboratorial: null,
+    criadoEm: '2026-05-18T09:00:00',
+    resultado: null,
     dataResultado: null,
     desfechoAnimal: null,
-    criadoEm: '2026-05-18T09:00:00',
+    resultados: [],
     ...sobrescrever,
   }
 }
 
-// T37: processo com resultado já lançado (write-once) — para os testes do
-// modo somente-leitura/histórico do CardResultadoProcesso.
+// T34: um lançamento do histórico (original ou correção, via retificaId).
+export function resultadoProcessoFixture(sobrescrever: Partial<ResultadoProcessoItem> = {}): ResultadoProcessoItem {
+  return {
+    id: 'h8000000-0000-0000-0000-000000000001',
+    resultado: { codigo: 'positivo', nome: 'Positivo' },
+    dataResultado: '2026-05-20',
+    observacoes: 'Laudo positivo',
+    retificaId: null,
+    registradoPorId: 'a1b2c3d4-0000-0000-0000-000000000001',
+    registradoPorNome: 'Agente Processos',
+    registradoEm: '2026-05-20T14:32:00',
+    ...sobrescrever,
+  }
+}
+
+// T34 + T37: processo com resultado já lançado (write-once) — para os testes
+// do modo somente-leitura/histórico do CardResultadoProcesso.
 export function processoComResultadoFixture(sobrescrever: Partial<Processo> = {}): Processo {
   return processoFixture({
     statusProcesso: 'COM_RESULTADO',
-    resultadoLaboratorial: { codigo: 'positivo', nome: 'Positivo' },
+    resultado: { codigo: 'positivo', nome: 'Positivo' },
     dataResultado: '2026-05-20',
     desfechoAnimal: { codigo: 'obito_eutanasia', nome: 'Óbito — Eutanásia' },
+    resultados: [resultadoProcessoFixture()],
     ...sobrescrever,
   })
-}
-
-// T37: GET /processos/:id/historico — eventos fixos (CRIACAO + ATUALIZACAO).
-export function historicoProcessoFixture() {
-  return [
-    { id: 'hi000000-0000-0000-0000-000000000001', usuarioEmail: 'agente.teste@itu.sp.gov.br', acao: 'CRIACAO', ocorreuEm: '2026-05-18T09:00:00' },
-    { id: 'hi000000-0000-0000-0000-000000000002', usuarioEmail: 'agente.teste@itu.sp.gov.br', acao: 'ATUALIZACAO', ocorreuEm: '2026-05-20T14:32:00' },
-  ]
 }
 
 export function processoSemVinculoFixture(sobrescrever: Partial<Processo> = {}): Processo {

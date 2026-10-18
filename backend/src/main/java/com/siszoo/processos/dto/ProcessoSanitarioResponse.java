@@ -9,13 +9,14 @@ import com.siszoo.animais.dto.CatalogoItemResponse;
 import com.siszoo.processos.entity.StatusProcesso;
 
 // Os campos da versao minima (T25) continuam com os mesmos nomes; os da T29
-// sao aditivos. ocorrenciaProtocolo permite exibir o vinculo sem buscar a
-// ocorrencia (que exige acesso ao modulo e audita o sigilo, T26).
-// resultadoLaboratorial/dataResultado/desfechoAnimal sao da T37 — nulos
-// enquanto o processo nao chega em AGUARDANDO_RESULTADO ou nao tem resultado
-// lancado ainda. galNumero/sinanNumero/dataEnvioAmostras/previsaoRetorno nao
-// entram aqui: nenhum fluxo os preenche ainda (fica para quem implementar o
-// envio de amostras de verdade).
+// e da T34 sao aditivos. ocorrenciaProtocolo (T32) permite exibir o vinculo
+// sem buscar a ocorrencia (que exige acesso ao modulo e audita o sigilo,
+// T26). resultado/dataResultado sao o vigente (nulos sem resultado);
+// resultados e o historico, do original a ultima correcao (T34).
+// desfechoAnimal (T37) nao entra no historico imutavel — e so do processo.
+// galNumero/sinanNumero/dataEnvioAmostras/previsaoRetorno nao entram aqui:
+// nenhum fluxo os preenche ainda (fica para quem implementar o envio de
+// amostras de verdade).
 public record ProcessoSanitarioResponse(
         UUID id,
         String protocolo,
@@ -30,8 +31,9 @@ public record ProcessoSanitarioResponse(
         String observacoes,
         ResponsavelProcessoResponse responsavel,
         List<AmostraAnimalResponse> amostras,
-        CatalogoItemResponse resultadoLaboratorial,
+        LocalDateTime criadoEm,
+        CatalogoItemResponse resultado,
         LocalDate dataResultado,
         CatalogoItemResponse desfechoAnimal,
-        LocalDateTime criadoEm) {
+        List<ResultadoProcessoResponse> resultados) {
 }

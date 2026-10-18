@@ -2,10 +2,10 @@ import { http, HttpResponse } from 'msw'
 import { API_BASE_URL } from '../lib/env'
 import {
   CATALOGOS_PROCESSO_FIXTURE,
-  historicoProcessoFixture,
   paraResumoProcesso,
   processoCriadoFixture,
   processosFixture,
+  resultadoProcessoFixture,
 } from './processosFixtures'
 
 // Handlers de processos (T29) com respostas FIXAS — sem estado e sem regra de
@@ -47,27 +47,36 @@ export const processosHandlers = [
     return HttpResponse.json({ ...processo, statusProcesso: status })
   }),
 
-  // T37: resposta fixa — o processo "vira" COM_RESULTADO com o resultado
-  // enviado. Testes que precisam do erro (422 fora de AGUARDANDO_RESULTADO,
-  // falha de rede) sobrescrevem com `server.use()`.
-  http.post(`${API_BASE_URL}/processos/:id/resultado`, async ({ params, request }) => {
+  // T34 + T37: resposta fixa — o processo "vira" COM_RESULTADO com o
+  // resultado enviado, e o histórico ganha um item novo. Testes que
+  // precisam do erro (422 fora de AGUARDANDO_RESULTADO, falha de rede)
+  // sobrescrevem com `server.use()`.
+  http.post(`${API_BASE_URL}/processos/:id/resultados`, async ({ params, request }) => {
     const processo = buscarFixture(params.id as string)
     if (!processo) return naoEncontrado()
-    const corpo = (await request.json()) as { resultadoLaboratorial: string; desfechoAnimal?: string }
-    const resultado = CATALOGOS_PROCESSO_FIXTURE.resultadosLaboratoriais.find((item) => item.codigo === corpo.resultadoLaboratorial)
+    const corpo = (await request.json()) as {
+      resultado: string
+      dataResultado: string
+      observacoes?: string
+      retificaId?: string
+      desfechoAnimal?: string
+    }
+    const resultado = CATALOGOS_PROCESSO_FIXTURE.resultadosLaboratoriais.find((item) => item.codigo === corpo.resultado)
     const desfecho = CATALOGOS_PROCESSO_FIXTURE.desfechos.find((item) => item.codigo === corpo.desfechoAnimal)
+    const novoRegistro = resultadoProcessoFixture({
+      id: `h8000000-0000-0000-0000-${String(processo.resultados.length + 1).padStart(12, '0')}`,
+      resultado: resultado ?? { codigo: corpo.resultado, nome: corpo.resultado },
+      dataResultado: corpo.dataResultado,
+      observacoes: corpo.observacoes ?? null,
+      retificaId: corpo.retificaId ?? null,
+    })
     return HttpResponse.json({
       ...processo,
       statusProcesso: 'COM_RESULTADO',
-      resultadoLaboratorial: resultado ?? null,
-      dataResultado: '2026-05-20',
-      desfechoAnimal: desfecho ?? null,
+      resultado: resultado ?? null,
+      dataResultado: corpo.dataResultado,
+      desfechoAnimal: desfecho ?? processo.desfechoAnimal,
+      resultados: [...processo.resultados, novoRegistro],
     })
-  }),
-
-  http.get(`${API_BASE_URL}/processos/:id/historico`, ({ params }) => {
-    const processo = buscarFixture(params.id as string)
-    if (!processo) return naoEncontrado()
-    return HttpResponse.json(historicoProcessoFixture())
   }),
 ]

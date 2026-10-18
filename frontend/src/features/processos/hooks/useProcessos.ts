@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   avancarStatusProcesso,
   buscarCatalogosProcesso,
-  buscarHistoricoProcesso,
   buscarProcessoPorId,
   criarProcesso,
   listarProcessos,
@@ -45,15 +44,6 @@ export function useCatalogosProcessoQuery() {
   })
 }
 
-// T37: mini trilha de auditoria — só existe depois que o processo já foi
-// lido (não precisa de `enabled`, sempre chamado com um id de processo real).
-export function useHistoricoProcessoQuery(id: string) {
-  return useQuery({
-    queryKey: ['processos', 'historico', id],
-    queryFn: () => buscarHistoricoProcesso(id),
-  })
-}
-
 // O detalhe recebe a resposta gravada pelo servidor; listagens de processos e
 // ocorrências são invalidadas (a ocorrência vinculada ganha o processo e pode
 // passar a urgente, D31).
@@ -82,18 +72,14 @@ export function useAvancarStatusProcessoMutation(id: string) {
   })
 }
 
-// T37: substitui o avanço provisório só para AGUARDANDO_RESULTADO ->
-// COM_RESULTADO. Também invalida o histórico, já que o lançamento grava um
-// novo evento de auditoria (ATUALIZACAO).
+// T34 + T37: substitui o avanço provisório só para AGUARDANDO_RESULTADO ->
+// COM_RESULTADO (lançamento) ou corrige o vigente (com retificaId). A
+// resposta já traz o histórico completo em `resultados`.
 export function useRegistrarResultadoMutation(id: string) {
   const atualizarCache = useAtualizarCacheDoProcesso()
-  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (payload: RegistrarResultadoRequest) => registrarResultado(id, payload),
-    onSuccess: (processo) => {
-      atualizarCache(processo)
-      void queryClient.invalidateQueries({ queryKey: ['processos', 'historico', id] })
-    },
+    onSuccess: atualizarCache,
   })
 }
 

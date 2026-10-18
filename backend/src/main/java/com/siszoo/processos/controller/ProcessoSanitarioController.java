@@ -1,6 +1,5 @@
 package com.siszoo.processos.controller;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,7 +18,6 @@ import com.siszoo.ocorrencias.service.PermissoesOcorrencia;
 import com.siszoo.processos.dto.AlterarStatusProcessoRequest;
 import com.siszoo.processos.dto.CatalogosProcessoResponse;
 import com.siszoo.processos.dto.CriarProcessoRequest;
-import com.siszoo.processos.dto.HistoricoProcessoItemResponse;
 import com.siszoo.processos.dto.ProcessoResumoResponse;
 import com.siszoo.processos.dto.ProcessoSanitarioResponse;
 import com.siszoo.processos.dto.RegistrarResultadoRequest;
@@ -28,10 +26,13 @@ import com.siszoo.processos.service.ProcessoSanitarioService;
 
 import jakarta.validation.Valid;
 
-// Processo sanitario (T25 + T29 + T37): criacao completa, listagem, detalhe,
-// catalogos, avanco provisorio de status (D18), lancamento de resultado e
-// mini trilha de auditoria. Com ocorrenciaId, o POST tambem exige
-// OCORRENCIAS_DENUNCIAS:escrita, checado no service (D33).
+// Processo sanitario (T25 + T29 + T32 + T34 + T37): criacao completa,
+// listagem, detalhe, catalogos, avanco de status e registro do resultado
+// laboratorial (com desfecho do animal e notificacao ao municipe). Com
+// ocorrenciaId, o POST tambem exige OCORRENCIAS_DENUNCIAS:escrita, checado no
+// service (D33). Resultado e imutavel: sem PUT/PATCH/DELETE em /resultados;
+// a correcao e um novo POST com retificaId. O historico completo (original +
+// correcoes) vem embutido em GET /{id} (ProcessoSanitarioResponse.resultados).
 @RestController
 @RequestMapping("/api/processos")
 public class ProcessoSanitarioController {
@@ -77,16 +78,10 @@ public class ProcessoSanitarioController {
         return processoService.alterarStatus(id, request, UUID.fromString(authentication.getName()));
     }
 
-    @PostMapping("/{id}/resultado")
+    @PostMapping("/{id}/resultados")
     @PreAuthorize("hasAuthority('PROCESSOS_SANITARIOS:escrita')")
     public ProcessoSanitarioResponse registrarResultado(
             Authentication authentication, @PathVariable UUID id, @Valid @RequestBody RegistrarResultadoRequest request) {
         return processoService.registrarResultado(id, request, UUID.fromString(authentication.getName()));
-    }
-
-    @GetMapping("/{id}/historico")
-    @PreAuthorize("hasAuthority('PROCESSOS_SANITARIOS:leitura')")
-    public List<HistoricoProcessoItemResponse> historico(@PathVariable UUID id) {
-        return processoService.historico(id);
     }
 }

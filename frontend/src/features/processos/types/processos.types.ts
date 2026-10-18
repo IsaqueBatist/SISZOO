@@ -118,9 +118,23 @@ export interface AmostraAnimal {
   sintomas: CatalogoItem[]
 }
 
-// GET /api/processos/{id} (ProcessoSanitarioResponse). resultadoLaboratorial/
-// dataResultado/desfechoAnimal (T37) são nulos até o lançamento do
-// resultado; depois de lançados, são write-once (trigger da V14).
+// Um lançamento do histórico de resultado (original ou correção) — T34,
+// tabela resultado_processo, imutável. Sem retificaId = original.
+export interface ResultadoProcessoItem {
+  id: string
+  resultado: CatalogoItem
+  dataResultado: string
+  observacoes: string | null
+  retificaId: string | null
+  registradoPorId: string
+  registradoPorNome: string
+  registradoEm: string
+}
+
+// GET /api/processos/{id} (ProcessoSanitarioResponse). resultado/dataResultado
+// são o vigente (nulos até o primeiro lançamento). resultados é o histórico
+// completo, do original até a última correção (T34). desfechoAnimal (T37)
+// não faz parte do histórico imutável — é só do processo.
 export interface Processo {
   id: string
   protocolo: string
@@ -135,27 +149,23 @@ export interface Processo {
   observacoes: string | null
   responsavel: ResponsavelProcesso | null
   amostras: AmostraAnimal[]
-  resultadoLaboratorial: CatalogoItem | null
+  criadoEm: string
+  resultado: CatalogoItem | null
   dataResultado: string | null
   desfechoAnimal: CatalogoItem | null
-  criadoEm: string
+  resultados: ResultadoProcessoItem[]
 }
 
-// POST /api/processos/{id}/resultado (T37). resultadoLaboratorial/
-// desfechoAnimal são códigos do catálogo (resultadosLaboratoriais/desfechos
-// de CatalogosProcesso) — "aguardando" não é um valor aceito aqui.
+// POST /api/processos/{id}/resultados (T34 + T37). resultado e desfechoAnimal
+// são códigos de catálogo ("aguardando" não é aceito como resultado).
+// retificaId só na correção de um resultado já lançado (write-once: sem ele,
+// só funciona com o processo em AGUARDANDO_RESULTADO).
 export interface RegistrarResultadoRequest {
-  resultadoLaboratorial: string
+  resultado: string
+  dataResultado: string
+  observacoes?: string
+  retificaId?: string
   desfechoAnimal?: string
-}
-
-// GET /api/processos/{id}/historico (T37): mini trilha de auditoria do
-// processo (HistoricoProcessoItemResponse) — sem payload nem dado pessoal.
-export interface HistoricoProcessoItem {
-  id: string
-  usuarioEmail: string | null
-  acao: string
-  ocorreuEm: string
 }
 
 // Linha de GET /api/processos (ProcessoResumoResponse)

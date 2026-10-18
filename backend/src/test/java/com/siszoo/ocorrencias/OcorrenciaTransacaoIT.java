@@ -6,12 +6,20 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.fail;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +30,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.IntStream;
+
+import javax.sql.DataSource;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +48,8 @@ import com.siszoo.comum.AbstractIntegrationTest;
 import com.siszoo.comum.ApiTesteFixture;
 import com.siszoo.comum.RelogioTesteConfig;
 import com.siszoo.comum.service.ProtocoloService;
+import com.siszoo.ocorrencias.entity.Ocorrencia;
+import com.siszoo.ocorrencias.repository.OcorrenciaRepository;
 
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -66,6 +79,12 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private OcorrenciaRepository ocorrenciaRepository;
+
+    @Autowired
+    private DataSource dataSource;
+
     private String tokenAgente;
 
     @BeforeEach
@@ -90,6 +109,9 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
     void removerGatilho() {
         jdbcTemplate.execute("DROP TRIGGER IF EXISTS t25_falhar_movimentacao ON movimentacao_ocorrencia");
         jdbcTemplate.execute("DROP FUNCTION IF EXISTS t25_falhar_movimentacao()");
+        // Segunda barreira (a primeira e o finally do teste): nenhum teste
+        // seguinte herda o relogio de um ano isolado (T30).
+        RelogioTesteConfig.restaurar();
     }
 
     // ── Rollback (D4) ────────────────────────────────────
@@ -184,6 +206,227 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
         }
     }
 
+    // updatable = false tira a coluna do UPDATE que o Hibernate gera para a
+    // entidade; nao impede SQL direto (nao ha garantia no banco).
+    @Test
+    @DisplayName("[T30] alterar a ocorrencia pela entidade nao muda o protocolo gravado")
+    void protocoloNaoEntraNoUpdateDaOcorrencia() {
+        Response criada = criar(corpo("Protocolo imutavel"));
+        String id = idDe(criada);
+        String protocolo = criada.path("protocolo");
+
+        transactionTemplate.executeWithoutResult(status -> {
+            Ocorrencia ocorrencia = ocorrenciaRepository.findById(UUID.fromString(id)).orElseThrow();
+            ocorrencia.setProtocolo("000/1999");
+            ocorrencia.setDescricao("Protocolo imutavel, descricao alterada");
+        });
+
+        Map<String, Object> gravada = jdbcTemplate.queryForMap(
+                "SELECT protocolo, descricao FROM ocorrencia WHERE id = CAST(? AS uuid)", id);
+        // A descricao prova que o UPDATE aconteceu; o protocolo ficou fora dele.
+        assertThat(gravada.get("descricao"), equalTo("Protocolo imutavel, descricao alterada"));
+        assertThat(gravada.get("protocolo"), equalTo(protocolo));
+    }
+
+    // Virada do ano: o ano do protocolo e o de America/Sao_Paulo (ClockConfig),
+    // nao o de UTC. 2098-01-01T02:00Z ainda e 31/12/2097 23:00 em Sao Paulo
+    // (UTC-3); 03:00Z ja e 01/01/2098 00:00.
+
+    @Test
+    @DisplayName("[D13/T30] virada do ano: UTC ja em 2098 e Sao Paulo ainda em 2097 gera 001/2097")
+    void viradaDoAnoUtcAdiantadoUsaAnoDeSaoPaulo() {
+        jdbcTemplate.update("DELETE FROM protocolo_sequencia WHERE ano IN (2097, 2098)");
+        try {
+            ProtocoloService servico = servicoNoInstante("2098-01-01T02:00:00Z");
+
+            assertThat(proximo(servico, ProtocoloService.Entidade.PROCESSO), equalTo("001/2097"));
+            assertThat(ultimoProtocolo("PROCESSO", 2097), equalTo(1));
+            assertThat(ultimoProtocolo("PROCESSO", 2098), nullValue());
+        } finally {
+            jdbcTemplate.update("DELETE FROM protocolo_sequencia WHERE ano IN (2097, 2098)");
+        }
+    }
+
+    @Test
+    @DisplayName("[D13/T30] virada do ano: UTC e Sao Paulo ja em 2098 gera 001/2098")
+    void viradaDoAnoJaNoAnoNovoEmSaoPaulo() {
+        jdbcTemplate.update("DELETE FROM protocolo_sequencia WHERE ano IN (2097, 2098)");
+        try {
+            ProtocoloService servico = servicoNoInstante("2098-01-01T03:00:00Z");
+
+            assertThat(proximo(servico, ProtocoloService.Entidade.PROCESSO), equalTo("001/2098"));
+            assertThat(ultimoProtocolo("PROCESSO", 2098), equalTo(1));
+            assertThat(ultimoProtocolo("PROCESSO", 2097), nullValue());
+        } finally {
+            jdbcTemplate.update("DELETE FROM protocolo_sequencia WHERE ano IN (2097, 2098)");
+        }
+    }
+
+    // ── Concorrencia do protocolo pela API (T30) ─────────
+    // 6 criacoes: mais de uma para disputar a linha (OCORRENCIA, ano) de
+    // protocolo_sequencia, com folga no pool padrao do Hikari (10; o
+    // application.yml nao o configura): 6 transacoes da aplicacao + 1 conexao
+    // bloqueadora + 1 de polling = 8, para as 6 estarem abertas ao mesmo tempo
+    // disputando a linha, e nao esperando conexao.
+    private static final int CRIACOES_CONCORRENTES = 6;
+    private static final long TIMEOUT_SEGUNDOS = 30;
+
+    @Test
+    @DisplayName("[T30] POST /api/ocorrencias simultaneos: todos 200, protocolos 001..N do ano, sem duplicata nem lacuna")
+    void ocorrenciasConcorrentesPelaApi() throws Exception {
+        int ano = 2096;
+        // O ano so e usado aqui e o banco do contexto e novo a cada execucao;
+        // ainda assim, nenhuma ocorrencia do ano pode existir (o 001 colidiria
+        // com o UNIQUE de protocolo), e a sequencia do ano e zerada.
+        assertThat("ocorrencias ja existentes em " + ano, jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM ocorrencia WHERE protocolo LIKE ?", Integer.class, "%/" + ano), equalTo(0));
+        jdbcTemplate.update("DELETE FROM protocolo_sequencia WHERE entidade = 'OCORRENCIA' AND ano = ?", ano);
+        RelogioTesteConfig.fixarEm(Instant.parse(ano + "-06-15T15:00:00Z"));
+        try {
+            // Login depois de ajustar o relogio: o token do @BeforeEach foi
+            // emitido em 2026 e estaria vencido no relogio do ano isolado.
+            String token = fixture.tokenComCargo("agente.concorrencia.ocorrencias@itu.sp.gov.br", "Agente",
+                    "Concorrencia", ApiTesteFixture.CARGO_AGENTE_SANITARIO_ID);
+            // dataAbertura fixa e no passado: o ano do protocolo vem do Clock,
+            // nao da data de abertura (D21), e estas linhas nao sobem para o
+            // topo das listagens dos outros testes (mesmo banco, sem rollback).
+            Map<String, Object> corpo = corpo("Ocorrencia concorrente");
+            corpo.put("dataAbertura", "2026-01-01");
+
+            List<Response> respostas = postarOcorrenciasEmParalelo(token, corpo, ano);
+
+            // Sem depender da ordem: cada resposta 200 com protocolo do ano igual
+            // ao gravado; os numeros, ordenados, sao exatamente 1..N (duplicata ou
+            // lacuna falham); e nao ha no banco outra ocorrencia do ano.
+            List<String> protocolos = new ArrayList<>();
+            List<Integer> numeros = new ArrayList<>();
+            for (Response resposta : respostas) {
+                resposta.then().statusCode(200);
+                String protocolo = resposta.path("protocolo");
+                assertThat(protocolo, matchesPattern("\\d{3,}/" + ano));
+                assertThat(jdbcTemplate.queryForObject("SELECT protocolo FROM ocorrencia WHERE id = CAST(? AS uuid)",
+                        String.class, (String) resposta.path("id")), equalTo(protocolo));
+                protocolos.add(protocolo);
+                numeros.add(Integer.parseInt(protocolo.substring(0, protocolo.indexOf('/'))));
+            }
+            Collections.sort(numeros);
+            assertThat(numeros, equalTo(IntStream.rangeClosed(1, CRIACOES_CONCORRENTES).boxed().toList()));
+            assertThat(jdbcTemplate.queryForList("SELECT protocolo FROM ocorrencia WHERE protocolo LIKE ?",
+                    String.class, "%/" + ano), containsInAnyOrder(protocolos.toArray(String[]::new)));
+        } finally {
+            RelogioTesteConfig.restaurar();
+        }
+    }
+
+    // Prova de simultaneidade no banco (padrao do VacinacaoControllerIT): uma
+    // conexao do teste insere, sem commit, a linha (OCORRENCIA, ano) da
+    // sequencia; o upsert de cada requisicao esbarra nela e espera. So quando
+    // pg_stat_activity mostra as N transacoes esperando juntas o teste libera
+    // (rollback), e as N disputam a mesma linha. O rollback deixa a sequencia
+    // vazia, entao o esperado continua 001..N. Prova que as N transacoes
+    // estavam abertas ao mesmo tempo disputando a linha; nao prova ausencia
+    // de deadlock em geral.
+    private List<Response> postarOcorrenciasEmParalelo(String token, Map<String, Object> corpo, int ano)
+            throws Exception {
+        CountDownLatch largada = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(CRIACOES_CONCORRENTES);
+        Throwable falha = null;
+        try (Connection bloqueio = dataSource.getConnection()) {
+            bloqueio.setAutoCommit(false);
+            int pidBloqueio = pidDe(bloqueio);
+            List<Future<Response>> futuros = new ArrayList<>();
+            // O rollback fica no finally: libera os upserts presos (e deixa a
+            // sequencia vazia) tambem quando a espera falha, antes do
+            // encerramento do executor.
+            try {
+                try (PreparedStatement insert = bloqueio.prepareStatement(
+                        "INSERT INTO protocolo_sequencia (entidade, ano, ultimo) VALUES ('OCORRENCIA', ?, 1)")) {
+                    insert.setInt(1, ano);
+                    insert.executeUpdate();
+                }
+                for (int i = 0; i < CRIACOES_CONCORRENTES; i++) {
+                    futuros.add(executor.submit(() -> {
+                        if (!largada.await(TIMEOUT_SEGUNDOS, TimeUnit.SECONDS)) {
+                            throw new IllegalStateException("largada nao liberada em " + TIMEOUT_SEGUNDOS + " s");
+                        }
+                        return given().header("Authorization", "Bearer " + token).contentType(ContentType.JSON)
+                                .body(corpo).when().post(ROTA);
+                    }));
+                }
+                largada.countDown();
+                aguardarUpsertsBloqueados(futuros, pidBloqueio);
+            } finally {
+                bloqueio.rollback();
+            }
+
+            List<Response> respostas = new ArrayList<>();
+            for (Future<Response> futuro : futuros) {
+                try {
+                    respostas.add(futuro.get(TIMEOUT_SEGUNDOS, TimeUnit.SECONDS));
+                } catch (TimeoutException e) {
+                    fail("POST " + ROTA + " nao terminou em " + TIMEOUT_SEGUNDOS + " s (bloqueio ou deadlock?)");
+                }
+            }
+            return respostas;
+        } catch (Throwable t) {
+            falha = t;
+            throw t;
+        } finally {
+            // shutdownNow so interrompe as threads do teste: o trabalho ja
+            // iniciado no servidor nao e cancelado. Se elas nao terminam, o
+            // teste falha dizendo isso, em vez de seguir (e restaurar o
+            // relogio) com requisicoes ainda em curso.
+            executor.shutdownNow();
+            if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
+                AssertionError pendentes = new AssertionError("Requisicoes ainda em execucao apos o encerramento;"
+                        + " o servidor nao cancela o trabalho ja iniciado");
+                if (falha != null) {
+                    falha.addSuppressed(pendentes);
+                } else {
+                    throw pendentes;
+                }
+            }
+        }
+    }
+
+    private static int pidDe(Connection conexao) throws Exception {
+        try (Statement consulta = conexao.createStatement();
+                ResultSet resultado = consulta.executeQuery("SELECT pg_backend_pid()")) {
+            resultado.next();
+            return resultado.getInt(1);
+        }
+    }
+
+    // Espera ate as N requisicoes estarem paradas no upsert do protocolo ao
+    // mesmo tempo. Conta so sessoes ativas que esperam a transacao da conexao
+    // bloqueadora (pg_blocking_pids) no INSERT da sequencia; a propria sessao
+    // de polling e a bloqueadora (idle in transaction) ficam de fora por
+    // construcao. Uma requisicao que termina antes nao esperou as demais.
+    private void aguardarUpsertsBloqueados(List<Future<Response>> futuros, int pidBloqueio) throws Exception {
+        long limite = System.nanoTime() + TimeUnit.SECONDS.toNanos(TIMEOUT_SEGUNDOS);
+        int bloqueados = 0;
+        while (System.nanoTime() < limite) {
+            for (Future<Response> futuro : futuros) {
+                if (futuro.isDone()) {
+                    throw new AssertionError("Uma requisicao terminou sem esperar as demais: " + futuro.get().asString());
+                }
+            }
+            bloqueados = jdbcTemplate.queryForObject("""
+                    SELECT count(*) FROM pg_stat_activity
+                    WHERE pid <> pg_backend_pid() AND state = 'active'
+                      AND wait_event_type = 'Lock' AND wait_event = 'transactionid'
+                      AND ? = ANY(pg_blocking_pids(pid))
+                      AND query ILIKE '%insert into protocolo_sequencia%'
+                    """, Integer.class, pidBloqueio);
+            if (bloqueados == futuros.size()) {
+                return;
+            }
+            Thread.sleep(50);
+        }
+        throw new AssertionError("Esperadas " + futuros.size() + " transacoes paradas no upsert do protocolo;"
+                + " vistas " + bloqueados);
+    }
+
     // ── Concorrencia de anexos e de vinculo ──────────────
 
     @Test
@@ -276,7 +519,13 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
     }
 
     private ProtocoloService servicoNoAno(int ano) {
-        Clock clock = Clock.fixed(Instant.parse(ano + "-06-15T15:00:00Z"), ZoneId.of("America/Sao_Paulo"));
+        return servicoNoInstante(ano + "-06-15T15:00:00Z");
+    }
+
+    // Fuso escrito aqui, igual ao de ClockConfig: o resultado esperado nunca
+    // depende do fuso da maquina.
+    private ProtocoloService servicoNoInstante(String instante) {
+        Clock clock = Clock.fixed(Instant.parse(instante), ZoneId.of("America/Sao_Paulo"));
         return new ProtocoloService(jdbcTemplate, clock);
     }
 

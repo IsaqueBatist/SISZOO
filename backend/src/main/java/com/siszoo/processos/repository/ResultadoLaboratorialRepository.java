@@ -10,7 +10,7 @@ import com.siszoo.processos.entity.ResultadoLaboratorial;
 
 public interface ResultadoLaboratorialRepository extends JpaRepository<ResultadoLaboratorial, UUID> {
 
-    List<ResultadoLaboratorial> findByAtivoTrueOrderByNomeAsc();
-
     Optional<ResultadoLaboratorial> findByCodigo(String codigo);
+
+    List<ResultadoLaboratorial> findByAtivoTrueOrderByNomeAsc();
 }

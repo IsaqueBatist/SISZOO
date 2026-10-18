@@ -125,14 +125,29 @@ class RbacMatrixIT extends AbstractIntegrationTest {
                 Arguments.of(Perfil.AGENTE_SANITARIO, 200));
     }
 
-    // T37: GET /{id}/historico usa PROCESSOS_SANITARIOS:leitura (nao
-    // USUARIOS_ACESSO:leitura, que so o Administrador tem) — os tres cargos
-    // que leem o processo tambem leem a trilha de auditoria dele.
-    static Stream<Arguments> historicoProcessoPorPerfil() {
+    // T34: lancar (e corrigir) resultado exige PROCESSOS_SANITARIOS:escrita,
+    // que os tres cargos tem (V3). A recusa (403) sem a permissao e coberta no
+    // ProcessoSanitarioControllerIT com o cargo leitor de teste.
+    static Stream<Arguments> lancarResultadoPorPerfil() {
         return Stream.of(
                 Arguments.of(Perfil.ADMINISTRADOR, 200),
                 Arguments.of(Perfil.VETERINARIO, 200),
                 Arguments.of(Perfil.AGENTE_SANITARIO, 200));
+    }
+
+    @ParameterizedTest(name = "{0} ao lancar resultado do processo -> status {1}")
+    @MethodSource("lancarResultadoPorPerfil")
+    void lancarResultadoExigeEscritaEmProcessos(Perfil perfil, int statusEsperado) {
+        String token = tokenPara(perfil);
+        String processoId = fixture.postarProcesso(token, null, false).then().statusCode(200).extract().path("id");
+        given().header("Authorization", "Bearer " + token).contentType(ContentType.JSON)
+                .body(Map.of("status", "AGUARDANDO_RESULTADO"))
+                .when().patch("/api/processos/" + processoId + "/status").then().statusCode(200);
+
+        given().header("Authorization", "Bearer " + token).contentType(ContentType.JSON)
+                .body(Map.of("resultado", "negativo", "dataResultado", fixture.hoje().toString()))
+                .when().post("/api/processos/" + processoId + "/resultados")
+                .then().statusCode(statusEsperado);
     }
 
     @ParameterizedTest(name = "{0} ao criar usuário -> status {1}")
@@ -231,17 +246,6 @@ class RbacMatrixIT extends AbstractIntegrationTest {
     void todosOsCargosListamProcessos(Perfil perfil, int statusEsperado) {
         given().header("Authorization", "Bearer " + tokenPara(perfil))
                 .when().get("/api/processos")
-                .then().statusCode(statusEsperado);
-    }
-
-    @ParameterizedTest(name = "{0} ao ver o historico do processo -> status {1}")
-    @MethodSource("historicoProcessoPorPerfil")
-    void todosOsCargosVeemHistoricoDoProcesso(Perfil perfil, int statusEsperado) {
-        String tokenAdmin = tokenPara(Perfil.ADMINISTRADOR);
-        String id = fixture.postarProcesso(tokenAdmin, null, false).then().statusCode(200).extract().path("id");
-
-        given().header("Authorization", "Bearer " + tokenPara(perfil))
-                .when().get("/api/processos/" + id + "/historico")
                 .then().statusCode(statusEsperado);
     }
 

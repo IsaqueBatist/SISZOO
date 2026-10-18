@@ -314,7 +314,7 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
     // ── Processo vinculado (D12, D31, D33) ───────────────
 
     @Test
-    @DisplayName("[D12/D18] processo completo vinculado nao concluido bloqueia o encerramento; concluido libera")
+    @DisplayName("[D12/T34] processo completo vinculado nao concluido bloqueia o encerramento; concluido libera")
     void encerramentoEsperaProcessoConcluir() {
         String id = idDe(criar(tokenAgente, corpo()));
         Response processo = criarProcesso(tokenAgente, false, id);
@@ -326,14 +326,15 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
 
         encerrar(tokenAgente, id, Map.of("providenciaTomada", "abertura_processo")).then().statusCode(422);
 
-        Response aguardando = alterarStatusProcesso(tokenAgente, processoId, "AGUARDANDO_RESULTADO");
-        aguardando.then().statusCode(200);
-        assertThat(aguardando.path("statusProcesso"), equalTo("AGUARDANDO_RESULTADO"));
-
-        Response comResultado = registrarResultadoProcesso(tokenAgente, processoId);
+        // T34: COM_RESULTADO so pelo lancamento do resultado (substitui a D18).
+        alterarStatusProcesso(tokenAgente, processoId, "AGUARDANDO_RESULTADO").then().statusCode(200);
+        encerrar(tokenAgente, id, Map.of("providenciaTomada", "abertura_processo")).then().statusCode(422);
+        Response comResultado = comToken(tokenAgente).contentType(ContentType.JSON)
+                .body(Map.of("resultado", "negativo", "dataResultado", HOJE.toString()))
+                .when().post("/api/processos/" + processoId + "/resultados");
         comResultado.then().statusCode(200);
         assertThat(comResultado.path("statusProcesso"), equalTo("COM_RESULTADO"));
-
+        encerrar(tokenAgente, id, Map.of("providenciaTomada", "abertura_processo")).then().statusCode(422);
         Response concluido = alterarStatusProcesso(tokenAgente, processoId, "CONCLUIDO");
         concluido.then().statusCode(200);
         assertThat(concluido.path("statusProcesso"), equalTo("CONCLUIDO"));
@@ -496,6 +497,24 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
         assertThat(lista.path("totalItens"), equalTo(2));
         assertThat(lista.path("itens[0].urgente"), equalTo(true));
         assertThat(lista.path("itens[1].urgente"), equalTo(false));
+    }
+
+    @Test
+    @DisplayName("[D31/T30] mesma urgencia e mesma data de abertura: desempate pela criacao mais recente, nao pelo texto do protocolo")
+    void listagemDesempataPelaCriacao() {
+        // Gravadas direto no banco para fixar protocolo e criado_em. A ordem de
+        // criacao (1000, 998, 999, da mais recente para a mais antiga) difere
+        // do texto do protocolo desc (999, 998, 1000) e do numero desc
+        // (1000, 999, 998): so o desempate por criado_em produz a esperada.
+        // data_abertura antiga e ano 2099 no protocolo isolam estas linhas.
+        inserirOcorrencia("999/2099", "2026-01-01 08:00:00");
+        inserirOcorrencia("998/2099", "2026-01-01 09:00:00");
+        inserirOcorrencia("1000/2099", "2026-01-01 10:00:00");
+
+        Response lista = listar(tokenAgente, "/2099");
+
+        assertThat(lista.path("totalItens"), equalTo(3));
+        assertThat(lista.path("itens.protocolo"), equalTo(List.of("1000/2099", "998/2099", "999/2099")));
     }
 
     @Test
@@ -714,19 +733,22 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
                 .when().patch("/api/processos/" + processoId + "/status");
     }
 
-    // T37: AGUARDANDO_RESULTADO -> COM_RESULTADO saiu do PATCH /status (DH-12,
-    // docs/decisoes/T37.md) — só acontece via lançamento do resultado.
-    private Response registrarResultadoProcesso(String token, String processoId) {
-        return comToken(token).contentType(ContentType.JSON).body(Map.of("resultadoLaboratorial", "negativo"))
-                .when().post("/api/processos/" + processoId + "/resultado");
-    }
-
     private RequestSpecification comToken(String token) {
         return given().header("Authorization", "Bearer " + token);
     }
 
     private int contar(String tabela) {
         return jdbcTemplate.queryForObject("SELECT count(*) FROM " + tabela, Integer.class);
+    }
+
+    // Ocorrencia nao urgente com data_abertura 2026-01-01 e criado_em explicito.
+    private void inserirOcorrencia(String protocolo, String criadoEm) {
+        jdbcTemplate.update("INSERT INTO ocorrencia (protocolo, tipo_ocorrencia_id, data_abertura, endereco, bairro,"
+                + " descricao, registrado_por_id, criado_em)"
+                + " SELECT ?, t.id, DATE '2026-01-01', 'Rua Teste, 1', 'Centro', 'Ordem da listagem', u.id,"
+                + " CAST(? AS timestamp)"
+                + " FROM tipo_ocorrencia t, usuario u WHERE t.codigo = 'zoonose' AND u.email = ?",
+                protocolo, criadoEm, "agente.ocorrencias@itu.sp.gov.br");
     }
 
     private static byte[] pngComTamanho(int tamanho) {
