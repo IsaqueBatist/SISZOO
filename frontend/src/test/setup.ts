@@ -17,7 +17,6 @@ import {
   resetUsuariosMock,
   resetVacinacoesMock,
 } from '../mocks/handlers'
-import { resetOcorrenciasDemonstracao } from '@/features/processos/api/ocorrenciasDemonstracao'
 
 // 'error': chamada HTTP sem handler falha o teste em vez de passar com um
 // aviso — toda rota da API usada nos testes precisa de handler em
@@ -33,6 +32,5 @@ afterEach(() => {
   resetVacinacoesMock()
   resetProcedimentosMock()
   resetPrescricoesMock()
-  resetOcorrenciasDemonstracao()
 })
 afterAll(() => server.close())

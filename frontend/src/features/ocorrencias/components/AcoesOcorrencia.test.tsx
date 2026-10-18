@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -18,6 +18,7 @@ import {
   ocorrenciaProcessoPendente,
 } from '@/mocks/ocorrenciasFixtures'
 import type { Ocorrencia, StatusProcesso } from '../types/ocorrencias.types'
+import { CadastrarProcesso } from '@/features/processos/components/CadastrarProcesso'
 import { OcorrenciaDetalhe } from './OcorrenciaDetalhe'
 
 const ADMIN = ['Administrador']
@@ -42,6 +43,7 @@ function renderDetalhe(ocorrenciaId: string, cargos: string[]) {
         <AuthProvider>
           <Routes>
             <Route path="/ocorrencias/:id" element={<OcorrenciaDetalhe />} />
+            <Route path="/processos/novo" element={<CadastrarProcesso />} />
           </Routes>
         </AuthProvider>
       </MemoryRouter>
@@ -151,45 +153,49 @@ describe('nota interna (D37)', () => {
 
 // T29: o backend exige o processo completo; até o wizard de processos ser
 // integrado (T32/T33), "Abrir processo" fica desabilitado e não envia nada.
-describe('abrir processo (D40, T29)', () => {
+// T29: o processo é aberto pelo wizard real, com a etapa 1 pré-preenchida e
+// travada nesta ocorrência (DER §3.5). Só para quem escreve em ocorrências
+// (D33) e só em ocorrência aberta e sem processo (0..1, D20).
+describe('abrir processo (D33, T29)', () => {
   it.each([
     ['Administrador', ADMIN],
     ['Agente Sanitário', AGENTE],
-  ])('%s vê "Abrir processo" desabilitado, com o motivo, e o clique não envia nada', async (_perfil, cargos) => {
+  ])('%s abre o wizard de processo já vinculado a esta ocorrência', async (_perfil, cargos) => {
     const user = userEvent.setup()
-    let chamadas = 0
-    server.use(
-      http.post(`${API_BASE_URL}/processos`, () => {
-        chamadas += 1
-        return HttpResponse.json({}, { status: 201 })
-      }),
-    )
     renderDetalhe(OCORRENCIA_ABERTA_ID, cargos)
     await esperarDetalhe('089/2026')
 
-    const botao = screen.getByRole('button', { name: 'Abrir processo sanitário' })
-    expect(botao).toBeDisabled()
-    expect(botao).toHaveAccessibleDescription('Disponível após a integração do módulo de processos')
-    expect(screen.queryByLabelText('Processo urgente')).not.toBeInTheDocument()
+    const abrir = screen.getByRole('link', { name: 'Abrir processo sanitário' })
+    expect(abrir).toHaveAttribute('href', `/processos/novo?ocorrencia=${OCORRENCIA_ABERTA_ID}`)
 
-    await user.click(botao)
+    await user.click(abrir)
 
-    expect(chamadas).toBe(0)
+    expect(await screen.findByRole('heading', { name: 'Novo Processo Sanitário' })).toBeInTheDocument()
+    expect(within(await screen.findByTestId('vinculo-travado')).getByText(/OC 089\/2026/)).toBeInTheDocument()
   })
 
   it('o Veterinário não vê "Abrir processo" (D33)', async () => {
     renderDetalhe(OCORRENCIA_ABERTA_ID, VET)
     await esperarDetalhe('089/2026')
 
+    expect(screen.queryByRole('link', { name: 'Abrir processo sanitário' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Abrir processo sanitário' })).not.toBeInTheDocument()
     expect(screen.getByText('Nenhum processo sanitário vinculado.')).toBeInTheDocument()
   })
 
-  it('não oferece abrir processo numa ocorrência encerrada', async () => {
+  it('não oferece abrir processo numa ocorrência encerrada (D20)', async () => {
     renderDetalhe(OCORRENCIA_ENCERRADA_ID, ADMIN)
     await esperarDetalhe('070/2026')
 
-    expect(screen.queryByRole('button', { name: 'Abrir processo sanitário' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Abrir processo sanitário' })).not.toBeInTheDocument()
+  })
+
+  it('ocorrência que já tem processo mostra o processo, com link para ele, e não oferece abrir outro (0..1)', async () => {
+    renderDetalhe(OCORRENCIA_PROCESSO_PENDENTE_ID, ADMIN)
+    await esperarDetalhe('092/2026')
+
+    expect(screen.getByRole('link', { name: 'Ver processo' })).toHaveAttribute('href', `/processos/${PROCESSO_PENDENTE_ID}`)
+    expect(screen.queryByRole('link', { name: 'Abrir processo sanitário' })).not.toBeInTheDocument()
   })
 })
 

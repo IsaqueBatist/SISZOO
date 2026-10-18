@@ -1,115 +1,96 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useAuth } from '@/features/auth/hooks/useAuth'
 import {
-  anexarDocumento,
-  buscarOcorrenciaParaVinculo,
+  avancarStatusProcesso,
+  buscarCatalogosProcesso,
   buscarProcessoPorId,
-  concluirProcesso,
   criarProcesso,
-  enviarAmostras,
-  listarOcorrenciasParaVinculo,
   listarProcessos,
   registrarResultado,
-  vincularExistentes,
+  vincularOcorrencia,
 } from '../api/processosApi'
 import type {
-  AnexarDocumentoRequest,
   CriarProcessoRequest,
-  EnviarAmostrasRequest,
+  Processo,
   ProcessosFiltro,
   RegistrarResultadoRequest,
+  StatusProcesso,
 } from '../types/processos.types'
 
-const PROCESSOS_QUERY_KEY = ['processos']
+function chaveDetalhe(id: string) {
+  return ['processos', 'detalhe', id]
+}
 
 export function useProcessosQuery(filtro: ProcessosFiltro) {
-  const { roleKey } = useAuth()
   return useQuery({
-    queryKey: ['processos', 'lista', filtro, roleKey],
-    queryFn: () => listarProcessos(filtro, roleKey),
+    queryKey: ['processos', 'lista', filtro],
+    queryFn: () => listarProcessos(filtro),
     placeholderData: (dadosAnteriores) => dadosAnteriores,
   })
 }
 
 export function useProcessoQuery(id: string | undefined) {
-  const { roleKey } = useAuth()
   return useQuery({
-    queryKey: ['processos', 'detalhe', id, roleKey],
-    queryFn: () => buscarProcessoPorId(id as string, roleKey),
+    queryKey: chaveDetalhe(id as string),
+    queryFn: () => buscarProcessoPorId(id as string),
     enabled: Boolean(id),
   })
 }
 
-// Ocorrências de demonstração (D40) sob o prefixo [processos]: toda
-// mutation de processo que muda vínculo já invalida esse prefixo.
-export function useOcorrenciasParaVinculoQuery(busca: string | undefined) {
-  const { roleKey } = useAuth()
+export function useCatalogosProcessoQuery() {
   return useQuery({
-    queryKey: ['processos', 'ocorrenciasDemonstracao', busca, roleKey],
-    queryFn: () => listarOcorrenciasParaVinculo(busca, roleKey),
+    queryKey: ['processos', 'catalogos'],
+    queryFn: buscarCatalogosProcesso,
+    staleTime: Infinity,
   })
 }
 
-export function useOcorrenciaParaVinculoQuery(id: string | undefined) {
-  const { roleKey } = useAuth()
-  return useQuery({
-    queryKey: ['processos', 'ocorrenciaDemonstracao', id, roleKey],
-    queryFn: () => buscarOcorrenciaParaVinculo(id as string, roleKey),
-    enabled: Boolean(id),
-  })
+// O detalhe recebe a resposta gravada pelo servidor; listagens de processos e
+// ocorrências são invalidadas (a ocorrência vinculada ganha o processo e pode
+// passar a urgente, D31).
+function useAtualizarCacheDoProcesso() {
+  const queryClient = useQueryClient()
+  return (processo: Processo) => {
+    queryClient.setQueryData(chaveDetalhe(processo.id), processo)
+    void queryClient.invalidateQueries({ queryKey: ['processos', 'lista'] })
+    void queryClient.invalidateQueries({ queryKey: ['ocorrencias'] })
+  }
 }
 
 export function useCriarProcessoMutation() {
-  const queryClient = useQueryClient()
-  const { user } = useAuth()
+  const atualizarCache = useAtualizarCacheDoProcesso()
   return useMutation({
-    mutationFn: (payload: CriarProcessoRequest) => criarProcesso(payload, `${user?.nome} ${user?.sobrenome}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: PROCESSOS_QUERY_KEY }),
+    mutationFn: (payload: CriarProcessoRequest) => criarProcesso(payload),
+    onSuccess: atualizarCache,
   })
 }
 
-// Processos e ocorrências de demonstração vivem sob o mesmo prefixo (D40).
-function invalidarProcessosEOcorrencias(queryClient: ReturnType<typeof useQueryClient>) {
-  queryClient.invalidateQueries({ queryKey: PROCESSOS_QUERY_KEY })
-}
-
-export function useEnviarAmostrasMutation(id: string) {
-  const queryClient = useQueryClient()
+export function useAvancarStatusProcessoMutation(id: string) {
+  const atualizarCache = useAtualizarCacheDoProcesso()
   return useMutation({
-    mutationFn: (payload: EnviarAmostrasRequest) => enviarAmostras(id, payload),
-    onSuccess: () => invalidarProcessosEOcorrencias(queryClient),
+    mutationFn: (status: StatusProcesso) => avancarStatusProcesso(id, status),
+    onSuccess: atualizarCache,
   })
 }
 
+// T34 + T37: substitui o avanço provisório só para AGUARDANDO_RESULTADO ->
+// COM_RESULTADO (lançamento) ou corrige o vigente (com retificaId). A
+// resposta já traz o histórico completo em `resultados`.
 export function useRegistrarResultadoMutation(id: string) {
-  const queryClient = useQueryClient()
+  const atualizarCache = useAtualizarCacheDoProcesso()
   return useMutation({
     mutationFn: (payload: RegistrarResultadoRequest) => registrarResultado(id, payload),
-    onSuccess: () => invalidarProcessosEOcorrencias(queryClient),
+    onSuccess: atualizarCache,
   })
 }
 
-export function useConcluirProcessoMutation(id: string) {
+// A resposta é a ocorrência: o detalhe do processo é recarregado do servidor.
+export function useVincularOcorrenciaMutation(processoId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: () => concluirProcesso(id),
-    onSuccess: () => invalidarProcessosEOcorrencias(queryClient),
-  })
-}
-
-export function useAnexarDocumentoMutation(id: string) {
-  const queryClient = useQueryClient()
-  const { user } = useAuth()
-  return useMutation({
-    mutationFn: (payload: AnexarDocumentoRequest) => anexarDocumento(id, payload, `${user?.nome} ${user?.sobrenome}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: PROCESSOS_QUERY_KEY }),
-  })
-}
-
-export function useVincularExistentesMutation(processoId: string) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (ocorrenciaId: string) => vincularExistentes(processoId, ocorrenciaId),
-    onSuccess: () => invalidarProcessosEOcorrencias(queryClient),
+    mutationFn: (ocorrenciaId: string) => vincularOcorrencia(processoId, ocorrenciaId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['processos'] })
+      void queryClient.invalidateQueries({ queryKey: ['ocorrencias'] })
+    },
   })
 }

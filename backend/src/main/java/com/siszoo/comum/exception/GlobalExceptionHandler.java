@@ -60,6 +60,7 @@ import com.siszoo.processos.exception.CorrecaoResultadoNaoPermitidaException;
 import com.siszoo.processos.exception.DataColetaFuturaException;
 import com.siszoo.processos.exception.DataResultadoAnteriorAberturaException;
 import com.siszoo.processos.exception.DataResultadoFuturaException;
+import com.siszoo.processos.exception.DesfechoInvalidoException;
 import com.siszoo.processos.exception.DoencaInvalidaException;
 import com.siszoo.processos.exception.IdentificacaoComAnimalDoCanilException;
 import com.siszoo.processos.exception.IdentificacaoObrigatoriaException;
@@ -518,5 +519,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroResponse> handleVinculoJaExistente() {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ErroResponse("Ocorrencia ou processo ja possui vinculo"));
+    }
+
+    @ExceptionHandler(DesfechoInvalidoException.class)
+    public ResponseEntity<ErroResponse> handleDesfechoInvalido() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Desfecho do animal informado nao existe"));
     }
 }

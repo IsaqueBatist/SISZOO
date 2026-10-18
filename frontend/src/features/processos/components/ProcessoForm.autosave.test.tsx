@@ -5,9 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
-import { resetOcorrenciasDemonstracao } from '../api/ocorrenciasDemonstracao'
 import { CadastrarProcesso } from './CadastrarProcesso'
-import { resetProcessosMock } from '../api/processosMockStore'
 
 // jsdom não implementa IndexedDB — mesmo padrão de
 // AnimalForm.autosave.test.tsx / OcorrenciaForm.autosave.test.tsx: mocka o
@@ -28,20 +26,20 @@ import { agendarSalvarRascunhoProcesso, carregarRascunhoProcesso, salvarRascunho
 
 const USUARIO_ID = 'a1b2c3d4-0000-0000-0000-000000000099'
 
-function autenticar() {
+function autenticar(cargos = ['Administrador']) {
   const usuario: Usuario = {
     id: USUARIO_ID,
     nome: 'Ana',
     sobrenome: 'Silva',
     email: 'ana.silva@itu.sp.gov.br',
-    cargos: ['Administrador'],
+    cargos,
     senhaAlteradaEm: '2026-01-10T12:00:00Z',
   }
   sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario }))
 }
 
-function renderCadastrar() {
-  autenticar()
+function renderCadastrar(cargos?: string[]) {
+  autenticar(cargos)
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
@@ -64,8 +62,6 @@ function paneDoStep(regex: RegExp) {
 describe('ProcessoForm — autosave do rascunho', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    resetOcorrenciasDemonstracao()
-    resetProcessosMock()
   })
 
   it('não agenda salvar o rascunho antes da checagem inicial terminar', async () => {
@@ -77,14 +73,14 @@ describe('ProcessoForm — autosave do rascunho', () => {
     const user = userEvent.setup()
     renderCadastrar()
 
-    await user.selectOptions(screen.getByLabelText(/Tipo de doença investigada/i), 'raiva')
+    await user.selectOptions(screen.getByLabelText(/Tipo de doença investigada/i), await screen.findByRole('option', { name: 'Raiva' }))
     expect(agendarSalvarRascunhoProcesso).not.toHaveBeenCalled()
 
     await act(async () => {
       resolverCarregamento(null)
     })
 
-    await user.selectOptions(screen.getByLabelText(/Laboratório de destino/i), 'pasteur_sp')
+    await user.selectOptions(screen.getByLabelText(/Laboratório de destino/i), screen.getByRole('option', { name: 'Pasteur — SP' }))
     await waitFor(() => expect(agendarSalvarRascunhoProcesso).toHaveBeenCalled())
   })
 
@@ -94,9 +90,9 @@ describe('ProcessoForm — autosave do rascunho', () => {
     renderCadastrar()
 
     const pane1 = paneDoStep(/^1\. Dados/)
-    await user.click(pane1.getByRole('button', { name: 'Pular esta etapa' }))
-    await user.selectOptions(screen.getByLabelText(/Tipo de doença investigada/i), 'raiva')
-    await user.selectOptions(screen.getByLabelText(/Laboratório de destino/i), 'pasteur_sp')
+    await user.click(await pane1.findByRole('button', { name: 'Pular esta etapa' }))
+    await user.selectOptions(screen.getByLabelText(/Tipo de doença investigada/i), await screen.findByRole('option', { name: 'Raiva' }))
+    await user.selectOptions(screen.getByLabelText(/Laboratório de destino/i), screen.getByRole('option', { name: 'Pasteur — SP' }))
     await user.click(pane1.getByRole('button', { name: 'Continuar →' }))
 
     await waitFor(() =>
@@ -107,12 +103,18 @@ describe('ProcessoForm — autosave do rascunho', () => {
     )
   })
 
-  it('o rascunho restaurado reabre na etapa salva com o vínculo travado', async () => {
-    vi.mocked(carregarRascunhoProcesso).mockResolvedValue({
-      etapaAtual: 3,
+  function rascunhoComVinculo() {
+    return {
+      etapaAtual: 3 as const,
       valores: {
-        vinculoDecisao: 'vinculado',
+        vinculoDecisao: 'vinculado' as const,
         ocorrenciaId: 'h5000000-0000-0000-0000-000000000001',
+        ocorrenciaResumo: {
+          id: 'h5000000-0000-0000-0000-000000000001',
+          protocolo: '089/2026',
+          tipoOcorrenciaNome: 'Suspeita de Zoonose',
+          bairro: 'Vila Esperança',
+        },
         dataAbertura: '2026-05-20',
         doenca: 'raiva',
         laboratorio: 'pasteur_sp',
@@ -128,19 +130,19 @@ describe('ProcessoForm — autosave do rascunho', () => {
         },
         amostras: [
           {
-            origem: 'externo',
-            especieId: 'canino',
-            sexo: 'macho',
+            origem: 'externo' as const,
+            especie: 'canino',
+            sexo: 'macho' as const,
             raca: '',
             coloracao: '',
-            pelagem: '',
+            pelagem: '' as const,
             idadeAprox: '',
             pesoKg: undefined,
-            statusClinico: 'assintomatico',
-            tipoAbrigo: 'intradomiciliar',
+            statusClinico: 'ASSINTOMATICO' as const,
+            tipoAbrigo: 'INTRADOMICILIAR' as const,
             alteracaoComportamental: '',
             dataColeta: '2026-05-20',
-            materialBiologico: 'soro',
+            materialBiologico: 'SORO' as const,
             contatoHumano: false,
             observacoes: '',
             sintomas: [],
@@ -148,8 +150,11 @@ describe('ProcessoForm — autosave do rascunho', () => {
         ],
         observacoes: '',
       },
-    })
+    }
+  }
 
+  it('o rascunho restaurado reabre na etapa salva com o vínculo travado, sem buscar a ocorrência de novo', async () => {
+    vi.mocked(carregarRascunhoProcesso).mockResolvedValue(rascunhoComVinculo())
     const user = userEvent.setup()
     renderCadastrar()
 
@@ -157,6 +162,19 @@ describe('ProcessoForm — autosave do rascunho', () => {
 
     expect(screen.getByText('Amostras').closest('.step')).toHaveClass('active')
     const vinculo = screen.getByTestId('vinculo-travado')
-    expect(await within(vinculo).findByText(/089\/2026/)).toBeInTheDocument()
+    expect(within(vinculo).getByText(/OC 089\/2026/)).toBeInTheDocument()
+  })
+
+  it('Veterinário que restaura rascunho com vínculo volta à etapa 1 sem o vínculo (D33)', async () => {
+    vi.mocked(carregarRascunhoProcesso).mockResolvedValue(rascunhoComVinculo())
+    const user = userEvent.setup()
+    renderCadastrar(['Veterinário'])
+
+    await user.click(await screen.findByRole('button', { name: 'Restaurar rascunho' }))
+
+    expect(screen.getByText('Vínculo').closest('.step')).toHaveClass('active')
+    expect(screen.queryByTestId('vinculo-travado')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Continuar sem vínculo' })).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Nome/i)).toHaveValue('Maria Responsável')
   })
 })

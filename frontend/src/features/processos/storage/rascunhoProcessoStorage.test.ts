@@ -29,4 +29,13 @@ describe('rascunho de processo por usuário', () => {
 
     expect(await carregarRascunhoProcesso(chaveRascunhoProcesso(USUARIO_A))).toBeNull()
   })
+
+  it('rascunho do contrato anterior (mock, sem versão) não é restaurado', async () => {
+    await salvarRascunho('processos', chaveRascunhoProcesso(USUARIO_A), {
+      etapaAtual: 3,
+      valores: { doenca: 'raiva', amostras: [{ origem: 'externo', especieId: 'canino', statusClinico: 'sintomatico' }] },
+    })
+
+    expect(await carregarRascunhoProcesso(chaveRascunhoProcesso(USUARIO_A))).toBeNull()
+  })
 })

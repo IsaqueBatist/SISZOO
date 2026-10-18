@@ -10,6 +10,7 @@ import com.siszoo.processos.entity.StatusProcesso;
 // (nome, CPF, telefone, e-mail, CEP, endereco, bairros), pelo mesmo motivo da
 // D23 — a auditoria nao replica o dado pessoal. As amostras entram (dados do
 // animal e da coleta). resultado/dataResultado: o vigente (T34).
+// desfechoAnimal (T37) e codigo de catalogo, sem dado pessoal.
 public record ProcessoAuditoriaSnapshot(
         UUID id,
         String protocolo,
@@ -23,5 +24,6 @@ public record ProcessoAuditoriaSnapshot(
         String observacoes,
         List<AmostraAnimalResponse> amostras,
         String resultado,
-        LocalDate dataResultado) {
+        LocalDate dataResultado,
+        String desfechoAnimal) {
 }

@@ -1,67 +1,35 @@
-// PROVISÓRIO: não existe com.siszoo.processos.dto.ProcessoResponse no
-// backend ainda (módulo `processos` só tem pastas .gitkeep). Tipos modelados
-// a partir de docs/DER.md §3.5 (Processo Sanitário) até o contrato real
-// existir; revalidar campo a campo quando o backend nascer.
+// Contrato da API de processos sanitários (T29, com.siszoo.processos.dto).
+// Catálogos (doença, laboratório, sintoma, espécie) vão e voltam pelo
+// `codigo`; enums da amostra em maiúsculas (D38). Sexo e pelagem usam o
+// domínio de `animal`, em minúsculas (DH-9).
 
-export type Doenca = 'raiva' | 'esporotricose' | 'leishmaniose_visceral' | 'leptospirose' | 'febre_maculosa' | 'febre_amarela'
+import type { Pelagem, Sexo } from '@/features/animais/types/animais.types'
 
-export type Laboratorio = 'pasteur_sp' | 'ial_sorocaba' | 'ccz_sp' | 'itu_ll01'
+export type StatusProcesso = 'ABERTO' | 'AGUARDANDO_RESULTADO' | 'COM_RESULTADO' | 'CONCLUIDO'
 
-export type StatusProcesso = 'aberto' | 'aguardando_resultado' | 'com_resultado' | 'concluido'
+export type StatusClinicoAmostra = 'SINTOMATICO' | 'ASSINTOMATICO' | 'OBITO'
 
-export type StatusClinicoAmostra = 'sintomatico' | 'assintomatico' | 'obito'
+export type TipoAbrigo = 'INTRADOMICILIAR' | 'PERIDOMICILIAR' | 'SILVESTRE' | 'NAO_IDENTIFICADO'
 
-export type TipoAbrigo = 'intradomiciliar' | 'peridomiciliar' | 'silvestre' | 'nao_identificado'
+export type MaterialBiologico = 'TECIDO_ENCEFALICO' | 'SORO' | 'SANGUE' | 'SALIVA' | 'URINA'
 
-export type MaterialBiologico = 'tecido_encefalico' | 'soro' | 'sangue' | 'saliva' | 'urina'
+export type NivelContato = 'DIRETA' | 'INDIRETA'
 
-export type NivelContato = 'direta' | 'indireta'
-
-// PROVISÓRIO / [EXTRAPOLAÇÃO]: DER.md §3.5 modela resultado laboratorial e documentos como
-// parte de processo_sanitario/documento_processo, mas o contrato do T32 não os incluía
-// (backend ainda não existe). Campos adicionados na T33 para o detalhe somente-leitura;
-// revalidar contra o DTO real quando o backend nascer.
-export type ResultadoLaboratorial =
-  | 'aguardando'
-  | 'positivo'
-  | 'negativo'
-  | 'inconclusivo'
-  | 'material_inadequado'
-  | 'nao_realizado'
-
-export type DesfechoAnimal = 'em_acompanhamento' | 'obito_natural' | 'obito_eutanasia' | 'obito_outro'
-
-export type TipoDocumentoProcesso = 'ficha_investigacao' | 'termo_envio' | 'foto_coleta' | 'outro'
-
-export type Sintoma =
-  | 'apatia'
-  | 'alt_comportamental'
-  | 'descamacao'
-  | 'ulcera_pele'
-  | 'ceratoconjuntivite'
-  | 'coriza'
-  | 'emagrecimento'
-  | 'diarreia'
-  | 'salivacao_excessiva'
-  | 'hemorragia_interna'
-  | 'vomito'
-  | 'aumento_linfonodo'
-
-// Resumo somente-leitura da ocorrência vinculada (etapa 1 / revisão). Campos
-// pessoais do denunciante já vêm mascarados pelo mock/backend quando
-// `sigilosa = true` e o perfil não é Admin — igual a
-// ocorrencias.types.ts::Denunciante.
-export interface OcorrenciaParaVinculo {
-  id: string
-  protocolo: string
-  tipoOcorrencia: string
-  bairro: string
-  statusOcorrencia: string
-  sigilosa: boolean
-  denunciante: { nome: string | null } | null
+export interface CatalogoItem {
+  codigo: string
+  nome: string
 }
 
-export interface ProcessoResponsavel {
+// GET /api/processos/catalogos
+export interface CatalogosProcesso {
+  doencas: CatalogoItem[]
+  laboratorios: CatalogoItem[]
+  sintomas: CatalogoItem[]
+  resultadosLaboratoriais: CatalogoItem[]
+  desfechos: CatalogoItem[]
+}
+
+export interface ResponsavelProcessoRequest {
   nome: string
   cpf?: string
   telefone?: string
@@ -72,114 +40,153 @@ export interface ProcessoResponsavel {
   bairroOcorrencia?: string
 }
 
-// PROVISÓRIO / [EXTRAPOLAÇÃO] — ver comentário de ResultadoLaboratorial acima.
-export interface DocumentoProcesso {
-  id: string
-  nome: string
-  url: string
-  tipo: TipoDocumentoProcesso
-  tamanho: number
-  mimeType: string
-  criadoEm: string
-  criadoPorNome: string
-}
-
-// Campos de identificação do animal_amostrado (DER.md:559-580) — no modo
-// canil vêm como snapshot somente-leitura copiado do Animal selecionado; no
-// modo externo são digitados. Em ambos os casos são campos reais do DER.
-interface AmostraAnimalIdentificacao {
-  sexo: 'macho' | 'femea' | 'nao_identificado'
-  raca?: string
-  coloracao?: string
-  pelagem?: string
-  idadeAprox?: string
-  pesoKg?: number
-}
-
-// [EXTRAPOLAÇÃO] união discriminada — "origem" não é campo do DER, é só o
-// discriminante de UI/Zod para decidir a origem dos dados de identificação;
-// nunca é enviado misturado com os dados do modo abandonado.
-export type AmostraAnimalOrigem =
-  | ({ origem: 'canil'; animalId: string; especieId: string } & AmostraAnimalIdentificacao)
-  | ({ origem: 'externo'; especieId: string } & AmostraAnimalIdentificacao)
-
-export type AmostraAnimal = AmostraAnimalOrigem & {
+// Campos clínicos, nas duas modalidades de amostra.
+interface AmostraClinicaRequest {
   statusClinico: StatusClinicoAmostra
   tipoAbrigo: TipoAbrigo
   alteracaoComportamental?: string
   dataColeta: string
   materialBiologico: MaterialBiologico
   contatoHumano: boolean
-  nivelContato?: NivelContato // obrigatório quando contatoHumano
-  agrediuHumano?: boolean // obrigatório quando contatoHumano
+  nivelContato?: NivelContato // obrigatório se, e somente se, houve contato
+  agrediuHumano?: boolean // idem
   observacoes?: string
-  sintomas: Sintoma[]
+  sintomas: string[] // só em amostra SINTOMATICO
 }
 
-// [EXTRAPOLAÇÃO] campo de UI para gatear a etapa 1 (DER trata o vínculo como
-// FK 0..1 opcional, sem campo de "decisão" — o RHF precisa de um valor
-// tri-state para bloquear "nenhuma escolha feita ainda", igual selecionar
-// ocorrência ou clicar "Pular esta etapa").
-export type VinculoDecisao = 'vinculado' | 'sem_vinculo' | ''
+// Animal do canil: só o animalId; a identificação vem da ficha no servidor
+// (snapshot, DH-5) e não pode ser enviada.
+export type AmostraCanilRequest = AmostraClinicaRequest & { animalId: string }
 
+// Animal de campo: espécie e sexo obrigatórios.
+export type AmostraCampoRequest = AmostraClinicaRequest & {
+  especie: string
+  sexo: Sexo
+  raca?: string
+  coloracao?: string
+  pelagem?: Pelagem
+  idadeAprox?: string
+  pesoKg?: number
+}
+
+export type AmostraAnimalRequest = AmostraCanilRequest | AmostraCampoRequest
+
+// POST /api/processos — processo completo numa requisição. `urgente` não é
+// enviado: o servidor deriva das amostras (regra 18).
 export interface CriarProcessoRequest {
   dataAbertura: string
-  doenca: Doenca
-  laboratorio: Laboratorio
-  ocorrenciaId: string | null // fixado na etapa 1 (RN2); null = decisão "sem_vinculo"
-  responsavel: ProcessoResponsavel
-  amostras: AmostraAnimal[] // mínimo 1, DER.md:584
+  doenca: string
+  laboratorio: string
+  ocorrenciaId: string | null
+  responsavel: ResponsavelProcessoRequest
+  amostras: AmostraAnimalRequest[]
   observacoes?: string
 }
 
+export interface ResponsavelProcesso {
+  id: string
+  nome: string
+  cpf: string | null
+  telefone: string | null
+  email: string | null
+  cep: string | null
+  endereco: string | null
+  bairroResidencial: string | null
+  bairroOcorrencia: string | null
+}
+
+// A identificação é a gravada na amostra (snapshot), nunca a ficha atual.
+export interface AmostraAnimal {
+  id: string
+  animalId: string | null
+  especie: CatalogoItem
+  sexo: Sexo
+  raca: string | null
+  coloracao: string | null
+  pelagem: Pelagem | null
+  idadeAprox: string | null
+  pesoKg: number | null
+  statusClinico: StatusClinicoAmostra
+  tipoAbrigo: TipoAbrigo
+  alteracaoComportamental: string | null
+  dataColeta: string
+  materialBiologico: MaterialBiologico
+  contatoHumano: boolean
+  nivelContato: NivelContato | null
+  agrediuHumano: boolean | null
+  observacoes: string | null
+  sintomas: CatalogoItem[]
+}
+
+// Um lançamento do histórico de resultado (original ou correção) — T34,
+// tabela resultado_processo, imutável. Sem retificaId = original.
+export interface ResultadoProcessoItem {
+  id: string
+  resultado: CatalogoItem
+  dataResultado: string
+  observacoes: string | null
+  retificaId: string | null
+  registradoPorId: string
+  registradoPorNome: string
+  registradoEm: string
+}
+
+// GET /api/processos/{id} (ProcessoSanitarioResponse). resultado/dataResultado
+// são o vigente (nulos até o primeiro lançamento). resultados é o histórico
+// completo, do original até a última correção (T34). desfechoAnimal (T37)
+// não faz parte do histórico imutável — é só do processo.
 export interface Processo {
   id: string
   protocolo: string
   dataAbertura: string
-  doenca: Doenca
-  laboratorio: Laboratorio
-  ocorrenciaVinculado: OcorrenciaParaVinculo | null
+  ocorrenciaId: string | null
+  ocorrenciaProtocolo: string | null
+  urgente: boolean
+  statusProcesso: StatusProcesso
+  doenca: CatalogoItem
+  cid: string | null
+  laboratorio: CatalogoItem
+  observacoes: string | null
+  responsavel: ResponsavelProcesso | null
+  amostras: AmostraAnimal[]
+  criadoEm: string
+  resultado: CatalogoItem | null
+  dataResultado: string | null
+  desfechoAnimal: CatalogoItem | null
+  resultados: ResultadoProcessoItem[]
+}
+
+// POST /api/processos/{id}/resultados (T34 + T37). resultado e desfechoAnimal
+// são códigos de catálogo ("aguardando" não é aceito como resultado).
+// retificaId só na correção de um resultado já lançado (write-once: sem ele,
+// só funciona com o processo em AGUARDANDO_RESULTADO).
+export interface RegistrarResultadoRequest {
+  resultado: string
+  dataResultado: string
+  observacoes?: string
+  retificaId?: string
+  desfechoAnimal?: string
+}
+
+// Linha de GET /api/processos (ProcessoResumoResponse)
+export interface ProcessoResumo {
+  id: string
+  protocolo: string
+  dataAbertura: string
+  doenca: CatalogoItem
   statusProcesso: StatusProcesso
   urgente: boolean
-  responsavel: ProcessoResponsavel
-  amostras: AmostraAnimal[]
-  observacoes?: string
-  criadoPorNome: string
-  criadoEm: string
-  atualizadoEm: string
-  // PROVISÓRIO / [EXTRAPOLAÇÃO] — ver comentário de ResultadoLaboratorial acima.
-  galNumero?: string
-  sinanNumero?: string
-  cid?: string
-  dataEnvioAmostras?: string
-  previsaoRetorno?: string
-  resultadoLaboratorial?: ResultadoLaboratorial
-  dataResultado?: string
-  desfechoAnimal?: DesfechoAnimal
-  documentos: DocumentoProcesso[]
+  ocorrenciaId: string | null
+  ocorrenciaProtocolo: string | null
 }
 
 export interface ProcessosFiltro {
-  doenca?: Doenca
-  statusProcesso?: StatusProcesso
-  q?: string
+  doenca?: string
+  status?: StatusProcesso
   pagina: number
   tamanho: number
 }
 
-export interface EnviarAmostrasRequest {
-  previsaoRetorno?: string
-}
-
-export interface RegistrarResultadoRequest {
-  resultadoLaboratorial: Exclude<ResultadoLaboratorial, 'aguardando'>
-  desfechoAnimal?: DesfechoAnimal
-}
-
-// `arquivo` é o `File` puro (não `data:` URI em base64), mesma decisão já
-// tomada em ocorrencias.types.ts::CriarOcorrenciaRequest.anexos — mais
-// barato em memória e compatível com um futuro upload multipart/form-data.
-export interface AnexarDocumentoRequest {
-  tipo: TipoDocumentoProcesso
-  arquivo: File
-}
+// Decisão da etapa 1 do wizard: "" = nenhuma decisão ainda. Não é campo da
+// API — o vínculo em si é o `ocorrenciaId` opcional.
+export type VinculoDecisao = 'vinculado' | 'sem_vinculo' | ''

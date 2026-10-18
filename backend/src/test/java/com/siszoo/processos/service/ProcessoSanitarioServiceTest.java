@@ -33,6 +33,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.AccessDeniedException;
 
@@ -103,6 +104,7 @@ class ProcessoSanitarioServiceTest {
     @Mock private OcorrenciaService ocorrenciaService;
     @Mock private ProtocoloService protocoloService;
     @Mock private AuditoriaEventoService auditoriaEventoService;
+    @Mock private ApplicationEventPublisher eventPublisher;
     @Mock private JdbcTemplate jdbcTemplate;
 
     private ProcessoSanitarioService processoService;
@@ -120,7 +122,7 @@ class ProcessoSanitarioServiceTest {
                 doencaRepository, laboratorioRepository, sintomaRepository, resultadoRepository,
                 resultadoProcessoRepository, desfechoRepository,
                 especieRepository, animalRepository, usuarioRepository, ocorrenciaService, protocoloService,
-                auditoriaEventoService, jdbcTemplate, clock);
+                auditoriaEventoService, eventPublisher, jdbcTemplate, clock);
         lenient().when(usuarioRepository.findById(usuarioId)).thenReturn(Optional.of(new Usuario()));
     }
 
@@ -194,7 +196,7 @@ class ProcessoSanitarioServiceTest {
         when(resultadoRepository.findByCodigo("positivo")).thenReturn(Optional.of(positivo));
 
         assertThat(processoService.registrarResultado(processo.getId(),
-                new RegistrarResultadoRequest("positivo", HOJE, "obs", null), usuarioId).statusProcesso())
+                new RegistrarResultadoRequest("positivo", HOJE, "obs", null, null), usuarioId).statusProcesso())
                 .isEqualTo(StatusProcesso.COM_RESULTADO);
 
         ArgumentCaptor<ResultadoProcesso> gravado = ArgumentCaptor.forClass(ResultadoProcesso.class);
@@ -214,7 +216,7 @@ class ProcessoSanitarioServiceTest {
         when(resultadoRepository.findByCodigo("negativo")).thenReturn(Optional.of(resultado("negativo", true)));
 
         assertThatThrownBy(() -> processoService.registrarResultado(processo.getId(),
-                new RegistrarResultadoRequest("negativo", HOJE, null, null), usuarioId)).isInstanceOf(erro);
+                new RegistrarResultadoRequest("negativo", HOJE, null, null, null), usuarioId)).isInstanceOf(erro);
         assertThat(processo.getStatusProcesso()).isEqualTo(status);
         verify(resultadoProcessoRepository, never()).saveAndFlush(any());
         verify(processoRepository, never()).saveAndFlush(any());
@@ -232,7 +234,7 @@ class ProcessoSanitarioServiceTest {
         when(resultadoRepository.findByCodigo(codigo)).thenReturn(encontrado);
 
         assertThatThrownBy(() -> processoService.registrarResultado(processo.getId(),
-                new RegistrarResultadoRequest(codigo, HOJE, null, null), usuarioId))
+                new RegistrarResultadoRequest(codigo, HOJE, null, null, null), usuarioId))
                 .isInstanceOf(ResultadoInvalidoException.class);
         assertThat(processo.getStatusProcesso()).isEqualTo(StatusProcesso.AGUARDANDO_RESULTADO);
         verify(resultadoProcessoRepository, never()).saveAndFlush(any());
@@ -244,10 +246,10 @@ class ProcessoSanitarioServiceTest {
         ProcessoSanitario comResultado = processoEm(StatusProcesso.COM_RESULTADO);
 
         assertThatThrownBy(() -> processoService.registrarResultado(aguardando.getId(),
-                new RegistrarResultadoRequest("positivo", ABERTURA.minusDays(1), null, null), usuarioId))
+                new RegistrarResultadoRequest("positivo", ABERTURA.minusDays(1), null, null, null), usuarioId))
                 .isInstanceOf(DataResultadoAnteriorAberturaException.class);
         assertThatThrownBy(() -> processoService.registrarResultado(comResultado.getId(),
-                new RegistrarResultadoRequest("positivo", ABERTURA.minusDays(1), null, UUID.randomUUID()), usuarioId))
+                new RegistrarResultadoRequest("positivo", ABERTURA.minusDays(1), null, UUID.randomUUID(), null), usuarioId))
                 .isInstanceOf(DataResultadoAnteriorAberturaException.class);
         assertThat(aguardando.getStatusProcesso()).isEqualTo(StatusProcesso.AGUARDANDO_RESULTADO);
         verify(resultadoProcessoRepository, never()).saveAndFlush(any());
@@ -259,14 +261,14 @@ class ProcessoSanitarioServiceTest {
         when(resultadoRepository.findByCodigo("negativo")).thenReturn(Optional.of(resultado("negativo", true)));
 
         assertThat(processoService.registrarResultado(processo.getId(),
-                new RegistrarResultadoRequest("negativo", ABERTURA, null, null), usuarioId).dataResultado())
+                new RegistrarResultadoRequest("negativo", ABERTURA, null, null, null), usuarioId).dataResultado())
                 .isEqualTo(ABERTURA);
     }
 
     @Test
     void dataResultadoFuturaRecusadaSemTocarNoBanco() {
         assertThatThrownBy(() -> processoService.registrarResultado(UUID.randomUUID(),
-                new RegistrarResultadoRequest("positivo", HOJE.plusDays(1), null, null), usuarioId))
+                new RegistrarResultadoRequest("positivo", HOJE.plusDays(1), null, null, null), usuarioId))
                 .isInstanceOf(DataResultadoFuturaException.class);
         verifyNoInteractions(processoRepository, resultadoProcessoRepository);
     }
@@ -283,7 +285,7 @@ class ProcessoSanitarioServiceTest {
         when(resultadoProcessoRepository.existsByRetificaId(anteriorId)).thenReturn(false);
 
         assertThat(processoService.registrarResultado(processo.getId(),
-                new RegistrarResultadoRequest("positivo", HOJE, null, anteriorId), usuarioId).statusProcesso())
+                new RegistrarResultadoRequest("positivo", HOJE, null, anteriorId, null), usuarioId).statusProcesso())
                 .isEqualTo(StatusProcesso.COM_RESULTADO);
 
         ArgumentCaptor<ResultadoProcesso> gravado = ArgumentCaptor.forClass(ResultadoProcesso.class);
@@ -307,7 +309,7 @@ class ProcessoSanitarioServiceTest {
 
         for (UUID retificaId : List.of(deOutro, inexistente)) {
             assertThatThrownBy(() -> processoService.registrarResultado(processo.getId(),
-                    new RegistrarResultadoRequest("positivo", HOJE, null, retificaId), usuarioId))
+                    new RegistrarResultadoRequest("positivo", HOJE, null, retificaId, null), usuarioId))
                     .isInstanceOf(ResultadoRetificadoInvalidoException.class);
         }
         verify(resultadoProcessoRepository, never()).saveAndFlush(any());
@@ -323,7 +325,7 @@ class ProcessoSanitarioServiceTest {
         when(resultadoProcessoRepository.existsByRetificaId(anteriorId)).thenReturn(true);
 
         assertThatThrownBy(() -> processoService.registrarResultado(processo.getId(),
-                new RegistrarResultadoRequest("positivo", HOJE, null, anteriorId), usuarioId))
+                new RegistrarResultadoRequest("positivo", HOJE, null, anteriorId, null), usuarioId))
                 .isInstanceOf(RegistroJaRetificadoException.class);
         verify(resultadoProcessoRepository, never()).saveAndFlush(any());
     }
@@ -335,7 +337,7 @@ class ProcessoSanitarioServiceTest {
         when(resultadoRepository.findByCodigo("positivo")).thenReturn(Optional.of(resultado("positivo", true)));
 
         assertThatThrownBy(() -> processoService.registrarResultado(processo.getId(),
-                new RegistrarResultadoRequest("positivo", HOJE, null, UUID.randomUUID()), usuarioId))
+                new RegistrarResultadoRequest("positivo", HOJE, null, UUID.randomUUID(), null), usuarioId))
                 .isInstanceOf(CorrecaoResultadoNaoPermitidaException.class);
         assertThat(processo.getStatusProcesso()).isEqualTo(status);
         verify(resultadoProcessoRepository, never()).saveAndFlush(any());

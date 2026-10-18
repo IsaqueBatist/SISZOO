@@ -1,223 +1,168 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { http, HttpResponse } from 'msw'
+import { MemoryRouter } from 'react-router-dom'
+import { describe, expect, it } from 'vitest'
 import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
+import { API_BASE_URL } from '@/lib/env'
+import { server } from '@/mocks/server'
+import { PROCESSO_PENDENTE_ID } from '@/mocks/processosFixtures'
 import { Processos } from './Processos'
-import { resetProcessosMock } from '../api/processosMockStore'
 
-// listarProcessos embrulhado num vi.fn() que, por padrão, delega pra
-// implementação real (mock store) — só a asserção de erro sobrescreve com
-// mockRejectedValueOnce, as demais continuam batendo no store de verdade.
-vi.mock('../api/processosApi', async () => {
-  const real = await vi.importActual<typeof import('../api/processosApi')>('../api/processosApi')
-  return { ...real, listarProcessos: vi.fn(real.listarProcessos) }
-})
-import { listarProcessos } from '../api/processosApi'
-
-function autenticarComCargos(cargos: string[]) {
+function renderProcessos(cargos = ['Administrador']) {
   const usuario: Usuario = {
     id: 'a1b2c3d4-0000-0000-0000-000000000099',
-    nome: 'Usuária',
-    sobrenome: 'Teste',
-    email: 'usuaria.teste@itu.sp.gov.br',
+    nome: 'Ana',
+    sobrenome: 'Silva',
+    email: 'ana.silva@itu.sp.gov.br',
     cargos,
     senhaAlteradaEm: '2026-01-10T12:00:00Z',
   }
   sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario }))
-}
-
-function renderLista(cargos: string[]) {
-  autenticarComCargos(cargos)
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={['/processos']}>
+      <MemoryRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/processos" element={<Processos />} />
-          </Routes>
+          <Processos />
         </AuthProvider>
       </MemoryRouter>
     </QueryClientProvider>,
   )
 }
 
-// Ids/protocolos semeados em ./processosMockStore.ts (seedProcessosMock).
-const PROCESSO_RAIVA_URGENTE_ID = 'p1000000-0000-0000-0000-000000000001'
+// Registra os parâmetros de cada GET /processos e devolve a página pedida.
+function capturarListagens(totalPaginas = 1) {
+  const chamadas: URLSearchParams[] = []
+  server.use(
+    http.get(`${API_BASE_URL}/processos`, ({ request }) => {
+      const params = new URL(request.url).searchParams
+      chamadas.push(params)
+      return HttpResponse.json({ itens: [], pagina: Number(params.get('pagina')), tamanho: 20, totalItens: 0, totalPaginas })
+    }),
+  )
+  return chamadas
+}
 
-describe('Processos', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    resetProcessosMock()
-  })
+describe('Processos — listagem', () => {
+  it('mostra os processos da API: protocolo, doença, status, data sem deslocamento de fuso e ocorrência vinculada', async () => {
+    renderProcessos()
 
-  it('renderiza a listagem com as colunas, doença como label e status como badge', async () => {
-    renderLista(['Administrador'])
-
-    expect(await screen.findByText('001/2026')).toBeInTheDocument()
-    // Doença aparece como rótulo legível, nunca o valor cru do enum.
-    expect(screen.getAllByText('Raiva').length).toBeGreaterThan(0)
-    expect(screen.queryByText('raiva')).not.toBeInTheDocument()
-    expect(screen.getAllByText('Aberto').length).toBeGreaterThan(0)
-  })
-
-  it('mantém os urgentes no topo em todas as páginas, sem nenhum urgente depois de um não urgente', async () => {
-    renderLista(['Administrador'])
-    await screen.findByText('001/2026')
-
-    function checarOrdemDaPagina() {
-      const linhas = document.querySelectorAll('table.data tbody tr')
-      const flags = Array.from(linhas).map((linha) => linha.classList.contains('urgent'))
-      const primeiroNaoUrgente = flags.indexOf(false)
-      if (primeiroNaoUrgente !== -1) {
-        expect(flags.slice(primeiroNaoUrgente)).not.toContain(true)
-      }
-    }
-
-    checarOrdemDaPagina()
-    expect(screen.getByText(/Página 1 de 2/)).toBeInTheDocument()
-
-    const user = userEvent.setup()
-    await user.click(screen.getByRole('button', { name: 'Próximo' }))
-    await screen.findByText(/Página 2 de 2/)
-    checarOrdemDaPagina()
-  })
-
-  it('ordena por data de abertura desc dentro do grupo não urgente (critério secundário)', async () => {
-    const user = userEvent.setup()
-    renderLista(['Administrador'])
-    await screen.findByText('001/2026')
-
-    await user.selectOptions(screen.getByLabelText('Filtrar por doença'), 'Febre Amarela')
-    // '001/2026' só existe fora do filtro — esperar seu sumiço garante que o
-    // resultado filtrado (não o placeholder da página anterior) já renderizou.
-    await waitFor(() => expect(screen.queryByText('001/2026')).not.toBeInTheDocument())
-
-    const tbody = document.querySelector('table.data tbody') as HTMLElement
-    const protocolos = within(tbody)
-      .getAllByText(/^0\d{2}\/2026$/)
-      .map((el) => el.textContent)
-    // 006 (25/09) > 014 (06/06) > 020 (12/03), todos não urgentes.
-    expect(protocolos).toEqual(['006/2026', '014/2026', '020/2026'])
-  })
-
-  it('filtra por doença', async () => {
-    const user = userEvent.setup()
-    renderLista(['Administrador'])
-    await screen.findByText('001/2026')
-
-    await user.selectOptions(screen.getByLabelText('Filtrar por doença'), 'Raiva')
-
-    await waitFor(() => expect(screen.queryByText('002/2026')).not.toBeInTheDocument())
-    expect(screen.getByText('001/2026')).toBeInTheDocument()
-    expect(screen.getByText('007/2026')).toBeInTheDocument()
-  })
-
-  it('filtra por status', async () => {
-    const user = userEvent.setup()
-    renderLista(['Administrador'])
-    await screen.findByText('001/2026')
-
-    await user.selectOptions(screen.getByLabelText('Filtrar por status'), 'Concluído')
-
-    await waitFor(() => expect(screen.queryByText('001/2026')).not.toBeInTheDocument())
-    expect(screen.getByText('003/2026')).toBeInTheDocument()
-    expect(screen.getByText('004/2026')).toBeInTheDocument()
-  })
-
-  it('combina filtro de doença e status, mantendo urgentes no topo do resultado filtrado', async () => {
-    const user = userEvent.setup()
-    renderLista(['Administrador'])
-    await screen.findByText('001/2026')
-
-    await user.selectOptions(screen.getByLabelText('Filtrar por doença'), 'Leptospirose')
-    await user.selectOptions(screen.getByLabelText('Filtrar por status'), 'Concluído')
-
-    // 008/2026 é leptospirose urgente (visível antes do filtro combinado
-    // aplicar) mas está com status aguardando_resultado — some assim que o
-    // filtro combinado (doença + concluído) realmente aplicar.
-    await waitFor(() => expect(screen.queryByText('008/2026')).not.toBeInTheDocument())
-
-    // 003/2026 (especial) + 012/2026 e 024/2026 (lote genérico) são os únicos
-    // leptospirose+concluído do seed.
-    expect(screen.getByText('003/2026')).toBeInTheDocument()
-    const linhas = document.querySelectorAll('table.data tbody tr')
-    expect(linhas).toHaveLength(3)
-  })
-
-  it('mudar o filtro volta a listagem para a página 0', async () => {
-    const user = userEvent.setup()
-    renderLista(['Administrador'])
-    await screen.findByText('001/2026')
-
-    await user.click(screen.getByRole('button', { name: 'Próximo' }))
-    await screen.findByText(/Página 2 de 2/)
-
-    await user.selectOptions(screen.getByLabelText('Filtrar por doença'), 'Raiva')
-
-    await waitFor(() => expect(screen.getByText(/Página 1 de/)).toBeInTheDocument())
-  })
-
-  it('linha urgente tem destaque de cor e também texto "Urgente" (não depende só de cor)', async () => {
-    renderLista(['Administrador'])
-    await screen.findByText('001/2026')
-
-    const linha = screen.getByText('001/2026').closest('tr')
+    const linha = (await screen.findByText('PS 045/2026')).closest('tr') as HTMLElement
+    expect(within(linha).getByText('Raiva')).toBeInTheDocument()
+    expect(within(linha).getByText('Aguardando resultado')).toBeInTheDocument()
+    // LocalDate "2026-05-18": new Date() leria meia-noite UTC e mostraria 17/05.
+    expect(within(linha).getByText('18/05/2026')).toBeInTheDocument()
+    expect(within(linha).getByText('OC 092/2026')).toBeInTheDocument()
+    expect(within(linha).getByText(/Urgente/)).toBeInTheDocument()
     expect(linha).toHaveClass('urgent')
-    expect(within(linha as HTMLElement).getByText('Urgente')).toBeInTheDocument()
+
+    const semVinculo = screen.getByText('PS 046/2026').closest('tr') as HTMLElement
+    expect(within(semVinculo).getByText('—')).toBeInTheDocument()
+    expect(screen.getByText('2 registros')).toBeInTheDocument()
   })
 
-  it('o link "Ver" aponta para o id correto do processo', async () => {
-    renderLista(['Administrador'])
-    await screen.findByText('001/2026')
+  it('o link "Ver" aponta para o processo', async () => {
+    renderProcessos()
 
-    const link = screen.getByRole('link', { name: /ver processo 001\/2026/i })
-    expect(link).toHaveAttribute('href', `/processos/${PROCESSO_RAIVA_URGENTE_ID}`)
+    expect(await screen.findByRole('link', { name: 'Ver processo PS 045/2026' })).toHaveAttribute('href', `/processos/${PROCESSO_PENDENTE_ID}`)
   })
 
-  it('a ocorrência vinculada (fictícia, D40) aparece sem link para a tela de ocorrências', async () => {
+  it('filtros enviam o código da doença e o status da API, e voltam para a página 0', async () => {
+    const chamadas = capturarListagens(3)
     const user = userEvent.setup()
-    renderLista(['Administrador'])
-    await screen.findByText('001/2026')
+    renderProcessos()
 
-    await user.selectOptions(screen.getByLabelText('Filtrar por doença'), 'Febre Maculosa')
-    await screen.findByText('005/2026')
+    await user.selectOptions(screen.getByLabelText('Filtrar por doença'), await screen.findByRole('option', { name: 'Esporotricose' }))
+    await user.selectOptions(screen.getByLabelText('Filtrar por status'), 'CONCLUIDO')
 
-    expect(screen.getByText('095/2026')).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: '095/2026' })).not.toBeInTheDocument()
-    expect(screen.getByRole('note', { name: 'Dados de demonstração' })).toBeInTheDocument()
+    await waitFor(() => {
+      const ultima = chamadas[chamadas.length - 1]
+      expect(ultima.get('doenca')).toBe('esporotricose')
+      expect(ultima.get('status')).toBe('CONCLUIDO')
+      expect(ultima.get('pagina')).toBe('0')
+    })
   })
 
-  it('mostra o estado vazio com mensagem de filtro quando a combinação não encontra nada', async () => {
+  it('mudar de filtro depois de paginar volta para a página 0', async () => {
+    const chamadas: URLSearchParams[] = []
+    server.use(
+      http.get(`${API_BASE_URL}/processos`, ({ request }) => {
+        const params = new URL(request.url).searchParams
+        chamadas.push(params)
+        const pagina = Number(params.get('pagina'))
+        return HttpResponse.json({
+          itens: [{
+            id: `p-${pagina}`,
+            protocolo: `00${pagina + 1}/2026`,
+            dataAbertura: '2026-05-01',
+            doenca: { codigo: 'raiva', nome: 'Raiva' },
+            statusProcesso: 'ABERTO',
+            urgente: false,
+            ocorrenciaId: null,
+            ocorrenciaProtocolo: null,
+          }],
+          pagina,
+          tamanho: 20,
+          totalItens: 41,
+          totalPaginas: 3,
+        })
+      }),
+    )
     const user = userEvent.setup()
-    renderLista(['Administrador'])
-    await screen.findByText('001/2026')
+    renderProcessos()
 
-    await user.selectOptions(screen.getByLabelText('Filtrar por doença'), 'Raiva')
-    await user.selectOptions(screen.getByLabelText('Filtrar por status'), 'Concluído')
+    await user.click(await screen.findByRole('button', { name: 'Próximo' }))
+    await screen.findByText('PS 002/2026')
+    await user.selectOptions(screen.getByLabelText('Filtrar por status'), 'ABERTO')
+
+    await waitFor(() => {
+      const ultima = chamadas[chamadas.length - 1]
+      expect(ultima.get('status')).toBe('ABERTO')
+      expect(ultima.get('pagina')).toBe('0')
+    })
+  })
+
+  it('estado vazio com filtro orienta a ajustar os filtros', async () => {
+    capturarListagens()
+    const user = userEvent.setup()
+    renderProcessos()
+
+    await user.selectOptions(screen.getByLabelText('Filtrar por status'), 'CONCLUIDO')
 
     expect(await screen.findByText('Nenhum processo sanitário encontrado')).toBeInTheDocument()
     expect(screen.getByText('Ajuste os filtros de busca.')).toBeInTheDocument()
   })
 
-  it('mostra estado de erro quando a listagem falha', async () => {
-    vi.mocked(listarProcessos).mockRejectedValueOnce(new Error('falhou'))
+  it('estado vazio sem filtro informa que nenhum processo foi aberto', async () => {
+    capturarListagens()
+    renderProcessos()
 
-    renderLista(['Administrador'])
+    expect(await screen.findByText('Nenhum processo foi aberto ainda.')).toBeInTheDocument()
+  })
 
-    expect(
-      await screen.findByText('Não foi possível carregar os processos sanitários. Tente novamente.'),
-    ).toBeInTheDocument()
+  it('mostra erro quando a listagem falha', async () => {
+    server.use(http.get(`${API_BASE_URL}/processos`, () => HttpResponse.json({ mensagem: 'erro' }, { status: 500 })))
+    renderProcessos()
+
+    expect(await screen.findByText('Não foi possível carregar os processos sanitários. Tente novamente.')).toBeInTheDocument()
+  })
+
+  it('não mostra aviso de dados de demonstração', async () => {
+    renderProcessos()
+
+    await screen.findByText('PS 045/2026')
+    expect(screen.queryByText(/Dados de demonstração/)).not.toBeInTheDocument()
   })
 
   it.each(['Administrador', 'Veterinário', 'Agente Sanitário'])(
-    'mostra o botão "Novo Processo" para o perfil %s',
+    '%s vê "Novo Processo" (PROCESSOS_SANITARIOS:escrita)',
     async (cargo) => {
-      renderLista([cargo])
-      expect(await screen.findByRole('link', { name: /Novo Processo/i })).toBeInTheDocument()
+      renderProcessos([cargo])
+
+      expect(await screen.findByRole('link', { name: /Novo Processo/ })).toHaveAttribute('href', '/processos/novo')
     },
   )
 })
