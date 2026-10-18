@@ -732,6 +732,23 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         assertVigenteCoerente(processoId);
     }
 
+    // Estado legado: COM_RESULTADO sem resultado, como o PATCH provisorio da
+    // D18 deixava antes da T34 (montado via SQL, depois da V15).
+    @Test
+    @DisplayName("[T34] COM_RESULTADO sem resultado vigente: PATCH CONCLUIDO 422, sem gravar nem auditar")
+    void concluirSemResultadoVigenteRecusado() {
+        String processoId = processoAguardandoResultado();
+        jdbcTemplate.update("UPDATE processo_sanitario SET status_processo = 'COM_RESULTADO' WHERE id = CAST(? AS uuid)",
+                processoId);
+        int eventosAntes = eventosDeAtualizacao(processoId);
+
+        alterarStatus(tokenAgente, processoId, "CONCLUIDO").then().statusCode(422)
+                .body("mensagem", equalTo("Processo so pode ser concluido com resultado laboratorial registrado"));
+
+        assertSemResultado(processoId, "COM_RESULTADO");
+        assertThat(eventosDeAtualizacao(processoId), equalTo(eventosAntes));
+    }
+
     @Test
     @DisplayName("[T34] correcao: novo registro com retificaId, original intacto, vigente coerente apos cada passo e auditoria")
     void correcaoPorNovoRegistro() {

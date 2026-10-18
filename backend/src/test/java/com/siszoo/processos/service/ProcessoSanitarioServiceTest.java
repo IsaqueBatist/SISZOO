@@ -59,6 +59,7 @@ import com.siszoo.processos.entity.ResultadoProcesso;
 import com.siszoo.processos.entity.StatusClinicoAmostra;
 import com.siszoo.processos.entity.StatusProcesso;
 import com.siszoo.processos.entity.TipoAbrigo;
+import com.siszoo.processos.exception.ConclusaoSemResultadoException;
 import com.siszoo.processos.exception.ContatoHumanoInconsistenteException;
 import com.siszoo.processos.exception.CorrecaoResultadoNaoPermitidaException;
 import com.siszoo.processos.exception.DataColetaFuturaException;
@@ -146,9 +147,14 @@ class ProcessoSanitarioServiceTest {
     void statusSoAvancaUmPasso(StatusProcesso atual, StatusProcesso pedido, Class<? extends Throwable> erro) {
         UUID id = UUID.randomUUID();
         ProcessoSanitario processo = new ProcessoSanitario();
-        processo.setStatusProcesso(atual);
         processo.setDoenca(doenca());
         processo.setLaboratorio(laboratorio());
+        if (atual.ordinal() >= StatusProcesso.COM_RESULTADO.ordinal()) {
+            // Depois do resultado ha sempre um vigente (CONCLUIDO o exige).
+            processo.aplicarResultadoVigente(ResultadoProcesso.registrar(processo, resultado("negativo", true),
+                    HOJE, null, new Usuario()));
+        }
+        processo.setStatusProcesso(atual);
         when(processoRepository.findByIdForUpdate(id)).thenReturn(Optional.of(processo));
 
         if (erro == null) {
@@ -160,6 +166,20 @@ class ProcessoSanitarioServiceTest {
             assertThat(processo.getStatusProcesso()).isEqualTo(atual);
             verify(processoRepository, never()).saveAndFlush(any());
         }
+    }
+
+    // Processo que chegou a COM_RESULTADO sem resultado (PATCH provisorio da
+    // D18, antes da T34): CONCLUIDO exige o vigente.
+    @Test
+    void concluirSemResultadoVigenteRecusado() {
+        ProcessoSanitario processo = processoEm(StatusProcesso.COM_RESULTADO);
+
+        assertThatThrownBy(() -> processoService.alterarStatus(processo.getId(),
+                new AlterarStatusProcessoRequest(StatusProcesso.CONCLUIDO), usuarioId))
+                .isInstanceOf(ConclusaoSemResultadoException.class);
+        assertThat(processo.getStatusProcesso()).isEqualTo(StatusProcesso.COM_RESULTADO);
+        verify(processoRepository, never()).saveAndFlush(any());
+        verifyNoInteractions(auditoriaEventoService);
     }
 
     // Matriz completa 4x4 da maquina de estados (T34): so o proximo passo.

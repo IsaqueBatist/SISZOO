@@ -621,6 +621,7 @@ Não é catálogo: coluna `processo_sanitario.status_processo` varchar + `CHECK`
 
 - Qualquer outra transição (pular passo, voltar, repetir o status) → 422. Pedir `COM_RESULTADO` pelo PATCH → 422 com mensagem própria: exige o resultado.
 - `CONCLUIDO` é terminal: nenhum avanço, lançamento ou correção.
+- `CONCLUIDO` exige resultado vigente: o PATCH recusa (422, mensagem própria) concluir um processo sem `resultado_laboratorial_id`. Isso protege processos que chegaram a `COM_RESULTADO` pelo PATCH provisório da D18, antes da T34.
 - Consequência para a ocorrência (regra 13): só encerra com processo vinculado `CONCLUIDO`, e `CONCLUIDO` passa a exigir um resultado registrado.
 - **Pendência (T37):** a tela de lançamento de resultado ainda não existe. Até lá, o botão provisório "Avançar status" do front para em `AGUARDANDO_RESULTADO` (recebe 422), e um processo vinculado só chega a `CONCLUIDO` (e a ocorrência só encerra) pela API.
 

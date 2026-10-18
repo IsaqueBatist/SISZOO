@@ -50,6 +50,7 @@ import com.siszoo.processos.entity.ResultadoProcesso;
 import com.siszoo.processos.entity.Sintoma;
 import com.siszoo.processos.entity.StatusClinicoAmostra;
 import com.siszoo.processos.entity.StatusProcesso;
+import com.siszoo.processos.exception.ConclusaoSemResultadoException;
 import com.siszoo.processos.exception.ContatoHumanoInconsistenteException;
 import com.siszoo.processos.exception.CorrecaoResultadoNaoPermitidaException;
 import com.siszoo.processos.exception.DataColetaFuturaException;
@@ -362,6 +363,11 @@ public class ProcessoSanitarioService {
         }
         if (destino.exigeResultado()) {
             throw new ResultadoObrigatorioException();
+        }
+        // CONCLUIDO exige o vigente (DER §3.5): protege processos que chegaram a
+        // COM_RESULTADO sem resultado pelo PATCH provisorio da D18.
+        if (destino == StatusProcesso.CONCLUIDO && processo.getResultadoLaboratorial() == null) {
+            throw new ConclusaoSemResultadoException();
         }
         Usuario autor = usuarioRepository.findById(usuarioId).orElseThrow(UsuarioNaoEncontradoException::new);
         ProcessoAuditoriaSnapshot antes = toSnapshot(processo);
