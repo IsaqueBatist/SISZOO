@@ -573,16 +573,17 @@ GAL/SINAN, envio, previsão e desfecho existem no schema, mas nenhum fluxo os pr
 - Vínculo com ocorrência é normalmente definido **na etapa 1 do wizard de cadastro**. **Emenda (2026-10-03, decisão de produto)**: se o processo for criado sem vínculo (ou a ocorrência ficar sem processo), o vínculo pode ser definido **uma única vez, depois da criação**, a partir do detalhe de qualquer um dos dois lados — mas só quando **nenhum dos dois** já tiver vínculo. Uma vez que o vínculo existe (definido na criação ou depois), ele fica **bloqueado para edição/troca** — não é possível desfazer nem substituir por outro. Garantias: a entidade só aceita o vínculo uma vez (409), e um trigger da V13 recusa trocar ou remover `ocorrencia_id` já preenchido, para qualquer usuário ou caminho (inclusive SQL manual) — sem exceção para administrador.
 - Vincular processo a ocorrência exige também `OCORRENCIAS_DENUNCIAS:escrita` (D33).
 - Quando criado a partir do botão "Abrir Processo Sanitário" dentro da ocorrência, a etapa 1 é pré-preenchida. **Até a integração do wizard (T32/T33)** esse botão fica desabilitado: o backend exige o processo completo, que o cartão da ocorrência não coleta.
-- **Registro do resultado (T34)** — `POST /api/processos/{id}/resultados` com `resultado` (código do catálogo, obrigatório), `dataResultado` (obrigatória, não pode ser futura pelo relógio do projeto; sem data mínima), `observacoes` (opcional) e `retificaId` (só na correção). Exige `PROCESSOS_SANITARIOS:escrita` (Administrador, Veterinário e Agente, V3), para registrar e para corrigir.
+- **Registro do resultado (T34)** — `POST /api/processos/{id}/resultados` com `resultado` (código do catálogo, obrigatório), `dataResultado` (obrigatória, não pode ser futura pelo relógio do projeto nem anterior à `data_abertura` do processo — 422, também na correção), `observacoes` (opcional) e `retificaId` (só na correção). Exige `PROCESSOS_SANITARIOS:escrita` (Administrador, Veterinário e Agente, V3), para registrar e para corrigir.
   - Os cinco resultados lançáveis são `positivo`, `negativo`, `inconclusivo`, `material_inadequado` e `nao_realizado`; todos levam `AGUARDANDO_RESULTADO → COM_RESULTADO`. `aguardando`, código inexistente ou inativo → 422.
   - Sem `retificaId`: só em `AGUARDANDO_RESULTADO`. Em `ABERTO` ou `CONCLUIDO` → 422; em `COM_RESULTADO` (já há resultado) → 409.
   - **Correção** (`retificaId`): só em `COM_RESULTADO` (em `CONCLUIDO`, que é terminal, ou antes do resultado → 422) e não muda o status. `retificaId` precisa ser o resultado vigente do mesmo processo: de outro processo ou inexistente → 422; já corrigido → 409 (como RN-C02). O registro corrigido fica preservado.
   - Registro, vigente (`resultado_laboratorial_id`, `data_resultado`, status) e auditoria `ATUALIZACAO` de `processo_sanitario` (snapshot com o resultado vigente antes e depois) gravam numa única transação, sob o lock da linha do processo, que serializa lançamentos concorrentes. Uma falha desfaz tudo.
   - Não há edição nem exclusão de resultado (sem PUT/PATCH/DELETE: 405); ver `resultado_processo`.
-- Ao registrar `resultado_laboratorial` = `positivo` ou `inconclusivo`:
+- Ao registrar `resultado_laboratorial` = `positivo` (**revisão de 2026-10-17, decisão de produto: `inconclusivo` deixa de notificar**; a issue #37 ainda cita os dois):
   - dispara notificação ao munícipe (e-mail / SMS quando integrado)
   - dispara notificação à **Vigilância Epidemiológica de Itu** (regra a validar com CCZ)
-  - **Gancho (T36, ainda não implementado):** a notificação deve disparar quando o resultado **vigente passa a** `positivo` ou `inconclusivo`, **inclusive por correção** (ex.: `negativo` corrigido para `positivo`). O ponto único de gravação é `ProcessoSanitarioService.registrarResultado`. A T34 não envia nenhuma notificação.
+  - **Gancho (T36, ainda não implementado):** a notificação deve disparar quando o resultado **vigente passa a** `positivo`, **inclusive por correção** (ex.: `negativo` corrigido para `positivo`). O ponto único de gravação é `ProcessoSanitarioService.registrarResultado`. A T34 não envia nenhuma notificação.
+  - **Pendência (T36):** não há nada previsto para a correção de um `positivo` já notificado (ex.: `positivo` corrigido para `negativo`). A T36 decide se envia e-mail de retificação ao munícipe e à Vigilância.
 - Processo é considerado `urgente` se ao menos 1 `animal_amostrado.contato_humano = true`. Ao vincular, a urgência do processo marca a ocorrência (D31).
 - Auditoria: `CRIACAO` e `ATUALIZACAO` de `processo_sanitario` registram um snapshot **sem nenhum dado pessoal do responsável** (como a D23); as amostras entram.
 
@@ -638,7 +639,7 @@ Não é catálogo: coluna `processo_sanitario.status_processo` varchar + `CHECK`
 | `id`                        | uuid PK                     | \*     |                                                                    |
 | `processo_id`               | FK `processo_sanitario`     | \*     |                                                                    |
 | `resultado_laboratorial_id` | FK `resultado_laboratorial` | \*     |                                                                    |
-| `data_resultado`            | date                        | \*     | não pode ser futura (validado no servidor)                         |
+| `data_resultado`            | date                        | \*     | não pode ser futura nem anterior à abertura do processo (servidor) |
 | `observacoes`               | text                        | ?      |                                                                    |
 | `retifica_id`               | FK `resultado_processo`     | ?      | só na correção; único (`uq_resultado_processo_retifica_id`)        |
 | `registrado_por_id`         | FK `usuario`                | \*     | autor do lançamento ou da correção · `ON DELETE RESTRICT`          |
@@ -887,7 +888,7 @@ Um sintoma aparece no máximo uma vez por amostra (a API ignora códigos repetid
 16. Animal amostrado: pode referenciar `animal` do canil OU registrar dados próprios.
 17. Campos clínicos da amostragem (`data_coleta`, `material_biologico`, sintomas, contato humano) são sempre próprios da amostragem — não puxam da ficha.
 18. Contato humano-animal em qualquer amostra → processo marcado urgente.
-19. Resultado `positivo` ou `inconclusivo` dispara notificação automática ao munícipe e à **Vigilância Epidemiológica de Itu**.
+19. Resultado `positivo` dispara notificação automática ao munícipe e à **Vigilância Epidemiológica de Itu** (revisão de 2026-10-17: `inconclusivo` deixou de notificar; a correção de um positivo já notificado é pendência da T36, §3.5).
 
 ### Relatórios
 
