@@ -6,6 +6,7 @@ import { Controller, useForm, type FieldErrors as RhfFieldErrors } from 'react-h
 import { z } from 'zod'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { hojeEmItu } from '@/lib/datas'
 import type { Animal, AnimalRequest, CatalogoItem, Pelagem, Porte, Sexo } from '../types/animais.types'
 import {
   CASTRACAO_OPCOES,
@@ -71,8 +72,12 @@ interface RascunhoAnimalValores {
   observacoes: string
 }
 
-function hojeISO(): string {
-  return new Date().toISOString().slice(0, 10)
+// dataEntrada é LocalDateTime: o formulário só edita o dia. Se o dia não
+// mudou na edição, reenvia o valor original completo para não zerar a hora;
+// dia novo (ou cadastro) vai como meia-noite, como antes.
+function dataEntradaParaEnvio(dataDoForm: string, original?: string): string {
+  if (original && original.slice(0, 10) === dataDoForm) return original
+  return `${dataDoForm}T00:00:00`
 }
 
 function valoresVazios(): RascunhoAnimalValores {
@@ -92,7 +97,7 @@ function valoresVazios(): RascunhoAnimalValores {
     dataEsterilizacao: '',
     status: '',
     motivoEntrada: '',
-    dataEntrada: hojeISO(),
+    dataEntrada: hojeEmItu(),
     baiaId: '',
     fotoUrl: '',
     observacoes: '',
@@ -358,7 +363,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
       dataEsterilizacao: dados.dataEsterilizacao,
       status: dados.status,
       motivoEntrada: dados.motivoEntrada,
-      dataEntrada: `${dados.dataEntrada}T00:00:00`,
+      dataEntrada: dataEntradaParaEnvio(dados.dataEntrada, animal?.dataEntrada),
       baiaId: dados.baiaId,
       fotoUrl: dados.fotoUrl,
       observacoes: dados.observacoes,

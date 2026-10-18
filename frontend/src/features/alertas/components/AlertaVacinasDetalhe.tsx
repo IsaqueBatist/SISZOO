@@ -3,14 +3,11 @@ import { Icon } from '@/components/layout/Icon'
 import './AlertaVacinasDetalhe.css'
 import { useAlertasVacinaisQuery } from '../hooks/useAlertas'
 import type { AlertaVacinalAnimal, AlertaVacinalItem } from '../types/alertas.types'
+import { formatarDataBR } from '@/lib/datas'
 
-const FUSO_ITU = 'America/Sao_Paulo'
-
-function formatarData(iso: string): string {
-  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: FUSO_ITU }).format(
-    new Date(iso),
-  )
-}
+// dataValidade é LocalDate: `new Date('AAAA-MM-DD')` mostraria o dia
+// anterior em São Paulo (ver lib/datas.ts).
+const formatarData = formatarDataBR
 
 function formatarSexo(sexo: string): string {
   if (sexo === 'macho') return 'Macho'

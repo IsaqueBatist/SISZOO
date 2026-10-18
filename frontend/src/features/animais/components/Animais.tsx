@@ -2,24 +2,18 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { formatarDataBR } from '@/lib/datas'
 import { useAnimaisQuery, useBaiasAtivasQuery, useCatalogosAnimaisQuery } from '../hooks/useAnimais'
 import { badgeDeEspecie, badgeDeStatus } from '../utils/statusBadge'
 import type { Animal, Pelagem, Porte, Sexo } from '../types/animais.types'
 
 const TAMANHO_PAGINA = 20
-const FUSO_ITU = 'America/Sao_Paulo'
 const LINHAS_SKELETON = [0, 1, 2, 3, 4]
 const COLUNAS_TABELA = ['animal', 'especie', 'baia', 'status', 'sexo', 'porte', 'entrada', 'castrado', 'acoes']
 
-function formatarData(iso: string): string {
-  const data = new Date(iso)
-  return new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    timeZone: FUSO_ITU,
-  }).format(data)
-}
+// dataEntrada é LocalDateTime sem fuso, já no horário do CCZ: separar a
+// string não depende do fuso do navegador (ver lib/datas.ts).
+const formatarData = formatarDataBR
 
 function formatarSexo(sexo: Sexo): string {
   if (sexo === 'macho') return 'Macho'

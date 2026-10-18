@@ -6,6 +6,13 @@ spring:
     multipart:
       max-file-size: 5MB
       max-request-size: 6MB
+  # Fuso unico do sistema (DER, regra 4): o mesmo do ClockConfig e do
+  # TimeZone.setDefault em SiszooBackendApplication.
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: America/Sao_Paulo
   # T37: notificacao de resultado (positivo/inconclusivo) ao municipe. Sem
   # SMTP real configurado, o envio falha ao conectar — o listener engole a
   # falha (NotificacaoResultadoService), nunca bloqueia o lancamento do
