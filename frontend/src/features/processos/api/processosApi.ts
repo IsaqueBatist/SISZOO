@@ -4,15 +4,17 @@ import type { Ocorrencia } from '@/features/ocorrencias/types/ocorrencias.types'
 import type {
   CatalogosProcesso,
   CriarProcessoRequest,
+  HistoricoProcessoItem,
   Processo,
   ProcessoResumo,
   ProcessosFiltro,
+  RegistrarResultadoRequest,
   StatusProcesso,
 } from '../types/processos.types'
 
-// API real de processos sanitários (T29). Resultado laboratorial, envio de
-// amostras e documentos ainda não têm endpoint (tasks de resultado e de
-// documentos) e por isso não existem aqui.
+// API real de processos sanitários (T29 + T37). Envio de amostras e
+// documentos ainda não têm endpoint (task de documentos) e por isso não
+// existem aqui.
 
 export async function listarProcessos(filtro: ProcessosFiltro): Promise<PaginaResponse<ProcessoResumo>> {
   const { data } = await http.get<PaginaResponse<ProcessoResumo>>('/processos', {
@@ -46,5 +48,20 @@ export async function avancarStatusProcesso(id: string, status: StatusProcesso):
 // OCORRENCIAS_DENUNCIAS:escrita (D33). Devolve a ocorrência atualizada.
 export async function vincularOcorrencia(processoId: string, ocorrenciaId: string): Promise<Ocorrencia> {
   const { data } = await http.post<Ocorrencia>(`/ocorrencias/${ocorrenciaId}/processo`, { processoId })
+  return data
+}
+
+// T37: substitui o avanço provisório só para AGUARDANDO_RESULTADO ->
+// COM_RESULTADO — grava resultado, data e desfecho do animal numa vez
+// (write-once no backend).
+export async function registrarResultado(id: string, payload: RegistrarResultadoRequest): Promise<Processo> {
+  const { data } = await http.post<Processo>(`/processos/${id}/resultado`, payload)
+  return data
+}
+
+// T37: mini trilha de auditoria do processo (não a lista geral de
+// auditoria, que exige USUARIOS_ACESSO:leitura — só Administrador).
+export async function buscarHistoricoProcesso(id: string): Promise<HistoricoProcessoItem[]> {
+  const { data } = await http.get<HistoricoProcessoItem[]>(`/processos/${id}/historico`)
   return data
 }

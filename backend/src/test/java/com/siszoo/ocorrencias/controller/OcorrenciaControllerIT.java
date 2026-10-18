@@ -326,11 +326,17 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
 
         encerrar(tokenAgente, id, Map.of("providenciaTomada", "abertura_processo")).then().statusCode(422);
 
-        for (String status : List.of("AGUARDANDO_RESULTADO", "COM_RESULTADO", "CONCLUIDO")) {
-            Response avanco = alterarStatusProcesso(tokenAgente, processoId, status);
-            avanco.then().statusCode(200);
-            assertThat(avanco.path("statusProcesso"), equalTo(status));
-        }
+        Response aguardando = alterarStatusProcesso(tokenAgente, processoId, "AGUARDANDO_RESULTADO");
+        aguardando.then().statusCode(200);
+        assertThat(aguardando.path("statusProcesso"), equalTo("AGUARDANDO_RESULTADO"));
+
+        Response comResultado = registrarResultadoProcesso(tokenAgente, processoId);
+        comResultado.then().statusCode(200);
+        assertThat(comResultado.path("statusProcesso"), equalTo("COM_RESULTADO"));
+
+        Response concluido = alterarStatusProcesso(tokenAgente, processoId, "CONCLUIDO");
+        concluido.then().statusCode(200);
+        assertThat(concluido.path("statusProcesso"), equalTo("CONCLUIDO"));
         Response encerrada = encerrar(tokenAgente, id, Map.of("providenciaTomada", "abertura_processo"));
         encerrada.then().statusCode(200);
         assertThat(encerrada.path("statusOcorrencia"), equalTo("ENCERRADA"));
@@ -706,6 +712,13 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
     private Response alterarStatusProcesso(String token, String processoId, String status) {
         return comToken(token).contentType(ContentType.JSON).body(Map.of("status", status))
                 .when().patch("/api/processos/" + processoId + "/status");
+    }
+
+    // T37: AGUARDANDO_RESULTADO -> COM_RESULTADO saiu do PATCH /status (DH-12,
+    // docs/decisoes/T37.md) — só acontece via lançamento do resultado.
+    private Response registrarResultadoProcesso(String token, String processoId) {
+        return comToken(token).contentType(ContentType.JSON).body(Map.of("resultadoLaboratorial", "negativo"))
+                .when().post("/api/processos/" + processoId + "/resultado");
     }
 
     private RequestSpecification comToken(String token) {

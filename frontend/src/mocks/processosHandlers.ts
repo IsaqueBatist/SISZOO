@@ -1,6 +1,12 @@
 import { http, HttpResponse } from 'msw'
 import { API_BASE_URL } from '../lib/env'
-import { CATALOGOS_PROCESSO_FIXTURE, paraResumoProcesso, processoCriadoFixture, processosFixture } from './processosFixtures'
+import {
+  CATALOGOS_PROCESSO_FIXTURE,
+  historicoProcessoFixture,
+  paraResumoProcesso,
+  processoCriadoFixture,
+  processosFixture,
+} from './processosFixtures'
 
 // Handlers de processos (T29) com respostas FIXAS — sem estado e sem regra de
 // negócio (validação, urgência derivada, vínculo e transições são do
@@ -39,5 +45,29 @@ export const processosHandlers = [
     if (!processo) return naoEncontrado()
     const { status } = (await request.json()) as { status: string }
     return HttpResponse.json({ ...processo, statusProcesso: status })
+  }),
+
+  // T37: resposta fixa — o processo "vira" COM_RESULTADO com o resultado
+  // enviado. Testes que precisam do erro (422 fora de AGUARDANDO_RESULTADO,
+  // falha de rede) sobrescrevem com `server.use()`.
+  http.post(`${API_BASE_URL}/processos/:id/resultado`, async ({ params, request }) => {
+    const processo = buscarFixture(params.id as string)
+    if (!processo) return naoEncontrado()
+    const corpo = (await request.json()) as { resultadoLaboratorial: string; desfechoAnimal?: string }
+    const resultado = CATALOGOS_PROCESSO_FIXTURE.resultadosLaboratoriais.find((item) => item.codigo === corpo.resultadoLaboratorial)
+    const desfecho = CATALOGOS_PROCESSO_FIXTURE.desfechos.find((item) => item.codigo === corpo.desfechoAnimal)
+    return HttpResponse.json({
+      ...processo,
+      statusProcesso: 'COM_RESULTADO',
+      resultadoLaboratorial: resultado ?? null,
+      dataResultado: '2026-05-20',
+      desfechoAnimal: desfecho ?? null,
+    })
+  }),
+
+  http.get(`${API_BASE_URL}/processos/:id/historico`, ({ params }) => {
+    const processo = buscarFixture(params.id as string)
+    if (!processo) return naoEncontrado()
+    return HttpResponse.json(historicoProcessoFixture())
   }),
 ]

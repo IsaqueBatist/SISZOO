@@ -57,11 +57,13 @@ import com.siszoo.ocorrencias.exception.UrgenciaDefinidaPeloProcessoException;
 import com.siszoo.ocorrencias.exception.VinculoJaExistenteException;
 import com.siszoo.processos.exception.ContatoHumanoInconsistenteException;
 import com.siszoo.processos.exception.DataColetaFuturaException;
+import com.siszoo.processos.exception.DesfechoInvalidoException;
 import com.siszoo.processos.exception.DoencaInvalidaException;
 import com.siszoo.processos.exception.IdentificacaoComAnimalDoCanilException;
 import com.siszoo.processos.exception.IdentificacaoObrigatoriaException;
 import com.siszoo.processos.exception.LaboratorioInvalidoException;
 import com.siszoo.processos.exception.ProcessoNaoEncontradoException;
+import com.siszoo.processos.exception.ResultadoInvalidoException;
 import com.siszoo.processos.exception.SintomaInvalidoException;
 import com.siszoo.processos.exception.SintomaSemStatusSintomaticoException;
 import com.siszoo.processos.exception.TransicaoStatusProcessoInvalidaException;
@@ -463,5 +465,17 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroResponse> handleVinculoJaExistente() {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ErroResponse("Ocorrencia ou processo ja possui vinculo"));
+    }
+
+    @ExceptionHandler(ResultadoInvalidoException.class)
+    public ResponseEntity<ErroResponse> handleResultadoInvalido() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Resultado laboratorial informado nao existe ou nao pode ser lancado"));
+    }
+
+    @ExceptionHandler(DesfechoInvalidoException.class)
+    public ResponseEntity<ErroResponse> handleDesfechoInvalido() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Desfecho do animal informado nao existe"));
     }
 }

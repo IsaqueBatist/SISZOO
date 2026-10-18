@@ -26,8 +26,17 @@ export const CATALOGOS_PROCESSO_FIXTURE: CatalogosProcesso = {
   resultadosLaboratoriais: [
     { codigo: 'aguardando', nome: 'Aguardando' },
     { codigo: 'positivo', nome: 'Positivo' },
+    { codigo: 'negativo', nome: 'Negativo' },
+    { codigo: 'inconclusivo', nome: 'Inconclusivo' },
+    { codigo: 'material_inadequado', nome: 'Material Inadequado' },
+    { codigo: 'nao_realizado', nome: 'Não Realizado' },
   ],
-  desfechos: [{ codigo: 'em_acompanhamento', nome: 'Em acompanhamento' }],
+  desfechos: [
+    { codigo: 'em_acompanhamento', nome: 'Em acompanhamento' },
+    { codigo: 'obito_natural', nome: 'Óbito — Natural' },
+    { codigo: 'obito_eutanasia', nome: 'Óbito — Eutanásia' },
+    { codigo: 'obito_outro', nome: 'Óbito — Outro' },
+  ],
 }
 
 export function amostraFixture(sobrescrever: Partial<AmostraAnimal> = {}): AmostraAnimal {
@@ -83,12 +92,35 @@ export function processoFixture(sobrescrever: Partial<Processo> = {}): Processo 
       bairroOcorrencia: 'Vila Nova',
     },
     amostras: [amostraFixture()],
+    resultadoLaboratorial: null,
+    dataResultado: null,
+    desfechoAnimal: null,
     criadoEm: '2026-05-18T09:00:00',
     ...sobrescrever,
   }
 }
 
-export function processoSemVinculoFixture(): Processo {
+// T37: processo com resultado já lançado (write-once) — para os testes do
+// modo somente-leitura/histórico do CardResultadoProcesso.
+export function processoComResultadoFixture(sobrescrever: Partial<Processo> = {}): Processo {
+  return processoFixture({
+    statusProcesso: 'COM_RESULTADO',
+    resultadoLaboratorial: { codigo: 'positivo', nome: 'Positivo' },
+    dataResultado: '2026-05-20',
+    desfechoAnimal: { codigo: 'obito_eutanasia', nome: 'Óbito — Eutanásia' },
+    ...sobrescrever,
+  })
+}
+
+// T37: GET /processos/:id/historico — eventos fixos (CRIACAO + ATUALIZACAO).
+export function historicoProcessoFixture() {
+  return [
+    { id: 'hi000000-0000-0000-0000-000000000001', usuarioEmail: 'agente.teste@itu.sp.gov.br', acao: 'CRIACAO', ocorreuEm: '2026-05-18T09:00:00' },
+    { id: 'hi000000-0000-0000-0000-000000000002', usuarioEmail: 'agente.teste@itu.sp.gov.br', acao: 'ATUALIZACAO', ocorreuEm: '2026-05-20T14:32:00' },
+  ]
+}
+
+export function processoSemVinculoFixture(sobrescrever: Partial<Processo> = {}): Processo {
   return processoFixture({
     id: PROCESSO_SEM_VINCULO_ID,
     protocolo: '046/2026',
@@ -115,6 +147,7 @@ export function processoSemVinculoFixture(): Processo {
         sintomas: [],
       }),
     ],
+    ...sobrescrever,
   })
 }
 

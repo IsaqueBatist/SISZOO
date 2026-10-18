@@ -1,5 +1,6 @@
 package com.siszoo.processos.controller;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,15 +19,18 @@ import com.siszoo.ocorrencias.service.PermissoesOcorrencia;
 import com.siszoo.processos.dto.AlterarStatusProcessoRequest;
 import com.siszoo.processos.dto.CatalogosProcessoResponse;
 import com.siszoo.processos.dto.CriarProcessoRequest;
+import com.siszoo.processos.dto.HistoricoProcessoItemResponse;
 import com.siszoo.processos.dto.ProcessoResumoResponse;
 import com.siszoo.processos.dto.ProcessoSanitarioResponse;
+import com.siszoo.processos.dto.RegistrarResultadoRequest;
 import com.siszoo.processos.entity.StatusProcesso;
 import com.siszoo.processos.service.ProcessoSanitarioService;
 
 import jakarta.validation.Valid;
 
-// Processo sanitario (T25 + T29): criacao completa, listagem, detalhe,
-// catalogos e o avanco provisorio de status (D18). Com ocorrenciaId, o POST tambem exige
+// Processo sanitario (T25 + T29 + T37): criacao completa, listagem, detalhe,
+// catalogos, avanco provisorio de status (D18), lancamento de resultado e
+// mini trilha de auditoria. Com ocorrenciaId, o POST tambem exige
 // OCORRENCIAS_DENUNCIAS:escrita, checado no service (D33).
 @RestController
 @RequestMapping("/api/processos")
@@ -71,5 +75,18 @@ public class ProcessoSanitarioController {
     public ProcessoSanitarioResponse alterarStatus(
             Authentication authentication, @PathVariable UUID id, @Valid @RequestBody AlterarStatusProcessoRequest request) {
         return processoService.alterarStatus(id, request, UUID.fromString(authentication.getName()));
+    }
+
+    @PostMapping("/{id}/resultado")
+    @PreAuthorize("hasAuthority('PROCESSOS_SANITARIOS:escrita')")
+    public ProcessoSanitarioResponse registrarResultado(
+            Authentication authentication, @PathVariable UUID id, @Valid @RequestBody RegistrarResultadoRequest request) {
+        return processoService.registrarResultado(id, request, UUID.fromString(authentication.getName()));
+    }
+
+    @GetMapping("/{id}/historico")
+    @PreAuthorize("hasAuthority('PROCESSOS_SANITARIOS:leitura')")
+    public List<HistoricoProcessoItemResponse> historico(@PathVariable UUID id) {
+        return processoService.historico(id);
     }
 }

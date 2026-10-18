@@ -125,6 +125,16 @@ class RbacMatrixIT extends AbstractIntegrationTest {
                 Arguments.of(Perfil.AGENTE_SANITARIO, 200));
     }
 
+    // T37: GET /{id}/historico usa PROCESSOS_SANITARIOS:leitura (nao
+    // USUARIOS_ACESSO:leitura, que so o Administrador tem) — os tres cargos
+    // que leem o processo tambem leem a trilha de auditoria dele.
+    static Stream<Arguments> historicoProcessoPorPerfil() {
+        return Stream.of(
+                Arguments.of(Perfil.ADMINISTRADOR, 200),
+                Arguments.of(Perfil.VETERINARIO, 200),
+                Arguments.of(Perfil.AGENTE_SANITARIO, 200));
+    }
+
     @ParameterizedTest(name = "{0} ao criar usuário -> status {1}")
     @MethodSource("criarUsuarioPorPerfil")
     void somenteAdminCriaUsuario(Perfil perfil, int statusEsperado) {
@@ -221,6 +231,17 @@ class RbacMatrixIT extends AbstractIntegrationTest {
     void todosOsCargosListamProcessos(Perfil perfil, int statusEsperado) {
         given().header("Authorization", "Bearer " + tokenPara(perfil))
                 .when().get("/api/processos")
+                .then().statusCode(statusEsperado);
+    }
+
+    @ParameterizedTest(name = "{0} ao ver o historico do processo -> status {1}")
+    @MethodSource("historicoProcessoPorPerfil")
+    void todosOsCargosVeemHistoricoDoProcesso(Perfil perfil, int statusEsperado) {
+        String tokenAdmin = tokenPara(Perfil.ADMINISTRADOR);
+        String id = fixture.postarProcesso(tokenAdmin, null, false).then().statusCode(200).extract().path("id");
+
+        given().header("Authorization", "Bearer " + tokenPara(perfil))
+                .when().get("/api/processos/" + id + "/historico")
                 .then().statusCode(statusEsperado);
     }
 
