@@ -54,9 +54,7 @@ export function Sidebar({ collapsed, onToggleCollapsed }: SidebarProps) {
             <NavLink
               key={entry.id}
               to={entry.to}
-              className={({ isActive }) =>
-                `sidebar-item${isActive ? ' active' : ''}${collapsed ? ' collapsed' : ''}`
-              }
+              className={({ isActive }) => `sidebar-item${isActive ? ' active' : ''}`}
               title={entry.label}
             >
               <span className="icon">
@@ -70,11 +68,7 @@ export function Sidebar({ collapsed, onToggleCollapsed }: SidebarProps) {
       </nav>
 
       <div className="sidebar-footer">
-        <NavLink
-          to="/perfil"
-          className={`sidebar-footer-link${collapsed ? ' collapsed' : ''}`}
-          title="Meu perfil"
-        >
+        <NavLink to="/perfil" className="sidebar-footer-link" title="Meu perfil">
           <div className="avatar">{iniciais}</div>
           <div className={classeOculta.trim() || undefined} style={{ minWidth: 0 }}>
             <div className="user-name">{nomeCompleto}</div>

@@ -142,7 +142,6 @@ a:hover { text-decoration: underline; }
   color: #fff;
   border-left-color: #fff;
 }
-.sidebar-item.collapsed { justify-content: center; gap: 0; }
 .sidebar-item .icon { width: 18px; height: 18px; color: var(--sidebar-icon); flex-shrink: 0; }
 .sidebar-item.active .icon { color: #fff; }
 .sidebar-item .badge-count {
@@ -176,7 +175,6 @@ a:hover { text-decoration: underline; }
   text-decoration: none;
   border-radius: 8px;
 }
-.sidebar-footer-link.collapsed { justify-content: center; gap: 0; }
 .sidebar-footer-link:hover { background: var(--sidebar-item-hover); }
 .sidebar-footer .user-name { color: #fff; font-size: 13px; font-weight: 600; line-height: 1.2; }
 .sidebar-footer .user-role { color: rgba(255,255,255,0.6); font-size: 11px; }
