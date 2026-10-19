@@ -7,6 +7,24 @@
 --   - funções de trigger com SET search_path FROM CURRENT (T29-7);
 --   - erros do banco com ERRCODE e CONSTRAINT nomeados, como na V14.
 
+-- ── Pré-condição (T34-8) ─────────────────────────────────
+-- O CHECK ck_resultado_processo_retifica_outro (abaixo) valida as linhas
+-- existentes. Uma linha que corrige a si mesma (retifica_id = id, que a V14
+-- aceitava e só SQL manual cria) faria o ALTER TABLE falhar no meio, e o
+-- trigger da V14 impede apagá-la. A migration para antes de mudar qualquer
+-- coisa, com mensagem própria. Pela DH-3 não há dados reais: a saída é
+-- recriar o banco de desenvolvimento.
+
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM resultado_processo WHERE retifica_id = id) THEN
+        RAISE EXCEPTION 'V15: resultado_processo tem linha que corrige a si mesma (retifica_id = id).'
+            USING ERRCODE = 'check_violation',
+                  HINT = 'Não há dados reais a preservar (DH-3): recrie o banco de desenvolvimento e rode as migrations de novo (docs/decisoes/T34.md, T34-8).';
+    END IF;
+END
+$$;
+
 -- ── Reconciliação do legado (PATCH provisório da D18) ─────
 -- Antes da T34, o PATCH levava AGUARDANDO_RESULTADO a COM_RESULTADO sem
 -- resultado. Esses processos ficam sem saída depois da V14 (o lançamento

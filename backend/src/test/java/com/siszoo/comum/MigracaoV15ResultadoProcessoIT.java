@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -13,6 +14,7 @@ import java.util.UUID;
 import javax.sql.DataSource;
 
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.FlywayException;
 import org.flywaydb.core.api.MigrationVersion;
 import org.flywaydb.core.api.output.MigrateResult;
 import org.junit.jupiter.api.AfterEach;
@@ -97,6 +99,31 @@ class MigracaoV15ResultadoProcessoIT extends AbstractIntegrationTest {
         UUID propria = UUID.randomUUID();
 
         assertThat(transacao(resultado(propria, processo, propria, "negativo", usuario)), nullValue());
+    }
+
+    // Pre-condicao da V15 (T34-8): com uma linha auto-retificada ja gravada, a
+    // V15 para com mensagem propria antes de mudar qualquer coisa — sem a
+    // reconciliacao, sem o indice, e o schema continua na V14.
+    @Test
+    @DisplayName("[T34] V15 sobre banco com linha auto-retificada falha antes de mudar qualquer coisa")
+    void v15FalhaComLinhaAutoRetificadaSemAplicarNada() throws Exception {
+        migrarAte("14");
+        UUID usuario = inserirUsuario();
+        UUID legado = processoEm("COM_RESULTADO", usuario);
+        UUID processo = processoEm("AGUARDANDO_RESULTADO", usuario);
+        UUID propria = UUID.randomUUID();
+        assertThat(transacao(resultado(propria, processo, propria, "negativo", usuario)), nullValue());
+
+        FlywayException erro = assertThrows(FlywayException.class, () -> migrarAte("15"));
+
+        assertThat(erro.getMessage(), containsString("corrige a si mesma"));
+        assertThat(statusDe(legado), equalTo("COM_RESULTADO"));
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM pg_indexes WHERE schemaname = ?"
+                + " AND indexname = 'ix_resultado_processo_processo_id'", Integer.class, SCHEMA), equalTo(0));
+        // version e texto: a ultima aplicada vem pela ordem de instalacao.
+        assertThat(jdbcTemplate.queryForObject("SELECT version FROM " + S + "flyway_schema_history WHERE success"
+                + " ORDER BY installed_rank DESC LIMIT 1", String.class), equalTo("14"));
+        assertThat(contarResultados(), equalTo(1));
     }
 
     @Test
