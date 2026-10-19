@@ -77,9 +77,9 @@ class MedicamentoControllerIT extends AbstractIntegrationTest {
 
         tokenAdmin = login(EMAIL_ADMIN, SENHA_ADMIN);
 
-        // Sem endpoint de catalogo para categoria_farmacologica (fora do escopo
-        // desta tarefa): a categoria de apoio para os testes e criada direto via
-        // repositorio, nome unico para nao esbarrar em uq_categoria_farmacologica_nome.
+        // A categoria de apoio e criada direto via repositorio (o endpoint
+        // /api/categorias-farmacologicas tem teste proprio), com nome unico
+        // para nao esbarrar em uq_categoria_farmacologica_nome.
         CategoriaFarmacologica categoria = new CategoriaFarmacologica();
         categoria.setNome("Categoria Teste " + UUID.randomUUID());
         categoriaFarmacologicaRepository.save(categoria);

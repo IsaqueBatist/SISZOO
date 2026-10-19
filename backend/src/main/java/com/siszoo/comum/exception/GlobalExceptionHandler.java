@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import com.siszoo.animais.clinico.exception.CategoriaFarmacologicaInvalidaException;
+import com.siszoo.animais.clinico.exception.CategoriaFarmacologicaJaCadastradaException;
 import com.siszoo.animais.clinico.exception.DataAplicacaoFuturaException;
 import com.siszoo.animais.clinico.exception.MedicamentoInvalidoException;
 import com.siszoo.animais.clinico.exception.MedicamentoNaoEncontradoException;
@@ -309,6 +310,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroResponse> handleMedicamentoNaoEncontrado() {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ErroResponse("Medicamento nao encontrado"));
+    }
+
+    @ExceptionHandler(CategoriaFarmacologicaJaCadastradaException.class)
+    public ResponseEntity<ErroResponse> handleCategoriaFarmacologicaJaCadastrada() {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErroResponse("Categoria farmacologica ja cadastrada"));
     }
 
     @ExceptionHandler(CategoriaFarmacologicaInvalidaException.class)
