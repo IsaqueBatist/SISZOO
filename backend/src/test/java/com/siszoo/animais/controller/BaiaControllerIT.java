@@ -206,7 +206,9 @@ class BaiaControllerIT extends AbstractIntegrationTest {
 
     @Test
     void devePersistirAtualizacaoSemRollbackQuandoOcupacaoAcimaDaCapacidade() {
-        String id = criarBaiaViaApi(new CriarBaiaRequest("Baia Ocupacao Acima", "interna", (short) 2, null, null)).path("id");
+        // O cadastro de animal recusa baia cheia (409): a ocupacao acima da
+        // capacidade so acontece reduzindo a capacidade depois, no PUT abaixo.
+        String id = criarBaiaViaApi(new CriarBaiaRequest("Baia Ocupacao Acima", "interna", (short) 3, null, null)).path("id");
         criarAnimalNaBaia(id, "disponivel_adocao");
         criarAnimalNaBaia(id, "disponivel_adocao");
         criarAnimalNaBaia(id, "disponivel_adocao");

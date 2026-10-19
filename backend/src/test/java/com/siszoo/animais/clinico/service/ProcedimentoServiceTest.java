@@ -8,13 +8,17 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -29,6 +33,7 @@ import com.siszoo.animais.clinico.repository.ProcedimentoRepository;
 import com.siszoo.animais.clinico.repository.TipoProcedimentoRepository;
 import com.siszoo.animais.entity.Animal;
 import com.siszoo.animais.repository.AnimalRepository;
+import com.siszoo.comum.exception.CampoInvalidoException;
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.repository.UsuarioRepository;
@@ -37,8 +42,8 @@ import com.siszoo.usuarios.service.AuditoriaEventoService;
 @ExtendWith(MockitoExtension.class)
 class ProcedimentoServiceTest {
 
-    // Data fixa (nao LocalDate.now()): o service nao le relogio, a data e so
-    // dado do request — fixa-la deixa o teste deterministico.
+    // Mesmo dia do Clock fixo abaixo: o service recusa data futura comparando
+    // com LocalDate.now(clock).
     private static final LocalDate HOJE = LocalDate.of(2026, 9, 10);
 
     @Mock
@@ -59,8 +64,47 @@ class ProcedimentoServiceTest {
     @Mock
     private AuditoriaEventoService auditoriaEventoService;
 
-    @InjectMocks
     private ProcedimentoService procedimentoService;
+
+    // Construido a mao (nao @InjectMocks): Clock e valor, nao mock.
+    @BeforeEach
+    void criarService() {
+        Clock clock = Clock.fixed(Instant.parse("2026-09-10T15:00:00Z"), ZoneId.of("America/Sao_Paulo"));
+        procedimentoService = new ProcedimentoService(procedimentoRepository, tipoProcedimentoRepository,
+                animalRepository, usuarioRepository, procedimentoMapper, auditoriaEventoService, clock);
+    }
+
+    @Test
+    void deveRecusarDataFuturaSemGravar() {
+        UUID animalId = UUID.randomUUID();
+        UUID usuarioId = UUID.randomUUID();
+        when(animalRepository.findById(animalId)).thenReturn(Optional.of(animalComId(animalId)));
+        when(usuarioRepository.findById(usuarioId)).thenReturn(Optional.of(usuarioComId(usuarioId)));
+
+        CriarProcedimentoRequest amanha =
+                new CriarProcedimentoRequest(animalId, "castracao", HOJE.plusDays(1), null, null, null);
+
+        assertThatThrownBy(() -> procedimentoService.criar(amanha, usuarioId))
+                .isInstanceOf(CampoInvalidoException.class)
+                .satisfies(e -> assertThat(((CampoInvalidoException) e).getCampo()).isEqualTo("data"));
+        verify(procedimentoRepository, never()).save(any());
+    }
+
+    @Test
+    void deveGravarDescricaoEResultadoEmBrancoComoNulos() {
+        UUID animalId = UUID.randomUUID();
+        UUID usuarioId = UUID.randomUUID();
+        when(animalRepository.findById(animalId)).thenReturn(Optional.of(animalComId(animalId)));
+        when(usuarioRepository.findById(usuarioId)).thenReturn(Optional.of(usuarioComId(usuarioId)));
+        when(tipoProcedimentoRepository.findByCodigo("castracao")).thenReturn(Optional.of(new TipoProcedimento()));
+
+        procedimentoService.criar(new CriarProcedimentoRequest(animalId, "castracao", HOJE, "", "   ", null), usuarioId);
+
+        ArgumentCaptor<Procedimento> salvo = ArgumentCaptor.forClass(Procedimento.class);
+        verify(procedimentoRepository).save(salvo.capture());
+        assertThat(salvo.getValue().getDescricao()).isNull();
+        assertThat(salvo.getValue().getResultado()).isNull();
+    }
 
     @Test
     void deveCriarProcedimentoEDispararAuditoriaDeCriacaoQuandoNaoHaRetificacao() {

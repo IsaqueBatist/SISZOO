@@ -6,6 +6,10 @@ import { useAtualizarBaiaMutation, useCatalogosAnimaisQuery, useCriarBaiaMutatio
 import type { Baia } from '@/features/animais/types/animais.types'
 import { baiaFormSchema, type BaiaFormValues } from '../schemas/baiaFormSchema'
 
+// Texto vazio ou só com espaços vai como ausente (o backend grava NULL e a
+// listagem usa o tipo da baia). Mesmo padrão de AnimalForm.
+const semEspacos = (v: unknown) => (typeof v === 'string' ? v.trim() || undefined : v)
+
 interface BaiaFormModalProps {
   baia?: Baia
   onFechar: () => void
@@ -142,14 +146,14 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
                   className={`input${errors.finalidade ? ' error' : ''}`}
                   type="text"
                   placeholder="Cães porte médio"
-                  {...register('finalidade')}
+                  {...register('finalidade', { setValueAs: semEspacos })}
                 />
                 {errors.finalidade && <span className="err">{errors.finalidade.message}</span>}
               </div>
 
               <div className="field">
                 <label htmlFor="baia-observacoes">Observações</label>
-                <textarea id="baia-observacoes" className="textarea" rows={3} {...register('observacoes')} />
+                <textarea id="baia-observacoes" className="textarea" rows={3} {...register('observacoes', { setValueAs: semEspacos })} />
               </div>
             </div>
           </div>

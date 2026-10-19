@@ -34,6 +34,7 @@ import com.siszoo.animais.clinico.repository.MedicamentoRepository;
 import com.siszoo.animais.clinico.repository.PrescricaoRepository;
 import com.siszoo.animais.entity.Animal;
 import com.siszoo.animais.repository.AnimalRepository;
+import com.siszoo.comum.exception.CampoInvalidoException;
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.repository.UsuarioRepository;
@@ -132,6 +133,53 @@ class PrescricaoServiceTest {
                 .isInstanceOf(RegistroJaRetificadoException.class);
 
         verify(prescricaoRepository, never()).save(any());
+    }
+
+    @Test
+    void deveRecusarTerminoPrevistoAnteriorAoInicio() {
+        assertRecusaCampo(request(HOJE, HOJE.minusDays(1), null, StatusPrescricao.ATIVA), "dataFimPrevista");
+    }
+
+    @Test
+    void deveRecusarTerminoRealAnteriorAoInicio() {
+        assertRecusaCampo(request(HOJE, null, HOJE.minusDays(1), StatusPrescricao.ATIVA), "dataFimReal");
+    }
+
+    @Test
+    void deveRecusarConcluidaSemTerminoReal() {
+        assertRecusaCampo(request(HOJE, null, null, StatusPrescricao.CONCLUIDA), "dataFimReal");
+    }
+
+    @Test
+    void deveAceitarInicioFuturoETerminosNoMesmoDia() {
+        UUID usuarioId = UUID.randomUUID();
+        LocalDate futuro = HOJE.plusDays(30);
+        CriarPrescricaoRequest request = request(futuro, futuro, futuro, StatusPrescricao.CONCLUIDA);
+        when(animalRepository.findById(request.animalId())).thenReturn(Optional.of(animalComId(request.animalId())));
+        when(usuarioRepository.findById(usuarioId)).thenReturn(Optional.of(usuarioComId(usuarioId)));
+        when(medicamentoRepository.findById(request.medicamentoId())).thenReturn(Optional.of(new Medicamento()));
+
+        prescricaoService.criar(request, usuarioId);
+
+        verify(prescricaoRepository).save(any(Prescricao.class));
+    }
+
+    private void assertRecusaCampo(CriarPrescricaoRequest request, String campo) {
+        UUID usuarioId = UUID.randomUUID();
+        when(animalRepository.findById(request.animalId())).thenReturn(Optional.of(animalComId(request.animalId())));
+        when(usuarioRepository.findById(usuarioId)).thenReturn(Optional.of(usuarioComId(usuarioId)));
+
+        assertThatThrownBy(() -> prescricaoService.criar(request, usuarioId))
+                .isInstanceOf(CampoInvalidoException.class)
+                .satisfies(e -> assertThat(((CampoInvalidoException) e).getCampo()).isEqualTo(campo));
+        verify(prescricaoRepository, never()).save(any());
+    }
+
+    private CriarPrescricaoRequest request(
+            LocalDate inicio, LocalDate fimPrevisto, LocalDate fimReal, StatusPrescricao status) {
+        return new CriarPrescricaoRequest(
+                UUID.randomUUID(), UUID.randomUUID(), inicio, fimPrevisto, fimReal, 8, UnidadeFrequencia.HORAS,
+                new BigDecimal("10.000"), UnidadeDose.MILIGRAMA, ViaAdministracao.ORAL, status, null);
     }
 
     private CriarPrescricaoRequest requestSemRetificacao(UUID animalId, UUID medicamentoId) {

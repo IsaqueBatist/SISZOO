@@ -36,6 +36,15 @@ public interface VacinacaoRepository extends JpaRepository<Vacinacao, UUID>, Jpa
 
     List<Vacinacao> findByRetificaIdIn(Collection<UUID> retificaIds);
 
+    // ficha_completa (DER §3.2): o animal tem ao menos uma vacinacao vigente,
+    // isto e, que nenhuma outra retifica.
+    @Query("""
+            SELECT COUNT(v) > 0 FROM Vacinacao v
+            WHERE v.animal.id = :animalId
+              AND NOT EXISTS (SELECT 1 FROM Vacinacao r WHERE r.retifica = v)
+            """)
+    boolean existeVigenteDoAnimal(@Param("animalId") UUID animalId);
+
     // Alerta de reforco vacinal (com.siszoo.alertas): devolve so a aplicacao
     // vigente de cada par (animal, vacina) — a mais recente entre as nao
     // retificadas — via NOT EXISTS. Ao contrario de um finder que trouxesse

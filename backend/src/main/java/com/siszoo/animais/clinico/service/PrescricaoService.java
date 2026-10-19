@@ -1,5 +1,6 @@
 package com.siszoo.animais.clinico.service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,7 @@ import com.siszoo.animais.clinico.dto.CriarPrescricaoRequest;
 import com.siszoo.animais.clinico.dto.PrescricaoResponse;
 import com.siszoo.animais.clinico.entity.Medicamento;
 import com.siszoo.animais.clinico.entity.Prescricao;
+import com.siszoo.animais.clinico.entity.StatusPrescricao;
 import com.siszoo.animais.clinico.exception.MedicamentoInvalidoException;
 import com.siszoo.animais.clinico.exception.PrescricaoNaoEncontradaException;
 import com.siszoo.animais.clinico.exception.RegistroJaRetificadoException;
@@ -28,6 +30,7 @@ import com.siszoo.animais.entity.Animal;
 import com.siszoo.animais.exception.AnimalNaoEncontradoException;
 import com.siszoo.animais.repository.AnimalRepository;
 import com.siszoo.comum.dto.PaginaResponse;
+import com.siszoo.comum.exception.CampoInvalidoException;
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.exception.UsuarioNaoEncontradoException;
@@ -71,6 +74,8 @@ public class PrescricaoService {
                 .orElseThrow(AnimalNaoEncontradoException::new);
         Usuario usuarioAutenticado = usuarioRepository.findById(usuarioAutenticadoId)
                 .orElseThrow(UsuarioNaoEncontradoException::new);
+
+        validarDatas(request);
 
         Prescricao anterior = request.retificaId() != null
                 ? validarRetificacao(request.retificaId(), animal.getId())
@@ -146,6 +151,22 @@ public class PrescricaoService {
             throw new RegistroJaRetificadoException();
         }
         return anterior;
+    }
+
+    // Data futura continua aceita (inicio programado e legitimo,
+    // docs/regras-negocio-clinico.md); so a ordem das datas e a coerencia do
+    // status sao conferidas.
+    private void validarDatas(CriarPrescricaoRequest request) {
+        LocalDate inicio = request.dataInicio();
+        if (request.dataFimPrevista() != null && request.dataFimPrevista().isBefore(inicio)) {
+            throw new CampoInvalidoException("dataFimPrevista", "Termino previsto nao pode ser anterior ao inicio");
+        }
+        if (request.dataFimReal() != null && request.dataFimReal().isBefore(inicio)) {
+            throw new CampoInvalidoException("dataFimReal", "Termino real nao pode ser anterior ao inicio");
+        }
+        if (request.status() == StatusPrescricao.CONCLUIDA && request.dataFimReal() == null) {
+            throw new CampoInvalidoException("dataFimReal", "Prescricao concluida exige a data de termino real");
+        }
     }
 
     private Medicamento resolverMedicamento(UUID medicamentoId) {

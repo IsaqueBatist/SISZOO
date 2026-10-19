@@ -28,6 +28,7 @@ import com.siszoo.animais.clinico.exception.TipoProcedimentoInvalidoException;
 import com.siszoo.animais.clinico.exception.VacinaInvalidaException;
 import com.siszoo.animais.clinico.exception.VacinacaoNaoEncontradaException;
 import com.siszoo.animais.exception.AnimalNaoEncontradoException;
+import com.siszoo.animais.exception.BaiaIndisponivelException;
 import com.siszoo.animais.exception.BaiaInvalidaException;
 import com.siszoo.animais.exception.BaiaNaoEncontradaException;
 import com.siszoo.animais.exception.EspecieInvalidaException;
@@ -277,6 +278,19 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroResponse> handleRetificacaoAnimalDivergente() {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
                 .body(new ErroResponse("Registro retificado pertence a outro animal"));
+    }
+
+    @ExceptionHandler(CampoInvalidoException.class)
+    public ResponseEntity<ErroResponse> handleCampoInvalido(CampoInvalidoException ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse(ex.getMessage(),
+                        List.of(new ErroResponse.CampoInvalido(ex.getCampo(), ex.getMessage()))));
+    }
+
+    @ExceptionHandler(BaiaIndisponivelException.class)
+    public ResponseEntity<ErroResponse> handleBaiaIndisponivel(BaiaIndisponivelException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErroResponse(ex.getMessage()));
     }
 
     @ExceptionHandler(DataAplicacaoFuturaException.class)

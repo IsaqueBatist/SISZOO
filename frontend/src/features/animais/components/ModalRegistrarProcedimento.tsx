@@ -7,6 +7,10 @@ import { procedimentoFormSchema, type ProcedimentoFormValues } from '../schemas/
 import { useCriarProcedimentoMutation } from '../hooks/useHistoricoAnimal'
 import type { Procedimento } from '../types/historico.types'
 
+// Texto vazio ou só com espaços vai como ausente (o backend grava NULL e a
+// tela mostra "—"). Mesmo padrão de AnimalForm.
+const semEspacos = (v: unknown) => (typeof v === 'string' ? v.trim() || undefined : v)
+
 interface ModalRegistrarProcedimentoProps {
   animalId: string
   // Ver comentário equivalente em ModalRegistrarVacina.tsx.
@@ -114,12 +118,12 @@ export function ModalRegistrarProcedimento({ animalId, retifica, onFechar, onSuc
 
               <div className="field">
                 <label htmlFor="proc-descricao">Descrição</label>
-                <textarea id="proc-descricao" className="textarea" rows={3} {...register('descricao')} />
+                <textarea id="proc-descricao" className="textarea" rows={3} {...register('descricao', { setValueAs: semEspacos })} />
               </div>
 
               <div className="field">
                 <label htmlFor="proc-resultado">Resultado / observações pós-procedimento</label>
-                <textarea id="proc-resultado" className="textarea" rows={3} {...register('resultado')} />
+                <textarea id="proc-resultado" className="textarea" rows={3} {...register('resultado', { setValueAs: semEspacos })} />
               </div>
             </div>
           </div>

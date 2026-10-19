@@ -47,6 +47,7 @@ class RegistrosClinicosSemMutacaoTest {
     // nem de mutacao, so uma leitura ja existente no contrato do Spring Data.
     // "findVigentesParaAlertaVacinal" e a query do alerta de reforco vacinal
     // (com.siszoo.alertas) — tambem leitura pura (@Query JPQL de SELECT).
+    // "existeVigenteDoAnimal" alimenta ficha_completa (DER §3.2): SELECT.
     @Test
     @DisplayName("[RN-C01] repository de Vacinacao nao declara metodo de update/delete")
     void repositorioDeVacinacaoSoDeclaraFindersDeRetificacaoEFindAllComEntityGraph() {
@@ -56,7 +57,8 @@ class RegistrosClinicosSemMutacaoTest {
                 "findByRetificaId",
                 "findByRetificaIdIn",
                 "findAll",
-                "findVigentesParaAlertaVacinal");
+                "findVigentesParaAlertaVacinal",
+                "existeVigenteDoAnimal");
     }
 
     @Test
