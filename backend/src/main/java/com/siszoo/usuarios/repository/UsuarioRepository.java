@@ -11,4 +11,7 @@ import com.siszoo.usuarios.entity.Usuario;
 public interface UsuarioRepository extends JpaRepository<Usuario, UUID>, JpaSpecificationExecutor<Usuario> {
 
     Optional<Usuario> findByEmail(String email);
+
+    // Conferido a cada requisicao autenticada (JwtAuthenticationFilter).
+    boolean existsByIdAndAtivoTrue(UUID id);
 }
