@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -48,6 +49,8 @@ import jakarta.persistence.criteria.Predicate;
 @Service
 public class AnimalService {
 
+    private static final Pattern ESPACOS = Pattern.compile("\\s+");
+
     private final AnimalRepository animalRepository;
     private final BaiaRepository baiaRepository;
     private final EspecieRepository especieRepository;
@@ -83,7 +86,8 @@ public class AnimalService {
     public AnimalResponse criar(CriarAnimalRequest request, UUID usuarioAutenticadoId) {
         validarDatas(request.dataEntrada(), request.dataNascimentoAprox(),
                 request.esterilizado(), request.dataEsterilizacao());
-        verificarMicrochipDisponivel(request.microchip(), null);
+        String microchip = normalizarMicrochip(request.microchip());
+        verificarMicrochipDisponivel(microchip, null);
         StatusAnimal status = resolverStatus(request.status());
         Baia baia = resolverBaia(request.baiaId(), status, null);
 
@@ -98,7 +102,7 @@ public class AnimalService {
         animal.setPesoKg(request.pesoKg());
         animal.setIdadeAprox(request.idadeAprox());
         animal.setDataNascimentoAprox(request.dataNascimentoAprox());
-        animal.setMicrochip(normalizarMicrochip(request.microchip()));
+        animal.setMicrochip(microchip);
         animal.setEsterilizado(request.esterilizado());
         animal.setDataEsterilizacao(request.dataEsterilizacao());
         animal.setStatus(status);
@@ -197,8 +201,9 @@ public class AnimalService {
         animal.setMicrochip(novo);
     }
 
+    // Recebe o microchip ja normalizado (normalizarMicrochip).
     private void verificarMicrochipDisponivel(String microchip, UUID idAtual) {
-        if (!StringUtils.hasText(microchip)) {
+        if (microchip == null) {
             return;
         }
         animalRepository.findByMicrochip(microchip)
@@ -208,8 +213,16 @@ public class AnimalService {
                 });
     }
 
-    private String normalizarMicrochip(String microchip) {
-        return StringUtils.hasText(microchip) ? microchip : null;
+    // RN01/RN07: microchip opcional, unico quando presente. Forma unica usada
+    // no cadastro, na edicao, na checagem de duplicidade e na busca: sem
+    // espacos (nas pontas e no meio); vazio vira null (sem microchip). A V16
+    // aplicou a mesma regra aos dados existentes.
+    static String normalizarMicrochip(String microchip) {
+        if (microchip == null) {
+            return null;
+        }
+        String normalizado = ESPACOS.matcher(microchip).replaceAll("");
+        return normalizado.isEmpty() ? null : normalizado;
     }
 
     private Especie resolverEspecie(String codigo) {
@@ -314,9 +327,12 @@ public class AnimalService {
 
             if (StringUtils.hasText(q)) {
                 String termo = "%" + q.toLowerCase() + "%";
-                predicados.add(cb.or(
-                        cb.like(cb.lower(root.get("nome")), termo),
-                        cb.like(cb.lower(root.get("microchip")), termo)));
+                // O microchip e comparado na forma normalizada: " 985" acha "985".
+                String microchip = normalizarMicrochip(q);
+                Predicate porNome = cb.like(cb.lower(root.get("nome")), termo);
+                predicados.add(microchip == null
+                        ? porNome
+                        : cb.or(porNome, cb.like(cb.lower(root.get("microchip")), "%" + microchip.toLowerCase() + "%")));
             }
 
             return cb.and(predicados.toArray(new Predicate[0]));

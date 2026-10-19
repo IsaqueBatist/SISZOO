@@ -160,17 +160,22 @@ class MigracaoV13ProcessosIT extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("[DH-2] processo removido inteiro na mesma transacao nao e cobrado")
+    // Ate a V16 esta transacao passava (os triggers adiaveis da V13 nao cobram
+    // um processo removido). A V17 (RN06) recusa o DELETE do processo, e a
+    // transacao inteira e desfeita.
+    @DisplayName("[DH-2/RN06] processo removido inteiro na mesma transacao: recusado com 23514 desde a V17")
     void removerProcessoInteiro() throws Exception {
-        migrarAte("13");
+        migrarAte("17");
         UUID usuario = inserirUsuario();
         UUID processo = UUID.randomUUID();
         transacao(processo(processo, usuario), responsavel(processo), amostra(UUID.randomUUID(), processo));
 
-        assertThat(transacao(
+        assertViolacao(transacao(
                 "DELETE FROM " + S + "animal_amostrado WHERE processo_id = '" + processo + "'",
                 "DELETE FROM " + S + "responsavel_processo WHERE processo_id = '" + processo + "'",
-                "DELETE FROM " + S + "processo_sanitario WHERE id = '" + processo + "'"), nullValue());
+                "DELETE FROM " + S + "processo_sanitario WHERE id = '" + processo + "'"), "não pode ser excluído");
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM " + S + "animal_amostrado WHERE processo_id = ?",
+                Integer.class, processo), equalTo(1));
     }
 
     @Test

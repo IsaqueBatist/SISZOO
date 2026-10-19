@@ -323,7 +323,7 @@ public class OcorrenciaService {
         auditoriaEventoService.registrar(autor, AcaoAuditoria.ATUALIZACAO, ENTIDADE_AUDITORIA, id,
                 antes, ocorrenciaMapper.toSnapshot(ocorrencia, substituiDenunciante));
 
-        return montarResposta(ocorrencia, permissoes);
+        return montarRespostaDeMutacao(ocorrencia, permissoes);
     }
 
     // ── Status ───────────────────────────────────────────
@@ -346,7 +346,7 @@ public class OcorrenciaService {
         auditoriaEventoService.registrar(autor, AcaoAuditoria.ATUALIZACAO, ENTIDADE_AUDITORIA, id,
                 antes, ocorrenciaMapper.toSnapshot(ocorrencia, false));
 
-        return montarResposta(ocorrencia, permissoes);
+        return montarRespostaDeMutacao(ocorrencia, permissoes);
     }
 
     @Transactional
@@ -384,7 +384,7 @@ public class OcorrenciaService {
         auditoriaEventoService.registrar(autor, AcaoAuditoria.ENCERRAMENTO, ENTIDADE_AUDITORIA, id,
                 antes, ocorrenciaMapper.toSnapshot(ocorrencia, false));
 
-        return montarResposta(ocorrencia, permissoes);
+        return montarRespostaDeMutacao(ocorrencia, permissoes);
     }
 
     // D37: nota interna na timeline, sem mudanca de status.
@@ -397,7 +397,7 @@ public class OcorrenciaService {
         Usuario autor = buscarUsuario(permissoes.usuarioId());
         registrarMovimentacao(ocorrencia, autor, TipoMovimentacaoOcorrencia.NOTA_INTERNA,
                 null, null, request.descricao().trim());
-        return montarResposta(ocorrencia, permissoes);
+        return montarRespostaDeMutacao(ocorrencia, permissoes);
     }
 
     // ── Vinculo com processo ─────────────────────────────
@@ -411,7 +411,7 @@ public class OcorrenciaService {
         ProcessoSanitario processo = processoRepository.findByIdForUpdate(processoId)
                 .orElseThrow(ProcessoNaoEncontradoException::new);
         vincular(ocorrencia, processo, buscarUsuario(permissoes.usuarioId()));
-        return montarResposta(ocorrencia, permissoes);
+        return montarRespostaDeMutacao(ocorrencia, permissoes);
     }
 
     public void exigirEscritaEmOcorrencias(PermissoesOcorrencia permissoes) {
@@ -567,11 +567,25 @@ public class OcorrenciaService {
 
     private OcorrenciaResponse montarResposta(Ocorrencia ocorrencia, PermissoesOcorrencia permissoes) {
         return montarResposta(ocorrencia, denuncianteRepository.findByOcorrenciaId(ocorrencia.getId()).orElse(null),
-                permissoes);
+                permissoes, true);
     }
 
     private OcorrenciaResponse montarResposta(Ocorrencia ocorrencia, Denunciante denunciante,
             PermissoesOcorrencia permissoes) {
+        return montarResposta(ocorrencia, denunciante, permissoes, true);
+    }
+
+    // A04: edicao, status, encerramento, notas e vinculo devolvem o
+    // denunciante de ocorrencia sigilosa sempre mascarado, para qualquer
+    // perfil. O dado completo so sai pelo detalhe e pelo download de anexo,
+    // os dois caminhos que registram VISUALIZACAO.
+    private OcorrenciaResponse montarRespostaDeMutacao(Ocorrencia ocorrencia, PermissoesOcorrencia permissoes) {
+        return montarResposta(ocorrencia, denuncianteRepository.findByOcorrenciaId(ocorrencia.getId()).orElse(null),
+                permissoes, false);
+    }
+
+    private OcorrenciaResponse montarResposta(Ocorrencia ocorrencia, Denunciante denunciante,
+            PermissoesOcorrencia permissoes, boolean entregaDenunciante) {
         UUID id = ocorrencia.getId();
         return ocorrenciaMapper.toResponse(
                 ocorrencia,
@@ -580,7 +594,8 @@ public class OcorrenciaService {
                 processoRepository.findByOcorrenciaId(id).orElse(null),
                 movimentacaoRepository.findByOcorrenciaIdOrderByDataDescCriadoEmDesc(id),
                 anexoRepository.findByOcorrenciaIdOrderByCriadoEmAsc(id),
-                permissoes.podeVerSigilo());
+                permissoes.podeVerSigilo(),
+                entregaDenunciante);
     }
 
     private void registrarMovimentacao(Ocorrencia ocorrencia, Usuario autor, TipoMovimentacaoOcorrencia tipo,
