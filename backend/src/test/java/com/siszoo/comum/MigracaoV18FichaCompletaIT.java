@@ -69,10 +69,12 @@ class MigracaoV18FichaCompletaIT extends AbstractIntegrationTest {
         assertThat(fichaCompleta(semChip), equalTo(false));
         assertThat(fichaCompleta(chipEmBranco), equalTo(false));
         assertThat(fichaCompleta(chipComRetificacao), equalTo(true));
-        // So a coluna ficha_completa muda.
+        // So a coluna ficha_completa muda. (O microchip em branco nao e
+        // conferido aqui: a V16 da fix/auditoria-rn, quando estiver na
+        // sequencia, o normaliza para NULL antes da V18.)
         assertThat(atualizadoEm(chipSemVacina), equalTo(atualizadoAntes));
         assertThat(jdbcTemplate.queryForObject("SELECT microchip FROM " + S + "animal WHERE id = ?", String.class,
-                chipEmBranco), equalTo("   "));
+                chipSemVacina), equalTo("985000000000001"));
     }
 
     @Test
