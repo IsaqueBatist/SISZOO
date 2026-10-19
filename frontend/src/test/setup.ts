@@ -10,6 +10,7 @@ import { server } from '../mocks/server'
 configure({ asyncUtilTimeout: 3000 })
 import {
   resetAnimaisMock,
+  resetAuditoriaMock,
   resetBaiasMock,
   resetPreferenciasMock,
   resetPrescricoesMock,
@@ -32,5 +33,6 @@ afterEach(() => {
   resetVacinacoesMock()
   resetProcedimentosMock()
   resetPrescricoesMock()
+  resetAuditoriaMock()
 })
 afterAll(() => server.close())
