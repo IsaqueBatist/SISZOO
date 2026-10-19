@@ -50,6 +50,7 @@ import com.siszoo.processos.dto.AmostraAnimalRequest;
 import com.siszoo.processos.dto.CriarProcessoRequest;
 import com.siszoo.processos.dto.RegistrarResultadoRequest;
 import com.siszoo.processos.dto.ResponsavelProcessoRequest;
+import com.siszoo.processos.entity.DesfechoAnimal;
 import com.siszoo.processos.entity.Doenca;
 import com.siszoo.processos.entity.Laboratorio;
 import com.siszoo.processos.entity.MaterialBiologico;
@@ -65,6 +66,7 @@ import com.siszoo.processos.exception.ContatoHumanoInconsistenteException;
 import com.siszoo.processos.exception.CorrecaoResultadoNaoPermitidaException;
 import com.siszoo.processos.exception.DataColetaFuturaException;
 import com.siszoo.processos.exception.DataResultadoFuturaException;
+import com.siszoo.processos.exception.DesfechoInvalidoException;
 import com.siszoo.processos.exception.IdentificacaoComAnimalDoCanilException;
 import com.siszoo.processos.exception.IdentificacaoObrigatoriaException;
 import com.siszoo.processos.exception.ResultadoInvalidoException;
@@ -257,6 +259,27 @@ class ProcessoSanitarioServiceTest {
                 .isInstanceOf(ResultadoInvalidoException.class);
         assertThat(processo.getStatusProcesso()).isEqualTo(StatusProcesso.AGUARDANDO_RESULTADO);
         verify(resultadoProcessoRepository, never()).saveAndFlush(any());
+    }
+
+    // DH-21 (docs/decisoes/T37.md): desfecho de catalogo inexistente ou
+    // INATIVO -> 422; o caso inativo nao tinha teste (o seed so tem ativos).
+    @Test
+    void desfechoInativoRecusadoSemGravar() {
+        ProcessoSanitario processo = processoEm(StatusProcesso.AGUARDANDO_RESULTADO);
+        when(resultadoRepository.findByCodigo("negativo")).thenReturn(Optional.of(resultado("negativo", true)));
+        DesfechoAnimal inativo = new DesfechoAnimal();
+        inativo.setCodigo("obito_outro");
+        inativo.setNome("Obito outro");
+        inativo.setAtivo(false);
+        when(desfechoRepository.findByCodigo("obito_outro")).thenReturn(Optional.of(inativo));
+
+        assertThatThrownBy(() -> processoService.registrarResultado(processo.getId(),
+                new RegistrarResultadoRequest("negativo", HOJE, null, null, "obito_outro"), usuarioId))
+                .isInstanceOf(DesfechoInvalidoException.class);
+        assertThat(processo.getStatusProcesso()).isEqualTo(StatusProcesso.AGUARDANDO_RESULTADO);
+        assertThat(processo.getDesfechoAnimal()).isNull();
+        verify(resultadoProcessoRepository, never()).saveAndFlush(any());
+        verify(processoRepository, never()).saveAndFlush(any());
     }
 
     // Sem limite inferior (docs/decisoes/T34.md): coleta e laudo podem

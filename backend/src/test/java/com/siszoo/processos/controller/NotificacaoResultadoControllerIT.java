@@ -3,6 +3,8 @@ package com.siszoo.processos.controller;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.after;
 import static org.mockito.Mockito.doThrow;
@@ -12,6 +14,7 @@ import static org.mockito.Mockito.verify;
 
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +22,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mail.MailSendException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -51,6 +55,9 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
     @Autowired
     private ApiTesteFixture fixture;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     private String tokenAgente;
 
     @BeforeEach
@@ -71,6 +78,39 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
         assertThat(resposta.path("desfechoAnimal.codigo"), equalTo("em_acompanhamento"));
         assertThat(buscar(processoId).path("desfechoAnimal.codigo"), equalTo("em_acompanhamento"));
         verify(mailSender, after(1000).never()).send(any(SimpleMailMessage.class));
+    }
+
+    // DH-21 (docs/decisoes/T37.md): o desfecho e do processo e pode vir em
+    // qualquer lancamento (original ou correcao), fora do historico imutavel.
+    // A troca fica registrada na auditoria ATUALIZACAO de processo_sanitario
+    // (antes e depois), nao em resultado_processo. Correcao SEM desfecho (manter
+    // ou limpar o anterior) nao tem regra decidida e nao e testada aqui (T34-11).
+    @Test
+    @DisplayName("[T37/T34-11] desfecho no lancamento e na correcao: processo sobrescrito, auditoria com antes e depois")
+    void desfechoNaCorrecaoSobrescritoEAuditado() {
+        String processoId = processoAguardandoResultado(null);
+        String originalId = lancarResultado(processoId, corpoComDesfecho("negativo", "em_acompanhamento"))
+                .then().statusCode(200).extract().path("resultados[0].id");
+        Map<String, Object> correcao = corpoComDesfecho("inconclusivo", "obito_natural");
+        correcao.put("retificaId", originalId);
+
+        lancarResultado(processoId, correcao).then().statusCode(200)
+                .body("desfechoAnimal.codigo", equalTo("obito_natural"));
+
+        assertThat(jdbcTemplate.queryForObject("SELECT d.codigo FROM processo_sanitario p"
+                + " JOIN desfecho_animal d ON d.id = p.desfecho_animal_id WHERE p.id = CAST(? AS uuid)",
+                String.class, processoId), equalTo("obito_natural"));
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM resultado_processo WHERE processo_id = CAST(? AS uuid)",
+                Integer.class, processoId), equalTo(2));
+        List<Map<String, Object>> eventos = jdbcTemplate.queryForList("SELECT payload_antes ->> 'desfechoAnimal' AS antes,"
+                + " payload_depois ->> 'desfechoAnimal' AS depois FROM auditoria_evento"
+                + " WHERE entidade = 'processo_sanitario' AND acao = 'ATUALIZACAO' AND entidade_id = CAST(? AS uuid)"
+                + " AND payload_depois ->> 'resultado' IS NOT NULL ORDER BY ocorreu_em", processoId);
+        assertThat(eventos, hasSize(2));
+        assertThat(eventos.get(0).get("antes"), nullValue());
+        assertThat(eventos.get(0).get("depois"), equalTo("em_acompanhamento"));
+        assertThat(eventos.get(1).get("antes"), equalTo("em_acompanhamento"));
+        assertThat(eventos.get(1).get("depois"), equalTo("obito_natural"));
     }
 
     @Test
