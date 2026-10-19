@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { mapearOcorrenciasPorBairro } from './mapearOcorrenciasPorBairro'
+import { extrairBairrosDistintos, mapearOcorrenciasPorBairro } from './mapearOcorrenciasPorBairro'
 
 function ocorrencia(bairro: string) {
   return { bairro }
@@ -59,5 +59,33 @@ describe('mapearOcorrenciasPorBairro', () => {
     expect(resultado[15].bairro).toBe('Outros')
     const somaEsperadaOutros = Array.from({ length: 2 }, (_, i) => 17 - (15 + i)).reduce((a, b) => a + b, 0)
     expect(resultado[15].quantidade).toBe(somaEsperadaOutros)
+  })
+})
+
+describe('extrairBairrosDistintos', () => {
+  it('devolve uma grafia por bairro, em ordem alfabética, sem corte de Top N', () => {
+    const ocorrencias = Array.from({ length: 20 }, (_, indice) => ocorrencia(`Bairro ${indice}`))
+
+    const resultado = extrairBairrosDistintos(ocorrencias)
+    const ordenadoEsperado = [...resultado].sort((a, b) => a.localeCompare(b, 'pt-BR'))
+
+    expect(resultado).toHaveLength(20)
+    expect(resultado).not.toContain('Outros')
+    expect(resultado).toEqual(ordenadoEsperado)
+  })
+
+  it('agrupa grafias diferentes do mesmo bairro numa única sugestão (a mais frequente)', () => {
+    const resultado = extrairBairrosDistintos([
+      ocorrencia('Sao Luiz'),
+      ocorrencia('Sao Luiz'),
+      ocorrencia('São Luiz'),
+      ocorrencia('Centro'),
+    ])
+
+    expect(resultado).toEqual(['Centro', 'Sao Luiz'])
+  })
+
+  it('ignora bairro vazio', () => {
+    expect(extrairBairrosDistintos([ocorrencia('Centro'), ocorrencia('')])).toEqual(['Centro'])
   })
 })

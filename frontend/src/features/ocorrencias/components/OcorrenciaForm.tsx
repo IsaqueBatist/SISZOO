@@ -30,6 +30,7 @@ import { formatarHora, hojeIso } from '../utils/datas'
 import { formatarProtocoloOcorrencia } from '../utils/protocolo'
 import { useAtualizarOcorrenciaMutation, useCriarOcorrenciaMutation } from '../hooks/useOcorrencias'
 import { useAnexosPendentes } from '../hooks/useAnexosPendentes'
+import { useSugestoesBairroQuery } from '../hooks/useSugestoesBairro'
 import { AvisoAnexosPendentes } from './AvisoAnexosPendentes'
 
 const DENUNCIANTE_VAZIO = { nome: '', cpf: '', telefone: '', email: '', cep: '', endereco: '', bairroResidencial: '' }
@@ -207,6 +208,12 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
   })
 
   const valores = watch()
+
+  // Sugestão de preenchimento (datalist nativo) com bairros já usados em
+  // ocorrências existentes — reduz grafias divergentes do mesmo bairro sem
+  // travar o campo (continua texto livre) nem exigir catálogo no backend.
+  // Falha ao carregar não afeta o formulário: o campo segue editável.
+  const { data: bairrosConhecidos } = useSugestoesBairroQuery()
 
   const [buscandoCepDenunciante, setBuscandoCepDenunciante] = useState(false)
 
@@ -520,8 +527,14 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
                     className={`input${errors.bairro ? ' error' : ''}`}
                     type="text"
                     placeholder="Ex: Vila Esperança"
+                    list="bairros-conhecidos"
                     {...register('bairro')}
                   />
+                  <datalist id="bairros-conhecidos">
+                    {(bairrosConhecidos ?? []).map((bairro) => (
+                      <option key={bairro} value={bairro} />
+                    ))}
+                  </datalist>
                   {errors.bairro && <span className="err">{errors.bairro.message}</span>}
                 </div>
                 <div className="field">

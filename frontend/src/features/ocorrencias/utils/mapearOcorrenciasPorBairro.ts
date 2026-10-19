@@ -20,7 +20,9 @@ function normalizarChave(bairro: string): string {
     .replace(/\p{Diacritic}/gu, '')
 }
 
-export function mapearOcorrenciasPorBairro(ocorrencias: { bairro: string }[]): BairroDatum[] {
+// Núcleo compartilhado entre o gráfico (com corte Top N) e a lista de
+// sugestões do formulário (sem corte, precisa de todo mundo).
+function agruparBairros(ocorrencias: { bairro: string }[]): BairroDatum[] {
   const quantidadePorChave = new Map<string, number>()
   const rotulosPorChave = new Map<string, Map<string, number>>()
 
@@ -36,12 +38,15 @@ export function mapearOcorrenciasPorBairro(ocorrencias: { bairro: string }[]): B
     rotulosPorChave.set(chave, rotulos)
   }
 
-  const agrupado: BairroDatum[] = [...quantidadePorChave.entries()].map(([chave, quantidade]) => {
+  return [...quantidadePorChave.entries()].map(([chave, quantidade]) => {
     const rotulos = rotulosPorChave.get(chave) as Map<string, number>
     const [rotuloMaisFrequente] = [...rotulos.entries()].sort((a, b) => b[1] - a[1])[0]
     return { bairro: rotuloMaisFrequente, quantidade }
   })
+}
 
+export function mapearOcorrenciasPorBairro(ocorrencias: { bairro: string }[]): BairroDatum[] {
+  const agrupado = agruparBairros(ocorrencias)
   agrupado.sort((a, b) => b.quantidade - a.quantidade)
 
   if (agrupado.length <= TOP_N_BAIRROS) return agrupado
@@ -49,4 +54,14 @@ export function mapearOcorrenciasPorBairro(ocorrencias: { bairro: string }[]): B
   const principais = agrupado.slice(0, TOP_N_BAIRROS)
   const somaOutros = agrupado.slice(TOP_N_BAIRROS).reduce((soma, item) => soma + item.quantidade, 0)
   return [...principais, { bairro: ROTULO_OUTROS, quantidade: somaOutros }]
+}
+
+// Para sugestão de preenchimento (datalist do formulário de ocorrência):
+// todas as grafias distintas (sem corte Top N — aqui não é gráfico, é lista
+// de opções), uma por grupo (a grafia mais frequente, mesma regra acima),
+// em ordem alfabética.
+export function extrairBairrosDistintos(ocorrencias: { bairro: string }[]): string[] {
+  return agruparBairros(ocorrencias)
+    .map((item) => item.bairro)
+    .sort((a, b) => a.localeCompare(b, 'pt-BR'))
 }

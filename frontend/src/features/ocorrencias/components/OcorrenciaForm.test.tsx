@@ -378,3 +378,30 @@ describe('OcorrenciaForm', () => {
     })
   })
 })
+
+describe('sugestão de bairro (datalist)', () => {
+  it('popula a datalist do campo Bairro com os bairros já usados em ocorrências existentes', async () => {
+    server.use(
+      http.get(`${API_BASE_URL}/ocorrencias`, () =>
+        HttpResponse.json({
+          itens: [{ bairro: 'Centro' }, { bairro: 'Centro' }, { bairro: 'Vila Nova' }],
+          pagina: 0,
+          tamanho: 500,
+          totalItens: 3,
+          totalPaginas: 1,
+        }),
+      ),
+    )
+    renderForm()
+
+    const campoBairro = await screen.findByLabelText(/^Bairro/i)
+    expect(campoBairro).toHaveAttribute('list', 'bairros-conhecidos')
+
+    await waitFor(() => {
+      const datalist = document.getElementById('bairros-conhecidos') as HTMLDataListElement | null
+      expect(datalist).not.toBeNull()
+      const opcoes = Array.from(datalist?.querySelectorAll('option') ?? [])
+      expect(opcoes.map((opcao) => opcao.value)).toEqual(['Centro', 'Vila Nova'])
+    })
+  })
+})
