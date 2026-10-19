@@ -27,3 +27,20 @@ GET /api/auditoria?acao=LOGIN&entidade=usuario&usuarioId=<uuid>&de=2026-05-01&at
 Sem os parâmetros, comportamento atual inalterado (retrocompatível). Resolve
 a limitação acima e evita que o volume de eventos de auditoria cresça sem
 uma forma real de filtrar no servidor.
+
+Também seria útil um parâmetro `modulo` (`USUARIOS_ACESSO`, `GESTAO_ANIMAIS`,
+`OCORRENCIAS_DENUNCIAS`, `PROCESSOS_SANITARIOS`, `RELATORIOS`). Hoje a tela
+agrupa visualmente por módulo inferindo-o no frontend a partir da string
+livre `entidade` (`frontend/src/features/auditoria/utils/moduloDaEntidade.ts`),
+porque `auditoria_evento` não guarda módulo — só funciona enquanto as
+strings de entidade usadas pelo backend não mudarem.
+
+## Pedido adicional — valor antes/depois do evento
+
+`auditoria_evento` já tem as colunas `payload_antes`/`payload_depois`, mas
+`AuditoriaEventoResponse` (DTO) não as expõe — a tela de Logs não tem acesso
+a esse dado hoje, mesmo que quisesse mostrá-lo. Pedido: incluir
+`payloadAntes`/`payloadDepois` (ou nomes equivalentes) em
+`AuditoriaEventoResponse`, para permitir mostrar o valor antes/depois de cada
+alteração na tela de auditoria. Sem isso, essa informação continua invisível
+na UI, apesar de já existir no banco.

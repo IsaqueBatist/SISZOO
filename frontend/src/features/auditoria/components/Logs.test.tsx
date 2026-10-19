@@ -97,4 +97,43 @@ describe('Logs', () => {
 
     expect(await screen.findByRole('button', { name: 'Tentar novamente' })).toBeInTheDocument()
   })
+
+  it('agrupa os eventos do dia em sub-seções por módulo', async () => {
+    server.use(
+      http.get(`${API_BASE_URL}/auditoria`, () =>
+        HttpResponse.json(
+          paginaDe([
+            { id: '1', usuarioEmail: 'a@itu.sp.gov.br', acao: 'LOGIN', entidade: 'usuario', entidadeId: null, ocorreuEm: new Date().toISOString() },
+            { id: '2', usuarioEmail: 'b@itu.sp.gov.br', acao: 'CRIACAO', entidade: 'vacinacao', entidadeId: null, ocorreuEm: new Date().toISOString() },
+          ]),
+        ),
+      ),
+    )
+    renderLogs()
+
+    expect(await screen.findByRole('heading', { name: 'Usuários e Acesso' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Gestão de Animais' })).toBeInTheDocument()
+  })
+
+  it('filtrar por módulo mostra só os eventos daquele módulo', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.get(`${API_BASE_URL}/auditoria`, () =>
+        HttpResponse.json(
+          paginaDe([
+            { id: '1', usuarioEmail: 'a@itu.sp.gov.br', acao: 'LOGIN', entidade: 'usuario', entidadeId: null, ocorreuEm: new Date().toISOString() },
+            { id: '2', usuarioEmail: 'b@itu.sp.gov.br', acao: 'CRIACAO', entidade: 'vacinacao', entidadeId: null, ocorreuEm: new Date().toISOString() },
+          ], 50),
+        ),
+      ),
+    )
+    renderLogs()
+
+    await screen.findByText('a@itu.sp.gov.br', { selector: 'strong' })
+
+    await user.selectOptions(screen.getByLabelText('Filtrar por módulo'), 'Usuários e Acesso')
+
+    expect(await screen.findByText('Filtro aplicado aos 1 eventos desta página (de 50 no total).')).toBeInTheDocument()
+    expect(screen.queryByText('b@itu.sp.gov.br', { selector: 'strong' })).not.toBeInTheDocument()
+  })
 })

@@ -5,7 +5,9 @@ import { Skeleton } from '@/components/layout/Skeleton'
 import { formatarHora } from '@/features/ocorrencias/utils/datas'
 import { useEventosAuditoriaQuery } from '../hooks/useAuditoria'
 import { agruparPorDia } from '../utils/agruparPorDia'
+import { agruparPorModulo } from '../utils/agruparPorModulo'
 import { descricaoAcao, type TomAcao } from '../utils/descricaoAcao'
+import { labelModulo, moduloDaEntidade, type Modulo } from '../utils/moduloDaEntidade'
 import type { EventoAuditoria } from '../types/auditoria.types'
 
 const TAMANHO_PAGINA = 20
@@ -54,6 +56,7 @@ export function Logs() {
   const [acaoFiltro, setAcaoFiltro] = useState('')
   const [entidadeFiltro, setEntidadeFiltro] = useState('')
   const [usuarioFiltro, setUsuarioFiltro] = useState('')
+  const [moduloFiltro, setModuloFiltro] = useState<Modulo | ''>('')
 
   const { data, isLoading, isError, refetch } = useEventosAuditoriaQuery(pagina, TAMANHO_PAGINA)
 
@@ -67,14 +70,19 @@ export function Logs() {
     () => valoresUnicos(itens.map((e) => e.usuarioEmail).filter((email): email is string => Boolean(email))),
     [itens],
   )
+  const modulosDisponiveis = useMemo(
+    () => valoresUnicos(itens.map((e) => moduloDaEntidade(e.entidade))),
+    [itens],
+  )
 
   const eventosFiltrados = itens.filter((evento) => {
     const combinaAcao = !acaoFiltro || evento.acao === acaoFiltro
     const combinaEntidade = !entidadeFiltro || evento.entidade === entidadeFiltro
     const combinaUsuario = !usuarioFiltro || evento.usuarioEmail === usuarioFiltro
-    return combinaAcao && combinaEntidade && combinaUsuario
+    const combinaModulo = !moduloFiltro || moduloDaEntidade(evento.entidade) === moduloFiltro
+    return combinaAcao && combinaEntidade && combinaUsuario && combinaModulo
   })
-  const filtroAtivo = Boolean(acaoFiltro || entidadeFiltro || usuarioFiltro)
+  const filtroAtivo = Boolean(acaoFiltro || entidadeFiltro || usuarioFiltro || moduloFiltro)
   const grupos = agruparPorDia(eventosFiltrados)
 
   const totalPaginas = Math.max(data?.totalPaginas ?? 1, 1)
@@ -128,6 +136,19 @@ export function Logs() {
             </option>
           ))}
         </select>
+        <select
+          className="filter-select"
+          aria-label="Filtrar por módulo"
+          value={moduloFiltro}
+          onChange={(event) => setModuloFiltro(event.target.value as Modulo | '')}
+        >
+          <option value="">Módulo: Todos</option>
+          {modulosDisponiveis.map((modulo) => (
+            <option key={modulo} value={modulo}>
+              {labelModulo(modulo)}
+            </option>
+          ))}
+        </select>
       </div>
 
       {filtroAtivo && data && (
@@ -156,11 +177,20 @@ export function Logs() {
             <h2 className="uppercase-label" style={{ marginBottom: 'var(--space-3)' }}>
               {grupo.rotulo}
             </h2>
-            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-              {grupo.eventos.map((evento) => (
-                <LinhaEvento key={evento.id} evento={evento} />
-              ))}
-            </ul>
+            {agruparPorModulo(grupo.eventos).map((grupoModulo) => (
+              <div key={grupoModulo.modulo} style={{ marginBottom: 'var(--space-3)' }}>
+                <h3
+                  style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 'var(--space-2)' }}
+                >
+                  {grupoModulo.rotulo}
+                </h3>
+                <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                  {grupoModulo.eventos.map((evento) => (
+                    <LinhaEvento key={evento.id} evento={evento} />
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         ))}
 
