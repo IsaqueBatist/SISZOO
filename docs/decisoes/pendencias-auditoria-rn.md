@@ -18,7 +18,7 @@ Classificação provisória de cada divergência da seção 11.5 do relatório d
 | D6 | Porte e baia obrigatórios no animal | Baia: decisão em aberto · porte: evidência insuficiente |
 | D7 | Endereço do responsável obrigatório | Evidência insuficiente |
 | D8 | Matriz de acesso (RN09) | Decisão em aberto |
-| D9 | Resultado inconclusivo notifica? | Documentação desatualizada (DOCX), a confirmar |
+| D9 | Resultado inconclusivo notifica? | Documentação desatualizada (DOCX) — fechada pela decisão T34-4 |
 | D10 | Estados do processo | Decisão em aberto |
 | D11 | Fuso dos timestamps | Evidência insuficiente |
 | D12 | CPF do responsável único | Documentação desatualizada (DOCX), a confirmar |
@@ -80,10 +80,9 @@ Classificação provisória de cada divergência da seção 11.5 do relatório d
 - **Impacto.** Seguir o DOCX: migration ajustando `cargo_permissao` (sem editar a V3), front e testes; o Veterinário deixa de ver os dados pessoais do responsável e de lançar resultados; quem amostra animais do canil num processo pode precisar ler a ficha (efeito não confirmado no repositório). Seguir a V3: atualizar RN09 e o Quadro 4.
 
 ### D9 — Resultado inconclusivo notifica?
-- **Evidência.** DOCX RN10 e RF-B03: Positivo **ou** Inconclusivo. DER regra 19, "revisão de 2026-10-17, decisão de produto: `inconclusivo` deixa de notificar". Código em `main`: `ProcessoSanitarioService` (`RESULTADO_QUE_NOTIFICA = "positivo"`). Os comentários de `NotificacaoResultadoService.java:20` e `ResultadoLancadoEvent.java:6` ainda dizem "positivo/inconclusivo".
-- **Classificação provisória.** Documentação desatualizada no DOCX (e nos dois comentários), desde que a revisão de 2026-10-17 seja a decisão oficial.
-- **Pergunta.** A revisão de 2026-10-17 (só positivo) é a regra oficial?
-- **Impacto.** Sim: atualizar RN10, RF-B03 e os dois comentários. Não: voltar a notificar inconclusivo no service e nos testes da T37.
+- **Evidência.** Decisão registrada: **T34-4** (`docs/decisoes/T34.md` na `fix/T34-follow-up`, `f22e203`) — "Regra 19: só `positivo` notifica (revisão de produto de 2026-10-17)"; DER regra 19 com a mesma revisão. Código em `main`: `ProcessoSanitarioService` (`RESULTADO_QUE_NOTIFICA = "positivo"`). O DOCX ainda diz "Positivo ou Inconclusivo" em cinco trechos: RN10, RF-B03, a descrição da tela T13 e duas especificações de caso de uso. Os comentários "positivo/inconclusivo" de `NotificacaoResultadoService.java:20`, `ResultadoLancadoEvent.java:6` e `application.yml:9` estão desatualizados em `main`, mas **já foram corrigidos na follow-up** (`f22e203`); corrigi-los também nesta branch só geraria conflito.
+- **Classificação.** Documentação desatualizada no DOCX — fechada pela T34-4, sem pergunta pendente.
+- **Ação.** Atualizar os cinco trechos do DOCX. Os comentários do código ficam corrigidos com o merge da follow-up.
 - **Não verificado aqui.** "O envio é registrado e não se repete" (RN10).
 
 ### D10 — Estados do processo
@@ -142,6 +141,8 @@ Classificação provisória de cada divergência da seção 11.5 do relatório d
 
 ### N5 — Rascunho do animal restaurado apaga a baia
 - **Evidência.** Testes de reprodução em `frontend/src/features/animais/components/AnimalForm.edicaoPerdaDeDados.test.tsx` (branch local `tmp/reproducao-form-animal`): um rascunho de edição sem baia, restaurado depois de a ficha ganhar uma baia, envia o PUT sem `baiaId` e a baia é apagada; o porte vazio do mesmo rascunho não apaga o porte. Com a baia atual inativa, ou com a lista de baias chegando depois da ficha, o select mostra "Sem baia (em trânsito)", mas o PUT mantém a baia.
+- **Causa provável (parcialmente verificada).** `baiaId` está nos `defaultValues` e entra no `reset()` do rascunho como `undefined` (o rascunho guarda `''`, e `rascunhoParaValores` converte para `undefined`). `porte` sofre a mesma conversão, mas usa `<Controller>` e é mantido; `baiaId` usa `register` num `<select>` não controlado e é perdido. O mecanismo interno do React Hook Form que produz a diferença não foi confirmado.
+- **Gravidade.** É o caso mais grave da I1: o mecanismo que protege o formulário contra queda de rede (RNF03, "preservar dados de formulários não submetidos") é o que apaga a baia.
 - **Classificação provisória.** Decisão em aberto (comportamento do rascunho); a tela enganosa e a assimetria porte/baia parecem defeito, sem regra escrita que as cubra.
 - **Pergunta.** Restaurar um rascunho deve sobrescrever campos que mudaram na ficha depois de o rascunho ser salvo? A tela deve mostrar a baia atual mesmo quando ela está inativa?
-- **Impacto.** Proteger a ficha: o rascunho só reaplica campos que o usuário alterou, ou avisa quando a ficha mudou. Manter: documentar que restaurar sobrescreve a ficha inteira. A tela enganosa pode levar o usuário a escolher "Sem baia" achando que já é o valor atual.
+- **Impacto.** Proteger a ficha: restaurar o rascunho por cima dos dados do servidor (merge), e não no lugar deles. **Atenção:** "campo ausente no rascunho mantém o valor atual" não basta, porque o rascunho grava `''` tanto para "o usuário apagou a baia" quanto para "a ficha não tinha baia quando o rascunho foi salvo"; o merge precisa saber quais campos o usuário alterou (campos sujos) ou comparar com a ficha do momento em que o rascunho foi salvo. Versionar o formato do rascunho ajuda a descartar ou migrar formatos antigos, mas não resolve um rascunho desatualizado no formato atual. Manter: documentar que restaurar sobrescreve a ficha inteira. A tela enganosa pode levar o usuário a escolher "Sem baia" achando que já é o valor atual.
