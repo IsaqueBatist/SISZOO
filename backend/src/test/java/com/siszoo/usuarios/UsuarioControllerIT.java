@@ -8,11 +8,15 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.siszoo.comum.AbstractIntegrationTest;
@@ -46,6 +50,9 @@ class UsuarioControllerIT extends AbstractIntegrationTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     private String tokenAdmin;
 
@@ -162,6 +169,43 @@ class UsuarioControllerIT extends AbstractIntegrationTest {
         Usuario atualizado = usuarioRepository.findById(usuario.getId()).orElseThrow();
         assertThat(atualizado.isAtivo(), equalTo(false));
         assertThat(atualizado.getDesativadoEm(), notNullValue());
+    }
+
+    @Test
+    @DisplayName("[A03] criacao, desativacao e reativacao gravam o admin como autor e o usuario afetado em entidade_id")
+    void auditoriaDeUsuarioRegistraOAdminComoAutor() {
+        UUID adminId = usuarioRepository.findByEmail(EMAIL_ADMIN).orElseThrow().getId();
+        // O e-mail institucional so aceita letras e pontos.
+        String email = "autor.auditoria." + UUID.randomUUID().toString().replaceAll("[^a-f]", "") + "@itu.sp.gov.br";
+
+        String criadoId = given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .body(new CriarUsuarioRequest("Autor", "Auditoria", email, "Agente Sanitário", null, null, "SenhaInicial123"))
+                .when()
+                .post("/api/usuarios")
+                .then()
+                .statusCode(200)
+                .extract()
+                .path("id");
+        for (boolean ativo : List.of(false, true)) {
+            given()
+                    .contentType(ContentType.JSON)
+                    .header("Authorization", "Bearer " + tokenAdmin)
+                    .body(new AtualizarStatusUsuarioRequest(ativo))
+                    .when()
+                    .patch("/api/usuarios/" + criadoId + "/status")
+                    .then()
+                    .statusCode(200);
+        }
+
+        List<Map<String, Object>> eventos = jdbcTemplate.queryForList(
+                "SELECT acao, usuario_id FROM auditoria_evento WHERE entidade = 'usuario' AND entidade_id = ?"
+                        + " ORDER BY ocorreu_em",
+                UUID.fromString(criadoId));
+        assertThat(eventos.stream().map(e -> e.get("acao")).toList(),
+                equalTo(List.of("CRIACAO", "DESATIVACAO", "REATIVACAO")));
+        eventos.forEach(evento -> assertThat(evento.get("usuario_id"), equalTo(adminId)));
     }
 
     @Test

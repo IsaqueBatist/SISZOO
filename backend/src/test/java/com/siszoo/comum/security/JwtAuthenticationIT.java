@@ -4,6 +4,7 @@ import static io.restassured.RestAssured.given;
 
 import java.util.UUID;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
@@ -90,6 +91,27 @@ class JwtAuthenticationIT extends AbstractIntegrationTest {
                 .get(ROTA_PROTEGIDA)
                 .then()
                 .statusCode(200);
+    }
+
+    @Test
+    @DisplayName("token emitido antes da desativacao: 401 enquanto o usuario esta inativo, 200 de novo ao reativar")
+    void usuarioDesativadoComTokenValidoRetorna401() {
+        String email = "desativado.protegido@itu.sp.gov.br";
+        String token = logarComo(email, CARGO_ADMINISTRADOR_ID);
+        given().header("Authorization", "Bearer " + token).when().get(ROTA_PROTEGIDA).then().statusCode(200);
+
+        alterarAtivo(email, false);
+        given().header("Authorization", "Bearer " + token).when().get(ROTA_PROTEGIDA).then().statusCode(401);
+        given().header("Authorization", "Bearer " + token).when().get("/api/usuarios/me").then().statusCode(401);
+
+        alterarAtivo(email, true);
+        given().header("Authorization", "Bearer " + token).when().get(ROTA_PROTEGIDA).then().statusCode(200);
+    }
+
+    private void alterarAtivo(String email, boolean ativo) {
+        Usuario usuario = usuarioRepository.findByEmail(email).orElseThrow();
+        usuario.setAtivo(ativo);
+        usuarioRepository.save(usuario);
     }
 
     private String logarComo(String email, UUID cargoId) {
