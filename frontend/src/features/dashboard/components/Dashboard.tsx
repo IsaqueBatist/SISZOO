@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '@/components/layout/Icon'
 import { ErroComRetry } from '@/components/layout/ErroComRetry'
@@ -10,6 +11,12 @@ import { useKpisDashboardQuery } from '../hooks/useDashboardKpis'
 import { useProcessosUrgentesQuery } from '../hooks/useAlertaProcessosUrgentes'
 import { mapearKpisParaCards } from '../utils/kpiCards'
 import './Dashboard.css'
+
+// Lazy: isola o chunk de `recharts` (pesado) do carregamento inicial do
+// dashboard — máquinas do CCZ têm ~2GB RAM (ver CLAUDE.md).
+const GraficosDashboard = lazy(() =>
+  import('@/features/graficos/components/GraficosDashboard').then((m) => ({ default: m.GraficosDashboard })),
+)
 
 interface ItemAlertaAchatado {
   vacinacaoId: string
@@ -233,6 +240,12 @@ export function Dashboard() {
           <AlertaCriticoVacinas />
           <AlertaProcessosUrgentes />
         </div>
+      </div>
+
+      <div style={{ marginTop: 'var(--space-4)' }}>
+        <Suspense fallback={<Skeleton width="100%" height={220} />}>
+          <GraficosDashboard />
+        </Suspense>
       </div>
     </>
   )
