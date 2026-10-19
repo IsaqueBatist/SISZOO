@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -390,6 +390,31 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
 
     expect(screen.queryByText('Confirmar lançamento do resultado')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Registrar resultado' })).toBeInTheDocument()
+  })
+
+  // T34-5 (docs/decisoes/T34.md): sem limite inferior — o laudo pode
+  // anteceder a abertura do processo (aberto em 2026-05-18 na fixture).
+  it('data do resultado anterior à abertura: campo sem min e lançamento enviado com essa data', async () => {
+    const corpos: unknown[] = []
+    server.use(
+      http.post(`${API_BASE_URL}/processos/:id/resultados`, async ({ request }) => {
+        corpos.push(await request.json())
+        return HttpResponse.json(processoComResultadoFixture())
+      }),
+    )
+    const user = userEvent.setup()
+    renderDetalhe(PROCESSO_PENDENTE_ID, AGENTE)
+    await esperarDetalhe('045/2026')
+    await aguardarOpcoesDeResultado()
+
+    const data = screen.getByLabelText('Data do resultado') as HTMLInputElement
+    expect(data).not.toHaveAttribute('min')
+    fireEvent.change(data, { target: { value: '2026-05-10' } })
+    await user.selectOptions(screen.getByLabelText('Resultado laboratorial'), 'negativo')
+    await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
+
+    await waitFor(() => expect(corpos).toHaveLength(1))
+    expect(corpos[0]).toMatchObject({ resultado: 'negativo', dataResultado: '2026-05-10' })
   })
 
   it('falha de rede preserva o resultado selecionado e mostra mensagem de tentar de novo', async () => {

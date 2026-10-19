@@ -57,10 +57,10 @@ import com.siszoo.ocorrencias.exception.TipoOcorrenciaInvalidoException;
 import com.siszoo.ocorrencias.exception.TransicaoStatusInvalidaException;
 import com.siszoo.ocorrencias.exception.UrgenciaDefinidaPeloProcessoException;
 import com.siszoo.ocorrencias.exception.VinculoJaExistenteException;
+import com.siszoo.processos.exception.ConclusaoSemResultadoException;
 import com.siszoo.processos.exception.ContatoHumanoInconsistenteException;
 import com.siszoo.processos.exception.CorrecaoResultadoNaoPermitidaException;
 import com.siszoo.processos.exception.DataColetaFuturaException;
-import com.siszoo.processos.exception.DataResultadoAnteriorAberturaException;
 import com.siszoo.processos.exception.DataResultadoFuturaException;
 import com.siszoo.processos.exception.DesfechoInvalidoException;
 import com.siszoo.processos.exception.DoencaInvalidaException;
@@ -408,12 +408,6 @@ public class GlobalExceptionHandler {
                 .body(new ErroResponse("Data do resultado nao pode ser futura"));
     }
 
-    @ExceptionHandler(DataResultadoAnteriorAberturaException.class)
-    public ResponseEntity<ErroResponse> handleDataResultadoAnteriorAbertura() {
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
-                .body(new ErroResponse("Data do resultado nao pode ser anterior a data de abertura do processo"));
-    }
-
     @ExceptionHandler(ResultadoInvalidoException.class)
     public ResponseEntity<ErroResponse> handleResultadoInvalido() {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
@@ -430,6 +424,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroResponse> handleResultadoObrigatorio() {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
                 .body(new ErroResponse("O status COM_RESULTADO so e alcancado pelo registro do resultado laboratorial"));
+    }
+
+    @ExceptionHandler(ConclusaoSemResultadoException.class)
+    public ResponseEntity<ErroResponse> handleConclusaoSemResultado() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Processo so pode ser concluido com resultado laboratorial registrado"));
     }
 
     @ExceptionHandler(ResultadoRetificadoInvalidoException.class)

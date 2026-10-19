@@ -22,3 +22,19 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* Severidade por ícone + texto (não só cor) nos resumos de alerta */
+.alert-desc-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.alert-desc-item + .alert-desc-item {
+  margin-left: 6px;
+}
+.alert-desc-item.severidade-vencida {
+  color: var(--color-danger);
+}
+.alert-desc-item.severidade-a-vencer {
+  color: var(--color-warning);
+}

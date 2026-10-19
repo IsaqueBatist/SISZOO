@@ -699,31 +699,27 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         lancarResultado(tokenAgente, processoId, Map.of("resultado", "positivo")).then().statusCode(422);
         lancarResultado(tokenAgente, processoId, corpoResultado("positivo", HOJE.plusDays(1), null))
                 .then().statusCode(422).body("mensagem", equalTo("Data do resultado nao pode ser futura"));
-        // Processo aberto hoje: resultado de ontem antecede a abertura.
-        lancarResultado(tokenAgente, processoId, corpoResultado("positivo", HOJE.minusDays(1), null))
-                .then().statusCode(422)
-                .body("mensagem", equalTo("Data do resultado nao pode ser anterior a data de abertura do processo"));
 
         assertSemResultado(processoId, "AGUARDANDO_RESULTADO");
     }
 
+    // Sem limite inferior (docs/decisoes/T34.md): processo registrado no
+    // sistema depois do laudo; a abertura e imutavel e a data real do laudo
+    // precisa ser aceita.
     @Test
-    @DisplayName("[T34] dataResultado >= dataAbertura: na abertura aceita; antes recusada no registro e na correcao")
-    void dataResultadoNaoAntecedeAAbertura() {
-        LocalDate abertura = HOJE.minusDays(3);
-        String processoId = processoAguardandoResultadoAbertoEm(abertura);
+    @DisplayName("[T34] dataResultado anterior a abertura: aceita no registro e na correcao, gravada no banco")
+    void dataResultadoAnteriorAAberturaAceita() {
+        String processoId = processoAguardandoResultado();
 
-        lancarResultado(tokenAgente, processoId, corpoResultado("negativo", abertura.minusDays(1), null))
-                .then().statusCode(422);
-        assertSemResultado(processoId, "AGUARDANDO_RESULTADO");
+        String originalId = lancarResultado(tokenAgente, processoId, corpoResultado("negativo", HOJE.minusDays(5), null))
+                .then().statusCode(200).body("dataResultado", equalTo(HOJE.minusDays(5).toString()))
+                .extract().path("resultados[0].id");
+        lancarResultado(tokenAgente, processoId, corpoResultado("positivo", HOJE.minusDays(2), originalId))
+                .then().statusCode(200).body("dataResultado", equalTo(HOJE.minusDays(2).toString()));
 
-        String originalId = lancarResultado(tokenAgente, processoId, corpoResultado("negativo", abertura, null))
-                .then().statusCode(200).extract().path("resultados[0].id");
-        lancarResultado(tokenAgente, processoId, corpoResultado("positivo", abertura.minusDays(1), originalId))
-                .then().statusCode(422)
-                .body("mensagem", equalTo("Data do resultado nao pode ser anterior a data de abertura do processo"));
-        assertThat(contarResultados(processoId), equalTo(1));
-        assertThat(buscar(tokenAgente, processoId).path("resultado.codigo"), equalTo("negativo"));
+        assertThat(contarResultados(processoId), equalTo(2));
+        assertThat(jdbcTemplate.queryForObject("SELECT CAST(data_resultado AS text) FROM processo_sanitario"
+                + " WHERE id = CAST(? AS uuid)", String.class, processoId), equalTo(HOJE.minusDays(2).toString()));
         assertVigenteCoerente(processoId);
     }
 
@@ -824,6 +820,23 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
                 String.class, processoId), equalTo("CONCLUIDO"));
         assertThat(contarResultados(processoId), equalTo(1));
         assertVigenteCoerente(processoId);
+    }
+
+    // Estado legado: COM_RESULTADO sem resultado, como o PATCH provisorio da
+    // D18 deixava antes da T34 (montado via SQL, depois da V15).
+    @Test
+    @DisplayName("[T34] COM_RESULTADO sem resultado vigente: PATCH CONCLUIDO 422, sem gravar nem auditar")
+    void concluirSemResultadoVigenteRecusado() {
+        String processoId = processoAguardandoResultado();
+        jdbcTemplate.update("UPDATE processo_sanitario SET status_processo = 'COM_RESULTADO' WHERE id = CAST(? AS uuid)",
+                processoId);
+        int eventosAntes = eventosDeAtualizacao(processoId);
+
+        alterarStatus(tokenAgente, processoId, "CONCLUIDO").then().statusCode(422)
+                .body("mensagem", equalTo("Processo so pode ser concluido com resultado laboratorial registrado"));
+
+        assertSemResultado(processoId, "COM_RESULTADO");
+        assertThat(eventosDeAtualizacao(processoId), equalTo(eventosAntes));
     }
 
     @Test
@@ -988,6 +1001,69 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
             }
         }
         assertThat(contarResultados(processoId), equalTo(1));
+        assertThat(jdbcTemplate.queryForObject("SELECT status_processo FROM processo_sanitario WHERE id = CAST(? AS uuid)",
+                String.class, processoId), equalTo("COM_RESULTADO"));
+        assertVigenteCoerente(processoId);
+    }
+
+    // 2 correcoes simultaneas do mesmo vigente, no mesmo padrao: a correcao
+    // trava o processo antes de ler o vigente, entao a segunda ja ve a
+    // primeira confirmada (existsByRetificaId) e recebe 409.
+    @Test
+    @DisplayName("[T34] 2 correcoes simultaneas do mesmo vigente: um 200, um 409, uma so correcao gravada")
+    void correcoesConcorrentesDoMesmoVigente() throws Exception {
+        String processoId = processoAguardandoResultado();
+        String originalId = lancarResultado(tokenAgente, processoId, corpoResultado("negativo", HOJE, null))
+                .then().statusCode(200).extract().path("resultados[0].id");
+        List<String> codigos = List.of("positivo", "inconclusivo");
+        CountDownLatch largada = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(codigos.size());
+        List<Future<Response>> futuros = new ArrayList<>();
+        try {
+            try (Connection bloqueio = dataSource.getConnection()) {
+                bloqueio.setAutoCommit(false);
+                try {
+                    try (PreparedStatement trava = bloqueio.prepareStatement(
+                            "SELECT id FROM processo_sanitario WHERE id = CAST(? AS uuid) FOR UPDATE")) {
+                        trava.setString(1, processoId);
+                        trava.executeQuery().close();
+                    }
+                    for (String codigo : codigos) {
+                        futuros.add(executor.submit(() -> {
+                            if (!largada.await(TIMEOUT_SEGUNDOS, TimeUnit.SECONDS)) {
+                                throw new IllegalStateException("largada nao liberada em " + TIMEOUT_SEGUNDOS + " s");
+                            }
+                            return lancarResultado(tokenAgente, processoId, corpoResultado(codigo, HOJE, originalId));
+                        }));
+                    }
+                    largada.countDown();
+                    aguardarLancamentosBloqueados(futuros, pidDe(bloqueio));
+                } finally {
+                    bloqueio.rollback();
+                }
+            }
+
+            List<Response> respostas = new ArrayList<>();
+            for (Future<Response> futuro : futuros) {
+                try {
+                    respostas.add(futuro.get(TIMEOUT_SEGUNDOS, TimeUnit.SECONDS));
+                } catch (TimeoutException e) {
+                    fail("Correcao nao terminou em " + TIMEOUT_SEGUNDOS + " s (bloqueio ou deadlock?)");
+                }
+            }
+            assertThat(respostas.stream().filter(r -> r.statusCode() == 200).count(), equalTo(1L));
+            Response recusada = respostas.stream().filter(r -> r.statusCode() != 200).findFirst().orElseThrow();
+            assertThat(recusada.statusCode(), equalTo(409));
+            assertThat(recusada.path("mensagem"), equalTo("Registro ja foi retificado por outro"));
+        } finally {
+            executor.shutdownNow();
+            if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
+                fail("Requisicoes ainda em execucao apos o encerramento");
+            }
+        }
+        assertThat(contarResultados(processoId), equalTo(2));
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM resultado_processo WHERE retifica_id = CAST(? AS uuid)",
+                Integer.class, originalId), equalTo(1));
         assertThat(jdbcTemplate.queryForObject("SELECT status_processo FROM processo_sanitario WHERE id = CAST(? AS uuid)",
                 String.class, processoId), equalTo("COM_RESULTADO"));
         assertVigenteCoerente(processoId);
