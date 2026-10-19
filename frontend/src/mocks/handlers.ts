@@ -4,6 +4,7 @@ import type { Animal, AnimalRequest, Baia, BaiaRequest, CatalogosAnimal } from '
 import { VACINAS, TIPOS_PROCEDIMENTO } from '@/features/animais/utils/catalogoClinico'
 import { DIAS_ANTECEDENCIA_ALERTA_VACINA, diasAteVencimento, hojeEmItu } from '@/features/animais/utils/regrasVacina'
 import type {
+  CategoriaFarmacologica,
   CriarPrescricaoRequest,
   CriarProcedimentoRequest,
   CriarVacinacaoRequest,
@@ -892,10 +893,29 @@ export function resetProcedimentosMock() {
 
 const MEDICAMENTO_FENOBARBITAL_ID = 'f3000000-0000-0000-0000-000000000001'
 
-const medicamentosMock: Medicamento[] = [
-  { id: MEDICAMENTO_FENOBARBITAL_ID, nome: 'Fenobarbital 30mg', categoriaId: 'cat-1', categoriaNome: 'Anticonvulsivante', ativo: true },
-  { id: 'f3000000-0000-0000-0000-000000000002', nome: 'Amoxicilina 250mg', categoriaId: 'cat-2', categoriaNome: 'Antibiótico', ativo: true },
-]
+// Dados fictícios só do mock (o backend real não tem seed de medicamentos nem
+// de categorias: o CCZ cadastra os reais pela tela de medicamentos).
+function seedMedicamentosMock(): Medicamento[] {
+  return [
+    { id: MEDICAMENTO_FENOBARBITAL_ID, nome: 'Fenobarbital 30mg', categoriaId: 'cat-1', categoriaNome: 'Anticonvulsivante', ativo: true },
+    { id: 'f3000000-0000-0000-0000-000000000002', nome: 'Amoxicilina 250mg', categoriaId: 'cat-2', categoriaNome: 'Antibiótico', ativo: true },
+  ]
+}
+
+function seedCategoriasFarmacologicasMock(): CategoriaFarmacologica[] {
+  return [
+    { id: 'cat-1', nome: 'Anticonvulsivante', ativo: true },
+    { id: 'cat-2', nome: 'Antibiótico', ativo: true },
+  ]
+}
+
+let medicamentosMock: Medicamento[] = seedMedicamentosMock()
+let categoriasFarmacologicasMock: CategoriaFarmacologica[] = seedCategoriasFarmacologicasMock()
+
+export function resetMedicamentosMock() {
+  medicamentosMock = seedMedicamentosMock()
+  categoriasFarmacologicasMock = seedCategoriasFarmacologicasMock()
+}
 
 type PrescricaoMockInterna = Omit<Prescricao, 'retificadoPorId' | 'statusRegistro'>
 
@@ -1385,6 +1405,41 @@ export const handlers = [
     const tamanho = Number(url.searchParams.get('tamanho') ?? '20')
     const filtrados = medicamentosMock.filter((item) => ativoParam === null || item.ativo === (ativoParam === 'true'))
     return HttpResponse.json(paginar(filtrados, pagina, tamanho))
+  }),
+
+  http.post(`${API_BASE_URL}/medicamentos`, async ({ request }) => {
+    const body = (await request.json()) as { nome?: string; categoriaId?: string }
+    const categoria = categoriasFarmacologicasMock.find((item) => item.id === body.categoriaId)
+    if (!categoria) {
+      return HttpResponse.json({ mensagem: 'Categoria farmacologica informada nao existe' }, { status: 422 })
+    }
+    const medicamento: Medicamento = {
+      id: crypto.randomUUID(),
+      nome: body.nome ?? '',
+      categoriaId: categoria.id,
+      categoriaNome: categoria.nome,
+      ativo: true,
+    }
+    medicamentosMock.push(medicamento)
+    return HttpResponse.json(medicamento)
+  }),
+
+  // Espelha CategoriaFarmacologicaController: só ativas, por nome; nome
+  // repetido (sem diferenciar maiúsculas) responde 409.
+  http.get(`${API_BASE_URL}/categorias-farmacologicas`, () =>
+    HttpResponse.json(
+      categoriasFarmacologicasMock.filter((item) => item.ativo).sort((a, b) => a.nome.localeCompare(b.nome)),
+    ),
+  ),
+
+  http.post(`${API_BASE_URL}/categorias-farmacologicas`, async ({ request }) => {
+    const nome = ((await request.json()) as { nome?: string }).nome?.trim() ?? ''
+    if (categoriasFarmacologicasMock.some((item) => item.nome.toLowerCase() === nome.toLowerCase())) {
+      return HttpResponse.json({ mensagem: 'Categoria farmacologica ja cadastrada' }, { status: 409 })
+    }
+    const categoria: CategoriaFarmacologica = { id: crypto.randomUUID(), nome, ativo: true }
+    categoriasFarmacologicasMock.push(categoria)
+    return HttpResponse.json(categoria)
   }),
 
   ...ocorrenciasHandlers,

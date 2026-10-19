@@ -2,6 +2,7 @@ import { useState, type KeyboardEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { formatarDataBR } from '@/lib/datas'
 import { AbaExames } from './AbaExames'
 import { AbaHistorico } from './AbaHistorico'
 import { AbaMedicamentos } from './AbaMedicamentos'
@@ -22,13 +23,9 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'exames', label: 'Exames' },
 ]
 
-const FUSO_ITU = 'America/Sao_Paulo'
-
-function formatarData(iso: string): string {
-  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: FUSO_ITU }).format(
-    new Date(iso),
-  )
-}
+// Nascimento e castração são LocalDate: `new Date('AAAA-MM-DD')` mostraria o
+// dia anterior em São Paulo (ver lib/datas.ts).
+const formatarData = formatarDataBR
 
 function formatarRelativo(iso: string): string {
   const dias = Math.floor((Date.now() - new Date(iso).getTime()) / (24 * 60 * 60 * 1000))

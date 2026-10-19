@@ -1,10 +1,15 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
+import { hojeEmItu } from '@/lib/datas'
+import { API_BASE_URL } from '@/lib/env'
+import { server } from '@/mocks/server'
+import { adicionarDiasIso } from '@/test/datas'
 import { AbaProcedimentos } from './AbaProcedimentos'
 
 const REX_ID = 'b2c3d4e5-0000-0000-0000-000000000001'
@@ -65,6 +70,60 @@ describe('ModalRegistrarProcedimento', () => {
 
     expect(await screen.findByText('Selecione o tipo de procedimento.')).toBeInTheDocument()
     expect(screen.getByText('Informe a data.')).toBeInTheDocument()
+  })
+
+  it('bloqueia data futura no formulário, sem enviar', async () => {
+    let enviados = 0
+    server.use(
+      http.post(`${API_BASE_URL}/procedimentos`, () => {
+        enviados += 1
+        return HttpResponse.json({}, { status: 500 })
+      }),
+    )
+    const user = userEvent.setup()
+    renderAba()
+
+    await screen.findByText('Castração')
+    await user.click(screen.getByRole('button', { name: /registrar procedimento/i }))
+    const modal = screen.getByRole('heading', { name: 'Registrar procedimento' }).closest<HTMLElement>('.modal')
+    if (!modal) throw new Error('modal não encontrado')
+
+    await user.selectOptions(within(modal).getByLabelText(/tipo de procedimento/i), 'vacinacao')
+    await user.type(within(modal).getByLabelText(/^data/i), adicionarDiasIso(hojeEmItu(), 1))
+    await user.click(within(modal).getByRole('button', { name: /^registrar procedimento$/i }))
+
+    expect(await within(modal).findByText('A data do procedimento não pode ser futura.')).toBeInTheDocument()
+    expect(enviados).toBe(0)
+  })
+
+  it('erro 422 com `campos` aparece no campo, não como mensagem geral', async () => {
+    server.use(
+      http.post(`${API_BASE_URL}/procedimentos`, () =>
+        HttpResponse.json(
+          {
+            mensagem: 'Data do procedimento nao pode ser futura',
+            campos: [{ campo: 'data', mensagem: 'Data do procedimento nao pode ser futura' }],
+          },
+          { status: 422 },
+        ),
+      ),
+    )
+    const user = userEvent.setup()
+    renderAba()
+
+    await screen.findByText('Castração')
+    await user.click(screen.getByRole('button', { name: /registrar procedimento/i }))
+    const modal = screen.getByRole('heading', { name: 'Registrar procedimento' }).closest<HTMLElement>('.modal')
+    if (!modal) throw new Error('modal não encontrado')
+
+    await user.selectOptions(within(modal).getByLabelText(/tipo de procedimento/i), 'vacinacao')
+    await user.type(within(modal).getByLabelText(/^data/i), hojeEmItu())
+    await user.click(within(modal).getByRole('button', { name: /^registrar procedimento$/i }))
+
+    const campoData = within(modal).getByLabelText(/^data/i).closest<HTMLElement>('.field')
+    if (!campoData) throw new Error('campo não encontrado')
+    expect(await within(campoData).findByText('Data do procedimento nao pode ser futura')).toBeInTheDocument()
+    expect(within(modal).queryByRole('alert')).not.toBeInTheDocument()
   })
 
   it('corrige um procedimento existente sem alterar o original (retifica)', async () => {

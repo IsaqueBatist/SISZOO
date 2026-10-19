@@ -6,6 +6,12 @@ spring:
     multipart:
       max-file-size: 5MB
       max-request-size: 6MB
+  # Sem hibernate.jdbc.time_zone, de proposito: as datas de negocio sao
+  # LocalDate/LocalDateTime em colunas `date`/`timestamp` sem fuso, e a
+  # propriedade fazia o Hibernate converter o LocalDateTime pelo fuso da JVM
+  # ao gravar (09:30 virava 06:30 com a JVM em UTC). O fuso do sistema e
+  # fixado na JVM (SiszooBackendApplication, TZ do Dockerfile) e no Clock
+  # (ClockConfig). Ver FusoHorarioPersistenciaIT.
   # T37: notificacao de resultado positivo (regra 19; inconclusivo nao
   # notifica desde a revisao de 2026-10-17, T34-4) ao municipe. Sem
   # SMTP real configurado, o envio falha ao conectar — o listener engole a

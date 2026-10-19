@@ -1,11 +1,28 @@
 import { useState, type FormEvent } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
+import { BannerRascunho } from '@/components/BannerRascunho'
 import { Icon } from '@/components/layout/Icon'
+import { useAuth } from '@/features/auth/hooks/useAuth'
+import { hojeEmItu } from '@/lib/datas'
+import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
+import { useRascunho } from '@/lib/useRascunho'
+import { armazenamentoRascunhoClinico, chaveRascunhoClinico } from '../storage/rascunhoClinicoStorage'
 import { TIPOS_PROCEDIMENTO } from '../utils/catalogoClinico'
 import { procedimentoFormSchema, type ProcedimentoFormValues } from '../schemas/historicoFormSchemas'
 import { useCriarProcedimentoMutation } from '../hooks/useHistoricoAnimal'
 import type { Procedimento } from '../types/historico.types'
+
+// Texto vazio ou só com espaços vai como ausente (o backend grava NULL e a
+// tela mostra "—"). Mesmo padrão de AnimalForm.
+const semEspacos = (v: unknown) => (typeof v === 'string' ? v.trim() || undefined : v)
+
+// Erros por campo do 422: só os campos que existem no modal.
+const MAPA_ERROS_SERVIDOR = mapaDeCampos<ProcedimentoFormValues>(
+  Object.keys(procedimentoFormSchema.shape) as (keyof ProcedimentoFormValues)[],
+)
+
+const ARMAZENAMENTO_RASCUNHO = armazenamentoRascunhoClinico<ProcedimentoFormValues>()
 
 interface ModalRegistrarProcedimentoProps {
   animalId: string
@@ -20,9 +37,15 @@ export function ModalRegistrarProcedimento({ animalId, retifica, onFechar, onSuc
 
   const mutation = useCriarProcedimentoMutation(animalId)
 
+  const { user } = useAuth()
+
   const {
     register,
     handleSubmit,
+    setError,
+    watch,
+    reset,
+    getValues,
     formState: { errors },
   } = useForm<ProcedimentoFormValues>({
     resolver: zodResolver(procedimentoFormSchema),
@@ -36,6 +59,15 @@ export function ModalRegistrarProcedimento({ animalId, retifica, onFechar, onSuc
     },
   })
 
+  // Ver comentário equivalente em ModalRegistrarVacina.tsx.
+  const rascunho = useRascunho<ProcedimentoFormValues>({
+    armazenamento: ARMAZENAMENTO_RASCUNHO,
+    chave: chaveRascunhoClinico(user?.id ?? '', 'procedimento', animalId, retifica?.id),
+    watch,
+    reset,
+    getValues,
+  })
+
   async function onSubmit(dados: ProcedimentoFormValues) {
     try {
       await mutation.mutateAsync({
@@ -46,9 +78,14 @@ export function ModalRegistrarProcedimento({ animalId, retifica, onFechar, onSuc
         resultado: dados.resultado,
         retificaId: retifica?.id,
       })
+      await rascunho.removerAposSucesso()
       onSucesso()
-    } catch {
-      setSubmitError(`Não foi possível ${retifica ? 'corrigir' : 'registrar'} o procedimento. Tente novamente.`)
+    } catch (erro) {
+      if (aplicarErrosDeCampo(erro, setError, MAPA_ERROS_SERVIDOR).length > 0) return
+      setSubmitError(
+        mensagemDeRegraDaApi(erro) ??
+          `Não foi possível ${retifica ? 'corrigir' : 'registrar'} o procedimento. Tente novamente.`,
+      )
     }
   }
 
@@ -70,6 +107,9 @@ export function ModalRegistrarProcedimento({ animalId, retifica, onFechar, onSuc
         <form onSubmit={aoEnviar} noValidate>
           <div className="modal-body">
             <div className="form-grid cols-1">
+              {rascunho.rascunhoDisponivel && (
+                <BannerRascunho onRestaurar={rascunho.restaurar} onDescartar={() => void rascunho.descartar()} />
+              )}
               {submitError && (
                 <div className="alert danger" role="alert">
                   <span className="bullet" />
@@ -107,19 +147,19 @@ export function ModalRegistrarProcedimento({ animalId, retifica, onFechar, onSuc
                   <label htmlFor="proc-data">
                     Data <span className="req">*</span>
                   </label>
-                  <input id="proc-data" className={`input${errors.data ? ' error' : ''}`} type="date" {...register('data')} />
+                  <input id="proc-data" className={`input${errors.data ? ' error' : ''}`} type="date" max={hojeEmItu()} {...register('data')} />
                   {errors.data && <span className="err">{errors.data.message}</span>}
                 </div>
               </div>
 
               <div className="field">
                 <label htmlFor="proc-descricao">Descrição</label>
-                <textarea id="proc-descricao" className="textarea" rows={3} {...register('descricao')} />
+                <textarea id="proc-descricao" className="textarea" rows={3} {...register('descricao', { setValueAs: semEspacos })} />
               </div>
 
               <div className="field">
                 <label htmlFor="proc-resultado">Resultado / observações pós-procedimento</label>
-                <textarea id="proc-resultado" className="textarea" rows={3} {...register('resultado')} />
+                <textarea id="proc-resultado" className="textarea" rows={3} {...register('resultado', { setValueAs: semEspacos })} />
               </div>
             </div>
           </div>

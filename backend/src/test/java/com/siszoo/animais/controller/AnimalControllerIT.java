@@ -14,6 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.siszoo.animais.clinico.entity.UnidadeDose;
 import com.siszoo.animais.dto.AtualizarAnimalRequest;
 import com.siszoo.animais.dto.CriarAnimalRequest;
 import com.siszoo.animais.entity.Baia;
@@ -65,7 +66,69 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .body("motivoEntradaNome", equalTo("Resgate"))
                 .body("baiaNome", equalTo("Baia AnimalControllerIT 1"))
                 .body("tipoBaiaNome", equalTo("Interna"))
+                // DER §3.2: microchip sem nenhuma vacinacao ainda nao completa a ficha.
+                .body("fichaCompleta", equalTo(false));
+    }
+
+    @Test
+    void primeiraVacinacaoCompletaAFichaDeAnimalComMicrochip() {
+        String id = criarAnimalViaApi(animalMinimo(fixture.microchipUnico())).then().statusCode(200)
+                .body("fichaCompleta", equalTo(false))
+                .extract().path("id");
+
+        fixture.postarVacinacao(tokenAdmin, id, fixture.hoje(), UnidadeDose.MILILITRO, null)
+                .then().statusCode(200);
+
+        given()
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .when()
+                .get("/api/animais/" + id)
+                .then()
+                .statusCode(200)
                 .body("fichaCompleta", equalTo(true));
+    }
+
+    @Test
+    void deveRetornar422ComCampoQuandoDataDeEntradaFutura() {
+        CriarAnimalRequest request = new CriarAnimalRequest(
+                "Rex", "canino", "macho", null, null, null, null, null, null, null,
+                null, false, null, "disponivel_adocao", "resgate", fixture.agora().plusDays(1), null, null, null);
+
+        postarAnimal(request)
+                .then()
+                .statusCode(422)
+                .body("mensagem", equalTo("Data de entrada nao pode ser futura"))
+                .body("campos[0].campo", equalTo("dataEntrada"));
+    }
+
+    @Test
+    void deveRetornar422ComCampoQuandoDataDeCastracaoSemCastracao() {
+        CriarAnimalRequest request = new CriarAnimalRequest(
+                "Rex", "canino", "macho", null, null, null, null, null, null, null,
+                null, false, fixture.hoje(), "disponivel_adocao", "resgate", fixture.agora(), null, null, null);
+
+        postarAnimal(request)
+                .then()
+                .statusCode(422)
+                .body("campos[0].campo", equalTo("dataEsterilizacao"));
+    }
+
+    @Test
+    void deveRetornar409QuandoBaiaCheiaOuInativa() {
+        Baia cheia = criarBaia("Baia AnimalControllerIT cheia", (short) 1);
+        criarAnimalViaApi(animalNaBaia(cheia.getId())).then().statusCode(200);
+        postarAnimal(animalNaBaia(cheia.getId()))
+                .then()
+                .statusCode(409)
+                .body("mensagem", equalTo("Baia informada ja atingiu a capacidade"));
+
+        Baia inativa = criarBaia("Baia AnimalControllerIT inativa", (short) 5);
+        inativa.setAtiva(false);
+        baiaRepository.save(inativa);
+        postarAnimal(animalNaBaia(inativa.getId()))
+                .then()
+                .statusCode(409)
+                .body("mensagem", equalTo("Baia informada esta inativa"));
     }
 
     @Test
@@ -420,11 +483,31 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .response();
     }
 
+    // Resposta crua: o chamador decide o status esperado (422, 409...).
+    private io.restassured.response.Response postarAnimal(CriarAnimalRequest request) {
+        return given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .body(request)
+                .when()
+                .post("/api/animais");
+    }
+
+    private CriarAnimalRequest animalNaBaia(UUID baiaId) {
+        return new CriarAnimalRequest(
+                "Rex", "canino", "macho", null, null, null, null, null, null, null,
+                null, false, null, "disponivel_adocao", "resgate", fixture.agora(), baiaId, null, null);
+    }
+
     private Baia criarBaia(String nome) {
+        return criarBaia(nome, (short) 5);
+    }
+
+    private Baia criarBaia(String nome, short capacidade) {
         Baia baia = new Baia();
         baia.setNome(nome);
         baia.setTipoBaia(tipoBaiaRepository.findByCodigo("interna").orElseThrow());
-        baia.setCapacidade((short) 5);
+        baia.setCapacidade(capacidade);
         return baiaRepository.save(baia);
     }
 }

@@ -19,19 +19,21 @@ export const ROLES: Record<RoleKey, Role> = {
     label: 'Administrador',
     short: 'ADMIN',
     badgeCls: 'badge-role-admin',
-    access: ['dashboard', 'animais', 'ocorrencias', 'processos', 'relatorios', 'baias', 'usuarios', 'config'],
+    access: ['dashboard', 'animais', 'ocorrencias', 'processos', 'relatorios', 'medicamentos', 'baias', 'usuarios', 'config'],
   },
   vet: {
     label: 'Veterinária',
     short: 'VET',
     badgeCls: 'badge-role-vet',
-    access: ['dashboard', 'animais', 'processos', 'relatorios', 'baias', 'config'],
+    access: ['dashboard', 'animais', 'processos', 'relatorios', 'medicamentos', 'baias', 'config'],
   },
+  // 'medicamentos' (fora do protótipo): o Agente tem GESTAO_ANIMAIS:leitura,
+  // então vê o catálogo; cadastrar exige escrita (Admin e Vet).
   agente: {
     label: 'Agente Sanitário',
     short: 'AGENTE',
     badgeCls: 'badge-role-agent',
-    access: ['dashboard', 'animais', 'ocorrencias', 'processos', 'relatorios', 'config'],
+    access: ['dashboard', 'animais', 'ocorrencias', 'processos', 'relatorios', 'medicamentos', 'config'],
   },
 }
 
@@ -61,6 +63,7 @@ export const NAV_ALL: NavEntry[] = [
   { id: 'processos', label: 'Processos Sanitários', to: '/processos', icon: 'clipboard' },
   { id: 'relatorios', label: 'Relatórios', to: '/relatorios', icon: 'chart' },
   { group: 'ADMINISTRAÇÃO' },
+  { id: 'medicamentos', label: 'Medicamentos', to: '/medicamentos', icon: 'pill' },
   { id: 'baias', label: 'Gestão de Baias', to: '/baias', icon: 'grid' },
   { id: 'usuarios', label: 'Usuários', to: '/usuarios', icon: 'users' },
   { id: 'config', label: 'Configurações', to: '/configuracoes', icon: 'cog' },

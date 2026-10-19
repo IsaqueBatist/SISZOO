@@ -10,6 +10,8 @@ RUN ./mvnw package -DskipTests -B
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
+# Fuso do CCZ (DER, regra 4); a JVM le TZ ao iniciar.
+ENV TZ=America/Sao_Paulo
 
 COPY --from=build /app/target/app.jar app.jar
 

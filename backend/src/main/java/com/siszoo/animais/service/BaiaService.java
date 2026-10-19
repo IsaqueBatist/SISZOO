@@ -16,6 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.siszoo.animais.dto.AtualizarBaiaRequest;
 import com.siszoo.animais.dto.AtualizarStatusBaiaRequest;
@@ -66,8 +67,8 @@ public class BaiaService {
         baia.setNome(request.nome());
         baia.setTipoBaia(resolverTipoBaia(request.tipoBaia()));
         baia.setCapacidade(request.capacidade());
-        baia.setFinalidade(request.finalidade());
-        baia.setObservacoes(request.observacoes());
+        baia.setFinalidade(textoOuNulo(request.finalidade()));
+        baia.setObservacoes(textoOuNulo(request.observacoes()));
 
         baiaRepository.save(baia);
         return mapearComOcupacao(baia, true);
@@ -80,8 +81,8 @@ public class BaiaService {
         baia.setNome(request.nome());
         baia.setTipoBaia(resolverTipoBaia(request.tipoBaia()));
         baia.setCapacidade(request.capacidade());
-        baia.setFinalidade(request.finalidade());
-        baia.setObservacoes(request.observacoes());
+        baia.setFinalidade(textoOuNulo(request.finalidade()));
+        baia.setObservacoes(textoOuNulo(request.observacoes()));
 
         baiaRepository.save(baia);
         return mapearComOcupacao(baia, true);
@@ -151,6 +152,12 @@ public class BaiaService {
 
     private TipoBaia resolverTipoBaia(String codigo) {
         return tipoBaiaRepository.findByCodigo(codigo).orElseThrow(TipoBaiaInvalidoException::new);
+    }
+
+    // Texto vazio ou so com espacos vira NULL: a tela usa o tipo da baia quando
+    // nao ha finalidade.
+    private String textoOuNulo(String texto) {
+        return StringUtils.hasText(texto) ? texto : null;
     }
 
     private Specification<Baia> construirFiltro(Boolean ativa) {

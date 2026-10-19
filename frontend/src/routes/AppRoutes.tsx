@@ -39,6 +39,9 @@ const EditarAnimal = lazy(() =>
 const GestaoBaias = lazy(() =>
   import('@/features/baias/components/GestaoBaias').then((m) => ({ default: m.GestaoBaias })),
 )
+const Medicamentos = lazy(() =>
+  import('@/features/medicamentos/components/Medicamentos').then((m) => ({ default: m.Medicamentos })),
+)
 const Ocorrencias = lazy(() =>
   import('@/features/ocorrencias/components/Ocorrencias').then((m) => ({ default: m.Ocorrencias })),
 )
@@ -103,6 +106,8 @@ export function AppRoutes() {
                 <Route path="/animais/novo" element={<CadastrarAnimal />} />
                 <Route path="/animais/:id/editar" element={<EditarAnimal />} />
               </Route>
+              {/* GESTAO_ANIMAIS:leitura (todos os perfis); o cadastro só aparece com escrita. */}
+              <Route path="/medicamentos" element={<Medicamentos />} />
               <Route element={<RotaGestaoBaias />}>
                 <Route path="/baias" element={<GestaoBaias />} />
               </Route>

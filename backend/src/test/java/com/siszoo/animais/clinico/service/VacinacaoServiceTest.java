@@ -35,6 +35,7 @@ import com.siszoo.animais.clinico.repository.VacinaRepository;
 import com.siszoo.animais.clinico.repository.VacinacaoRepository;
 import com.siszoo.animais.entity.Animal;
 import com.siszoo.animais.repository.AnimalRepository;
+import com.siszoo.animais.service.FichaCompletaService;
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.repository.UsuarioRepository;
@@ -61,6 +62,9 @@ class VacinacaoServiceTest {
     @Mock
     private AuditoriaEventoService auditoriaEventoService;
 
+    @Mock
+    private FichaCompletaService fichaCompletaService;
+
     private VacinacaoService vacinacaoService;
 
     private static final LocalDate HOJE = LocalDate.of(2026, 9, 10);
@@ -70,7 +74,7 @@ class VacinacaoServiceTest {
     void criarService() {
         Clock clock = Clock.fixed(Instant.parse("2026-09-10T15:00:00Z"), ZoneId.of("America/Sao_Paulo"));
         vacinacaoService = new VacinacaoService(vacinacaoRepository, vacinaRepository, animalRepository,
-                usuarioRepository, vacinacaoMapper, auditoriaEventoService, clock);
+                usuarioRepository, vacinacaoMapper, auditoriaEventoService, fichaCompletaService, clock);
     }
 
     @Test
@@ -94,6 +98,23 @@ class VacinacaoServiceTest {
         assertThat(resultado).isEqualTo(response);
         verify(vacinacaoRepository).save(any(Vacinacao.class));
         verify(auditoriaEventoService).registrar(usuario, AcaoAuditoria.CRIACAO, "vacinacao", novoId, null, response);
+    }
+
+    @Test
+    @DisplayName("[DER 3.2] nova vacinacao recalcula ficha_completa do animal")
+    void deveRecalcularFichaCompletaDoAnimalAposCriarVacinacao() {
+        UUID animalId = UUID.randomUUID();
+        UUID usuarioId = UUID.randomUUID();
+        Animal animal = animalComId(animalId);
+
+        when(animalRepository.findById(animalId)).thenReturn(Optional.of(animal));
+        when(usuarioRepository.findById(usuarioId)).thenReturn(Optional.of(usuarioComId(usuarioId)));
+        when(vacinaRepository.findByCodigo("antirrabica")).thenReturn(Optional.of(new Vacina()));
+        when(fichaCompletaService.calcular(animal)).thenReturn(true);
+
+        vacinacaoService.criar(requestSemRetificacao(animalId), usuarioId);
+
+        assertThat(animal.isFichaCompleta()).isTrue();
     }
 
     @Test

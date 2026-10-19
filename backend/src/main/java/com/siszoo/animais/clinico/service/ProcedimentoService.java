@@ -1,5 +1,7 @@
 package com.siszoo.animais.clinico.service;
 
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.siszoo.animais.clinico.dto.CriarProcedimentoRequest;
 import com.siszoo.animais.clinico.dto.ProcedimentoResponse;
@@ -28,6 +31,7 @@ import com.siszoo.animais.entity.Animal;
 import com.siszoo.animais.exception.AnimalNaoEncontradoException;
 import com.siszoo.animais.repository.AnimalRepository;
 import com.siszoo.comum.dto.PaginaResponse;
+import com.siszoo.comum.exception.CampoInvalidoException;
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.exception.UsuarioNaoEncontradoException;
@@ -47,6 +51,7 @@ public class ProcedimentoService {
     private final UsuarioRepository usuarioRepository;
     private final ProcedimentoMapper procedimentoMapper;
     private final AuditoriaEventoService auditoriaEventoService;
+    private final Clock clock;
 
     public ProcedimentoService(
             ProcedimentoRepository procedimentoRepository,
@@ -54,13 +59,15 @@ public class ProcedimentoService {
             AnimalRepository animalRepository,
             UsuarioRepository usuarioRepository,
             ProcedimentoMapper procedimentoMapper,
-            AuditoriaEventoService auditoriaEventoService) {
+            AuditoriaEventoService auditoriaEventoService,
+            Clock clock) {
         this.procedimentoRepository = procedimentoRepository;
         this.tipoProcedimentoRepository = tipoProcedimentoRepository;
         this.animalRepository = animalRepository;
         this.usuarioRepository = usuarioRepository;
         this.procedimentoMapper = procedimentoMapper;
         this.auditoriaEventoService = auditoriaEventoService;
+        this.clock = clock;
     }
 
     @Transactional
@@ -69,6 +76,12 @@ public class ProcedimentoService {
                 .orElseThrow(AnimalNaoEncontradoException::new);
         Usuario usuarioAutenticado = usuarioRepository.findById(usuarioAutenticadoId)
                 .orElseThrow(UsuarioNaoEncontradoException::new);
+
+        // Procedimento e fato ocorrido (como a vacinacao, RN-C06): data futura
+        // e recusada, inclusive na retificacao, com "hoje" do Clock do projeto.
+        if (request.data().isAfter(LocalDate.now(clock))) {
+            throw new CampoInvalidoException("data", "Data do procedimento nao pode ser futura");
+        }
 
         Procedimento anterior = request.retificaId() != null
                 ? validarRetificacao(request.retificaId(), animal.getId())
@@ -79,8 +92,8 @@ public class ProcedimentoService {
         procedimento.setTipoProcedimento(resolverTipoProcedimento(request.tipoProcedimento()));
         procedimento.setExecutadoPor(usuarioAutenticado);
         procedimento.setData(request.data());
-        procedimento.setDescricao(request.descricao());
-        procedimento.setResultado(request.resultado());
+        procedimento.setDescricao(textoOuNulo(request.descricao()));
+        procedimento.setResultado(textoOuNulo(request.resultado()));
         procedimento.setRetifica(anterior);
 
         procedimentoRepository.save(procedimento);
@@ -142,6 +155,11 @@ public class ProcedimentoService {
 
     private TipoProcedimento resolverTipoProcedimento(String codigo) {
         return tipoProcedimentoRepository.findByCodigo(codigo).orElseThrow(TipoProcedimentoInvalidoException::new);
+    }
+
+    // Texto vazio ou so com espacos vira NULL: a tela trata ausencia como "—".
+    private String textoOuNulo(String texto) {
+        return StringUtils.hasText(texto) ? texto : null;
     }
 
     private Specification<Procedimento> construirFiltro(UUID animalId) {

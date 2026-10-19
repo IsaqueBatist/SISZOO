@@ -6,9 +6,13 @@
 // agregado (ver features/alertas/) — mas essa função continua em uso aqui
 // porque AbaVacinas.tsx precisa do status "em dia" linha a linha (fora da
 // janela de alerta), que o endpoint não devolve por design.
+import { hojeEmItu } from '@/lib/datas'
+
+// Reexport: hojeEmItu morava aqui antes de ir para lib/datas.ts.
+export { hojeEmItu }
+
 export const DIAS_ANTECEDENCIA_ALERTA_VACINA = 7
 
-const FUSO_ITU = 'America/Sao_Paulo'
 const UM_DIA_MS = 24 * 60 * 60 * 1000
 
 export type StatusReforcoVacina = 'vencida' | 'a_vencer' | 'em_dia'
@@ -27,10 +31,6 @@ export interface BadgeReforcoVacina {
 function paraDataUtc(isoDate: string): number {
   const [ano, mes, dia] = isoDate.split('-').map(Number)
   return Date.UTC(ano, mes - 1, dia)
-}
-
-export function hojeEmItu(): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: FUSO_ITU }).format(new Date())
 }
 
 export function diasAteVencimento(dataValidade: string, hoje: string = hojeEmItu()): number {

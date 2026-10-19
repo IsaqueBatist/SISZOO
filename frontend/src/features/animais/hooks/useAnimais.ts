@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import {
   alterarStatusBaia,
   atualizarAnimal,
@@ -55,7 +55,7 @@ export function useCriarAnimalMutation() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: criarAnimal,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ANIMAIS_QUERY_KEY }),
+    onSuccess: () => invalidarAnimaisEBaias(queryClient),
   })
 }
 
@@ -63,8 +63,17 @@ export function useAtualizarAnimalMutation() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: AnimalRequest }) => atualizarAnimal(id, payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ANIMAIS_QUERY_KEY }),
+    onSuccess: () => invalidarAnimaisEBaias(queryClient),
   })
+}
+
+// A ocupação das baias é calculada a partir dos animais: cadastro, troca de
+// baia ou de status mudam o "x/capacidade" das telas de baia e do select.
+function invalidarAnimaisEBaias(queryClient: QueryClient) {
+  return Promise.all([
+    queryClient.invalidateQueries({ queryKey: ANIMAIS_QUERY_KEY }),
+    queryClient.invalidateQueries({ queryKey: BAIAS_QUERY_KEY }),
+  ])
 }
 
 // Traz ativas e inativas — usado pela tela de gestão (T19), que filtra por

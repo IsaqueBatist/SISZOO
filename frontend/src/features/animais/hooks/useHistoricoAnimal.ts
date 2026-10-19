@@ -70,7 +70,14 @@ export function useCriarVacinacaoMutation(animalId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (payload: CriarVacinacaoRequest) => criarVacinacao(payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['vacinacoes', animalId] }),
+    // Também os alertas de vacina (a aplicação nova pode tirar o animal da
+    // lista) e o detalhe do animal (ficha_completa é recalculada no backend).
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['vacinacoes', animalId] }),
+        queryClient.invalidateQueries({ queryKey: ['alertas', 'vacinas'] }),
+        queryClient.invalidateQueries({ queryKey: ['animais', 'detalhe', animalId] }),
+      ]),
   })
 }
 
