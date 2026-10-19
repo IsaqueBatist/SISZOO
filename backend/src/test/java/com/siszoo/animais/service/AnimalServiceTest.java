@@ -129,7 +129,7 @@ class AnimalServiceTest {
     void deveRecusarBaiaInativaNoCadastro() {
         Baia baia = baia(5, false);
         when(statusAnimalRepository.findByCodigo("em_tratamento")).thenReturn(Optional.of(status("em_tratamento")));
-        when(baiaRepository.findById(baia.getId())).thenReturn(Optional.of(baia));
+        when(baiaRepository.findByIdForUpdate(baia.getId())).thenReturn(Optional.of(baia));
 
         assertThatThrownBy(() -> animalService.criar(
                 criar(ENTRADA, null, false, null, baia.getId(), "em_tratamento"), UUID.randomUUID()))
@@ -142,7 +142,7 @@ class AnimalServiceTest {
     void deveRecusarBaiaCheiaNoCadastro() {
         Baia baia = baia(2, true);
         when(statusAnimalRepository.findByCodigo("em_tratamento")).thenReturn(Optional.of(status("em_tratamento")));
-        when(baiaRepository.findById(baia.getId())).thenReturn(Optional.of(baia));
+        when(baiaRepository.findByIdForUpdate(baia.getId())).thenReturn(Optional.of(baia));
         when(animalRepository.countByBaia_IdAndStatus_CodigoNotIn(eq(baia.getId()), anyCollection())).thenReturn(2L);
 
         assertThatThrownBy(() -> animalService.criar(
@@ -156,7 +156,7 @@ class AnimalServiceTest {
     void deveAceitarBaiaComVagaNoCadastro() {
         Baia baia = baia(2, true);
         prepararCatalogos("em_tratamento");
-        when(baiaRepository.findById(baia.getId())).thenReturn(Optional.of(baia));
+        when(baiaRepository.findByIdForUpdate(baia.getId())).thenReturn(Optional.of(baia));
         when(animalRepository.countByBaia_IdAndStatus_CodigoNotIn(eq(baia.getId()), anyCollection())).thenReturn(1L);
 
         animalService.criar(criar(ENTRADA, null, false, null, baia.getId(), "em_tratamento"), usuarioComId().getId());
@@ -200,7 +200,7 @@ class AnimalServiceTest {
         Animal animal = animalNaBaia(origem, "em_tratamento");
         when(animalRepository.findById(animal.getId())).thenReturn(Optional.of(animal));
         when(statusAnimalRepository.findByCodigo("em_tratamento")).thenReturn(Optional.of(status("em_tratamento")));
-        when(baiaRepository.findById(destino.getId())).thenReturn(Optional.of(destino));
+        when(baiaRepository.findByIdForUpdate(destino.getId())).thenReturn(Optional.of(destino));
         when(animalRepository.countByBaia_IdAndStatus_CodigoNotIn(eq(destino.getId()), anyCollection())).thenReturn(1L);
 
         assertThatThrownBy(() -> animalService.atualizar(animal.getId(), atualizar(destino.getId(), "em_tratamento")))
@@ -216,7 +216,7 @@ class AnimalServiceTest {
         Animal animal = animalNaBaia(baia, "transferido");
         when(animalRepository.findById(animal.getId())).thenReturn(Optional.of(animal));
         when(statusAnimalRepository.findByCodigo("em_tratamento")).thenReturn(Optional.of(status("em_tratamento")));
-        when(baiaRepository.findById(baia.getId())).thenReturn(Optional.of(baia));
+        when(baiaRepository.findByIdForUpdate(baia.getId())).thenReturn(Optional.of(baia));
         when(animalRepository.countByBaia_IdAndStatus_CodigoNotIn(eq(baia.getId()), anyCollection())).thenReturn(1L);
 
         assertThatThrownBy(() -> animalService.atualizar(animal.getId(), atualizar(baia.getId(), "em_tratamento")))

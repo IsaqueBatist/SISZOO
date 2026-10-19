@@ -231,23 +231,23 @@ public class AnimalService {
     // depois (BaiaService permite as duas coisas com animais dentro), senao
     // nenhuma outra edicao dele passaria. Animal fora da custodia nao ocupa
     // baia (DER §5, regra 7) e nao e conferido.
+    // Quem passa a ocupar trava a baia (findByIdForUpdate) ate o commit, ja
+    // com a gravacao do animal: dois cadastros simultaneos na ultima vaga sao
+    // serializados e o segundo conta o primeiro (BaiaConcorrenciaIT). Os
+    // outros casos nao aumentam a ocupacao e leem sem trava.
     private Baia resolverBaia(UUID baiaId, StatusAnimal statusNovo, Animal atual) {
         if (baiaId == null) {
             return null;
-        }
-        Baia baia = baiaRepository.findById(baiaId).orElseThrow(BaiaInvalidaException::new);
-
-        if (!ocupaBaia(statusNovo)) {
-            return baia;
         }
         boolean jaOcupava = atual != null
                 && atual.getBaia() != null
                 && atual.getBaia().getId().equals(baiaId)
                 && ocupaBaia(atual.getStatus());
-        if (jaOcupava) {
-            return baia;
+        if (!ocupaBaia(statusNovo) || jaOcupava) {
+            return baiaRepository.findById(baiaId).orElseThrow(BaiaInvalidaException::new);
         }
 
+        Baia baia = baiaRepository.findByIdForUpdate(baiaId).orElseThrow(BaiaInvalidaException::new);
         if (!baia.isAtiva()) {
             throw BaiaIndisponivelException.inativa();
         }
