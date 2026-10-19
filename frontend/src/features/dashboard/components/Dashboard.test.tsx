@@ -47,7 +47,9 @@ describe('Dashboard', () => {
     expect(await screen.findByText('147')).toBeInTheDocument()
     expect(screen.getByText('84')).toBeInTheDocument()
     expect(screen.getByText('8')).toBeInTheDocument()
-    expect(screen.getByText('Dados de demonstração')).toBeInTheDocument()
+
+    const secaoIndicadores = screen.getByText('Indicadores').closest('.section-header') as HTMLElement
+    expect(within(secaoIndicadores).getByText('Dados de demonstração')).toBeInTheDocument()
   })
 
   it('mostra skeleton enquanto os dados carregam e some depois', async () => {
@@ -79,7 +81,8 @@ describe('Dashboard', () => {
     const user = userEvent.setup()
     renderDashboard()
 
-    expect(screen.queryByText('Dados de demonstração')).not.toBeInTheDocument()
+    const secaoIndicadores = screen.getByText('Indicadores').closest('.section-header') as HTMLElement
+    expect(within(secaoIndicadores).queryByText('Dados de demonstração')).not.toBeInTheDocument()
     const botaoRetry = await screen.findByRole('button', { name: 'Tentar novamente' })
     await user.click(botaoRetry)
 
