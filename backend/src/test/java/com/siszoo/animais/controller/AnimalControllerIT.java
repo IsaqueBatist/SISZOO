@@ -10,6 +10,7 @@ import static org.hamcrest.Matchers.nullValue;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -194,6 +195,81 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .body("itens.especieCodigo", not(hasItem("canino")))
                 .body("pagina", equalTo(0))
                 .body("tamanho", equalTo(20));
+    }
+
+    // ── Normalizacao do microchip (RN01) ─────────────────
+
+    @Test
+    @DisplayName("[RN01] microchip com espacos e gravado sem eles e colide com o mesmo numero sem espacos (409)")
+    void microchipComEspacosColideComONormalizado() {
+        String base = microchipSemHifen();
+        String comEspacos = " " + base.substring(0, 4) + " " + base.substring(4) + " ";
+
+        criarAnimalViaApi(animalMinimo(comEspacos)).then().body("microchip", equalTo(base));
+
+        given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .body(animalMinimo(base))
+                .when()
+                .post("/api/animais")
+                .then()
+                .statusCode(409)
+                .body("mensagem", equalTo("Microchip ja cadastrado"));
+    }
+
+    @Test
+    @DisplayName("[RN01] microchip vazio ou so com espacos e aceito como animal sem microchip")
+    void microchipVazioEhSemMicrochip() {
+        for (String vazio : new String[] {"", "   "}) {
+            criarAnimalViaApi(animalMinimo(vazio)).then()
+                    .body("microchip", nullValue())
+                    .body("fichaCompleta", equalTo(false));
+        }
+    }
+
+    @Test
+    @DisplayName("[RN01] busca por microchip com espacos encontra o microchip gravado sem eles")
+    void buscaPorMicrochipIgnoraEspacos() {
+        String base = microchipSemHifen();
+        criarAnimalViaApi(animalMinimo(base));
+
+        for (String termo : new String[] {" " + base, base.substring(0, 4) + " " + base.substring(4) + " "}) {
+            given()
+                    .header("Authorization", "Bearer " + tokenAdmin)
+                    .queryParam("q", termo)
+                    .when()
+                    .get("/api/animais")
+                    .then()
+                    .statusCode(200)
+                    .body("itens.microchip", hasItem(base));
+        }
+    }
+
+    @Test
+    @DisplayName("[RN01] edicao normaliza o microchip: define sem espacos e aceita o mesmo numero com espacos")
+    void edicaoNormalizaMicrochip() {
+        String id = criarAnimalViaApi(animalMinimo(null)).path("id");
+        String base = microchipSemHifen();
+        String comEspacos = base.substring(0, 4) + "  " + base.substring(4);
+
+        for (String microchip : new String[] {comEspacos, " " + base + " "}) {
+            given()
+                    .contentType(ContentType.JSON)
+                    .header("Authorization", "Bearer " + tokenAdmin)
+                    .body(new AtualizarAnimalRequest(
+                            "Rex", "canino", "macho", null, null, null, null, null, null, null,
+                            microchip, false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null))
+                    .when()
+                    .put("/api/animais/" + id)
+                    .then()
+                    .statusCode(200)
+                    .body("microchip", equalTo(base));
+        }
+    }
+
+    private String microchipSemHifen() {
+        return fixture.microchipUnico().replace("-", "");
     }
 
     @Test

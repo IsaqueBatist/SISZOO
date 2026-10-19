@@ -68,9 +68,9 @@ public class Animal {
     @Column(name = "data_nascimento_aprox")
     private LocalDate dataNascimentoAprox;
 
-    // PostgreSQL 16 (Constraints/Indexes): UNIQUE sobre coluna nullable trata
-    // múltiplos NULL como distintos, satisfazendo "único quando informado"
-    // (DER §3.2) sem exigir índice parcial.
+    // Único quando informado (DER §3.2): índice único parcial
+    // uq_animal_microchip ... WHERE microchip IS NOT NULL (V16). Gravado sempre
+    // na forma de AnimalService.normalizarMicrochip (sem espaços; vazio = null).
     @Column(unique = true, nullable = true, length = 30)
     private String microchip;
 

@@ -230,7 +230,7 @@ A feature `geral` gera a autoridade do módulo inteiro (`MODULO:leitura|escrita|
 | `peso_kg`               | decimal(5,2)        | ?      |                                                                                     |
 | `idade_aprox`           | varchar(30)         | ?      | livre ("3 anos", "~6 meses")                                                        |
 | `data_nascimento_aprox` | date                | ?      |                                                                                     |
-| `microchip`             | varchar(30)         | ?      | Único quando informado                                                              |
+| `microchip`             | varchar(30)         | ?      | Único quando informado (índice único parcial `uq_animal_microchip … WHERE microchip IS NOT NULL`, V16). Normalizado no servidor no cadastro, na edição e na busca: sem espaços; vazio = NULL |
 | `esterilizado`          | boolean             | \*     | default `false`                                                                     |
 | `data_esterilizacao`    | date                | ?      |                                                                                     |
 | `status_id`             | FK `status_animal`  | \*     |                                                                                     |
