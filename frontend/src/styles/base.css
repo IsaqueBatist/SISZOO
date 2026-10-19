@@ -36,6 +36,21 @@ a:hover { text-decoration: underline; }
   color: var(--color-text-secondary);
 }
 
+/* Esconde visualmente mas mantém no nome acessível (leitor de tela) — ao
+   contrário de display:none, que também tira o elemento da árvore de
+   acessibilidade. Usado na sidebar colapsada. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* App layout */
 .app-shell { display: grid; grid-template-columns: var(--sidebar-width) 1fr; min-height: 100vh; }
 .app-shell.collapsed { grid-template-columns: 72px 1fr; }
@@ -91,6 +106,8 @@ a:hover { text-decoration: underline; }
   display: inline-flex; align-items: center; justify-content: center;
 }
 .sidebar-toggle:hover { background: var(--sidebar-item-hover); }
+.sidebar-toggle-icon { display: inline-flex; transition: transform 150ms; }
+.sidebar-toggle-icon.collapsed { transform: rotate(180deg); }
 
 .sidebar-nav {
   flex: 1;
@@ -125,6 +142,7 @@ a:hover { text-decoration: underline; }
   color: #fff;
   border-left-color: #fff;
 }
+.sidebar-item.collapsed { justify-content: center; gap: 0; }
 .sidebar-item .icon { width: 18px; height: 18px; color: var(--sidebar-icon); flex-shrink: 0; }
 .sidebar-item.active .icon { color: #fff; }
 .sidebar-item .badge-count {
@@ -158,6 +176,7 @@ a:hover { text-decoration: underline; }
   text-decoration: none;
   border-radius: 8px;
 }
+.sidebar-footer-link.collapsed { justify-content: center; gap: 0; }
 .sidebar-footer-link:hover { background: var(--sidebar-item-hover); }
 .sidebar-footer .user-name { color: #fff; font-size: 13px; font-weight: 600; line-height: 1.2; }
 .sidebar-footer .user-role { color: rgba(255,255,255,0.6); font-size: 11px; }
