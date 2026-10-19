@@ -624,7 +624,7 @@ Não é catálogo: coluna `processo_sanitario.status_processo` varchar + `CHECK`
 - `CONCLUIDO` é terminal: nenhum avanço, lançamento ou correção.
 - `CONCLUIDO` exige resultado vigente: o PATCH recusa (422, mensagem própria) concluir um processo sem `resultado_laboratorial_id`. Isso protege processos que chegaram a `COM_RESULTADO` pelo PATCH provisório da D18, antes da T34.
 - Consequência para a ocorrência (regra 13): só encerra com processo vinculado `CONCLUIDO`, e `CONCLUIDO` passa a exigir um resultado registrado.
-- **Pendência (T37):** a tela de lançamento de resultado ainda não existe. Até lá, o botão provisório "Avançar status" do front para em `AGUARDANDO_RESULTADO` (recebe 422), e um processo vinculado só chega a `CONCLUIDO` (e a ocorrência só encerra) pela API.
+- **Front (T37):** o card de resultado (`CardResultadoProcesso.tsx`) faz o primeiro lançamento em `AGUARDANDO_RESULTADO` e depois mostra o histórico em modo somente leitura. O botão provisório "Avançar status" cobre só `ABERTO → AGUARDANDO_RESULTADO` e `COM_RESULTADO → CONCLUIDO`; em `AGUARDANDO_RESULTADO` ele orienta a lançar o resultado. A correção (`retificaId`) existe só na API: a tela não a oferece (DH-28, `docs/decisoes/T37.md`).
 
 #### `resultado_laboratorial` (catálogo)
 
@@ -657,9 +657,9 @@ Não é catálogo: coluna `processo_sanitario.status_processo` varchar + `CHECK`
 **Pendências (fora da T34)**
 
 - Motivo obrigatório da correção: não exigido, pendente de decisão do CCZ (como a retificação clínica, `docs/regras-negocio-clinico.md`). `observacoes` é opcional.
-- Desfecho do animal (`desfecho_animal_id`): fora do registro de resultado; nenhum fluxo o preenche.
-- Notificação (T36): ver o gancho nas regras de `processo_sanitario`.
-- Tela de lançamento e histórico (T37).
+- Desfecho do animal (`desfecho_animal_id`): preenchido pelo mesmo `POST …/resultados` (T37, DH-21), direto no processo e fora deste histórico imutável. Se ele precisa de histórico próprio ou de imutabilidade, e o que fazer numa correção sem desfecho, é decisão pendente do CCZ (`docs/decisoes/T34.md`, T34-11).
+- Notificação: implementada na T37 (regras de `processo_sanitario`); a correção de um `positivo` já notificado é pendência da T36.
+- Tela de correção de resultado: pendente (DH-28 da T37).
 
 #### `desfecho_animal` (catálogo)
 
