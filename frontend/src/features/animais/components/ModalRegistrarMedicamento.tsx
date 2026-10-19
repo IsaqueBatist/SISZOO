@@ -1,8 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
+import { BannerRascunho } from '@/components/BannerRascunho'
 import { Icon } from '@/components/layout/Icon'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
+import { useRascunho } from '@/lib/useRascunho'
+import { armazenamentoRascunhoClinico, chaveRascunhoClinico } from '../storage/rascunhoClinicoStorage'
 import { prescricaoFormSchema, type PrescricaoFormValues } from '../schemas/historicoFormSchemas'
 import {
   LABELS_STATUS_PRESCRICAO,
@@ -18,6 +22,8 @@ const MAPA_ERROS_SERVIDOR = mapaDeCampos<PrescricaoFormValues>(
   Object.keys(prescricaoFormSchema.shape) as (keyof PrescricaoFormValues)[],
 )
 
+const ARMAZENAMENTO_RASCUNHO = armazenamentoRascunhoClinico<PrescricaoFormValues>()
+
 interface ModalRegistrarMedicamentoProps {
   animalId: string
   // Ver comentário equivalente em ModalRegistrarVacina.tsx.
@@ -32,11 +38,16 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
   const { data: medicamentos } = useMedicamentosAtivosQuery()
   const mutation = useCriarPrescricaoMutation(animalId)
 
+  const { user } = useAuth()
+
   const {
     register,
     control,
     handleSubmit,
     setError,
+    watch,
+    reset,
+    getValues,
     formState: { errors },
   } = useForm<PrescricaoFormValues>({
     resolver: zodResolver(prescricaoFormSchema),
@@ -61,6 +72,15 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
     },
   })
 
+  // Ver comentário equivalente em ModalRegistrarVacina.tsx.
+  const rascunho = useRascunho<PrescricaoFormValues>({
+    armazenamento: ARMAZENAMENTO_RASCUNHO,
+    chave: chaveRascunhoClinico(user?.id ?? '', 'prescricao', animalId, retifica?.id),
+    watch,
+    reset,
+    getValues,
+  })
+
   async function onSubmit(dados: PrescricaoFormValues) {
     try {
       await mutation.mutateAsync({
@@ -77,6 +97,7 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
         status: dados.status,
         retificaId: retifica?.id,
       })
+      await rascunho.removerAposSucesso()
       onSucesso()
     } catch (erro) {
       if (aplicarErrosDeCampo(erro, setError, MAPA_ERROS_SERVIDOR).length > 0) return
@@ -107,6 +128,9 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
         <form onSubmit={aoEnviar} noValidate>
           <div className="modal-body">
             <div className="form-grid cols-1">
+              {rascunho.rascunhoDisponivel && (
+                <BannerRascunho onRestaurar={rascunho.restaurar} onDescartar={() => void rascunho.descartar()} />
+              )}
               {submitError && (
                 <div className="alert danger" role="alert">
                   <span className="bullet" />

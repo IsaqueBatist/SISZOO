@@ -1,8 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
+import { BannerRascunho } from '@/components/BannerRascunho'
 import { Icon } from '@/components/layout/Icon'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
+import { useRascunho } from '@/lib/useRascunho'
+import { armazenamentoRascunhoClinico, chaveRascunhoClinico } from '../storage/rascunhoClinicoStorage'
 import { VACINAS } from '../utils/catalogoClinico'
 import { vacinacaoFormSchema, type VacinacaoFormValues } from '../schemas/historicoFormSchemas'
 import { LABELS_UNIDADE_DOSE } from '../utils/historicoLabels'
@@ -14,6 +18,8 @@ import type { Vacinacao } from '../types/historico.types'
 const MAPA_ERROS_SERVIDOR = mapaDeCampos<VacinacaoFormValues>(
   Object.keys(vacinacaoFormSchema.shape) as (keyof VacinacaoFormValues)[],
 )
+
+const ARMAZENAMENTO_RASCUNHO = armazenamentoRascunhoClinico<VacinacaoFormValues>()
 
 interface ModalRegistrarVacinaProps {
   animalId: string
@@ -30,10 +36,15 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
 
   const mutation = useCriarVacinacaoMutation(animalId)
 
+  const { user } = useAuth()
+
   const {
     register,
     handleSubmit,
     setError,
+    watch,
+    reset,
+    getValues,
     formState: { errors },
   } = useForm<VacinacaoFormValues>({
     resolver: zodResolver(vacinacaoFormSchema),
@@ -50,6 +61,16 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
     },
   })
 
+  // Internet instável do CCZ: fechar o modal sem salvar mantém o que foi
+  // digitado; o envio com sucesso remove o rascunho.
+  const rascunho = useRascunho<VacinacaoFormValues>({
+    armazenamento: ARMAZENAMENTO_RASCUNHO,
+    chave: chaveRascunhoClinico(user?.id ?? '', 'vacina', animalId, retifica?.id),
+    watch,
+    reset,
+    getValues,
+  })
+
   async function onSubmit(dados: VacinacaoFormValues) {
     try {
       await mutation.mutateAsync({
@@ -63,6 +84,7 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
         observacoes: dados.observacoes,
         retificaId: retifica?.id,
       })
+      await rascunho.removerAposSucesso()
       onSucesso()
     } catch (erro) {
       if (aplicarErrosDeCampo(erro, setError, MAPA_ERROS_SERVIDOR).length > 0) return
@@ -91,6 +113,9 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
         <form onSubmit={aoEnviar} noValidate>
           <div className="modal-body">
             <div className="form-grid cols-1">
+              {rascunho.rascunhoDisponivel && (
+                <BannerRascunho onRestaurar={rascunho.restaurar} onDescartar={() => void rascunho.descartar()} />
+              )}
               {submitError && (
                 <div className="alert danger" role="alert">
                   <span className="bullet" />

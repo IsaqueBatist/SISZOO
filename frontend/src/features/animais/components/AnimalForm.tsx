@@ -1,5 +1,5 @@
 import { isAxiosError } from 'axios'
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm, type FieldErrors as RhfFieldErrors } from 'react-hook-form'
@@ -22,11 +22,15 @@ import {
 import { ImagemInvalidaError, comprimirImagem } from '../utils/comprimirImagem'
 import {
   agendarSalvarRascunhoAnimal,
+  cancelarSalvamentoRascunhoAnimal,
   carregarRascunhoAnimal,
   chaveRascunhoAnimal,
   removerRascunhoAnimal,
   salvarRascunhoAnimal,
 } from '../storage/rascunhoAnimalStorage'
+import { BannerRascunho } from '@/components/BannerRascunho'
+import type { ArmazenamentoRascunho } from '@/lib/rascunhoDb'
+import { useRascunho } from '@/lib/useRascunho'
 import { useAtualizarAnimalMutation, useBaiasAtivasQuery, useCatalogosAnimaisQuery, useCriarAnimalMutation } from '../hooks/useAnimais'
 
 interface AnimalFormProps {
@@ -98,6 +102,16 @@ interface RascunhoAnimalValores {
 function dataEntradaParaEnvio(dataDoForm: string, original?: string): string {
   if (original && original.slice(0, 10) === dataDoForm) return original
   return `${dataDoForm}T00:00:00`
+}
+
+// Pelas funções de rascunhoAnimalStorage (store 'animais', chave e formato
+// inalterados), não direto pelo banco.
+const ARMAZENAMENTO_RASCUNHO_ANIMAL: ArmazenamentoRascunho<RascunhoAnimalValores> = {
+  carregar: (chave) => carregarRascunhoAnimal<RascunhoAnimalValores>(chave),
+  agendarSalvar: (chave, valores) => agendarSalvarRascunhoAnimal(chave, valores),
+  salvar: (chave, valores) => salvarRascunhoAnimal(chave, valores),
+  remover: (chave) => removerRascunhoAnimal(chave),
+  cancelarAgendado: (chave) => cancelarSalvamentoRascunhoAnimal(chave),
 }
 
 function valoresVazios(): RascunhoAnimalValores {
@@ -235,9 +249,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [fotoErro, setFotoErro] = useState<string | null>(null)
   const [fotoCarregando, setFotoCarregando] = useState(false)
-  const [rascunhoDisponivel, setRascunhoDisponivel] = useState<RascunhoAnimalValores | null>(null)
   const [rascunhoMensagem, setRascunhoMensagem] = useState<string | null>(null)
-  const [prontoParaAutoSalvar, setProntoParaAutoSalvar] = useState(false)
 
   const { data: catalogos } = useCatalogosAnimaisQuery()
   const { data: baias } = useBaiasAtivasQuery()
@@ -290,46 +302,20 @@ export function AnimalForm({ animal }: AnimalFormProps) {
   const valores = watch()
   const castracaoOpcao = valores.castracaoOpcao
 
-  useEffect(() => {
-    let cancelado = false
-    carregarRascunhoAnimal<RascunhoAnimalValores>(chaveRascunho).then((valoresSalvos) => {
-      if (cancelado) return
-      if (valoresSalvos) setRascunhoDisponivel(valoresSalvos)
-      setProntoParaAutoSalvar(true)
-    })
-    return () => {
-      cancelado = true
-    }
-    // Só verifica o rascunho salvo uma vez, ao montar o formulário.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  useEffect(() => {
-    // O gate precisa envolver a CRIAÇÃO da assinatura, não só o corpo do
-    // callback: criar a assinatura incondicionalmente e checar a flag só
-    // dentro do callback é um stale closure real (o callback fecharia sobre
-    // o valor de prontoParaAutoSalvar do momento em que a assinatura foi
-    // criada) — na pior hipótese, salvaria um rascunho vazio por cima do
-    // rascunho de verdade do usuário antes da hidratação terminar.
-    if (!prontoParaAutoSalvar) return
-    const inscricao = watch((valoresAtuais) => {
-      agendarSalvarRascunhoAnimal(chaveRascunho, valoresParaRascunho(valoresAtuais as AnimalFormUiValues))
-    })
-    return () => inscricao.unsubscribe()
-  }, [prontoParaAutoSalvar, chaveRascunho, watch])
-
-  function handleRestaurarRascunho() {
-    if (rascunhoDisponivel) reset(rascunhoParaValores(rascunhoDisponivel))
-    setRascunhoDisponivel(null)
-  }
-
-  async function handleDescartarRascunho() {
-    setRascunhoDisponivel(null)
-    await removerRascunhoAnimal(chaveRascunho)
-  }
+  // Carrega uma vez ao montar, só então começa a salvar (debounce de 800 ms),
+  // e grava no formato RascunhoAnimalValores (ver valoresParaRascunho).
+  const rascunho = useRascunho<AnimalFormUiValues, RascunhoAnimalValores>({
+    armazenamento: ARMAZENAMENTO_RASCUNHO_ANIMAL,
+    chave: chaveRascunho,
+    watch,
+    reset,
+    getValues,
+    paraRascunho: valoresParaRascunho,
+    deRascunho: rascunhoParaValores,
+  })
 
   async function handleSalvarRascunhoAgora() {
-    await salvarRascunhoAnimal(chaveRascunho, valoresParaRascunho(getValues()))
+    await rascunho.salvarAgora()
     setRascunhoMensagem('Rascunho salvo.')
     setTimeout(() => setRascunhoMensagem(null), 3000)
   }
@@ -403,7 +389,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
       } else {
         await criarMutation.mutateAsync(payload)
       }
-      await removerRascunhoAnimal(chaveRascunho)
+      await rascunho.removerAposSucesso()
       navigate('/animais')
     } catch (erro) {
       tratarErroSubmit(erro)
@@ -437,21 +423,8 @@ export function AnimalForm({ animal }: AnimalFormProps) {
         </div>
       </div>
 
-      {rascunhoDisponivel && (
-        <div className="alert info" role="alert">
-          <span className="bullet" />
-          <div className="alert-content">
-            Encontramos um rascunho salvo deste formulário.
-            <div className="flex gap-2" style={{ marginTop: 8 }}>
-              <button type="button" className="btn btn-sm btn-primary" onClick={handleRestaurarRascunho}>
-                Restaurar rascunho
-              </button>
-              <button type="button" className="btn btn-sm btn-ghost" onClick={handleDescartarRascunho}>
-                Descartar
-              </button>
-            </div>
-          </div>
-        </div>
+      {rascunho.rascunhoDisponivel && (
+        <BannerRascunho onRestaurar={rascunho.restaurar} onDescartar={() => void rascunho.descartar()} />
       )}
 
       <div className="stepper">

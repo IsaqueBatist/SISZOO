@@ -3,7 +3,14 @@
 // ("cadastro de animal"), já que a rede do CCZ é instável e o form não pode
 // perder dados preenchidos numa queda de conexão. O banco é compartilhado
 // com os outros rascunhos (lib/rascunhoDb.ts).
-import { agendarSalvarRascunho, carregarRascunho, chaveComEscopo, removerRascunho, salvarRascunho } from '@/lib/rascunhoDb'
+import {
+  agendarSalvarRascunho,
+  cancelarSalvamentoAgendado,
+  carregarRascunho,
+  chaveComEscopo,
+  removerRascunho,
+  salvarRascunho,
+} from '@/lib/rascunhoDb'
 
 const STORE = 'animais'
 const DEBOUNCE_MS = 800
@@ -27,4 +34,10 @@ export function removerRascunhoAnimal(chave: string): Promise<void> {
 // Debounce por chave: evita gravar no IndexedDB a cada tecla digitada.
 export function agendarSalvarRascunhoAnimal<T>(chave: string, valores: T): void {
   agendarSalvarRascunho(STORE, chave, valores, DEBOUNCE_MS)
+}
+
+// Depois do envio com sucesso: o salvamento ainda agendado regravaria o
+// rascunho que acabou de ser removido.
+export function cancelarSalvamentoRascunhoAnimal(chave: string): void {
+  cancelarSalvamentoAgendado(STORE, chave)
 }
