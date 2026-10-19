@@ -2,6 +2,7 @@ import { useLocation } from 'react-router-dom'
 import { NAV_ALL, ROLES, isNavGroup } from '../../lib/nav'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { Icon } from './Icon'
+import { MenuPerfil } from './MenuPerfil'
 
 function currentCrumbLabel(pathname: string): string {
   const match = NAV_ALL.find((entry) => !isNavGroup(entry) && pathname.startsWith(entry.to))
@@ -10,9 +11,8 @@ function currentCrumbLabel(pathname: string): string {
 
 export function Topbar() {
   const location = useLocation()
-  const { user, roleKey } = useAuth()
+  const { roleKey } = useAuth()
   const role = ROLES[roleKey]
-  const iniciais = user ? `${user.nome[0] ?? ''}${user.sobrenome[0] ?? ''}`.toUpperCase() : ''
 
   return (
     <header className="topbar">
@@ -31,10 +31,7 @@ export function Topbar() {
         <span className={`badge role-pill ${role.badgeCls}`} title="Papel atual">
           {role.short}
         </span>
-        <div className="topbar-user">
-          <div className="avatar">{iniciais}</div>
-          <span className="name">{user?.nome ?? ''}</span>
-        </div>
+        <MenuPerfil />
       </div>
     </header>
   )
