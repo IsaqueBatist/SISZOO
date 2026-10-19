@@ -17,7 +17,7 @@ import com.siszoo.processos.repository.ResponsavelProcessoRepository;
 import java.util.UUID;
 
 /**
- * Notificacao de resultado positivo/inconclusivo (regra 19, DER). Chamado so
+ * Notificacao de resultado positivo (regra 19, DER; T34-4). Chamado so
  * pelo {@code NotificacaoResultadoListener}, depois do commit da escrita —
  * nunca na transacao que grava o resultado (ela nao pode ficar presa
  * esperando SMTP).

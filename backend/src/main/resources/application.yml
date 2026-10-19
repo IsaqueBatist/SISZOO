@@ -6,7 +6,8 @@ spring:
     multipart:
       max-file-size: 5MB
       max-request-size: 6MB
-  # T37: notificacao de resultado (positivo/inconclusivo) ao municipe. Sem
+  # T37: notificacao de resultado positivo (regra 19; inconclusivo nao
+  # notifica desde a revisao de 2026-10-17, T34-4) ao municipe. Sem
   # SMTP real configurado, o envio falha ao conectar — o listener engole a
   # falha (NotificacaoResultadoService), nunca bloqueia o lancamento do
   # resultado. Timeouts curtos para a thread assincrona nao ficar presa.

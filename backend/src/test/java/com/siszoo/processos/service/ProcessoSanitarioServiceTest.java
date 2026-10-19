@@ -50,6 +50,7 @@ import com.siszoo.processos.dto.AmostraAnimalRequest;
 import com.siszoo.processos.dto.CriarProcessoRequest;
 import com.siszoo.processos.dto.RegistrarResultadoRequest;
 import com.siszoo.processos.dto.ResponsavelProcessoRequest;
+import com.siszoo.processos.entity.DesfechoAnimal;
 import com.siszoo.processos.entity.Doenca;
 import com.siszoo.processos.entity.Laboratorio;
 import com.siszoo.processos.entity.MaterialBiologico;
@@ -60,11 +61,12 @@ import com.siszoo.processos.entity.ResultadoProcesso;
 import com.siszoo.processos.entity.StatusClinicoAmostra;
 import com.siszoo.processos.entity.StatusProcesso;
 import com.siszoo.processos.entity.TipoAbrigo;
+import com.siszoo.processos.exception.ConclusaoSemResultadoException;
 import com.siszoo.processos.exception.ContatoHumanoInconsistenteException;
 import com.siszoo.processos.exception.CorrecaoResultadoNaoPermitidaException;
 import com.siszoo.processos.exception.DataColetaFuturaException;
-import com.siszoo.processos.exception.DataResultadoAnteriorAberturaException;
 import com.siszoo.processos.exception.DataResultadoFuturaException;
+import com.siszoo.processos.exception.DesfechoInvalidoException;
 import com.siszoo.processos.exception.IdentificacaoComAnimalDoCanilException;
 import com.siszoo.processos.exception.IdentificacaoObrigatoriaException;
 import com.siszoo.processos.exception.ResultadoInvalidoException;
@@ -149,9 +151,14 @@ class ProcessoSanitarioServiceTest {
     void statusSoAvancaUmPasso(StatusProcesso atual, StatusProcesso pedido, Class<? extends Throwable> erro) {
         UUID id = UUID.randomUUID();
         ProcessoSanitario processo = new ProcessoSanitario();
-        processo.setStatusProcesso(atual);
         processo.setDoenca(doenca());
         processo.setLaboratorio(laboratorio());
+        if (atual.ordinal() >= StatusProcesso.COM_RESULTADO.ordinal()) {
+            // Depois do resultado ha sempre um vigente (CONCLUIDO o exige).
+            processo.aplicarResultadoVigente(ResultadoProcesso.registrar(processo, resultado("negativo", true),
+                    HOJE, null, new Usuario()));
+        }
+        processo.setStatusProcesso(atual);
         when(processoRepository.findByIdForUpdate(id)).thenReturn(Optional.of(processo));
 
         if (erro == null) {
@@ -163,6 +170,20 @@ class ProcessoSanitarioServiceTest {
             assertThat(processo.getStatusProcesso()).isEqualTo(atual);
             verify(processoRepository, never()).saveAndFlush(any());
         }
+    }
+
+    // Processo que chegou a COM_RESULTADO sem resultado (PATCH provisorio da
+    // D18, antes da T34): CONCLUIDO exige o vigente.
+    @Test
+    void concluirSemResultadoVigenteRecusado() {
+        ProcessoSanitario processo = processoEm(StatusProcesso.COM_RESULTADO);
+
+        assertThatThrownBy(() -> processoService.alterarStatus(processo.getId(),
+                new AlterarStatusProcessoRequest(StatusProcesso.CONCLUIDO), usuarioId))
+                .isInstanceOf(ConclusaoSemResultadoException.class);
+        assertThat(processo.getStatusProcesso()).isEqualTo(StatusProcesso.COM_RESULTADO);
+        verify(processoRepository, never()).saveAndFlush(any());
+        verifyNoInteractions(auditoriaEventoService);
     }
 
     // Matriz completa 4x4 da maquina de estados (T34): so o proximo passo.
@@ -240,29 +261,49 @@ class ProcessoSanitarioServiceTest {
         verify(resultadoProcessoRepository, never()).saveAndFlush(any());
     }
 
+    // DH-21 (docs/decisoes/T37.md): desfecho de catalogo inexistente ou
+    // INATIVO -> 422; o caso inativo nao tinha teste (o seed so tem ativos).
     @Test
-    void dataResultadoAnteriorAAberturaRecusadaNoRegistroENaCorrecao() {
-        ProcessoSanitario aguardando = processoEm(StatusProcesso.AGUARDANDO_RESULTADO);
-        ProcessoSanitario comResultado = processoEm(StatusProcesso.COM_RESULTADO);
-
-        assertThatThrownBy(() -> processoService.registrarResultado(aguardando.getId(),
-                new RegistrarResultadoRequest("positivo", ABERTURA.minusDays(1), null, null, null), usuarioId))
-                .isInstanceOf(DataResultadoAnteriorAberturaException.class);
-        assertThatThrownBy(() -> processoService.registrarResultado(comResultado.getId(),
-                new RegistrarResultadoRequest("positivo", ABERTURA.minusDays(1), null, UUID.randomUUID(), null), usuarioId))
-                .isInstanceOf(DataResultadoAnteriorAberturaException.class);
-        assertThat(aguardando.getStatusProcesso()).isEqualTo(StatusProcesso.AGUARDANDO_RESULTADO);
-        verify(resultadoProcessoRepository, never()).saveAndFlush(any());
-    }
-
-    @Test
-    void dataResultadoIgualAAberturaAceita() {
+    void desfechoInativoRecusadoSemGravar() {
         ProcessoSanitario processo = processoEm(StatusProcesso.AGUARDANDO_RESULTADO);
         when(resultadoRepository.findByCodigo("negativo")).thenReturn(Optional.of(resultado("negativo", true)));
+        DesfechoAnimal inativo = new DesfechoAnimal();
+        inativo.setCodigo("obito_outro");
+        inativo.setNome("Obito outro");
+        inativo.setAtivo(false);
+        when(desfechoRepository.findByCodigo("obito_outro")).thenReturn(Optional.of(inativo));
+
+        assertThatThrownBy(() -> processoService.registrarResultado(processo.getId(),
+                new RegistrarResultadoRequest("negativo", HOJE, null, null, "obito_outro"), usuarioId))
+                .isInstanceOf(DesfechoInvalidoException.class);
+        assertThat(processo.getStatusProcesso()).isEqualTo(StatusProcesso.AGUARDANDO_RESULTADO);
+        assertThat(processo.getDesfechoAnimal()).isNull();
+        verify(resultadoProcessoRepository, never()).saveAndFlush(any());
+        verify(processoRepository, never()).saveAndFlush(any());
+    }
+
+    // Sem limite inferior (docs/decisoes/T34.md): coleta e laudo podem
+    // anteceder a abertura do processo, no registro e na correcao.
+    @Test
+    void dataResultadoAnteriorAAberturaAceitaNoRegistroENaCorrecao() {
+        ProcessoSanitario processo = processoEm(StatusProcesso.AGUARDANDO_RESULTADO);
+        when(resultadoRepository.findByCodigo("negativo")).thenReturn(Optional.of(resultado("negativo", true)));
+        when(resultadoRepository.findByCodigo("positivo")).thenReturn(Optional.of(resultado("positivo", true)));
 
         assertThat(processoService.registrarResultado(processo.getId(),
-                new RegistrarResultadoRequest("negativo", ABERTURA, null, null, null), usuarioId).dataResultado())
-                .isEqualTo(ABERTURA);
+                new RegistrarResultadoRequest("negativo", ABERTURA.minusDays(3), null, null, null), usuarioId)
+                .dataResultado()).isEqualTo(ABERTURA.minusDays(3));
+
+        ArgumentCaptor<ResultadoProcesso> original = ArgumentCaptor.forClass(ResultadoProcesso.class);
+        verify(resultadoProcessoRepository).saveAndFlush(original.capture());
+        UUID originalId = UUID.randomUUID();
+        when(resultadoProcessoRepository.findById(originalId)).thenReturn(Optional.of(original.getValue()));
+
+        assertThat(processoService.registrarResultado(processo.getId(),
+                new RegistrarResultadoRequest("positivo", ABERTURA.minusDays(1), null, originalId, null), usuarioId)
+                .dataResultado()).isEqualTo(ABERTURA.minusDays(1));
+        assertThat(processo.getDataResultado()).isEqualTo(ABERTURA.minusDays(1));
+        assertThat(processo.getStatusProcesso()).isEqualTo(StatusProcesso.COM_RESULTADO);
     }
 
     @Test
