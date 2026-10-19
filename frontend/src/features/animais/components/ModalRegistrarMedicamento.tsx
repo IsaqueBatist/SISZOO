@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
 import { Icon } from '@/components/layout/Icon'
+import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
 import { prescricaoFormSchema, type PrescricaoFormValues } from '../schemas/historicoFormSchemas'
 import {
   LABELS_STATUS_PRESCRICAO,
@@ -11,6 +12,11 @@ import {
 } from '../utils/historicoLabels'
 import { useCriarPrescricaoMutation, useMedicamentosAtivosQuery } from '../hooks/useHistoricoAnimal'
 import type { Prescricao } from '../types/historico.types'
+
+// Erros por campo do 422: só os campos que existem no modal.
+const MAPA_ERROS_SERVIDOR = mapaDeCampos<PrescricaoFormValues>(
+  Object.keys(prescricaoFormSchema.shape) as (keyof PrescricaoFormValues)[],
+)
 
 interface ModalRegistrarMedicamentoProps {
   animalId: string
@@ -30,6 +36,7 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
     register,
     control,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<PrescricaoFormValues>({
     resolver: zodResolver(prescricaoFormSchema),
@@ -71,8 +78,14 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
         retificaId: retifica?.id,
       })
       onSucesso()
-    } catch {
-      setSubmitError(`Não foi possível ${retifica ? 'corrigir' : 'registrar'} a prescrição. Tente novamente.`)
+    } catch (erro) {
+      if (aplicarErrosDeCampo(erro, setError, MAPA_ERROS_SERVIDOR).length > 0) return
+      // 409/422 de regra ("Registro ja foi retificado por outro"...) mostram o
+      // motivo real, como nos outros modais clínicos.
+      setSubmitError(
+        mensagemDeRegraDaApi(erro) ??
+          `Não foi possível ${retifica ? 'corrigir' : 'registrar'} a prescrição. Tente novamente.`,
+      )
     }
   }
 
@@ -163,19 +176,21 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
                   <label htmlFor="pres-fim-previsto">Término previsto</label>
                   <input
                     id="pres-fim-previsto"
-                    className="input"
+                    className={`input${errors.dataFimPrevista ? ' error' : ''}`}
                     type="date"
                     {...register('dataFimPrevista', { setValueAs: (v: string) => v || undefined })}
                   />
+                  {errors.dataFimPrevista && <span className="err">{errors.dataFimPrevista.message}</span>}
                 </div>
                 <div className="field">
                   <label htmlFor="pres-fim-real">Término real</label>
                   <input
                     id="pres-fim-real"
-                    className="input"
+                    className={`input${errors.dataFimReal ? ' error' : ''}`}
                     type="date"
                     {...register('dataFimReal', { setValueAs: (v: string) => v || undefined })}
                   />
+                  {errors.dataFimReal && <span className="err">{errors.dataFimReal.message}</span>}
                 </div>
               </div>
 

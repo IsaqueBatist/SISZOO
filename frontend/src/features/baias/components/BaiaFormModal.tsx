@@ -4,11 +4,17 @@ import { useForm } from 'react-hook-form'
 import { Icon } from '@/components/layout/Icon'
 import { useAtualizarBaiaMutation, useCatalogosAnimaisQuery, useCriarBaiaMutation } from '@/features/animais/hooks/useAnimais'
 import type { Baia } from '@/features/animais/types/animais.types'
+import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
 import { baiaFormSchema, type BaiaFormValues } from '../schemas/baiaFormSchema'
 
 // Texto vazio ou só com espaços vai como ausente (o backend grava NULL e a
 // listagem usa o tipo da baia). Mesmo padrão de AnimalForm.
 const semEspacos = (v: unknown) => (typeof v === 'string' ? v.trim() || undefined : v)
+
+// Erros por campo do 422: só os campos que existem no modal.
+const MAPA_ERROS_SERVIDOR = mapaDeCampos<BaiaFormValues>(
+  Object.keys(baiaFormSchema.shape) as (keyof BaiaFormValues)[],
+)
 
 interface BaiaFormModalProps {
   baia?: Baia
@@ -27,6 +33,7 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<BaiaFormValues>({
     resolver: zodResolver(baiaFormSchema),
@@ -61,8 +68,9 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
         await criarMutation.mutateAsync(payload)
       }
       onFechar()
-    } catch {
-      setSubmitError(`Não foi possível ${editando ? 'salvar' : 'criar'} a baia. Tente novamente.`)
+    } catch (erro) {
+      if (aplicarErrosDeCampo(erro, setError, MAPA_ERROS_SERVIDOR).length > 0) return
+      setSubmitError(mensagemDeRegraDaApi(erro) ?? `Não foi possível ${editando ? 'salvar' : 'criar'} a baia. Tente novamente.`)
     }
   }
 

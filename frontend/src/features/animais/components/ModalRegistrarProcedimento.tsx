@@ -2,6 +2,8 @@ import { useState, type FormEvent } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Icon } from '@/components/layout/Icon'
+import { hojeEmItu } from '@/lib/datas'
+import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
 import { TIPOS_PROCEDIMENTO } from '../utils/catalogoClinico'
 import { procedimentoFormSchema, type ProcedimentoFormValues } from '../schemas/historicoFormSchemas'
 import { useCriarProcedimentoMutation } from '../hooks/useHistoricoAnimal'
@@ -10,6 +12,11 @@ import type { Procedimento } from '../types/historico.types'
 // Texto vazio ou só com espaços vai como ausente (o backend grava NULL e a
 // tela mostra "—"). Mesmo padrão de AnimalForm.
 const semEspacos = (v: unknown) => (typeof v === 'string' ? v.trim() || undefined : v)
+
+// Erros por campo do 422: só os campos que existem no modal.
+const MAPA_ERROS_SERVIDOR = mapaDeCampos<ProcedimentoFormValues>(
+  Object.keys(procedimentoFormSchema.shape) as (keyof ProcedimentoFormValues)[],
+)
 
 interface ModalRegistrarProcedimentoProps {
   animalId: string
@@ -27,6 +34,7 @@ export function ModalRegistrarProcedimento({ animalId, retifica, onFechar, onSuc
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<ProcedimentoFormValues>({
     resolver: zodResolver(procedimentoFormSchema),
@@ -51,8 +59,12 @@ export function ModalRegistrarProcedimento({ animalId, retifica, onFechar, onSuc
         retificaId: retifica?.id,
       })
       onSucesso()
-    } catch {
-      setSubmitError(`Não foi possível ${retifica ? 'corrigir' : 'registrar'} o procedimento. Tente novamente.`)
+    } catch (erro) {
+      if (aplicarErrosDeCampo(erro, setError, MAPA_ERROS_SERVIDOR).length > 0) return
+      setSubmitError(
+        mensagemDeRegraDaApi(erro) ??
+          `Não foi possível ${retifica ? 'corrigir' : 'registrar'} o procedimento. Tente novamente.`,
+      )
     }
   }
 
@@ -111,7 +123,7 @@ export function ModalRegistrarProcedimento({ animalId, retifica, onFechar, onSuc
                   <label htmlFor="proc-data">
                     Data <span className="req">*</span>
                   </label>
-                  <input id="proc-data" className={`input${errors.data ? ' error' : ''}`} type="date" {...register('data')} />
+                  <input id="proc-data" className={`input${errors.data ? ' error' : ''}`} type="date" max={hojeEmItu()} {...register('data')} />
                   {errors.data && <span className="err">{errors.data.message}</span>}
                 </div>
               </div>

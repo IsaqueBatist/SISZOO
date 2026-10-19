@@ -2,13 +2,18 @@ import { useState, type FormEvent } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Icon } from '@/components/layout/Icon'
-import { mensagemDeRegraDaApi } from '@/lib/erroApi'
+import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
 import { VACINAS } from '../utils/catalogoClinico'
 import { vacinacaoFormSchema, type VacinacaoFormValues } from '../schemas/historicoFormSchemas'
 import { LABELS_UNIDADE_DOSE } from '../utils/historicoLabels'
 import { hojeEmItu } from '../utils/regrasVacina'
 import { useCriarVacinacaoMutation } from '../hooks/useHistoricoAnimal'
 import type { Vacinacao } from '../types/historico.types'
+
+// Erros por campo do 422: só os campos que existem no modal.
+const MAPA_ERROS_SERVIDOR = mapaDeCampos<VacinacaoFormValues>(
+  Object.keys(vacinacaoFormSchema.shape) as (keyof VacinacaoFormValues)[],
+)
 
 interface ModalRegistrarVacinaProps {
   animalId: string
@@ -28,6 +33,7 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<VacinacaoFormValues>({
     resolver: zodResolver(vacinacaoFormSchema),
@@ -59,6 +65,7 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
       })
       onSucesso()
     } catch (erro) {
+      if (aplicarErrosDeCampo(erro, setError, MAPA_ERROS_SERVIDOR).length > 0) return
       setSubmitError(
         mensagemDeRegraDaApi(erro) ??
           `Não foi possível ${retifica ? 'corrigir' : 'registrar'} a vacinação. Tente novamente.`,

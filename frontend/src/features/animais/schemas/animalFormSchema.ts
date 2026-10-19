@@ -1,4 +1,10 @@
 import { z } from 'zod'
+import { hojeEmItu } from '@/lib/datas'
+
+// "Hoje" lido a cada validação, não fixado no carregamento do módulo.
+function naoEhFutura(data: string): boolean {
+  return !data || data <= hojeEmItu()
+}
 
 // Opções fixas do design system (não vêm de catálogo da API): Sexo/Pelagem/
 // Porte já são tipos fechados em animais.types.ts, espelhando os regex do
@@ -56,13 +62,26 @@ export const animalFormSchema = z.object({
   porte: z.enum(['pequeno', 'medio', 'grande']).optional(),
   pesoKg: z.number().positive('O peso deve ser maior que zero.').optional(),
   idadeAprox: z.string().trim().max(30, 'Máximo de 30 caracteres.').optional(),
-  dataNascimentoAprox: z.string().optional(),
+  // Datas de fato ocorrido: nunca futuras, com "hoje" no fuso de Itu (mesma
+  // regra do AnimalService). Datas ISO comparam certo como texto. A regra
+  // entre campos (nascimento até a entrada) fica no schema de UI do
+  // AnimalForm: refinamento de objeto impediria o .omit() feito lá.
+  dataNascimentoAprox: z
+    .string()
+    .refine(naoEhFutura, 'A data de nascimento não pode ser futura.')
+    .optional(),
   microchip: z.string().trim().max(30, 'Máximo de 30 caracteres.').optional(),
   esterilizado: z.boolean(),
-  dataEsterilizacao: z.string().optional(),
+  dataEsterilizacao: z
+    .string()
+    .refine(naoEhFutura, 'A data da castração não pode ser futura.')
+    .optional(),
   status: z.string().min(1, 'Selecione o status.'),
   motivoEntrada: z.string().min(1, 'Selecione o motivo de entrada.'),
-  dataEntrada: z.string().min(1, 'Informe a data de entrada.'),
+  dataEntrada: z
+    .string()
+    .min(1, 'Informe a data de entrada.')
+    .refine(naoEhFutura, 'A data de entrada não pode ser futura.'),
   baiaId: z.string().optional(),
   fotoUrl: z.string().optional(),
   observacoes: z.string().trim().max(2000, 'Máximo de 2000 caracteres.').optional(),
