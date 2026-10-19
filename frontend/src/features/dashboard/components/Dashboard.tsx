@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/layout/Skeleton'
 import { SeloDadosMock } from '@/components/layout/SeloDadosMock'
 import type { SeveridadeAlerta } from '@/features/alertas/types/alertas.types'
 import { useAlertasVacinaisQuery } from '@/features/alertas/hooks/useAlertas'
-import { kpisUsamMock } from '../api/dashboardApi'
+import { vacinacaoEAdocoesUsamMock } from '../api/dashboardApi'
 import { useKpisDashboardQuery } from '../hooks/useDashboardKpis'
 import { useProcessosUrgentesQuery } from '../hooks/useAlertaProcessosUrgentes'
 import { mapearKpisParaCards } from '../utils/kpiCards'
@@ -184,7 +184,7 @@ function AlertaProcessosUrgentes() {
 
 export function Dashboard() {
   const { data: kpis, isLoading: kpisCarregando, isError: kpisComErro, refetch: refazerKpis } = useKpisDashboardQuery()
-  const cards = kpis ? mapearKpisParaCards(kpis) : []
+  const cards = kpis ? mapearKpisParaCards(kpis, vacinacaoEAdocoesUsamMock()) : []
 
   return (
     <>
@@ -197,7 +197,6 @@ export function Dashboard() {
 
       <div className="section-header">
         <h2>Indicadores</h2>
-        {kpisUsamMock() && <SeloDadosMock />}
       </div>
 
       {kpisComErro ? (
@@ -222,6 +221,7 @@ export function Dashboard() {
                     <span>{kpi.foot}</span>
                     {kpi.delta && <span className={`kpi-delta ${kpi.deltaDirection}`}>{kpi.delta}</span>}
                   </div>
+                  {kpi.mockado && <SeloDadosMock />}
                 </div>
               ))}
         </div>

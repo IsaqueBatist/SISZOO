@@ -9,10 +9,20 @@ Importante: isso **não** é o mesmo mecanismo da tabela `RelatorioGerado`
 já existentes (animais, vacinações, adoções/status, ocorrências) — sem
 persistir nada novo.
 
-Enquanto o endpoint não existe, o frontend usa um mock local
-(`frontend/src/features/dashboard/api/dashboardApi.mock.ts`), selecionado
-pela env var `VITE_USE_MOCK_KPIS` (default `true`). Trocar para a API real
-exige só mudar essa variável para `false` — nenhum componente precisa mudar.
+**Atualização**: `animais` e `ocorrencias` já são calculados em tempo real no
+frontend hoje, a partir de `GET /animais` e `GET /ocorrencias` (já existem e
+estão em produção) — ver `frontend/src/features/dashboard/api/dashboardApi.ts::buscarKpisParciaisReais`.
+Esses dois blocos **não dependem mais deste endpoint**; implementá-lo, para
+eles, seria só uma otimização (uma query agregada no backend em vez de
+`tamanho` grande + filtro no cliente). Só `vacinacao` e `adocoes` continuam
+bloqueados: não existe hoje endpoint que conte "animais com vacina em dia",
+nem campo de data de adoção em `Animal` para calcular "adoções no mês".
+
+Enquanto o endpoint não existe, o frontend usa um mock local só para
+`vacinacao`/`adocoes` (`frontend/src/features/dashboard/api/dashboardApi.mock.ts`),
+selecionado pela env var `VITE_USE_MOCK_KPIS` (default `true`). Trocar para a
+API real exige só mudar essa variável para `false` — nenhum componente
+precisa mudar.
 
 ## Requisição
 
@@ -46,12 +56,15 @@ Sem parâmetros por ora. Os quatro números abaixo são "hoje"/"mês corrente"/
     "variacaoSemanal": 2
   },
   "ocorrencias": {
-    "abertasHoje": 4,
+    "registradasHoje": 4,
     "mediaPorHora": 1,
     "variacaoSemanal": -2
   }
 }
 ```
+
+`ocorrencias.registradasHoje` conta **qualquer status** (não só `ABERTA`) —
+é volume de registro do dia, não contagem de ocorrências em aberto.
 
 ### Campos opcionais
 
@@ -75,8 +88,8 @@ variação falsa de "0%".
 | `vacinacao.variacaoSemanalPontos` | Delta em **pontos percentuais** (não %) vs. 7 dias atrás |
 | `adocoes.noMes` | Adoções concluídas desde o 1º dia do mês corrente |
 | `adocoes.metaMensal` | Meta institucional do mês (parâmetro de configuração do CCZ — a decidir onde fica armazenado) |
-| `ocorrencias.abertasHoje` | Ocorrências com `dataAbertura` = hoje |
-| `ocorrencias.mediaPorHora` | `abertasHoje / horas decorridas do dia`, arredondado |
+| `ocorrencias.registradasHoje` | Ocorrências com `dataAbertura` = hoje (fuso America/São_Paulo), qualquer status |
+| `ocorrencias.mediaPorHora` | `registradasHoje / horas decorridas do dia`, arredondado |
 
 ## Dúvida para o backend
 

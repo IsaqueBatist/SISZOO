@@ -10,6 +10,7 @@ export interface KpiCardData {
   foot: string
   delta?: string
   deltaDirection?: 'up' | 'down'
+  mockado: boolean
 }
 
 function formatarDelta(valor: number | undefined, formatar: (v: number) => string): KpiCardData['delta'] {
@@ -23,7 +24,10 @@ function direcao(valor: number | undefined): KpiCardData['deltaDirection'] {
   return valor >= 0 ? 'up' : 'down'
 }
 
-export function mapearKpisParaCards(kpis: DashboardKpis): KpiCardData[] {
+// `vacinacaoEAdocoesMockadas` vem de dashboardApi.ts::vacinacaoEAdocoesUsamMock()
+// — Total de Animais e Ocorrências já são sempre reais, só Vacinados e
+// Adoções podem estar mockados hoje.
+export function mapearKpisParaCards(kpis: DashboardKpis, vacinacaoEAdocoesMockadas: boolean): KpiCardData[] {
   return [
     {
       tone: 'kpi-info',
@@ -33,6 +37,7 @@ export function mapearKpisParaCards(kpis: DashboardKpis): KpiCardData[] {
       foot: `${kpis.animais.caninos} cães · ${kpis.animais.felinos} gatos`,
       delta: formatarDelta(kpis.animais.variacaoSemanal, (v) => `+${v} essa semana`),
       deltaDirection: direcao(kpis.animais.variacaoSemanal),
+      mockado: false,
     },
     {
       tone: 'kpi-success',
@@ -43,6 +48,7 @@ export function mapearKpisParaCards(kpis: DashboardKpis): KpiCardData[] {
       foot: `${kpis.vacinacao.vacinados} de ${kpis.vacinacao.total} animais`,
       delta: formatarDelta(kpis.vacinacao.variacaoSemanalPontos, (v) => `${v}% vs semana`),
       deltaDirection: direcao(kpis.vacinacao.variacaoSemanalPontos),
+      mockado: vacinacaoEAdocoesMockadas,
     },
     {
       tone: 'kpi-alert',
@@ -52,18 +58,20 @@ export function mapearKpisParaCards(kpis: DashboardKpis): KpiCardData[] {
       foot: `Meta mensal: ${kpis.adocoes.metaMensal}`,
       delta: formatarDelta(kpis.adocoes.variacaoSemanal, (v) => `+${v} essa semana`),
       deltaDirection: direcao(kpis.adocoes.variacaoSemanal),
+      mockado: vacinacaoEAdocoesMockadas,
     },
     {
       tone: 'kpi-danger',
       icon: 'alert',
-      label: 'Ocorrências',
-      value: String(kpis.ocorrencias.abertasHoje),
+      label: 'Ocorrências registradas hoje',
+      value: String(kpis.ocorrencias.registradasHoje),
       foot:
         kpis.ocorrencias.mediaPorHora !== undefined
-          ? `Abertas hoje · média ${kpis.ocorrencias.mediaPorHora} a cada hora`
-          : 'Abertas hoje',
+          ? `Registradas hoje · média ${kpis.ocorrencias.mediaPorHora} a cada hora`
+          : 'Registradas hoje',
       delta: formatarDelta(kpis.ocorrencias.variacaoSemanal, (v) => `${v} vs semana passada`),
       deltaDirection: direcao(kpis.ocorrencias.variacaoSemanal),
+      mockado: false,
     },
   ]
 }
