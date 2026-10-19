@@ -34,7 +34,7 @@ export function GraficoOcupacaoBaia({ dados }: GraficoOcupacaoBaiaProps) {
           <CartesianGrid strokeDasharray="3 3" horizontal={false} />
           <XAxis type="number" unit="%" domain={[0, 100]} allowDecimals={false} />
           <YAxis type="category" dataKey="nome" width={100} />
-          <Tooltip formatter={(valor: number) => [`${valor}%`, 'Ocupação']} />
+          <Tooltip formatter={(valor) => [`${valor}%`, 'Ocupação']} />
           <Bar dataKey="percentual" name="Ocupação" isAnimationActive={false}>
             {dados.map((item) => (
               <Cell key={item.baiaId} fill={COR_POR_ESTADO[item.estado]} />
