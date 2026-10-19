@@ -212,6 +212,18 @@
 .badge-inconclusive { background: #FFFDE7; color: #F57F17; }
 .badge-neutral { background: var(--color-bg); color: var(--color-text-secondary); border: 1px solid var(--color-border); }
 
+/* Selo de dados de demonstração (mock ligado por env var) */
+.badge-mock {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  border: 1px dashed var(--color-border-strong);
+}
+
 /* Process status */
 .badge-process-open { background: #E3F2FD; color: #1565C0; }
 .badge-process-awaiting { background: #FFF3E0; color: #E65100; }
