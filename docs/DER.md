@@ -237,7 +237,7 @@ A feature `geral` gera a autoridade do módulo inteiro (`MODULO:leitura|escrita|
 | `motivo_entrada_id`     | FK `motivo_entrada` | \*     |                                                                                     |
 | `data_entrada`          | timestamp           | \*     |                                                                                     |
 | `baia_id`               | FK `baia`           | ?      | NULL se em trânsito                                                                 |
-| `ficha_completa`        | boolean             | \*     | calculado: todos campos obrigatórios + microchip + ao menos 1 vacina                |
+| `ficha_completa`        | boolean             | \*     | calculado: todos campos obrigatórios + microchip + ao menos 1 vacina (ver regras)   |
 | `foto_url`              | text                | ?      |                                                                                     |
 | `observacoes`           | text                | ?      |                                                                                     |
 | `criado_por_id`         | FK `usuario`        | \*     |                                                                                     |
@@ -247,7 +247,9 @@ A feature `geral` gera a autoridade do módulo inteiro (`MODULO:leitura|escrita|
 **Regras**
 
 - Animal só sai do canil via `adocao` ou `obito` (status_animal).
-- `baia_id` deve apontar para baia com `atual_ocupacao < capacidade` (verificado no save; alerta gerado se ultrapassar).
+- `baia_id` deve apontar para baia **ativa** com `atual_ocupacao < capacidade`. Implementado em `AnimalService#resolverBaia` (409 "Baia informada esta inativa" / "Baia informada ja atingiu a capacidade"), conferido **só quando o animal passa a ocupar a baia**: cadastro, troca de baia ou volta à custódia, e só se o status novo for de custódia. Quem já ocupa a baia não é barrado por ela ter sido desativada ou ter tido a capacidade reduzida depois (o `BaiaService` permite as duas coisas com animais dentro). Quem passa a ocupar trava a linha da baia (`BaiaRepository#findByIdForUpdate`) até o commit, então cadastros simultâneos não passam da capacidade (`BaiaConcorrenciaIT`). Não há "alerta gerado se ultrapassar": o cadastro é recusado. Decisões: `docs/decisoes/animais-clinico-correcoes.md` (AC-3, AC-4).
+- `ficha_completa` (`FichaCompletaService#calcular`): microchip com texto **e** ao menos uma vacinação que nenhuma outra retifica — equivale a "ao menos 1 vacinação registrada"; não considera validade/vencimento. Recalculada no cadastro e na edição do animal e a cada vacinação. A V18 recalcula os dados existentes (antes, só o microchip contava). Decisão: AC-5.
+- Datas do animal não podem ser futuras (entrada, nascimento, castração); nascimento não pode ser posterior à entrada; data de castração só com `esterilizado = true` (422 com `campos`). Decisão: AC-6.
 
 #### `especie` (catálogo)
 
@@ -352,6 +354,8 @@ Valores: `atendimento_clinico`, `castracao`, `cirurgia_maior`, `vacinacao`.
 
 `id` uuid PK · `nome` varchar(100) único · `ativo` boolean (default `true`).
 
+Sem seed (nem de medicamento): o CCZ cadastra os reais. `GET /api/categorias-farmacologicas` (só ativas, por nome; `GESTAO_ANIMAIS:leitura`) e `POST` (`GESTAO_ANIMAIS:escrita`, as mesmas permissões de `/api/medicamentos`). O nome é gravado sem espaços nas pontas; nome repetido sem diferenciar maiúsculas responde 409 (o `UNIQUE` do banco diferencia, e em corrida responde o 409 genérico). Não há desativação nem edição de categoria. Decisão: AC-8.
+
 #### `exame`
 
 | Campo              | Tipo             | Obrig. |
@@ -406,7 +410,7 @@ Valores: `atendimento_clinico`, `castracao`, `cirurgia_maior`, `vacinacao`.
 
 **Regras**
 
-- `atual_ocupacao` = `count(animal where baia_id = X and status_animal != 'adotado'/'obito')` — campo computado (view).
+- `atual_ocupacao` = `count(animal where baia_id = X and status fora de StatusAnimal.CODIGOS_FORA_DA_CUSTODIA)` — `adotado`, `obito_natural`, `obito_eutanasia` e `transferido` não ocupam vaga. Não é coluna nem view: é calculado por consulta (`AnimalRepository#countByBaia_IdAndStatus_CodigoNotIn`, `#contarOcupacaoPorBaia`) no `BaiaService` e, ao alocar um animal, no `AnimalService`.
 - Status de superlotação derivado: `atual_ocupacao / capacidade ≥ 1` → `superlotada`; `≥ 0.8` → `proximo_limite`; senão `normal`.
 
 #### `tipo_baia` (catálogo)
@@ -867,13 +871,13 @@ Um sintoma aparece no máximo uma vez por amostra (a API ignora códigos repetid
 1. Login somente com e-mail `@itu.sp.gov.br`.
 2. Perfil `recepcionista` **não existe** (fora do escopo).
 3. Admin é o único com acesso a `usuarios` e criação/desativação. Dados de denunciante sigiloso: Administrador e Agente Sanitário (permissão `denunciante_sigiloso`). Veterinário não acessa ocorrências e denúncias (V11).
-4. Sistema é **PT-BR único**; data **DD/MM/AAAA**; fuso **America/São_Paulo** — nenhum desses é configurável.
+4. Sistema é **PT-BR único**; data **DD/MM/AAAA**; fuso **America/São_Paulo** — nenhum desses é configurável. Datas de negócio são `date`/`timestamp` sem fuso (horário de parede do CCZ); o fuso é fixado no `Clock` (`ClockConfig`) e na JVM (`SiszooBackendApplication`, `TZ` do Dockerfile), sem `hibernate.jdbc.time_zone` (AC-1, AC-2).
 
 ### Animais e baias
 
 5. Cada `baia` tem **capacidade própria** (não há valor padrão de sistema).
 6. Animal só pode estar em uma baia ativa de cada vez.
-7. Status `adotado` e `obito_*` removem o animal da contagem de ocupação.
+7. Status `adotado`, `obito_*` e `transferido` removem o animal da contagem de ocupação (`StatusAnimal.CODIGOS_FORA_DA_CUSTODIA`).
 8. Animal com vacina vencida ou prestes a vencer (≤7d) aparece em alertas críticos.
 
 ### Ocorrências
@@ -906,6 +910,11 @@ Um sintoma aparece no máximo uma vez por amostra (a API ignora códigos repetid
 ### Acesso e segurança (adendo)
 
 24. Usuário autenticado não pode desativar a si mesmo (HTTP 422) — adicionado ao final para não renumerar as regras 5-23.
+
+### Animais e baias (adendo)
+
+25. O animal só passa a ocupar uma baia ativa e com vaga; quem já a ocupa não é barrado por mudanças posteriores na baia; a conferência é serializada por trava na baia (ver §3.2 e AC-3/AC-4).
+26. `ficha_completa` = campos obrigatórios + microchip + ao menos 1 vacinação, recalculada no animal e na vacinação; V18 para os dados existentes (AC-5).
 
 ---
 
@@ -953,6 +962,7 @@ Um sintoma aparece no máximo uma vez por amostra (a API ignora códigos repetid
 - Envio paralelo do resultado do processo à **Vigilância Epidemiológica de Itu** — confirmar canal (e-mail/integração).
 - **Necessidade de assinatura digital ou física** em relatórios oficiais.
 - **Funcionamento do CCZ aos finais de semana** — afeta SLA de atendimento de ocorrências urgentes e geração de plantão.
+- Animal e clínico (lista completa em `docs/decisoes/animais-clinico-correcoes.md`, "Pendentes do CCZ"): status permitidos no cadastro do animal; procedimento agendado (hoje data futura é recusada); hora da entrada ao mudar o dia; baia de animal fora da custódia; quem cadastra categoria farmacológica e se acento/maiúscula distinguem categorias; lista inicial de medicamentos e categorias.
 
 ---
 
