@@ -167,6 +167,9 @@ function paraUsuarioPublico({ senhaInicial: _senhaInicial, ...usuario }: Usuario
 // "transferido", que não têm badge dedicado no design system) e inclui
 // espécies sem classe de badge própria (quiróptero, pnh) para exercitar o
 // fallback neutro nos testes.
+// fichaCompleta fixa aqui segue fichaCompletaMock: só o Rex tem microchip e
+// vacinação (seedVacinacoesMock). Calcular na hora não dá: este seed roda
+// antes de vacinacoesMock existir.
 function seedAnimaisMock(): Animal[] {
   return [
     {
@@ -225,7 +228,7 @@ function seedAnimaisMock(): Animal[] {
       baiaId: 'c3d4e5f6-0000-0000-0000-000000000002',
       baiaNome: 'Gatil A',
       tipoBaiaNome: 'Gatil',
-      fichaCompleta: true,
+      fichaCompleta: false,
       fotoUrl: null,
       observacoes: null,
       criadoPorId: 'a1b2c3d4-0000-0000-0000-000000000001',
@@ -257,7 +260,7 @@ function seedAnimaisMock(): Animal[] {
       baiaId: 'c3d4e5f6-0000-0000-0000-000000000003',
       baiaNome: 'Baia 6',
       tipoBaiaNome: 'Canil',
-      fichaCompleta: true,
+      fichaCompleta: false,
       fotoUrl: null,
       observacoes: null,
       criadoPorId: 'a1b2c3d4-0000-0000-0000-000000000001',
@@ -289,7 +292,7 @@ function seedAnimaisMock(): Animal[] {
       baiaId: null,
       baiaNome: null,
       tipoBaiaNome: null,
-      fichaCompleta: true,
+      fichaCompleta: false,
       fotoUrl: null,
       observacoes: null,
       criadoPorId: 'a1b2c3d4-0000-0000-0000-000000000001',
@@ -321,7 +324,7 @@ function seedAnimaisMock(): Animal[] {
       baiaId: null,
       baiaNome: null,
       tipoBaiaNome: null,
-      fichaCompleta: true,
+      fichaCompleta: false,
       fotoUrl: null,
       observacoes: null,
       criadoPorId: 'a1b2c3d4-0000-0000-0000-000000000001',
@@ -353,7 +356,7 @@ function seedAnimaisMock(): Animal[] {
       baiaId: null,
       baiaNome: null,
       tipoBaiaNome: null,
-      fichaCompleta: true,
+      fichaCompleta: false,
       fotoUrl: null,
       observacoes: null,
       criadoPorId: 'a1b2c3d4-0000-0000-0000-000000000001',
@@ -385,7 +388,7 @@ function seedAnimaisMock(): Animal[] {
       baiaId: null,
       baiaNome: null,
       tipoBaiaNome: null,
-      fichaCompleta: true,
+      fichaCompleta: false,
       fotoUrl: null,
       observacoes: null,
       criadoPorId: 'a1b2c3d4-0000-0000-0000-000000000001',
@@ -417,7 +420,7 @@ function seedAnimaisMock(): Animal[] {
       baiaId: 'c3d4e5f6-0000-0000-0000-000000000004',
       baiaNome: 'Baia 7',
       tipoBaiaNome: 'Canil',
-      fichaCompleta: true,
+      fichaCompleta: false,
       fotoUrl: null,
       observacoes: null,
       criadoPorId: 'a1b2c3d4-0000-0000-0000-000000000001',
@@ -668,6 +671,16 @@ function nomeDoCatalogo(itens: { codigo: string; nome: string }[], codigo: strin
   return itens.find((item) => item.codigo === codigo)?.nome ?? codigo
 }
 
+// Espelha FichaCompletaService (DER §3.2): microchip com texto e ao menos uma
+// vacinação que nenhuma outra retifica. Recalculada no POST/PUT do animal e a
+// cada POST de vacinação, como no backend.
+function fichaCompletaMock(animalId: string, microchip: string | null): boolean {
+  if (!microchip?.trim()) return false
+  return vacinacoesMock.some(
+    (vacinacao) => vacinacao.animalId === animalId && !vacinacoesMock.some((outra) => outra.retificaId === vacinacao.id),
+  )
+}
+
 // Recompõe um `Animal` (resposta) a partir de um `AnimalRequest` (o que o
 // form de T18 envia) — espelha o que o service real faz ao resolver os
 // códigos de espécie/status/motivo/baia para os nomes exibidos.
@@ -698,7 +711,7 @@ function construirAnimalMock(id: string, body: AnimalRequest, existente: Animal 
     baiaId: body.baiaId ?? null,
     baiaNome: baia?.nome ?? null,
     tipoBaiaNome: baia?.tipoBaiaNome ?? null,
-    fichaCompleta: Boolean(body.microchip),
+    fichaCompleta: fichaCompletaMock(id, body.microchip ?? null),
     fotoUrl: body.fotoUrl ?? null,
     observacoes: body.observacoes ?? null,
     criadoPorId: existente?.criadoPorId ?? usuariosMock[0].id,
@@ -1271,6 +1284,9 @@ export const handlers = [
       criadoEm: new Date().toISOString(),
     }
     vacinacoesMock = [...vacinacoesMock, novo]
+    animaisMock = animaisMock.map((animal) =>
+      animal.id === body.animalId ? { ...animal, fichaCompleta: fichaCompletaMock(animal.id, animal.microchip) } : animal,
+    )
     const [comStatus] = derivarStatusRegistro([novo])
     return HttpResponse.json(comStatus, { status: 201 })
   }),
