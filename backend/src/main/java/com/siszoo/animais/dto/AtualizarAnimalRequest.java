@@ -46,7 +46,8 @@ public record AtualizarAnimalRequest(
         @Size(max = 30)
         String microchip,
 
-        boolean esterilizado,
+        @NotNull
+        Boolean esterilizado,
 
         LocalDate dataEsterilizacao,
 

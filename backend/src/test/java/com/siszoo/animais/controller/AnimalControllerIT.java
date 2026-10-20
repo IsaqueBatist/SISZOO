@@ -1,6 +1,7 @@
 package com.siszoo.animais.controller;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasItem;
@@ -99,6 +100,41 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .statusCode(422)
                 .body("mensagem", equalTo("Data de entrada nao pode ser futura"))
                 .body("campos[0].campo", equalTo("dataEntrada"));
+    }
+
+    // esterilizado era boolean primitivo: sem o campo no JSON, o Jackson
+    // recusava o corpo e o Spring respondia 400 generico, fora do padrao de
+    // campo obrigatorio (Bean Validation -> 422 "Dados invalidos" + campos).
+    @Test
+    @DisplayName("cadastro sem esterilizado responde 422 com o campo, como os demais obrigatorios")
+    void deveRetornar422ComCampoQuandoCadastroSemEsterilizado() {
+        given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .body(jsonAnimalSemEsterilizado())
+                .when()
+                .post("/api/animais")
+                .then()
+                .statusCode(422)
+                .body("mensagem", equalTo("Dados invalidos"))
+                .body("campos.campo", contains("esterilizado"));
+    }
+
+    @Test
+    @DisplayName("edicao sem esterilizado responde 422 com o campo, como os demais obrigatorios")
+    void deveRetornar422ComCampoQuandoEdicaoSemEsterilizado() {
+        String id = criarAnimalViaApi(animalMinimo(null)).path("id");
+
+        given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .body(jsonAnimalSemEsterilizado())
+                .when()
+                .put("/api/animais/" + id)
+                .then()
+                .statusCode(422)
+                .body("mensagem", equalTo("Dados invalidos"))
+                .body("campos.campo", contains("esterilizado"));
     }
 
     @Test
@@ -484,6 +520,14 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     }
 
     // Resposta crua: o chamador decide o status esperado (422, 409...).
+    // JSON cru, sem a chave "esterilizado" (o record serializaria o campo).
+    private String jsonAnimalSemEsterilizado() {
+        return """
+                {"nome": "Rex", "especie": "canino", "sexo": "macho", "status": "disponivel_adocao",
+                 "motivoEntrada": "resgate", "dataEntrada": "%s"}
+                """.formatted(fixture.agora());
+    }
+
     private io.restassured.response.Response postarAnimal(CriarAnimalRequest request) {
         return given()
                 .contentType(ContentType.JSON)
