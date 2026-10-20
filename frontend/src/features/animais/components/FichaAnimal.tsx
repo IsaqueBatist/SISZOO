@@ -107,7 +107,13 @@ export function FichaAnimal() {
           </div>
           <h1>{animal.nome}</h1>
           <p className="subtitle">
-            Ficha completa · No CCZ desde {formatarData(animal.dataEntrada)} · Última atualização {formatarRelativo(animal.atualizadoEm)}
+            {/* fichaCompleta vem do backend (FichaCompletaService, DER §3.2); o protótipo só desenha o estado completo. */}
+            {animal.fichaCompleta ? (
+              'Ficha completa'
+            ) : (
+              <strong style={{ color: 'var(--color-warning)' }}>Ficha incompleta</strong>
+            )}{' '}
+            · No CCZ desde {formatarData(animal.dataEntrada)} · Última atualização {formatarRelativo(animal.atualizadoEm)}
           </p>
         </div>
         {podeEscrever && (
