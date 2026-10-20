@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { hojeIso as hojeIsoOcorrencias } from '@/features/ocorrencias/utils/datas'
-import { hojeIso as hojeIsoProcessos } from '@/features/processos/schemas/processoFormSchema'
 import { procedimentoFormSchema, vacinacaoFormSchema } from '@/features/animais/schemas/historicoFormSchemas'
+import { processoFormSchema } from '@/features/processos/schemas/processoFormSchema'
 import { hojeEmItu } from './datas'
 
 // "Hoje" do formulário na virada do dia UTC x Itu (DER §5 regra 4; AC-1):
@@ -20,13 +19,6 @@ const VIRADAS = [
   ['31/12 21:30 BRT (virada de ano em UTC)', '2031-01-01T00:30:00Z', '2030-12-31', '2031-01-01'],
 ] as const
 
-// As três funções de "hoje" que existem no front (cópias da mesma regra).
-const FUNCOES_DE_HOJE = [
-  ['lib/datas#hojeEmItu', hojeEmItu],
-  ['ocorrencias/utils/datas#hojeIso', hojeIsoOcorrencias],
-  ['processos/schemas/processoFormSchema#hojeIso', hojeIsoProcessos],
-] as const
-
 function mensagensDoCampo(resultado: { error?: { issues: { path: PropertyKey[]; message: string }[] } }, campo: string) {
   return (resultado.error?.issues ?? []).filter((issue) => issue.path[0] === campo).map((issue) => issue.message)
 }
@@ -41,8 +33,14 @@ describe.each(VIRADAS)('%s', (_caso, instante, hoje, amanha) => {
     vi.useRealTimers()
   })
 
-  it.each(FUNCOES_DE_HOJE)(`%s devolve ${hoje}`, (_nome, hojeDoCcz) => {
-    expect(hojeDoCcz()).toBe(hoje)
+  it(`hojeEmItu devolve ${hoje}`, () => {
+    expect(hojeEmItu()).toBe(hoje)
+  })
+
+  it(`processo aceita abertura em ${hoje} e recusa em ${amanha}`, () => {
+    const futura = 'A data de abertura não pode ser uma data futura.'
+    expect(mensagensDoCampo(processoFormSchema.safeParse({ dataAbertura: hoje }), 'dataAbertura')).not.toContain(futura)
+    expect(mensagensDoCampo(processoFormSchema.safeParse({ dataAbertura: amanha }), 'dataAbertura')).toContain(futura)
   })
 
   it(`vacinação aceita aplicação em ${hoje} e recusa em ${amanha}`, () => {
