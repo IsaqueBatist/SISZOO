@@ -9,10 +9,10 @@ e da entrevista com a equipe do CCZ-Itu (09/01/2026).
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `DER.md`                  | Diagrama Entidade-Relacionamento completo: todas as entidades, atributos, relacionamentos, catálogos e regras de negócio. É a referência central do modelo de dados. |
 | `modulo*.dbml`            | Diagramas lógicos por módulo, em formato DBML.                                                                                                                       |
+| `roteiro-testes-manuais.md` | Roteiro de teste manual (tela, API e banco) de processos, auditoria de regras de negócio, animais, clínico e baias, com os casos de fuso cobertos por testes automatizados. |
 | `entrevista_09jan2026.md` | Registro da entrevista de levantamento de requisitos com a equipe do CCZ.                                                                                            |
 | `planilha_animais.md`     | Estrutura da planilha Excel atual de animais (sistema legado a ser substituído).                                                                                     |
 | `planilha_processos.md`   | Estrutura da planilha Excel atual de processos sanitários (legado).                                                                                                  |
-| `roteiro-testes-manuais.md` | Roteiro de teste manual (tela, API e banco) de processos, auditoria de regras de negócio, animais, clínico e baias, com os casos de fuso cobertos por testes automatizados. |
 
 ## Diagramas lógicos (DBML)
 
