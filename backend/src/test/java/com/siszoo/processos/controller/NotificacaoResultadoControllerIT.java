@@ -6,16 +6,21 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.after;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,13 +29,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mail.MailSendException;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import com.siszoo.comum.AbstractIntegrationTest;
 import com.siszoo.comum.ApiTesteFixture;
 import com.siszoo.comum.RelogioTesteConfig;
+import com.siszoo.comum.service.EmailService;
 
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -40,9 +44,9 @@ import io.restassured.response.Response;
 // notificação assíncrona ao município quando o vigente passa a "positivo"
 // (regra 19, DER revisão 2026-10-17 — inconclusivo não notifica mais).
 //
-// JavaMailSender mockado na classe inteira: o envio é @Async, então mesmo os
-// testes que não verificam notificação não podem deixar uma tentativa real
-// de SMTP vazando para outra thread.
+// EmailService (T35) mockado na classe inteira: o envio é @Async, então mesmo
+// os testes que não verificam notificação não podem deixar uma tentativa real
+// de SMTP vazando para outra thread. O envio real fica no EmailServiceIT.
 @Import(RelogioTesteConfig.class)
 class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
 
@@ -50,7 +54,7 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
     private static final LocalDate HOJE = RelogioTesteConfig.HOJE;
 
     @MockitoBean
-    private JavaMailSender mailSender;
+    private EmailService emailService;
 
     @Autowired
     private ApiTesteFixture fixture;
@@ -62,7 +66,7 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
 
     @BeforeEach
     void preparar() {
-        reset(mailSender);
+        envioAceito();
         tokenAgente = fixture.tokenComCargo("agente.notificacao@itu.sp.gov.br", "Agente", "Notificacao",
                 ApiTesteFixture.CARGO_AGENTE_SANITARIO_ID);
     }
@@ -77,7 +81,7 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
         resposta.then().statusCode(200);
         assertThat(resposta.path("desfechoAnimal.codigo"), equalTo("em_acompanhamento"));
         assertThat(buscar(processoId).path("desfechoAnimal.codigo"), equalTo("em_acompanhamento"));
-        verify(mailSender, after(1000).never()).send(any(SimpleMailMessage.class));
+        semEnvio();
     }
 
     // DH-21 (docs/decisoes/T37.md): o desfecho e do processo e pode vir em
@@ -130,7 +134,7 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
 
         lancarResultado(processoId, corpoComDesfecho("positivo", null)).then().statusCode(200);
 
-        verify(mailSender, timeout(5000)).send(any(SimpleMailMessage.class));
+        envioAoMunicipe(processoId);
     }
 
     @Test
@@ -140,7 +144,7 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
 
         lancarResultado(processoId, corpoComDesfecho("inconclusivo", null)).then().statusCode(200);
 
-        verify(mailSender, after(1000).never()).send(any(SimpleMailMessage.class));
+        semEnvio();
     }
 
     @Test
@@ -149,29 +153,52 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
         String processoId = processoAguardandoResultado("maria@exemplo.com");
         String originalId = lancarResultado(processoId, corpoComDesfecho("negativo", null))
                 .then().statusCode(200).extract().path("resultados[0].id");
-        reset(mailSender);
+        envioAceito();
 
         Map<String, Object> correcao = corpoComDesfecho("positivo", null);
         correcao.put("retificaId", originalId);
         lancarResultado(processoId, correcao).then().statusCode(200);
 
-        verify(mailSender, timeout(5000)).send(any(SimpleMailMessage.class));
+        envioAoMunicipe(processoId);
     }
 
+    // Desde a T35, a falha de SMTP chega como future falho (o EmailService
+    // loga e nunca lanca); o lancamento do resultado nao depende dela.
     @Test
     @DisplayName("[T37] e-mail indisponivel: resultado e salvo mesmo assim, e a tentativa de envio aconteceu")
     void resultadoSalvoMesmoComFalhaDeEmail() {
-        doThrow(new MailSendException("SMTP indisponivel")).when(mailSender).send(any(SimpleMailMessage.class));
+        when(emailService.enviar(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(CompletableFuture.failedFuture(new MailSendException("SMTP indisponivel")));
         String processoId = processoAguardandoResultado("maria@exemplo.com");
 
         Response resposta = lancarResultado(processoId, corpoComDesfecho("positivo", null));
 
         resposta.then().statusCode(200);
         assertThat(resposta.path("resultado.codigo"), equalTo("positivo"));
-        verify(mailSender, timeout(5000)).send(any(SimpleMailMessage.class));
+        envioAoMunicipe(processoId);
     }
 
     // ── Apoio ────────────────────────────────────────────
+
+    // Mock sem stub devolveria null no lugar do future.
+    private void envioAceito() {
+        reset(emailService);
+        when(emailService.enviar(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(CompletableFuture.completedFuture(null));
+    }
+
+    // Notificacao ao responsavel cadastrado, com o protocolo no assunto e as
+    // versoes HTML e texto do template (NotificacaoResultadoService).
+    private void envioAoMunicipe(String processoId) {
+        String protocolo = buscar(processoId).path("protocolo");
+        verify(emailService, timeout(5000)).enviar(eq("maria@exemplo.com"), contains(protocolo), anyString(), anyString());
+    }
+
+    // O listener e @Async: a ausencia de chamada e conferida depois de uma espera.
+    private void semEnvio() {
+        verify(emailService, after(1000).never()).enviar(any(), any(), any(), any());
+        verify(emailService, never()).enviar(any(), any(), any());
+    }
 
     private String processoAguardandoResultado(String emailResponsavel) {
         Map<String, Object> corpo = fixture.corpoProcesso(null, false);
