@@ -67,7 +67,7 @@ npm run test:seed               # 4/4
 | FS-P4 | Mock calculava "hoje" em UTC | **Corrigida** | FS-10; `datasMock.test.ts` (antes: 4/6 falham nos dois fusos; depois: 6/6) |
 | FS-P5 | `new Date(iso)` em `FichaAnimal`, `Perfil` e `Usuarios` | **Corrigida** | FS-10; `datasNaTela.test.tsx` (antes: 6/10 falham; depois: 10/10 em UTC e em São Paulo) |
 | FS-P6 | Testes não distinguem offset fixo `-03:00` de `America/Sao_Paulo` | **Não corrigível hoje** | Os dois são equivalentes desde 2019 (sem horário de verão); o código usa `ZoneId.of("America/Sao_Paulo")` e o front, `Intl` com `America/Sao_Paulo`. Nenhum offset fixo foi introduzido. |
-| FS-P7 | Filtros de relatório por dia sem teste de fuso | **Bloqueada** | O módulo de relatórios não existe; incluir os instantes de FS-3 quando for implementado |
+| FS-P7 | Filtros de relatório por dia sem teste de fuso | **Bloqueada nesta branch** | Na base desta branch (`872b607`) o módulo de relatórios não existia. A T38 (PR 101, já na `main`) acrescentou o dashboard, com janelas por dia calculadas pelo `Clock` (`LocalDate.now(clock)`, `Year.now(clock)`). Ao integrar a `main`, cobrir essas janelas com os instantes de FS-3. |
 | A | `esterilizado` ausente no cadastro e na edição | **Corrigida** (contrato mantido e fundamentado) | FS-6; ITs de cadastro e edição (422 com o campo) e `AnimalForm.test.tsx` (contraprova: sem o campo no payload, 2 testes falham) |
 | D | Animais com ficha errada em bancos semeados pela versão anterior | **Depende de ação explícita** (procedimento documentado e validado) | Seção "Procedimento" acima |
 | G | Cobertura da regra de ficha completa | **Corrigida** | FS-11 (contraprova: sem recálculo na edição, a IT falha) |
