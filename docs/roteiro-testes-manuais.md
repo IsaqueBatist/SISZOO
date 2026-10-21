@@ -25,7 +25,7 @@ npm run db:seed                 # idempotente: rodar de novo não insere nada
 npm run test:seed               # confere a ficha completa de todos os animais
 ```
 
-Um banco semeado por uma versão anterior do seed (que gravava `ficha_completa` = "tem microchip") tem animais "completos" sem vacina, e o `test:seed` falha nele. Recrie o banco (`docker compose down -v`, que **apaga os dados**) ou edite e salve esses animais pela tela, o que recalcula a ficha.
+Um banco semeado por uma versão anterior do seed (que gravava `ficha_completa` = "tem microchip") tem animais "completos" sem vacina, e o `test:seed` falha nele. Siga o procedimento de `docs/decisoes/ficha-completa-seed-fuso.md` (seção "Procedimento"): recriar o banco, que **apaga os dados**, ou, se houver dados a preservar, diagnosticar e editar/salvar esses animais pela tela.
 
 ☐ Conferir migrations: `docker exec siszoo-db-1 psql -U postgres -d siszoo -c "select version, success from flyway_schema_history order by installed_rank desc limit 5;"` → 18, 17, 16, 15, 14 todos `t`.
 
@@ -167,6 +167,8 @@ Api POST "/animais" @{nome="Teste"; especie="canino"; sexo="macho"; status="em_q
 ☐ → 422 com `campos: [{campo: "dataEsterilizacao", ...}]`. Troque por `dataEntrada="2099-01-01T10:00:00"` → `campos` com `dataEntrada`.
 
 ☐ Sem o campo `esterilizado` (tire `esterilizado=$false` do corpo acima), no cadastro e na edição (`Api PUT "/animais/<id>" ...`) → **422** `{"mensagem": "Dados invalidos", "campos": [{"campo": "esterilizado", ...}]}`, o mesmo formato dos outros campos obrigatórios. Antes respondia 400 genérico.
+
+☐ Permissão vem antes da validação: `Api POST "/animais" @{} $AGE` (Agente só lê animais) → **403** "Acesso negado"; o mesmo corpo vazio com `$ADM` → **422** "Dados invalidos"; sem token → **401**. Antes, o Agente recebia 422.
 
 ### 3.2 Baia ativa e com vaga (RN-AN02/AN03) [UI + API]
 - ☐ Cadastro: Baias 07 e 08 (cheias) e Baia 01 (3/2) aparecem como **"(superlotada)"** e desabilitadas.

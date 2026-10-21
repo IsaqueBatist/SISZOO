@@ -122,6 +122,8 @@ npm run test:seed   # confere a ficha completa dos animais semeados
 ```
 
 O seed é idempotente. A API usada é `SEED_API_URL` (padrão `http://localhost:8080`, ver `.env.example`).
+Banco semeado por uma versão anterior do seed (o `test:seed` falha nele): siga o procedimento de
+`docs/decisoes/ficha-completa-seed-fuso.md`, seção "Procedimento".
 
 > **Importante (LGPD):** nunca versione dados reais de munícipes, denunciantes ou animais. Utilize apenas dados fictícios em seeds e fixtures.
 
