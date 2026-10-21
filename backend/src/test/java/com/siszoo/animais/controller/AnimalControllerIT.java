@@ -89,6 +89,38 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .body("fichaCompleta", equalTo(true));
     }
 
+    // RN-AN04: a ficha e recalculada na edicao do animal (FichaCompletaService
+    // via AnimalService#atualizar) e a retificacao de uma vacinacao nao a
+    // desfaz (a retificadora passa a ser a vigente). Exclusao de vacinacao nao
+    // existe (V17).
+    @Test
+    @DisplayName("[RN-AN04] ficha completa na edicao (microchip definido depois da vacina) e apos retificacao")
+    void fichaCompletaNaEdicaoENaRetificacao() {
+        String id = criarAnimalViaApi(animalMinimo(null)).path("id");
+        String vacinacaoId = fixture.criarVacinacao(tokenAdmin, id, fixture.hoje(), null);
+        given().header("Authorization", "Bearer " + tokenAdmin).get("/api/animais/" + id).then()
+                .statusCode(200)
+                .body("fichaCompleta", equalTo(false));
+
+        given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .body(new AtualizarAnimalRequest(
+                        "Rex", "canino", "macho", null, null, null, null, null, null, null,
+                        fixture.microchipUnico(), false, null, "disponivel_adocao", "resgate", fixture.agora(),
+                        null, null, null))
+                .when()
+                .put("/api/animais/" + id)
+                .then()
+                .statusCode(200)
+                .body("fichaCompleta", equalTo(true));
+
+        fixture.criarVacinacao(tokenAdmin, id, fixture.hoje(), vacinacaoId);
+        given().header("Authorization", "Bearer " + tokenAdmin).get("/api/animais/" + id).then()
+                .statusCode(200)
+                .body("fichaCompleta", equalTo(true));
+    }
+
     @Test
     void deveRetornar422ComCampoQuandoDataDeEntradaFutura() {
         CriarAnimalRequest request = new CriarAnimalRequest(
