@@ -1,8 +1,12 @@
 package com.siszoo.comum.security;
 
+import java.lang.reflect.Method;
+
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authorization.AuthorizationResult;
 import org.springframework.security.authorization.method.PreAuthorizeAuthorizationManager;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,6 +26,12 @@ import jakarta.servlet.http.HttpServletResponse;
 // sempre pelo ExceptionTranslationFilter -> JwtAccessDeniedHandler (403).
 // A checagem por metodo continua valendo como segunda camada. Requisicao sem
 // autenticacao nao chega aqui: o filtro ja respondeu 401.
+//
+// Limite: aqui os argumentos do metodo ainda nao foram lidos. Um @PreAuthorize
+// que use argumentos (#param, #root...) seria avaliado com tudo nulo e daria
+// um resultado errado sem aviso. Por isso ele e recusado de forma explicita
+// (IllegalStateException), e PreAuthorizeSemArgumentosTest quebra o build se
+// algum controller usar "#".
 @Component
 public class PreAutorizacaoInterceptor implements HandlerInterceptor {
 
@@ -31,18 +41,37 @@ public class PreAutorizacaoInterceptor implements HandlerInterceptor {
         autorizacao.setApplicationContext(applicationContext);
     }
 
+    // Expressao do @PreAuthorize que vale para o metodo (no metodo ou, na
+    // falta dele, na classe), ou null se nao houver.
+    static String expressaoPreAuthorize(Method metodo, Class<?> classe) {
+        PreAuthorize anotacao = AnnotatedElementUtils.findMergedAnnotation(metodo, PreAuthorize.class);
+        if (anotacao == null) {
+            anotacao = AnnotatedElementUtils.findMergedAnnotation(classe, PreAuthorize.class);
+        }
+        return anotacao == null ? null : anotacao.value();
+    }
+
+    static boolean usaArgumentosDoMetodo(String expressao) {
+        return expressao != null && expressao.contains("#");
+    }
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         if (!(handler instanceof HandlerMethod metodo)) {
             return true;
         }
-        // Os @PreAuthorize do projeto so usam hasAuthority(...), sem argumentos
-        // do metodo (#param): os argumentos ainda nao foram lidos aqui.
+        String expressao = expressaoPreAuthorize(metodo.getMethod(), metodo.getBeanType());
+        if (expressao == null) {
+            return true;
+        }
+        if (usaArgumentosDoMetodo(expressao)) {
+            throw new IllegalStateException("@PreAuthorize com argumentos do metodo nao e suportado pelo "
+                    + "PreAutorizacaoInterceptor (" + metodo.getShortLogMessage() + ": " + expressao + ")");
+        }
         MethodInvocation invocacao = new SimpleMethodInvocation(
                 metodo.getBean(), metodo.getMethod(), new Object[metodo.getMethod().getParameterCount()]);
         AuthorizationResult resultado = autorizacao.authorize(
                 () -> SecurityContextHolder.getContext().getAuthentication(), invocacao);
-        // null: o metodo nao tem @PreAuthorize.
         if (resultado != null && !resultado.isGranted()) {
             throw new AccessDeniedException("Acesso negado");
         }
