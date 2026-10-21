@@ -1,0 +1,5 @@
+Ola, [(${nome})].
+
+O resultado laboratorial do processo sanitario [(${protocolo})] foi registrado pelo Centro de Controle de Zoonoses de Itu.
+Entre em contato com o CCZ para mais informacoes.
+/*[- T35: versao em texto puro de resultado-processo.html (mesmo texto da T36; nao e comunicacao oficial aprovada pelo CCZ). Variaveis: nome, protocolo. Comentario de template: nao sai no e-mail. Sem quebra de linha depois dele, para o texto terminar na linha acima. -]*/

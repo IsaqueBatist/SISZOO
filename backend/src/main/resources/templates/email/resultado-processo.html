@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<!--/*
+  T35: modelo inicial do e-mail da notificacao de resultado positivo (T36,
+  issue #37; NotificacaoResultadoService). Mesmo texto que a T36 enviava em
+  texto puro. NAO e comunicacao oficial aprovada pelo CCZ.
+  Variaveis: nome, protocolo. th:text escapa HTML. Este comentario nao sai
+  no e-mail (comentario de parser do Thymeleaf). Versao em texto puro:
+  resultado-processo.txt.
+*/-->
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>SISZOO</title>
+</head>
+<body>
+<p>Ola, <span th:text="${nome}">Nome</span>.</p>
+<p>O resultado laboratorial do processo sanitario <strong th:text="${protocolo}">000/0000</strong> foi registrado pelo Centro de Controle de Zoonoses de Itu.<br>
+Entre em contato com o CCZ para mais informacoes.</p>
+</body>
+</html>
