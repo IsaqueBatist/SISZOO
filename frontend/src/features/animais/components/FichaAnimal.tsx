@@ -2,7 +2,7 @@ import { useState, type KeyboardEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { formatarDataBR } from '@/lib/datas'
+import { diasCivisAteHoje, formatarDataBR } from '@/lib/datas'
 import { AbaExames } from './AbaExames'
 import { AbaHistorico } from './AbaHistorico'
 import { AbaMedicamentos } from './AbaMedicamentos'
@@ -27,8 +27,11 @@ const TABS: { key: TabKey; label: string }[] = [
 // dia anterior em São Paulo (ver lib/datas.ts).
 const formatarData = formatarDataBR
 
+// atualizadoEm é LocalDateTime de Itu: conta dias civis em Itu (ontem às 23h
+// é "há 1 dia" às 8h de hoje), sem `new Date(iso)`, que dependeria do fuso do
+// navegador.
 function formatarRelativo(iso: string): string {
-  const dias = Math.floor((Date.now() - new Date(iso).getTime()) / (24 * 60 * 60 * 1000))
+  const dias = diasCivisAteHoje(iso)
   if (dias <= 0) return 'hoje'
   if (dias === 1) return 'há 1 dia'
   return `há ${dias} dias`

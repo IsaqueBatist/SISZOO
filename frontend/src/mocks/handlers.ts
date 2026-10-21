@@ -3,6 +3,7 @@ import type { AlertaVacinalAnimal, AlertaVacinalItem } from '@/features/alertas/
 import type { Animal, AnimalRequest, Baia, BaiaRequest, CatalogosAnimal } from '@/features/animais/types/animais.types'
 import { VACINAS, TIPOS_PROCEDIMENTO } from '@/features/animais/utils/catalogoClinico'
 import { DIAS_ANTECEDENCIA_ALERTA_VACINA, diasAteVencimento, hojeEmItu } from '@/features/animais/utils/regrasVacina'
+import { adicionarDiasIso } from '@/lib/datas'
 import type {
   CategoriaFarmacologica,
   CriarPrescricaoRequest,
@@ -741,10 +742,11 @@ function derivarStatusRegistro<T extends RegistroClinicoBruto>(
 
 const ANIMAL_REX_ID = 'b2c3d4e5-0000-0000-0000-000000000001'
 
+// Datas civis relativas ao dia de Itu (o handler de alertas compara com
+// hojeEmItu, como o backend). Partir do dia UTC deslocava tudo em 1 dia entre
+// 21:00 e 23:59 em Itu (datasMock.test.ts).
 function addDiasIso(dias: number): string {
-  const data = new Date()
-  data.setUTCDate(data.getUTCDate() + dias)
-  return data.toISOString().slice(0, 10)
+  return adicionarDiasIso(hojeEmItu(), dias)
 }
 
 type VacinacaoMockInterna = Omit<Vacinacao, 'retificadoPorId' | 'statusRegistro'>

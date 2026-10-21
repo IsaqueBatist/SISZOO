@@ -1,6 +1,3 @@
-// Soma dias a uma data ISO (AAAA-MM-DD) em UTC, sem hora — para montar
-// fronteiras de data nos testes sem sofrer deslocamento de fuso horário.
-export function adicionarDiasIso(isoDate: string, dias: number): string {
-  const [ano, mes, dia] = isoDate.split('-').map(Number)
-  return new Date(Date.UTC(ano, mes - 1, dia + dias)).toISOString().slice(0, 10)
-}
+// Soma de dias a uma data civil para montar fronteiras de data nos testes.
+// A implementação é a de lib/datas (a mesma que o mock usa).
+export { adicionarDiasIso } from '@/lib/datas'
