@@ -28,6 +28,16 @@ services:
       ADMIN_SEED_EMAIL: ${ADMIN_SEED_EMAIL:-}
       ADMIN_SEED_PASSWORD: ${ADMIN_SEED_PASSWORD:-}
       JWT_SECRET: ${JWT_SECRET:-}
+      # SMTP do EmailService (T35). Mesmos padroes do application.yml: uma
+      # variavel vazia aqui chegaria como "" e anularia o padrao do Spring.
+      SMTP_HOST: ${SMTP_HOST:-localhost}
+      SMTP_PORT: ${SMTP_PORT:-25}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_AUTH: ${SMTP_AUTH:-false}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-false}
+      SMTP_STARTTLS_REQUIRED: ${SMTP_STARTTLS_REQUIRED:-false}
+      SISZOO_MAIL_FROM: ${SISZOO_MAIL_FROM:-nao-responda@itu.sp.gov.br}
     ports:
       - "8080:8080"
     depends_on:

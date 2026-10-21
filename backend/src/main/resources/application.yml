@@ -12,11 +12,11 @@ spring:
   # ao gravar (09:30 virava 06:30 com a JVM em UTC). O fuso do sistema e
   # fixado na JVM (SiszooBackendApplication, TZ do Dockerfile) e no Clock
   # (ClockConfig). Ver FusoHorarioPersistenciaIT.
-  # T37: notificacao de resultado positivo (regra 19; inconclusivo nao
-  # notifica desde a revisao de 2026-10-17, T34-4) ao municipe. Sem
-  # SMTP real configurado, o envio falha ao conectar — o listener engole a
-  # falha (NotificacaoResultadoService), nunca bloqueia o lancamento do
-  # resultado. Timeouts curtos para a thread assincrona nao ficar presa.
+  # SMTP do EmailService (T35; usado pela notificacao de resultado positivo
+  # da T37). Sem SMTP real configurado, o envio falha ao conectar: a falha
+  # so e logada pelo EmailService e nunca bloqueia quem chamou. Timeouts
+  # curtos para a thread assincrona nao ficar presa. Variaveis e sandbox de
+  # desenvolvimento: docs/email.md.
   mail:
     host: ${SMTP_HOST:localhost}
     port: ${SMTP_PORT:25}
@@ -28,9 +28,21 @@ spring:
           auth: ${SMTP_AUTH:false}
           starttls:
             enable: ${SMTP_STARTTLS:false}
+            # true recusa a sessao se o servidor nao aceitar STARTTLS, em vez
+            # de seguir em texto claro (o Angus tenta o STARTTLS so com isso).
+            required: ${SMTP_STARTTLS_REQUIRED:false}
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
+  # Executor do @EnableAsync (AsyncConfig): o applicationTaskExecutor do
+  # Boot. Prefixo para identificar as threads no log; no encerramento
+  # normal, espera os envios em curso (ate 3 timeouts SMTP de 5 s).
+  task:
+    execution:
+      thread-name-prefix: siszoo-async-
+      shutdown:
+        await-termination: true
+        await-termination-period: 20s
 
 siszoo:
   cors:
@@ -97,8 +109,25 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
+  # Fixo nos testes: um SMTP_* exportado na maquina nao vaza para a suite.
+  # Nada escuta em 127.0.0.1:25 no CI; os testes que precisam de SMTP sobem
+  # o GreenMail e sobrescrevem host/porta (EmailServiceIT).
+  mail:
+    host: 127.0.0.1
+    port: 25
+    username: ""
+    password: ""
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+            required: false
 
 siszoo:
   jwt:
     secret: chave-secreta-de-teste-determin-nao-usar-em-producao-1234567890
     expiracao-minutos: 60
+  notificacoes:
+    remetente: nao-responda@siszoo.test
