@@ -1,19 +1,78 @@
-import type { DashboardKpis } from '../types/dashboard.types'
+import type { DashboardKpisApi, KpiAdocoes } from '../types/dashboard.types'
 
 // Latência simulada para o skeleton ser visível e o estado de loading ser
 // testável — mesmo valor usado em features/graficos/api/graficosApi.mock.ts.
 const LATENCIA_MOCK_MS = 300
 
 // Números do protótipo (docs/prototipo/dashboard.html): 147 animais (123
-// cães, 24 gatos), 84% vacinados (123 de 147), 8 adoções no mês (meta 12),
-// 4 ocorrências abertas hoje.
-const KPIS_MOCK: DashboardKpis = {
-  animais: { total: 147, caninos: 123, felinos: 24, variacaoSemanal: 12 },
-  vacinacao: { percentualVacinados: 84, vacinados: 123, total: 147, variacaoSemanalPontos: 5.2 },
-  adocoes: { noMes: 8, metaMensal: 12, variacaoSemanal: 2 },
-  ocorrencias: { abertasHoje: 4, mediaPorHora: 1, variacaoSemanal: -2 },
+// cães, 24 gatos), 84% vacinados (123 de 147), 4 ocorrências registradas
+// hoje. Alertas replicam o mesmo protótipo (vacinas, avaliação, baia,
+// medicação, ficha, castração).
+const KPIS_REAIS_MOCK: DashboardKpisApi = {
+  animais: { total: 147, caninos: 123, felinos: 24 },
+  vacinacao: { percentualVacinados: 84, vacinados: 123, total: 147 },
+  ocorrencias: { registradasHoje: 4, mediaPorHora: 1 },
+  alertas: [
+    {
+      tipo: 'vacina_vencendo',
+      severidade: 'atencao',
+      titulo: '4 vacina(s) vencendo em até 7 dias',
+      descricao: 'Reforços vacinais com vencimento nos próximos 7 dias.',
+      total: 4,
+    },
+    {
+      tipo: 'vacina_vencida',
+      severidade: 'critico',
+      titulo: '1 vacina(s) vencida(s)',
+      descricao: 'Reforços vacinais já vencidos.',
+      total: 1,
+    },
+    {
+      tipo: 'sem_avaliacao_30d',
+      severidade: 'atencao',
+      titulo: '3 animal(is) sem avaliação clínica há mais de 30 dias',
+      descricao: 'Animais sob custódia sem procedimento registrado nos últimos 30 dias.',
+      total: 3,
+    },
+    {
+      tipo: 'baia_superlotada',
+      severidade: 'critico',
+      titulo: '1 baia(s) superlotada(s)',
+      descricao: 'Baias com ocupação igual ou acima da capacidade.',
+      total: 1,
+    },
+    {
+      tipo: 'medicacao_ativa',
+      severidade: 'info',
+      titulo: '7 prescrição(ões) ativa(s) terminando em até 7 dias',
+      descricao: 'Prescrições ativas com fim previsto nos próximos 7 dias.',
+      total: 7,
+    },
+    {
+      tipo: 'ficha_incompleta',
+      severidade: 'info',
+      titulo: '2 animal(is) com ficha incompleta',
+      descricao: 'Animais sob custódia sem microchip e/ou sem vacinação vigente.',
+      total: 2,
+    },
+    {
+      tipo: 'nao_castrado',
+      severidade: 'info',
+      titulo: '10 animal(is) disponível(is) para adoção não castrado(s)',
+      descricao: 'Animais disponíveis para adoção que ainda não foram esterilizados.',
+      total: 10,
+    },
+  ],
 }
 
-export function buscarKpisDashboardMock(): Promise<DashboardKpis> {
-  return new Promise((resolve) => setTimeout(() => resolve(KPIS_MOCK), LATENCIA_MOCK_MS))
+// Meta mensal de adoções: parâmetro institucional sem fonte no DER — ver
+// dashboard.types.ts::KpiAdocoes.
+const ADOCOES_MOCK: KpiAdocoes = { noMes: 8, metaMensal: 12 }
+
+export function buscarKpisReaisMock(): Promise<DashboardKpisApi> {
+  return new Promise((resolve) => setTimeout(() => resolve(KPIS_REAIS_MOCK), LATENCIA_MOCK_MS))
+}
+
+export function buscarAdocoesMock(): Promise<KpiAdocoes> {
+  return new Promise((resolve) => setTimeout(() => resolve(ADOCOES_MOCK), LATENCIA_MOCK_MS))
 }

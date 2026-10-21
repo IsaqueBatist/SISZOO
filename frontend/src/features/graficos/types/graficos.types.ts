@@ -1,6 +1,5 @@
-// Contrato PROPOSTO para GET /api/dashboard/graficos — endpoint ainda não
-// existe (com.siszoo.relatorios é um esqueleto vazio). Ver
-// docs/contratos/dashboard-graficos.md.
+// Espelha com.siszoo.relatorios.dto do backend — GET /api/dashboard/graficos
+// (T38). Ver docs/contratos/dashboard-graficos.md.
 //
 // NÃO inclui ocupação por baia: esse dado já é real hoje via GET /baias
 // (features/animais) — ver GraficoOcupacaoBaia.tsx, que usa useBaiasQuery()
