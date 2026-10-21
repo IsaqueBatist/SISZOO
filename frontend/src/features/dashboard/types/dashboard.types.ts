@@ -1,42 +1,61 @@
-// Contrato PROPOSTO para GET /api/dashboard/kpis — endpoint ainda não existe
-// no backend (pacote com.siszoo.relatorios é um esqueleto vazio). Ver
-// docs/contratos/dashboard-kpis.md para a especificação a validar com o
-// backend antes de implementar a chamada real.
+// Espelha com.siszoo.relatorios.dto do backend (T38) — ver
+// docs/contratos/dashboard-kpis.md para o contrato completo.
 //
-// Campos de variação são opcionais: quando o backend não tiver uma janela de
-// comparação disponível (ex. primeira semana de operação), omite o campo em
-// vez de mandar 0 — o card esconde o delta nesse caso, em vez de mostrar uma
-// variação falsa de "0%".
+// Sem campos de variação semanal: o backend não guarda nenhum snapshot
+// histórico de contagem, então não há como calcular um delta real vs. 7 dias
+// atrás (decisão registrada no contrato). Fica para uma tarefa futura.
 
 export interface KpiAnimais {
   total: number
   caninos: number
   felinos: number
-  variacaoSemanal?: number
 }
 
 export interface KpiVacinacao {
   percentualVacinados: number // 0-100
   vacinados: number
   total: number
-  variacaoSemanalPontos?: number // pontos percentuais
 }
 
+// mediaPorHora ausente (não 0) na virada do dia — o card esconde a média
+// nesse caso, em vez de mostrar uma conta falsa de "X/0".
+export interface KpiOcorrencias {
+  registradasHoje: number
+  mediaPorHora?: number
+}
+
+export type SeveridadeAlertaCritico = 'info' | 'atencao' | 'critico'
+
+// Um dos 6 alertas críticos do DER §3.7 — vacina_vencendo/vacina_vencida
+// contam como 2 entradas separadas (mesma severidade do alerta de vacina já
+// existente, com.siszoo.alertas), totalizando 7 no array.
+export interface AlertaCritico {
+  tipo: string
+  severidade: SeveridadeAlertaCritico
+  titulo: string
+  descricao: string
+  total: number
+}
+
+// Exatamente o que GET /api/dashboard/kpis devolve.
+export interface DashboardKpisApi {
+  animais: KpiAnimais
+  vacinacao: KpiVacinacao
+  ocorrencias: KpiOcorrencias
+  alertas: AlertaCritico[]
+}
+
+// Único bloco sem fonte real: o DER documenta uma tabela `adocao` (com
+// `data_adocao`) que nunca foi implementada — sem migration, sem entidade,
+// sem rastro em auditoria (ver docs/contratos/dashboard-kpis.md). Continua
+// mockado localmente até uma tarefa futura criar essa tabela.
 export interface KpiAdocoes {
   noMes: number
   metaMensal: number
-  variacaoSemanal?: number
 }
 
-export interface KpiOcorrencias {
-  abertasHoje: number
-  mediaPorHora?: number
-  variacaoSemanal?: number
-}
-
-export interface DashboardKpis {
-  animais: KpiAnimais
-  vacinacao: KpiVacinacao
+// O que a UI consome: a resposta real do endpoint + o bloco de adoções
+// (sempre mock, ver dashboardApi.ts::buscarAdocoesMock).
+export interface DashboardKpis extends DashboardKpisApi {
   adocoes: KpiAdocoes
-  ocorrencias: KpiOcorrencias
 }

@@ -48,6 +48,9 @@ class RegistrosClinicosSemMutacaoTest {
     // "findVigentesParaAlertaVacinal" e a query do alerta de reforco vacinal
     // (com.siszoo.alertas) — tambem leitura pura (@Query JPQL de SELECT).
     // "existeVigenteDoAnimal" alimenta ficha_completa (DER §3.2): SELECT.
+    // "findVigentesSobCustodiaParaKpiVacinacao" alimenta o KPI "% vacinados"
+    // do dashboard (com.siszoo.relatorios, T38): tambem SELECT, deliberadamente
+    // separada de findVigentesParaAlertaVacinal (ver comentario no repository).
     @Test
     @DisplayName("[RN-C01] repository de Vacinacao nao declara metodo de update/delete")
     void repositorioDeVacinacaoSoDeclaraFindersDeRetificacaoEFindAllComEntityGraph() {
@@ -58,7 +61,8 @@ class RegistrosClinicosSemMutacaoTest {
                 "findByRetificaIdIn",
                 "findAll",
                 "findVigentesParaAlertaVacinal",
-                "existeVigenteDoAnimal");
+                "existeVigenteDoAnimal",
+                "findVigentesSobCustodiaParaKpiVacinacao");
     }
 
     @Test
@@ -68,11 +72,19 @@ class RegistrosClinicosSemMutacaoTest {
                 ProcedimentoRepository.class, "existsByRetificaId", "findByRetificaId", "findByRetificaIdIn", "findAll");
     }
 
+    // "countByStatusAndDataFimPrevistaBetweenAndAnimal_Status_CodigoNotIn"
+    // alimenta o alerta "medicacao_ativa" do dashboard (com.siszoo.relatorios,
+    // T38): COUNT derivado, sem nenhuma mutacao.
     @Test
     @DisplayName("[RN-C01] repository de Prescricao nao declara metodo de update/delete")
     void repositorioDePrescricaoSoDeclaraFindersDeRetificacaoEFindAllComEntityGraph() {
         assertNomesDosMetodosPublicosDeclarados(
-                PrescricaoRepository.class, "existsByRetificaId", "findByRetificaId", "findByRetificaIdIn", "findAll");
+                PrescricaoRepository.class,
+                "existsByRetificaId",
+                "findByRetificaId",
+                "findByRetificaIdIn",
+                "findAll",
+                "countByStatusAndDataFimPrevistaBetweenAndAnimal_Status_CodigoNotIn");
     }
 
     // getDeclaredMethods() so retorna metodos declarados diretamente no tipo

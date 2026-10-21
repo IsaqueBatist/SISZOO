@@ -6,10 +6,10 @@ import { Skeleton } from '@/components/layout/Skeleton'
 import { SeloDadosMock } from '@/components/layout/SeloDadosMock'
 import type { SeveridadeAlerta } from '@/features/alertas/types/alertas.types'
 import { useAlertasVacinaisQuery } from '@/features/alertas/hooks/useAlertas'
-import { kpisUsamMock } from '../api/dashboardApi'
 import { useKpisDashboardQuery } from '../hooks/useDashboardKpis'
 import { useProcessosUrgentesQuery } from '../hooks/useAlertaProcessosUrgentes'
 import { mapearKpisParaCards } from '../utils/kpiCards'
+import type { AlertaCritico } from '../types/dashboard.types'
 import './Dashboard.css'
 
 // Lazy: isola o chunk de `recharts` (pesado) do carregamento inicial do
@@ -43,11 +43,9 @@ function IconeSeveridadeVacina({ severidade }: { severidade: SeveridadeAlerta })
   return <Icon name={severidade === 'VENCIDA' ? 'alert' : 'bell'} size={12} />
 }
 
-// Só o card de vacinas usa dado real (GET /api/alertas/vacinas) — os outros
-// 5 alertas do protótipo (avaliação, baia, medicação, ficha, castração) não
-// têm endpoint ainda, então não entram aqui como card mockado: um número
-// inventado numa tela de produção é pior que não ter o card. Cada um entra
-// quando ganhar seu próprio endpoint.
+// Card dedicado pro alerta de vacina (GET /api/alertas/vacinas, com a lista
+// de animais) — os outros 5 tipos do DER §3.7 vêm agregados em
+// kpis.alertas (T38) e são renderizados por AlertaCriticoGenerico, abaixo.
 function AlertaCriticoVacinas() {
   const { data, isLoading, isError, refetch } = useAlertasVacinaisQuery()
 
@@ -182,9 +180,47 @@ function AlertaProcessosUrgentes() {
   )
 }
 
+// Os 6 alertas críticos do DER §3.7 chegam todos juntos em kpis.alertas (T38),
+// mas vacina_vencendo/vacina_vencida já têm card dedicado acima
+// (AlertaCriticoVacinas, com a lista de animais via GET /api/alertas/vacinas)
+// — não duplicar aqui, só os outros 5 tipos novos.
+const TIPOS_JA_EXIBIDOS_EM_CARD_DEDICADO = new Set(['vacina_vencendo', 'vacina_vencida'])
+
+// Mesmo tom por tipo do protótipo (docs/prototipo/dashboard.html): não deriva
+// de `severidade` (info/atencao/critico) porque o protótipo usa classes mais
+// granulares que a enum do DER — fiel ao visual já validado, em vez de uma
+// conversão aproximada.
+const TOM_POR_TIPO_DE_ALERTA: Record<string, string> = {
+  sem_avaliacao_30d: 'alert-yellow',
+  baia_superlotada: 'warning',
+  medicacao_ativa: 'info',
+  ficha_incompleta: 'info',
+  nao_castrado: 'danger',
+}
+
+// Sem link "ver detalhes": diferente do alerta de vacina, estes 5 tipos não
+// têm endpoint de lista de itens (só o total agregado) — navegar para uma
+// tela vazia seria pior do que não navegar.
+function AlertaCriticoGenerico({ alerta }: { alerta: AlertaCritico }) {
+  return (
+    <div className={`alert ${TOM_POR_TIPO_DE_ALERTA[alerta.tipo] ?? 'info'}`}>
+      <span className="bullet" />
+      <div className="alert-content">
+        <strong>{alerta.titulo}</strong>
+        <div className="alert-desc">{alerta.descricao}</div>
+      </div>
+    </div>
+  )
+}
+
 export function Dashboard() {
   const { data: kpis, isLoading: kpisCarregando, isError: kpisComErro, refetch: refazerKpis } = useKpisDashboardQuery()
   const cards = kpis ? mapearKpisParaCards(kpis) : []
+  // Só os com total > 0: a seção é "Alertas Críticos", não um inventário —
+  // mostrar "0 baia(s) superlotada(s)" não ajuda ninguém a agir.
+  const alertasGenericos = (kpis?.alertas ?? []).filter(
+    (alerta) => !TIPOS_JA_EXIBIDOS_EM_CARD_DEDICADO.has(alerta.tipo) && alerta.total > 0,
+  )
 
   return (
     <>
@@ -197,7 +233,6 @@ export function Dashboard() {
 
       <div className="section-header">
         <h2>Indicadores</h2>
-        {kpisUsamMock() && <SeloDadosMock />}
       </div>
 
       {kpisComErro ? (
@@ -210,6 +245,7 @@ export function Dashboard() {
                 <div className={`kpi ${kpi.tone}`} key={kpi.label}>
                   <div className="kpi-head">
                     <span className="kpi-label">{kpi.label}</span>
+                    {kpi.isMock && <SeloDadosMock />}
                     <span className="kpi-icon">
                       <Icon name={kpi.icon} size={18} />
                     </span>
@@ -220,7 +256,6 @@ export function Dashboard() {
                   </div>
                   <div className="kpi-foot">
                     <span>{kpi.foot}</span>
-                    {kpi.delta && <span className={`kpi-delta ${kpi.deltaDirection}`}>{kpi.delta}</span>}
                   </div>
                 </div>
               ))}
@@ -239,6 +274,9 @@ export function Dashboard() {
         <div className="alerts-grid">
           <AlertaCriticoVacinas />
           <AlertaProcessosUrgentes />
+          {!kpisCarregando &&
+            !kpisComErro &&
+            alertasGenericos.map((alerta) => <AlertaCriticoGenerico key={alerta.tipo} alerta={alerta} />)}
         </div>
       </div>
 

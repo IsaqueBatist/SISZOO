@@ -808,6 +808,17 @@ Um sintoma aparece no máximo uma vez por amostra (a API ignora códigos repetid
 - `ficha_incompleta`: `animal WHERE ficha_completa = false`
 - `nao_castrado`: `animal WHERE esterilizado = false AND status = 'disponivel_adocao'`
 
+**Implementado (T38)** em `GET /api/dashboard/kpis` (`DashboardService#calcularAlertas`,
+`docs/contratos/dashboard-kpis.md`): `vacina_vencendo`/`vacina_vencida` reaproveitam
+`AlertaVacinalService` (T21) contados por severidade — por isso a resposta tem 7
+entradas (2 severidades de vacina + os outros 5 tipos), não 6. `baia_superlotada`
+usa `ocupacao >= capacidade` (mesmo critério de `BaiaResponse.superlotada`), não
+`>` como o texto acima sugere — mantido assim para as duas telas concordarem
+sobre qual baia está superlotada. Todos os alertas de animal/baia/prescrição
+consideram só quem está sob custódia (`StatusAnimal.CODIGOS_SOB_CUSTODIA`), exceto
+`baia_superlotada` (todas as baias ativas) e `nao_castrado` (literal do DER: só
+`disponivel_adocao`, não todo "sob custódia").
+
 ---
 
 ### 3.8 Auditoria

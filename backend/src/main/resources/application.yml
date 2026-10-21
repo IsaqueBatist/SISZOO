@@ -43,6 +43,14 @@ spring:
       shutdown:
         await-termination: true
         await-termination-period: 20s
+  # Cache das agregacoes do dashboard (com.siszoo.relatorios, T38): TTL curto
+  # para nao recalcular a cada refresh/polling em maquinas com ~2GB RAM. Sem
+  # @CacheEvict — ver docs/contratos/dashboard-kpis.md para o atraso que isso
+  # pode introduzir. Desligado no perfil de teste (abaixo).
+  cache:
+    cache-names: dashboardKpis, dashboardGraficos
+    caffeine:
+      spec: expireAfterWrite=5m,maximumSize=10
 
 siszoo:
   cors:
@@ -124,6 +132,11 @@ spring:
           starttls:
             enable: false
             required: false
+  # Cache do dashboard desligado nos testes (T38): o banco de teste é
+  # compartilhado entre métodos sem rollback (AbstractIntegrationTest), e um
+  # TTL de 5 min faria um teste ler o resultado cacheado de outro.
+  cache:
+    type: none
 
 siszoo:
   jwt:
