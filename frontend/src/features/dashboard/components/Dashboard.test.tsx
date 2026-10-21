@@ -41,15 +41,18 @@ afterEach(() => {
 })
 
 describe('Dashboard', () => {
-  it('renderiza os KPIs com dados mockados e mostra o selo de demonstração', async () => {
+  it('renderiza os KPIs com dados mockados e mostra o selo de demonstração só no card de Adoções', async () => {
     renderDashboard()
 
     expect(await screen.findByText('147')).toBeInTheDocument()
     expect(screen.getByText('84')).toBeInTheDocument()
     expect(screen.getByText('8')).toBeInTheDocument()
 
-    const secaoIndicadores = screen.getByText('Indicadores').closest('.section-header') as HTMLElement
-    expect(within(secaoIndicadores).getByText('Dados de demonstração')).toBeInTheDocument()
+    const cardAdocoes = screen.getByText('Adoções no Mês').closest('.kpi') as HTMLElement
+    expect(within(cardAdocoes).getByText('Dados de demonstração')).toBeInTheDocument()
+
+    const cardAnimais = screen.getByText('Total de Animais').closest('.kpi') as HTMLElement
+    expect(within(cardAnimais).queryByText('Dados de demonstração')).not.toBeInTheDocument()
   })
 
   it('mostra skeleton enquanto os dados carregam e some depois', async () => {
@@ -59,7 +62,7 @@ describe('Dashboard', () => {
     await waitFor(() => expect(container.querySelectorAll('.skel').length).toBe(0))
   })
 
-  it('erro ao carregar KPIs mostra retry e some o selo de demonstração', async () => {
+  it('erro ao carregar KPIs mostra retry; depois de recuperar, só Adoções continua com o selo de demonstração', async () => {
     vi.stubEnv('VITE_USE_MOCK_KPIS', 'false')
 
     let chamadas = 0
@@ -72,8 +75,8 @@ describe('Dashboard', () => {
         return HttpResponse.json({
           animais: { total: 10, caninos: 7, felinos: 3 },
           vacinacao: { percentualVacinados: 50, vacinados: 5, total: 10 },
-          adocoes: { noMes: 1, metaMensal: 5 },
-          ocorrencias: { abertasHoje: 0 },
+          ocorrencias: { registradasHoje: 0 },
+          alertas: [],
         })
       }),
     )
@@ -81,13 +84,52 @@ describe('Dashboard', () => {
     const user = userEvent.setup()
     renderDashboard()
 
-    const secaoIndicadores = screen.getByText('Indicadores').closest('.section-header') as HTMLElement
-    expect(within(secaoIndicadores).queryByText('Dados de demonstração')).not.toBeInTheDocument()
     const botaoRetry = await screen.findByRole('button', { name: 'Tentar novamente' })
     await user.click(botaoRetry)
 
     expect(await screen.findByText('10')).toBeInTheDocument()
     expect(chamadas).toBe(2)
+
+    const cardAnimais = screen.getByText('Total de Animais').closest('.kpi') as HTMLElement
+    expect(within(cardAnimais).queryByText('Dados de demonstração')).not.toBeInTheDocument()
+    // Adoções não depende do endpoint real: continua mockado mesmo com o resto real.
+    const cardAdocoes = screen.getByText('Adoções no Mês').closest('.kpi') as HTMLElement
+    expect(within(cardAdocoes).getByText('Dados de demonstração')).toBeInTheDocument()
+  })
+
+  it('renderiza os alertas críticos genéricos (DER §3.7) vindos de kpis.alertas, sem duplicar o alerta de vacina', async () => {
+    renderDashboard()
+
+    expect(await screen.findByText(/baia\(s\) superlotada/)).toBeInTheDocument()
+    expect(screen.getByText(/anima(l|is).*ficha incompleta/i)).toBeInTheDocument()
+    expect(screen.getByText(/não castrado/)).toBeInTheDocument()
+  })
+
+  it('não renderiza o alerta genérico quando o total é 0', async () => {
+    vi.stubEnv('VITE_USE_MOCK_KPIS', 'false')
+    server.use(
+      http.get(`${API_BASE_URL}/dashboard/kpis`, () =>
+        HttpResponse.json({
+          animais: { total: 10, caninos: 7, felinos: 3 },
+          vacinacao: { percentualVacinados: 50, vacinados: 5, total: 10 },
+          ocorrencias: { registradasHoje: 0 },
+          alertas: [
+            {
+              tipo: 'baia_superlotada',
+              severidade: 'critico',
+              titulo: '0 baia(s) superlotada(s)',
+              descricao: 'Baias com ocupação igual ou acima da capacidade.',
+              total: 0,
+            },
+          ],
+        }),
+      ),
+    )
+
+    renderDashboard()
+
+    await screen.findByText('10')
+    expect(screen.queryByText(/baia\(s\) superlotada/)).not.toBeInTheDocument()
   })
 
   it('alerta de vacina mostra a severidade com ícone e texto (vencida antes de a vencer)', async () => {

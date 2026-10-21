@@ -1,5 +1,6 @@
 package com.siszoo.animais.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -21,4 +22,10 @@ public interface BaiaRepository extends JpaRepository<Baia, UUID>, JpaSpecificat
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT b FROM Baia b WHERE b.id = :id")
     Optional<Baia> findByIdForUpdate(@Param("id") UUID id);
+
+    // Alerta "baia_superlotada" (com.siszoo.relatorios, T38): base para o
+    // service comparar ocupacao (AnimalRepository#contarOcupacaoPorBaia) com
+    // capacidade — so baias ativas entram na contagem, mesmo criterio de
+    // "superlotada" ja usado em BaiaService#mapearComOcupacao (>= capacidade).
+    List<Baia> findByAtivaTrue();
 }

@@ -5,7 +5,7 @@ import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { API_BASE_URL } from '@/lib/env'
 import { server } from '@/mocks/server'
-import type { DashboardKpis } from '../types/dashboard.types'
+import type { DashboardKpisApi } from '../types/dashboard.types'
 import { useKpisDashboardQuery } from './useDashboardKpis'
 
 function Wrapper({ children }: { children: ReactNode }) {
@@ -18,28 +18,43 @@ afterEach(() => {
 })
 
 describe('useKpisDashboardQuery', () => {
-  it('usa o mock por padrão (endpoint real ainda não existe), sem chamar a API', async () => {
+  it('usa o mock por padrão para animais/vacinação/ocorrências/alertas, e também mocka adoções (sem fonte real)', async () => {
     const { result } = renderHook(() => useKpisDashboardQuery(), { wrapper: Wrapper })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data?.animais.total).toBe(147)
     expect(result.current.data?.vacinacao.percentualVacinados).toBe(84)
+    expect(result.current.data?.adocoes.noMes).toBe(8)
+    expect(result.current.data?.alertas.length).toBeGreaterThan(0)
   })
 
-  it('chama a API real quando VITE_USE_MOCK_KPIS=false', async () => {
+  it('chama a API real quando VITE_USE_MOCK_KPIS=false, mas ainda mocka adoções', async () => {
     vi.stubEnv('VITE_USE_MOCK_KPIS', 'false')
 
-    const kpisReais: DashboardKpis = {
+    const kpisReais: DashboardKpisApi = {
       animais: { total: 10, caninos: 7, felinos: 3 },
       vacinacao: { percentualVacinados: 50, vacinados: 5, total: 10 },
-      adocoes: { noMes: 1, metaMensal: 5 },
-      ocorrencias: { abertasHoje: 0 },
+      ocorrencias: { registradasHoje: 0 },
+      alertas: [
+        {
+          tipo: 'baia_superlotada',
+          severidade: 'critico',
+          titulo: '1 baia(s) superlotada(s)',
+          descricao: 'Baias com ocupação igual ou acima da capacidade.',
+          total: 1,
+        },
+      ],
     }
     server.use(http.get(`${API_BASE_URL}/dashboard/kpis`, () => HttpResponse.json(kpisReais)))
 
     const { result } = renderHook(() => useKpisDashboardQuery(), { wrapper: Wrapper })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(result.current.data).toEqual(kpisReais)
+    expect(result.current.data?.animais).toEqual(kpisReais.animais)
+    expect(result.current.data?.vacinacao).toEqual(kpisReais.vacinacao)
+    expect(result.current.data?.ocorrencias).toEqual(kpisReais.ocorrencias)
+    expect(result.current.data?.alertas).toEqual(kpisReais.alertas)
+    // adocoes continua vindo do mock, mesmo com o resto real.
+    expect(result.current.data?.adocoes.noMes).toBe(8)
   })
 })

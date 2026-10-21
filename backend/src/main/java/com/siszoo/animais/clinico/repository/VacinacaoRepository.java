@@ -78,4 +78,32 @@ public interface VacinacaoRepository extends JpaRepository<Vacinacao, UUID>, Jpa
             """)
     List<Vacinacao> findVigentesParaAlertaVacinal(
             @Param("codigosForaDaCustodia") Collection<String> codigosForaDaCustodia);
+
+    // KPI "% vacinados" do dashboard (com.siszoo.relatorios, T38): mesma
+    // selecao de "vigente" (NOT EXISTS) de findVigentesParaAlertaVacinal, mas
+    // DELIBERADAMENTE uma query separada — essa nao e a janela de alerta de 7
+    // dias, e "vacinado" aqui so precisa da vigente mais recente de cada par
+    // (animal, vacina), sem relacao com o alerta. dataValidade e calculada em
+    // Java pelo service (soma de meses nao e portavel em JPQL), igual
+    // AlertaVacinalService#calcularDataValidade.
+    @EntityGraph(attributePaths = {"animal", "vacina"})
+    @Query("""
+            SELECT v FROM Vacinacao v
+            WHERE v.vacina.intervaloMeses IS NOT NULL
+              AND v.vacina.ativo = true
+              AND v.animal.status.codigo NOT IN :codigosForaDaCustodia
+              AND NOT EXISTS (SELECT 1 FROM Vacinacao r WHERE r.retifica = v)
+              AND NOT EXISTS (
+                  SELECT 1 FROM Vacinacao maisRecente
+                  WHERE maisRecente.animal = v.animal
+                    AND maisRecente.vacina = v.vacina
+                    AND maisRecente <> v
+                    AND NOT EXISTS (SELECT 1 FROM Vacinacao r2 WHERE r2.retifica = maisRecente)
+                    AND (maisRecente.dataAplicacao > v.dataAplicacao
+                         OR (maisRecente.dataAplicacao = v.dataAplicacao AND maisRecente.criadoEm > v.criadoEm)
+                         OR (maisRecente.dataAplicacao = v.dataAplicacao AND maisRecente.criadoEm = v.criadoEm AND maisRecente.id > v.id))
+              )
+            """)
+    List<Vacinacao> findVigentesSobCustodiaParaKpiVacinacao(
+            @Param("codigosForaDaCustodia") Collection<String> codigosForaDaCustodia);
 }

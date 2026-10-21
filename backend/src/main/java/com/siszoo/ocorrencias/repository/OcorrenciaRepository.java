@@ -1,5 +1,6 @@
 package com.siszoo.ocorrencias.repository;
 
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -34,4 +35,14 @@ public interface OcorrenciaRepository extends JpaRepository<Ocorrencia, UUID>, J
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT o FROM Ocorrencia o WHERE o.id = :id")
     Optional<Ocorrencia> findByIdForUpdate(@Param("id") UUID id);
+
+    // KPI "ocorrencias" do dashboard (com.siszoo.relatorios, T38): registro
+    // duplicado/indevido (providencia "registro_indevido") e excluido por
+    // decisao de produto registrada no comentario de
+    // V10__schema_ocorrencias.sql ("O dashboard deve exclui-la das
+    // contagens") — vale pra qualquer contagem de ocorrencias do dashboard,
+    // nao so esta.
+    @Query("SELECT COUNT(o) FROM Ocorrencia o WHERE o.dataAbertura = :hoje "
+            + "AND (o.providenciaTomada IS NULL OR o.providenciaTomada.codigo <> 'registro_indevido')")
+    long contarRegistradasEm(@Param("hoje") LocalDate hoje);
 }
