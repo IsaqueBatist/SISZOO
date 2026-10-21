@@ -1,19 +1,16 @@
 # Contrato — GET /api/dashboard/graficos
 
-Status: **proposta do frontend, endpoint ainda não implementado** (pacote
-`com.siszoo.relatorios` é um esqueleto vazio — ver `docs/modulo5-relatorios.dbml`).
+Status: **implementado (T38)** — `com.siszoo.relatorios.controller.DashboardController`.
 
 Alimenta 2 dos 4 gráficos do mural no dashboard: "Casos Suspeitos" (donuts de
 doença e de raiva por espécie) e "Resultados Laboratoriais" (barras).
+Protegido por `RELATORIOS:leitura` (os 3 perfis). Cacheado por 5 minutos por
+ano (Caffeine, `CacheConfig`) — ver `docs/contratos/dashboard-kpis.md` para o
+atraso que isso pode introduzir.
 
 **Não inclui ocupação por baia.** Esse gráfico já é real hoje, consumido
-direto de `GET /baias` (módulo `animais`, já implementado) — não precisa de
-nada novo no backend.
-
-Enquanto este endpoint não existe, o frontend usa um mock local
-(`frontend/src/features/graficos/api/graficosApi.mock.ts`), selecionado pela
-env var `VITE_USE_MOCK_GRAFICOS` (default `true`). Trocar para a API real
-exige só mudar essa variável para `false`.
+direto de `GET /baias` (módulo `animais`) — não precisa de nada novo no
+backend.
 
 ## Requisição
 
@@ -23,8 +20,9 @@ Authorization: Bearer <token>
 ```
 
 `ano` (opcional): filtra os dados ao ano informado. Sem o parâmetro, o
-backend assume o ano corrente no fuso `America/São_Paulo` (fixo no
-projeto).
+backend assume o ano corrente no fuso `America/Sao_Paulo`. Sem validação de
+intervalo — um ano sem nenhum dado simplesmente devolve os catálogos
+zerados/listas vazias.
 
 ## Resposta — 200 OK
 
@@ -51,33 +49,37 @@ projeto).
 }
 ```
 
-### `casosPorDoenca`
+### `casosPorDoenca` — decisão: "caso" = processo sanitário
 
-Contagem de processos sanitários abertos no ano filtrado, agrupados por
-`doenca` (catálogo de 6 itens: `raiva`, `esporotricose`,
+Contagem de `ProcessoSanitario` abertos no ano filtrado (`dataAbertura`),
+agrupados por `doenca` (catálogo de 6 itens: `raiva`, `esporotricose`,
 `leishmaniose_visceral`, `leptospirose`, `febre_maculosa`, `febre_amarela`).
-**Sempre devolver as 6 doenças**, mesmo com `quantidade: 0` — o frontend
-exibe a fatia zerada no gráfico em vez de omitir a categoria.
+**Sempre devolve as 6 doenças**, mesmo com `quantidade: 0`. "1 processo = 1
+caso" porque `doenca` vive direto em `ProcessoSanitario`, não na amostra —
+é a granularidade mais próxima do que já existe em `GET /processos`.
 
-### `casosRaivaPorEspecie`
+### `casosRaivaPorEspecie` — decisão: conta por amostra, pode exceder o total de processos
 
-Mesma contagem, mas só para `doenca = raiva`, agrupada por `especie` da
-amostra (catálogo de 4 itens: `canino`, `felino`, `quiroptero`, `pnh`).
-Mesma regra: sempre as 4 espécies, mesmo com `quantidade: 0`.
+Mesmo filtro de ano (`dataAbertura`), só `doenca = raiva`, agrupado por
+`especie` **da amostra** (catálogo de 4 itens: `canino`, `felino`,
+`quiroptero`, `pnh`). Sempre devolve as 4 espécies, mesmo com `quantidade: 0`.
 
-### `resultadosPorDoenca`
+Diferente de `casosPorDoenca`: como um processo pode ter várias amostras
+(`animal_amostrado`, 1:N), um processo com amostras de espécies diferentes
+**conta uma vez em cada espécie** — a soma de `casosRaivaPorEspecie` pode
+ser maior que o total de processos de raiva no ano. Duas amostras do mesmo
+processo e da mesma espécie contam só uma vez (`COUNT(DISTINCT processo)`).
+
+### `resultadosPorDoenca` — lista dinâmica, ano do resultado
 
 **Lista dinâmica** (diferente das duas acima): só entram as doenças que
-tiveram pelo menos 1 resultado laboratorial (`positivo` ou `negativo`)
-lançado no ano filtrado. `positivos` e `negativos` contam processos distintos
-(resultado vigente de cada processo, não o histórico de retificações — ver
-`resultado_processo` no módulo `processos`).
+tiveram pelo menos 1 resultado laboratorial **positivo ou negativo**
+lançado no ano filtrado. `positivos`/`negativos` contam o **resultado
+vigente** de cada processo (`ProcessoSanitario.resultadoLaboratorial`, não o
+histórico de retificações em `resultado_processo`). Os demais códigos do
+catálogo (`aguardando`, `inconclusivo`, `material_inadequado`,
+`nao_realizado`) nunca contam como positivo nem negativo.
 
-## Dúvida para o backend
-
-"Casos" aqui significa processo sanitário aberto (`processo_sanitario.doenca`)
-ou amostra individual dentro do processo? O protótipo (`dashboard.html`) não
-deixa claro. O frontend assumiu "processo" (1 processo = 1 caso) porque é a
-granularidade mais próxima do que já existe em `GET /processos` — mas isso
-precisa de confirmação de quem implementar, já que um processo pode ter
-várias amostras.
+O ano filtra pela **data do resultado** (`dataResultado`), não pela data de
+abertura do processo — um processo aberto em 2025 com resultado lançado em
+2026 aparece em `resultadosPorDoenca` do ano 2026, não 2025.
