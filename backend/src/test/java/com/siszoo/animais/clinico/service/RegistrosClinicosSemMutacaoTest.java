@@ -71,16 +71,24 @@ class RegistrosClinicosSemMutacaoTest {
                 "contarAplicacoesPorVeterinario");
     }
 
+    // "countByTipoProcedimento_CodigoAndDataBetweenAndAnimal_Sexo",
+    // "contarPorTipo", "contarPorVeterinarioETipo" e "listarCirurgias"
+    // alimentam o relatorio de procedimentos (com.siszoo.relatorios, T41):
+    // COUNT/GROUP BY/SELECT, tambem leitura pura.
     @Test
     @DisplayName("[RN-C01] repository de Procedimento nao declara metodo de update/delete")
     void repositorioDeProcedimentoSoDeclaraFindersDeRetificacaoEFindAllComEntityGraph() {
         assertNomesDosMetodosPublicosDeclarados(
-                ProcedimentoRepository.class, "existsByRetificaId", "findByRetificaId", "findByRetificaIdIn", "findAll");
+                ProcedimentoRepository.class,
+                "existsByRetificaId", "findByRetificaId", "findByRetificaIdIn", "findAll",
+                "countByTipoProcedimento_CodigoAndDataBetweenAndAnimal_Sexo",
+                "contarPorTipo", "contarPorVeterinarioETipo", "listarCirurgias");
     }
 
     // "countByStatusAndDataFimPrevistaBetweenAndAnimal_Status_CodigoNotIn"
     // alimenta o alerta "medicacao_ativa" do dashboard (com.siszoo.relatorios,
-    // T38): COUNT derivado, sem nenhuma mutacao.
+    // T38); "countByDataInicioBetween" alimenta "Medicações" no relatorio de
+    // procedimentos (T41): ambos COUNT derivado, sem nenhuma mutacao.
     @Test
     @DisplayName("[RN-C01] repository de Prescricao nao declara metodo de update/delete")
     void repositorioDePrescricaoSoDeclaraFindersDeRetificacaoEFindAllComEntityGraph() {
@@ -90,7 +98,8 @@ class RegistrosClinicosSemMutacaoTest {
                 "findByRetificaId",
                 "findByRetificaIdIn",
                 "findAll",
-                "countByStatusAndDataFimPrevistaBetweenAndAnimal_Status_CodigoNotIn");
+                "countByStatusAndDataFimPrevistaBetweenAndAnimal_Status_CodigoNotIn",
+                "countByDataInicioBetween");
     }
 
     // getDeclaredMethods() so retorna metodos declarados diretamente no tipo
