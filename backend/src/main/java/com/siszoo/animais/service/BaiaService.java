@@ -33,6 +33,11 @@ import com.siszoo.animais.repository.BaiaRepository;
 import com.siszoo.animais.repository.OcupacaoBaiaProjection;
 import com.siszoo.animais.repository.TipoBaiaRepository;
 import com.siszoo.comum.dto.PaginaResponse;
+import com.siszoo.usuarios.entity.AcaoAuditoria;
+import com.siszoo.usuarios.entity.Usuario;
+import com.siszoo.usuarios.exception.UsuarioNaoEncontradoException;
+import com.siszoo.usuarios.repository.UsuarioRepository;
+import com.siszoo.usuarios.service.AuditoriaEventoService;
 
 import jakarta.persistence.criteria.Predicate;
 
@@ -45,24 +50,35 @@ public class BaiaService {
     // os mesmos que o tiram da custódia do CCZ (fonte única em StatusAnimal).
     private static final Set<String> STATUS_FORA_DA_OCUPACAO = StatusAnimal.CODIGOS_FORA_DA_CUSTODIA;
 
+    // RNF10 (F2-078): baia e cadastro critico (define a ocupacao do canil) —
+    // criacao, edicao, (des)ativacao e exclusao logica geram AuditoriaEvento.
+    private static final String ENTIDADE_AUDITORIA = "baia";
+
     private final BaiaRepository baiaRepository;
     private final TipoBaiaRepository tipoBaiaRepository;
     private final AnimalRepository animalRepository;
     private final BaiaMapper baiaMapper;
+    private final UsuarioRepository usuarioRepository;
+    private final AuditoriaEventoService auditoriaEventoService;
 
     public BaiaService(
             BaiaRepository baiaRepository,
             TipoBaiaRepository tipoBaiaRepository,
             AnimalRepository animalRepository,
-            BaiaMapper baiaMapper) {
+            BaiaMapper baiaMapper,
+            UsuarioRepository usuarioRepository,
+            AuditoriaEventoService auditoriaEventoService) {
         this.baiaRepository = baiaRepository;
         this.tipoBaiaRepository = tipoBaiaRepository;
         this.animalRepository = animalRepository;
         this.baiaMapper = baiaMapper;
+        this.usuarioRepository = usuarioRepository;
+        this.auditoriaEventoService = auditoriaEventoService;
     }
 
     @Transactional
-    public BaiaResponse criar(CriarBaiaRequest request) {
+    public BaiaResponse criar(CriarBaiaRequest request, UUID usuarioAutenticadoId) {
+        Usuario autor = autor(usuarioAutenticadoId);
         Baia baia = new Baia();
         baia.setNome(request.nome());
         baia.setTipoBaia(resolverTipoBaia(request.tipoBaia()));
@@ -71,12 +87,16 @@ public class BaiaService {
         baia.setObservacoes(textoOuNulo(request.observacoes()));
 
         baiaRepository.save(baia);
-        return mapearComOcupacao(baia, true);
+        BaiaResponse response = mapearComOcupacao(baia, true);
+        auditoriaEventoService.registrar(autor, AcaoAuditoria.CRIACAO, ENTIDADE_AUDITORIA, baia.getId(), null, response);
+        return response;
     }
 
     @Transactional
-    public BaiaResponse atualizar(UUID id, AtualizarBaiaRequest request) {
+    public BaiaResponse atualizar(UUID id, AtualizarBaiaRequest request, UUID usuarioAutenticadoId) {
         Baia baia = baiaRepository.findById(id).orElseThrow(BaiaNaoEncontradaException::new);
+        Usuario autor = autor(usuarioAutenticadoId);
+        BaiaResponse antes = mapearComOcupacao(baia, false);
 
         baia.setNome(request.nome());
         baia.setTipoBaia(resolverTipoBaia(request.tipoBaia()));
@@ -85,23 +105,39 @@ public class BaiaService {
         baia.setObservacoes(textoOuNulo(request.observacoes()));
 
         baiaRepository.save(baia);
-        return mapearComOcupacao(baia, true);
+        BaiaResponse depois = mapearComOcupacao(baia, true);
+        auditoriaEventoService.registrar(autor, AcaoAuditoria.ATUALIZACAO, ENTIDADE_AUDITORIA, baia.getId(), antes, depois);
+        return depois;
     }
 
     @Transactional
-    public BaiaResponse alterarStatus(UUID id, AtualizarStatusBaiaRequest request) {
+    public BaiaResponse alterarStatus(UUID id, AtualizarStatusBaiaRequest request, UUID usuarioAutenticadoId) {
         Baia baia = baiaRepository.findById(id).orElseThrow(BaiaNaoEncontradaException::new);
-        baia.setAtiva(Boolean.TRUE.equals(request.ativa()));
+        Usuario autor = autor(usuarioAutenticadoId);
+        BaiaResponse antes = mapearComOcupacao(baia, false);
+        boolean ativar = Boolean.TRUE.equals(request.ativa());
+        baia.setAtiva(ativar);
         baiaRepository.save(baia);
-        return mapearComOcupacao(baia, false);
+        BaiaResponse depois = mapearComOcupacao(baia, false);
+        auditoriaEventoService.registrar(autor, ativar ? AcaoAuditoria.REATIVACAO : AcaoAuditoria.DESATIVACAO,
+                ENTIDADE_AUDITORIA, baia.getId(), antes, depois);
+        return depois;
     }
 
     @Transactional
-    public BaiaResponse desativar(UUID id) {
+    public BaiaResponse desativar(UUID id, UUID usuarioAutenticadoId) {
         Baia baia = baiaRepository.findById(id).orElseThrow(BaiaNaoEncontradaException::new);
+        Usuario autor = autor(usuarioAutenticadoId);
+        BaiaResponse antes = mapearComOcupacao(baia, false);
         baia.setAtiva(false);
         baiaRepository.save(baia);
-        return mapearComOcupacao(baia, false);
+        BaiaResponse depois = mapearComOcupacao(baia, false);
+        auditoriaEventoService.registrar(autor, AcaoAuditoria.DESATIVACAO, ENTIDADE_AUDITORIA, baia.getId(), antes, depois);
+        return depois;
+    }
+
+    private Usuario autor(UUID usuarioAutenticadoId) {
+        return usuarioRepository.findById(usuarioAutenticadoId).orElseThrow(UsuarioNaoEncontradoException::new);
     }
 
     @Transactional(readOnly = true)

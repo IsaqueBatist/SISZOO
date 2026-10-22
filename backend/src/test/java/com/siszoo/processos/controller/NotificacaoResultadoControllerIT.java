@@ -32,6 +32,8 @@ import java.util.concurrent.locks.LockSupport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -49,7 +51,7 @@ import io.restassured.response.Response;
 // T37 — o que a arquitetura de resultado da T34 (resultado_processo,
 // retificação) não tinha: desfecho do animal no mesmo lançamento e
 // notificação assíncrona ao município quando o vigente passa a "positivo"
-// (regra 19, DER revisão 2026-10-17 — inconclusivo não notifica mais).
+// (RN10 do TG, F2-014 de 22/10/2026 — Positivo e Inconclusivo notificam).
 //
 // EmailService (T35) mockado na classe inteira: o envio é @Async, então mesmo
 // os testes que não verificam notificação não podem deixar uma tentativa real
@@ -195,14 +197,65 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
         assertThat(dataNotificacao(processoId), equalTo(gravada));
     }
 
+    // RN10 do TG (F2-014, 22/10/2026): Positivo e Inconclusivo notificam; os
+    // demais resultados nao.
     @Test
-    @DisplayName("[T37/regra 19, revisao 2026-10-17] resultado inconclusivo NAO notifica mais")
-    void inconclusivoNaoNotificaMais() {
+    @DisplayName("[F2-014/RN10] resultado inconclusivo notifica o municipe e grava a data do envio")
+    void inconclusivoNotifica() {
         String processoId = processoAguardandoResultado("maria@exemplo.com");
 
         lancarResultado(processoId, corpoComDesfecho("inconclusivo", null)).then().statusCode(200);
 
+        envioAoMunicipe(processoId);
+        assertThat(aguardarDataNotificacao(processoId), notNullValue());
+    }
+
+    @ParameterizedTest(name = "[F2-014/RN10] resultado {0} nao notifica")
+    @ValueSource(strings = {"negativo", "material_inadequado", "nao_realizado"})
+    void demaisResultadosNaoNotificam(String resultado) {
+        String processoId = processoAguardandoResultado("maria@exemplo.com");
+
+        lancarResultado(processoId, corpoComDesfecho(resultado, null)).then().statusCode(200);
+
         semEnvio();
+        dataNotificacaoContinuaNula(processoId);
+    }
+
+    // Inconclusivo nao e definitivo: a correcao para positivo e um novo
+    // lancamento notificavel — segundo e-mail e nova data de envio.
+    @Test
+    @DisplayName("[F2-014/RN10] correcao de inconclusivo para positivo notifica de novo e regrava a data")
+    void correcaoDeInconclusivoParaPositivoNotificaDeNovo() {
+        String processoId = processoAguardandoResultado("maria@exemplo.com");
+        String inconclusivoId = lancarResultado(processoId, corpoComDesfecho("inconclusivo", null))
+                .then().statusCode(200).extract().path("resultados[0].id");
+        envioAoMunicipe(processoId);
+        LocalDateTime primeira = aguardarDataNotificacao(processoId);
+        assertThat(primeira, notNullValue());
+
+        Map<String, Object> correcao = corpoComDesfecho("positivo", null);
+        correcao.put("retificaId", inconclusivoId);
+        lancarResultado(processoId, correcao).then().statusCode(200);
+
+        verify(emailService, timeout(5000).times(2)).enviar(eq("maria@exemplo.com"), anyString(), anyString(), anyString());
+        assertThat(aguardarDataNotificacao(processoId), notNullValue());
+    }
+
+    @Test
+    @DisplayName("[F2-014/RN10] reenvio com resultado inconclusivo vigente e sem aceite: tenta de novo")
+    void reenvioComInconclusivoPermitido() {
+        when(emailService.enviar(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(CompletableFuture.failedFuture(new MailSendException("SMTP indisponivel")));
+        String processoId = processoAguardandoResultado("maria@exemplo.com");
+        lancarResultado(processoId, corpoComDesfecho("inconclusivo", null)).then().statusCode(200);
+        verify(emailService, timeout(5000).times(1)).enviar(any(), any(), any(), any());
+        dataNotificacaoContinuaNula(processoId);
+
+        envioAceito();
+        reenviar(processoId).then().statusCode(200);
+
+        verify(emailService, timeout(5000).times(1)).enviar(any(), any(), any(), any());
+        assertThat(aguardarDataNotificacao(processoId), notNullValue());
     }
 
     @Test

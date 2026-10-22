@@ -40,9 +40,11 @@ import com.siszoo.animais.repository.MotivoEntradaRepository;
 import com.siszoo.animais.repository.StatusAnimalRepository;
 import com.siszoo.comum.dto.PaginaResponse;
 import com.siszoo.comum.exception.CampoInvalidoException;
+import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.exception.UsuarioNaoEncontradoException;
 import com.siszoo.usuarios.repository.UsuarioRepository;
+import com.siszoo.usuarios.service.AuditoriaEventoService;
 
 import jakarta.persistence.criteria.Predicate;
 
@@ -59,7 +61,12 @@ public class AnimalService {
     private final UsuarioRepository usuarioRepository;
     private final AnimalMapper animalMapper;
     private final FichaCompletaService fichaCompletaService;
+    private final AuditoriaEventoService auditoriaEventoService;
     private final Clock clock;
+
+    // RNF10 (F2-078/F2-029): o cadastro do animal e alteracao critica — cada
+    // criacao e edicao gera AuditoriaEvento com o estado antes/depois.
+    private static final String ENTIDADE_AUDITORIA = "animal";
 
     public AnimalService(
             AnimalRepository animalRepository,
@@ -70,6 +77,7 @@ public class AnimalService {
             UsuarioRepository usuarioRepository,
             AnimalMapper animalMapper,
             FichaCompletaService fichaCompletaService,
+            AuditoriaEventoService auditoriaEventoService,
             Clock clock) {
         this.animalRepository = animalRepository;
         this.baiaRepository = baiaRepository;
@@ -79,6 +87,7 @@ public class AnimalService {
         this.usuarioRepository = usuarioRepository;
         this.animalMapper = animalMapper;
         this.fichaCompletaService = fichaCompletaService;
+        this.auditoriaEventoService = auditoriaEventoService;
         this.clock = clock;
     }
 
@@ -119,13 +128,19 @@ public class AnimalService {
         animal.setFichaCompleta(fichaCompletaService.calcular(animal));
 
         animalRepository.save(animal);
-        return animalMapper.toResponse(animal);
+        AnimalResponse response = animalMapper.toResponse(animal);
+        auditoriaEventoService.registrar(criadoPor, AcaoAuditoria.CRIACAO, ENTIDADE_AUDITORIA, animal.getId(), null, response);
+        return response;
     }
 
     @Transactional
-    public AnimalResponse atualizar(UUID id, AtualizarAnimalRequest request) {
+    public AnimalResponse atualizar(UUID id, AtualizarAnimalRequest request, UUID usuarioAutenticadoId) {
         Animal animal = animalRepository.findById(id)
                 .orElseThrow(AnimalNaoEncontradoException::new);
+        Usuario autor = usuarioRepository.findById(usuarioAutenticadoId)
+                .orElseThrow(UsuarioNaoEncontradoException::new);
+        // Estado anterior para a auditoria (RNF10), antes de qualquer setter.
+        AnimalResponse antes = animalMapper.toResponse(animal);
 
         validarDatas(request.dataEntrada(), request.dataNascimentoAprox(),
                 request.esterilizado(), request.dataEsterilizacao());
@@ -159,7 +174,9 @@ public class AnimalService {
         animal.setFichaCompleta(fichaCompletaService.calcular(animal));
 
         animalRepository.save(animal);
-        return animalMapper.toResponse(animal);
+        AnimalResponse depois = animalMapper.toResponse(animal);
+        auditoriaEventoService.registrar(autor, AcaoAuditoria.ATUALIZACAO, ENTIDADE_AUDITORIA, animal.getId(), antes, depois);
+        return depois;
     }
 
     @Transactional(readOnly = true)

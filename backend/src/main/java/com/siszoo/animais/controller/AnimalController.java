@@ -57,7 +57,8 @@ public class AnimalController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('GESTAO_ANIMAIS:escrita')")
-    public AnimalResponse atualizar(@PathVariable UUID id, @Valid @RequestBody AtualizarAnimalRequest request) {
-        return animalService.atualizar(id, request);
+    public AnimalResponse atualizar(Authentication authentication, @PathVariable UUID id,
+            @Valid @RequestBody AtualizarAnimalRequest request) {
+        return animalService.atualizar(id, request, UUID.fromString(authentication.getName()));
     }
 }

@@ -95,7 +95,8 @@ class NotificacaoResultadoServiceTest {
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Map<String, Object>> variaveis = ArgumentCaptor.forClass(Map.class);
         verify(emailTemplateService).renderizarHtml(eq(NotificacaoResultadoService.TEMPLATE_EMAIL), variaveis.capture());
-        assertThat(variaveis.getValue(), equalTo(Map.of("nome", "Maria Responsavel", "protocolo", "045/2026")));
+        assertThat(variaveis.getValue(),
+                equalTo(Map.of("nome", "Maria Responsavel", "protocolo", "045/2026", "resultado", "registrado")));
     }
 
     // T35-16: aceite do SMTP grava a data/hora com o relogio do projeto

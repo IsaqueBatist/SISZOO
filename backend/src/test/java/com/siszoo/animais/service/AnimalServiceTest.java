@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -40,6 +41,7 @@ import com.siszoo.animais.repository.StatusAnimalRepository;
 import com.siszoo.comum.exception.CampoInvalidoException;
 import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.repository.UsuarioRepository;
+import com.siszoo.usuarios.service.AuditoriaEventoService;
 
 @ExtendWith(MockitoExtension.class)
 class AnimalServiceTest {
@@ -72,6 +74,9 @@ class AnimalServiceTest {
     @Mock
     private FichaCompletaService fichaCompletaService;
 
+    @Mock
+    private AuditoriaEventoService auditoriaEventoService;
+
     private AnimalService animalService;
 
     // Construido a mao (nao @InjectMocks): Clock e valor, nao mock.
@@ -79,7 +84,10 @@ class AnimalServiceTest {
     void criarService() {
         Clock clock = Clock.fixed(Instant.parse("2026-09-10T15:00:00Z"), ZoneId.of("America/Sao_Paulo"));
         animalService = new AnimalService(animalRepository, baiaRepository, especieRepository, statusAnimalRepository,
-                motivoEntradaRepository, usuarioRepository, animalMapper, fichaCompletaService, clock);
+                motivoEntradaRepository, usuarioRepository, animalMapper, fichaCompletaService, auditoriaEventoService, clock);
+        // RNF10 (F2-078): atualizar() resolve o autor da auditoria; nos testes de
+        // regra de baia o usuario e irrelevante, entao o stub e lenient.
+        lenient().when(usuarioRepository.findById(usuarioComId().getId())).thenReturn(Optional.of(usuarioComId()));
     }
 
     // --- Datas ---
@@ -187,7 +195,7 @@ class AnimalServiceTest {
         when(animalRepository.findById(animal.getId())).thenReturn(Optional.of(animal));
         when(baiaRepository.findById(baia.getId())).thenReturn(Optional.of(baia));
 
-        animalService.atualizar(animal.getId(), atualizar(baia.getId(), "em_tratamento"));
+        animalService.atualizar(animal.getId(), atualizar(baia.getId(), "em_tratamento"), usuarioComId().getId());
 
         verify(animalRepository, never()).countByBaia_IdAndStatus_CodigoNotIn(any(), anyCollection());
         assertThat(animal.getBaia()).isSameAs(baia);
@@ -203,7 +211,7 @@ class AnimalServiceTest {
         when(baiaRepository.findByIdForUpdate(destino.getId())).thenReturn(Optional.of(destino));
         when(animalRepository.countByBaia_IdAndStatus_CodigoNotIn(eq(destino.getId()), anyCollection())).thenReturn(1L);
 
-        assertThatThrownBy(() -> animalService.atualizar(animal.getId(), atualizar(destino.getId(), "em_tratamento")))
+        assertThatThrownBy(() -> animalService.atualizar(animal.getId(), atualizar(destino.getId(), "em_tratamento"), usuarioComId().getId()))
                 .isInstanceOf(BaiaIndisponivelException.class);
         assertThat(animal.getBaia()).isSameAs(origem);
     }
@@ -219,7 +227,7 @@ class AnimalServiceTest {
         when(baiaRepository.findByIdForUpdate(baia.getId())).thenReturn(Optional.of(baia));
         when(animalRepository.countByBaia_IdAndStatus_CodigoNotIn(eq(baia.getId()), anyCollection())).thenReturn(1L);
 
-        assertThatThrownBy(() -> animalService.atualizar(animal.getId(), atualizar(baia.getId(), "em_tratamento")))
+        assertThatThrownBy(() -> animalService.atualizar(animal.getId(), atualizar(baia.getId(), "em_tratamento"), usuarioComId().getId()))
                 .isInstanceOf(BaiaIndisponivelException.class);
     }
 
@@ -258,7 +266,6 @@ class AnimalServiceTest {
         when(statusAnimalRepository.findByCodigo(statusCodigo)).thenReturn(Optional.of(status(statusCodigo)));
         when(especieRepository.findByCodigo("canino")).thenReturn(Optional.of(new Especie()));
         when(motivoEntradaRepository.findByCodigo("resgate")).thenReturn(Optional.of(new MotivoEntrada()));
-        when(usuarioRepository.findById(usuarioComId().getId())).thenReturn(Optional.of(usuarioComId()));
     }
 
     private void prepararCatalogosEdicao(String statusCodigo) {
