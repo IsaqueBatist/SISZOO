@@ -237,16 +237,16 @@ function dataPassadaIso(dias) {
 
 const API_URL = process.env.SEED_API_URL ?? "http://localhost:8080";
 
-async function chamarApi(caminho, { token, corpo } = {}) {
+async function chamarApi(caminho, { metodo = "POST", token, corpo } = {}) {
   let resposta;
   try {
     resposta = await fetch(`${API_URL}${caminho}`, {
-      method: "POST",
+      method: metodo,
       headers: {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify(corpo),
+      body: corpo === undefined ? undefined : JSON.stringify(corpo),
     });
   } catch (erro) {
     throw new Error(
@@ -255,24 +255,25 @@ async function chamarApi(caminho, { token, corpo } = {}) {
   }
   const texto = await resposta.text();
   if (!resposta.ok) {
-    throw new Error(`POST ${caminho} respondeu ${resposta.status}: ${texto}`);
+    throw new Error(`${metodo} ${caminho} respondeu ${resposta.status}: ${texto}`);
   }
   return JSON.parse(texto);
+}
+
+const tokens = new Map();
+async function tokenDe(usuarioId) {
+  if (!tokens.has(usuarioId)) {
+    const usuario = USUARIOS.find((u) => u.id === usuarioId);
+    const { token } = await chamarApi("/api/auth/login", { corpo: { email: usuario.email, senha: SENHA_TESTE } });
+    tokens.set(usuarioId, token);
+  }
+  return tokens.get(usuarioId);
 }
 
 // Cria as vacinações pelo VacinacaoService, que é quem recalcula
 // ficha_completa (FichaCompletaService). Idempotente pelo par (animal, lote):
 // o que já existe no banco é pulado.
 async function criarVacinacoesPelaApi(client) {
-  const tokens = new Map();
-  const tokenDe = async (usuarioId) => {
-    if (!tokens.has(usuarioId)) {
-      const usuario = USUARIOS.find((u) => u.id === usuarioId);
-      const { token } = await chamarApi("/api/auth/login", { corpo: { email: usuario.email, senha: SENHA_TESTE } });
-      tokens.set(usuarioId, token);
-    }
-    return tokens.get(usuarioId);
-  };
   const idPorLote = async (animalId, lote) => {
     const { rows } = await client.query("SELECT id FROM vacinacao WHERE animal_id = $1 AND lote = $2", [animalId, lote]);
     return rows[0]?.id ?? null;
@@ -297,6 +298,60 @@ async function criarVacinacoesPelaApi(client) {
     criadas++;
   }
   return criadas;
+}
+
+// Bancos semeados pela versão anterior deste seed: ela gravava
+// ficha_completa = "tem microchip" direto no INSERT, e esse valor nunca
+// passou pelo backend. Ficha gravada assim é reconhecida pela origem, não
+// pela regra: animal do seed (id fixo) com ficha_completa = true e
+// atualizado_em = criado_em. Toda passagem pela aplicação muda atualizado_em
+// (a edição; a vacinação, quando completa a ficha), e este seed só deixa a
+// ficha true por meio de vacinação pela API. Para cada um, GET + PUT com os
+// mesmos valores: o AnimalService recalcula pelo FichaCompletaService. Ficha
+// errada vira false, o registro muda e sai da seleção. Ficha que já estava
+// certa continua true: o PUT não altera nada (o Hibernate não grava nem muda
+// atualizado_em), e ela volta a ser conferida, sem escrita, nas próximas
+// execuções. Devolve só as fichas que mudaram. Animais fora do seed e os já
+// tocados pela aplicação nunca entram.
+async function recalcularFichasDoSeedAnterior(client) {
+  const { rows } = await client.query(
+    `SELECT id FROM animal
+      WHERE id = ANY($1::uuid[]) AND ficha_completa AND atualizado_em = criado_em
+      ORDER BY id`,
+    [ANIMAIS.map((animal) => animal.id)],
+  );
+  const token = await tokenDe(USUARIOS[1].id); // Veterinário: GESTAO_ANIMAIS:escrita
+  let corrigidas = 0;
+  for (const { id } of rows) {
+    const atual = await chamarApi(`/api/animais/${id}`, { metodo: "GET", token });
+    const salvo = await chamarApi(`/api/animais/${id}`, {
+      metodo: "PUT",
+      token,
+      corpo: {
+        nome: atual.nome,
+        especie: atual.especieCodigo,
+        sexo: atual.sexo,
+        raca: atual.raca,
+        coloracao: atual.coloracao,
+        pelagem: atual.pelagem,
+        porte: atual.porte,
+        pesoKg: atual.pesoKg,
+        idadeAprox: atual.idadeAprox,
+        dataNascimentoAprox: atual.dataNascimentoAprox,
+        microchip: atual.microchip,
+        esterilizado: atual.esterilizado,
+        dataEsterilizacao: atual.dataEsterilizacao,
+        status: atual.statusCodigo,
+        motivoEntrada: atual.motivoEntradaCodigo,
+        dataEntrada: atual.dataEntrada,
+        baiaId: atual.baiaId,
+        fotoUrl: atual.fotoUrl,
+        observacoes: atual.observacoes,
+      },
+    });
+    if (salvo.fichaCompleta !== atual.fichaCompleta) corrigidas++;
+  }
+  return corrigidas;
 }
 
 async function seed() {
@@ -494,6 +549,7 @@ async function seed() {
   // Depois do COMMIT: a API precisa enxergar usuários e animais já gravados.
   try {
     contagens.vacinacao = await criarVacinacoesPelaApi(client);
+    contagens.ficha_corrigida_do_seed_anterior = await recalcularFichasDoSeedAnterior(client);
   } finally {
     await client.end();
   }
