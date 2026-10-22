@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { salvarBlob } from '@/lib/arquivos'
 import { statusHttpDoErro } from '@/lib/erroApi'
 import { AvisoAnexosPendentes } from './AvisoAnexosPendentes'
 import { CardDenunciante } from './CardDenunciante'
@@ -77,19 +78,6 @@ function BotaoIniciarAtendimento({ ocorrencia, podeEscrever }: { ocorrencia: Oco
 
 function formatarTamanho(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
-
-// O download precisa do token, então não dá para usar <a href> direto: baixa
-// o Blob, cria um object URL só para o clique e o revoga logo depois.
-function salvarBlob(blob: Blob, nomeArquivo: string) {
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = nomeArquivo
-  document.body.appendChild(link)
-  link.click()
-  link.remove()
-  setTimeout(() => URL.revokeObjectURL(url), 0)
 }
 
 // Anexo de ocorrência sigilosa é restrito a quem pode ver o denunciante (o
