@@ -576,7 +576,8 @@ public class ProcessoSanitarioService {
                         processo.getResultadoLaboratorial().getCodigo(), processo.getResultadoLaboratorial().getNome()),
                 processo.getDataResultado(),
                 catalogoDeDesfecho(processo),
-                resultadosDe(processo));
+                resultadosDe(processo),
+                processo.getDataNotificacaoMunicipe());
     }
 
     // Historico em ordem de cadeia: o original e, a seguir, cada correcao da

@@ -346,7 +346,7 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
     expect(cardDe('Resultado Laboratorial').getByText(/registrado por Agente Processos/)).toBeInTheDocument()
   })
 
-  it('resultado positivo: mostra confirmação antes de enviar e o aviso de notificação depois', async () => {
+  it('resultado positivo: mostra confirmação antes de enviar e o envio da notificação em andamento depois', async () => {
     const user = userEvent.setup()
     renderDetalhe(PROCESSO_PENDENTE_ID, AGENTE)
     await esperarDetalhe('045/2026')
@@ -358,7 +358,11 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
     expect(await screen.findByText('Confirmar lançamento do resultado')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    expect(await cardDe('Resultado Laboratorial').findByText('Notificação solicitada ao responsável.')).toBeInTheDocument()
+    // T35-16: o e-mail sai depois do commit; os estados seguintes do aviso
+    // (notificado / NÃO notificado) estão em CardResultadoProcesso.test.tsx.
+    expect(
+      await cardDe('Resultado Laboratorial').findByText('Enviando a notificação por e-mail ao munícipe…'),
+    ).toBeInTheDocument()
   })
 
   // Revisão de 2026-10-17 (regra 19, DER): inconclusivo deixou de notificar
@@ -374,7 +378,7 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
 
     expect(screen.queryByText('Confirmar lançamento do resultado')).not.toBeInTheDocument()
     expect(await cardDe('Resultado Laboratorial').findByText('Inconclusivo', { selector: 'span' })).toBeInTheDocument()
-    expect(cardDe('Resultado Laboratorial').queryByText('Notificação solicitada ao responsável.')).not.toBeInTheDocument()
+    expect(cardDe('Resultado Laboratorial').queryByText(/notifica/i)).not.toBeInTheDocument()
   })
 
   it('confirmação de positivo pode ser cancelada sem enviar nada', async () => {

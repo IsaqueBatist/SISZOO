@@ -4,6 +4,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
@@ -168,6 +169,9 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
         assertThat(LocalDateTime.parse((String) eventos.get(0).get("depois")), equalTo(gravada));
         assertThat((String) eventos.get(0).get("bruto"), not(containsString("maria")));
         assertThat((String) eventos.get(0).get("bruto"), not(containsString("Maria")));
+        // GET do processo expoe a data (campo aditivo), para a tela mostrar
+        // "Municipe notificado em ...".
+        assertThat(LocalDateTime.parse(buscar(processoId).path("dataNotificacaoMunicipe")), equalTo(gravada));
     }
 
     // T35-15 (#37, "uma vez"): depois de notificado, o positivo nao se corrige
@@ -233,6 +237,7 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
         envioAoMunicipe(processoId);
         // T35-16: so o aceite do SMTP grava a data; na falha, fica nula.
         dataNotificacaoContinuaNula(processoId);
+        assertThat(buscar(processoId).path("dataNotificacaoMunicipe"), nullValue());
     }
 
     @Test
@@ -244,6 +249,10 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
 
         semEnvio();
         assertThat(dataNotificacao(processoId), nullValue());
+        // No GET, o campo existe e vem nulo: a tela mostra "NAO notificado".
+        buscar(processoId).then().statusCode(200)
+                .body("$", hasKey("dataNotificacaoMunicipe"))
+                .body("dataNotificacaoMunicipe", nullValue());
     }
 
     // ── Apoio ────────────────────────────────────────────

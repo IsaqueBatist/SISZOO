@@ -119,6 +119,15 @@ emailService.enviar(
   falha de envio, a coluna fica nula, e não há reenvio (T35-16).
 - Uma falha ao gravar a data depois do envio aceito gera `WARN` só com o
   protocolo. Nesse caso o e-mail saiu e a coluna ficou nula (caso ambíguo).
+- **Na tela:** o `GET /api/processos/{id}` devolve `dataNotificacaoMunicipe`
+  (nula sem envio aceito). O detalhe de um processo com resultado positivo
+  mostra uma de três mensagens:
+  - "Munícipe notificado em dd/MM/aaaa HH:mm", quando há data;
+  - logo depois de lançar o positivo na própria tela, "Enviando a notificação
+    por e-mail ao munícipe…", enquanto a tela consulta o processo a cada 2 s por
+    até 20 s (o envio acontece depois do commit);
+  - fora disso, ou se o responsável não tem e-mail, o aviso destacado
+    "Munícipe NÃO notificado por e-mail — contatar por outro meio".
 
 ## Como adicionar um template
 

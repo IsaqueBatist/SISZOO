@@ -1,8 +1,8 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { useQueryClient } from '@tanstack/react-query'
-import { formatarData, formatarDataHora, hojeIso } from '@/features/ocorrencias/utils/datas'
+import { formatarData, formatarDataHora, formatarHora, hojeIso } from '@/features/ocorrencias/utils/datas'
 import { mensagemDeRegraDaApi, statusHttpDoErro } from '@/lib/erroApi'
 import { buscarProcessoPorId } from '../api/processosApi'
 import {
@@ -13,15 +13,62 @@ import type { Processo, ResultadoProcessoItem } from '../types/processos.types'
 import { badgeDeResultado } from '../utils/statusBadge'
 import { useCatalogosProcessoQuery, useRegistrarResultadoMutation } from '../hooks/useProcessos'
 
+// Depois de lançar um positivo nesta tela, o e-mail sai em segundo plano
+// (depois do commit, T37/T35): por alguns segundos dataNotificacaoMunicipe
+// ainda vem nula. Em vez de acusar "NÃO notificado" na hora, a tela consulta
+// o processo de novo por um tempo (o envio tem timeouts SMTP de 5 s).
+export interface AcompanhamentoEnvio {
+  intervaloMs: number
+  duracaoMs: number
+}
+
+const ACOMPANHAMENTO_PADRAO: AcompanhamentoEnvio = { intervaloMs: 2000, duracaoMs: 20000 }
+
 interface CardResultadoProcessoProps {
   processo: Processo
   podeEscrever: boolean
+  acompanhamentoEnvio?: AcompanhamentoEnvio
 }
 
 // Regra 19 (DER, revisão 2026-10-17): só positivo notifica o município —
 // inconclusivo deixou de notificar. Dispara inclusive por correção (se o
 // vigente passar a positivo), mas a T37 não oferece correção nesta tela.
 const RESULTADO_QUE_NOTIFICA = 'positivo'
+
+// "2026-05-20T14:32:07.12" -> "20/05/2026 14:32" (LocalDateTime de Itu, sem fuso)
+function formatarDataHoraNotificacao(valor: string): string {
+  return `${formatarData(valor)} ${formatarHora(valor.slice(11))}`
+}
+
+// T35-16 (#37): situação do e-mail ao munícipe num resultado positivo.
+function AvisoNotificacao({ processo, enviando }: { processo: Processo; enviando: boolean }) {
+  if (processo.dataNotificacaoMunicipe) {
+    return (
+      <div className="alert success" role="status" style={{ marginTop: 'var(--space-3)' }}>
+        <span className="bullet" />
+        <div className="alert-content">
+          Munícipe notificado em {formatarDataHoraNotificacao(processo.dataNotificacaoMunicipe)}
+        </div>
+      </div>
+    )
+  }
+  if (enviando) {
+    return (
+      <div className="alert info" role="status" style={{ marginTop: 'var(--space-3)' }}>
+        <span className="bullet" />
+        <div className="alert-content">Enviando a notificação por e-mail ao munícipe…</div>
+      </div>
+    )
+  }
+  return (
+    <div className="alert danger" role="alert" style={{ marginTop: 'var(--space-3)' }}>
+      <span className="bullet" />
+      <div className="alert-content">
+        <strong>Munícipe NÃO notificado por e-mail — contatar por outro meio</strong>
+      </div>
+    </div>
+  )
+}
 
 function Historico({ resultados }: { resultados: ResultadoProcessoItem[] }) {
   if (resultados.length === 0) return null
@@ -51,12 +98,40 @@ function Historico({ resultados }: { resultados: ResultadoProcessoItem[] }) {
 // (depois de lançado). Correção de um resultado já lançado (retificaId) é
 // suportada pelo backend, mas esta tela não oferece essa ação — só o
 // lançamento inicial.
-export function CardResultadoProcesso({ processo, podeEscrever }: CardResultadoProcessoProps) {
+export function CardResultadoProcesso({
+  processo,
+  podeEscrever,
+  acompanhamentoEnvio = ACOMPANHAMENTO_PADRAO,
+}: CardResultadoProcessoProps) {
   const [erro, setErro] = useState<string | null>(null)
   const [pendente, setPendente] = useState<RegistrarResultadoFormValues | null>(null)
+  const [acompanhandoEnvio, setAcompanhandoEnvio] = useState(false)
   const mutation = useRegistrarResultadoMutation(processo.id)
   const queryClient = useQueryClient()
   const { data: catalogos } = useCatalogosProcessoQuery()
+
+  const positivo = processo.resultado?.codigo === RESULTADO_QUE_NOTIFICA
+  const temEmail = Boolean(processo.responsavel?.email)
+  const aguardandoEnvio = acompanhandoEnvio && positivo && temEmail && !processo.dataNotificacaoMunicipe
+
+  // Consulta o processo até a data do envio aparecer ou o prazo acabar; aí o
+  // aviso passa a "notificado" ou a "NÃO notificado".
+  const { intervaloMs, duracaoMs } = acompanhamentoEnvio
+  useEffect(() => {
+    if (!aguardandoEnvio) return
+    const inicio = Date.now()
+    const timer = setInterval(() => {
+      if (Date.now() - inicio >= duracaoMs) {
+        clearInterval(timer)
+        setAcompanhandoEnvio(false)
+        return
+      }
+      buscarProcessoPorId(processo.id)
+        .then((atualizado) => queryClient.setQueryData(['processos', 'detalhe', processo.id], atualizado))
+        .catch(() => undefined)
+    }, intervaloMs)
+    return () => clearInterval(timer)
+  }, [aguardandoEnvio, intervaloMs, duracaoMs, processo.id, queryClient])
 
   const {
     register,
@@ -79,6 +154,7 @@ export function CardResultadoProcesso({ processo, podeEscrever }: CardResultadoP
         desfechoAnimal: dados.desfechoAnimal || undefined,
       })
       setPendente(null)
+      if (dados.resultado === RESULTADO_QUE_NOTIFICA) setAcompanhandoEnvio(true)
     } catch (falha) {
       setPendente(null)
       if (statusHttpDoErro(falha) === 422) {
@@ -113,7 +189,6 @@ export function CardResultadoProcesso({ processo, podeEscrever }: CardResultadoP
 
   if (processo.resultado) {
     const badge = badgeDeResultado(processo.resultado)
-    const notificou = processo.resultado.codigo === RESULTADO_QUE_NOTIFICA
     return (
       <div className="card">
         <div className="card-header">
@@ -136,12 +211,7 @@ export function CardResultadoProcesso({ processo, podeEscrever }: CardResultadoP
               <div>{processo.desfechoAnimal ? processo.desfechoAnimal.nome : '—'}</div>
             </div>
           </div>
-          {notificou && (
-            <div className="alert warning" role="alert" style={{ marginTop: 'var(--space-3)' }}>
-              <span className="bullet" />
-              <div className="alert-content">Notificação solicitada ao responsável.</div>
-            </div>
-          )}
+          {positivo && <AvisoNotificacao processo={processo} enviando={aguardandoEnvio} />}
           <Historico resultados={processo.resultados} />
         </div>
       </div>
