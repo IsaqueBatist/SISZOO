@@ -640,6 +640,8 @@ Não é catálogo: coluna `processo_sanitario.status_processo` varchar + `CHECK`
 
 > **Decidido (T34, fecha a R1 da T29):** "sem resultado" é `resultado_laboratorial_id` **nulo**. O código `aguardando` continua no catálogo (e em `GET /api/processos/catalogos`), mas não é um resultado lançável: o registro o recusa (422).
 
+> **`codigo` imutável (V21, T35):** as regras do processo se apoiam no código (`positivo` notifica e é definitivo, V20; `aguardando` não é lançável). Renomear um código mudaria o sentido de registros já gravados e contornaria o trigger da V20. Por isso o trigger `tg_resultado_laboratorial_codigo_imutavel` recusa `UPDATE` de `codigo` (`check_violation`, `ck_resultado_laboratorial_codigo_imutavel`), para qualquer usuário ou caminho. `nome` e `ativo` continuam alteráveis. Não há API de escrita nesse catálogo, e o seed só insere (V13).
+
 #### `resultado_processo`
 
 > Histórico imutável dos resultados laboratoriais do processo (V14, T34). Cada lançamento é uma linha nova; a correção é outra linha com `retifica_id` apontando para a corrigida, que fica preservada (mesmo mecanismo dos registros clínicos, RN-C02). O vigente é a única linha que nenhuma outra corrige, copiado em `processo_sanitario.resultado_laboratorial_id`/`data_resultado`.
@@ -661,7 +663,7 @@ Não é catálogo: coluna `processo_sanitario.status_processo` varchar + `CHECK`
 - A correção é sempre de um resultado do mesmo processo: FK composta `fk_resultado_processo_retifica (retifica_id, processo_id) → (id, processo_id)`.
 - **Imutável:** triggers recusam `UPDATE` e `DELETE` de qualquer linha (`tg_resultado_processo_imutavel`, V14) e `TRUNCATE` da tabela, direto ou em cascata (`tg_resultado_processo_sem_truncate`, V15), para qualquer usuário ou caminho, inclusive SQL manual (mesmo princípio do vínculo, DH-7). A única saída é o dono da tabela desativar os triggers (`ALTER TABLE … DISABLE TRIGGER`), fora de qualquer fluxo da aplicação. No código, a entidade não tem setters, as colunas ficam fora do UPDATE (`updatable = false`) e o repositório não declara escrita (herda `save`/`delete` de `JpaRepository`; quem barra é o trigger).
 - Índice `ix_resultado_processo_processo_id` (V15) para a leitura do histórico por processo.
-- **Positivo definitivo (V20, T35):** o trigger `tg_resultado_positivo_definitivo` (`BEFORE INSERT`, só em linha com `retifica_id`) recusa a correção de um registro cujo resultado é `positivo` (`check_violation`, constraint `ck_resultado_positivo_definitivo`). Junto com a imutabilidade acima, não há caminho por `INSERT`, `UPDATE`, `DELETE` ou `TRUNCATE` para trocar um `positivo` registrado; contornar exige desabilitar triggers ou alterar o código do catálogo `resultado_laboratorial`.
+- **Positivo definitivo (V20, T35):** o trigger `tg_resultado_positivo_definitivo` (`BEFORE INSERT`, só em linha com `retifica_id`) recusa a correção de um registro cujo resultado é `positivo` (`check_violation`, constraint `ck_resultado_positivo_definitivo`). Junto com a imutabilidade acima, não há caminho por `INSERT`, `UPDATE`, `DELETE` ou `TRUNCATE` para trocar um `positivo` registrado, e o código do catálogo também é imutável (V21). Contornar exige um privilégio de dono da tabela ou de superusuário: desabilitar ou remover um trigger, ou mudar `session_replication_role` para `replica`.
 
 **Pendências (fora da T34)**
 
