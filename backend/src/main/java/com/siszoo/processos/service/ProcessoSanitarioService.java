@@ -231,6 +231,9 @@ public class ProcessoSanitarioService {
         processo.setCid(doenca.getCid());
         processo.setLaboratorio(laboratorio);
         processo.setObservacoes(request.observacoes());
+        // F2-012: numeros GAL/SINAN registrados manualmente (RF-B01; sem integracao, 3.5.2).
+        processo.setGalNumero(normalizarNumeroExterno(request.galNumero()));
+        processo.setSinanNumero(normalizarNumeroExterno(request.sinanNumero()));
         // DER regra 18: contato humano em qualquer amostra torna o processo urgente.
         processo.setUrgente(request.amostras().stream().anyMatch(AmostraAnimalRequest::contatoHumano));
         processo.setCriadoPor(autor);
@@ -561,6 +564,15 @@ public class ProcessoSanitarioService {
                 .toList();
     }
 
+    // F2-012: GAL/SINAN sao texto livre opcional (sem espacos nas pontas; vazio = null).
+    private static String normalizarNumeroExterno(String valor) {
+        if (valor == null) {
+            return null;
+        }
+        String limpo = valor.trim();
+        return limpo.isEmpty() ? null : limpo;
+    }
+
     private ProcessoSanitarioResponse toResponse(ProcessoSanitario processo) {
         ResponsavelProcessoResponse responsavel = responsavelRepository.findByProcessoId(processo.getId())
                 .map(ProcessoSanitarioService::toResponsavelResponse)
@@ -585,7 +597,9 @@ public class ProcessoSanitarioService {
                 processo.getDataResultado(),
                 catalogoDeDesfecho(processo),
                 resultadosDe(processo),
-                processo.getDataNotificacaoMunicipe());
+                processo.getDataNotificacaoMunicipe(),
+                processo.getGalNumero(),
+                processo.getSinanNumero());
     }
 
     // Historico em ordem de cadeia: o original e, a seguir, cada correcao da

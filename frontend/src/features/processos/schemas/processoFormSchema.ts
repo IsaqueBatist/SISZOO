@@ -133,6 +133,9 @@ export const processoFormSchema = z
     responsavel: responsavelSchema,
     amostras: z.array(amostraSchema).min(1, 'Adicione pelo menos um animal amostrado.'),
     observacoes: z.string().trim().optional(),
+    // F2-012: GAL/SINAN opcionais (texto livre, até 40 caracteres).
+    galNumero: z.string().trim().max(40, 'Máximo de 40 caracteres.').optional(),
+    sinanNumero: z.string().trim().max(40, 'Máximo de 40 caracteres.').optional(),
   })
   .superRefine((dados, ctx) => {
     if (dados.vinculoDecisao === 'vinculado' && !dados.ocorrenciaId) {
@@ -144,7 +147,7 @@ export type ProcessoFormValues = z.infer<typeof processoFormSchema>
 
 // Campo → etapa que bloqueia "Avançar".
 export const CAMPOS_STEP: Record<1 | 2 | 3 | 4, (keyof ProcessoFormValues)[]> = {
-  1: ['vinculoDecisao', 'dataAbertura', 'doenca', 'laboratorio'],
+  1: ['vinculoDecisao', 'dataAbertura', 'doenca', 'laboratorio', 'galNumero', 'sinanNumero'],
   2: ['responsavel'],
   3: ['amostras'],
   4: [],

@@ -203,6 +203,8 @@ export function ProcessoDetalhe() {
                 <Campo rotulo="CID" valor={processo.cid} mono />
                 <Campo rotulo="Doença investigada" valor={processo.doenca.nome} />
                 <Campo rotulo="Laboratório de destino" valor={processo.laboratorio.nome} />
+                <Campo rotulo="Nº GAL" valor={processo.galNumero ?? null} mono />
+                <Campo rotulo="Nº SINAN" valor={processo.sinanNumero ?? null} mono />
                 <Campo rotulo="Data de abertura" valor={formatarData(processo.dataAbertura)} mono />
                 <Campo rotulo="Observações" valor={processo.observacoes} full />
               </div>

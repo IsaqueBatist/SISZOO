@@ -50,6 +50,8 @@ function valoresVazios(): ProcessoFormValues {
     dataAbertura: hojeEmItu(),
     doenca: '',
     laboratorio: '',
+    galNumero: '',
+    sinanNumero: '',
     responsavel: {
       nome: '',
       cpf: '',
@@ -107,6 +109,8 @@ function paraRequisicao(valores: ProcessoFormValues): CriarProcessoRequest {
     dataAbertura: valores.dataAbertura,
     doenca: valores.doenca,
     laboratorio: valores.laboratorio,
+    galNumero: textoOuIndefinido(valores.galNumero),
+    sinanNumero: textoOuIndefinido(valores.sinanNumero),
     ocorrenciaId: valores.vinculoDecisao === 'vinculado' ? valores.ocorrenciaId : null,
     responsavel: {
       nome: valores.responsavel.nome.trim(),
@@ -453,6 +457,34 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular }: ProcessoFormProp
                   ))}
                 </select>
                 {errors.laboratorio && <span className="err">{errors.laboratorio.message}</span>}
+              </div>
+              <div className="field">
+                <label htmlFor="proc-gal">Nº GAL</label>
+                <input
+                  id="proc-gal"
+                  className={`input mono${errors.galNumero ? ' error' : ''}`}
+                  type="text"
+                  maxLength={40}
+                  placeholder="Protocolo no GAL (opcional)"
+                  {...register('galNumero')}
+                />
+                {errors.galNumero ? (
+                  <span className="err">{errors.galNumero.message}</span>
+                ) : (
+                  <span className="hint">Registro manual; sem integração com o sistema estadual.</span>
+                )}
+              </div>
+              <div className="field">
+                <label htmlFor="proc-sinan">Nº SINAN</label>
+                <input
+                  id="proc-sinan"
+                  className={`input mono${errors.sinanNumero ? ' error' : ''}`}
+                  type="text"
+                  maxLength={40}
+                  placeholder="Notificação no SINAN (opcional)"
+                  {...register('sinanNumero')}
+                />
+                {errors.sinanNumero && <span className="err">{errors.sinanNumero.message}</span>}
               </div>
               <div className="field full">
                 <label htmlFor="proc-observacoes">Observações</label>

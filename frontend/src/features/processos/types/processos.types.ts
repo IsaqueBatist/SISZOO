@@ -81,6 +81,9 @@ export interface CriarProcessoRequest {
   responsavel: ResponsavelProcessoRequest
   amostras: AmostraAnimalRequest[]
   observacoes?: string
+  // F2-012: números dos sistemas estaduais, registrados manualmente (RF-B01).
+  galNumero?: string
+  sinanNumero?: string
 }
 
 export interface ResponsavelProcesso {
@@ -157,6 +160,9 @@ export interface Processo {
   // T35-16 (#37): quando o SMTP aceitou o e-mail de resultado positivo ao
   // munícipe (LocalDateTime de Itu, sem fuso). Nulo: sem envio aceito.
   dataNotificacaoMunicipe: string | null
+  // F2-012 (opcionais no tipo para não quebrar fixtures antigas)
+  galNumero?: string | null
+  sinanNumero?: string | null
 }
 
 // POST /api/processos/{id}/resultados (T34 + T37). resultado e desfechoAnimal

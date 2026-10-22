@@ -16,9 +16,9 @@ import com.siszoo.processos.entity.StatusProcesso;
 // desfechoAnimal (T37) nao entra no historico imutavel — e so do processo.
 // dataNotificacaoMunicipe (T35-16, #37): quando o SMTP aceitou o e-mail de
 // resultado positivo ao municipe; nula quando nao houve envio aceito.
-// galNumero/sinanNumero/dataEnvioAmostras/previsaoRetorno nao entram aqui:
-// nenhum fluxo os preenche ainda (fica para quem implementar o envio de
-// amostras de verdade).
+// galNumero/sinanNumero (F2-012, Fase 3 do TG): numeros dos sistemas estaduais
+// informados manualmente na abertura (RF-B01; sem integracao, 3.5.2).
+// dataEnvioAmostras/previsaoRetorno continuam fora: nenhum fluxo os preenche.
 public record ProcessoSanitarioResponse(
         UUID id,
         String protocolo,
@@ -38,5 +38,7 @@ public record ProcessoSanitarioResponse(
         LocalDate dataResultado,
         CatalogoItemResponse desfechoAnimal,
         List<ResultadoProcessoResponse> resultados,
-        LocalDateTime dataNotificacaoMunicipe) {
+        LocalDateTime dataNotificacaoMunicipe,
+        String galNumero,
+        String sinanNumero) {
 }
