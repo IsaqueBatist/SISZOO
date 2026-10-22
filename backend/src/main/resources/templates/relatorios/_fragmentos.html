@@ -52,6 +52,11 @@
   .status-atraso-medio { color: #E65100; font-weight: 700; }
   tr.row-superlotada td { background: #FFEBEE; }
   tr.row-proximo-limite td { background: #FFF8E1; }
+  tr.row-total td { background: #F4F6F8; font-weight: 700; }
+  .legend-list .li { padding: 1.5mm 0; font-size: 9.5pt; }
+  .legend-list .sw { display: inline-block; width: 3mm; height: 3mm; margin-right: 2mm; }
+  .sheet { page-break-after: always; }
+  .sheet:last-child { page-break-after: auto; }
 </style>
 </th:block>
 </head>
@@ -75,6 +80,44 @@
   <div class="r-footer">
     <span class="esq" th:text="'SISZOO · ' + ${meta.docId}">SISZOO</span>
     <span class="dir">Página 1 de 1</span>
+  </div>
+</div>
+<!-- Variantes para relatorios de mais de 1 pagina (ex.: anual_processos) —
+     cabecalho da pagina 1 com "Páginas: X de Y"; cabecalho de continuacao
+     (pagina 2+) sem h1/subtitulo, so a marca + meta; rodape com a pagina atual. -->
+<div th:fragment="cabecalhoPaginado(titulo, subtitulo, totalPaginas)">
+  <div class="r-header">
+    <div class="r-brand">
+      <div class="wm"><span class="wm-mark"></span>SISZOO</div>
+      <div class="gov">Prefeitura Municipal de Itu · CCZ</div>
+    </div>
+    <div class="r-meta">
+      <div class="doc-id" th:text="${meta.docId}">DOC-2026-0001</div>
+      <div th:text="'Emitido em ' + ${meta.emitidoEm}">Emitido em 01/01/2026</div>
+      <div th:text="'Geração: ' + ${meta.geradoPor}">Geração: Usuário</div>
+      <div th:text="'Páginas: 1 de ' + ${totalPaginas}">Páginas: 1 de 2</div>
+    </div>
+  </div>
+  <h1 class="r-title" th:text="${titulo}">Título</h1>
+  <div class="r-subtitle" th:text="${subtitulo}">Período</div>
+</div>
+<div th:fragment="cabecalhoContinuacao(tituloCurto, paginaAtual, totalPaginas)">
+  <div class="r-header">
+    <div class="r-brand">
+      <div class="wm"><span class="wm-mark"></span>SISZOO</div>
+      <div class="gov">Prefeitura Municipal de Itu · CCZ</div>
+    </div>
+    <div class="r-meta">
+      <div class="doc-id" th:text="${meta.docId}">DOC-2026-0001</div>
+      <div th:text="${tituloCurto}">Relatório · Ano</div>
+      <div th:text="'Páginas: ' + ${paginaAtual} + ' de ' + ${totalPaginas}">Páginas: 2 de 2</div>
+    </div>
+  </div>
+</div>
+<div th:fragment="rodapePaginado(paginaAtual, totalPaginas)">
+  <div class="r-footer">
+    <span class="esq" th:text="'SISZOO · Relatório ' + ${meta.docId} + ' · gerado em ' + ${meta.emitidoEm}">SISZOO</span>
+    <span class="dir" th:text="'Página ' + ${paginaAtual} + ' de ' + ${totalPaginas}">Página 1 de 2</span>
   </div>
 </div>
 </body>

@@ -71,7 +71,7 @@ describe('Relatorios', () => {
     expect(screen.getByText('Próx. limite')).toBeInTheDocument()
   })
 
-  it('tipo ainda não implementado (PR2) mostra a mensagem de erro do backend', async () => {
+  it('gera o preview de Adoções e exibe a nota de limitação e o perfil', async () => {
     const user = userEvent.setup()
     renderRelatorios()
 
@@ -80,7 +80,8 @@ describe('Relatorios', () => {
     ).closest('.report-card') as HTMLElement
     await user.click(within(cardAdocoes).getByRole('button', { name: 'Gerar Relatório' }))
 
-    expect(await screen.findByText('Tipo de relatório ainda não implementado')).toBeInTheDocument()
+    expect(await screen.findByText(/não é filtrado pelo período selecionado/i)).toBeInTheDocument()
+    expect(screen.getByText('Canino')).toBeInTheDocument()
   })
 
   describe('download', () => {

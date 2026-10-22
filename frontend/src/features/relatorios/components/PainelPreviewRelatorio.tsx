@@ -4,8 +4,20 @@ import { Skeleton } from '@/components/layout/Skeleton'
 import { salvarBlob } from '@/lib/arquivos'
 import { mensagemDeRegraDaApi } from '@/lib/erroApi'
 import { useExportarRelatorioMutation, usePreviewRelatorioQuery } from '../hooks/useRelatorios'
-import type { FiltroRelatorio, PreviewOcupacaoBaias as DadosOcupacaoBaias, PreviewVacinacao as DadosVacinacao } from '../types/relatorios.types'
+import type {
+  FiltroRelatorio,
+  PreviewAdocoes as DadosAdocoes,
+  PreviewAnualProcessos as DadosAnualProcessos,
+  PreviewOcorrenciasBairro as DadosOcorrenciasBairro,
+  PreviewOcupacaoBaias as DadosOcupacaoBaias,
+  PreviewProcedimentos as DadosProcedimentos,
+  PreviewVacinacao as DadosVacinacao,
+} from '../types/relatorios.types'
+import { PreviewAdocoes } from './previews/PreviewAdocoes'
+import { PreviewAnualProcessos } from './previews/PreviewAnualProcessos'
+import { PreviewOcorrenciasBairro } from './previews/PreviewOcorrenciasBairro'
 import { PreviewOcupacaoBaias } from './previews/PreviewOcupacaoBaias'
+import { PreviewProcedimentos } from './previews/PreviewProcedimentos'
 import { PreviewVacinacao } from './previews/PreviewVacinacao'
 
 interface PainelPreviewRelatorioProps {
@@ -15,9 +27,7 @@ interface PainelPreviewRelatorioProps {
 
 // Dispatcher entre o tipo escolhido e o componente de preview correspondente
 // — cada tipo tem colunas/seções diferentes (DER §3.6), um preview genérico
-// perderia fidelidade ao protótipo. Tipos ainda não implementados no backend
-// (PR2) caem no 422 "Tipo de relatório ainda não implementado", tratado como
-// qualquer outro erro de regra de negócio abaixo.
+// perderia fidelidade ao protótipo.
 export function PainelPreviewRelatorio({ nomeExibicao, filtro }: PainelPreviewRelatorioProps) {
   const preview = usePreviewRelatorioQuery<unknown>(filtro)
   const exportar = useExportarRelatorioMutation()
@@ -88,9 +98,15 @@ function renderizarPreview(tipo: FiltroRelatorio['tipo'], dados: unknown) {
       return <PreviewOcupacaoBaias dados={dados as DadosOcupacaoBaias} />
     case 'vacinacao':
       return <PreviewVacinacao dados={dados as DadosVacinacao} />
+    case 'procedimentos':
+      return <PreviewProcedimentos dados={dados as DadosProcedimentos} />
+    case 'ocorrencias_bairro':
+      return <PreviewOcorrenciasBairro dados={dados as DadosOcorrenciasBairro} />
+    case 'adocoes':
+      return <PreviewAdocoes dados={dados as DadosAdocoes} />
+    case 'anual_processos':
+      return <PreviewAnualProcessos dados={dados as DadosAnualProcessos} />
     default:
-      // Os outros 4 tipos (PR2) nunca chegam aqui com dados — a query falha
-      // antes com 422 "ainda não implementado", tratado em preview.isError.
       return null
   }
 }

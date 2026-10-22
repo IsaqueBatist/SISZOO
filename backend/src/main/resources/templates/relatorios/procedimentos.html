@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/>
+<title>Relatório de Procedimentos</title>
+<th:block th:replace="~{_fragmentos :: estilo}"></th:block>
+</head>
+<body>
+<div th:replace="~{_fragmentos :: cabecalho('Relatório de Procedimentos', 'Período: ' + ${meta.subtituloPeriodo})}"></div>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="kpi-box"><div class="l">Total de procedimentos</div><div class="v" th:text="${d.kpis.totalProcedimentos}">0</div></div></div>
+  <div class="kpi"><div class="kpi-box"><div class="l">Castrações</div><div class="v" th:text="${d.kpis.castracoes}">0</div>
+    <div class="d" th:text="${d.kpis.castracoesMachos} + ' machos · ' + ${d.kpis.castracoesFemeas} + ' fêmeas'">0 machos · 0 fêmeas</div></div></div>
+  <div class="kpi"><div class="kpi-box"><div class="l">Atendimentos clínicos</div><div class="v" th:text="${d.kpis.atendimentosClinicos}">0</div></div></div>
+  <div class="kpi"><div class="kpi-box"><div class="l">Cirurgias maiores</div><div class="v" th:text="${d.kpis.cirurgiasMaiores}">0</div></div></div>
+</div>
+
+<h2 class="section">Procedimentos por tipo</h2>
+<div th:each="linha : ${d.porTipo}" class="bar-row">
+  <span class="label" th:text="${linha.tipo}">Tipo</span>
+  <span class="track"><span class="track-inner"><span class="fill"
+        th:style="'width:' + ${linha.quantidade * 100.0 / d.porTipo[0].quantidade} + '%;'"></span></span></span>
+  <span class="val" th:text="${linha.quantidade}">0</span>
+</div>
+
+<h2 class="section">Produtividade por veterinário</h2>
+<table>
+  <thead><tr><th>Veterinário</th><th>Atendimentos</th><th>Castrações</th><th>Cirurgias</th><th>Vacinações</th><th>Total</th></tr></thead>
+  <tbody>
+    <tr th:each="v : ${d.porVeterinario}">
+      <td th:text="${v.veterinario}">Veterinário</td>
+      <td class="mono" th:text="${v.atendimentos}">0</td>
+      <td class="mono" th:text="${v.castracoes}">0</td>
+      <td class="mono" th:text="${v.cirurgias}">0</td>
+      <td class="mono" th:text="${v.vacinacoes}">0</td>
+      <td class="mono" th:text="${v.total}">0</td>
+    </tr>
+    <tr class="row-total">
+      <td>TOTAL</td>
+      <td class="mono" th:text="${d.totalVeterinarios.atendimentos}">0</td>
+      <td class="mono" th:text="${d.totalVeterinarios.castracoes}">0</td>
+      <td class="mono" th:text="${d.totalVeterinarios.cirurgias}">0</td>
+      <td class="mono" th:text="${d.totalVeterinarios.vacinacoes}">0</td>
+      <td class="mono" th:text="${d.totalVeterinarios.total}">0</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 class="section">Cirurgias realizadas</h2>
+<table>
+  <thead><tr><th>Data</th><th>Animal</th><th>Procedimento</th><th>Vet. responsável</th><th>Resultado</th></tr></thead>
+  <tbody>
+    <tr th:each="c : ${d.cirurgias}">
+      <td class="mono" th:text="${#temporals.format(c.data, 'dd/MM/yyyy')}">01/01/2026</td>
+      <td th:text="${c.animal}">Animal</td>
+      <td th:text="${c.procedimento}">Procedimento</td>
+      <td th:text="${c.veterinario}">Veterinário</td>
+      <td th:text="${c.resultado}">Resultado</td>
+    </tr>
+    <tr th:if="${d.cirurgiasExcedente} > 0">
+      <td th:text="'+ ' + ${d.cirurgiasExcedente} + ' cirurgias'">+ N cirurgias</td>
+      <td>—</td><td>—</td><td>—</td><td>—</td>
+    </tr>
+  </tbody>
+</table>
+
+<div th:replace="~{_fragmentos :: rodape}"></div>
+</body>
+</html>

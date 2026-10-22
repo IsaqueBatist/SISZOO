@@ -2,31 +2,42 @@ import { http, HttpResponse } from 'msw'
 import { API_BASE_URL } from '../lib/env'
 import {
   historicoRelatoriosFixture,
+  previewAdocoesFixture,
+  previewAnualProcessosFixture,
+  previewOcorrenciasBairroFixture,
   previewOcupacaoBaiasFixture,
+  previewProcedimentosFixture,
   previewVacinacaoFixture,
   TIPOS_RELATORIO_FIXTURE,
 } from './relatoriosFixtures'
 
-// Handlers de relatorios (T41) com respostas FIXAS, só para os 2 tipos
-// implementados no backend (PR1). Os outros 4 respondem 422 "ainda não
-// implementado", igual ao backend real.
-const TIPOS_IMPLEMENTADOS = new Set(['ocupacao_baias', 'vacinacao'])
-
+// Handlers de relatorios (T41) com respostas FIXAS, para os 6 tipos do
+// catálogo (PR1: ocupacao_baias, vacinacao; PR2: os outros 4).
 export const relatoriosHandlers = [
   http.get(`${API_BASE_URL}/relatorios/tipos`, () => HttpResponse.json(TIPOS_RELATORIO_FIXTURE)),
 
   http.get(`${API_BASE_URL}/relatorios/preview`, ({ request }) => {
     const tipo = new URL(request.url).searchParams.get('tipo')
-    if (tipo === 'ocupacao_baias') return HttpResponse.json(previewOcupacaoBaiasFixture())
-    if (tipo === 'vacinacao') return HttpResponse.json(previewVacinacaoFixture())
-    return HttpResponse.json({ mensagem: 'Tipo de relatório ainda não implementado' }, { status: 422 })
+    switch (tipo) {
+      case 'ocupacao_baias':
+        return HttpResponse.json(previewOcupacaoBaiasFixture())
+      case 'vacinacao':
+        return HttpResponse.json(previewVacinacaoFixture())
+      case 'procedimentos':
+        return HttpResponse.json(previewProcedimentosFixture())
+      case 'ocorrencias_bairro':
+        return HttpResponse.json(previewOcorrenciasBairroFixture())
+      case 'adocoes':
+        return HttpResponse.json(previewAdocoesFixture())
+      case 'anual_processos':
+        return HttpResponse.json(previewAnualProcessosFixture())
+      default:
+        return HttpResponse.json({ mensagem: 'Tipo de relatório inválido' }, { status: 422 })
+    }
   }),
 
   http.post(`${API_BASE_URL}/relatorios/exportar`, async ({ request }) => {
     const body = (await request.json()) as { tipo: string; formato: 'csv' | 'pdf' }
-    if (!TIPOS_IMPLEMENTADOS.has(body.tipo)) {
-      return HttpResponse.json({ mensagem: 'Tipo de relatório ainda não implementado' }, { status: 422 })
-    }
     const conteudo = body.formato === 'csv' ? 'Baia;Capacidade\r\n' : '%PDF-1.4 conteúdo de teste'
     const nomeArquivo = `${body.tipo}-2026-01-01_2026-09-10.${body.formato}`
     return new HttpResponse(conteudo, {

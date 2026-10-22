@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/>
+<title>Relatório de Ocorrências por Bairro</title>
+<th:block th:replace="~{_fragmentos :: estilo}"></th:block>
+</head>
+<body>
+<div th:replace="~{_fragmentos :: cabecalho('Relatório de Ocorrências por Bairro', 'Período: ' + ${meta.subtituloPeriodo})}"></div>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="kpi-box"><div class="l">Ocorrências registradas</div><div class="v" th:text="${d.kpis.ocorrenciasRegistradas}">0</div></div></div>
+  <div class="kpi"><div class="kpi-box"><div class="l">Bairros atingidos</div><div class="v" th:text="${d.kpis.bairrosAtingidos}">0</div></div></div>
+  <div class="kpi"><div class="kpi-box"><div class="l">Tempo médio (h)</div><div class="v" th:text="${d.kpis.tempoMedioHoras} ?: '—'">0</div></div></div>
+  <div class="kpi"><div class="kpi-box"><div class="l">Encerradas</div><div class="v" th:text="${d.kpis.percentualEncerradas} + '%'">0%</div>
+    <div class="d" th:text="${d.kpis.encerradas} + ' de ' + ${d.kpis.ocorrenciasRegistradas}">0 de 0</div></div></div>
+</div>
+
+<h2 class="section">Bairros com mais ocorrências</h2>
+<table>
+  <thead><tr><th>Bairro</th><th>Ocorrências</th><th>Tipo predominante</th><th>Tempo médio (h)</th></tr></thead>
+  <tbody>
+    <tr th:each="b : ${d.bairros}">
+      <td th:text="${b.bairro}">Bairro</td>
+      <td class="mono" th:text="${b.ocorrencias}">0</td>
+      <td th:text="${b.tipoPredominante}">Tipo</td>
+      <td class="mono" th:text="${b.tempoMedioHoras} ?: '—'">0</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 class="section">Tipos de ocorrência</h2>
+<div th:each="t : ${d.tipos}" class="bar-row">
+  <span class="label" th:text="${t.tipo}">Tipo</span>
+  <span class="track"><span class="track-inner"><span class="fill"
+        th:style="'width:' + ${t.quantidade * 100.0 / d.tipos[0].quantidade} + '%;'"></span></span></span>
+  <span class="val" th:text="${t.quantidade}">0</span>
+</div>
+
+<div class="note" th:text="${d.notaFocoGeografico}">Nota.</div>
+
+<div th:replace="~{_fragmentos :: rodape}"></div>
+</body>
+</html>

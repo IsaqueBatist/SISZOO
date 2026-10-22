@@ -23,9 +23,8 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
 // Endpoints de relatorios (T41): GET /tipos, GET /preview, POST /exportar,
-// GET /historico. PR1 so tem ocupacao_baias e vacinacao implementados — os
-// outros 4 tipos (PR2) devem recusar com 422 "nao implementado" em vez de
-// 404/500, ate la.
+// GET /historico. Os 6 tipos do catalogo estao implementados (PR1: ocupacao_baias
+// e vacinacao; PR2: anual_processos, adocoes, procedimentos, ocorrencias_bairro).
 class RelatorioControllerIT extends AbstractIntegrationTest {
 
     private static final String ROTA = "/api/relatorios";
@@ -84,17 +83,56 @@ class RelatorioControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("422 para tipo do catalogo ainda nao implementado nesta PR (ex.: adocoes)")
-    void exportarDeveRecusarTipoAindaNaoImplementado() {
+    @DisplayName("422 para formato invalido no exportar")
+    void exportarDeveRecusarFormatoInvalido() {
         Map<String, Object> corpo = new HashMap<>();
-        corpo.put("tipo", "adocoes");
+        corpo.put("tipo", "vacinacao");
         corpo.put("periodoInicio", "2026-01-01");
         corpo.put("periodoFim", "2026-09-10");
-        corpo.put("formato", "csv");
+        corpo.put("formato", "xlsx");
 
         given().header("Authorization", "Bearer " + tokenAdmin).contentType(ContentType.JSON).body(corpo)
                 .when().post(ROTA + "/exportar")
                 .then().statusCode(422);
+    }
+
+    @Test
+    @DisplayName("preview de anual_processos (filtro por ano) responde 200 com os KPIs esperados")
+    void previewAnualProcessosDeveResponder200() {
+        given().header("Authorization", "Bearer " + tokenAdmin)
+                .when().get(ROTA + "/preview?tipo=anual_processos&ano=2025")
+                .then().statusCode(200)
+                .body("ano", equalTo(2025))
+                .body("kpis.processosAbertos", greaterThanOrEqualTo(0))
+                .body("resultadosPorDoenca", org.hamcrest.Matchers.notNullValue());
+    }
+
+    @Test
+    @DisplayName("preview de adocoes (versao simplificada) responde 200 e explica a limitacao")
+    void previewAdocoesDeveResponder200ComNotaDeLimitacao() {
+        given().header("Authorization", "Bearer " + tokenAdmin)
+                .when().get(ROTA + "/preview?tipo=adocoes&periodoInicio=2026-01-01&periodoFim=2026-03-31")
+                .then().statusCode(200)
+                .body("kpis.animaisAdotados", greaterThanOrEqualTo(0))
+                .body("notaLimitacao", containsString("não é filtrado pelo período"));
+    }
+
+    @Test
+    @DisplayName("preview de procedimentos responde 200")
+    void previewProcedimentosDeveResponder200() {
+        given().header("Authorization", "Bearer " + tokenAdmin)
+                .when().get(ROTA + "/preview?tipo=procedimentos&periodoInicio=2026-04-01&periodoFim=2026-04-30")
+                .then().statusCode(200)
+                .body("kpis.totalProcedimentos", greaterThanOrEqualTo(0));
+    }
+
+    @Test
+    @DisplayName("preview de ocorrencias_bairro responde 200")
+    void previewOcorrenciasBairroDeveResponder200() {
+        given().header("Authorization", "Bearer " + tokenAdmin)
+                .when().get(ROTA + "/preview?tipo=ocorrencias_bairro&periodoInicio=2026-01-01&periodoFim=2026-05-20")
+                .then().statusCode(200)
+                .body("kpis.ocorrenciasRegistradas", greaterThanOrEqualTo(0));
     }
 
     @Test
@@ -168,6 +206,70 @@ class RelatorioControllerIT extends AbstractIntegrationTest {
         assertThat(texto, not(containsString("recomendacao")));
         assertThat(texto, not(containsString("sugestão")));
         assertThat(texto, not(containsString("sugestao")));
+    }
+
+    @Test
+    @DisplayName("exportar PDF de anual_processos (2 paginas): sem assinatura/recomendacao em nenhuma das 2 paginas")
+    void exportarPdfDeAnualProcessosNaoDeveConterAssinaturaOuRecomendacaoEmNenhumaPagina() throws Exception {
+        Map<String, Object> corpo = new HashMap<>();
+        corpo.put("tipo", "anual_processos");
+        corpo.put("ano", 2025);
+        corpo.put("formato", "pdf");
+
+        byte[] pdf = given()
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .contentType(ContentType.JSON)
+                .body(corpo)
+                .when().post(ROTA + "/exportar")
+                .then().statusCode(200)
+                .contentType(equalTo("application/pdf"))
+                .extract().asByteArray();
+
+        assertThat(new String(pdf, 0, 4, StandardCharsets.US_ASCII), equalTo("%PDF"));
+
+        com.lowagie.text.pdf.PdfReader leitor = new com.lowagie.text.pdf.PdfReader(pdf);
+        assertThat(leitor.getNumberOfPages(), equalTo(2));
+        com.lowagie.text.pdf.parser.PdfTextExtractor extrator = new com.lowagie.text.pdf.parser.PdfTextExtractor(leitor);
+        String pagina1 = extrator.getTextFromPage(1).toLowerCase(java.util.Locale.ROOT);
+        String pagina2 = extrator.getTextFromPage(2).toLowerCase(java.util.Locale.ROOT);
+
+        assertThat(pagina1, containsString("relatório anual de processos"));
+        assertThat(pagina2, containsString("laboratórios utilizados"));
+        for (String texto : new String[] {pagina1, pagina2}) {
+            assertThat(texto, not(containsString("assinatura")));
+            assertThat(texto, not(containsString("assinado")));
+            assertThat(texto, not(containsString("recomendação")));
+            assertThat(texto, not(containsString("recomendacao")));
+            assertThat(texto, not(containsString("sugestão")));
+            assertThat(texto, not(containsString("sugestao")));
+        }
+    }
+
+    @Test
+    @DisplayName("exportar CSV de procedimentos: 3 blocos (por tipo, produtividade, cirurgias) e grava relatorio_gerado")
+    void exportarCsvDeProcedimentosDeveGerarOsTresBlocos() {
+        long totalAntes = totalNoHistorico();
+
+        Map<String, Object> corpo = new HashMap<>();
+        corpo.put("tipo", "procedimentos");
+        corpo.put("periodoInicio", "2026-04-01");
+        corpo.put("periodoFim", "2026-04-30");
+        corpo.put("formato", "csv");
+
+        byte[] arquivo = given()
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .contentType(ContentType.JSON)
+                .body(corpo)
+                .when().post(ROTA + "/exportar")
+                .then().statusCode(200)
+                .contentType(containsString("text/csv"))
+                .extract().asByteArray();
+
+        String texto = new String(arquivo, 3, arquivo.length - 3, StandardCharsets.UTF_8);
+        assertThat(texto, containsString("Procedimentos por tipo"));
+        assertThat(texto, containsString("Produtividade por veterinário"));
+        assertThat(texto, containsString("Cirurgias realizadas"));
+        assertThat(totalNoHistorico(), equalTo(totalAntes + 1));
     }
 
     @Test

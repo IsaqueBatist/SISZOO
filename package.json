@@ -2,8 +2,7 @@
   "name": "siszoo-tools",
   "private": true,
   "scripts": {
-    "db:seed": "node scripts/seed-test-data.mjs",
-    "test:seed": "node --test scripts/seed-test-data.test.mjs"
+    "db:seed": "node scripts/seed-test-data.mjs"
   },
   "devDependencies": {
     "bcryptjs": "^2.4.3",
