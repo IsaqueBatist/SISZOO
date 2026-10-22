@@ -2,7 +2,8 @@ import { useState, type FormEvent } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { useQueryClient } from '@tanstack/react-query'
-import { formatarData, formatarDataHora, hojeIso } from '@/features/ocorrencias/utils/datas'
+import { formatarData, formatarDataHora } from '@/features/ocorrencias/utils/datas'
+import { hojeEmItu } from '@/lib/datas'
 import { mensagemDeRegraDaApi, statusHttpDoErro } from '@/lib/erroApi'
 import { buscarProcessoPorId } from '../api/processosApi'
 import {
@@ -66,7 +67,7 @@ export function CardResultadoProcesso({ processo, podeEscrever }: CardResultadoP
     resolver: zodResolver(registrarResultadoFormSchema),
     mode: 'onSubmit',
     reValidateMode: 'onSubmit',
-    defaultValues: { resultado: '', dataResultado: hojeIso(), observacoes: '', desfechoAnimal: '' },
+    defaultValues: { resultado: '', dataResultado: hojeEmItu(), observacoes: '', desfechoAnimal: '' },
   })
 
   async function enviar(dados: RegistrarResultadoFormValues) {
@@ -218,7 +219,7 @@ export function CardResultadoProcesso({ processo, podeEscrever }: CardResultadoP
                 id="proc-data-resultado"
                 className={`input${errors.dataResultado ? ' error' : ''}`}
                 type="date"
-                max={hojeIso()}
+                max={hojeEmItu()}
                 {...register('dataResultado')}
               />
               {errors.dataResultado && <span className="err">{errors.dataResultado.message}</span>}

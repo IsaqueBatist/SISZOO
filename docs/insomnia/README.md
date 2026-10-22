@@ -76,23 +76,19 @@ Environment precisa estar correto.
 Para rodar: com o backend de pé, abra a aba **Unit Testing** no Insomnia,
 selecione uma suíte e clique em **Run Tests**.
 
-**Importante:** o teste `ut_usuarios_autodesativacao_admin` documenta um gap
-encontrado no código — hoje não existe nenhuma regra que impeça um
-Administrador de desativar a própria conta. O teste cria um Administrador
-temporário só para isso (nunca usa o admin seedado real), e a asserção
-reflete o comportamento *atual* (200, permite). Se a equipe decidir bloquear
-essa ação no futuro, o teste precisa ser atualizado para esperar o novo
-status.
+**Importante:** o teste `ut_usuarios_autodesativacao_admin` cobre a regra 24 do
+DER: nenhum usuário desativa a própria conta (422, "Nao e permitido desativar o
+proprio usuario", em `UsuarioService#alterarStatus`). O teste cria um
+Administrador temporário só para isso (nunca usa o admin seedado real) e
+confere que ele continua ativo depois da tentativa.
 
-Da mesma forma, `ut_baias_excluir_soft_delete_nao_bloqueia_ocupada` e
-`ut_baias_animal_pode_ser_alocado_em_baia_superlotada` documentam dois gaps
-equivalentes no módulo de baias: o backend nem bloqueia excluir uma baia
-ocupada, nem impede alocar um animal numa baia já superlotada — os dois
-únicos freios existentes são de UI (aviso ao excluir, `<option disabled>` no
-formulário de animal), na tela de Gestão de Baias e no formulário de animal
-respectivamente. Ambos os testes refletem o comportamento *atual* (200,
-permite); se essas regras migrarem para o backend no futuro, os testes
-precisam ser atualizados para esperar 409/422.
+Da mesma forma, `ut_baias_excluir_soft_delete_nao_bloqueia_ocupada` documenta
+que o backend não bloqueia excluir (desativar) uma baia ocupada: o único freio
+é o aviso da tela de Gestão de Baias, e o teste reflete o comportamento
+*atual* (200, permite; decisão AC-3 em
+`docs/decisoes/animais-clinico-correcoes.md`). Já alocar um animal numa baia
+sem vaga deixou de ser permitido: `ut_baias_animal_409_baia_superlotada`
+espera 409 (RN-AN02, `docs/regras-negocio-clinico.md`).
 
 ## O que não está aqui
 

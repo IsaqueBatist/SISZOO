@@ -814,7 +814,7 @@ Um sintoma aparece no máximo uma vez por amostra (a API ignora códigos repetid
 
 - `vacina_vencendo`: `vacinacao` vigente (`VacinacaoRepository#findVigentesParaAlertaVacinal`) com `data_aplicacao + vacina.intervalo_meses` entre hoje e hoje + 7d — regras RN-A01… em `docs/regras-negocio-clinico.md`
 - `sem_avaliacao_30d`: `animal WHERE max(procedimento.data) < now() - 30d`
-- `baia_superlotada`: `baia WHERE atual_ocupacao > capacidade`
+- `baia_superlotada`: `baia WHERE atual_ocupacao >= capacidade` — mesma regra do indicador `superlotada` da tabela `baia` (`BaiaService`, `estadoLotacao` no front) e do 409 de baia sem vaga (RN-AN02): baia cheia já alerta. Decisão FS-8 em `docs/decisoes/ficha-completa-seed-fuso.md`; o alerta ainda não está implementado.
 - `medicacao_ativa`: `prescricao WHERE status = 'ATIVA' AND data_fim_prevista BETWEEN now() AND now() + 7d`
 - `ficha_incompleta`: `animal WHERE ficha_completa = false`
 - `nao_castrado`: `animal WHERE esterilizado = false AND status = 'disponivel_adocao'`
