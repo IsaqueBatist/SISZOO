@@ -71,6 +71,7 @@ import com.siszoo.processos.exception.ProcessoNaoEncontradoException;
 import com.siszoo.processos.exception.ResultadoInvalidoException;
 import com.siszoo.processos.exception.ResultadoJaRegistradoException;
 import com.siszoo.processos.exception.ResultadoObrigatorioException;
+import com.siszoo.processos.exception.ResultadoPositivoDefinitivoException;
 import com.siszoo.processos.exception.ResultadoRetificadoInvalidoException;
 import com.siszoo.processos.exception.SintomaInvalidoException;
 import com.siszoo.processos.exception.SintomaSemStatusSintomaticoException;
@@ -442,6 +443,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroResponse> handleCorrecaoResultadoNaoPermitida() {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
                 .body(new ErroResponse("Resultado so pode ser corrigido com o processo em COM_RESULTADO"));
+    }
+
+    @ExceptionHandler(ResultadoPositivoDefinitivoException.class)
+    public ResponseEntity<ErroResponse> handleResultadoPositivoDefinitivo() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Resultado positivo e definitivo e nao pode ser corrigido"));
     }
 
     @ExceptionHandler(IdentificacaoComAnimalDoCanilException.class)

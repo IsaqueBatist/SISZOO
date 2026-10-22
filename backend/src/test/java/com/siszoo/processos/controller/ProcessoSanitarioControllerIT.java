@@ -851,10 +851,12 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         assertVigenteCoerente(processoId);
         Map<String, Object> originalGravado = linhaDoResultado(originalId);
 
-        Response primeira = lancarResultado(tokenVet, processoId, corpoResultado("positivo", HOJE.minusDays(1), originalId));
+        // T35-15: a cadeia termina no positivo, que e definitivo (corrigi-lo e
+        // recusado, positivoEDefinitivo).
+        Response primeira = lancarResultado(tokenVet, processoId, corpoResultado("inconclusivo", HOJE.minusDays(1), originalId));
         primeira.then().statusCode(200);
         assertThat(primeira.path("statusProcesso"), equalTo("COM_RESULTADO"));
-        assertThat(primeira.path("resultado.codigo"), equalTo("positivo"));
+        assertThat(primeira.path("resultado.codigo"), equalTo("inconclusivo"));
         assertThat(primeira.path("dataResultado"), equalTo(HOJE.minusDays(1).toString()));
         assertThat(primeira.path("resultados"), hasSize(2));
         assertThat(primeira.path("resultados[1].retificaId"), equalTo(originalId));
@@ -862,9 +864,9 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         String primeiraId = primeira.path("resultados[1].id");
         assertVigenteCoerente(processoId);
 
-        Response segunda = lancarResultado(tokenAgente, processoId, corpoResultado("inconclusivo", HOJE, primeiraId));
+        Response segunda = lancarResultado(tokenAgente, processoId, corpoResultado("positivo", HOJE, primeiraId));
         segunda.then().statusCode(200);
-        assertThat(segunda.path("resultados.resultado.codigo"), equalTo(List.of("negativo", "positivo", "inconclusivo")));
+        assertThat(segunda.path("resultados.resultado.codigo"), equalTo(List.of("negativo", "inconclusivo", "positivo")));
         assertThat(segunda.path("resultados[2].retificaId"), equalTo(primeiraId));
         assertVigenteCoerente(processoId);
 
@@ -895,10 +897,38 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         assertThat(eventos.get(0).get("antes"), nullValue());
         assertThat(eventos.get(0).get("depois"), equalTo("negativo"));
         assertThat(eventos.get(1).get("antes"), equalTo("negativo"));
-        assertThat(eventos.get(1).get("depois"), equalTo("positivo"));
-        assertThat(eventos.get(2).get("antes"), equalTo("positivo"));
-        assertThat(eventos.get(2).get("depois"), equalTo("inconclusivo"));
+        assertThat(eventos.get(1).get("depois"), equalTo("inconclusivo"));
+        assertThat(eventos.get(2).get("antes"), equalTo("inconclusivo"));
+        assertThat(eventos.get(2).get("depois"), equalTo("positivo"));
         assertThat(eventos.get(2).get("status"), equalTo("COM_RESULTADO"));
+    }
+
+    // T35-15 (#37): o positivo e definitivo — nenhuma correcao dele, nem para
+    // outro resultado nem para positivo de novo (que reenviaria o e-mail). O
+    // positivo continua vigente, sem registro novo. Negativo -> positivo,
+    // por correcao, continua valendo (correcaoPorNovoRegistro).
+    @Test
+    @DisplayName("[T35-15] positivo e definitivo: corrigir para negativo ou positivo da 422, sem gravar nada")
+    void positivoEDefinitivo() {
+        String processoId = processoAguardandoResultado();
+        String positivoId = lancarResultado(tokenAgente, processoId, corpoResultado("positivo", HOJE.minusDays(1), null))
+                .then().statusCode(200).extract().path("resultados[0].id");
+        Map<String, Object> gravado = linhaDoResultado(positivoId);
+
+        for (String novo : List.of("negativo", "positivo")) {
+            lancarResultado(tokenAgente, processoId, corpoResultado(novo, HOJE, positivoId)).then()
+                    .statusCode(422).body("mensagem", equalTo("Resultado positivo e definitivo e nao pode ser corrigido"));
+        }
+
+        assertThat(contarResultados(processoId), equalTo(1));
+        assertThat(linhaDoResultado(positivoId), equalTo(gravado));
+        Response processo = buscar(tokenAgente, processoId);
+        assertThat(processo.path("resultado.codigo"), equalTo("positivo"));
+        assertThat(processo.path("dataResultado"), equalTo(HOJE.minusDays(1).toString()));
+        assertThat(processo.path("statusProcesso"), equalTo("COM_RESULTADO"));
+        assertVigenteCoerente(processoId);
+        // Lancar de novo sem retificaId continua 409 (ja ha resultado).
+        lancarResultado(tokenAgente, processoId, corpoResultado("positivo", HOJE, null)).then().statusCode(409);
     }
 
     @Test

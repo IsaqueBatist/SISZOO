@@ -14,7 +14,7 @@ import ch.qos.logback.core.read.ListAppender;
 // o EmailService loga sem depender do console — onde GreenMail, Hibernate e
 // Testcontainers tambem escrevem. Liga o DEBUG do logger enquanto captura e
 // devolve o nivel anterior no close().
-final class LogCapturado implements AutoCloseable {
+public final class LogCapturado implements AutoCloseable {
 
     private final Logger logger;
     private final Level nivelAnterior;
@@ -28,23 +28,23 @@ final class LogCapturado implements AutoCloseable {
         logger.addAppender(appender);
     }
 
-    static LogCapturado de(Class<?> origem) {
+    public static LogCapturado de(Class<?> origem) {
         return new LogCapturado(origem);
     }
 
     // ListAppender guarda num ArrayList; o envio loga em outra thread.
-    List<ILoggingEvent> eventos() {
+    public List<ILoggingEvent> eventos() {
         synchronized (appender) {
             return new ArrayList<>(appender.list);
         }
     }
 
-    List<ILoggingEvent> doNivel(Level nivel) {
+    public List<ILoggingEvent> doNivel(Level nivel) {
         return eventos().stream().filter(evento -> evento.getLevel() == nivel).toList();
     }
 
     /** Mensagens formatadas e, se houver, a mensagem do throwable de cada evento. */
-    List<String> textos(Level nivel) {
+    public List<String> textos(Level nivel) {
         return doNivel(nivel).stream().map(LogCapturado::texto).toList();
     }
 

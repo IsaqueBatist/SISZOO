@@ -2,6 +2,7 @@ package com.siszoo.processos.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.task.TaskRejectedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,9 +13,13 @@ import com.siszoo.processos.entity.ResponsavelProcesso;
 import com.siszoo.processos.repository.ProcessoSanitarioRepository;
 import com.siszoo.processos.repository.ResponsavelProcessoRepository;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Notificacao de resultado positivo (regra 19, DER; T34-4). Chamado so
@@ -24,9 +29,11 @@ import java.util.UUID;
  *
  * <p>Municipe: tentativa real pelo {@link EmailService} (T35), com o template
  * {@value #TEMPLATE_EMAIL} em HTML e texto puro; melhor esforco — o envio e
- * assincrono e uma falha so e logada pelo EmailService, nunca propaga
- * (docs/decisoes/T37.md, DH-24). Vigilancia Epidemiologica de Itu: nao existe
- * endereco real configurado, entao fica mockada (so loga a intencao).
+ * assincrono e uma falha so e logada, nunca propaga (docs/decisoes/T37.md,
+ * DH-24). Quando o SMTP aceita, grava a data/hora do envio no processo (#37,
+ * T35-16); sem reenvio, porque o positivo e definitivo (T35-15). Vigilancia
+ * Epidemiologica de Itu: nao existe endereco real configurado, entao fica
+ * mockada (so loga a intencao).
  */
 @Service
 public class NotificacaoResultadoService {
@@ -39,16 +46,22 @@ public class NotificacaoResultadoService {
     private final ResponsavelProcessoRepository responsavelRepository;
     private final EmailService emailService;
     private final EmailTemplateService emailTemplateService;
+    private final ProcessoSanitarioService processoSanitarioService;
+    private final Clock clock;
 
     public NotificacaoResultadoService(
             ProcessoSanitarioRepository processoRepository,
             ResponsavelProcessoRepository responsavelRepository,
             EmailService emailService,
-            EmailTemplateService emailTemplateService) {
+            EmailTemplateService emailTemplateService,
+            ProcessoSanitarioService processoSanitarioService,
+            Clock clock) {
         this.processoRepository = processoRepository;
         this.responsavelRepository = responsavelRepository;
         this.emailService = emailService;
         this.emailTemplateService = emailTemplateService;
+        this.processoSanitarioService = processoSanitarioService;
+        this.clock = clock;
     }
 
     @Transactional(readOnly = true)
@@ -75,13 +88,44 @@ public class NotificacaoResultadoService {
         Map<String, Object> variaveis = new HashMap<>();
         variaveis.put("nome", responsavel.getNome());
         variaveis.put("protocolo", processo.getProtocolo());
-        // O future e ignorado de proposito: o EmailService ja loga a falha, e o
-        // resultado foi salvo antes deste listener rodar (DH-24).
-        emailService.enviar(
-                responsavel.getEmail(),
-                "SISZOO — Resultado do processo sanitario " + processo.getProtocolo(),
-                emailTemplateService.renderizarHtml(TEMPLATE_EMAIL, variaveis),
-                emailTemplateService.renderizarTexto(TEMPLATE_EMAIL, variaveis));
+        UUID processoId = processo.getId();
+        String protocolo = processo.getProtocolo();
+        CompletableFuture<Void> envio;
+        try {
+            envio = emailService.enviar(
+                    responsavel.getEmail(),
+                    "SISZOO — Resultado do processo sanitario " + protocolo,
+                    emailTemplateService.renderizarHtml(TEMPLATE_EMAIL, variaveis),
+                    emailTemplateService.renderizarTexto(TEMPLATE_EMAIL, variaveis));
+        } catch (TaskRejectedException ex) {
+            // T35-17: a recusa do executor (ex.: aplicacao encerrando) sobe na
+            // propria chamada, nao no future. Nada foi enviado nem registrado.
+            log.warn("Notificacao ao municipe do processo {} nao submetida: executor recusou a tarefa", protocolo);
+            log.debug("Detalhes da recusa da notificacao do processo {}", protocolo, ex);
+            return;
+        }
+        // Falha de envio ja foi logada pelo EmailService (DH-24) e deixa a data
+        // nula; so o aceite do SMTP grava (T35-16). O resultado ja foi salvo.
+        envio.whenComplete((ok, falha) -> {
+            if (falha == null) {
+                registrarEnvio(processoId, protocolo);
+            }
+        });
+    }
+
+    // Dentro do callback, uma excecao sumiria no future: e logada aqui, so com
+    // o protocolo. E-mail aceito sem data gravada = caso ambiguo (T35-16).
+    private void registrarEnvio(UUID processoId, String protocolo) {
+        // Microssegundos: a precisao do timestamp do PostgreSQL. Sem truncar,
+        // o banco arredonda e a coluna diverge da data no evento de auditoria.
+        LocalDateTime aceitoEm = LocalDateTime.now(clock).truncatedTo(ChronoUnit.MICROS);
+        try {
+            processoSanitarioService.registrarNotificacaoMunicipe(processoId, aceitoEm);
+        } catch (RuntimeException ex) {
+            log.warn("E-mail ao municipe do processo {} aceito pelo SMTP, mas a data do envio nao foi gravada: {}",
+                    protocolo, ex.getClass().getSimpleName());
+            log.debug("Detalhes da falha ao gravar o envio da notificacao do processo {}", protocolo, ex);
+        }
     }
 
     // Mock: nao ha endereco real configurado para a Vigilancia Epidemiologica

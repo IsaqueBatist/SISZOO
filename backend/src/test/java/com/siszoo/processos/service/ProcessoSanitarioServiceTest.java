@@ -8,14 +8,18 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -72,6 +76,7 @@ import com.siszoo.processos.exception.IdentificacaoObrigatoriaException;
 import com.siszoo.processos.exception.ResultadoInvalidoException;
 import com.siszoo.processos.exception.ResultadoJaRegistradoException;
 import com.siszoo.processos.exception.ResultadoObrigatorioException;
+import com.siszoo.processos.exception.ResultadoPositivoDefinitivoException;
 import com.siszoo.processos.exception.ResultadoRetificadoInvalidoException;
 import com.siszoo.processos.exception.SintomaSemStatusSintomaticoException;
 import com.siszoo.processos.exception.TransicaoStatusProcessoInvalidaException;
@@ -84,6 +89,7 @@ import com.siszoo.processos.repository.ResponsavelProcessoRepository;
 import com.siszoo.processos.repository.ResultadoLaboratorialRepository;
 import com.siszoo.processos.repository.ResultadoProcessoRepository;
 import com.siszoo.processos.repository.SintomaRepository;
+import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.repository.UsuarioRepository;
 import com.siszoo.usuarios.service.AuditoriaEventoService;
@@ -382,6 +388,45 @@ class ProcessoSanitarioServiceTest {
                 .isInstanceOf(CorrecaoResultadoNaoPermitidaException.class);
         assertThat(processo.getStatusProcesso()).isEqualTo(status);
         verify(resultadoProcessoRepository, never()).saveAndFlush(any());
+    }
+
+    // T35-15: positivo e definitivo. Corrigir um positivo e recusado para
+    // qualquer resultado novo (inclusive outro positivo, que reenviaria o
+    // e-mail), sem gravar registro, sem mexer no vigente e sem notificar.
+    @ParameterizedTest(name = "[T35-15] corrigir positivo para {0}: 422")
+    @ValueSource(strings = {"negativo", "positivo", "inconclusivo"})
+    void correcaoDePositivoRecusada(String novoResultado) {
+        ProcessoSanitario processo = processoEm(StatusProcesso.COM_RESULTADO);
+        UUID positivoId = UUID.randomUUID();
+        when(resultadoRepository.findByCodigo(novoResultado)).thenReturn(Optional.of(resultado(novoResultado, true)));
+        when(resultadoProcessoRepository.findById(positivoId)).thenReturn(Optional.of(
+                ResultadoProcesso.registrar(processo, resultado("positivo", true), HOJE, null, new Usuario())));
+        when(resultadoProcessoRepository.existsByRetificaId(positivoId)).thenReturn(false);
+
+        assertThatThrownBy(() -> processoService.registrarResultado(processo.getId(),
+                new RegistrarResultadoRequest(novoResultado, HOJE, null, positivoId, null), usuarioId))
+                .isInstanceOf(ResultadoPositivoDefinitivoException.class);
+        verify(resultadoProcessoRepository, never()).saveAndFlush(any());
+        verify(processoRepository, never()).saveAndFlush(any());
+        verifyNoInteractions(eventPublisher, auditoriaEventoService);
+    }
+
+    // T35-16: data/hora do aceite do SMTP com um evento de auditoria de
+    // sistema (sem usuario, so a data); a segunda chamada nao muda nada.
+    @Test
+    void registroDaNotificacaoGravaUmaVezEAuditaSemUsuario() {
+        ProcessoSanitario processo = processoEm(StatusProcesso.COM_RESULTADO);
+        LocalDateTime aceito = LocalDateTime.of(2026, 10, 21, 12, 30);
+
+        processoService.registrarNotificacaoMunicipe(processo.getId(), aceito);
+        processoService.registrarNotificacaoMunicipe(processo.getId(), aceito.plusHours(1));
+
+        assertThat(processo.getDataNotificacaoMunicipe()).isEqualTo(aceito);
+        verify(processoRepository).saveAndFlush(processo);
+        verify(auditoriaEventoService).registrar(null, AcaoAuditoria.ATUALIZACAO, "processo_sanitario",
+                processo.getId(), Collections.singletonMap("dataNotificacaoMunicipe", null),
+                Map.of("dataNotificacaoMunicipe", aceito));
+        verifyNoMoreInteractions(auditoriaEventoService);
     }
 
     @Test
