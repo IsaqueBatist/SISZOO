@@ -1,5 +1,9 @@
 import type {
+  PreviewAdocoes,
+  PreviewAnualProcessos,
+  PreviewOcorrenciasBairro,
   PreviewOcupacaoBaias,
+  PreviewProcedimentos,
   PreviewVacinacao,
   RelatorioGeradoItem,
   TipoRelatorioInfo,
@@ -54,6 +58,80 @@ export function previewVacinacaoFixture(): PreviewVacinacao {
       { animal: 'Pipoca', microchip: null, baia: 'Baia 4', vacina: 'V10', diasAtraso: 28 },
     ],
     animaisVencidosExcedente: 8,
+  }
+}
+
+export function previewProcedimentosFixture(): PreviewProcedimentos {
+  return {
+    periodoInicio: '2026-04-01',
+    periodoFim: '2026-04-30',
+    kpis: { totalProcedimentos: 318, castracoes: 34, castracoesMachos: 21, castracoesFemeas: 13, atendimentosClinicos: 87, cirurgiasMaiores: 12 },
+    porTipo: [
+      { tipo: 'Vacinação', quantidade: 159 },
+      { tipo: 'Atendimento clínico', quantidade: 87 },
+      { tipo: 'Castração', quantidade: 34 },
+      { tipo: 'Medicações', quantidade: 26 },
+      { tipo: 'Cirurgia maior', quantidade: 12 },
+    ],
+    porVeterinario: [
+      { veterinario: 'Stéphanie Lima', atendimentos: 28, castracoes: 11, cirurgias: 4, vacinacoes: 62, total: 105 },
+      { veterinario: 'Rafael Souza', atendimentos: 24, castracoes: 9, cirurgias: 3, vacinacoes: 48, total: 84 },
+    ],
+    totalVeterinarios: { veterinario: 'TOTAL', atendimentos: 52, castracoes: 20, cirurgias: 7, vacinacoes: 110, total: 189 },
+    cirurgias: [
+      { data: '2026-04-28', animal: 'Thor', procedimento: 'OSH', veterinario: 'Rafael Souza', resultado: 'Sem intercorr.' },
+    ],
+    cirurgiasExcedente: 0,
+  }
+}
+
+export function previewOcorrenciasBairroFixture(): PreviewOcorrenciasBairro {
+  return {
+    periodoInicio: '2026-01-01',
+    periodoFim: '2026-05-20',
+    kpis: { ocorrenciasRegistradas: 218, bairrosAtingidos: 21, tempoMedioHoras: 3.4, encerradas: 207, percentualEncerradas: 95 },
+    bairros: [
+      { bairro: 'Centro', ocorrencias: 42, tipoPredominante: 'Infestação de Morcegos', tempoMedioHoras: 2.8 },
+      { bairro: 'Outros (12 bairros)', ocorrencias: 46, tipoPredominante: 'Diversos', tempoMedioHoras: 3.5 },
+    ],
+    tipos: [
+      { tipo: 'Infestação de Morcegos', quantidade: 68 },
+      { tipo: 'Animal Agressivo', quantidade: 51 },
+    ],
+    notaFocoGeografico: 'O bairro Centro concentra 19,3% das ocorrências, principalmente relacionadas à Infestação de Morcegos.',
+  }
+}
+
+export function previewAdocoesFixture(): PreviewAdocoes {
+  return {
+    periodoInicio: '2026-01-01',
+    periodoFim: '2026-03-31',
+    kpis: { animaisAdotados: 24 },
+    perfil: [
+      { caracteristica: 'Canino', quantidade: 17, percentual: 71 },
+      { caracteristica: 'Felino', quantidade: 7, percentual: 29 },
+      { caracteristica: 'Porte Pequeno', quantidade: 11, percentual: 46 },
+    ],
+    notaLimitacao:
+      'Este relatório mostra a quantidade ATUAL de animais com status "Adotado" — não é filtrado pelo período selecionado.',
+  }
+}
+
+export function previewAnualProcessosFixture(): PreviewAnualProcessos {
+  return {
+    ano: 2025,
+    periodoInicio: '2025-01-01',
+    periodoFim: '2025-12-31',
+    kpis: { processosAbertos: 87, confirmadosPositivos: 14, percentualPositividade: 16, comContatoHumano: 9, tempoMedioDias: 11 },
+    sumarioExecutivo: 'Durante o exercício de 2025, o CCZ instaurou 87 processo(s) sanitário(s)...',
+    porPatologia: [{ doenca: 'Raiva', quantidade: 28 }],
+    resultadosPorDoenca: [
+      { doenca: 'Raiva', investigados: 28, positivos: 2, negativos: 24, inconclusivos: 1, aguardando: 1, percentualPositividade: 7 },
+    ],
+    totalResultados: { doenca: 'TOTAL', investigados: 87, positivos: 14, negativos: 69, inconclusivos: 3, aguardando: 1, percentualPositividade: 16 },
+    porEspecie: [{ especie: 'Canino', quantidade: 52, percentual: 60 }],
+    bairros: [{ bairro: 'Centro', processos: 14, positivos: 3, doencasPredominantes: 'Esporotricose · Leptospirose' }],
+    laboratorios: [{ laboratorio: 'Instituto Pasteur — SP', amostras: 31, percentualDoTotal: 36, tempoMedioDias: 8 }],
   }
 }
 

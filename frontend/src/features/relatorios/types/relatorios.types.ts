@@ -92,6 +92,160 @@ export interface PreviewVacinacao {
   animaisVencidosExcedente: number
 }
 
+// --- Procedimentos ---
+
+export interface KpisProcedimentos {
+  totalProcedimentos: number
+  castracoes: number
+  castracoesMachos: number
+  castracoesFemeas: number
+  atendimentosClinicos: number
+  cirurgiasMaiores: number
+}
+
+export interface ProcedimentoPorTipo {
+  tipo: string
+  quantidade: number
+}
+
+export interface ProdutividadeVeterinario {
+  veterinario: string
+  atendimentos: number
+  castracoes: number
+  cirurgias: number
+  vacinacoes: number
+  total: number
+}
+
+export interface CirurgiaRealizada {
+  data: string
+  animal: string
+  procedimento: string
+  veterinario: string
+  resultado: string
+}
+
+export interface PreviewProcedimentos {
+  periodoInicio: string
+  periodoFim: string
+  kpis: KpisProcedimentos
+  porTipo: ProcedimentoPorTipo[]
+  porVeterinario: ProdutividadeVeterinario[]
+  totalVeterinarios: ProdutividadeVeterinario
+  cirurgias: CirurgiaRealizada[]
+  cirurgiasExcedente: number
+}
+
+// --- Ocorrências por Bairro ---
+
+export interface LinhaBairroOcorrencia {
+  bairro: string
+  ocorrencias: number
+  tipoPredominante: string
+  tempoMedioHoras: number | null
+}
+
+export interface TipoOcorrenciaContagem {
+  tipo: string
+  quantidade: number
+}
+
+export interface KpisOcorrenciasBairro {
+  ocorrenciasRegistradas: number
+  bairrosAtingidos: number
+  tempoMedioHoras: number | null
+  encerradas: number
+  percentualEncerradas: number
+}
+
+export interface PreviewOcorrenciasBairro {
+  periodoInicio: string
+  periodoFim: string
+  kpis: KpisOcorrenciasBairro
+  bairros: LinhaBairroOcorrencia[]
+  tipos: TipoOcorrenciaContagem[]
+  notaFocoGeografico: string
+}
+
+// --- Adoções (versão simplificada — ver backend RelatorioAdocoesResponse) ---
+
+export interface PerfilAdocao {
+  caracteristica: string
+  quantidade: number
+  percentual: number
+}
+
+export interface KpisAdocoes {
+  animaisAdotados: number
+}
+
+export interface PreviewAdocoes {
+  periodoInicio: string
+  periodoFim: string
+  kpis: KpisAdocoes
+  perfil: PerfilAdocao[]
+  notaLimitacao: string
+}
+
+// --- Relatório Anual de Processos ---
+
+export interface KpisAnualProcessos {
+  processosAbertos: number
+  confirmadosPositivos: number
+  percentualPositividade: number
+  comContatoHumano: number
+  tempoMedioDias: number | null
+}
+
+export interface CasoPorPatologia {
+  doenca: string
+  quantidade: number
+}
+
+export interface ResultadoLaboratorialPorDoenca {
+  doenca: string
+  investigados: number
+  positivos: number
+  negativos: number
+  inconclusivos: number
+  aguardando: number
+  percentualPositividade: number
+}
+
+export interface DistribuicaoEspecie {
+  especie: string
+  quantidade: number
+  percentual: number
+}
+
+export interface BairroProcesso {
+  bairro: string
+  processos: number
+  positivos: number
+  doencasPredominantes: string
+}
+
+export interface LaboratorioUtilizado {
+  laboratorio: string
+  amostras: number
+  percentualDoTotal: number
+  tempoMedioDias: number | null
+}
+
+export interface PreviewAnualProcessos {
+  ano: number
+  periodoInicio: string
+  periodoFim: string
+  kpis: KpisAnualProcessos
+  sumarioExecutivo: string
+  porPatologia: CasoPorPatologia[]
+  resultadosPorDoenca: ResultadoLaboratorialPorDoenca[]
+  totalResultados: ResultadoLaboratorialPorDoenca
+  porEspecie: DistribuicaoEspecie[]
+  bairros: BairroProcesso[]
+  laboratorios: LaboratorioUtilizado[]
+}
+
 // GET /api/relatorios/historico — sem arquivoUrl: o arquivo nao e persistido
 // nesta versao. A acao da linha e "Gerar novamente", nao "Baixar".
 // parametrosJson e o filtro bruto original (string JSON), necessario porque
