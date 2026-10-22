@@ -752,24 +752,35 @@ Um sintoma aparece no máximo uma vez por amostra (a API ignora códigos repetid
 
 #### `relatorio_gerado`
 
-| Campo               | Tipo         | Obrig. | Observações                        |
-| ------------------- | ------------ | ------ | ---------------------------------- |
-| `id`                | uuid PK      | \*     |                                    |
-| `doc_id`            | varchar(30)  | \*     | "DOC-2026-0156" — gerado           |
-| `tipo_relatorio_id` | FK           | \*     |                                    |
-| `periodo_inicio`    | date         | ?      |                                    |
-| `periodo_fim`       | date         | ?      |                                    |
-| `parametros_jsonb`  | jsonb        | ?      | filtros aplicados                  |
-| `gerado_por_id`     | FK `usuario` | \*     |                                    |
-| `gerado_em`         | timestamp    | \*     |                                    |
-| `status`            | enum         | \*     | `processando`, `concluido`, `erro` |
-| `arquivo_url`       | text         | ?      | PDF/CSV final                      |
-| `tamanho_bytes`     | int          | ?      |                                    |
+> **Estado do schema (V20, T41) — diverge do modelo abaixo em 3 pontos, decisão
+> tomada na implementação.** (1) `tipo_relatorio` é `varchar` com `CHECK` dos 6
+> códigos, não FK para uma tabela catálogo: os 6 valores são fixos (cada um
+> exige uma classe de agregação própria no backend) e uma tabela catálogo só
+> para isso seria sobre-engenharia. (2) Sem coluna `status`: uma linha só é
+> gravada quando a exportação (CSV/PDF) termina com sucesso — não há estado
+> intermediário "processando"/"erro" a persistir. (3) `periodo_inicio`/
+> `periodo_fim` são **obrigatórios**: filtros por ano (`anual_processos`) ou
+> por janela relativa (`ocupacao_baias`) são resolvidos para datas concretas
+> antes de salvar. `gerado_em` é `timestamptz`. Fonte: este DER; o DBML do
+> módulo 5 está desatualizado (mesmo aviso já registrado para o módulo 4).
+
+| Campo               | Tipo         | Obrig. | Observações                                          |
+| ------------------- | ------------ | ------ | ----------------------------------------------------- |
+| `id`                | uuid PK      | \*     |                                                       |
+| `doc_id`            | varchar(30)  | \*     | "DOC-2026-0001" — gerado via `ProtocoloService`       |
+| `tipo_relatorio`    | varchar(30)  | \*     | `CHECK`, não FK — ver nota acima                      |
+| `periodo_inicio`    | date         | \*     | resolvido a partir de ano/janela quando aplicável     |
+| `periodo_fim`       | date         | \*     | idem                                                  |
+| `parametros_jsonb`  | jsonb        | ?      | filtros brutos aplicados (tipo, ano, janela)          |
+| `gerado_por_id`     | FK `usuario` | \*     |                                                       |
+| `gerado_em`         | timestamptz  | \*     |                                                       |
+| `arquivo_url`       | text         | ?      | sempre nulo nesta versão (arquivo não é persistido)   |
+| `tamanho_bytes`     | int          | ?      |                                                       |
 
 > **Sem campo de assinatura** (removido do escopo do protótipo).
 > **Sem campos de sugestão / recomendação** — relatórios não auxiliam decisão.
 
-#### `tipo_relatorio` (catálogo)
+#### `tipo_relatorio` (6 códigos fixos, ver nota acima)
 
 `anual_processos`, `vacinacao`, `adocoes`, `procedimentos`, `ocupacao_baias`, `ocorrencias_bairro`.
 
