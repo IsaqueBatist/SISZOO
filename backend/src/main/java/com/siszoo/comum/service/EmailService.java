@@ -30,11 +30,14 @@ import jakarta.mail.internet.MimeMultipart;
  * de quem chama, normalmente de {@link EmailTemplateService}.
  *
  * <p>Os dois {@code enviar} sao {@link Async}: rodam no executor do
- * {@code @EnableAsync} e devolvem na hora um future. <b>Tudo</b> acontece na
- * thread assincrona, inclusive a validacao dos argumentos — pelo proxy, quem
- * chama nunca recebe excecao; argumento invalido ou falha de SMTP aparecem so
- * como future completado com erro, ja logado aqui. Quem nao precisa do
- * resultado pode ignorar o future.
+ * {@code @EnableAsync} e devolvem na hora um future. A validacao dos
+ * argumentos e o envio acontecem na thread assincrona: argumento invalido ou
+ * falha de SMTP aparecem so como future completado com erro, ja logado aqui.
+ * Quem nao precisa do resultado pode ignorar o future. <b>Excecao:</b> se o
+ * executor recusar a tarefa (ex.: aplicacao encerrando), a
+ * {@link org.springframework.core.task.TaskRejectedException} sobe na propria
+ * chamada — o proxy submete na thread de quem chama (Spring 7,
+ * {@code submitCompletable}; docs/decisoes/T35.md T35-17).
  *
  * <p>Sucesso significa que o servidor SMTP aceitou a mensagem, nao que ela
  * foi entregue ou lida. Nao ha fila nem retentativa.

@@ -28,8 +28,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.core.task.TaskRejectedException;
 import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.AnnotationAsyncExecutionInterceptor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import ch.qos.logback.classic.Level;
 import jakarta.mail.Session;
@@ -120,6 +124,24 @@ class EmailServiceTest {
         assertThat(log.doNivel(Level.DEBUG), hasSize(1));
         assertThat(log.textos(Level.DEBUG).get(0), containsString(DESTINATARIO));
         assertThat(log.textos(Level.INFO), empty());
+    }
+
+    // T35-17: pelo proxy assincrono (o mesmo interceptor do @EnableAsync), a
+    // tarefa e submetida na thread de quem chama. Executor encerrado recusa,
+    // e a TaskRejectedException sobe na propria chamada — nao no future.
+    @Test
+    void recusaDoExecutorSobeNaPropriaChamadaSemTentarEnviar() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.initialize();
+        executor.shutdown();
+        ProxyFactory fabrica = new ProxyFactory(service);
+        fabrica.setProxyTargetClass(true);
+        fabrica.addAdvice(new AnnotationAsyncExecutionInterceptor(executor));
+        EmailService proxy = (EmailService) fabrica.getProxy();
+
+        assertThrows(TaskRejectedException.class, () -> proxy.enviar(DESTINATARIO, ASSUNTO, "<p>corpo</p>"));
+        verify(mailSender, never()).send(any(MimeMessage.class));
+        verify(mailSender, never()).createMimeMessage();
     }
 
     @Test
