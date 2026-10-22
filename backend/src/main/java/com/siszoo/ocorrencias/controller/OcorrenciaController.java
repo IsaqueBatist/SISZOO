@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.format.annotation.DateTimeFormat;
+import java.time.LocalDate;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -57,9 +59,13 @@ public class OcorrenciaController {
             @RequestParam(required = false) String tipo,
             @RequestParam(required = false) StatusOcorrencia status,
             @RequestParam(required = false) String q,
+            // F2-010 (RF-E02, Fase 3 do TG): periodo da data de abertura, dias inclusivos
+            // (docs/contratos/ocorrencias-filtro-data.md). Sem os parametros, nada muda.
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate de,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate ate,
             @RequestParam(defaultValue = "0") int pagina,
             @RequestParam(defaultValue = "20") int tamanho) {
-        return ocorrenciaService.listar(tipo, status, q, pagina, tamanho, PermissoesOcorrencia.de(authentication));
+        return ocorrenciaService.listar(tipo, status, q, de, ate, pagina, tamanho, PermissoesOcorrencia.de(authentication));
     }
 
     @GetMapping("/catalogos")

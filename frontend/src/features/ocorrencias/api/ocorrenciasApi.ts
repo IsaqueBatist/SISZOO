@@ -23,6 +23,8 @@ export async function listarOcorrencias(filtro: OcorrenciasFiltro): Promise<Pagi
       tipo: filtro.tipo,
       status: filtro.status,
       q: filtro.q,
+      de: filtro.de,
+      ate: filtro.ate,
       pagina: filtro.pagina,
       tamanho: filtro.tamanho,
     },

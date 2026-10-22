@@ -536,8 +536,14 @@ public class OcorrenciaService {
     @Transactional(readOnly = true)
     public PaginaResponse<OcorrenciaResumoResponse> listar(String tipo, StatusOcorrencia status, String q,
             int pagina, int tamanho, PermissoesOcorrencia permissoes) {
+        return listar(tipo, status, q, null, null, pagina, tamanho, permissoes);
+    }
+
+    // F2-010 (RF-E02): filtro por periodo da data de abertura (dias inclusivos).
+    public PaginaResponse<OcorrenciaResumoResponse> listar(String tipo, StatusOcorrencia status, String q,
+            LocalDate de, LocalDate ate, int pagina, int tamanho, PermissoesOcorrencia permissoes) {
         Page<Ocorrencia> paginaOcorrencias = ocorrenciaRepository.findAll(
-                construirFiltro(tipo, status, q),
+                construirFiltro(tipo, status, q, de, ate),
                 PageRequest.of(pagina, tamanho, ORDEM_LISTAGEM));
 
         List<UUID> ids = paginaOcorrencias.getContent().stream().map(Ocorrencia::getId).toList();
@@ -676,11 +682,19 @@ public class OcorrenciaService {
         denunciado.setObservacoes(request.observacoes());
     }
 
-    private Specification<Ocorrencia> construirFiltro(String tipo, StatusOcorrencia status, String q) {
+    private Specification<Ocorrencia> construirFiltro(String tipo, StatusOcorrencia status, String q,
+            LocalDate de, LocalDate ate) {
         return (root, query, cb) -> {
             List<Predicate> predicados = new ArrayList<>();
             if (StringUtils.hasText(tipo)) {
                 predicados.add(cb.equal(root.get("tipoOcorrencia").get("codigo"), tipo));
+            }
+            // F2-010: periodo da data de abertura, dias inclusivos.
+            if (de != null) {
+                predicados.add(cb.greaterThanOrEqualTo(root.get("dataAbertura"), de));
+            }
+            if (ate != null) {
+                predicados.add(cb.lessThanOrEqualTo(root.get("dataAbertura"), ate));
             }
             if (status != null) {
                 predicados.add(cb.equal(root.get("statusOcorrencia"), status));
