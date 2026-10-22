@@ -29,13 +29,16 @@ Uma linha por decisão, no formato de `T29.md`. Origem: roteiro de testes manuai
 
 A versão anterior do seed gravava `ficha_completa` = "tem microchip" direto no `INSERT`. Num banco semeado por ela, animais com microchip e sem vacinação ficam "completos" (no seed padrão: Apolo, Bolt, Chico, Frajola e Rocky).
 
-**O próprio seed corrige**, sem cópia da regra (FS-1) e sem migration (que rodaria também em produção). O registro errado é reconhecido pela **origem**, não pela regra: animal do seed (id fixo) com `ficha_completa = true` e `atualizado_em = criado_em`, ou seja, valor gravado por SQL e nunca recalculado pelo backend. Toda passagem pela aplicação muda `atualizado_em`, e o seed atual só deixa a ficha `true` por vacinação pela API. Para cada um, o seed faz GET + PUT com os mesmos valores (`recalcularFichasDoSeedAnterior`), e o `AnimalService` recalcula pelo `FichaCompletaService`:
-- ficha errada vira `false`;
-- ficha certa continua `true`, e o PUT não grava nada (o Hibernate não vê alteração).
+**O próprio seed corrige**, sem migration (que rodaria também em produção). Ele seleciona exatamente a assinatura do defeito antigo: animal do seed (id fixo) com `ficha_completa = true`, nunca tocado pela aplicação (`atualizado_em = criado_em`: toda edição, e a vacinação que completa a ficha, mudam `atualizado_em`) e **sem nenhuma vacinação**. Para cada um, faz GET + PUT com os mesmos valores (`recalcularFichasDoSeedAnterior`), e o `AnimalService` recalcula pelo `FichaCompletaService`; o valor é sempre o do backend, e o filtro só evita chamadas que não mudariam nada. Se a regra mudar, a FS-2 já exige uma migration de recálculo para todos os dados.
 
-Animais fora do seed e os já tocados pela aplicação nunca entram. O seed informa `ficha_corrigida_do_seed_anterior`.
+Sem candidatos, o seed nem faz login: nenhuma chamada à API e nenhum evento de auditoria. Animais fora do seed e os já tocados pela aplicação nunca entram. O seed informa `ficha_corrigida_do_seed_anterior`.
 
-**Validado** num banco descartável semeado pela versão anterior: 15 completas, 5 fora da regra → 10 completas, 0 fora da regra; demais colunas dos animais idênticas (hash antes = depois); 2ª execução corrige 0 e não grava nada (`ficha_completa` e `atualizado_em` iguais). Banco limpo: corrige 0. Teste: `seed-test-data.test.mjs` simula o estado da versão anterior num animal do seed.
+**Efeito colateral medido** (contagem de linhas de todas as tabelas e de `auditoria_evento` por entidade/ação, antes e depois de cada execução). A edição do animal não gera auditoria nem histórico: o `AnimalService` não registra auditoria, e não há trigger nem listener na tabela `animal`.
+- **Banco limpo:** 2ª e 3ª execuções não mudam nenhuma tabela; a auditoria fica igual.
+- **Banco semeado pela versão anterior:** 1ª execução faz 5 PUTs e corrige 5 (15 completas, 5 fora da regra → 10 completas, 0 fora da regra), com +1 `usuario/LOGIN` (o login de que a correção precisa) e as demais colunas dos animais idênticas. 2ª e 3ª execuções não mudam nenhuma tabela.
+- Na versão anterior desta correção, o seed fazia login a cada execução (+1 `usuario/LOGIN`, inclusive no banco limpo) e regravava, sem alteração, as 10 fichas `true` corretas do seed antigo.
+
+Teste: `seed-test-data.test.mjs` confere que uma execução repetida não gera auditoria e simula o estado da versão anterior em dois animais do seed: a ficha errada é corrigida; a certa, com vacina, não é regravada; a execução seguinte não gera auditoria nem toca nos dois. Contra a versão anterior do seed, os dois testes falham.
 
 ## Pendências da revisão
 
@@ -58,5 +61,5 @@ Animais fora do seed e os já tocados pela aplicação nunca entram. O seed info
 ## Riscos residuais e itens para a equipe
 
 - **Interceptor de autorização (FS-9):** vale para todos os endpoints com `@PreAuthorize`. Um `@PreAuthorize` com argumentos do método é recusado no build e em tempo de execução; se um dia for necessário, a checagem antecipada precisará de outro desenho.
-- **Seed em bancos antigos:** nas execuções seguintes à correção, as fichas `true` corretas do seed anterior continuam com `atualizado_em = criado_em` e são reconferidas (GET + PUT sem escrita) a cada execução. São no máximo 30 chamadas à API, sem alteração de dados.
+- **Seed em bancos antigos:** a correção custa um login (`usuario/LOGIN` na auditoria) na execução que corrige; as seguintes não chamam a API.
 - **Insomnia sem o runner oficial:** não há o CLI do Insomnia (`inso`) no ambiente. Os UnitTests foram executados com um runner temporário (shim de `insomnia.send`/`expect` sobre `fetch`, que lê também as Requests da coleção pelo id), contra backends descartáveis. Convém rodar a coleção no Insomnia antes do merge.

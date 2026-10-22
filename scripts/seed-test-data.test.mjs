@@ -73,27 +73,47 @@ test("o seed produz fichas completas e incompletas (o invariante não passa por 
   assert.ok(rows[0].incompletas > 0, "nenhuma ficha incompleta");
 });
 
-// Por último: altera um animal do seed para simular o banco semeado pela
+async function totalAuditoria() {
+  return (await client.query("SELECT count(*)::int AS n FROM auditoria_evento")).rows[0].n;
+}
+
+async function estadoDoAnimal(id) {
+  return (await client.query("SELECT ficha_completa, atualizado_em FROM animal WHERE id = $1", [id])).rows[0];
+}
+
+test("execução repetida do seed não chama a API nem gera auditoria", async () => {
+  const antes = await totalAuditoria();
+  const saida = rodarSeed();
+  assert.equal(await totalAuditoria(), antes, "nenhum evento novo (nem usuario/LOGIN)");
+  assert.match(saida, /ficha_corrigida_do_seed_anterior: 0/);
+});
+
+// Por último: altera animais do seed para simular o banco semeado pela
 // versão anterior, que gravava ficha_completa = "tem microchip" direto no
 // INSERT (ficha true sem passar pelo backend, atualizado_em = criado_em).
 test("o seed corrige pela API a ficha gravada pela versão anterior, uma vez só", async () => {
-  const { rows } = await client.query(
-    `SELECT a.id FROM animal a
-      WHERE a.id::text LIKE '40000000-%' AND ${TEM_MICROCHIP} AND NOT ${TEM_VACINA_VIGENTE}
-      ORDER BY a.id LIMIT 1`,
-  );
-  assert.equal(rows.length, 1, "o seed devia ter um animal com microchip e sem vacinação");
-  const id = rows[0].id;
-  await client.query("UPDATE animal SET ficha_completa = true, atualizado_em = criado_em WHERE id = $1", [id]);
+  const doSeed = (condicao) =>
+    client.query(`SELECT a.id FROM animal a WHERE a.id::text LIKE '40000000-%' AND ${condicao} ORDER BY a.id LIMIT 1`);
+  const errada = (await doSeed(`${TEM_MICROCHIP} AND NOT ${TEM_VACINA_VIGENTE}`)).rows[0]?.id;
+  const certa = (await doSeed(`${TEM_MICROCHIP} AND ${TEM_VACINA_VIGENTE}`)).rows[0]?.id;
+  assert.ok(errada, "o seed devia ter um animal com microchip e sem vacinação");
+  assert.ok(certa, "o seed devia ter um animal com microchip e vacinação");
+  // Errada: completa sem vacina. Certa: completa com vacina, nunca tocada.
+  await client.query("UPDATE animal SET ficha_completa = true, atualizado_em = criado_em WHERE id = ANY($1::uuid[])", [
+    [errada, certa],
+  ]);
+  const certaAntes = await estadoDoAnimal(certa);
 
   const primeira = rodarSeed();
-  const depois = (await client.query("SELECT ficha_completa, atualizado_em FROM animal WHERE id = $1", [id])).rows[0];
-  assert.equal(depois.ficha_completa, false);
+  const erradaDepois = await estadoDoAnimal(errada);
+  assert.equal(erradaDepois.ficha_completa, false);
   assert.match(primeira, /ficha_corrigida_do_seed_anterior: [1-9]/);
+  assert.deepEqual(await estadoDoAnimal(certa), certaAntes, "a ficha certa não deve ser regravada");
 
+  const auditoriaAntes = await totalAuditoria();
   const segunda = rodarSeed();
-  const deNovo = (await client.query("SELECT ficha_completa, atualizado_em FROM animal WHERE id = $1", [id])).rows[0];
-  assert.equal(deNovo.ficha_completa, false);
-  assert.deepEqual(deNovo.atualizado_em, depois.atualizado_em, "a segunda execução não deve tocar no animal");
+  assert.equal(await totalAuditoria(), auditoriaAntes, "a segunda execução não deve gerar auditoria");
+  assert.deepEqual(await estadoDoAnimal(errada), erradaDepois, "a segunda execução não deve tocar no animal");
+  assert.deepEqual(await estadoDoAnimal(certa), certaAntes);
   assert.match(segunda, /ficha_corrigida_do_seed_anterior: 0/);
 });

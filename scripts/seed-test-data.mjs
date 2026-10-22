@@ -301,25 +301,26 @@ async function criarVacinacoesPelaApi(client) {
 }
 
 // Bancos semeados pela versão anterior deste seed: ela gravava
-// ficha_completa = "tem microchip" direto no INSERT, e esse valor nunca
-// passou pelo backend. Ficha gravada assim é reconhecida pela origem, não
-// pela regra: animal do seed (id fixo) com ficha_completa = true e
-// atualizado_em = criado_em. Toda passagem pela aplicação muda atualizado_em
-// (a edição; a vacinação, quando completa a ficha), e este seed só deixa a
-// ficha true por meio de vacinação pela API. Para cada um, GET + PUT com os
-// mesmos valores: o AnimalService recalcula pelo FichaCompletaService. Ficha
-// errada vira false, o registro muda e sai da seleção. Ficha que já estava
-// certa continua true: o PUT não altera nada (o Hibernate não grava nem muda
-// atualizado_em), e ela volta a ser conferida, sem escrita, nas próximas
-// execuções. Devolve só as fichas que mudaram. Animais fora do seed e os já
-// tocados pela aplicação nunca entram.
+// ficha_completa = "tem microchip" direto no INSERT, sem passar pelo
+// backend, e assim marcava completo animal com microchip e sem vacinação.
+// Seleciona exatamente essa assinatura: animal do seed (id fixo) com
+// ficha_completa = true, nunca tocado pela aplicação (atualizado_em =
+// criado_em: toda edição, e a vacinação que completa a ficha, mudam
+// atualizado_em) e sem nenhuma vacinação. Para cada um, GET + PUT com os
+// mesmos valores: o AnimalService recalcula pelo FichaCompletaService (o
+// valor é sempre o do backend). A ficha muda, o registro sai da seleção, e a
+// execução seguinte não acha nada. Sem candidatos, o seed nem faz login: nenhuma
+// chamada à API, nenhum evento de auditoria (o login gera usuario/LOGIN).
+// Animais fora do seed e os já tocados pela aplicação nunca entram.
 async function recalcularFichasDoSeedAnterior(client) {
   const { rows } = await client.query(
-    `SELECT id FROM animal
-      WHERE id = ANY($1::uuid[]) AND ficha_completa AND atualizado_em = criado_em
-      ORDER BY id`,
+    `SELECT a.id FROM animal a
+      WHERE a.id = ANY($1::uuid[]) AND a.ficha_completa AND a.atualizado_em = a.criado_em
+        AND NOT EXISTS (SELECT 1 FROM vacinacao v WHERE v.animal_id = a.id)
+      ORDER BY a.id`,
     [ANIMAIS.map((animal) => animal.id)],
   );
+  if (rows.length === 0) return 0;
   const token = await tokenDe(USUARIOS[1].id); // Veterinário: GESTAO_ANIMAIS:escrita
   let corrigidas = 0;
   for (const { id } of rows) {
