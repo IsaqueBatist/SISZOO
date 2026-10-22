@@ -22,12 +22,12 @@ import org.postgresql.util.PSQLException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-// Exercita a V21 (T35-19: codigo de resultado_laboratorial imutavel) num
-// schema proprio, no padrao de MigracaoV20PositivoDefinitivoIT. Sem a V21,
-// renomear "positivo" por SQL contornaria o trigger da V20.
-class MigracaoV21CatalogoResultadoIT extends AbstractIntegrationTest {
+// Exercita a V22 (T35-19: codigo de resultado_laboratorial imutavel) num
+// schema proprio, no padrao de MigracaoV21PositivoDefinitivoIT. Sem a V22,
+// renomear "positivo" por SQL contornaria o trigger da V21.
+class MigracaoV22CatalogoResultadoIT extends AbstractIntegrationTest {
 
-    private static final String SCHEMA = "migracao_v21";
+    private static final String SCHEMA = "migracao_v22";
     private static final String S = SCHEMA + ".";
     private static final String CONSTRAINT = "ck_resultado_laboratorial_codigo_imutavel";
 
@@ -43,18 +43,18 @@ class MigracaoV21CatalogoResultadoIT extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("[T35-19] V21 aplica do zero sobre V1-V20")
-    void v21DeveAplicarDoZero() {
-        MigrateResult resultado = migrarAte("21");
+    @DisplayName("[T35-19] V22 aplica do zero sobre V1-V21")
+    void v22DeveAplicarDoZero() {
+        MigrateResult resultado = migrarAte("22");
 
         assertThat(resultado.success, equalTo(true));
-        assertThat(resultado.targetSchemaVersion, equalTo("21"));
+        assertThat(resultado.targetSchemaVersion, equalTo("22"));
     }
 
     @Test
-    @DisplayName("[T35-19] V21 recusa renomear o codigo por SQL, inclusive o positivo e a troca entre dois codigos")
-    void v21RecusaAlterarCodigo() throws Exception {
-        migrarAte("21");
+    @DisplayName("[T35-19] V22 recusa renomear o codigo por SQL, inclusive o positivo e a troca entre dois codigos")
+    void v22RecusaAlterarCodigo() throws Exception {
+        migrarAte("22");
 
         assertViolacao(transacao("UPDATE " + S + "resultado_laboratorial SET codigo = 'positivo_antigo'"
                 + " WHERE codigo = 'positivo'"));
@@ -73,9 +73,9 @@ class MigracaoV21CatalogoResultadoIT extends AbstractIntegrationTest {
     // So o codigo e imutavel: nome e ativo continuam alteraveis, e um UPDATE
     // que regrava o mesmo codigo (ex.: SET codigo = codigo) nao dispara.
     @Test
-    @DisplayName("[T35-19] V21 aceita alterar nome e ativo e regravar o mesmo codigo")
-    void v21AceitaAlterarNomeEAtivo() throws Exception {
-        migrarAte("21");
+    @DisplayName("[T35-19] V22 aceita alterar nome e ativo e regravar o mesmo codigo")
+    void v22AceitaAlterarNomeEAtivo() throws Exception {
+        migrarAte("22");
 
         assertThat(transacao("UPDATE " + S + "resultado_laboratorial SET nome = 'Positivo (reagente)', ativo = false,"
                 + " codigo = codigo WHERE codigo = 'positivo'"), nullValue());
@@ -84,17 +84,17 @@ class MigracaoV21CatalogoResultadoIT extends AbstractIntegrationTest {
                 + " WHERE codigo = 'positivo'", String.class), equalTo("Positivo (reagente)"));
     }
 
-    // Antes da V21 o banco aceitava o renome: e o contorno que a V21 fecha.
+    // Antes da V22 o banco aceitava o renome: e o contorno que a V22 fecha.
     @Test
-    @DisplayName("[T35-19] ate a V20 o renome do codigo era aceito (contorno fechado pela V21)")
-    void v20AceitavaRenomearCodigo() throws Exception {
-        migrarAte("20");
+    @DisplayName("[T35-19] ate a V21 o renome do codigo era aceito (contorno fechado pela V22)")
+    void v21AceitavaRenomearCodigo() throws Exception {
+        migrarAte("21");
 
         assertThat(transacao("UPDATE " + S + "resultado_laboratorial SET codigo = 'positivo_antigo'"
                 + " WHERE codigo = 'positivo'"), nullValue());
     }
 
-    // ── Apoio (como em MigracaoV20PositivoDefinitivoIT) ──
+    // ── Apoio (como em MigracaoV21PositivoDefinitivoIT) ──
 
     private MigrateResult migrarAte(String versao) {
         return Flyway.configure()

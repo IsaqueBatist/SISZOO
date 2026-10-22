@@ -123,7 +123,7 @@ emailService.enviar(
 - Dispara depois do commit do lançamento `positivo` (`NotificacaoResultadoListener`,
   `@Async` + `AFTER_COMMIT`). Se a transação for desfeita, nada é enviado.
 - **Uma vez por processo:** o `positivo` é definitivo e não pode ser corrigido
-  (422 na API, trigger da V20). Por isso, só existe um lançamento `positivo` por
+  (422 na API, trigger da V21). Por isso, só existe um lançamento `positivo` por
   processo, e o lançamento em si nunca reenvia (`docs/decisoes/T35.md` T35-15).
 - **Registro:** quando o SMTP aceita o e-mail, o callback do future grava
   `processo_sanitario.data_notificacao_municipe` com o relógio do projeto

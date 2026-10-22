@@ -110,7 +110,7 @@ public class ProcessoSanitario {
     @Column(columnDefinition = "text")
     private String observacoes;
 
-    // T35/#37 (V20): quando o SMTP aceitou o e-mail de resultado positivo ao
+    // T35/#37 (V21): quando o SMTP aceitou o e-mail de resultado positivo ao
     // municipe. Gravada uma vez so, por registrarNotificacaoMunicipe.
     @Column(name = "data_notificacao_municipe")
     @Setter(AccessLevel.NONE)

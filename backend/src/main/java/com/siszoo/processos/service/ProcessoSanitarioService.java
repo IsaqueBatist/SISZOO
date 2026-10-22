@@ -508,7 +508,7 @@ public class ProcessoSanitarioService {
 
     // Como RN-C02: so o vigente (ainda nao corrigido) do mesmo processo.
     // T35-15: positivo e definitivo — nao se corrige (422), para nenhum
-    // resultado; o trigger da V20 recusa o mesmo no banco.
+    // resultado; o trigger da V21 recusa o mesmo no banco.
     private ResultadoProcesso resultadoACorrigir(ProcessoSanitario processo, UUID retificaId) {
         if (processo.getStatusProcesso() != StatusProcesso.COM_RESULTADO) {
             throw new CorrecaoResultadoNaoPermitidaException();

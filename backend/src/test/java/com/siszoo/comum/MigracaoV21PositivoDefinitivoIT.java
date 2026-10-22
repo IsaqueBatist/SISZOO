@@ -24,13 +24,13 @@ import org.postgresql.util.PSQLException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-// Exercita a V20 (T35-15/T35-16: positivo definitivo e data do envio da
+// Exercita a V21 (T35-15/T35-16: positivo definitivo e data do envio da
 // notificacao) num schema proprio, no padrao de MigracaoV15ResultadoProcessoIT:
 // coluna nova e nula, trigger que recusa a correcao de um positivo por SQL
 // direto (o service recusa antes, com 422) e dados anteriores intactos.
-class MigracaoV20PositivoDefinitivoIT extends AbstractIntegrationTest {
+class MigracaoV21PositivoDefinitivoIT extends AbstractIntegrationTest {
 
-    private static final String SCHEMA = "migracao_v20";
+    private static final String SCHEMA = "migracao_v21";
     private static final String S = SCHEMA + ".";
 
     @Autowired
@@ -45,12 +45,12 @@ class MigracaoV20PositivoDefinitivoIT extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("[T35-16] V20 aplica do zero e cria data_notificacao_municipe timestamp sem fuso e anulavel")
-    void v20DeveAplicarDoZero() {
-        MigrateResult resultado = migrarAte("20");
+    @DisplayName("[T35-16] V21 aplica do zero e cria data_notificacao_municipe timestamp sem fuso e anulavel")
+    void v21DeveAplicarDoZero() {
+        MigrateResult resultado = migrarAte("21");
 
         assertThat(resultado.success, equalTo(true));
-        assertThat(resultado.targetSchemaVersion, equalTo("20"));
+        assertThat(resultado.targetSchemaVersion, equalTo("21"));
         Map<String, Object> coluna = jdbcTemplate.queryForMap("SELECT data_type, is_nullable"
                 + " FROM information_schema.columns WHERE table_schema = ? AND table_name = 'processo_sanitario'"
                 + " AND column_name = 'data_notificacao_municipe'", SCHEMA);
@@ -59,9 +59,9 @@ class MigracaoV20PositivoDefinitivoIT extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("[T35-15] V20 recusa por SQL a correcao de um positivo, para negativo ou positivo")
-    void v20RecusaCorrecaoDePositivo() throws Exception {
-        migrarAte("20");
+    @DisplayName("[T35-15] V21 recusa por SQL a correcao de um positivo, para negativo ou positivo")
+    void v21RecusaCorrecaoDePositivo() throws Exception {
+        migrarAte("21");
         UUID usuario = inserirUsuario();
         UUID processo = processoEm("AGUARDANDO_RESULTADO", usuario);
         UUID positivo = UUID.randomUUID();
@@ -77,9 +77,9 @@ class MigracaoV20PositivoDefinitivoIT extends AbstractIntegrationTest {
     // A correcao dos demais resultados continua valendo, inclusive para
     // positivo; o positivo resultante passa a ser definitivo.
     @Test
-    @DisplayName("[T35-15] V20 aceita corrigir negativo para positivo; o positivo resultante nao se corrige")
-    void v20AceitaCorrecaoDeOutroResultado() throws Exception {
-        migrarAte("20");
+    @DisplayName("[T35-15] V21 aceita corrigir negativo para positivo; o positivo resultante nao se corrige")
+    void v21AceitaCorrecaoDeOutroResultado() throws Exception {
+        migrarAte("21");
         UUID usuario = inserirUsuario();
         UUID processo = processoEm("AGUARDANDO_RESULTADO", usuario);
         UUID negativo = UUID.randomUUID();
@@ -93,10 +93,10 @@ class MigracaoV20PositivoDefinitivoIT extends AbstractIntegrationTest {
     }
 
     // Linhas existentes nao mudam: uma correcao de positivo gravada antes da
-    // V20 (a API aceitava) fica no historico, e a migration nao falha.
+    // V21 (a API aceitava) fica no historico, e a migration nao falha.
     @Test
-    @DisplayName("[T35-15] V20 sobre historico com positivo ja corrigido: aplica e preserva as linhas")
-    void v20PreservaHistoricoAnterior() throws Exception {
+    @DisplayName("[T35-15] V21 sobre historico com positivo ja corrigido: aplica e preserva as linhas")
+    void v21PreservaHistoricoAnterior() throws Exception {
         migrarAte("19");
         UUID usuario = inserirUsuario();
         UUID processo = processoEm("AGUARDANDO_RESULTADO", usuario);
@@ -104,7 +104,7 @@ class MigracaoV20PositivoDefinitivoIT extends AbstractIntegrationTest {
         assertThat(transacao(resultado(positivo, processo, null, "positivo", usuario),
                 resultado(UUID.randomUUID(), processo, positivo, "negativo", usuario)), nullValue());
 
-        MigrateResult resultado = migrarAte("20");
+        MigrateResult resultado = migrarAte("21");
 
         assertThat(resultado.success, equalTo(true));
         assertThat(contarResultados(), equalTo(2));
