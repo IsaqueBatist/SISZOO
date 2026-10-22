@@ -80,7 +80,9 @@ describe('Logs', () => {
 
     await user.selectOptions(screen.getByLabelText('Filtrar por ação'), 'LOGIN')
 
-    expect(await screen.findByText('Filtro aplicado aos 1 eventos desta página (de 50 no total).')).toBeInTheDocument()
+    // F2-027: o filtro é aplicado no servidor (o handler fixo deste teste devolve a
+    // mesma página; a passagem local garante a página exibida).
+    expect(await screen.findByText('Filtro aplicado em toda a trilha: 50 evento(s) encontrado(s), 1 nesta página.')).toBeInTheDocument()
     expect(screen.queryByText('b@itu.sp.gov.br', { selector: 'strong' })).not.toBeInTheDocument()
   })
 
@@ -133,7 +135,9 @@ describe('Logs', () => {
 
     await user.selectOptions(screen.getByLabelText('Filtrar por módulo'), 'Usuários e Acesso')
 
-    expect(await screen.findByText('Filtro aplicado aos 1 eventos desta página (de 50 no total).')).toBeInTheDocument()
+    // F2-027: o filtro é aplicado no servidor (o handler fixo deste teste devolve a
+    // mesma página; a passagem local garante a página exibida).
+    expect(await screen.findByText('Filtro aplicado em toda a trilha: 50 evento(s) encontrado(s), 1 nesta página.')).toBeInTheDocument()
     expect(screen.queryByText('b@itu.sp.gov.br', { selector: 'strong' })).not.toBeInTheDocument()
   })
 })

@@ -11,5 +11,8 @@ public record AuditoriaEventoResponse(
         AcaoAuditoria acao,
         String entidade,
         UUID entidadeId,
-        LocalDateTime ocorreuEm) {
+        LocalDateTime ocorreuEm,
+        // F2-027: estado antes/depois (JSON serializado) para a tela de Logs.
+        String payloadAntes,
+        String payloadDepois) {
 }

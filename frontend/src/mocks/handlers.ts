@@ -1475,11 +1475,27 @@ export const handlers = [
     return HttpResponse.json(comStatus, { status: 201 })
   }),
 
+  // F2-027: catálogo de filtros (toda a trilha) e filtros de servidor na listagem.
+  http.get(`${API_BASE_URL}/auditoria/filtros`, () =>
+    HttpResponse.json({
+      acoes: [...new Set(auditoriaMock.map((e) => e.acao))].sort(),
+      entidades: [...new Set(auditoriaMock.map((e) => e.entidade))].sort(),
+      usuarios: [...new Set(auditoriaMock.map((e) => e.usuarioEmail).filter((e): e is string => Boolean(e)))].sort(),
+      modulos: ['USUARIOS_ACESSO', 'GESTAO_ANIMAIS', 'OCORRENCIAS_DENUNCIAS', 'PROCESSOS_SANITARIOS', 'RELATORIOS'],
+    }),
+  ),
+
   http.get(`${API_BASE_URL}/auditoria`, ({ request }) => {
     const url = new URL(request.url)
     const pagina = Number(url.searchParams.get('pagina') ?? '0')
     const tamanho = Number(url.searchParams.get('tamanho') ?? '20')
-    return HttpResponse.json(paginar(auditoriaMock, pagina, tamanho))
+    const acao = url.searchParams.get('acao')
+    const entidade = url.searchParams.get('entidade')
+    const usuarioEmail = url.searchParams.get('usuarioEmail')
+    const filtrados = auditoriaMock.filter(
+      (e) => (!acao || e.acao === acao) && (!entidade || e.entidade === entidade) && (!usuarioEmail || e.usuarioEmail === usuarioEmail),
+    )
+    return HttpResponse.json(paginar(filtrados, pagina, tamanho))
   }),
 
   http.get(`${API_BASE_URL}/medicamentos`, ({ request }) => {

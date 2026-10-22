@@ -3,7 +3,7 @@ import { Icon } from '@/components/layout/Icon'
 import { ErroComRetry } from '@/components/layout/ErroComRetry'
 import { Skeleton } from '@/components/layout/Skeleton'
 import { formatarHora } from '@/features/ocorrencias/utils/datas'
-import { useEventosAuditoriaQuery } from '../hooks/useAuditoria'
+import { useEventosAuditoriaQuery, useOpcoesFiltroAuditoriaQuery } from '../hooks/useAuditoria'
 import { agruparPorDia } from '../utils/agruparPorDia'
 import { agruparPorModulo } from '../utils/agruparPorModulo'
 import { descricaoAcao, type TomAcao } from '../utils/descricaoAcao'
@@ -58,23 +58,49 @@ export function Logs() {
   const [usuarioFiltro, setUsuarioFiltro] = useState('')
   const [moduloFiltro, setModuloFiltro] = useState<Modulo | ''>('')
 
-  const { data, isLoading, isError, refetch } = useEventosAuditoriaQuery(pagina, TAMANHO_PAGINA)
+  // F2-027 (Fase 3 do TG): os filtros vão ao servidor (GET /api/auditoria com
+  // acao/entidade/usuarioEmail/modulo) e valem para toda a trilha, não só para
+  // a página carregada. Trocar um filtro volta à primeira página.
+  const filtros = useMemo(
+    () => ({ acao: acaoFiltro, entidade: entidadeFiltro, usuarioEmail: usuarioFiltro, modulo: moduloFiltro }),
+    [acaoFiltro, entidadeFiltro, usuarioFiltro, moduloFiltro],
+  )
+  const { data, isLoading, isError, refetch } = useEventosAuditoriaQuery(pagina, TAMANHO_PAGINA, filtros)
+  const { data: opcoes } = useOpcoesFiltroAuditoriaQuery()
+
+  function aplicarFiltro<T>(definir: (valor: T) => void) {
+    return (valor: T) => {
+      definir(valor)
+      setPagina(0)
+    }
+  }
+  const definirAcao = aplicarFiltro(setAcaoFiltro)
+  const definirEntidade = aplicarFiltro(setEntidadeFiltro)
+  const definirUsuario = aplicarFiltro(setUsuarioFiltro)
+  const definirModulo = aplicarFiltro(setModuloFiltro)
 
   // Memoizado: `data?.itens ?? []` cria um array novo a cada render enquanto
   // `data` está undefined, o que quebraria a identidade estável exigida
   // pelos useMemo abaixo.
   const itens = useMemo(() => data?.itens ?? [], [data])
-  const acoesDisponiveis = useMemo(() => valoresUnicos(itens.map((e) => e.acao)), [itens])
-  const entidadesDisponiveis = useMemo(() => valoresUnicos(itens.map((e) => e.entidade)), [itens])
+  // Opções: catálogo do servidor (toda a trilha); enquanto não carrega, os
+  // valores da página atual (mesmo comportamento anterior).
+  const acoesDisponiveis = useMemo(() => opcoes?.acoes ?? valoresUnicos(itens.map((e) => e.acao)), [opcoes, itens])
+  const entidadesDisponiveis = useMemo(
+    () => opcoes?.entidades ?? valoresUnicos(itens.map((e) => e.entidade)),
+    [opcoes, itens],
+  )
   const usuariosDisponiveis = useMemo(
-    () => valoresUnicos(itens.map((e) => e.usuarioEmail).filter((email): email is string => Boolean(email))),
-    [itens],
+    () => opcoes?.usuarios ?? valoresUnicos(itens.map((e) => e.usuarioEmail).filter((email): email is string => Boolean(email))),
+    [opcoes, itens],
   )
   const modulosDisponiveis = useMemo(
-    () => valoresUnicos(itens.map((e) => moduloDaEntidade(e.entidade))),
-    [itens],
+    () => (opcoes?.modulos as Modulo[] | undefined) ?? valoresUnicos(itens.map((e) => moduloDaEntidade(e.entidade))),
+    [opcoes, itens],
   )
 
+  // Defesa local: o servidor já filtra; esta passagem só garante a consistência
+  // da página exibida (e mantém o comportamento quando a API ignora um parâmetro).
   const eventosFiltrados = itens.filter((evento) => {
     const combinaAcao = !acaoFiltro || evento.acao === acaoFiltro
     const combinaEntidade = !entidadeFiltro || evento.entidade === entidadeFiltro
@@ -101,7 +127,7 @@ export function Logs() {
           className="filter-select"
           aria-label="Filtrar por ação"
           value={acaoFiltro}
-          onChange={(event) => setAcaoFiltro(event.target.value)}
+          onChange={(event) => definirAcao(event.target.value)}
         >
           <option value="">Ação: Todas</option>
           {acoesDisponiveis.map((acao) => (
@@ -114,7 +140,7 @@ export function Logs() {
           className="filter-select"
           aria-label="Filtrar por entidade"
           value={entidadeFiltro}
-          onChange={(event) => setEntidadeFiltro(event.target.value)}
+          onChange={(event) => definirEntidade(event.target.value)}
         >
           <option value="">Entidade: Todas</option>
           {entidadesDisponiveis.map((entidade) => (
@@ -127,7 +153,7 @@ export function Logs() {
           className="filter-select"
           aria-label="Filtrar por usuário"
           value={usuarioFiltro}
-          onChange={(event) => setUsuarioFiltro(event.target.value)}
+          onChange={(event) => definirUsuario(event.target.value)}
         >
           <option value="">Usuário: Todos</option>
           {usuariosDisponiveis.map((email) => (
@@ -140,7 +166,7 @@ export function Logs() {
           className="filter-select"
           aria-label="Filtrar por módulo"
           value={moduloFiltro}
-          onChange={(event) => setModuloFiltro(event.target.value as Modulo | '')}
+          onChange={(event) => definirModulo(event.target.value as Modulo | '')}
         >
           <option value="">Módulo: Todos</option>
           {modulosDisponiveis.map((modulo) => (
@@ -153,7 +179,7 @@ export function Logs() {
 
       {filtroAtivo && data && (
         <p className="subtitle" style={{ marginBottom: 'var(--space-3)' }}>
-          Filtro aplicado aos {eventosFiltrados.length} eventos desta página (de {data.totalItens} no total).
+          Filtro aplicado em toda a trilha: {data.totalItens} evento(s) encontrado(s), {eventosFiltrados.length} nesta página.
         </p>
       )}
 

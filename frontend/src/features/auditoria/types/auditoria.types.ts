@@ -22,4 +22,25 @@ export interface EventoAuditoria {
   entidade: string
   entidadeId: string | null
   ocorreuEm: string
+  // F2-027: estado antes/depois (JSON serializado pelo backend); opcionais.
+  payloadAntes?: string | null
+  payloadDepois?: string | null
+}
+
+// F2-027: filtros aplicados no servidor (GET /api/auditoria?acao=&entidade=&usuarioEmail=&modulo=&de=&ate=).
+export interface FiltrosAuditoria {
+  acao?: string
+  entidade?: string
+  usuarioEmail?: string
+  modulo?: string
+  de?: string
+  ate?: string
+}
+
+// Espelha com.siszoo.usuarios.dto.OpcoesFiltroAuditoriaResponse (GET /api/auditoria/filtros).
+export interface OpcoesFiltroAuditoria {
+  acoes: AcaoAuditoria[]
+  entidades: string[]
+  usuarios: string[]
+  modulos: string[]
 }
