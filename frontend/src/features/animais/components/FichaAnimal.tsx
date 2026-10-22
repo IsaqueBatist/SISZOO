@@ -8,6 +8,7 @@ import { AbaHistorico } from './AbaHistorico'
 import { AbaMedicamentos } from './AbaMedicamentos'
 import { AbaProcedimentos } from './AbaProcedimentos'
 import { AbaVacinas } from './AbaVacinas'
+import { AnexosAnimal } from './AnexosAnimal'
 import './FichaAnimal.css'
 import { badgeDeEspecie, badgeDeStatus } from '../utils/statusBadge'
 import { useAnimalQuery } from '../hooks/useAnimais'
@@ -224,6 +225,9 @@ export function FichaAnimal() {
               </div>
             </div>
           </div>
+
+          {/* F2-007 / RF-A04: documentos e fotos do animal (Quadro 69). */}
+          <AnexosAnimal animalId={id} podeEscrever={podeEscrever} />
         </div>
 
         <div className="right-panel">
@@ -261,7 +265,7 @@ export function FichaAnimal() {
                 {tab === 'medicamentos' && (
                   <AbaMedicamentos animalId={id} onRegistroCriado={handleRegistroCriado} />
                 )}
-                {tab === 'exames' && <AbaExames />}
+                {tab === 'exames' && <AbaExames animalId={id} onRegistroCriado={handleRegistroCriado} />}
               </div>
             </div>
           </div>

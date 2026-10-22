@@ -17,6 +17,10 @@ import com.siszoo.animais.repository.EspecieRepository;
 import com.siszoo.animais.repository.MotivoEntradaRepository;
 import com.siszoo.animais.repository.StatusAnimalRepository;
 import com.siszoo.animais.repository.TipoBaiaRepository;
+import com.siszoo.animais.clinico.entity.TipoExame;
+import com.siszoo.animais.clinico.repository.TipoExameRepository;
+import com.siszoo.processos.entity.Laboratorio;
+import com.siszoo.processos.repository.LaboratorioRepository;
 
 @Service
 public class CatalogoAnimalService {
@@ -30,12 +34,20 @@ public class CatalogoAnimalService {
             EspecieRepository especieRepository,
             StatusAnimalRepository statusAnimalRepository,
             MotivoEntradaRepository motivoEntradaRepository,
-            TipoBaiaRepository tipoBaiaRepository) {
+            TipoBaiaRepository tipoBaiaRepository,
+            TipoExameRepository tipoExameRepository,
+            LaboratorioRepository laboratorioRepository) {
         this.especieRepository = especieRepository;
         this.statusAnimalRepository = statusAnimalRepository;
         this.motivoEntradaRepository = motivoEntradaRepository;
         this.tipoBaiaRepository = tipoBaiaRepository;
+        this.tipoExameRepository = tipoExameRepository;
+        this.laboratorioRepository = laboratorioRepository;
     }
+
+    // F2-007 / RF-A04: catalogos do registro de exame.
+    private final TipoExameRepository tipoExameRepository;
+    private final LaboratorioRepository laboratorioRepository;
 
     @Transactional(readOnly = true)
     public CatalogosAnimalResponse listar() {
@@ -43,7 +55,9 @@ public class CatalogoAnimalService {
                 mapear(especieRepository.findAll(), Especie::getCodigo, Especie::getNome),
                 mapear(statusAnimalRepository.findAll(), StatusAnimal::getCodigo, StatusAnimal::getNome),
                 mapear(motivoEntradaRepository.findAll(), MotivoEntrada::getCodigo, MotivoEntrada::getNome),
-                mapear(tipoBaiaRepository.findAll(), TipoBaia::getCodigo, TipoBaia::getNome));
+                mapear(tipoBaiaRepository.findAll(), TipoBaia::getCodigo, TipoBaia::getNome),
+                mapear(tipoExameRepository.findByAtivoTrueOrderByNomeAsc(), TipoExame::getCodigo, TipoExame::getNome),
+                mapear(laboratorioRepository.findByAtivoTrueOrderByNomeAsc(), Laboratorio::getCodigo, Laboratorio::getNome));
     }
 
     private <T> List<CatalogoItemResponse> mapear(List<T> entidades, Function<T, String> codigo, Function<T, String> nome) {

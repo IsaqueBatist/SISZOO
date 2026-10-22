@@ -1,9 +1,11 @@
 import { http } from '@/lib/http'
 import type { PaginaResponse } from '@/features/usuarios/types/usuarios.types'
 import type {
+  CriarExameRequest,
   CriarPrescricaoRequest,
   CriarProcedimentoRequest,
   CriarVacinacaoRequest,
+  Exame,
   Medicamento,
   Prescricao,
   Procedimento,
@@ -28,6 +30,15 @@ export function listarProcedimentos(animalId: string, pagina: number, tamanho: n
 
 export function criarProcedimento(payload: CriarProcedimentoRequest): Promise<Procedimento> {
   return http.post<Procedimento>('/procedimentos', payload).then((response) => response.data)
+}
+
+// F2-007 / RF-A04: exames (GET/POST /api/exames; registro imutável, correção por retificaId).
+export function listarExames(animalId: string, pagina: number, tamanho: number): Promise<PaginaResponse<Exame>> {
+  return http.get<PaginaResponse<Exame>>('/exames', { params: { animalId, pagina, tamanho } }).then((response) => response.data)
+}
+
+export function criarExame(payload: CriarExameRequest): Promise<Exame> {
+  return http.post<Exame>('/exames', payload).then((response) => response.data)
 }
 
 export function listarPrescricoes(animalId: string, pagina: number, tamanho: number): Promise<PaginaResponse<Prescricao>> {

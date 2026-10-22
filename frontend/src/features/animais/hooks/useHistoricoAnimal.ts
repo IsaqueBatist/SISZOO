@@ -1,14 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  criarExame,
   criarPrescricao,
   criarProcedimento,
   criarVacinacao,
+  listarExames,
   listarMedicamentosAtivos,
   listarPrescricoes,
   listarProcedimentos,
   listarVacinacoes,
 } from '../api/historicoApi'
-import type { CriarPrescricaoRequest, CriarProcedimentoRequest, CriarVacinacaoRequest } from '../types/historico.types'
+import type { CriarExameRequest, CriarPrescricaoRequest, CriarProcedimentoRequest, CriarVacinacaoRequest } from '../types/historico.types'
 
 // Tamanho de página padrão das abas Vacinas/Procedimentos/Medicamentos —
 // também usado pelo merge k-way de `useTimelineAnimal` para reaproveitar as
@@ -55,6 +57,28 @@ export function usePrescricoesQuery(animalId: string, pagina: number, tamanho: n
     queryFn: () => listarPrescricoes(animalId, pagina, tamanho),
     enabled: Boolean(animalId),
     placeholderData: (dadosAnteriores) => dadosAnteriores,
+  })
+}
+
+// F2-007 / RF-A04
+export function chaveExames(animalId: string, pagina: number) {
+  return ['exames', animalId, 'pagina', pagina] as const
+}
+
+export function useExamesQuery(animalId: string, pagina: number, tamanho: number = TAMANHO_PAGINA_HISTORICO) {
+  return useQuery({
+    queryKey: chaveExames(animalId, pagina),
+    queryFn: () => listarExames(animalId, pagina, tamanho),
+    enabled: Boolean(animalId),
+    placeholderData: (dadosAnteriores) => dadosAnteriores,
+  })
+}
+
+export function useCriarExameMutation(animalId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: CriarExameRequest) => criarExame(payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['exames', animalId] }),
   })
 }
 

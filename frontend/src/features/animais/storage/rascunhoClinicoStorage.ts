@@ -6,7 +6,7 @@ import { armazenamentoRascunho, chaveComEscopo } from '@/lib/rascunhoDb'
 
 const DEBOUNCE_MS = 800
 
-export type TipoRascunhoClinico = 'vacina' | 'procedimento' | 'prescricao'
+export type TipoRascunhoClinico = 'vacina' | 'procedimento' | 'prescricao' | 'exame'
 
 // '<usuarioId>:<tipo>:<animalId>[:<retificaId>]'
 export function chaveRascunhoClinico(

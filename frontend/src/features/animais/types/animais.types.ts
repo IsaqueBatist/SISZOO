@@ -52,6 +52,22 @@ export interface CatalogosAnimal {
   status: CatalogoItem[]
   motivosEntrada: CatalogoItem[]
   tiposBaia: CatalogoItem[]
+  // F2-007 / RF-A04: catálogos do registro de exame (aditivos; opcionais para fixtures antigas)
+  tiposExame?: CatalogoItem[]
+  laboratorios?: CatalogoItem[]
+}
+
+// F2-007 / RF-A04 — espelha com.siszoo.animais.dto.AnexoAnimalResponse.
+export interface AnexoAnimal {
+  id: string
+  animalId: string
+  nome: string
+  mimeType: string
+  tamanho: number
+  descricao: string | null
+  criadoPorId: string | null
+  criadoPorNome: string | null
+  criadoEm: string
 }
 
 // Espelha com.siszoo.animais.dto.BaiaResponse.

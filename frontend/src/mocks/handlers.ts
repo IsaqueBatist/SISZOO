@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw'
 import type { AlertaVacinalAnimal, AlertaVacinalItem } from '@/features/alertas/types/alertas.types'
-import type { Animal, AnimalRequest, Baia, BaiaRequest, CatalogosAnimal } from '@/features/animais/types/animais.types'
+import type { Animal, AnimalRequest, AnexoAnimal, Baia, BaiaRequest, CatalogosAnimal } from '@/features/animais/types/animais.types'
+import type { CriarExameRequest, Exame } from '@/features/animais/types/historico.types'
 import { VACINAS, TIPOS_PROCEDIMENTO } from '@/features/animais/utils/catalogoClinico'
 import { DIAS_ANTECEDENCIA_ALERTA_VACINA, diasAteVencimento, hojeEmItu } from '@/features/animais/utils/regrasVacina'
 import { adicionarDiasIso, agoraEmItu } from '@/lib/datas'
@@ -566,6 +567,15 @@ const CATALOGOS_ANIMAIS_MOCK: CatalogosAnimal = {
     { codigo: 'entrega_voluntaria', nome: 'Entrega voluntária' },
     { codigo: 'apreensao', nome: 'Apreensão' },
   ],
+  tiposExame: [
+    { codigo: 'hemograma', nome: 'Hemograma' },
+    { codigo: 'raspado_pele', nome: 'Raspado de pele' },
+    { codigo: 'sorologia', nome: 'Sorologia' },
+  ],
+  laboratorios: [
+    { codigo: 'ial_sorocaba', nome: 'Instituto Adolfo Lutz - Sorocaba' },
+    { codigo: 'pasteur_sp', nome: 'Instituto Pasteur' },
+  ],
   tiposBaia: [
     { codigo: 'canil', nome: 'Canil' },
     { codigo: 'gatil', nome: 'Gatil' },
@@ -903,6 +913,15 @@ function seedProcedimentosMock(): ProcedimentoMockInterno[] {
 }
 
 let procedimentosMock: ProcedimentoMockInterno[] = seedProcedimentosMock()
+
+// F2-007 / RF-A04: exames e anexos do animal (vazios por padrão; os testes semeiam o que precisam).
+type ExameMockInterno = Omit<Exame, 'retificadoPorId' | 'statusRegistro'>
+let examesMock: ExameMockInterno[] = []
+let anexosAnimalMock: AnexoAnimal[] = []
+export function resetExamesEAnexosMock() {
+  examesMock = []
+  anexosAnimalMock = []
+}
 
 export function resetProcedimentosMock() {
   procedimentosMock = seedProcedimentosMock()
@@ -1415,6 +1434,67 @@ export const handlers = [
       .filter((item) => !animalId || item.animalId === animalId)
       .sort((a, b) => (a.data < b.data ? 1 : -1))
     return HttpResponse.json(paginar(filtrados, pagina, tamanho))
+  }),
+
+  // F2-007 / RF-A04: exames (registro imutável, correção por retificaId).
+  http.get(`${API_BASE_URL}/exames`, ({ request }) => {
+    const url = new URL(request.url)
+    const animalId = url.searchParams.get('animalId')
+    const pagina = Number(url.searchParams.get('pagina') ?? '0')
+    const tamanho = Number(url.searchParams.get('tamanho') ?? '20')
+    const filtrados = derivarStatusRegistro(examesMock).filter((e) => !animalId || e.animalId === animalId)
+    return HttpResponse.json(paginar(filtrados, pagina, tamanho))
+  }),
+
+  http.post(`${API_BASE_URL}/exames`, async ({ request }) => {
+    const body = (await request.json()) as CriarExameRequest
+    const novo: ExameMockInterno = {
+      id: crypto.randomUUID(),
+      animalId: body.animalId,
+      tipoExameCodigo: body.tipoExame,
+      tipoExameNome: CATALOGOS_ANIMAIS_MOCK.tiposExame?.find((item) => item.codigo === body.tipoExame)?.nome ?? body.tipoExame,
+      laboratorioCodigo: body.laboratorio ?? null,
+      laboratorioNome: CATALOGOS_ANIMAIS_MOCK.laboratorios?.find((item) => item.codigo === body.laboratorio)?.nome ?? null,
+      solicitadoPorId: usuariosMock[0].id,
+      solicitadoPorNome: `${usuariosMock[0].nome} ${usuariosMock[0].sobrenome}`,
+      dataSolicitacao: body.dataSolicitacao,
+      dataResultado: body.dataResultado ?? null,
+      resultado: body.resultado ?? null,
+      observacoes: body.observacoes ?? null,
+      retificaId: body.retificaId ?? null,
+      criadoEm: agoraEmItu(),
+    }
+    examesMock = [...examesMock, novo]
+    const [comStatus] = derivarStatusRegistro([novo])
+    return HttpResponse.json(comStatus, { status: 201 })
+  }),
+
+  // F2-007 / RF-A04: anexos do animal (metadados; download devolve bytes).
+  http.get(`${API_BASE_URL}/animais/:id/anexos`, ({ params }) => {
+    return HttpResponse.json(anexosAnimalMock.filter((a) => a.animalId === params.id))
+  }),
+
+  http.post(`${API_BASE_URL}/animais/:id/anexos`, async ({ params, request }) => {
+    const formulario = await request.formData()
+    const arquivo = formulario.get('arquivo') as File | null
+    if (!arquivo) return HttpResponse.json({ mensagem: 'Anexo invalido' }, { status: 422 })
+    const novo: AnexoAnimal = {
+      id: crypto.randomUUID(),
+      animalId: String(params.id),
+      nome: arquivo.name,
+      mimeType: arquivo.type || 'application/octet-stream',
+      tamanho: arquivo.size,
+      descricao: (formulario.get('descricao') as string | null) ?? null,
+      criadoPorId: usuariosMock[0].id,
+      criadoPorNome: `${usuariosMock[0].nome} ${usuariosMock[0].sobrenome}`,
+      criadoEm: agoraEmItu(),
+    }
+    anexosAnimalMock = [...anexosAnimalMock, novo]
+    return HttpResponse.json(novo, { status: 201 })
+  }),
+
+  http.get(`${API_BASE_URL}/animais/:id/anexos/:anexoId`, () => {
+    return new HttpResponse(new Uint8Array([0x89, 0x50, 0x4e, 0x47]), { headers: { 'Content-Type': 'image/png' } })
   }),
 
   http.post(`${API_BASE_URL}/procedimentos`, async ({ request }) => {

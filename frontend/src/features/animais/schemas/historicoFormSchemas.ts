@@ -38,6 +38,37 @@ export const procedimentoFormSchema = z.object({
 
 export type ProcedimentoFormValues = z.infer<typeof procedimentoFormSchema>
 
+// F2-007 / RF-A04 — espelha com.siszoo.animais.clinico.dto.CriarExameRequest. Regras
+// entre campos (resultado ⇄ data do resultado; resultado ≥ solicitação) também
+// valem no ExameService, que devolve 422 por campo.
+export const exameFormSchema = z
+  .object({
+    tipoExame: z.string().min(1, 'Selecione o tipo de exame.'),
+    laboratorio: z.string().optional(),
+    dataSolicitacao: z
+      .string()
+      .min(1, 'Informe a data da solicitação.')
+      .refine((data) => data <= hojeEmItu(), 'A data da solicitação não pode ser futura.'),
+    dataResultado: z.string().optional(),
+    resultado: z.string().trim().max(4000, 'Máximo de 4000 caracteres.').optional(),
+    observacoes: z.string().trim().max(2000, 'Máximo de 2000 caracteres.').optional(),
+  })
+  .superRefine((dados, ctx) => {
+    const temResultado = Boolean(dados.resultado)
+    const temData = Boolean(dados.dataResultado)
+    if (temResultado !== temData) {
+      ctx.addIssue({ code: 'custom', path: [temResultado ? 'dataResultado' : 'resultado'], message: 'Informe o resultado e a data do resultado juntos.' })
+    }
+    if (dados.dataResultado && dados.dataResultado > hojeEmItu()) {
+      ctx.addIssue({ code: 'custom', path: ['dataResultado'], message: 'A data do resultado não pode ser futura.' })
+    }
+    if (dados.dataResultado && dados.dataSolicitacao && dados.dataResultado < dados.dataSolicitacao) {
+      ctx.addIssue({ code: 'custom', path: ['dataResultado'], message: 'A data do resultado não pode ser anterior à solicitação.' })
+    }
+  })
+
+export type ExameFormValues = z.infer<typeof exameFormSchema>
+
 // Campos espelham com.siszoo.animais.clinico.dto.CriarPrescricaoRequest.
 // Data futura é aceita (início programado é legítimo); as regras entre datas
 // e status são as do PrescricaoService. Datas vazias chegam como ''.

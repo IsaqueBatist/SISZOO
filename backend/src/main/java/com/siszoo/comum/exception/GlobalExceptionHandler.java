@@ -16,6 +16,11 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
+import com.siszoo.animais.clinico.exception.ExameNaoEncontradoException;
+import com.siszoo.animais.clinico.exception.TipoExameInvalidoException;
+import com.siszoo.animais.exception.AnexoAnimalInvalidoException;
+import com.siszoo.animais.exception.AnexoAnimalNaoEncontradoException;
+import com.siszoo.animais.exception.LimiteAnexosAnimalAtingidoException;
 import com.siszoo.animais.clinico.exception.CategoriaFarmacologicaInvalidaException;
 import com.siszoo.animais.clinico.exception.CategoriaFarmacologicaJaCadastradaException;
 import com.siszoo.animais.clinico.exception.DataAplicacaoFuturaException;
@@ -270,6 +275,37 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroResponse> handleTipoProcedimentoInvalido() {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
                 .body(new ErroResponse("Tipo de procedimento informado nao existe"));
+    }
+
+    // F2-007 / RF-A04: exames e anexos do animal.
+    @ExceptionHandler(ExameNaoEncontradoException.class)
+    public ResponseEntity<ErroResponse> handleExameNaoEncontrado() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErroResponse("Exame nao encontrado"));
+    }
+
+    @ExceptionHandler(TipoExameInvalidoException.class)
+    public ResponseEntity<ErroResponse> handleTipoExameInvalido() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Tipo de exame informado nao existe"));
+    }
+
+    @ExceptionHandler(AnexoAnimalInvalidoException.class)
+    public ResponseEntity<ErroResponse> handleAnexoAnimalInvalido() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Anexo deve ser JPG, PNG ou PDF com ate 5 MB"));
+    }
+
+    @ExceptionHandler(AnexoAnimalNaoEncontradoException.class)
+    public ResponseEntity<ErroResponse> handleAnexoAnimalNaoEncontrado() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErroResponse("Anexo nao encontrado"));
+    }
+
+    @ExceptionHandler(LimiteAnexosAnimalAtingidoException.class)
+    public ResponseEntity<ErroResponse> handleLimiteAnexosAnimalAtingido() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Limite de 10 anexos por animal atingido"));
     }
 
     @ExceptionHandler(MedicamentoInvalidoException.class)

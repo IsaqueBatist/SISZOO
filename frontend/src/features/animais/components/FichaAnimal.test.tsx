@@ -82,7 +82,7 @@ describe('FichaAnimal', () => {
     expect(await screen.findByText('Fenobarbital 30mg')).toBeInTheDocument()
 
     await user.click(screen.getByRole('tab', { name: /exames/i }))
-    expect(await screen.findByText(/estarão disponíveis em uma versão futura/i)).toBeInTheDocument()
+    expect(await screen.findByText('Nenhum exame registrado')).toBeInTheDocument()
   })
 
   it('destaca vacina vencida, a vencer e em dia com o badge correto', async () => {

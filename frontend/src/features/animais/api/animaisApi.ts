@@ -1,6 +1,6 @@
 import { http } from '@/lib/http'
 import type { PaginaResponse } from '@/features/usuarios/types/usuarios.types'
-import type { Animal, AnimaisFiltro, AnimalRequest, Baia, BaiaRequest, CatalogosAnimal } from '../types/animais.types'
+import type { Animal, AnimaisFiltro, AnimalRequest, AnexoAnimal, Baia, BaiaRequest, CatalogosAnimal } from '../types/animais.types'
 
 // A tela de Animais só usa a lista de baias para popular o filtro (sem
 // paginação própria) — pedimos uma página grande o bastante para cobrir as
@@ -37,6 +37,25 @@ export function atualizarAnimal(id: string, payload: AnimalRequest): Promise<Ani
 // Sem `ativa` (diferente de `listarBaiasAtivas`): a tela de gestão precisa
 // ver e filtrar também as baias inativas, então traz tudo numa página só e
 // filtra por status em memória, junto com tipo/lotação/busca.
+// F2-007 / RF-A04: anexos do animal (mesmo contrato dos anexos de ocorrência).
+export function listarAnexosAnimal(animalId: string): Promise<AnexoAnimal[]> {
+  return http.get<AnexoAnimal[]>(`/animais/${animalId}/anexos`).then((response) => response.data)
+}
+
+export async function enviarAnexoAnimal(animalId: string, arquivo: File, descricao?: string): Promise<AnexoAnimal> {
+  const formulario = new FormData()
+  formulario.append('arquivo', arquivo)
+  if (descricao) formulario.append('descricao', descricao)
+  const { data } = await http.post<AnexoAnimal>(`/animais/${animalId}/anexos`, formulario)
+  return data
+}
+
+// O download precisa do token: baixa como Blob e quem chama cria/revoga o object URL.
+export async function baixarAnexoAnimal(animalId: string, anexoId: string): Promise<Blob> {
+  const { data } = await http.get<Blob>(`/animais/${animalId}/anexos/${anexoId}`, { responseType: 'blob' })
+  return data
+}
+
 export function listarBaias(): Promise<Baia[]> {
   return http
     .get<PaginaResponse<Baia>>('/baias', { params: { pagina: 0, tamanho: TAMANHO_PAGINA_SEM_UI_DE_PAGINACAO } })

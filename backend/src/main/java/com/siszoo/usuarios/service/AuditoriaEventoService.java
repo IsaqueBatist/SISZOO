@@ -114,7 +114,8 @@ public class AuditoriaEventoService {
     // simplesmente nao aparece no filtro por modulo.
     private static final Map<Modulo, List<String>> ENTIDADES_POR_MODULO = Map.of(
             Modulo.USUARIOS_ACESSO, List.of("usuario", "preferencia_usuario"),
-            Modulo.GESTAO_ANIMAIS, List.of("animal", "baia", "vacinacao", "procedimento", "prescricao", "medicamento"),
+            Modulo.GESTAO_ANIMAIS, List.of("animal", "baia", "vacinacao", "procedimento", "prescricao", "medicamento",
+                    "exame", "anexo_animal"),
             Modulo.OCORRENCIAS_DENUNCIAS, List.of("ocorrencia", "denunciante", "anexo_ocorrencia"),
             Modulo.PROCESSOS_SANITARIOS, List.of("processo_sanitario"),
             Modulo.RELATORIOS, List.of("relatorio_gerado"));
