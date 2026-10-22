@@ -97,8 +97,12 @@ class NotificacaoResultadoEmailIT extends AbstractIntegrationTest {
         String html = (String) partes.getBodyPart(1).getContent();
         assertThat(texto, equalTo("Ola, <b>Ana</b> Responsavel.\n\n"
                 + "O resultado laboratorial do processo sanitario " + protocolo
-                + " foi registrado pelo Centro de Controle de Zoonoses de Itu.\n"
-                + "Entre em contato com o CCZ para mais informacoes.\n"));
+                + " foi registrado como positivo pelo Centro de Controle de Zoonoses de Itu.\n"
+                + "Entre em contato com o CCZ para mais informacoes.\n\n"
+                + "CCZ \"Sao Francisco de Assis\"\n"
+                + "Avenida Sete Quedas, 1038 - Vila Progresso\n"
+                + "Fone: (11) 4023-1505 / WhatsApp: (11) 93231-9925\n"
+                + "Segunda a sexta, das 8h as 17h\n"));
         assertThat(html, containsString("Ola, <span>&lt;b&gt;Ana&lt;/b&gt; Responsavel</span>."));
         assertThat(html, not(containsString("<b>Ana</b>")));
         assertThat(html, containsString("<strong>" + protocolo + "</strong>"));

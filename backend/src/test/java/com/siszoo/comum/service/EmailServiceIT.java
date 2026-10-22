@@ -136,8 +136,12 @@ class EmailServiceIT extends AbstractIntegrationTest {
         // Quebras normalizadas: com core.autocrlf, o .txt pode estar em CRLF
         // num checkout Windows (inofensivo no e-mail, que trafega em CRLF).
         assertThat(texto.replace("\r\n", "\n"), equalTo("Ola, <script>alert(1)</script> Ana.\n\n"
-                + "O resultado laboratorial do processo sanitario 007/2026 foi registrado pelo Centro de Controle de Zoonoses de Itu.\n"
-                + "Entre em contato com o CCZ para mais informacoes.\n"));
+                + "O resultado laboratorial do processo sanitario 007/2026 foi registrado como positivo pelo Centro de Controle de Zoonoses de Itu.\n"
+                + "Entre em contato com o CCZ para mais informacoes.\n\n"
+                + "CCZ \"Sao Francisco de Assis\"\n"
+                + "Avenida Sete Quedas, 1038 - Vila Progresso\n"
+                + "Fone: (11) 4023-1505 / WhatsApp: (11) 93231-9925\n"
+                + "Segunda a sexta, das 8h as 17h\n"));
 
         emailService.enviar(DESTINATARIO, "Resultado 007/2026", html, texto)
                 .get(ESPERA_MS, MILLISECONDS);

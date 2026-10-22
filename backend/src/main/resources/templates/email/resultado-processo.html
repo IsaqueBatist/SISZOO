@@ -1,20 +1,95 @@
 <!DOCTYPE html>
 <!--/*
-  T35: modelo inicial do e-mail da notificacao de resultado positivo (T36,
-  issue #37; NotificacaoResultadoService). Mesmo texto que a T36 enviava em
-  texto puro. NAO e comunicacao oficial aprovada pelo CCZ.
-  Variaveis: nome, protocolo. th:text escapa HTML. Este comentario nao sai
-  no e-mail (comentario de parser do Thymeleaf). Versao em texto puro:
-  resultado-processo.txt.
+  T35: modelo do e-mail da notificacao de resultado positivo (T36, issue
+  #37; NotificacaoResultadoService). Redesenhado com as cores e a
+  tipografia do design system do SISZOO (docs/prototipo/design-system.html
+  e tokens.css). NAO e comunicacao oficial aprovada pelo CCZ.
+  "Positivo" esta fixo no texto (nao e variavel): regra 19 do DER so
+  dispara esta notificacao quando o resultado vigente e positivo
+  (RESULTADO_QUE_NOTIFICA em ProcessoSanitarioService/NotificacaoResultadoService),
+  entao o template nunca precisa descrever outro resultado. A cor do card
+  do protocolo usa a mesma paleta do badge "positivo" do app (vermelho/danger,
+  components.css .badge-positive), nao a verde: verde no design system
+  identifica "negativo".
+  Variaveis: nome, protocolo. th:text escapa HTML — os elementos que
+  recebem nome/protocolo nao levam nenhum outro atributo, de proposito:
+  EmailServiceIT e NotificacaoResultadoEmailIT conferem o HTML escapado
+  por essas tags exatas ("Ola, <span>...</span>." e "<strong>...</strong>").
+  Layout em tabelas (compatibilidade com Outlook/clientes de e-mail, que
+  nao suportam flex/grid) e estilo inline (muitos clientes removem <style>
+  do <head>). A pata do cabecalho e um SVG embutido (data URI, branco, mesmo
+  desenho do icone paw do design system/icons.js) em vez do emoji de pata:
+  o emoji depende da fonte do cliente de e-mail e em alguns renderiza em
+  preto/monocromatico sobre o verde do cabecalho, sem contraste (2026-10-22).
+  Endereco e telefones do CCZ: fixos no rodape, extraidos de
+  https://itu.sp.gov.br/saude/zoonoses/ (2026-10-22), sem variavel nova.
+  Este comentario nao sai no e-mail (comentario de parser do Thymeleaf).
+  Versao em texto puro: resultado-processo.txt.
 */-->
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SISZOO</title>
 </head>
-<body>
-<p>Ola, <span th:text="${nome}">Nome</span>.</p>
-<p>O resultado laboratorial do processo sanitario <strong th:text="${protocolo}">000/0000</strong> foi registrado pelo Centro de Controle de Zoonoses de Itu.<br>
-Entre em contato com o CCZ para mais informacoes.</p>
+<body style="margin:0; padding:0; background-color:#F4F6F8;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F4F6F8;">
+<tr>
+<td align="center" style="padding:32px 16px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px; background-color:#FFFFFF; border:1px solid #E0E4EA; border-radius:10px; overflow:hidden;">
+
+<tr>
+<td style="background-color:#1B5E20; padding:24px 32px;">
+<table role="presentation" cellpadding="0" cellspacing="0"><tr>
+<td style="vertical-align:middle; padding-right:8px;"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjRkZGRkZGIj48Y2lyY2xlIGN4PSI2IiBjeT0iOSIgcj0iMiIvPjxjaXJjbGUgY3g9IjEwIiBjeT0iNSIgcj0iMiIvPjxjaXJjbGUgY3g9IjE0IiBjeT0iNSIgcj0iMiIvPjxjaXJjbGUgY3g9IjE4IiBjeT0iOSIgcj0iMiIvPjxwYXRoIGQ9Ik0xMiAxMWMtMyAwLTUgMi41LTUgNSAwIDIgMS41IDMgMyAzIDEgMCAxLjUtLjUgMi0uNXMxIC41IDIgLjVjMS41IDAgMy0xIDMtMyAwLTIuNS0yLTUtNS01eiIvPjwvc3ZnPgo=" width="22" height="22" alt="" style="display:block;"></td>
+<td style="vertical-align:middle; font-family:Arial, Helvetica, sans-serif; font-size:20px; font-weight:700; color:#FFFFFF;">SISZOO</td>
+</tr></table>
+<div style="font-family:Arial, Helvetica, sans-serif; font-size:12px; color:#C8E6C9; margin-top:4px;">Centro de Controle de Zoonoses de Itu</div>
+</td>
+</tr>
+
+<tr>
+<td style="padding:32px;">
+<p style="margin:0 0 16px; font-family:Arial, Helvetica, sans-serif; font-size:15px; line-height:1.6; color:#1A2332;">Ola, <span th:text="${nome}">Nome</span>.</p>
+<p style="margin:0 0 24px; font-family:Arial, Helvetica, sans-serif; font-size:14px; line-height:1.6; color:#1A2332;">O resultado laboratorial do processo sanitario abaixo foi registrado como <strong>positivo</strong> pelo Centro de Controle de Zoonoses de Itu.</p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#FFEBEE; border-radius:10px; margin:0 0 24px;">
+<tr>
+<td style="padding:16px 20px;">
+<div style="font-family:Arial, Helvetica, sans-serif; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#C62828; font-weight:700;">Processo sanitario · Resultado positivo</div>
+<div style="font-family:'Courier New', Courier, monospace; font-size:22px; font-weight:700; color:#C62828; margin-top:4px;"><strong th:text="${protocolo}">000/0000</strong></div>
+</td>
+</tr>
+</table>
+
+<p style="margin:0 0 16px; font-family:Arial, Helvetica, sans-serif; font-size:14px; line-height:1.6; color:#1A2332;">Entre em contato com o CCZ para mais informacoes.</p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F9FAFB; border:1px solid #E0E4EA; border-radius:10px;">
+<tr>
+<td style="padding:16px 20px;">
+<div style="font-family:Arial, Helvetica, sans-serif; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#5A6A7E; font-weight:700; margin-bottom:8px;">Contato</div>
+<div style="font-family:Arial, Helvetica, sans-serif; font-size:13px; line-height:1.7; color:#1A2332;">
+CCZ &quot;S&atilde;o Francisco de Assis&quot;<br>
+Avenida Sete Quedas, 1038 &ndash; Vila Progresso<br>
+Fone: (11) 4023-1505 &middot; WhatsApp: (11) 93231-9925<br>
+Segunda a sexta, das 8h &agrave;s 17h
+</div>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+
+<tr>
+<td style="padding:0 32px 28px;">
+<hr style="border:none; border-top:1px solid #E0E4EA; margin:0 0 16px;">
+<p style="margin:0; font-family:Arial, Helvetica, sans-serif; font-size:12px; line-height:1.5; color:#9AAABB;">Esta e uma mensagem automatica do SISZOO — Sistema de Gestao do CCZ de Itu. Nao e necessario responder este e-mail.</p>
+</td>
+</tr>
+
+</table>
+</td>
+</tr>
+</table>
 </body>
 </html>
