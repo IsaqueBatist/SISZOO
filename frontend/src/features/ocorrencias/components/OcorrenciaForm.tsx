@@ -26,7 +26,8 @@ import {
   salvarRascunhoOcorrencia,
 } from '../storage/rascunhoOcorrenciaStorage'
 import { iconeDeTipo, labelDeTipo } from '../utils/statusBadge'
-import { formatarHora, hojeIso } from '../utils/datas'
+import { hojeEmItu } from '@/lib/datas'
+import { formatarHora } from '../utils/datas'
 import { formatarProtocoloOcorrencia } from '../utils/protocolo'
 import { useAtualizarOcorrenciaMutation, useCriarOcorrenciaMutation } from '../hooks/useOcorrencias'
 import { useAnexosPendentes } from '../hooks/useAnexosPendentes'
@@ -38,7 +39,7 @@ const DENUNCIANTE_VAZIO = { nome: '', cpf: '', telefone: '', email: '', cep: '',
 function valoresVazios(): OcorrenciaFormValues {
   return {
     tipoOcorrencia: 'zoonose',
-    dataAbertura: hojeIso(),
+    dataAbertura: hojeEmItu(),
     horaAbertura: '',
     endereco: '',
     bairro: '',

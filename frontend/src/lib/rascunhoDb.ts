@@ -5,13 +5,15 @@
 // 'siszoo-rascunhos' na versão 1, cada um criando a PRÓPRIA store no
 // onupgradeneeded. Esse evento só dispara quando a versão sobe — então, no
 // navegador real, só a store do primeiro formulário aberto existia e os
-// outros rascunhos falhavam em silêncio. Aqui a versão é 2 e o upgrade cria
-// todas as stores de uma vez; para incluir uma store nova, acrescente o nome
-// em STORES_RASCUNHO e suba VERSAO_BANCO.
+// outros rascunhos falhavam em silêncio. O upgrade cria todas as stores que
+// faltam de uma vez e nunca apaga as existentes; para incluir uma store nova,
+// acrescente o nome em STORES_RASCUNHO e suba VERSAO_BANCO.
+// Versão 3: store 'clinico' (modais de vacina, procedimento, prescrição e de
+// baia). Quem vem da 2 mantém os rascunhos de animais, ocorrências e processos.
 const NOME_BANCO = 'siszoo-rascunhos'
-const VERSAO_BANCO = 2
+const VERSAO_BANCO = 3
 
-export const STORES_RASCUNHO = ['animais', 'ocorrencias', 'processos'] as const
+export const STORES_RASCUNHO = ['animais', 'ocorrencias', 'processos', 'clinico'] as const
 export type StoreRascunho = (typeof STORES_RASCUNHO)[number]
 
 function indexedDbDisponivel(): boolean {
@@ -138,5 +140,25 @@ export async function limparRascunhos(): Promise<void> {
     banco.close()
   } catch {
     // idem
+  }
+}
+
+// Operações de rascunho de uma store, no formato que o hook useRascunho
+// consome. O debounce do salvamento automático fica no agendamento acima.
+export interface ArmazenamentoRascunho<T> {
+  carregar(chave: string): Promise<T | null>
+  agendarSalvar(chave: string, valores: T): void
+  salvar(chave: string, valores: T): Promise<void>
+  remover(chave: string): Promise<void>
+  cancelarAgendado?(chave: string): void
+}
+
+export function armazenamentoRascunho<T>(store: StoreRascunho, debounceMs: number): ArmazenamentoRascunho<T> {
+  return {
+    carregar: (chave) => carregarRascunho<T>(store, chave),
+    agendarSalvar: (chave, valores) => agendarSalvarRascunho(store, chave, valores, debounceMs),
+    salvar: (chave, valores) => salvarRascunho(store, chave, valores),
+    remover: (chave) => removerRascunho(store, chave),
+    cancelarAgendado: (chave) => cancelarSalvamentoAgendado(store, chave),
   }
 }

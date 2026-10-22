@@ -1,4 +1,4 @@
-import { hojeIso } from '@/features/ocorrencias/utils/datas'
+import { hojeEmItu } from '@/lib/datas'
 import type { EventoAuditoria } from '../types/auditoria.types'
 
 export interface GrupoEventosPorDia {
@@ -7,8 +7,8 @@ export interface GrupoEventosPorDia {
 }
 
 // `ocorreuEm` chega sem fuso, já no horário local do CCZ (America/Sao_Paulo)
-// — mesmo formato de LocalDateTime documentado em
-// features/ocorrencias/utils/datas.ts. Fatiar a string em vez de
+// — mesmo formato de LocalDateTime documentado em lib/datas.ts. Fatiar a
+// string em vez de
 // `new Date(ocorreuEm)`: o construtor de Date interpretaria essa string sem
 // fuso como horário LOCAL DO NAVEGADOR/MÁQUINA DE TESTE, não de São Paulo —
 // o mesmo bug que aquele util já documenta e evita.
@@ -38,7 +38,7 @@ function rotuloDoDia(dataIso: string, hoje: string, ontem: string): string {
 // segura porque o formato é sempre "AAAA-MM-DDTHH:mm:ss..."), sem assumir
 // que o backend já devolve nessa ordem.
 export function agruparPorDia(eventos: EventoAuditoria[]): GrupoEventosPorDia[] {
-  const hoje = hojeIso()
+  const hoje = hojeEmItu()
   const ontem = ontemIso()
 
   const ordenados = [...eventos].sort((a, b) => (a.ocorreuEm < b.ocorreuEm ? 1 : -1))

@@ -4,7 +4,7 @@
 
 > Documento de referência derivado das **15 telas + Design System** do protótipo navegável. Use-o para comparar com seu schema atual e validar cobertura.
 
-> **Estado do schema (V15).** As tabelas de usuários/acesso, animais, baias, registros clínicos (`vacinacao`, `procedimento`, `prescricao`), ocorrências (§3.4), processo sanitário (§3.5, exceto `documento_processo`) e seus catálogos estão descritas aqui **como existem nas migrations** (`backend/src/main/resources/db/migration`, V1–V15; a V11 só corrige a matriz de permissões, §3.1, a V12 só acrescenta a ação de auditoria `VISUALIZACAO`, §3.8, a V13 completa o processo sanitário, T29, a V14 cria o histórico de resultados, T34, e a V15 completa as garantias desse histórico e reconcilia o legado da D18). As demais (relatórios, `adocao`, `exame`, anexos de animal, `documento_processo`) ainda **não têm tabela**: são o modelo-alvo, a validar na implementação de cada módulo.
+> **Estado do schema (V18).** As tabelas de usuários/acesso, animais, baias, registros clínicos (`vacinacao`, `procedimento`, `prescricao`), ocorrências (§3.4), processo sanitário (§3.5, exceto `documento_processo`) e seus catálogos estão descritas aqui **como existem nas migrations** (`backend/src/main/resources/db/migration`, V1–V18; a V11 só corrige a matriz de permissões, §3.1, a V12 só acrescenta a ação de auditoria `VISUALIZACAO`, §3.8, a V13 completa o processo sanitário, T29, a V14 cria o histórico de resultados, T34, a V15 completa as garantias desse histórico e reconcilia o legado da D18, a V16 normaliza o microchip, §3.2, a V17 recusa a exclusão de registros críticos, §3.2 e §3.5, e a V18 recalcula `ficha_completa` dos animais existentes, §3.2). As demais (relatórios, `adocao`, `exame`, anexos de animal, `documento_processo`) ainda **não têm tabela**: são o modelo-alvo, a validar na implementação de cada módulo.
 
 **Convenções**
 
@@ -230,14 +230,14 @@ A feature `geral` gera a autoridade do módulo inteiro (`MODULO:leitura|escrita|
 | `peso_kg`               | decimal(5,2)        | ?      |                                                                                     |
 | `idade_aprox`           | varchar(30)         | ?      | livre ("3 anos", "~6 meses")                                                        |
 | `data_nascimento_aprox` | date                | ?      |                                                                                     |
-| `microchip`             | varchar(30)         | ?      | Único quando informado                                                              |
+| `microchip`             | varchar(30)         | ?      | Único quando informado (índice único parcial `uq_animal_microchip … WHERE microchip IS NOT NULL`, V16). Normalizado no servidor no cadastro, na edição e na busca: sem espaços; vazio = NULL |
 | `esterilizado`          | boolean             | \*     | default `false`                                                                     |
 | `data_esterilizacao`    | date                | ?      |                                                                                     |
 | `status_id`             | FK `status_animal`  | \*     |                                                                                     |
 | `motivo_entrada_id`     | FK `motivo_entrada` | \*     |                                                                                     |
 | `data_entrada`          | timestamp           | \*     |                                                                                     |
 | `baia_id`               | FK `baia`           | ?      | NULL se em trânsito                                                                 |
-| `ficha_completa`        | boolean             | \*     | calculado: todos campos obrigatórios + microchip + ao menos 1 vacina                |
+| `ficha_completa`        | boolean             | \*     | calculado: todos campos obrigatórios + microchip + ao menos 1 vacina (ver regras)   |
 | `foto_url`              | text                | ?      |                                                                                     |
 | `observacoes`           | text                | ?      |                                                                                     |
 | `criado_por_id`         | FK `usuario`        | \*     |                                                                                     |
@@ -247,7 +247,9 @@ A feature `geral` gera a autoridade do módulo inteiro (`MODULO:leitura|escrita|
 **Regras**
 
 - Animal só sai do canil via `adocao` ou `obito` (status_animal).
-- `baia_id` deve apontar para baia com `atual_ocupacao < capacidade` (verificado no save; alerta gerado se ultrapassar).
+- `baia_id` deve apontar para baia **ativa** com `atual_ocupacao < capacidade`. Implementado em `AnimalService#resolverBaia` (409 "Baia informada esta inativa" / "Baia informada ja atingiu a capacidade"), conferido **só quando o animal passa a ocupar a baia**: cadastro, troca de baia ou volta à custódia, e só se o status novo for de custódia. Quem já ocupa a baia não é barrado por ela ter sido desativada ou ter tido a capacidade reduzida depois (o `BaiaService` permite as duas coisas com animais dentro). Quem passa a ocupar trava a linha da baia (`BaiaRepository#findByIdForUpdate`) até o commit, então cadastros simultâneos não passam da capacidade (`BaiaConcorrenciaIT`). Não há "alerta gerado se ultrapassar": o cadastro é recusado. Decisões: `docs/decisoes/animais-clinico-correcoes.md` (AC-3, AC-4).
+- `ficha_completa` (`FichaCompletaService#calcular`): microchip com texto **e** ao menos uma vacinação que nenhuma outra retifica — equivale a "ao menos 1 vacinação registrada"; não considera validade/vencimento. Recalculada no cadastro e na edição do animal e a cada vacinação. A V18 recalcula os dados existentes (antes, só o microchip contava). Decisão: AC-5.
+- Datas do animal não podem ser futuras (entrada, nascimento, castração); nascimento não pode ser posterior à entrada; data de castração só com `esterilizado = true` (422 com `campos`). Decisão: AC-6.
 
 #### `especie` (catálogo)
 
@@ -266,7 +268,7 @@ A feature `geral` gera a autoridade do módulo inteiro (`MODULO:leitura|escrita|
 
 `recolhimento`, `abandono`, `entrega_voluntaria`, `resgate`, `apreensao_judicial`.
 
-> **Registros clínicos (`vacinacao`, `procedimento`, `prescricao`) são imutáveis.** Não há alteração nem exclusão: uma correção é um registro novo com `retifica_id` apontando para o original, que fica preservado; cada registro aceita uma única retificação (`UNIQUE (retifica_id)` → 409). O autor (`*_por_id`) é nulo só em dado legado e não pode ser removido fisicamente enquanto referenciado (`ON DELETE RESTRICT`, V7). Catálogo completo de regras (RN-C01…RN-C06, RN-A01…): `docs/regras-negocio-clinico.md`.
+> **Registros clínicos (`vacinacao`, `procedimento`, `prescricao`) são imutáveis.** Não há alteração nem exclusão: uma correção é um registro novo com `retifica_id` apontando para o original, que fica preservado; cada registro aceita uma única retificação (`UNIQUE (retifica_id)` → 409). O autor (`*_por_id`) é nulo só em dado legado e não pode ser removido fisicamente enquanto referenciado (`ON DELETE RESTRICT`, V7). **No banco (V17, RN06):** triggers `tg_<tabela>_sem_exclusao` (`BEFORE DELETE`, por linha) e `tg_<tabela>_sem_truncate` (`BEFORE TRUNCATE`, por comando) recusam a exclusão com `check_violation` (23514), para qualquer usuário ou caminho, inclusive SQL manual e `TRUNCATE … CASCADE` de uma tabela-pai. `UPDATE` não é bloqueado no banco: a imutabilidade contra alteração continua garantida só pela aplicação (sem caminho de UPDATE). Catálogo completo de regras (RN-C01…RN-C06, RN-A01…): `docs/regras-negocio-clinico.md`.
 
 #### `vacinacao`
 
@@ -352,6 +354,8 @@ Valores: `atendimento_clinico`, `castracao`, `cirurgia_maior`, `vacinacao`.
 
 `id` uuid PK · `nome` varchar(100) único · `ativo` boolean (default `true`).
 
+Sem seed (nem de medicamento): o CCZ cadastra os reais. `GET /api/categorias-farmacologicas` (só ativas, por nome; `GESTAO_ANIMAIS:leitura`) e `POST` (`GESTAO_ANIMAIS:escrita`, as mesmas permissões de `/api/medicamentos`). O nome é gravado sem espaços nas pontas; nome repetido sem diferenciar maiúsculas responde 409 (o `UNIQUE` do banco diferencia, e em corrida responde o 409 genérico). Não há desativação nem edição de categoria. Decisão: AC-8.
+
 #### `exame`
 
 | Campo              | Tipo             | Obrig. |
@@ -406,7 +410,7 @@ Valores: `atendimento_clinico`, `castracao`, `cirurgia_maior`, `vacinacao`.
 
 **Regras**
 
-- `atual_ocupacao` = `count(animal where baia_id = X and status_animal != 'adotado'/'obito')` — campo computado (view).
+- `atual_ocupacao` = `count(animal where baia_id = X and status fora de StatusAnimal.CODIGOS_FORA_DA_CUSTODIA)` — `adotado`, `obito_natural`, `obito_eutanasia` e `transferido` não ocupam vaga. Não é coluna nem view: é calculado por consulta (`AnimalRepository#countByBaia_IdAndStatus_CodigoNotIn`, `#contarOcupacaoPorBaia`) no `BaiaService` e, ao alocar um animal, no `AnimalService`.
 - Status de superlotação derivado: `atual_ocupacao / capacidade ≥ 1` → `superlotada`; `≥ 0.8` → `proximo_limite`; senão `normal`.
 
 #### `tipo_baia` (catálogo)
@@ -540,7 +544,7 @@ Um `CHECK` amarra cada tipo à sua transição (tabela de regras de `ocorrencia`
 
 #### `processo_sanitario`
 
-> **Estado do schema (V15, T29 e T34).** As tabelas desta seção existem como descritas, exceto `documento_processo` (fica para a task de documentos). A V10 criou a versão mínima de `processo_sanitario` (T25); a V13 acrescentou as colunas do modelo-alvo; a V14 criou `resultado_processo`, o histórico imutável dos resultados (T34); a V15 completou as garantias desse histórico (índice por processo, linha que não corrige a si mesma, `TRUNCATE` recusado) e devolveu a `AGUARDANDO_RESULTADO` os processos que o PATCH provisório da D18 deixou em `COM_RESULTADO` sem resultado. A V13 **só aplica sobre um banco sem processos**: com processos mínimos da T25 (sem doença, laboratório, responsável e amostras), ela para e pede a recriação do banco de desenvolvimento — não há dados reais a preservar (decisão DH-3, `docs/decisoes/T29.md`). Fonte: este DER; o DBML do módulo 4 está desatualizado.
+> **Estado do schema (V17, T29, T34 e RN06).** As tabelas desta seção existem como descritas, exceto `documento_processo` (fica para a task de documentos). A V10 criou a versão mínima de `processo_sanitario` (T25); a V13 acrescentou as colunas do modelo-alvo; a V14 criou `resultado_processo`, o histórico imutável dos resultados (T34); a V15 completou as garantias desse histórico (índice por processo, linha que não corrige a si mesma, `TRUNCATE` recusado) e devolveu a `AGUARDANDO_RESULTADO` os processos que o PATCH provisório da D18 deixou em `COM_RESULTADO` sem resultado; a V17 recusa a exclusão de processo no banco (ver "Sem exclusão" nas regras abaixo). A V13 **só aplica sobre um banco sem processos**: com processos mínimos da T25 (sem doença, laboratório, responsável e amostras), ela para e pede a recriação do banco de desenvolvimento — não há dados reais a preservar (decisão DH-3, `docs/decisoes/T29.md`). Fonte: este DER; o DBML do módulo 4 está desatualizado.
 
 | Campo                       | Tipo                            | Obrig. | Observações                                                                                |
 | --------------------------- | ------------------------------- | ------ | ------------------------------------------------------------------------------------------ |
@@ -561,6 +565,7 @@ Um `CHECK` amarra cada tipo à sua transição (tabela de regras de `ocorrencia`
 | `data_resultado`            | date                            | ?      | data do resultado vigente (idem)                                                           |
 | `desfecho_animal_id`        | FK `desfecho_animal`            | ?      |                                                                                            |
 | `observacoes`               | text                            | ?      |                                                                                            |
+| `data_notificacao_municipe` | timestamp                       | ?      | data/hora (relógio do projeto, America/Sao_Paulo) em que o servidor SMTP **aceitou** o e-mail de resultado positivo ao munícipe (#37, T35, V21). Nulo: sem positivo, sem e-mail cadastrado, envio em andamento ou com falha. Não prova entrega nem leitura. Exposta como `dataNotificacaoMunicipe` no `GET /api/processos/{id}` |
 | `criado_por_id`             | FK `usuario`                    | \*     | `ON DELETE RESTRICT`                                                                       |
 | `criado_em`                 | timestamp                       | \*     |                                                                                            |
 | `atualizado_em`             | timestamp                       | \*     |                                                                                            |
@@ -572,19 +577,22 @@ GAL/SINAN, envio e previsão existem no schema, mas nenhum fluxo os preenche. `r
 - **Criação completa numa requisição** (`POST /api/processos`): processo, `responsavel_processo` e **pelo menos um** `animal_amostrado`, na mesma transação — as etapas do wizard são da interface; o servidor não guarda rascunho. A garantia vale também no banco: constraint triggers adiáveis recusam, no `COMMIT`, processo sem responsável ou sem amostra e a remoção (ou mudança de processo) da última amostra ou do responsável. O service antecipa essa verificação (`SET CONSTRAINTS ALL IMMEDIATE`), e uma violação que chegue ao banco responde 409 genérico.
 - Vínculo com ocorrência é normalmente definido **na etapa 1 do wizard de cadastro**. **Emenda (2026-10-03, decisão de produto)**: se o processo for criado sem vínculo (ou a ocorrência ficar sem processo), o vínculo pode ser definido **uma única vez, depois da criação**, a partir do detalhe de qualquer um dos dois lados — mas só quando **nenhum dos dois** já tiver vínculo. Uma vez que o vínculo existe (definido na criação ou depois), ele fica **bloqueado para edição/troca** — não é possível desfazer nem substituir por outro. Garantias: a entidade só aceita o vínculo uma vez (409), e um trigger da V13 recusa trocar ou remover `ocorrencia_id` já preenchido, para qualquer usuário ou caminho (inclusive SQL manual) — sem exceção para administrador.
 - Vincular processo a ocorrência exige também `OCORRENCIAS_DENUNCIAS:escrita` (D33).
+- **Sem exclusão (RN06, V17).** A aplicação não tem caminho de exclusão de processo, e o banco recusa `DELETE` (trigger por linha `tg_processo_sanitario_sem_exclusao`) e `TRUNCATE` (`tg_processo_sanitario_sem_truncate`, também via `CASCADE`) com `check_violation` (23514), para qualquer usuário ou caminho. Apagar amostras, responsável e processo na mesma transação, que os triggers adiáveis da V13 aceitavam, agora é desfeito por inteiro. Remover uma amostra que não seja a última continua possível no banco (V13). `UPDATE` continua permitido (status e resultado vigente mudam).
 - Quando criado a partir do botão "Abrir Processo Sanitário" dentro da ocorrência, a etapa 1 é pré-preenchida e travada nessa ocorrência (wizard `/processos/novo?ocorrencia=<id>`). O botão só aparece para quem escreve em ocorrências (Administrador e Agente, D33) e só em ocorrência não encerrada e sem processo (D20, 0..1).
 - **Listagem** (`GET /api/processos`): paginada, filtros por código de doença e por status, urgentes primeiro e depois os mais recentes (mesma regra da listagem de ocorrências). A linha e o detalhe trazem `ocorrenciaProtocolo`, para exibir o vínculo sem consultar a ocorrência (que exige acesso ao módulo e audita o sigilo, T26).
 - **Registro do resultado (T34)** — `POST /api/processos/{id}/resultados` com `resultado` (código do catálogo, obrigatório), `dataResultado` (obrigatória, não pode ser futura pelo relógio do projeto — 422, também na correção; sem limite inferior: pode anteceder a `data_abertura`, `docs/decisoes/T34.md` T34-5), `observacoes` (opcional), `retificaId` (só na correção) e `desfechoAnimal` (opcional, T37, código do catálogo — grava direto no processo, fora do histórico imutável). Exige `PROCESSOS_SANITARIOS:escrita` (Administrador, Veterinário e Agente, V3), para registrar e para corrigir.
   - Os cinco resultados lançáveis são `positivo`, `negativo`, `inconclusivo`, `material_inadequado` e `nao_realizado`; todos levam `AGUARDANDO_RESULTADO → COM_RESULTADO`. `aguardando`, código inexistente ou inativo → 422.
   - Sem `retificaId`: só em `AGUARDANDO_RESULTADO`. Em `ABERTO` ou `CONCLUIDO` → 422; em `COM_RESULTADO` (já há resultado) → 409.
   - **Correção** (`retificaId`): só em `COM_RESULTADO` (em `CONCLUIDO`, que é terminal, ou antes do resultado → 422) e não muda o status. `retificaId` precisa ser o resultado vigente do mesmo processo: de outro processo ou inexistente → 422; já corrigido → 409 (como RN-C02). O registro corrigido fica preservado.
+  - **Positivo é definitivo (T35, decisão de 2026-10-21, `docs/decisoes/T35.md` T35-15):** um resultado `positivo` não pode ser corrigido. `retificaId` apontando para um `positivo` → 422, para qualquer resultado novo (inclusive outro `positivo`). Vale também no banco: o trigger `tg_resultado_positivo_definitivo` (V21) recusa a inserção dessa correção para qualquer usuário ou caminho, inclusive SQL manual. A correção dos demais resultados continua valendo, inclusive para `positivo` (ex.: `negativo` → `positivo`). Consequência: cada processo tem **no máximo um** registro `positivo`, e ele é sempre o vigente.
   - Registro, vigente (`resultado_laboratorial_id`, `data_resultado`, status, `desfecho_animal_id`) e auditoria `ATUALIZACAO` de `processo_sanitario` (snapshot com o resultado vigente antes e depois) gravam numa única transação, sob o lock da linha do processo, que serializa lançamentos concorrentes. Uma falha desfaz tudo.
   - Não há edição nem exclusão de resultado (sem PUT/PATCH/DELETE: 405); ver `resultado_processo`.
 - Ao registrar `resultado_laboratorial` = `positivo` (**revisão de 2026-10-17, decisão de produto: `inconclusivo` deixa de notificar**, `docs/decisoes/T34.md` T34-4; a issue #37 ainda cita os dois):
-  - **(T37)** dispara notificação ao munícipe (tentativa real por e-mail, assíncrona — depois do commit, nunca bloqueia o lançamento; sem e-mail cadastrado ou com falha de envio, só loga).
+  - **(T37)** dispara notificação ao munícipe (tentativa real por e-mail, assíncrona — depois do commit, nunca bloqueia o lançamento; sem e-mail cadastrado ou com falha de envio, só loga). Desde a **T35**, o envio passa pelo `EmailService`, com o template `email/resultado-processo` em HTML e texto puro (`docs/email.md`, `docs/decisoes/T35.md`).
   - **(T37)** dispara notificação à **Vigilância Epidemiológica de Itu** — **mockada**: não há endereço real configurado ainda, só loga a intenção.
   - A notificação dispara quando o resultado **vigente passa a** `positivo`, **inclusive por correção** (ex.: `negativo` corrigido para `positivo`), no mesmo ponto único de gravação (`ProcessoSanitarioService.registrarResultado`).
-  - **Pendência (T36):** não há nada previsto para a correção de um `positivo` já notificado (ex.: `positivo` corrigido para `negativo`, ou uma segunda correção que volte a `positivo`). A T37 reenvia a mesma notificação sem diferenciar; a T36 decide se isso precisa de um e-mail de retificação diferente ao munícipe e à Vigilância.
+  - **Uma vez por processo (#37, T35):** como o `positivo` é definitivo, só um lançamento `positivo` existe por processo, e a notificação dispara no máximo uma vez. Não há reenvio, nem por correção (a sequência `positivo` → `negativo` → `positivo`, que o backend aceitava até a T35, deixou de ser possível) nem por retentativa. Por isso a antiga pendência de um "e-mail de retificação" de um `positivo` já notificado não se aplica mais.
+  - **Registro do envio (#37):** quando o servidor SMTP aceita o e-mail, o processo grava `data_notificacao_municipe`, depois do commit do resultado, com um evento de auditoria `ATUALIZACAO` de sistema (`usuario_id` nulo; payload só com `dataNotificacaoMunicipe`, sem dado pessoal). Sem e-mail cadastrado ou com falha de envio, a coluna fica nula e só há o log. Não existe reenvio automático nem manual (pendência em `docs/decisoes/T35.md`).
 - Processo é considerado `urgente` se ao menos 1 `animal_amostrado.contato_humano = true`. Ao vincular, a urgência do processo marca a ocorrência (D31).
 - Auditoria: `CRIACAO` e `ATUALIZACAO` de `processo_sanitario` registram um snapshot **sem nenhum dado pessoal do responsável** (como a D23); as amostras entram.
 
@@ -632,6 +640,8 @@ Não é catálogo: coluna `processo_sanitario.status_processo` varchar + `CHECK`
 
 > **Decidido (T34, fecha a R1 da T29):** "sem resultado" é `resultado_laboratorial_id` **nulo**. O código `aguardando` continua no catálogo (e em `GET /api/processos/catalogos`), mas não é um resultado lançável: o registro o recusa (422).
 
+> **`codigo` imutável (V22, T35):** as regras do processo se apoiam no código (`positivo` notifica e é definitivo, V21; `aguardando` não é lançável). Renomear um código mudaria o sentido de registros já gravados e contornaria o trigger da V21. Por isso o trigger `tg_resultado_laboratorial_codigo_imutavel` recusa `UPDATE` de `codigo` (`check_violation`, `ck_resultado_laboratorial_codigo_imutavel`), para qualquer usuário ou caminho. `nome` e `ativo` continuam alteráveis. Não há API de escrita nesse catálogo, e o seed só insere (V13).
+
 #### `resultado_processo`
 
 > Histórico imutável dos resultados laboratoriais do processo (V14, T34). Cada lançamento é uma linha nova; a correção é outra linha com `retifica_id` apontando para a corrigida, que fica preservada (mesmo mecanismo dos registros clínicos, RN-C02). O vigente é a única linha que nenhuma outra corrige, copiado em `processo_sanitario.resultado_laboratorial_id`/`data_resultado`.
@@ -653,12 +663,13 @@ Não é catálogo: coluna `processo_sanitario.status_processo` varchar + `CHECK`
 - A correção é sempre de um resultado do mesmo processo: FK composta `fk_resultado_processo_retifica (retifica_id, processo_id) → (id, processo_id)`.
 - **Imutável:** triggers recusam `UPDATE` e `DELETE` de qualquer linha (`tg_resultado_processo_imutavel`, V14) e `TRUNCATE` da tabela, direto ou em cascata (`tg_resultado_processo_sem_truncate`, V15), para qualquer usuário ou caminho, inclusive SQL manual (mesmo princípio do vínculo, DH-7). A única saída é o dono da tabela desativar os triggers (`ALTER TABLE … DISABLE TRIGGER`), fora de qualquer fluxo da aplicação. No código, a entidade não tem setters, as colunas ficam fora do UPDATE (`updatable = false`) e o repositório não declara escrita (herda `save`/`delete` de `JpaRepository`; quem barra é o trigger).
 - Índice `ix_resultado_processo_processo_id` (V15) para a leitura do histórico por processo.
+- **Positivo definitivo (V21, T35):** o trigger `tg_resultado_positivo_definitivo` (`BEFORE INSERT`, só em linha com `retifica_id`) recusa a correção de um registro cujo resultado é `positivo` (`check_violation`, constraint `ck_resultado_positivo_definitivo`). Junto com a imutabilidade acima, não há caminho por `INSERT`, `UPDATE`, `DELETE` ou `TRUNCATE` para trocar um `positivo` registrado, e o código do catálogo também é imutável (V22). Contornar exige um privilégio de dono da tabela ou de superusuário: desabilitar ou remover um trigger, ou mudar `session_replication_role` para `replica`.
 
 **Pendências (fora da T34)**
 
 - Motivo obrigatório da correção: não exigido, pendente de decisão do CCZ (como a retificação clínica, `docs/regras-negocio-clinico.md`). `observacoes` é opcional.
 - Desfecho do animal (`desfecho_animal_id`): preenchido pelo mesmo `POST …/resultados` (T37, DH-21), direto no processo e fora deste histórico imutável. Se ele precisa de histórico próprio ou de imutabilidade, e o que fazer numa correção sem desfecho, é decisão pendente do CCZ (`docs/decisoes/T34.md`, T34-11).
-- Notificação: implementada na T37 (regras de `processo_sanitario`); a correção de um `positivo` já notificado é pendência da T36.
+- Notificação: implementada na T37 (regras de `processo_sanitario`). A correção de um `positivo` já notificado deixou de ser possível com o positivo definitivo (T35, V21); não há e-mail de retificação a decidir.
 - Tela de correção de resultado: pendente (DH-28 da T37).
 
 #### `desfecho_animal` (catálogo)
@@ -747,24 +758,35 @@ Um sintoma aparece no máximo uma vez por amostra (a API ignora códigos repetid
 
 #### `relatorio_gerado`
 
-| Campo               | Tipo         | Obrig. | Observações                        |
-| ------------------- | ------------ | ------ | ---------------------------------- |
-| `id`                | uuid PK      | \*     |                                    |
-| `doc_id`            | varchar(30)  | \*     | "DOC-2026-0156" — gerado           |
-| `tipo_relatorio_id` | FK           | \*     |                                    |
-| `periodo_inicio`    | date         | ?      |                                    |
-| `periodo_fim`       | date         | ?      |                                    |
-| `parametros_jsonb`  | jsonb        | ?      | filtros aplicados                  |
-| `gerado_por_id`     | FK `usuario` | \*     |                                    |
-| `gerado_em`         | timestamp    | \*     |                                    |
-| `status`            | enum         | \*     | `processando`, `concluido`, `erro` |
-| `arquivo_url`       | text         | ?      | PDF/CSV final                      |
-| `tamanho_bytes`     | int          | ?      |                                    |
+> **Estado do schema (V20, T41) — diverge do modelo abaixo em 3 pontos, decisão
+> tomada na implementação.** (1) `tipo_relatorio` é `varchar` com `CHECK` dos 6
+> códigos, não FK para uma tabela catálogo: os 6 valores são fixos (cada um
+> exige uma classe de agregação própria no backend) e uma tabela catálogo só
+> para isso seria sobre-engenharia. (2) Sem coluna `status`: uma linha só é
+> gravada quando a exportação (CSV/PDF) termina com sucesso — não há estado
+> intermediário "processando"/"erro" a persistir. (3) `periodo_inicio`/
+> `periodo_fim` são **obrigatórios**: filtros por ano (`anual_processos`) ou
+> por janela relativa (`ocupacao_baias`) são resolvidos para datas concretas
+> antes de salvar. `gerado_em` é `timestamptz`. Fonte: este DER; o DBML do
+> módulo 5 está desatualizado (mesmo aviso já registrado para o módulo 4).
+
+| Campo               | Tipo         | Obrig. | Observações                                          |
+| ------------------- | ------------ | ------ | ----------------------------------------------------- |
+| `id`                | uuid PK      | \*     |                                                       |
+| `doc_id`            | varchar(30)  | \*     | "DOC-2026-0001" — gerado via `ProtocoloService`       |
+| `tipo_relatorio`    | varchar(30)  | \*     | `CHECK`, não FK — ver nota acima                      |
+| `periodo_inicio`    | date         | \*     | resolvido a partir de ano/janela quando aplicável     |
+| `periodo_fim`       | date         | \*     | idem                                                  |
+| `parametros_jsonb`  | jsonb        | ?      | filtros brutos aplicados (tipo, ano, janela)          |
+| `gerado_por_id`     | FK `usuario` | \*     |                                                       |
+| `gerado_em`         | timestamptz  | \*     |                                                       |
+| `arquivo_url`       | text         | ?      | sempre nulo nesta versão (arquivo não é persistido)   |
+| `tamanho_bytes`     | int          | ?      |                                                       |
 
 > **Sem campo de assinatura** (removido do escopo do protótipo).
 > **Sem campos de sugestão / recomendação** — relatórios não auxiliam decisão.
 
-#### `tipo_relatorio` (catálogo)
+#### `tipo_relatorio` (6 códigos fixos, ver nota acima)
 
 `anual_processos`, `vacinacao`, `adocoes`, `procedimentos`, `ocupacao_baias`, `ocorrencias_bairro`.
 
@@ -798,10 +820,21 @@ Um sintoma aparece no máximo uma vez por amostra (a API ignora códigos repetid
 
 - `vacina_vencendo`: `vacinacao` vigente (`VacinacaoRepository#findVigentesParaAlertaVacinal`) com `data_aplicacao + vacina.intervalo_meses` entre hoje e hoje + 7d — regras RN-A01… em `docs/regras-negocio-clinico.md`
 - `sem_avaliacao_30d`: `animal WHERE max(procedimento.data) < now() - 30d`
-- `baia_superlotada`: `baia WHERE atual_ocupacao > capacidade`
+- `baia_superlotada`: `baia WHERE atual_ocupacao >= capacidade` — mesma regra do indicador `superlotada` da tabela `baia` (`BaiaService`, `estadoLotacao` no front) e do 409 de baia sem vaga (RN-AN02): baia cheia já alerta. Decisão FS-8 em `docs/decisoes/ficha-completa-seed-fuso.md`; o alerta ainda não está implementado.
 - `medicacao_ativa`: `prescricao WHERE status = 'ATIVA' AND data_fim_prevista BETWEEN now() AND now() + 7d`
 - `ficha_incompleta`: `animal WHERE ficha_completa = false`
 - `nao_castrado`: `animal WHERE esterilizado = false AND status = 'disponivel_adocao'`
+
+**Implementado (T38)** em `GET /api/dashboard/kpis` (`DashboardService#calcularAlertas`,
+`docs/contratos/dashboard-kpis.md`): `vacina_vencendo`/`vacina_vencida` reaproveitam
+`AlertaVacinalService` (T21) contados por severidade — por isso a resposta tem 7
+entradas (2 severidades de vacina + os outros 5 tipos), não 6. `baia_superlotada`
+usa `ocupacao >= capacidade` (mesmo critério de `BaiaResponse.superlotada`), não
+`>` como o texto acima sugere — mantido assim para as duas telas concordarem
+sobre qual baia está superlotada. Todos os alertas de animal/baia/prescrição
+consideram só quem está sob custódia (`StatusAnimal.CODIGOS_SOB_CUSTODIA`), exceto
+`baia_superlotada` (todas as baias ativas) e `nao_castrado` (literal do DER: só
+`disponivel_adocao`, não todo "sob custódia").
 
 ---
 
@@ -835,7 +868,8 @@ Um sintoma aparece no máximo uma vez por amostra (a API ignora códigos repetid
 - **Falha da auditoria nega a entrega:** o evento é gravado na mesma transação da leitura (detalhe e download não são `readOnly`); se o INSERT falhar, tudo é desfeito e a resposta é 500 sem os dados. Numa transação `readOnly` o INSERT seria descartado sem erro (`FlushMode.MANUAL`) ou recusado pelo PostgreSQL (`25006`) — por isso os dois métodos deixaram de ser `readOnly`.
 - **Significado de `VISUALIZACAO`:** dado **liberado para envio na resposta** — a autorização foi verificada e o evento foi commitado antes de o corpo ser escrito. **Não** é confirmação de que o cliente recebeu ou leu o dado.
 - **Risco residual aceito:** se a entrega falhar depois do commit (cliente que desconecta, erro ao escrever o corpo), o `VISUALIZACAO` permanece registrado sem que o dado tenha chegado. Não há evento compensatório; a escolha preserva a regra principal — nenhum dado sai sem registro.
-- **Lacunas conhecidas (fora da T26):** as respostas de cadastro e edição (`POST`/`PUT`/`PATCH`/encerramento/notas/vínculo) devolvem o denunciante completo a quem tem a permissão e não geram `VISUALIZACAO` (as escritas já geram o próprio evento, exceto notas); `POST /{id}/notas` não gera evento de auditoria; a coluna `ip` não é preenchida.
+- **Respostas de mutação (A04, `docs/decisoes/auditoria-rn.md`):** edição (`PUT`), mudança de status (`PATCH /{id}/status`), encerramento, notas e vínculo de processo devolvem o denunciante de ocorrência sigilosa **sempre mascarado**, para qualquer perfil, e não geram `VISUALIZACAO`; `podeVerDenunciante` continua indicando a permissão. O front recarrega o detalhe depois dessas mutações. O dado completo só sai pelo detalhe e pelo download de anexo.
+- **Lacunas conhecidas:** a resposta do cadastro (`POST /api/ocorrencias`) devolve o denunciante completo a quem tem a permissão, sem `VISUALIZACAO` (quem cadastra acabou de informar o dado); `POST /{id}/notas` não gera evento de auditoria; a coluna `ip` não é preenchida.
 
 ---
 
@@ -867,13 +901,13 @@ Um sintoma aparece no máximo uma vez por amostra (a API ignora códigos repetid
 1. Login somente com e-mail `@itu.sp.gov.br`.
 2. Perfil `recepcionista` **não existe** (fora do escopo).
 3. Admin é o único com acesso a `usuarios` e criação/desativação. Dados de denunciante sigiloso: Administrador e Agente Sanitário (permissão `denunciante_sigiloso`). Veterinário não acessa ocorrências e denúncias (V11).
-4. Sistema é **PT-BR único**; data **DD/MM/AAAA**; fuso **America/São_Paulo** — nenhum desses é configurável.
+4. Sistema é **PT-BR único**; data **DD/MM/AAAA**; fuso **America/São_Paulo** — nenhum desses é configurável. Datas de negócio são `date`/`timestamp` sem fuso (horário de parede do CCZ); o fuso é fixado no `Clock` (`ClockConfig`) e na JVM (`SiszooBackendApplication`, `TZ` do Dockerfile), sem `hibernate.jdbc.time_zone` (AC-1, AC-2).
 
 ### Animais e baias
 
 5. Cada `baia` tem **capacidade própria** (não há valor padrão de sistema).
 6. Animal só pode estar em uma baia ativa de cada vez.
-7. Status `adotado` e `obito_*` removem o animal da contagem de ocupação.
+7. Status `adotado`, `obito_*` e `transferido` removem o animal da contagem de ocupação (`StatusAnimal.CODIGOS_FORA_DA_CUSTODIA`).
 8. Animal com vacina vencida ou prestes a vencer (≤7d) aparece em alertas críticos.
 
 ### Ocorrências
@@ -891,7 +925,7 @@ Um sintoma aparece no máximo uma vez por amostra (a API ignora códigos repetid
 16. Animal amostrado: pode referenciar `animal` do canil OU registrar dados próprios.
 17. Campos clínicos da amostragem (`data_coleta`, `material_biologico`, sintomas, contato humano) são sempre próprios da amostragem — não puxam da ficha.
 18. Contato humano-animal em qualquer amostra → processo marcado urgente.
-19. Resultado `positivo` dispara notificação automática ao munícipe e à **Vigilância Epidemiológica de Itu** (revisão de 2026-10-17: `inconclusivo` deixou de notificar; a correção de um positivo já notificado é pendência da T36, §3.5).
+19. Resultado `positivo` dispara notificação automática ao munícipe e à **Vigilância Epidemiológica de Itu** (revisão de 2026-10-17: `inconclusivo` deixou de notificar). Revisão de 2026-10-21 (T35): o `positivo` é definitivo (não pode ser corrigido), então a notificação sai no máximo uma vez por processo, e a data/hora do envio aceito fica em `processo_sanitario.data_notificacao_municipe` (#37, §3.5).
 
 ### Relatórios
 
@@ -906,6 +940,11 @@ Um sintoma aparece no máximo uma vez por amostra (a API ignora códigos repetid
 ### Acesso e segurança (adendo)
 
 24. Usuário autenticado não pode desativar a si mesmo (HTTP 422) — adicionado ao final para não renumerar as regras 5-23.
+
+### Animais e baias (adendo)
+
+25. O animal só passa a ocupar uma baia ativa e com vaga; quem já a ocupa não é barrado por mudanças posteriores na baia; a conferência é serializada por trava na baia (ver §3.2 e AC-3/AC-4).
+26. `ficha_completa` = campos obrigatórios + microchip + ao menos 1 vacinação, recalculada no animal e na vacinação; V18 para os dados existentes (AC-5).
 
 ---
 
@@ -953,6 +992,7 @@ Um sintoma aparece no máximo uma vez por amostra (a API ignora códigos repetid
 - Envio paralelo do resultado do processo à **Vigilância Epidemiológica de Itu** — confirmar canal (e-mail/integração).
 - **Necessidade de assinatura digital ou física** em relatórios oficiais.
 - **Funcionamento do CCZ aos finais de semana** — afeta SLA de atendimento de ocorrências urgentes e geração de plantão.
+- Animal e clínico (lista completa em `docs/decisoes/animais-clinico-correcoes.md`, "Pendentes do CCZ"): status permitidos no cadastro do animal; procedimento agendado (hoje data futura é recusada); hora da entrada ao mudar o dia; baia de animal fora da custódia; quem cadastra categoria farmacológica e se acento/maiúscula distinguem categorias; lista inicial de medicamentos e categorias.
 
 ---
 

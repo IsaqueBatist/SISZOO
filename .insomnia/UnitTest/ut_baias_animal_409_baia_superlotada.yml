@@ -1,0 +1,107 @@
+_id: "ut_baias_animal_409_baia_superlotada"
+type: "UnitTest"
+parentId: "uts_baias"
+modified: 1750000000000
+created: 1750000000000
+requestId: null
+name: "Alocar um animal numa baia já no limite responde 409 e não passa da capacidade"
+code: |-
+  async function login(email, senha) {
+    const res = await insomnia.send({
+      url: '{{ _.base_url }}/api/auth/login',
+      method: 'POST',
+      headers: [{ name: 'Content-Type', value: 'application/json' }],
+      body: { mimeType: 'application/json', text: JSON.stringify({ email, senha }) },
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body).token;
+  }
+
+  function baiaValida(overrides) {
+    return Object.assign(
+      { nome: 'Baia Teste', tipoBaia: 'interna', capacidade: 2 },
+      overrides,
+    );
+  }
+
+  async function criarBaia(token, overrides) {
+    const res = await insomnia.send({
+      url: '{{ _.base_url }}/api/baias',
+      method: 'POST',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${token}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify(baiaValida(overrides)) },
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body);
+  }
+
+  async function buscarBaia(token, id) {
+    const res = await insomnia.send({
+      url: `{{ _.base_url }}/api/baias/${id}`,
+      method: 'GET',
+      headers: [{ name: 'Authorization', value: `Bearer ${token}` }],
+    });
+    expect(res.status).to.equal(200);
+    return JSON.parse(res.body);
+  }
+
+  function animalValido(overrides) {
+    return Object.assign(
+      {
+        nome: 'Animal Teste',
+        especie: 'canino',
+        sexo: 'macho',
+        esterilizado: false,
+        status: 'disponivel_adocao',
+        motivoEntrada: 'recolhimento',
+        dataEntrada: '2026-08-30T09:00:00',
+      },
+      overrides,
+    );
+  }
+
+  async function criarAnimal(token, overrides) {
+    return insomnia.send({
+      url: '{{ _.base_url }}/api/animais',
+      method: 'POST',
+      headers: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Authorization', value: `Bearer ${token}` },
+      ],
+      body: { mimeType: 'application/json', text: JSON.stringify(animalValido(overrides)) },
+    });
+  }
+
+  const adminToken = await login('{{ _.admin_email }}', '{{ _.admin_password }}');
+
+  // Capacidade 1: o primeiro animal já deixa a baia superlotada (>=capacidade).
+  const baia = await criarBaia(adminToken, { nome: `Baia Superlotada ${Date.now()}`, capacidade: 1 });
+
+  const primeiro = await criarAnimal(adminToken, {
+    nome: 'Primeiro',
+    baiaId: baia.id,
+    microchip: `CHIP-SUPER-1-${Date.now()}`,
+  });
+  expect(primeiro.status).to.equal(200);
+
+  const baiaSuperlotada = await buscarBaia(adminToken, baia.id);
+  expect(baiaSuperlotada.superlotada).to.equal(true);
+
+  // AnimalService.resolverBaia recusa quem passa a ocupar uma baia sem vaga
+  // (RN-AN02, DER §3.2 e regra 25, decisão AC-3): 409, mesmo direto na API.
+  const segundo = await criarAnimal(adminToken, {
+    nome: 'Segundo',
+    baiaId: baia.id,
+    microchip: `CHIP-SUPER-2-${Date.now()}`,
+  });
+  expect(segundo.status).to.equal(409);
+  expect(JSON.parse(segundo.body).mensagem).to.equal('Baia informada ja atingiu a capacidade');
+
+  const baiaDepois = await buscarBaia(adminToken, baia.id);
+  expect(baiaDepois.ocupacaoAtual).to.equal(1);
+  expect(baiaDepois.superlotada).to.equal(true);
+
+metaSortKey: 48000000

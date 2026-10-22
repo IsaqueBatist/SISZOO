@@ -112,6 +112,22 @@ class ProcedimentoControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    void deveRetornar422ComCampoQuandoDataFutura() {
+        String animalId = fixture.criarAnimal(tokenAdmin);
+
+        given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .body(new CriarProcedimentoRequest(UUID.fromString(animalId), "castracao", hoje.plusDays(1), null, null, null))
+                .when()
+                .post("/api/procedimentos")
+                .then()
+                .statusCode(422)
+                .body("mensagem", equalTo("Data do procedimento nao pode ser futura"))
+                .body("campos[0].campo", equalTo("data"));
+    }
+
+    @Test
     void deveRetornar403QuandoAgenteSanitarioTentaCriarProcedimento() {
         String tokenAgente = fixture.tokenComCargo(
                 "teste.agente.procedimentos@itu.sp.gov.br", "Teste", "Procedimentos",

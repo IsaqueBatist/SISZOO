@@ -30,6 +30,7 @@ import com.siszoo.animais.clinico.repository.VacinacaoRepository;
 import com.siszoo.animais.entity.Animal;
 import com.siszoo.animais.exception.AnimalNaoEncontradoException;
 import com.siszoo.animais.repository.AnimalRepository;
+import com.siszoo.animais.service.FichaCompletaService;
 import com.siszoo.comum.dto.PaginaResponse;
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.Usuario;
@@ -51,6 +52,7 @@ public class VacinacaoService {
     private final UsuarioRepository usuarioRepository;
     private final VacinacaoMapper vacinacaoMapper;
     private final AuditoriaEventoService auditoriaEventoService;
+    private final FichaCompletaService fichaCompletaService;
     private final Clock clock;
 
     public VacinacaoService(
@@ -60,6 +62,7 @@ public class VacinacaoService {
             UsuarioRepository usuarioRepository,
             VacinacaoMapper vacinacaoMapper,
             AuditoriaEventoService auditoriaEventoService,
+            FichaCompletaService fichaCompletaService,
             Clock clock) {
         this.vacinacaoRepository = vacinacaoRepository;
         this.vacinaRepository = vacinaRepository;
@@ -67,6 +70,7 @@ public class VacinacaoService {
         this.usuarioRepository = usuarioRepository;
         this.vacinacaoMapper = vacinacaoMapper;
         this.auditoriaEventoService = auditoriaEventoService;
+        this.fichaCompletaService = fichaCompletaService;
         this.clock = clock;
     }
 
@@ -102,6 +106,9 @@ public class VacinacaoService {
         vacinacao.setRetifica(anterior);
 
         vacinacaoRepository.save(vacinacao);
+        // DER §3.2: a primeira vacinacao pode completar a ficha. A consulta do
+        // calculo dispara o flush, entao ja enxerga a vacinacao recem-gravada.
+        animal.setFichaCompleta(fichaCompletaService.calcular(animal));
         VacinacaoResponse response = vacinacaoMapper.toResponse(vacinacao, null);
 
         if (anterior != null) {

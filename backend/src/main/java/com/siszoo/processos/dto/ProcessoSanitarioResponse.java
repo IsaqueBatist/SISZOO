@@ -14,6 +14,8 @@ import com.siszoo.processos.entity.StatusProcesso;
 // T26). resultado/dataResultado sao o vigente (nulos sem resultado);
 // resultados e o historico, do original a ultima correcao (T34).
 // desfechoAnimal (T37) nao entra no historico imutavel — e so do processo.
+// dataNotificacaoMunicipe (T35-16, #37): quando o SMTP aceitou o e-mail de
+// resultado positivo ao municipe; nula quando nao houve envio aceito.
 // galNumero/sinanNumero/dataEnvioAmostras/previsaoRetorno nao entram aqui:
 // nenhum fluxo os preenche ainda (fica para quem implementar o envio de
 // amostras de verdade).
@@ -35,5 +37,6 @@ public record ProcessoSanitarioResponse(
         CatalogoItemResponse resultado,
         LocalDate dataResultado,
         CatalogoItemResponse desfechoAnimal,
-        List<ResultadoProcessoResponse> resultados) {
+        List<ResultadoProcessoResponse> resultados,
+        LocalDateTime dataNotificacaoMunicipe) {
 }

@@ -35,81 +35,24 @@ function processoResumo(sobrescrever: Record<string, unknown>) {
   }
 }
 
-function hojeFormatado(): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date())
-}
-
-function animalMinimo(sobrescrever: Record<string, unknown>) {
-  return {
-    id: 'a1', nome: 'Animal', especieCodigo: 'canino', especieNome: 'Canino', sexo: 'macho',
-    raca: null, coloracao: null, pelagem: null, porte: null, pesoKg: null, idadeAprox: null,
-    dataNascimentoAprox: null, microchip: null, esterilizado: false, dataEsterilizacao: null,
-    statusCodigo: 'disponivel_adocao', statusNome: 'Disponível', motivoEntradaCodigo: 'resgate',
-    motivoEntradaNome: 'Resgate', dataEntrada: '2026-01-01T09:00:00Z', baiaId: null, baiaNome: null,
-    tipoBaiaNome: null, fichaCompleta: true, fotoUrl: null, observacoes: null, criadoPorId: 'u1',
-    criadoPorNome: 'Nome', criadoEm: '2026-01-01T09:00:00Z', atualizadoEm: '2026-01-01T09:00:00Z',
-    ...sobrescrever,
-  }
-}
-
-// KPIs de animais/ocorrências são reais (GET /animais, GET /ocorrencias) —
-// sobrescreve com fixtures próprias e determinísticas em vez de depender da
-// fixture global compartilhada (que não é o foco deste teste).
-function mockarAnimaisEOcorrenciasReais() {
-  server.use(
-    http.get(`${API_BASE_URL}/animais`, () =>
-      HttpResponse.json({
-        itens: [
-          animalMinimo({ id: 'a1', especieCodigo: 'canino' }),
-          animalMinimo({ id: 'a2', especieCodigo: 'felino' }),
-          animalMinimo({ id: 'a3', especieCodigo: 'canino', statusCodigo: 'adotado' }),
-        ],
-        pagina: 0,
-        tamanho: 1000,
-        totalItens: 3,
-        totalPaginas: 1,
-      }),
-    ),
-    http.get(`${API_BASE_URL}/ocorrencias`, () =>
-      HttpResponse.json({
-        itens: [{ dataAbertura: hojeFormatado() }, { dataAbertura: '2020-01-01' }],
-        pagina: 0,
-        tamanho: 500,
-        totalItens: 2,
-        totalPaginas: 1,
-      }),
-    ),
-  )
-}
-
 afterEach(() => {
   vi.unstubAllEnvs()
   vi.resetModules()
 })
 
 describe('Dashboard', () => {
-  it('Total de Animais e Ocorrências são reais (sem selo); Vacinados/Adoções continuam mockados (com selo)', async () => {
-    mockarAnimaisEOcorrenciasReais()
+  it('renderiza os KPIs com dados mockados e mostra o selo de demonstração só no card de Adoções', async () => {
     renderDashboard()
 
-    const cardAnimais = (await screen.findByText('Total de Animais')).closest('.kpi') as HTMLElement
-    const cardOcorrencias = screen.getByText('Ocorrências registradas hoje').closest('.kpi') as HTMLElement
-    const cardVacinados = screen.getByText('Vacinados').closest('.kpi') as HTMLElement
+    expect(await screen.findByText('147')).toBeInTheDocument()
+    expect(screen.getByText('84')).toBeInTheDocument()
+    expect(screen.getByText('8')).toBeInTheDocument()
+
     const cardAdocoes = screen.getByText('Adoções no Mês').closest('.kpi') as HTMLElement
-
-    // 2 sob custódia (1 canino + 1 felino) — o adotado não entra.
-    expect(within(cardAnimais).getByText('2')).toBeInTheDocument()
-    expect(within(cardAnimais).getByText('1 cães · 1 gatos')).toBeInTheDocument()
-    // 1 ocorrência com dataAbertura = hoje.
-    expect(within(cardOcorrencias).getByText('1')).toBeInTheDocument()
-    // Vacinados/Adoções seguem mockados.
-    expect(within(cardVacinados).getByText('84')).toBeInTheDocument()
-    expect(within(cardAdocoes).getByText('8')).toBeInTheDocument()
-
-    expect(within(cardAnimais).queryByText('Dados de demonstração')).not.toBeInTheDocument()
-    expect(within(cardOcorrencias).queryByText('Dados de demonstração')).not.toBeInTheDocument()
-    expect(within(cardVacinados).getByText('Dados de demonstração')).toBeInTheDocument()
     expect(within(cardAdocoes).getByText('Dados de demonstração')).toBeInTheDocument()
+
+    const cardAnimais = screen.getByText('Total de Animais').closest('.kpi') as HTMLElement
+    expect(within(cardAnimais).queryByText('Dados de demonstração')).not.toBeInTheDocument()
   })
 
   it('mostra skeleton enquanto os dados carregam e some depois', async () => {
@@ -119,9 +62,8 @@ describe('Dashboard', () => {
     await waitFor(() => expect(container.querySelectorAll('.skel').length).toBe(0))
   })
 
-  it('erro ao carregar KPIs mostra retry e some o selo de demonstração', async () => {
+  it('erro ao carregar KPIs mostra retry; depois de recuperar, só Adoções continua com o selo de demonstração', async () => {
     vi.stubEnv('VITE_USE_MOCK_KPIS', 'false')
-    mockarAnimaisEOcorrenciasReais()
 
     let chamadas = 0
     server.use(
@@ -133,8 +75,8 @@ describe('Dashboard', () => {
         return HttpResponse.json({
           animais: { total: 10, caninos: 7, felinos: 3 },
           vacinacao: { percentualVacinados: 50, vacinados: 5, total: 10 },
-          adocoes: { noMes: 1, metaMensal: 5 },
           ocorrencias: { registradasHoje: 0 },
+          alertas: [],
         })
       }),
     )
@@ -142,15 +84,52 @@ describe('Dashboard', () => {
     const user = userEvent.setup()
     renderDashboard()
 
-    // Durante o erro, nenhum card de KPI é renderizado (vira ErroComRetry) —
-    // não há seção de Indicadores para checar ausência de selo aqui; o selo
-    // por card é verificado no teste de sucesso acima.
     const botaoRetry = await screen.findByRole('button', { name: 'Tentar novamente' })
     await user.click(botaoRetry)
 
-    const cardVacinados = (await screen.findByText('Vacinados')).closest('.kpi') as HTMLElement
-    expect(within(cardVacinados).getByText('50')).toBeInTheDocument()
+    expect(await screen.findByText('10')).toBeInTheDocument()
     expect(chamadas).toBe(2)
+
+    const cardAnimais = screen.getByText('Total de Animais').closest('.kpi') as HTMLElement
+    expect(within(cardAnimais).queryByText('Dados de demonstração')).not.toBeInTheDocument()
+    // Adoções não depende do endpoint real: continua mockado mesmo com o resto real.
+    const cardAdocoes = screen.getByText('Adoções no Mês').closest('.kpi') as HTMLElement
+    expect(within(cardAdocoes).getByText('Dados de demonstração')).toBeInTheDocument()
+  })
+
+  it('renderiza os alertas críticos genéricos (DER §3.7) vindos de kpis.alertas, sem duplicar o alerta de vacina', async () => {
+    renderDashboard()
+
+    expect(await screen.findByText(/baia\(s\) superlotada/)).toBeInTheDocument()
+    expect(screen.getByText(/anima(l|is).*ficha incompleta/i)).toBeInTheDocument()
+    expect(screen.getByText(/não castrado/)).toBeInTheDocument()
+  })
+
+  it('não renderiza o alerta genérico quando o total é 0', async () => {
+    vi.stubEnv('VITE_USE_MOCK_KPIS', 'false')
+    server.use(
+      http.get(`${API_BASE_URL}/dashboard/kpis`, () =>
+        HttpResponse.json({
+          animais: { total: 10, caninos: 7, felinos: 3 },
+          vacinacao: { percentualVacinados: 50, vacinados: 5, total: 10 },
+          ocorrencias: { registradasHoje: 0 },
+          alertas: [
+            {
+              tipo: 'baia_superlotada',
+              severidade: 'critico',
+              titulo: '0 baia(s) superlotada(s)',
+              descricao: 'Baias com ocupação igual ou acima da capacidade.',
+              total: 0,
+            },
+          ],
+        }),
+      ),
+    )
+
+    renderDashboard()
+
+    await screen.findByText('10')
+    expect(screen.queryByText(/baia\(s\) superlotada/)).not.toBeInTheDocument()
   })
 
   it('alerta de vacina mostra a severidade com ícone e texto (vencida antes de a vencer)', async () => {

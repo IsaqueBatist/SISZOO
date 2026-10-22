@@ -1,5 +1,6 @@
 package com.siszoo.animais.clinico.repository;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -13,6 +14,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import com.siszoo.animais.clinico.entity.Prescricao;
+import com.siszoo.animais.clinico.entity.StatusPrescricao;
 
 // Sem metodo de update/delete: registro clinico imutavel (regra de negocio). Ver
 // VacinacaoRepository.
@@ -30,4 +32,18 @@ public interface PrescricaoRepository extends JpaRepository<Prescricao, UUID>, J
     Optional<Prescricao> findByRetificaId(UUID retificaId);
 
     List<Prescricao> findByRetificaIdIn(Collection<UUID> retificaIds);
+
+    // Alerta "medicacao_ativa" (DER §3.7): prescricao ATIVA com fim previsto
+    // dentro da janela de 7 dias, so para animais sob custodia. Prescricao
+    // sem dataFimPrevista (em aberto) nao entra — segue o texto literal do
+    // DER (BETWEEN hoje e hoje+7d).
+    long countByStatusAndDataFimPrevistaBetweenAndAnimal_Status_CodigoNotIn(
+            StatusPrescricao status,
+            LocalDate inicioJanela,
+            LocalDate fimJanela,
+            Collection<String> codigosForaDaCustodia);
+
+    // "Medicações" no relatorio de procedimentos (T41): prescricoes iniciadas
+    // no periodo.
+    long countByDataInicioBetween(LocalDate inicio, LocalDate fim);
 }

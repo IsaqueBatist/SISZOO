@@ -1,10 +1,26 @@
 import { useState, type FormEvent } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
+import { BannerRascunho } from '@/components/BannerRascunho'
 import { Icon } from '@/components/layout/Icon'
 import { useAtualizarBaiaMutation, useCatalogosAnimaisQuery, useCriarBaiaMutation } from '@/features/animais/hooks/useAnimais'
 import type { Baia } from '@/features/animais/types/animais.types'
+import { useAuth } from '@/features/auth/hooks/useAuth'
+import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
+import { useRascunho } from '@/lib/useRascunho'
 import { baiaFormSchema, type BaiaFormValues } from '../schemas/baiaFormSchema'
+import { armazenamentoRascunhoBaia, chaveRascunhoBaia } from '../storage/rascunhoBaiaStorage'
+
+// Texto vazio ou só com espaços vai como ausente (o backend grava NULL e a
+// listagem usa o tipo da baia). Mesmo padrão de AnimalForm.
+const semEspacos = (v: unknown) => (typeof v === 'string' ? v.trim() || undefined : v)
+
+// Erros por campo do 422: só os campos que existem no modal.
+const MAPA_ERROS_SERVIDOR = mapaDeCampos<BaiaFormValues>(
+  Object.keys(baiaFormSchema.shape) as (keyof BaiaFormValues)[],
+)
+
+const ARMAZENAMENTO_RASCUNHO = armazenamentoRascunhoBaia<BaiaFormValues>()
 
 interface BaiaFormModalProps {
   baia?: Baia
@@ -20,9 +36,15 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
   const atualizarMutation = useAtualizarBaiaMutation()
   const mutation = editando ? atualizarMutation : criarMutation
 
+  const { user } = useAuth()
+
   const {
     register,
     handleSubmit,
+    setError,
+    watch,
+    reset,
+    getValues,
     formState: { errors },
   } = useForm<BaiaFormValues>({
     resolver: zodResolver(baiaFormSchema),
@@ -41,6 +63,16 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
     },
   })
 
+  // Internet instável do CCZ: fechar o modal sem salvar mantém o que foi
+  // digitado; salvar com sucesso remove o rascunho.
+  const rascunho = useRascunho<BaiaFormValues>({
+    armazenamento: ARMAZENAMENTO_RASCUNHO,
+    chave: chaveRascunhoBaia(user?.id ?? '', baia?.id),
+    watch,
+    reset,
+    getValues,
+  })
+
   async function onSubmit(dados: BaiaFormValues) {
     const payload = {
       nome: dados.nome,
@@ -56,9 +88,11 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
       } else {
         await criarMutation.mutateAsync(payload)
       }
+      await rascunho.removerAposSucesso()
       onFechar()
-    } catch {
-      setSubmitError(`Não foi possível ${editando ? 'salvar' : 'criar'} a baia. Tente novamente.`)
+    } catch (erro) {
+      if (aplicarErrosDeCampo(erro, setError, MAPA_ERROS_SERVIDOR).length > 0) return
+      setSubmitError(mensagemDeRegraDaApi(erro) ?? `Não foi possível ${editando ? 'salvar' : 'criar'} a baia. Tente novamente.`)
     }
   }
 
@@ -80,6 +114,9 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
         <form onSubmit={aoEnviar} noValidate>
           <div className="modal-body">
             <div className="form-grid cols-1">
+              {rascunho.rascunhoDisponivel && (
+                <BannerRascunho onRestaurar={rascunho.restaurar} onDescartar={() => void rascunho.descartar()} />
+              )}
               {submitError && (
                 <div className="alert danger" role="alert">
                   <span className="bullet" />
@@ -142,14 +179,14 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
                   className={`input${errors.finalidade ? ' error' : ''}`}
                   type="text"
                   placeholder="Cães porte médio"
-                  {...register('finalidade')}
+                  {...register('finalidade', { setValueAs: semEspacos })}
                 />
                 {errors.finalidade && <span className="err">{errors.finalidade.message}</span>}
               </div>
 
               <div className="field">
                 <label htmlFor="baia-observacoes">Observações</label>
-                <textarea id="baia-observacoes" className="textarea" rows={3} {...register('observacoes')} />
+                <textarea id="baia-observacoes" className="textarea" rows={3} {...register('observacoes', { setValueAs: semEspacos })} />
               </div>
             </div>
           </div>

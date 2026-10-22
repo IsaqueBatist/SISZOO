@@ -119,3 +119,10 @@ export interface Medicamento {
   categoriaNome: string
   ativo: boolean
 }
+
+// Espelha com.siszoo.animais.clinico.dto.CategoriaFarmacologicaResponse.
+export interface CategoriaFarmacologica {
+  id: string
+  nome: string
+  ativo: boolean
+}

@@ -1,49 +1,61 @@
-// `animais` e `ocorrencias` são calculados em tempo real no frontend hoje
-// (ver dashboardApi.ts::buscarKpisParciaisReais), a partir de GET /animais e
-// GET /ocorrencias já existentes — não dependem do endpoint de KPIs. Só
-// `vacinacao`/`adocoes` continuam mockados: não existe hoje endpoint nem
-// campo (data de adoção) que permita calculá-los no cliente. Ver
-// docs/contratos/dashboard-kpis.md para a especificação completa proposta
-// para um futuro GET /api/dashboard/kpis (que poderia, no máximo, otimizar
-// os blocos já calculados no cliente numa única query do backend).
+// Espelha com.siszoo.relatorios.dto do backend (T38) — ver
+// docs/contratos/dashboard-kpis.md para o contrato completo.
 //
-// Campos de variação são opcionais: nenhum dos blocos reais tem como
-// calcular variação semanal hoje (sem endpoint de contagem histórica) — o
-// card esconde o delta quando o campo está ausente, em vez de mostrar uma
-// variação falsa de "0%".
+// Sem campos de variação semanal: o backend não guarda nenhum snapshot
+// histórico de contagem, então não há como calcular um delta real vs. 7 dias
+// atrás (decisão registrada no contrato). Fica para uma tarefa futura.
 
 export interface KpiAnimais {
   total: number
   caninos: number
   felinos: number
-  variacaoSemanal?: number
 }
 
 export interface KpiVacinacao {
   percentualVacinados: number // 0-100
   vacinados: number
   total: number
-  variacaoSemanalPontos?: number // pontos percentuais
 }
 
-export interface KpiAdocoes {
-  noMes: number
-  metaMensal: number
-  variacaoSemanal?: number
-}
-
-// registradasHoje conta QUALQUER status (não só ABERTA) — "aberta" sugeriria
-// filtrar por StatusOcorrencia.ABERTA, mas o KPI é sobre volume de registro
-// do dia, independente do status em que a ocorrência está agora.
+// mediaPorHora ausente (não 0) na virada do dia — o card esconde a média
+// nesse caso, em vez de mostrar uma conta falsa de "X/0".
 export interface KpiOcorrencias {
   registradasHoje: number
   mediaPorHora?: number
-  variacaoSemanal?: number
 }
 
-export interface DashboardKpis {
+export type SeveridadeAlertaCritico = 'info' | 'atencao' | 'critico'
+
+// Um dos 6 alertas críticos do DER §3.7 — vacina_vencendo/vacina_vencida
+// contam como 2 entradas separadas (mesma severidade do alerta de vacina já
+// existente, com.siszoo.alertas), totalizando 7 no array.
+export interface AlertaCritico {
+  tipo: string
+  severidade: SeveridadeAlertaCritico
+  titulo: string
+  descricao: string
+  total: number
+}
+
+// Exatamente o que GET /api/dashboard/kpis devolve.
+export interface DashboardKpisApi {
   animais: KpiAnimais
   vacinacao: KpiVacinacao
-  adocoes: KpiAdocoes
   ocorrencias: KpiOcorrencias
+  alertas: AlertaCritico[]
+}
+
+// Único bloco sem fonte real: o DER documenta uma tabela `adocao` (com
+// `data_adocao`) que nunca foi implementada — sem migration, sem entidade,
+// sem rastro em auditoria (ver docs/contratos/dashboard-kpis.md). Continua
+// mockado localmente até uma tarefa futura criar essa tabela.
+export interface KpiAdocoes {
+  noMes: number
+  metaMensal: number
+}
+
+// O que a UI consome: a resposta real do endpoint + o bloco de adoções
+// (sempre mock, ver dashboardApi.ts::buscarAdocoesMock).
+export interface DashboardKpis extends DashboardKpisApi {
+  adocoes: KpiAdocoes
 }

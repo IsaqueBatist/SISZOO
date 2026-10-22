@@ -1,0 +1,10 @@
+Ola, [(${nome})].
+
+O resultado laboratorial do processo sanitario [(${protocolo})] foi registrado como positivo pelo Centro de Controle de Zoonoses de Itu.
+Entre em contato com o CCZ para mais informacoes.
+
+CCZ "Sao Francisco de Assis"
+Avenida Sete Quedas, 1038 - Vila Progresso
+Fone: (11) 4023-1505 / WhatsApp: (11) 93231-9925
+Segunda a sexta, das 8h as 17h
+/*[- T35: versao em texto puro de resultado-processo.html (nao e comunicacao oficial aprovada pelo CCZ). "Positivo" fixo no texto: regra 19 do DER so dispara esta notificacao com resultado positivo. Endereco/telefones fixos, extraidos de https://itu.sp.gov.br/saude/zoonoses/ (2026-10-22). Variaveis: nome, protocolo. Comentario de template: nao sai no e-mail. Sem quebra de linha depois dele, para o texto terminar na linha acima. -]*/

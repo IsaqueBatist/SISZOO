@@ -42,6 +42,8 @@ code: |-
         nome: 'Animal Teste',
         especie: 'canino',
         sexo: 'macho',
+        // boolean primitivo no CriarAnimalRequest: sem ele o Jackson recusa o corpo (400).
+        esterilizado: false,
         status: 'disponivel_adocao',
         motivoEntrada: 'recolhimento',
         dataEntrada: '2026-08-30T09:00:00',
@@ -84,6 +86,36 @@ code: |-
   });
   expect(atualizar.status).to.equal(200);
   expect(JSON.parse(atualizar.body).microchip).to.equal(novoMicrochip);
-  expect(JSON.parse(atualizar.body).fichaCompleta).to.equal(true);
+  // Ficha completa = microchip + ao menos 1 vacinação (DER §3.2,
+  // FichaCompletaService): só o microchip não basta.
+  expect(JSON.parse(atualizar.body).fichaCompleta).to.equal(false);
+
+  const vacinar = await insomnia.send({
+    url: '{{ _.base_url }}/api/vacinacoes',
+    method: 'POST',
+    headers: [
+      { name: 'Content-Type', value: 'application/json' },
+      { name: 'Authorization', value: `Bearer ${adminToken}` },
+    ],
+    body: {
+      mimeType: 'application/json',
+      text: JSON.stringify({
+        animalId,
+        vacina: 'antirrabica',
+        dataAplicacao: '2026-08-31',
+        doseQuantidade: 1.0,
+        doseUnidade: 'MILILITRO',
+      }),
+    },
+  });
+  expect(vacinar.status).to.equal(200);
+
+  const buscar = await insomnia.send({
+    url: `{{ _.base_url }}/api/animais/${animalId}`,
+    method: 'GET',
+    headers: [{ name: 'Authorization', value: `Bearer ${adminToken}` }],
+  });
+  expect(buscar.status).to.equal(200);
+  expect(JSON.parse(buscar.body).fichaCompleta).to.equal(true);
 
 metaSortKey: 32000000

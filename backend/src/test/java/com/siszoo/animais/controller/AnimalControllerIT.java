@@ -1,6 +1,7 @@
 package com.siszoo.animais.controller;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasItem;
@@ -10,9 +11,11 @@ import static org.hamcrest.Matchers.nullValue;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.siszoo.animais.clinico.entity.UnidadeDose;
 import com.siszoo.animais.dto.AtualizarAnimalRequest;
 import com.siszoo.animais.dto.CriarAnimalRequest;
 import com.siszoo.animais.entity.Baia;
@@ -64,7 +67,136 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .body("motivoEntradaNome", equalTo("Resgate"))
                 .body("baiaNome", equalTo("Baia AnimalControllerIT 1"))
                 .body("tipoBaiaNome", equalTo("Interna"))
+                // DER §3.2: microchip sem nenhuma vacinacao ainda nao completa a ficha.
+                .body("fichaCompleta", equalTo(false));
+    }
+
+    @Test
+    void primeiraVacinacaoCompletaAFichaDeAnimalComMicrochip() {
+        String id = criarAnimalViaApi(animalMinimo(fixture.microchipUnico())).then().statusCode(200)
+                .body("fichaCompleta", equalTo(false))
+                .extract().path("id");
+
+        fixture.postarVacinacao(tokenAdmin, id, fixture.hoje(), UnidadeDose.MILILITRO, null)
+                .then().statusCode(200);
+
+        given()
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .when()
+                .get("/api/animais/" + id)
+                .then()
+                .statusCode(200)
                 .body("fichaCompleta", equalTo(true));
+    }
+
+    // RN-AN04: a ficha e recalculada na edicao do animal (FichaCompletaService
+    // via AnimalService#atualizar) e a retificacao de uma vacinacao nao a
+    // desfaz (a retificadora passa a ser a vigente). Exclusao de vacinacao nao
+    // existe (V17).
+    @Test
+    @DisplayName("[RN-AN04] ficha completa na edicao (microchip definido depois da vacina) e apos retificacao")
+    void fichaCompletaNaEdicaoENaRetificacao() {
+        String id = criarAnimalViaApi(animalMinimo(null)).path("id");
+        String vacinacaoId = fixture.criarVacinacao(tokenAdmin, id, fixture.hoje(), null);
+        given().header("Authorization", "Bearer " + tokenAdmin).get("/api/animais/" + id).then()
+                .statusCode(200)
+                .body("fichaCompleta", equalTo(false));
+
+        given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .body(new AtualizarAnimalRequest(
+                        "Rex", "canino", "macho", null, null, null, null, null, null, null,
+                        fixture.microchipUnico(), false, null, "disponivel_adocao", "resgate", fixture.agora(),
+                        null, null, null))
+                .when()
+                .put("/api/animais/" + id)
+                .then()
+                .statusCode(200)
+                .body("fichaCompleta", equalTo(true));
+
+        fixture.criarVacinacao(tokenAdmin, id, fixture.hoje(), vacinacaoId);
+        given().header("Authorization", "Bearer " + tokenAdmin).get("/api/animais/" + id).then()
+                .statusCode(200)
+                .body("fichaCompleta", equalTo(true));
+    }
+
+    @Test
+    void deveRetornar422ComCampoQuandoDataDeEntradaFutura() {
+        CriarAnimalRequest request = new CriarAnimalRequest(
+                "Rex", "canino", "macho", null, null, null, null, null, null, null,
+                null, false, null, "disponivel_adocao", "resgate", fixture.agora().plusDays(1), null, null, null);
+
+        postarAnimal(request)
+                .then()
+                .statusCode(422)
+                .body("mensagem", equalTo("Data de entrada nao pode ser futura"))
+                .body("campos[0].campo", equalTo("dataEntrada"));
+    }
+
+    // esterilizado era boolean primitivo: sem o campo no JSON, o Jackson
+    // recusava o corpo e o Spring respondia 400 generico, fora do padrao de
+    // campo obrigatorio (Bean Validation -> 422 "Dados invalidos" + campos).
+    @Test
+    @DisplayName("cadastro sem esterilizado responde 422 com o campo, como os demais obrigatorios")
+    void deveRetornar422ComCampoQuandoCadastroSemEsterilizado() {
+        given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .body(jsonAnimalSemEsterilizado())
+                .when()
+                .post("/api/animais")
+                .then()
+                .statusCode(422)
+                .body("mensagem", equalTo("Dados invalidos"))
+                .body("campos.campo", contains("esterilizado"));
+    }
+
+    @Test
+    @DisplayName("edicao sem esterilizado responde 422 com o campo, como os demais obrigatorios")
+    void deveRetornar422ComCampoQuandoEdicaoSemEsterilizado() {
+        String id = criarAnimalViaApi(animalMinimo(null)).path("id");
+
+        given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .body(jsonAnimalSemEsterilizado())
+                .when()
+                .put("/api/animais/" + id)
+                .then()
+                .statusCode(422)
+                .body("mensagem", equalTo("Dados invalidos"))
+                .body("campos.campo", contains("esterilizado"));
+    }
+
+    @Test
+    void deveRetornar422ComCampoQuandoDataDeCastracaoSemCastracao() {
+        CriarAnimalRequest request = new CriarAnimalRequest(
+                "Rex", "canino", "macho", null, null, null, null, null, null, null,
+                null, false, fixture.hoje(), "disponivel_adocao", "resgate", fixture.agora(), null, null, null);
+
+        postarAnimal(request)
+                .then()
+                .statusCode(422)
+                .body("campos[0].campo", equalTo("dataEsterilizacao"));
+    }
+
+    @Test
+    void deveRetornar409QuandoBaiaCheiaOuInativa() {
+        Baia cheia = criarBaia("Baia AnimalControllerIT cheia", (short) 1);
+        criarAnimalViaApi(animalNaBaia(cheia.getId())).then().statusCode(200);
+        postarAnimal(animalNaBaia(cheia.getId()))
+                .then()
+                .statusCode(409)
+                .body("mensagem", equalTo("Baia informada ja atingiu a capacidade"));
+
+        Baia inativa = criarBaia("Baia AnimalControllerIT inativa", (short) 5);
+        inativa.setAtiva(false);
+        baiaRepository.save(inativa);
+        postarAnimal(animalNaBaia(inativa.getId()))
+                .then()
+                .statusCode(409)
+                .body("mensagem", equalTo("Baia informada esta inativa"));
     }
 
     @Test
@@ -194,6 +326,81 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .body("itens.especieCodigo", not(hasItem("canino")))
                 .body("pagina", equalTo(0))
                 .body("tamanho", equalTo(20));
+    }
+
+    // ── Normalizacao do microchip (RN01) ─────────────────
+
+    @Test
+    @DisplayName("[RN01] microchip com espacos e gravado sem eles e colide com o mesmo numero sem espacos (409)")
+    void microchipComEspacosColideComONormalizado() {
+        String base = microchipSemHifen();
+        String comEspacos = " " + base.substring(0, 4) + " " + base.substring(4) + " ";
+
+        criarAnimalViaApi(animalMinimo(comEspacos)).then().body("microchip", equalTo(base));
+
+        given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .body(animalMinimo(base))
+                .when()
+                .post("/api/animais")
+                .then()
+                .statusCode(409)
+                .body("mensagem", equalTo("Microchip ja cadastrado"));
+    }
+
+    @Test
+    @DisplayName("[RN01] microchip vazio ou so com espacos e aceito como animal sem microchip")
+    void microchipVazioEhSemMicrochip() {
+        for (String vazio : new String[] {"", "   "}) {
+            criarAnimalViaApi(animalMinimo(vazio)).then()
+                    .body("microchip", nullValue())
+                    .body("fichaCompleta", equalTo(false));
+        }
+    }
+
+    @Test
+    @DisplayName("[RN01] busca por microchip com espacos encontra o microchip gravado sem eles")
+    void buscaPorMicrochipIgnoraEspacos() {
+        String base = microchipSemHifen();
+        criarAnimalViaApi(animalMinimo(base));
+
+        for (String termo : new String[] {" " + base, base.substring(0, 4) + " " + base.substring(4) + " "}) {
+            given()
+                    .header("Authorization", "Bearer " + tokenAdmin)
+                    .queryParam("q", termo)
+                    .when()
+                    .get("/api/animais")
+                    .then()
+                    .statusCode(200)
+                    .body("itens.microchip", hasItem(base));
+        }
+    }
+
+    @Test
+    @DisplayName("[RN01] edicao normaliza o microchip: define sem espacos e aceita o mesmo numero com espacos")
+    void edicaoNormalizaMicrochip() {
+        String id = criarAnimalViaApi(animalMinimo(null)).path("id");
+        String base = microchipSemHifen();
+        String comEspacos = base.substring(0, 4) + "  " + base.substring(4);
+
+        for (String microchip : new String[] {comEspacos, " " + base + " "}) {
+            given()
+                    .contentType(ContentType.JSON)
+                    .header("Authorization", "Bearer " + tokenAdmin)
+                    .body(new AtualizarAnimalRequest(
+                            "Rex", "canino", "macho", null, null, null, null, null, null, null,
+                            microchip, false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null))
+                    .when()
+                    .put("/api/animais/" + id)
+                    .then()
+                    .statusCode(200)
+                    .body("microchip", equalTo(base));
+        }
+    }
+
+    private String microchipSemHifen() {
+        return fixture.microchipUnico().replace("-", "");
     }
 
     @Test
@@ -344,11 +551,39 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .response();
     }
 
+    // Resposta crua: o chamador decide o status esperado (422, 409...).
+    // JSON cru, sem a chave "esterilizado" (o record serializaria o campo).
+    private String jsonAnimalSemEsterilizado() {
+        return """
+                {"nome": "Rex", "especie": "canino", "sexo": "macho", "status": "disponivel_adocao",
+                 "motivoEntrada": "resgate", "dataEntrada": "%s"}
+                """.formatted(fixture.agora());
+    }
+
+    private io.restassured.response.Response postarAnimal(CriarAnimalRequest request) {
+        return given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .body(request)
+                .when()
+                .post("/api/animais");
+    }
+
+    private CriarAnimalRequest animalNaBaia(UUID baiaId) {
+        return new CriarAnimalRequest(
+                "Rex", "canino", "macho", null, null, null, null, null, null, null,
+                null, false, null, "disponivel_adocao", "resgate", fixture.agora(), baiaId, null, null);
+    }
+
     private Baia criarBaia(String nome) {
+        return criarBaia(nome, (short) 5);
+    }
+
+    private Baia criarBaia(String nome, short capacidade) {
         Baia baia = new Baia();
         baia.setNome(nome);
         baia.setTipoBaia(tipoBaiaRepository.findByCodigo("interna").orElseThrow());
-        baia.setCapacidade((short) 5);
+        baia.setCapacidade(capacidade);
         return baiaRepository.save(baia);
     }
 }

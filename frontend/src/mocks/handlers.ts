@@ -3,7 +3,9 @@ import type { AlertaVacinalAnimal, AlertaVacinalItem } from '@/features/alertas/
 import type { Animal, AnimalRequest, Baia, BaiaRequest, CatalogosAnimal } from '@/features/animais/types/animais.types'
 import { VACINAS, TIPOS_PROCEDIMENTO } from '@/features/animais/utils/catalogoClinico'
 import { DIAS_ANTECEDENCIA_ALERTA_VACINA, diasAteVencimento, hojeEmItu } from '@/features/animais/utils/regrasVacina'
+import { adicionarDiasIso, agoraEmItu } from '@/lib/datas'
 import type {
+  CategoriaFarmacologica,
   CriarPrescricaoRequest,
   CriarProcedimentoRequest,
   CriarVacinacaoRequest,
@@ -19,6 +21,7 @@ import type { EventoAuditoria } from '@/features/auditoria/types/auditoria.types
 import { API_BASE_URL } from '../lib/env'
 import { ocorrenciasHandlers } from './ocorrenciasHandlers'
 import { processosHandlers } from './processosHandlers'
+import { relatoriosHandlers } from './relatoriosHandlers'
 import type { CriarUsuarioRequest, UsuarioListItem } from '@/features/usuarios/types/usuarios.types'
 import type { PreferenciaUsuario } from '@/features/configuracoes/types/configuracoes.types'
 
@@ -39,7 +42,7 @@ const LOGIN_RESPONSE: LoginResponse = {
     sobrenome: 'Lima',
     email: CREDENCIAIS_VALIDAS.email,
     cargos: ['Veterinário'],
-    senhaAlteradaEm: '2026-01-10T12:00:00Z',
+    senhaAlteradaEm: '2026-01-10T12:00:00',
   },
 }
 
@@ -58,10 +61,10 @@ function seedUsuariosMock(): UsuarioMockInterno[] {
       email: 'stephanie.lima@itu.sp.gov.br',
       cargos: ['Veterinário'],
       crmv: 'CRMV-SP 01234',
-      senhaAlteradaEm: '2026-01-10T12:00:00Z',
+      senhaAlteradaEm: '2026-01-10T12:00:00',
       ativo: true,
-      ultimoAcesso: '2026-05-20T14:32:00Z',
-      criadoEm: '2024-03-15T09:00:00Z',
+      ultimoAcesso: '2026-05-20T14:32:00',
+      criadoEm: '2024-03-15T09:00:00',
       senhaInicial: CREDENCIAIS_VALIDAS.senha,
     },
     {
@@ -71,10 +74,10 @@ function seedUsuariosMock(): UsuarioMockInterno[] {
       email: 'paulo.henriques@itu.sp.gov.br',
       cargos: ['Administrador'],
       crmv: null,
-      senhaAlteradaEm: '2024-03-15T09:00:00Z',
+      senhaAlteradaEm: '2024-03-15T09:00:00',
       ativo: true,
-      ultimoAcesso: '2026-05-20T14:00:00Z',
-      criadoEm: '2024-03-15T09:00:00Z',
+      ultimoAcesso: '2026-05-20T14:00:00',
+      criadoEm: '2024-03-15T09:00:00',
       senhaInicial: 'Itu@2026!',
     },
     {
@@ -84,10 +87,10 @@ function seedUsuariosMock(): UsuarioMockInterno[] {
       email: 'carlos.martins@itu.sp.gov.br',
       cargos: ['Veterinário'],
       crmv: 'CRMV-SP 05678',
-      senhaAlteradaEm: '2024-05-10T09:00:00Z',
+      senhaAlteradaEm: '2024-05-10T09:00:00',
       ativo: true,
-      ultimoAcesso: '2026-05-19T17:02:00Z',
-      criadoEm: '2024-05-10T09:00:00Z',
+      ultimoAcesso: '2026-05-19T17:02:00',
+      criadoEm: '2024-05-10T09:00:00',
       senhaInicial: 'Itu@2026!',
     },
     {
@@ -97,10 +100,10 @@ function seedUsuariosMock(): UsuarioMockInterno[] {
       email: 'rafael.santos@itu.sp.gov.br',
       cargos: ['Agente Sanitário'],
       crmv: null,
-      senhaAlteradaEm: '2024-11-03T09:00:00Z',
+      senhaAlteradaEm: '2024-11-03T09:00:00',
       ativo: true,
-      ultimoAcesso: '2026-05-20T12:55:00Z',
-      criadoEm: '2024-11-03T09:00:00Z',
+      ultimoAcesso: '2026-05-20T12:55:00',
+      criadoEm: '2024-11-03T09:00:00',
       senhaInicial: 'Itu@2026!',
     },
     {
@@ -110,10 +113,10 @@ function seedUsuariosMock(): UsuarioMockInterno[] {
       email: 'marcos.oliveira@itu.sp.gov.br',
       cargos: ['Agente Sanitário'],
       crmv: null,
-      senhaAlteradaEm: '2024-12-20T09:00:00Z',
+      senhaAlteradaEm: '2024-12-20T09:00:00',
       ativo: true,
-      ultimoAcesso: '2026-05-20T11:08:00Z',
-      criadoEm: '2024-12-20T09:00:00Z',
+      ultimoAcesso: '2026-05-20T11:08:00',
+      criadoEm: '2024-12-20T09:00:00',
       senhaInicial: 'Itu@2026!',
     },
     {
@@ -123,10 +126,10 @@ function seedUsuariosMock(): UsuarioMockInterno[] {
       email: 'joana.pires@itu.sp.gov.br',
       cargos: ['Veterinário'],
       crmv: 'CRMV-SP 09999',
-      senhaAlteradaEm: '2024-09-18T09:00:00Z',
+      senhaAlteradaEm: '2024-09-18T09:00:00',
       ativo: false,
-      ultimoAcesso: '2026-02-12T11:00:00Z',
-      criadoEm: '2024-09-18T09:00:00Z',
+      ultimoAcesso: '2026-02-12T11:00:00',
+      criadoEm: '2024-09-18T09:00:00',
       senhaInicial: 'Itu@2026!',
     },
   ]
@@ -167,6 +170,9 @@ function paraUsuarioPublico({ senhaInicial: _senhaInicial, ...usuario }: Usuario
 // "transferido", que não têm badge dedicado no design system) e inclui
 // espécies sem classe de badge própria (quiróptero, pnh) para exercitar o
 // fallback neutro nos testes.
+// fichaCompleta fixa aqui segue fichaCompletaMock: só o Rex tem microchip e
+// vacinação (seedVacinacoesMock). Calcular na hora não dá: este seed roda
+// antes de vacinacoesMock existir.
 function seedAnimaisMock(): Animal[] {
   return [
     {
@@ -189,7 +195,7 @@ function seedAnimaisMock(): Animal[] {
       statusNome: 'Disponível',
       motivoEntradaCodigo: 'resgate',
       motivoEntradaNome: 'Resgate',
-      dataEntrada: '2024-03-15T09:00:00Z',
+      dataEntrada: '2024-03-15T09:00:00',
       baiaId: 'c3d4e5f6-0000-0000-0000-000000000001',
       baiaNome: 'Baia 3',
       tipoBaiaNome: 'Canil',
@@ -198,8 +204,8 @@ function seedAnimaisMock(): Animal[] {
       observacoes: null,
       criadoPorId: 'a1b2c3d4-0000-0000-0000-000000000001',
       criadoPorNome: 'Stéphanie Lima',
-      criadoEm: '2024-03-15T09:00:00Z',
-      atualizadoEm: '2024-03-15T09:00:00Z',
+      criadoEm: '2024-03-15T09:00:00',
+      atualizadoEm: '2024-03-15T09:00:00',
     },
     {
       id: 'b2c3d4e5-0000-0000-0000-000000000002',
@@ -221,17 +227,17 @@ function seedAnimaisMock(): Animal[] {
       statusNome: 'Em quarentena',
       motivoEntradaCodigo: 'resgate',
       motivoEntradaNome: 'Resgate',
-      dataEntrada: '2024-08-12T10:00:00Z',
+      dataEntrada: '2024-08-12T10:00:00',
       baiaId: 'c3d4e5f6-0000-0000-0000-000000000002',
       baiaNome: 'Gatil A',
       tipoBaiaNome: 'Gatil',
-      fichaCompleta: true,
+      fichaCompleta: false,
       fotoUrl: null,
       observacoes: null,
       criadoPorId: 'a1b2c3d4-0000-0000-0000-000000000001',
       criadoPorNome: 'Stéphanie Lima',
-      criadoEm: '2024-08-12T10:00:00Z',
-      atualizadoEm: '2024-08-12T10:00:00Z',
+      criadoEm: '2024-08-12T10:00:00',
+      atualizadoEm: '2024-08-12T10:00:00',
     },
     {
       id: 'b2c3d4e5-0000-0000-0000-000000000003',
@@ -253,17 +259,17 @@ function seedAnimaisMock(): Animal[] {
       statusNome: 'Em tratamento',
       motivoEntradaCodigo: 'resgate',
       motivoEntradaNome: 'Resgate',
-      dataEntrada: '2025-02-22T09:00:00Z',
+      dataEntrada: '2025-02-22T09:00:00',
       baiaId: 'c3d4e5f6-0000-0000-0000-000000000003',
       baiaNome: 'Baia 6',
       tipoBaiaNome: 'Canil',
-      fichaCompleta: true,
+      fichaCompleta: false,
       fotoUrl: null,
       observacoes: null,
       criadoPorId: 'a1b2c3d4-0000-0000-0000-000000000001',
       criadoPorNome: 'Stéphanie Lima',
-      criadoEm: '2025-02-22T09:00:00Z',
-      atualizadoEm: '2025-02-22T09:00:00Z',
+      criadoEm: '2025-02-22T09:00:00',
+      atualizadoEm: '2025-02-22T09:00:00',
     },
     {
       id: 'b2c3d4e5-0000-0000-0000-000000000004',
@@ -285,17 +291,17 @@ function seedAnimaisMock(): Animal[] {
       statusNome: 'Adotado',
       motivoEntradaCodigo: 'resgate',
       motivoEntradaNome: 'Resgate',
-      dataEntrada: '2025-04-02T09:00:00Z',
+      dataEntrada: '2025-04-02T09:00:00',
       baiaId: null,
       baiaNome: null,
       tipoBaiaNome: null,
-      fichaCompleta: true,
+      fichaCompleta: false,
       fotoUrl: null,
       observacoes: null,
       criadoPorId: 'a1b2c3d4-0000-0000-0000-000000000001',
       criadoPorNome: 'Stéphanie Lima',
-      criadoEm: '2025-04-02T09:00:00Z',
-      atualizadoEm: '2025-04-02T09:00:00Z',
+      criadoEm: '2025-04-02T09:00:00',
+      atualizadoEm: '2025-04-02T09:00:00',
     },
     {
       id: 'b2c3d4e5-0000-0000-0000-000000000005',
@@ -317,17 +323,17 @@ function seedAnimaisMock(): Animal[] {
       statusNome: 'Óbito natural',
       motivoEntradaCodigo: 'resgate',
       motivoEntradaNome: 'Resgate',
-      dataEntrada: '2025-05-18T09:00:00Z',
+      dataEntrada: '2025-05-18T09:00:00',
       baiaId: null,
       baiaNome: null,
       tipoBaiaNome: null,
-      fichaCompleta: true,
+      fichaCompleta: false,
       fotoUrl: null,
       observacoes: null,
       criadoPorId: 'a1b2c3d4-0000-0000-0000-000000000001',
       criadoPorNome: 'Stéphanie Lima',
-      criadoEm: '2025-05-18T09:00:00Z',
-      atualizadoEm: '2025-05-18T09:00:00Z',
+      criadoEm: '2025-05-18T09:00:00',
+      atualizadoEm: '2025-05-18T09:00:00',
     },
     {
       id: 'b2c3d4e5-0000-0000-0000-000000000006',
@@ -349,17 +355,17 @@ function seedAnimaisMock(): Animal[] {
       statusNome: 'Óbito eutanásia',
       motivoEntradaCodigo: 'resgate',
       motivoEntradaNome: 'Resgate',
-      dataEntrada: '2025-09-21T09:00:00Z',
+      dataEntrada: '2025-09-21T09:00:00',
       baiaId: null,
       baiaNome: null,
       tipoBaiaNome: null,
-      fichaCompleta: true,
+      fichaCompleta: false,
       fotoUrl: null,
       observacoes: null,
       criadoPorId: 'a1b2c3d4-0000-0000-0000-000000000001',
       criadoPorNome: 'Stéphanie Lima',
-      criadoEm: '2025-09-21T09:00:00Z',
-      atualizadoEm: '2025-09-21T09:00:00Z',
+      criadoEm: '2025-09-21T09:00:00',
+      atualizadoEm: '2025-09-21T09:00:00',
     },
     {
       id: 'b2c3d4e5-0000-0000-0000-000000000007',
@@ -381,17 +387,17 @@ function seedAnimaisMock(): Animal[] {
       statusNome: 'Transferido',
       motivoEntradaCodigo: 'resgate',
       motivoEntradaNome: 'Resgate',
-      dataEntrada: '2025-06-23T09:00:00Z',
+      dataEntrada: '2025-06-23T09:00:00',
       baiaId: null,
       baiaNome: null,
       tipoBaiaNome: null,
-      fichaCompleta: true,
+      fichaCompleta: false,
       fotoUrl: null,
       observacoes: null,
       criadoPorId: 'a1b2c3d4-0000-0000-0000-000000000001',
       criadoPorNome: 'Stéphanie Lima',
-      criadoEm: '2025-06-23T09:00:00Z',
-      atualizadoEm: '2025-06-23T09:00:00Z',
+      criadoEm: '2025-06-23T09:00:00',
+      atualizadoEm: '2025-06-23T09:00:00',
     },
     {
       id: 'b2c3d4e5-0000-0000-0000-000000000008',
@@ -413,17 +419,17 @@ function seedAnimaisMock(): Animal[] {
       statusNome: 'Disponível',
       motivoEntradaCodigo: 'resgate',
       motivoEntradaNome: 'Resgate',
-      dataEntrada: '2025-05-11T09:00:00Z',
+      dataEntrada: '2025-05-11T09:00:00',
       baiaId: 'c3d4e5f6-0000-0000-0000-000000000004',
       baiaNome: 'Baia 7',
       tipoBaiaNome: 'Canil',
-      fichaCompleta: true,
+      fichaCompleta: false,
       fotoUrl: null,
       observacoes: null,
       criadoPorId: 'a1b2c3d4-0000-0000-0000-000000000001',
       criadoPorNome: 'Stéphanie Lima',
-      criadoEm: '2025-05-11T09:00:00Z',
-      atualizadoEm: '2025-05-11T09:00:00Z',
+      criadoEm: '2025-05-11T09:00:00',
+      atualizadoEm: '2025-05-11T09:00:00',
     },
     {
       id: 'b2c3d4e5-0000-0000-0000-000000000009',
@@ -445,7 +451,7 @@ function seedAnimaisMock(): Animal[] {
       statusNome: 'Em tratamento',
       motivoEntradaCodigo: 'entrega_voluntaria',
       motivoEntradaNome: 'Entrega voluntária',
-      dataEntrada: '2025-01-08T09:00:00Z',
+      dataEntrada: '2025-01-08T09:00:00',
       baiaId: null,
       baiaNome: null,
       tipoBaiaNome: null,
@@ -454,8 +460,8 @@ function seedAnimaisMock(): Animal[] {
       observacoes: null,
       criadoPorId: 'a1b2c3d4-0000-0000-0000-000000000001',
       criadoPorNome: 'Stéphanie Lima',
-      criadoEm: '2025-01-08T09:00:00Z',
-      atualizadoEm: '2025-01-08T09:00:00Z',
+      criadoEm: '2025-01-08T09:00:00',
+      atualizadoEm: '2025-01-08T09:00:00',
     },
     {
       id: 'b2c3d4e5-0000-0000-0000-000000000010',
@@ -477,7 +483,7 @@ function seedAnimaisMock(): Animal[] {
       statusNome: 'Disponível',
       motivoEntradaCodigo: 'apreensao',
       motivoEntradaNome: 'Apreensão',
-      dataEntrada: '2026-02-17T09:00:00Z',
+      dataEntrada: '2026-02-17T09:00:00',
       baiaId: null,
       baiaNome: null,
       tipoBaiaNome: null,
@@ -486,8 +492,8 @@ function seedAnimaisMock(): Animal[] {
       observacoes: null,
       criadoPorId: 'a1b2c3d4-0000-0000-0000-000000000001',
       criadoPorNome: 'Stéphanie Lima',
-      criadoEm: '2026-02-17T09:00:00Z',
-      atualizadoEm: '2026-02-17T09:00:00Z',
+      criadoEm: '2026-02-17T09:00:00',
+      atualizadoEm: '2026-02-17T09:00:00',
     },
   ]
 }
@@ -515,7 +521,7 @@ function criarAnimalFiller(indice: number): Animal {
     statusNome: 'Disponível',
     motivoEntradaCodigo: 'resgate',
     motivoEntradaNome: 'Resgate',
-    dataEntrada: '2026-01-01T09:00:00Z',
+    dataEntrada: '2026-01-01T09:00:00',
     baiaId: null,
     baiaNome: null,
     tipoBaiaNome: null,
@@ -524,8 +530,8 @@ function criarAnimalFiller(indice: number): Animal {
     observacoes: null,
     criadoPorId: 'a1b2c3d4-0000-0000-0000-000000000001',
     criadoPorNome: 'Stéphanie Lima',
-    criadoEm: '2026-01-01T09:00:00Z',
-    atualizadoEm: '2026-01-01T09:00:00Z',
+    criadoEm: '2026-01-01T09:00:00',
+    atualizadoEm: '2026-01-01T09:00:00',
   }
 }
 
@@ -668,12 +674,22 @@ function nomeDoCatalogo(itens: { codigo: string; nome: string }[], codigo: strin
   return itens.find((item) => item.codigo === codigo)?.nome ?? codigo
 }
 
+// Espelha FichaCompletaService (DER §3.2): microchip com texto e ao menos uma
+// vacinação que nenhuma outra retifica. Recalculada no POST/PUT do animal e a
+// cada POST de vacinação, como no backend.
+function fichaCompletaMock(animalId: string, microchip: string | null): boolean {
+  if (!microchip?.trim()) return false
+  return vacinacoesMock.some(
+    (vacinacao) => vacinacao.animalId === animalId && !vacinacoesMock.some((outra) => outra.retificaId === vacinacao.id),
+  )
+}
+
 // Recompõe um `Animal` (resposta) a partir de um `AnimalRequest` (o que o
 // form de T18 envia) — espelha o que o service real faz ao resolver os
 // códigos de espécie/status/motivo/baia para os nomes exibidos.
 function construirAnimalMock(id: string, body: AnimalRequest, existente: Animal | null): Animal {
   const baia = body.baiaId ? baiasMock.find((item) => item.id === body.baiaId) : undefined
-  const agora = new Date().toISOString()
+  const agora = agoraEmItu()
   return {
     id,
     nome: body.nome,
@@ -698,7 +714,7 @@ function construirAnimalMock(id: string, body: AnimalRequest, existente: Animal 
     baiaId: body.baiaId ?? null,
     baiaNome: baia?.nome ?? null,
     tipoBaiaNome: baia?.tipoBaiaNome ?? null,
-    fichaCompleta: Boolean(body.microchip),
+    fichaCompleta: fichaCompletaMock(id, body.microchip ?? null),
     fotoUrl: body.fotoUrl ?? null,
     observacoes: body.observacoes ?? null,
     criadoPorId: existente?.criadoPorId ?? usuariosMock[0].id,
@@ -728,10 +744,11 @@ function derivarStatusRegistro<T extends RegistroClinicoBruto>(
 
 const ANIMAL_REX_ID = 'b2c3d4e5-0000-0000-0000-000000000001'
 
+// Datas civis relativas ao dia de Itu (o handler de alertas compara com
+// hojeEmItu, como o backend). Partir do dia UTC deslocava tudo em 1 dia entre
+// 21:00 e 23:59 em Itu (datasMock.test.ts).
 function addDiasIso(dias: number): string {
-  const data = new Date()
-  data.setUTCDate(data.getUTCDate() + dias)
-  return data.toISOString().slice(0, 10)
+  return adicionarDiasIso(hojeEmItu(), dias)
 }
 
 type VacinacaoMockInterna = Omit<Vacinacao, 'retificadoPorId' | 'statusRegistro'>
@@ -754,7 +771,7 @@ function seedVacinacoesMock(): VacinacaoMockInterna[] {
       lote: '22B-4451',
       observacoes: null,
       retificaId: null,
-      criadoEm: `${addDiasIso(-400)}T09:00:00Z`,
+      criadoEm: `${addDiasIso(-400)}T09:00:00`,
     },
     {
       id: 'd1000000-0000-0000-0000-000000000002',
@@ -771,7 +788,7 @@ function seedVacinacoesMock(): VacinacaoMockInterna[] {
       lote: '18A-9923',
       observacoes: null,
       retificaId: null,
-      criadoEm: `${addDiasIso(-360)}T09:00:00Z`,
+      criadoEm: `${addDiasIso(-360)}T09:00:00`,
     },
     {
       id: 'd1000000-0000-0000-0000-000000000003',
@@ -788,7 +805,7 @@ function seedVacinacoesMock(): VacinacaoMockInterna[] {
       lote: null,
       observacoes: null,
       retificaId: null,
-      criadoEm: `${addDiasIso(-30)}T09:00:00Z`,
+      criadoEm: `${addDiasIso(-30)}T09:00:00`,
     },
     // Par retificado: o registro 004 é corrigido pelo 005 (aponta retificaId
     // de volta para 004) — 004 deve aparecer como "RETIFICADO", 005 "ATIVO".
@@ -807,7 +824,7 @@ function seedVacinacoesMock(): VacinacaoMockInterna[] {
       lote: 'LOTE-ERRADO',
       observacoes: null,
       retificaId: null,
-      criadoEm: `${addDiasIso(-100)}T09:00:00Z`,
+      criadoEm: `${addDiasIso(-100)}T09:00:00`,
     },
     {
       id: 'd1000000-0000-0000-0000-000000000005',
@@ -824,7 +841,7 @@ function seedVacinacoesMock(): VacinacaoMockInterna[] {
       lote: 'LOTE-CORRIGIDO',
       observacoes: 'Correção de lote informado errado.',
       retificaId: 'd1000000-0000-0000-0000-000000000004',
-      criadoEm: `${addDiasIso(-99)}T09:00:00Z`,
+      criadoEm: `${addDiasIso(-99)}T09:00:00`,
     },
   ]
 }
@@ -867,7 +884,7 @@ function seedProcedimentosMock(): ProcedimentoMockInterno[] {
       descricao: 'Orquiectomia eletiva.',
       resultado: 'Sem intercorrências. Alta no mesmo dia.',
       retificaId: null,
-      criadoEm: `${addDiasIso(-250)}T09:00:00Z`,
+      criadoEm: `${addDiasIso(-250)}T09:00:00`,
     },
     {
       id: 'e2000000-0000-0000-0000-000000000002',
@@ -880,7 +897,7 @@ function seedProcedimentosMock(): ProcedimentoMockInterno[] {
       descricao: 'Consulta de rotina.',
       resultado: null,
       retificaId: null,
-      criadoEm: `${addDiasIso(-15)}T09:00:00Z`,
+      criadoEm: `${addDiasIso(-15)}T09:00:00`,
     },
   ]
 }
@@ -893,10 +910,29 @@ export function resetProcedimentosMock() {
 
 const MEDICAMENTO_FENOBARBITAL_ID = 'f3000000-0000-0000-0000-000000000001'
 
-const medicamentosMock: Medicamento[] = [
-  { id: MEDICAMENTO_FENOBARBITAL_ID, nome: 'Fenobarbital 30mg', categoriaId: 'cat-1', categoriaNome: 'Anticonvulsivante', ativo: true },
-  { id: 'f3000000-0000-0000-0000-000000000002', nome: 'Amoxicilina 250mg', categoriaId: 'cat-2', categoriaNome: 'Antibiótico', ativo: true },
-]
+// Dados fictícios só do mock (o backend real não tem seed de medicamentos nem
+// de categorias: o CCZ cadastra os reais pela tela de medicamentos).
+function seedMedicamentosMock(): Medicamento[] {
+  return [
+    { id: MEDICAMENTO_FENOBARBITAL_ID, nome: 'Fenobarbital 30mg', categoriaId: 'cat-1', categoriaNome: 'Anticonvulsivante', ativo: true },
+    { id: 'f3000000-0000-0000-0000-000000000002', nome: 'Amoxicilina 250mg', categoriaId: 'cat-2', categoriaNome: 'Antibiótico', ativo: true },
+  ]
+}
+
+function seedCategoriasFarmacologicasMock(): CategoriaFarmacologica[] {
+  return [
+    { id: 'cat-1', nome: 'Anticonvulsivante', ativo: true },
+    { id: 'cat-2', nome: 'Antibiótico', ativo: true },
+  ]
+}
+
+let medicamentosMock: Medicamento[] = seedMedicamentosMock()
+let categoriasFarmacologicasMock: CategoriaFarmacologica[] = seedCategoriasFarmacologicasMock()
+
+export function resetMedicamentosMock() {
+  medicamentosMock = seedMedicamentosMock()
+  categoriasFarmacologicasMock = seedCategoriasFarmacologicasMock()
+}
 
 type PrescricaoMockInterna = Omit<Prescricao, 'retificadoPorId' | 'statusRegistro'>
 
@@ -920,7 +956,7 @@ function seedPrescricoesMock(): PrescricaoMockInterna[] {
       viaAdministracao: 'ORAL',
       status: 'ATIVA',
       retificaId: null,
-      criadoEm: `${addDiasIso(-20)}T09:00:00Z`,
+      criadoEm: `${addDiasIso(-20)}T09:00:00`,
     },
   ]
 }
@@ -1056,7 +1092,7 @@ export const handlers = [
       senhaAlteradaEm: null,
       ativo: true,
       ultimoAcesso: null,
-      criadoEm: new Date().toISOString(),
+      criadoEm: agoraEmItu(),
       senhaInicial: body.senhaInicial,
     }
 
@@ -1306,9 +1342,12 @@ export const handlers = [
       lote: body.lote ?? null,
       observacoes: body.observacoes ?? null,
       retificaId: body.retificaId ?? null,
-      criadoEm: new Date().toISOString(),
+      criadoEm: agoraEmItu(),
     }
     vacinacoesMock = [...vacinacoesMock, novo]
+    animaisMock = animaisMock.map((animal) =>
+      animal.id === body.animalId ? { ...animal, fichaCompleta: fichaCompletaMock(animal.id, animal.microchip) } : animal,
+    )
     const [comStatus] = derivarStatusRegistro([novo])
     return HttpResponse.json(comStatus, { status: 201 })
   }),
@@ -1391,7 +1430,7 @@ export const handlers = [
       descricao: body.descricao ?? null,
       resultado: body.resultado ?? null,
       retificaId: body.retificaId ?? null,
-      criadoEm: new Date().toISOString(),
+      criadoEm: agoraEmItu(),
     }
     procedimentosMock = [...procedimentosMock, novo]
     const [comStatus] = derivarStatusRegistro([novo])
@@ -1429,7 +1468,7 @@ export const handlers = [
       viaAdministracao: body.viaAdministracao,
       status: body.status,
       retificaId: body.retificaId ?? null,
-      criadoEm: new Date().toISOString(),
+      criadoEm: agoraEmItu(),
     }
     prescricoesMock = [...prescricoesMock, novo]
     const [comStatus] = derivarStatusRegistro([novo])
@@ -1452,6 +1491,42 @@ export const handlers = [
     return HttpResponse.json(paginar(filtrados, pagina, tamanho))
   }),
 
+  http.post(`${API_BASE_URL}/medicamentos`, async ({ request }) => {
+    const body = (await request.json()) as { nome?: string; categoriaId?: string }
+    const categoria = categoriasFarmacologicasMock.find((item) => item.id === body.categoriaId)
+    if (!categoria) {
+      return HttpResponse.json({ mensagem: 'Categoria farmacologica informada nao existe' }, { status: 422 })
+    }
+    const medicamento: Medicamento = {
+      id: crypto.randomUUID(),
+      nome: body.nome ?? '',
+      categoriaId: categoria.id,
+      categoriaNome: categoria.nome,
+      ativo: true,
+    }
+    medicamentosMock.push(medicamento)
+    return HttpResponse.json(medicamento)
+  }),
+
+  // Espelha CategoriaFarmacologicaController: só ativas, por nome; nome
+  // repetido (sem diferenciar maiúsculas) responde 409.
+  http.get(`${API_BASE_URL}/categorias-farmacologicas`, () =>
+    HttpResponse.json(
+      categoriasFarmacologicasMock.filter((item) => item.ativo).sort((a, b) => a.nome.localeCompare(b.nome)),
+    ),
+  ),
+
+  http.post(`${API_BASE_URL}/categorias-farmacologicas`, async ({ request }) => {
+    const nome = ((await request.json()) as { nome?: string }).nome?.trim() ?? ''
+    if (categoriasFarmacologicasMock.some((item) => item.nome.toLowerCase() === nome.toLowerCase())) {
+      return HttpResponse.json({ mensagem: 'Categoria farmacologica ja cadastrada' }, { status: 409 })
+    }
+    const categoria: CategoriaFarmacologica = { id: crypto.randomUUID(), nome, ativo: true }
+    categoriasFarmacologicasMock.push(categoria)
+    return HttpResponse.json(categoria)
+  }),
+
   ...ocorrenciasHandlers,
   ...processosHandlers,
+  ...relatoriosHandlers,
 ]

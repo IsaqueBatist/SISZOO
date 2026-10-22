@@ -9,7 +9,8 @@ import { aplicarMascaraAoDigitar, formatarCep, formatarCpf, formatarTelefone } f
 import { buscarEnderecoPorCep } from '@/lib/viaCep'
 import { AmostraAnimalCard, type AmostraErros } from './AmostraAnimalCard'
 import './ProcessoForm.css'
-import { CAMPOS_STEP, hojeIso, processoFormSchema, type ProcessoFormValues } from '../schemas/processoFormSchema'
+import { hojeEmItu } from '@/lib/datas'
+import { CAMPOS_STEP, processoFormSchema, type ProcessoFormValues } from '../schemas/processoFormSchema'
 import type { AmostraAnimalRequest, CriarProcessoRequest } from '../types/processos.types'
 import {
   agendarSalvarRascunhoProcesso,
@@ -31,7 +32,7 @@ function amostraVazia(): ProcessoFormValues['amostras'][number] {
     statusClinico: '' as never,
     tipoAbrigo: '' as never,
     alteracaoComportamental: '',
-    dataColeta: hojeIso(),
+    dataColeta: hojeEmItu(),
     materialBiologico: '' as never,
     contatoHumano: false,
     nivelContato: undefined,
@@ -46,7 +47,7 @@ function valoresVazios(): ProcessoFormValues {
     vinculoDecisao: '' as never,
     ocorrenciaId: null,
     ocorrenciaResumo: null,
-    dataAbertura: hojeIso(),
+    dataAbertura: hojeEmItu(),
     doenca: '',
     laboratorio: '',
     responsavel: {

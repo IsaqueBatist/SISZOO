@@ -8,26 +8,15 @@ export interface KpiCardData {
   value: string
   unit?: string
   foot: string
-  delta?: string
-  deltaDirection?: 'up' | 'down'
-  mockado: boolean
+  // Só o card de Adoções usa isto hoje: é o único bloco sem fonte real no
+  // backend (ver dashboard.types.ts::KpiAdocoes). Mostra o selo "Dados de
+  // demonstração" no card individual, no mesmo padrão já usado pelos cards
+  // de gráfico (GraficosDashboard.tsx), em vez de um selo único pra seção
+  // inteira — os outros 3 cards são reais.
+  isMock?: boolean
 }
 
-function formatarDelta(valor: number | undefined, formatar: (v: number) => string): KpiCardData['delta'] {
-  if (valor === undefined) return undefined
-  const seta = valor >= 0 ? '▲' : '▼'
-  return `${seta} ${formatar(Math.abs(valor))}`
-}
-
-function direcao(valor: number | undefined): KpiCardData['deltaDirection'] {
-  if (valor === undefined) return undefined
-  return valor >= 0 ? 'up' : 'down'
-}
-
-// `vacinacaoEAdocoesMockadas` vem de dashboardApi.ts::vacinacaoEAdocoesUsamMock()
-// — Total de Animais e Ocorrências já são sempre reais, só Vacinados e
-// Adoções podem estar mockados hoje.
-export function mapearKpisParaCards(kpis: DashboardKpis, vacinacaoEAdocoesMockadas: boolean): KpiCardData[] {
+export function mapearKpisParaCards(kpis: DashboardKpis): KpiCardData[] {
   return [
     {
       tone: 'kpi-info',
@@ -35,9 +24,6 @@ export function mapearKpisParaCards(kpis: DashboardKpis, vacinacaoEAdocoesMockad
       label: 'Total de Animais',
       value: String(kpis.animais.total),
       foot: `${kpis.animais.caninos} cães · ${kpis.animais.felinos} gatos`,
-      delta: formatarDelta(kpis.animais.variacaoSemanal, (v) => `+${v} essa semana`),
-      deltaDirection: direcao(kpis.animais.variacaoSemanal),
-      mockado: false,
     },
     {
       tone: 'kpi-success',
@@ -46,9 +32,6 @@ export function mapearKpisParaCards(kpis: DashboardKpis, vacinacaoEAdocoesMockad
       value: String(kpis.vacinacao.percentualVacinados),
       unit: '%',
       foot: `${kpis.vacinacao.vacinados} de ${kpis.vacinacao.total} animais`,
-      delta: formatarDelta(kpis.vacinacao.variacaoSemanalPontos, (v) => `${v}% vs semana`),
-      deltaDirection: direcao(kpis.vacinacao.variacaoSemanalPontos),
-      mockado: vacinacaoEAdocoesMockadas,
     },
     {
       tone: 'kpi-alert',
@@ -56,22 +39,17 @@ export function mapearKpisParaCards(kpis: DashboardKpis, vacinacaoEAdocoesMockad
       label: 'Adoções no Mês',
       value: String(kpis.adocoes.noMes),
       foot: `Meta mensal: ${kpis.adocoes.metaMensal}`,
-      delta: formatarDelta(kpis.adocoes.variacaoSemanal, (v) => `+${v} essa semana`),
-      deltaDirection: direcao(kpis.adocoes.variacaoSemanal),
-      mockado: vacinacaoEAdocoesMockadas,
+      isMock: true,
     },
     {
       tone: 'kpi-danger',
       icon: 'alert',
-      label: 'Ocorrências registradas hoje',
+      label: 'Ocorrências',
       value: String(kpis.ocorrencias.registradasHoje),
       foot:
         kpis.ocorrencias.mediaPorHora !== undefined
           ? `Registradas hoje · média ${kpis.ocorrencias.mediaPorHora} a cada hora`
           : 'Registradas hoje',
-      delta: formatarDelta(kpis.ocorrencias.variacaoSemanal, (v) => `${v} vs semana passada`),
-      deltaDirection: direcao(kpis.ocorrencias.variacaoSemanal),
-      mockado: false,
     },
   ]
 }

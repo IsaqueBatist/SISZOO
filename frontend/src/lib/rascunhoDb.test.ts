@@ -10,6 +10,7 @@ function stubIndexedDb(storesExistentes: string[]) {
   const banco = {
     objectStoreNames: { contains: (nome: string) => stores.has(nome) },
     createObjectStore: vi.fn((nome: string) => stores.add(nome)),
+    deleteObjectStore: vi.fn((nome: string) => stores.delete(nome)),
   }
   const open = vi.fn((_nome: string, versao: number) => {
     const requisicao: Record<string, unknown> = { result: banco }
@@ -33,9 +34,20 @@ describe('banco de rascunhos compartilhado', () => {
 
     await abrirBancoRascunhos()
 
-    expect(open).toHaveBeenCalledWith('siszoo-rascunhos', 2)
-    expect(banco.createObjectStore).toHaveBeenCalledTimes(2)
+    expect(open).toHaveBeenCalledWith('siszoo-rascunhos', 3)
+    expect(banco.createObjectStore).toHaveBeenCalledTimes(STORES_RASCUNHO.length - 1)
     expect([...stores].sort()).toEqual([...STORES_RASCUNHO].sort())
+  })
+
+  it('da versão 2 para a 3 só cria a store clinico e não apaga as existentes', async () => {
+    const { banco, stores } = stubIndexedDb(['animais', 'ocorrencias', 'processos'])
+
+    await abrirBancoRascunhos()
+
+    expect(banco.createObjectStore).toHaveBeenCalledTimes(1)
+    expect(banco.createObjectStore).toHaveBeenCalledWith('clinico')
+    expect(banco.deleteObjectStore).not.toHaveBeenCalled()
+    expect(stores.has('animais')).toBe(true)
   })
 
   it('não recria stores que já existem', async () => {

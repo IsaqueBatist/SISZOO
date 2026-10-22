@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/>
+<title>Relatório Anual de Processos Sanitários</title>
+<th:block th:replace="~{_fragmentos :: estilo}"></th:block>
+</head>
+<body>
+
+<div class="sheet">
+<div th:replace="~{_fragmentos :: cabecalhoPaginado(
+        'Relatório Anual de Processos Sanitários',
+        'Período: ' + ${meta.subtituloPeriodo} + ' · Centro de Controle de Zoonoses · Itu/SP',
+        2)}"></div>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="kpi-box"><div class="l">Processos abertos</div><div class="v" th:text="${d.kpis.processosAbertos}">0</div></div></div>
+  <div class="kpi"><div class="kpi-box"><div class="l">Confirmados positivos</div><div class="v" th:text="${d.kpis.confirmadosPositivos}">0</div>
+    <div class="d" th:text="${d.kpis.percentualPositividade} + '% de positividade'">0% de positividade</div></div></div>
+  <div class="kpi"><div class="kpi-box"><div class="l">Com contato humano</div><div class="v" th:text="${d.kpis.comContatoHumano}">0</div>
+    <div class="d">Notificados ao SINAN</div></div></div>
+  <div class="kpi"><div class="kpi-box"><div class="l">Tempo médio (dias)</div><div class="v" th:text="${d.kpis.tempoMedioDias} ?: '—'">0</div>
+    <div class="d">Abertura → resultado</div></div></div>
+</div>
+
+<h2 class="section">1. Sumário Executivo</h2>
+<p th:text="${d.sumarioExecutivo}">Sumário.</p>
+
+<h2 class="section">2. Distribuição por Patologia</h2>
+<div th:each="p : ${d.porPatologia}" class="bar-row">
+  <span class="label" th:text="${p.doenca}">Doença</span>
+  <span class="track"><span class="track-inner"><span class="fill"
+        th:style="'width:' + ${p.quantidade * 100.0 / d.porPatologia[0].quantidade} + '%;'"></span></span></span>
+  <span class="val" th:text="${p.quantidade}">0</span>
+</div>
+
+<h2 class="section">3. Resultados Laboratoriais</h2>
+<table>
+  <thead><tr><th>Doença</th><th>Investigados</th><th>Positivos</th><th>Negativos</th><th>Inconclus.</th><th>Aguard.</th><th>Positividade</th></tr></thead>
+  <tbody>
+    <tr th:each="r : ${d.resultadosPorDoenca}">
+      <td th:text="${r.doenca}">Doença</td>
+      <td class="mono" th:text="${r.investigados}">0</td>
+      <td class="mono" th:text="${r.positivos}">0</td>
+      <td class="mono" th:text="${r.negativos}">0</td>
+      <td class="mono" th:text="${r.inconclusivos}">0</td>
+      <td class="mono" th:text="${r.aguardando}">0</td>
+      <td th:text="${r.percentualPositividade} + '%'">0%</td>
+    </tr>
+    <tr class="row-total">
+      <td>TOTAL</td>
+      <td class="mono" th:text="${d.totalResultados.investigados}">0</td>
+      <td class="mono" th:text="${d.totalResultados.positivos}">0</td>
+      <td class="mono" th:text="${d.totalResultados.negativos}">0</td>
+      <td class="mono" th:text="${d.totalResultados.inconclusivos}">0</td>
+      <td class="mono" th:text="${d.totalResultados.aguardando}">0</td>
+      <td th:text="${d.totalResultados.percentualPositividade} + '%'">0%</td>
+    </tr>
+  </tbody>
+</table>
+
+<div th:replace="~{_fragmentos :: rodapePaginado(1, 2)}"></div>
+</div>
+
+<div class="sheet">
+<div th:replace="~{_fragmentos :: cabecalhoContinuacao('Relatório Anual de Processos · ' + ${d.ano}, 2, 2)}"></div>
+
+<h2 class="section">4. Distribuição por Espécie</h2>
+<div class="legend-list">
+  <div th:each="e, iter : ${d.porEspecie}" class="li">
+    <span class="sw" th:style="'background:' + (${iter.index} % 4 == 0 ? '#1565C0' : (${iter.index} % 4 == 1 ? '#00695C' : (${iter.index} % 4 == 2 ? '#6A1B9A' : '#424242')))"></span>
+    <span th:text="${e.especie} + ' — ' + ${e.quantidade} + ' casos (' + ${e.percentual} + '%)'">Espécie</span>
+  </div>
+</div>
+
+<h2 class="section">5. Bairros com mais ocorrências</h2>
+<table>
+  <thead><tr><th>Bairro</th><th>Processos</th><th>Positivos</th><th>Doenças predominantes</th></tr></thead>
+  <tbody>
+    <tr th:each="b : ${d.bairros}">
+      <td th:text="${b.bairro}">Bairro</td>
+      <td class="mono" th:text="${b.processos}">0</td>
+      <td class="mono" th:text="${b.positivos}">0</td>
+      <td th:text="${b.doencasPredominantes}">—</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 class="section">6. Laboratórios utilizados</h2>
+<table>
+  <thead><tr><th>Laboratório</th><th>Amostras</th><th>% do total</th><th>Tempo médio (dias)</th></tr></thead>
+  <tbody>
+    <tr th:each="l : ${d.laboratorios}">
+      <td th:text="${l.laboratorio}">Laboratório</td>
+      <td class="mono" th:text="${l.amostras}">0</td>
+      <td th:text="${l.percentualDoTotal} + '%'">0%</td>
+      <td class="mono" th:text="${l.tempoMedioDias} ?: '—'">0</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="note" style="margin-top: 6mm;">
+  <strong>Observação LGPD:</strong> Este relatório consolida dados de forma anonimizada. Para acesso a registros individuais, consulte o módulo de Auditoria do SISZOO ou solicite via ofício à Vigilância Sanitária.
+</div>
+
+<div th:replace="~{_fragmentos :: rodapePaginado(2, 2)}"></div>
+</div>
+
+</body>
+</html>

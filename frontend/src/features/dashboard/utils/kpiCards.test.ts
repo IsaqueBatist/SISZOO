@@ -4,61 +4,44 @@ import { mapearKpisParaCards } from './kpiCards'
 
 function kpisBase(sobrescrever: Partial<DashboardKpis> = {}): DashboardKpis {
   return {
-    animais: { total: 147, caninos: 123, felinos: 24, variacaoSemanal: 12 },
-    vacinacao: { percentualVacinados: 84, vacinados: 123, total: 147, variacaoSemanalPontos: 5.2 },
-    adocoes: { noMes: 8, metaMensal: 12, variacaoSemanal: 2 },
-    ocorrencias: { registradasHoje: 4, mediaPorHora: 1, variacaoSemanal: -2 },
+    animais: { total: 147, caninos: 123, felinos: 24 },
+    vacinacao: { percentualVacinados: 84, vacinados: 123, total: 147 },
+    adocoes: { noMes: 8, metaMensal: 12 },
+    ocorrencias: { registradasHoje: 4, mediaPorHora: 1 },
+    alertas: [],
     ...sobrescrever,
   }
 }
 
 describe('mapearKpisParaCards', () => {
   it('mapeia os 4 KPIs com valores, unidade e rodapé corretos', () => {
-    const cards = mapearKpisParaCards(kpisBase(), false)
+    const cards = mapearKpisParaCards(kpisBase())
 
     expect(cards).toHaveLength(4)
     expect(cards[0]).toMatchObject({ label: 'Total de Animais', value: '147', foot: '123 cães · 24 gatos' })
     expect(cards[1]).toMatchObject({ label: 'Vacinados', value: '84', unit: '%', foot: '123 de 147 animais' })
-    expect(cards[2]).toMatchObject({ label: 'Adoções no Mês', value: '8', foot: 'Meta mensal: 12' })
-    expect(cards[3]).toMatchObject({ label: 'Ocorrências registradas hoje', value: '4' })
+    expect(cards[2]).toMatchObject({ label: 'Adoções no Mês', value: '8', foot: 'Meta mensal: 12', isMock: true })
+    expect(cards[3]).toMatchObject({ label: 'Ocorrências', value: '4' })
   })
 
-  it('direção do delta reflete o sinal do valor de variação', () => {
-    const cards = mapearKpisParaCards(kpisBase(), false)
-    const ocorrencias = cards.find((card) => card.label === 'Ocorrências registradas hoje')
+  it('só o card de Adoções é marcado como mock', () => {
+    const cards = mapearKpisParaCards(kpisBase())
 
-    expect(ocorrencias?.deltaDirection).toBe('down')
-    expect(ocorrencias?.delta).toContain('▼')
-
-    const animais = cards.find((card) => card.label === 'Total de Animais')
-    expect(animais?.deltaDirection).toBe('up')
-    expect(animais?.delta).toContain('▲')
-  })
-
-  it('esconde o delta quando o campo de variação está ausente', () => {
-    const cards = mapearKpisParaCards(kpisBase({ animais: { total: 147, caninos: 123, felinos: 24 } }), false)
-    const animais = cards.find((card) => card.label === 'Total de Animais')
-
-    expect(animais?.delta).toBeUndefined()
-    expect(animais?.deltaDirection).toBeUndefined()
+    expect(cards.filter((card) => card.isMock)).toHaveLength(1)
+    expect(cards.find((card) => card.isMock)?.label).toBe('Adoções no Mês')
   })
 
   it('mostra "Registradas hoje" sem a média quando mediaPorHora está ausente', () => {
-    const cards = mapearKpisParaCards(kpisBase({ ocorrencias: { registradasHoje: 4 } }), false)
-    const ocorrencias = cards.find((card) => card.label === 'Ocorrências registradas hoje')
+    const cards = mapearKpisParaCards(kpisBase({ ocorrencias: { registradasHoje: 4 } }))
+    const ocorrencias = cards.find((card) => card.label === 'Ocorrências')
 
     expect(ocorrencias?.foot).toBe('Registradas hoje')
   })
 
-  it('só os cards de Vacinados e Adoções ficam marcados como mockados; Animais e Ocorrências nunca', () => {
-    const cardsMockados = mapearKpisParaCards(kpisBase(), true)
-    expect(cardsMockados.find((c) => c.label === 'Total de Animais')?.mockado).toBe(false)
-    expect(cardsMockados.find((c) => c.label === 'Vacinados')?.mockado).toBe(true)
-    expect(cardsMockados.find((c) => c.label === 'Adoções no Mês')?.mockado).toBe(true)
-    expect(cardsMockados.find((c) => c.label === 'Ocorrências registradas hoje')?.mockado).toBe(false)
+  it('mostra a média por hora quando presente', () => {
+    const cards = mapearKpisParaCards(kpisBase({ ocorrencias: { registradasHoje: 4, mediaPorHora: 0.5 } }))
+    const ocorrencias = cards.find((card) => card.label === 'Ocorrências')
 
-    const cardsReais = mapearKpisParaCards(kpisBase(), false)
-    expect(cardsReais.find((c) => c.label === 'Vacinados')?.mockado).toBe(false)
-    expect(cardsReais.find((c) => c.label === 'Adoções no Mês')?.mockado).toBe(false)
+    expect(ocorrencias?.foot).toBe('Registradas hoje · média 0.5 a cada hora')
   })
 })

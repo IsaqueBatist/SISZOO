@@ -1,5 +1,7 @@
 package com.siszoo.ocorrencias.repository;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,6 +16,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.siszoo.ocorrencias.entity.Ocorrencia;
+import com.siszoo.processos.repository.ContagemCatalogoProjection;
 
 import jakarta.persistence.LockModeType;
 
@@ -34,4 +37,59 @@ public interface OcorrenciaRepository extends JpaRepository<Ocorrencia, UUID>, J
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT o FROM Ocorrencia o WHERE o.id = :id")
     Optional<Ocorrencia> findByIdForUpdate(@Param("id") UUID id);
+
+    // KPI "ocorrencias" do dashboard (com.siszoo.relatorios, T38): registro
+    // duplicado/indevido (providencia "registro_indevido") e excluido por
+    // decisao de produto registrada no comentario de
+    // V10__schema_ocorrencias.sql ("O dashboard deve exclui-la das
+    // contagens") — vale pra qualquer contagem de ocorrencias do dashboard,
+    // nao so esta.
+    @Query("SELECT COUNT(o) FROM Ocorrencia o WHERE o.dataAbertura = :hoje "
+            + "AND (o.providenciaTomada IS NULL OR o.providenciaTomada.codigo <> 'registro_indevido')")
+    long contarRegistradasEm(@Param("hoje") LocalDate hoje);
+
+    // Relatorio "Ocorrências por Bairro" (T41) — mesma exclusao de
+    // 'registro_indevido' de contarRegistradasEm, aplicada a qualquer
+    // contagem de ocorrencias (comentario de V10__schema_ocorrencias.sql).
+    @Query("SELECT COUNT(o) FROM Ocorrencia o WHERE o.dataAbertura BETWEEN :inicio AND :fim "
+            + "AND (o.providenciaTomada IS NULL OR o.providenciaTomada.codigo <> 'registro_indevido')")
+    long contarRegistradasNoPeriodo(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
+
+    @Query("SELECT COUNT(o) FROM Ocorrencia o WHERE o.dataAbertura BETWEEN :inicio AND :fim "
+            + "AND o.statusOcorrencia = 'ENCERRADA' "
+            + "AND (o.providenciaTomada IS NULL OR o.providenciaTomada.codigo <> 'registro_indevido')")
+    long contarEncerradasNoPeriodo(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
+
+    @Query("SELECT COUNT(DISTINCT o.bairro) FROM Ocorrencia o WHERE o.dataAbertura BETWEEN :inicio AND :fim "
+            + "AND (o.providenciaTomada IS NULL OR o.providenciaTomada.codigo <> 'registro_indevido')")
+    long contarBairrosAtingidos(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
+
+    @Query("SELECT o.bairro AS bairro, COUNT(o) AS quantidade FROM Ocorrencia o "
+            + "WHERE o.dataAbertura BETWEEN :inicio AND :fim "
+            + "AND (o.providenciaTomada IS NULL OR o.providenciaTomada.codigo <> 'registro_indevido') "
+            + "GROUP BY o.bairro ORDER BY COUNT(o) DESC")
+    List<ContagemPorBairroProjection> contarPorBairro(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
+
+    @Query("SELECT o.bairro AS bairro, o.tipoOcorrencia.nome AS tipo, COUNT(o) AS quantidade FROM Ocorrencia o "
+            + "WHERE o.dataAbertura BETWEEN :inicio AND :fim "
+            + "AND (o.providenciaTomada IS NULL OR o.providenciaTomada.codigo <> 'registro_indevido') "
+            + "GROUP BY o.bairro, o.tipoOcorrencia.nome")
+    List<BairroTipoProjection> contarPorBairroETipo(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
+
+    @Query("SELECT o.tipoOcorrencia.codigo AS codigo, o.tipoOcorrencia.nome AS nome, COUNT(o) AS quantidade FROM Ocorrencia o "
+            + "WHERE o.dataAbertura BETWEEN :inicio AND :fim "
+            + "AND (o.providenciaTomada IS NULL OR o.providenciaTomada.codigo <> 'registro_indevido') "
+            + "GROUP BY o.tipoOcorrencia.codigo, o.tipoOcorrencia.nome ORDER BY COUNT(o) DESC")
+    List<ContagemCatalogoProjection> contarPorTipo(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
+
+    // "Tempo médio (h)" (T41): registro -> encerramento (criadoEm sempre tem
+    // hora cheia; horaAbertura e opcional, por isso nao e usada aqui) — so
+    // ocorrencias ENCERRADAS no periodo entram. Uma linha por ocorrencia; o
+    // service agrupa/calcula a media em Java (JPQL nao tem diferenca de
+    // datas em horas de forma portavel).
+    @Query("SELECT o.bairro AS bairro, o.criadoEm AS criadoEm, o.encerradaEm AS encerradaEm FROM Ocorrencia o "
+            + "WHERE o.dataAbertura BETWEEN :inicio AND :fim "
+            + "AND o.statusOcorrencia = 'ENCERRADA' "
+            + "AND (o.providenciaTomada IS NULL OR o.providenciaTomada.codigo <> 'registro_indevido')")
+    List<TempoAtendimentoProjection> listarTemposDeAtendimento(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 }

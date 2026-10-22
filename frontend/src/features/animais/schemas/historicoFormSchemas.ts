@@ -27,7 +27,11 @@ export type VacinacaoFormValues = z.infer<typeof vacinacaoFormSchema>
 // Campos espelham com.siszoo.animais.clinico.dto.CriarProcedimentoRequest.
 export const procedimentoFormSchema = z.object({
   tipoProcedimento: z.string().min(1, 'Selecione o tipo de procedimento.'),
-  data: z.string().min(1, 'Informe a data.'),
+  // Fato ocorrido, como a vacinação: mesma regra do ProcedimentoService.
+  data: z
+    .string()
+    .min(1, 'Informe a data.')
+    .refine((data) => data <= hojeEmItu(), 'A data do procedimento não pode ser futura.'),
   descricao: z.string().trim().optional(),
   resultado: z.string().trim().optional(),
 })
@@ -35,21 +39,35 @@ export const procedimentoFormSchema = z.object({
 export type ProcedimentoFormValues = z.infer<typeof procedimentoFormSchema>
 
 // Campos espelham com.siszoo.animais.clinico.dto.CriarPrescricaoRequest.
-export const prescricaoFormSchema = z.object({
-  medicamentoId: z.string().min(1, 'Selecione o medicamento.'),
-  dataInicio: z.string().min(1, 'Informe a data de início.'),
-  dataFimPrevista: z.string().optional(),
-  dataFimReal: z.string().optional(),
-  frequenciaAplicada: z.number({ message: 'Informe a frequência.' }).int().positive('Deve ser maior que zero.'),
-  unidadeFrequencia: z.enum(['HORAS', 'DIAS'], { message: 'Selecione a unidade.' }),
-  doseQuantidade: z.number({ message: 'Informe a quantidade da dose.' }).positive('A dose deve ser maior que zero.'),
-  doseUnidade: z.enum(['MILIGRAMA', 'MICROGRAMA', 'GRAMA', 'MILILITRO', 'UNIDADE_INTERNACIONAL'], {
-    message: 'Selecione a unidade da dose.',
-  }),
-  viaAdministracao: z.enum(['ORAL', 'INTRAVENOSA', 'INTRAMUSCULAR', 'SUBCUTANEA', 'TOPICA'], {
-    message: 'Selecione a via de administração.',
-  }),
-  status: z.enum(['ATIVA', 'CONCLUIDA', 'SUSPENSA', 'CANCELADA']),
-})
+// Data futura é aceita (início programado é legítimo); as regras entre datas
+// e status são as do PrescricaoService. Datas vazias chegam como ''.
+export const prescricaoFormSchema = z
+  .object({
+    medicamentoId: z.string().min(1, 'Selecione o medicamento.'),
+    dataInicio: z.string().min(1, 'Informe a data de início.'),
+    dataFimPrevista: z.string().optional(),
+    dataFimReal: z.string().optional(),
+    frequenciaAplicada: z.number({ message: 'Informe a frequência.' }).int().positive('Deve ser maior que zero.'),
+    unidadeFrequencia: z.enum(['HORAS', 'DIAS'], { message: 'Selecione a unidade.' }),
+    doseQuantidade: z.number({ message: 'Informe a quantidade da dose.' }).positive('A dose deve ser maior que zero.'),
+    doseUnidade: z.enum(['MILIGRAMA', 'MICROGRAMA', 'GRAMA', 'MILILITRO', 'UNIDADE_INTERNACIONAL'], {
+      message: 'Selecione a unidade da dose.',
+    }),
+    viaAdministracao: z.enum(['ORAL', 'INTRAVENOSA', 'INTRAMUSCULAR', 'SUBCUTANEA', 'TOPICA'], {
+      message: 'Selecione a via de administração.',
+    }),
+    status: z.enum(['ATIVA', 'CONCLUIDA', 'SUSPENSA', 'CANCELADA']),
+  })
+  .superRefine((dados, ctx) => {
+    if (dados.dataFimPrevista && dados.dataInicio && dados.dataFimPrevista < dados.dataInicio) {
+      ctx.addIssue({ code: 'custom', path: ['dataFimPrevista'], message: 'O término previsto não pode ser anterior ao início.' })
+    }
+    if (dados.dataFimReal && dados.dataInicio && dados.dataFimReal < dados.dataInicio) {
+      ctx.addIssue({ code: 'custom', path: ['dataFimReal'], message: 'O término real não pode ser anterior ao início.' })
+    }
+    if (dados.status === 'CONCLUIDA' && !dados.dataFimReal) {
+      ctx.addIssue({ code: 'custom', path: ['dataFimReal'], message: 'Informe o término real para concluir a prescrição.' })
+    }
+  })
 
 export type PrescricaoFormValues = z.infer<typeof prescricaoFormSchema>

@@ -75,7 +75,7 @@ public class UsuarioService {
     }
 
     @Transactional
-    public UsuarioResponse criar(CriarUsuarioRequest request) {
+    public UsuarioResponse criar(CriarUsuarioRequest request, UUID usuarioAutenticadoId) {
         if (usuarioRepository.findByEmail(request.email()).isPresent()) {
             throw new EmailJaCadastradoException();
         }
@@ -106,8 +106,11 @@ public class UsuarioService {
         preferencias.setUsuario(usuario);
         preferenciaUsuarioRepository.save(preferencias);
 
+        // Autor do evento e o administrador que executou a acao; o usuario
+        // afetado fica em entidade_id.
         UsuarioResponse response = usuarioMapper.toResponse(usuario);
-        auditoriaEventoService.registrar(usuario, AcaoAuditoria.CRIACAO, "usuario", usuario.getId(), null, response);
+        auditoriaEventoService.registrar(buscarAutor(usuarioAutenticadoId), AcaoAuditoria.CRIACAO, "usuario",
+                usuario.getId(), null, response);
 
         return response;
     }
@@ -162,9 +165,13 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
 
         AcaoAuditoria acao = ativar ? AcaoAuditoria.REATIVACAO : AcaoAuditoria.DESATIVACAO;
-        auditoriaEventoService.registrar(usuario, acao, "usuario", usuario.getId(), null, null);
+        auditoriaEventoService.registrar(buscarAutor(usuarioAutenticadoId), acao, "usuario", usuario.getId(), null, null);
 
         return usuarioMapper.toResponse(usuario);
+    }
+
+    private Usuario buscarAutor(UUID usuarioAutenticadoId) {
+        return usuarioRepository.findById(usuarioAutenticadoId).orElseThrow(UsuarioNaoEncontradoException::new);
     }
 
     @Transactional(readOnly = true)

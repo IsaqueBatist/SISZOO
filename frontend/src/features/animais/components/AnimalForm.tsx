@@ -1,11 +1,13 @@
 import { isAxiosError } from 'axios'
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm, type FieldErrors as RhfFieldErrors } from 'react-hook-form'
 import { z } from 'zod'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { hojeEmItu } from '@/lib/datas'
+import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
 import type { Animal, AnimalRequest, CatalogoItem, Pelagem, Porte, Sexo } from '../types/animais.types'
 import {
   CASTRACAO_OPCOES,
@@ -20,11 +22,15 @@ import {
 import { ImagemInvalidaError, comprimirImagem } from '../utils/comprimirImagem'
 import {
   agendarSalvarRascunhoAnimal,
+  cancelarSalvamentoRascunhoAnimal,
   carregarRascunhoAnimal,
   chaveRascunhoAnimal,
   removerRascunhoAnimal,
   salvarRascunhoAnimal,
 } from '../storage/rascunhoAnimalStorage'
+import { BannerRascunho } from '@/components/BannerRascunho'
+import type { ArmazenamentoRascunho } from '@/lib/rascunhoDb'
+import { useRascunho } from '@/lib/useRascunho'
 import { useAtualizarAnimalMutation, useBaiasAtivasQuery, useCatalogosAnimaisQuery, useCriarAnimalMutation } from '../hooks/useAnimais'
 
 interface AnimalFormProps {
@@ -36,9 +42,21 @@ interface AnimalFormProps {
 // acontece só no submit, via castracaoParaEsterilizado. Mantém o
 // animalFormSchema original intacto (é o contrato espelhado do backend,
 // usado/citado em outros lugares).
-const animalFormUiSchema = animalFormSchema.omit({ esterilizado: true }).extend({
-  castracaoOpcao: z.enum(['nao_castrado', 'orquiectomia', 'osh']),
-})
+const animalFormUiSchema = animalFormSchema
+  .omit({ esterilizado: true })
+  .extend({
+    castracaoOpcao: z.enum(['nao_castrado', 'orquiectomia', 'osh']),
+  })
+  // Mesma regra do AnimalService: o animal não nasce depois de entrar no CCZ.
+  .superRefine((dados, ctx) => {
+    if (dados.dataNascimentoAprox && dados.dataEntrada && dados.dataNascimentoAprox > dados.dataEntrada) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['dataNascimentoAprox'],
+        message: 'A data de nascimento não pode ser posterior à data de entrada.',
+      })
+    }
+  })
 type AnimalFormUiValues = z.infer<typeof animalFormUiSchema>
 
 const CAMPOS_STEP: Record<1 | 2 | 3, (keyof AnimalFormUiValues)[]> = {
@@ -48,6 +66,13 @@ const CAMPOS_STEP: Record<1 | 2 | 3, (keyof AnimalFormUiValues)[]> = {
 }
 
 const CAMPOS_COM_ERRO = new Set<string>([...CAMPOS_STEP[1], ...CAMPOS_STEP[2]])
+
+// Campo do DTO -> campo do formulário, para os erros por campo do 422. O
+// `esterilizado` do DTO é o grupo de cartões de castração na tela.
+const MAPA_ERROS_SERVIDOR: Record<string, keyof AnimalFormUiValues> = {
+  ...mapaDeCampos<AnimalFormUiValues>([...CAMPOS_STEP[1], ...CAMPOS_STEP[2], 'observacoes']),
+  esterilizado: 'castracaoOpcao',
+}
 
 interface RascunhoAnimalValores {
   nome: string
@@ -71,8 +96,22 @@ interface RascunhoAnimalValores {
   observacoes: string
 }
 
-function hojeISO(): string {
-  return new Date().toISOString().slice(0, 10)
+// dataEntrada é LocalDateTime: o formulário só edita o dia. Se o dia não
+// mudou na edição, reenvia o valor original completo para não zerar a hora;
+// dia novo (ou cadastro) vai como meia-noite, como antes.
+function dataEntradaParaEnvio(dataDoForm: string, original?: string): string {
+  if (original && original.slice(0, 10) === dataDoForm) return original
+  return `${dataDoForm}T00:00:00`
+}
+
+// Pelas funções de rascunhoAnimalStorage (store 'animais', chave e formato
+// inalterados), não direto pelo banco.
+const ARMAZENAMENTO_RASCUNHO_ANIMAL: ArmazenamentoRascunho<RascunhoAnimalValores> = {
+  carregar: (chave) => carregarRascunhoAnimal<RascunhoAnimalValores>(chave),
+  agendarSalvar: (chave, valores) => agendarSalvarRascunhoAnimal(chave, valores),
+  salvar: (chave, valores) => salvarRascunhoAnimal(chave, valores),
+  remover: (chave) => removerRascunhoAnimal(chave),
+  cancelarAgendado: (chave) => cancelarSalvamentoRascunhoAnimal(chave),
 }
 
 function valoresVazios(): RascunhoAnimalValores {
@@ -92,7 +131,7 @@ function valoresVazios(): RascunhoAnimalValores {
     dataEsterilizacao: '',
     status: '',
     motivoEntrada: '',
-    dataEntrada: hojeISO(),
+    dataEntrada: hojeEmItu(),
     baiaId: '',
     fotoUrl: '',
     observacoes: '',
@@ -210,9 +249,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [fotoErro, setFotoErro] = useState<string | null>(null)
   const [fotoCarregando, setFotoCarregando] = useState(false)
-  const [rascunhoDisponivel, setRascunhoDisponivel] = useState<RascunhoAnimalValores | null>(null)
   const [rascunhoMensagem, setRascunhoMensagem] = useState<string | null>(null)
-  const [prontoParaAutoSalvar, setProntoParaAutoSalvar] = useState(false)
 
   const { data: catalogos } = useCatalogosAnimaisQuery()
   const { data: baias } = useBaiasAtivasQuery()
@@ -265,46 +302,20 @@ export function AnimalForm({ animal }: AnimalFormProps) {
   const valores = watch()
   const castracaoOpcao = valores.castracaoOpcao
 
-  useEffect(() => {
-    let cancelado = false
-    carregarRascunhoAnimal<RascunhoAnimalValores>(chaveRascunho).then((valoresSalvos) => {
-      if (cancelado) return
-      if (valoresSalvos) setRascunhoDisponivel(valoresSalvos)
-      setProntoParaAutoSalvar(true)
-    })
-    return () => {
-      cancelado = true
-    }
-    // Só verifica o rascunho salvo uma vez, ao montar o formulário.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  useEffect(() => {
-    // O gate precisa envolver a CRIAÇÃO da assinatura, não só o corpo do
-    // callback: criar a assinatura incondicionalmente e checar a flag só
-    // dentro do callback é um stale closure real (o callback fecharia sobre
-    // o valor de prontoParaAutoSalvar do momento em que a assinatura foi
-    // criada) — na pior hipótese, salvaria um rascunho vazio por cima do
-    // rascunho de verdade do usuário antes da hidratação terminar.
-    if (!prontoParaAutoSalvar) return
-    const inscricao = watch((valoresAtuais) => {
-      agendarSalvarRascunhoAnimal(chaveRascunho, valoresParaRascunho(valoresAtuais as AnimalFormUiValues))
-    })
-    return () => inscricao.unsubscribe()
-  }, [prontoParaAutoSalvar, chaveRascunho, watch])
-
-  function handleRestaurarRascunho() {
-    if (rascunhoDisponivel) reset(rascunhoParaValores(rascunhoDisponivel))
-    setRascunhoDisponivel(null)
-  }
-
-  async function handleDescartarRascunho() {
-    setRascunhoDisponivel(null)
-    await removerRascunhoAnimal(chaveRascunho)
-  }
+  // Carrega uma vez ao montar, só então começa a salvar (debounce de 800 ms),
+  // e grava no formato RascunhoAnimalValores (ver valoresParaRascunho).
+  const rascunho = useRascunho<AnimalFormUiValues, RascunhoAnimalValores>({
+    armazenamento: ARMAZENAMENTO_RASCUNHO_ANIMAL,
+    chave: chaveRascunho,
+    watch,
+    reset,
+    getValues,
+    paraRascunho: valoresParaRascunho,
+    deRascunho: rascunhoParaValores,
+  })
 
   async function handleSalvarRascunhoAgora() {
-    await salvarRascunhoAnimal(chaveRascunho, valoresParaRascunho(getValues()))
+    await rascunho.salvarAgora()
     setRascunhoMensagem('Rascunho salvo.')
     setTimeout(() => setRascunhoMensagem(null), 3000)
   }
@@ -332,13 +343,20 @@ export function AnimalForm({ animal }: AnimalFormProps) {
       const mensagem = (erro.response?.data as { mensagem?: string } | undefined)?.mensagem
       const pareceComMicrochip = mensagem?.toLowerCase().includes('icrochip')
 
-      if (httpStatus === 409 || (httpStatus === 422 && pareceComMicrochip)) {
+      if ((httpStatus === 409 || httpStatus === 422) && pareceComMicrochip) {
         setError('microchip', { message: mensagem ?? 'Microchip já cadastrado.' })
         setStep(1)
         return
       }
     }
-    setSubmitError('Não foi possível salvar o animal. Tente novamente.')
+
+    const campos = aplicarErrosDeCampo(erro, setError, MAPA_ERROS_SERVIDOR)
+    if (campos.length > 0) {
+      setStep((CAMPOS_STEP[1] as string[]).includes(campos[0]) ? 1 : 2)
+      return
+    }
+    // 409 de baia cheia/inativa e outras regras sem campo: mostra o motivo.
+    setSubmitError(mensagemDeRegraDaApi(erro) ?? 'Não foi possível salvar o animal. Tente novamente.')
   }
 
   async function onSubmit(dados: AnimalFormUiValues) {
@@ -355,10 +373,11 @@ export function AnimalForm({ animal }: AnimalFormProps) {
       dataNascimentoAprox: dados.dataNascimentoAprox,
       microchip: dados.microchip,
       esterilizado: castracaoParaEsterilizado(dados.castracaoOpcao),
-      dataEsterilizacao: dados.dataEsterilizacao,
+      // Rascunho antigo pode trazer data com "não castrado": não envia.
+      dataEsterilizacao: dados.castracaoOpcao === 'nao_castrado' ? undefined : dados.dataEsterilizacao,
       status: dados.status,
       motivoEntrada: dados.motivoEntrada,
-      dataEntrada: `${dados.dataEntrada}T00:00:00`,
+      dataEntrada: dataEntradaParaEnvio(dados.dataEntrada, animal?.dataEntrada),
       baiaId: dados.baiaId,
       fotoUrl: dados.fotoUrl,
       observacoes: dados.observacoes,
@@ -370,7 +389,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
       } else {
         await criarMutation.mutateAsync(payload)
       }
-      await removerRascunhoAnimal(chaveRascunho)
+      await rascunho.removerAposSucesso()
       navigate('/animais')
     } catch (erro) {
       tratarErroSubmit(erro)
@@ -404,21 +423,8 @@ export function AnimalForm({ animal }: AnimalFormProps) {
         </div>
       </div>
 
-      {rascunhoDisponivel && (
-        <div className="alert info" role="alert">
-          <span className="bullet" />
-          <div className="alert-content">
-            Encontramos um rascunho salvo deste formulário.
-            <div className="flex gap-2" style={{ marginTop: 8 }}>
-              <button type="button" className="btn btn-sm btn-primary" onClick={handleRestaurarRascunho}>
-                Restaurar rascunho
-              </button>
-              <button type="button" className="btn btn-sm btn-ghost" onClick={handleDescartarRascunho}>
-                Descartar
-              </button>
-            </div>
-          </div>
-        </div>
+      {rascunho.rascunhoDisponivel && (
+        <BannerRascunho onRestaurar={rascunho.restaurar} onDescartar={() => void rascunho.descartar()} />
       )}
 
       <div className="stepper">
@@ -598,10 +604,12 @@ export function AnimalForm({ animal }: AnimalFormProps) {
                 <label htmlFor="dataNascimentoAprox">Data provável de nascimento</label>
                 <input
                   id="dataNascimentoAprox"
-                  className="input"
+                  className={`input${errors.dataNascimentoAprox ? ' error' : ''}`}
                   type="date"
+                  max={hojeEmItu()}
                   {...register('dataNascimentoAprox', { setValueAs: semVazio })}
                 />
+                {errors.dataNascimentoAprox && <span className="err">{errors.dataNascimentoAprox.message}</span>}
               </div>
 
               <div className="field">
@@ -727,6 +735,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
                   id="dataEntrada"
                   className={`input${errors.dataEntrada ? ' error' : ''}`}
                   type="date"
+                  max={hojeEmItu()}
                   {...register('dataEntrada')}
                 />
                 {errors.dataEntrada && <span className="err">{errors.dataEntrada.message}</span>}
@@ -751,7 +760,12 @@ export function AnimalForm({ animal }: AnimalFormProps) {
                           role="radio"
                           aria-checked={field.value === opcao.valor}
                           className={`radio-card${field.value === opcao.valor ? ' selected' : ''}`}
-                          onClick={() => field.onChange(opcao.valor)}
+                          onClick={() => {
+                            field.onChange(opcao.valor)
+                            // O campo some da tela, mas o RHF guardaria o valor:
+                            // "não castrado" com data é recusado pelo backend.
+                            if (opcao.valor === 'nao_castrado') setValue('dataEsterilizacao', undefined)
+                          }}
                         >
                           <span className="label">{opcao.label}</span>
                           <span className="sub">{opcao.sub}</span>
@@ -767,10 +781,12 @@ export function AnimalForm({ animal }: AnimalFormProps) {
                   <label htmlFor="dataEsterilizacao">Data da castração</label>
                   <input
                     id="dataEsterilizacao"
-                    className="input"
+                    className={`input${errors.dataEsterilizacao ? ' error' : ''}`}
                     type="date"
+                    max={hojeEmItu()}
                     {...register('dataEsterilizacao', { setValueAs: semVazio })}
                   />
+                  {errors.dataEsterilizacao && <span className="err">{errors.dataEsterilizacao.message}</span>}
                 </div>
               )}
 

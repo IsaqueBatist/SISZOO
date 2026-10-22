@@ -48,14 +48,25 @@ export function useCatalogosOcorrenciaQuery() {
   })
 }
 
-// As mutations que devolvem a ocorrência atualizada gravam essa resposta no
-// cache do detalhe (é o estado que o backend acabou de gravar) e invalidam
-// só as listagens.
+// O cadastro grava a resposta no cache do detalhe (é o estado que o backend
+// acabou de gravar) e invalida só as listagens.
 function useAtualizarCacheDaOcorrencia() {
   const queryClient = useQueryClient()
   return (ocorrencia: Ocorrencia) => {
     queryClient.setQueryData(chaveDetalhe(ocorrencia.id), ocorrencia)
     void queryClient.invalidateQueries({ queryKey: ['ocorrencias', 'lista'] })
+  }
+}
+
+// Edição, status, encerramento e nota devolvem o denunciante de ocorrência
+// sigilosa sempre mascarado (A04): a resposta não pode ir para o cache do
+// detalhe, ou quem tem acesso veria o bloco vazio. O detalhe é recarregado
+// pelo GET, que entrega o dado a quem tem a permissão e registra o acesso.
+function useRecarregarOcorrencia(id: string) {
+  const queryClient = useQueryClient()
+  return () => {
+    void queryClient.invalidateQueries({ queryKey: ['ocorrencias', 'lista'] })
+    return queryClient.invalidateQueries({ queryKey: chaveDetalhe(id) })
   }
 }
 
@@ -68,34 +79,34 @@ export function useCriarOcorrenciaMutation() {
 }
 
 export function useAtualizarOcorrenciaMutation(id: string) {
-  const atualizarCache = useAtualizarCacheDaOcorrencia()
+  const recarregar = useRecarregarOcorrencia(id)
   return useMutation({
     mutationFn: (payload: AtualizarOcorrenciaRequest) => atualizarOcorrencia(id, payload),
-    onSuccess: atualizarCache,
+    onSuccess: recarregar,
   })
 }
 
 export function useIniciarAtendimentoMutation(id: string) {
-  const atualizarCache = useAtualizarCacheDaOcorrencia()
+  const recarregar = useRecarregarOcorrencia(id)
   return useMutation({
     mutationFn: () => iniciarAtendimento(id),
-    onSuccess: atualizarCache,
+    onSuccess: recarregar,
   })
 }
 
 export function useEncerrarOcorrenciaMutation(id: string) {
-  const atualizarCache = useAtualizarCacheDaOcorrencia()
+  const recarregar = useRecarregarOcorrencia(id)
   return useMutation({
     mutationFn: (payload: EncerrarOcorrenciaRequest) => encerrarOcorrencia(id, payload),
-    onSuccess: atualizarCache,
+    onSuccess: recarregar,
   })
 }
 
 export function useAdicionarNotaMutation(id: string) {
-  const atualizarCache = useAtualizarCacheDaOcorrencia()
+  const recarregar = useRecarregarOcorrencia(id)
   return useMutation({
     mutationFn: (descricao: string) => adicionarNota(id, descricao),
-    onSuccess: atualizarCache,
+    onSuccess: recarregar,
   })
 }
 

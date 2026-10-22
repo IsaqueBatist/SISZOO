@@ -2,6 +2,7 @@ import { useState, type KeyboardEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { diasCivisAteHoje, formatarDataBR } from '@/lib/datas'
 import { AbaExames } from './AbaExames'
 import { AbaHistorico } from './AbaHistorico'
 import { AbaMedicamentos } from './AbaMedicamentos'
@@ -22,16 +23,15 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'exames', label: 'Exames' },
 ]
 
-const FUSO_ITU = 'America/Sao_Paulo'
+// Nascimento e castração são LocalDate: `new Date('AAAA-MM-DD')` mostraria o
+// dia anterior em São Paulo (ver lib/datas.ts).
+const formatarData = formatarDataBR
 
-function formatarData(iso: string): string {
-  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: FUSO_ITU }).format(
-    new Date(iso),
-  )
-}
-
+// atualizadoEm é LocalDateTime de Itu: conta dias civis em Itu (ontem às 23h
+// é "há 1 dia" às 8h de hoje), sem `new Date(iso)`, que dependeria do fuso do
+// navegador.
 function formatarRelativo(iso: string): string {
-  const dias = Math.floor((Date.now() - new Date(iso).getTime()) / (24 * 60 * 60 * 1000))
+  const dias = diasCivisAteHoje(iso)
   if (dias <= 0) return 'hoje'
   if (dias === 1) return 'há 1 dia'
   return `há ${dias} dias`
@@ -110,7 +110,13 @@ export function FichaAnimal() {
           </div>
           <h1>{animal.nome}</h1>
           <p className="subtitle">
-            Ficha completa · No CCZ desde {formatarData(animal.dataEntrada)} · Última atualização {formatarRelativo(animal.atualizadoEm)}
+            {/* fichaCompleta vem do backend (FichaCompletaService, DER §3.2); o protótipo só desenha o estado completo. */}
+            {animal.fichaCompleta ? (
+              'Ficha completa'
+            ) : (
+              <strong style={{ color: 'var(--color-warning)' }}>Ficha incompleta</strong>
+            )}{' '}
+            · No CCZ desde {formatarData(animal.dataEntrada)} · Última atualização {formatarRelativo(animal.atualizadoEm)}
           </p>
         </div>
         {podeEscrever && (

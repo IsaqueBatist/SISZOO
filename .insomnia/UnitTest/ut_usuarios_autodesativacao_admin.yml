@@ -4,7 +4,7 @@ parentId: "uts_usuarios"
 modified: 1750000000000
 created: 1750000000000
 requestId: null
-name: "Administrador consegue desativar a própria conta (comportamento atual, sem bloqueio implementado)"
+name: "Administrador não pode desativar a própria conta (422, regra 24 do DER)"
 code: |-
   // Cria um Administrador TEMPORÁRIO e o desativa nele mesmo — nunca no admin
   // seedado (evita travar o acesso real do time). O código atual (UsuarioService)
@@ -64,7 +64,13 @@ code: |-
     ],
     body: { mimeType: 'application/json', text: JSON.stringify({ ativo: false }) },
   });
-  expect(autodesativar.status).to.equal(200);
-  expect(JSON.parse(autodesativar.body).ativo).to.equal(false);
+  // Regra 24 do DER (UsuarioService#alterarStatus): ninguém desativa o
+  // próprio usuário.
+  expect(autodesativar.status).to.equal(422);
+  expect(JSON.parse(autodesativar.body).mensagem).to.equal('Nao e permitido desativar o proprio usuario');
+
+  // Continua ativo: o login do Administrador temporário ainda funciona.
+  const tokenDepois = await login(email, '{{ _.senha_teste_padrao }}');
+  expect(typeof tokenDepois).to.equal('string');
 
 metaSortKey: 26000000

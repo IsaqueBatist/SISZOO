@@ -5,6 +5,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-siszoo}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      TZ: America/Sao_Paulo
     ports:
       - "5432:5432"
     volumes:
@@ -20,12 +21,24 @@ services:
       context: ./backend
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      TZ: America/Sao_Paulo
       DB_URL: ${DB_URL:-jdbc:postgresql://db:5432/siszoo}
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       ADMIN_SEED_EMAIL: ${ADMIN_SEED_EMAIL:-}
       ADMIN_SEED_PASSWORD: ${ADMIN_SEED_PASSWORD:-}
       JWT_SECRET: ${JWT_SECRET:-}
+      # SMTP do EmailService (T35). Mesmos padroes do application.yml: uma
+      # variavel vazia aqui chegaria como "" e anularia o padrao do Spring.
+      SMTP_HOST: ${SMTP_HOST:-localhost}
+      SMTP_PORT: ${SMTP_PORT:-25}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_AUTH: ${SMTP_AUTH:-false}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-false}
+      SMTP_STARTTLS_REQUIRED: ${SMTP_STARTTLS_REQUIRED:-false}
+      SMTP_SSL: ${SMTP_SSL:-false}
+      SISZOO_MAIL_FROM: ${SISZOO_MAIL_FROM:-nao-responda@itu.sp.gov.br}
     ports:
       - "8080:8080"
     depends_on:

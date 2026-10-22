@@ -47,6 +47,13 @@ class RegistrosClinicosSemMutacaoTest {
     // nem de mutacao, so uma leitura ja existente no contrato do Spring Data.
     // "findVigentesParaAlertaVacinal" e a query do alerta de reforco vacinal
     // (com.siszoo.alertas) — tambem leitura pura (@Query JPQL de SELECT).
+    // "existeVigenteDoAnimal" alimenta ficha_completa (DER §3.2): SELECT.
+    // "findVigentesSobCustodiaParaKpiVacinacao" alimenta o KPI "% vacinados"
+    // do dashboard (com.siszoo.relatorios, T38): tambem SELECT, deliberadamente
+    // separada de findVigentesParaAlertaVacinal (ver comentario no repository).
+    // "countByDataAplicacaoBetween", "contarAplicacoesPorVacina" e
+    // "contarAplicacoesPorVeterinario" alimentam o relatorio de vacinacao
+    // (com.siszoo.relatorios, T41): COUNT/GROUP BY, tambem leitura pura.
     @Test
     @DisplayName("[RN-C01] repository de Vacinacao nao declara metodo de update/delete")
     void repositorioDeVacinacaoSoDeclaraFindersDeRetificacaoEFindAllComEntityGraph() {
@@ -56,21 +63,43 @@ class RegistrosClinicosSemMutacaoTest {
                 "findByRetificaId",
                 "findByRetificaIdIn",
                 "findAll",
-                "findVigentesParaAlertaVacinal");
+                "findVigentesParaAlertaVacinal",
+                "existeVigenteDoAnimal",
+                "findVigentesSobCustodiaParaKpiVacinacao",
+                "countByDataAplicacaoBetween",
+                "contarAplicacoesPorVacina",
+                "contarAplicacoesPorVeterinario");
     }
 
+    // "countByTipoProcedimento_CodigoAndDataBetweenAndAnimal_Sexo",
+    // "contarPorTipo", "contarPorVeterinarioETipo" e "listarCirurgias"
+    // alimentam o relatorio de procedimentos (com.siszoo.relatorios, T41):
+    // COUNT/GROUP BY/SELECT, tambem leitura pura.
     @Test
     @DisplayName("[RN-C01] repository de Procedimento nao declara metodo de update/delete")
     void repositorioDeProcedimentoSoDeclaraFindersDeRetificacaoEFindAllComEntityGraph() {
         assertNomesDosMetodosPublicosDeclarados(
-                ProcedimentoRepository.class, "existsByRetificaId", "findByRetificaId", "findByRetificaIdIn", "findAll");
+                ProcedimentoRepository.class,
+                "existsByRetificaId", "findByRetificaId", "findByRetificaIdIn", "findAll",
+                "countByTipoProcedimento_CodigoAndDataBetweenAndAnimal_Sexo",
+                "contarPorTipo", "contarPorVeterinarioETipo", "listarCirurgias");
     }
 
+    // "countByStatusAndDataFimPrevistaBetweenAndAnimal_Status_CodigoNotIn"
+    // alimenta o alerta "medicacao_ativa" do dashboard (com.siszoo.relatorios,
+    // T38); "countByDataInicioBetween" alimenta "Medicações" no relatorio de
+    // procedimentos (T41): ambos COUNT derivado, sem nenhuma mutacao.
     @Test
     @DisplayName("[RN-C01] repository de Prescricao nao declara metodo de update/delete")
     void repositorioDePrescricaoSoDeclaraFindersDeRetificacaoEFindAllComEntityGraph() {
         assertNomesDosMetodosPublicosDeclarados(
-                PrescricaoRepository.class, "existsByRetificaId", "findByRetificaId", "findByRetificaIdIn", "findAll");
+                PrescricaoRepository.class,
+                "existsByRetificaId",
+                "findByRetificaId",
+                "findByRetificaIdIn",
+                "findAll",
+                "countByStatusAndDataFimPrevistaBetweenAndAnimal_Status_CodigoNotIn",
+                "countByDataInicioBetween");
     }
 
     // getDeclaredMethods() so retorna metodos declarados diretamente no tipo

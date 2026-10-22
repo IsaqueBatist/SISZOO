@@ -2,7 +2,9 @@ package com.siszoo.processos.service;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -18,6 +20,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
@@ -72,6 +75,7 @@ import com.siszoo.processos.exception.ProcessoNaoEncontradoException;
 import com.siszoo.processos.exception.ResultadoInvalidoException;
 import com.siszoo.processos.exception.ResultadoJaRegistradoException;
 import com.siszoo.processos.exception.ResultadoObrigatorioException;
+import com.siszoo.processos.exception.ResultadoPositivoDefinitivoException;
 import com.siszoo.processos.exception.ResultadoRetificadoInvalidoException;
 import com.siszoo.processos.exception.SintomaInvalidoException;
 import com.siszoo.processos.exception.SintomaSemStatusSintomaticoException;
@@ -117,7 +121,11 @@ public class ProcessoSanitarioService {
     private static final String RESULTADO_SEM_RESULTADO = "aguardando";
 
     // Regra 19 (DER, revisao 2026-10-17): so positivo notifica o municipe.
+    // Tambem e o resultado definitivo, que nao se corrige (T35-15).
     private static final String RESULTADO_QUE_NOTIFICA = "positivo";
+
+    // Unico campo do evento de auditoria do envio da notificacao (T35-16).
+    private static final String CAMPO_NOTIFICACAO_AUDITORIA = "dataNotificacaoMunicipe";
 
     // RN3 do front (T32), mesma regra da listagem de ocorrencias (D31):
     // urgentes primeiro, depois os mais recentes. Desempate pela criacao, nao
@@ -476,10 +484,11 @@ public class ProcessoSanitarioService {
         auditoriaEventoService.registrar(autor, AcaoAuditoria.ATUALIZACAO, ENTIDADE_AUDITORIA, id, antes,
                 toSnapshot(processo));
         // Ponto unico de gravacao do resultado: regra 19 (DER, revisao
-        // 2026-10-17) — so positivo notifica, inclusive por correcao. O envio
-        // roda fora desta transacao, depois do commit (NotificacaoResultadoListener).
-        // Se a correcao de um positivo ja notificado deve gerar um e-mail
-        // diferente ("de retificacao") e decisao de uma task futura (T36).
+        // 2026-10-17) — so positivo notifica, inclusive por correcao (ex.:
+        // negativo -> positivo). O envio roda fora desta transacao, depois do
+        // commit (NotificacaoResultadoListener). Como o positivo e definitivo
+        // (resultadoACorrigir, T35-15), so um lancamento positivo existe por
+        // processo: a notificacao sai no maximo uma vez (#37).
         if (RESULTADO_QUE_NOTIFICA.equals(resultado.getCodigo())) {
             eventPublisher.publishEvent(new ResultadoLancadoEvent(id));
         }
@@ -498,6 +507,8 @@ public class ProcessoSanitarioService {
     }
 
     // Como RN-C02: so o vigente (ainda nao corrigido) do mesmo processo.
+    // T35-15: positivo e definitivo — nao se corrige (422), para nenhum
+    // resultado; o trigger da V21 recusa o mesmo no banco.
     private ResultadoProcesso resultadoACorrigir(ProcessoSanitario processo, UUID retificaId) {
         if (processo.getStatusProcesso() != StatusProcesso.COM_RESULTADO) {
             throw new CorrecaoResultadoNaoPermitidaException();
@@ -508,7 +519,30 @@ public class ProcessoSanitarioService {
         if (resultadoProcessoRepository.existsByRetificaId(retificaId)) {
             throw new RegistroJaRetificadoException();
         }
+        if (RESULTADO_QUE_NOTIFICA.equals(anterior.getResultadoLaboratorial().getCodigo())) {
+            throw new ResultadoPositivoDefinitivoException();
+        }
         return anterior;
+    }
+
+    // T35-16/#37: data/hora em que o SMTP aceitou a notificacao ao municipe.
+    // Chamado pelo callback do envio, depois do commit do resultado (o envio
+    // e AFTER_COMMIT). REQUIRES_NEW: o callback pode rodar na thread do
+    // listener, dentro da transacao readOnly de NotificacaoResultadoService
+    // (future ja concluido), e a gravacao precisa da sua. Registro critico so
+    // muda com log: evento de sistema (sem usuario), payload so com a data.
+    // Idempotente: uma data ja gravada fica, sem novo evento.
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void registrarNotificacaoMunicipe(UUID id, LocalDateTime aceitoEm) {
+        ProcessoSanitario processo = processoRepository.findByIdForUpdate(id)
+                .orElseThrow(ProcessoNaoEncontradoException::new);
+        if (!processo.registrarNotificacaoMunicipe(aceitoEm)) {
+            return;
+        }
+        processoRepository.saveAndFlush(processo);
+        auditoriaEventoService.registrar(null, AcaoAuditoria.ATUALIZACAO, ENTIDADE_AUDITORIA, id,
+                Collections.singletonMap(CAMPO_NOTIFICACAO_AUDITORIA, null),
+                Map.of(CAMPO_NOTIFICACAO_AUDITORIA, aceitoEm));
     }
 
     // ── Apoio ────────────────────────────────────────────
@@ -542,7 +576,8 @@ public class ProcessoSanitarioService {
                         processo.getResultadoLaboratorial().getCodigo(), processo.getResultadoLaboratorial().getNome()),
                 processo.getDataResultado(),
                 catalogoDeDesfecho(processo),
-                resultadosDe(processo));
+                resultadosDe(processo),
+                processo.getDataNotificacaoMunicipe());
     }
 
     // Historico em ordem de cadeia: o original e, a seguir, cada correcao da

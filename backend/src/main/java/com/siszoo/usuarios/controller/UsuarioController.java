@@ -45,8 +45,8 @@ public class UsuarioController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('USUARIOS_ACESSO:escrita')")
-    public UsuarioResponse criar(@Valid @RequestBody CriarUsuarioRequest request) {
-        return usuarioService.criar(request);
+    public UsuarioResponse criar(Authentication authentication, @Valid @RequestBody CriarUsuarioRequest request) {
+        return usuarioService.criar(request, UUID.fromString(authentication.getName()));
     }
 
     @PatchMapping("/{id}/status")

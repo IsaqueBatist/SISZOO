@@ -3,15 +3,15 @@ import { Link } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Icon } from '@/components/layout/Icon'
+import { formatarDataBR } from '@/lib/datas'
 import { NAV_ALL, ROLES, isNavGroup, roleKeyFromCargos } from '@/lib/nav'
 import { perfilFormSchema, type PerfilFormValues } from '../schemas/perfilFormSchema'
 import { useAtualizarTelefoneMutation, usePerfilQuery } from '../hooks/usePerfil'
 import './Perfil.css'
 
-function formatarData(iso: string): string {
-  const data = new Date(iso)
-  return data.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
-}
+// criadoEm é LocalDateTime sem fuso, já no horário de Itu: `new Date(iso)` o
+// leria no fuso do navegador (ver lib/datas.ts).
+const formatarData = formatarDataBR
 
 export function Perfil() {
   const query = usePerfilQuery()

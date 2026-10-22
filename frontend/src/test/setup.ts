@@ -12,6 +12,7 @@ import {
   resetAnimaisMock,
   resetAuditoriaMock,
   resetBaiasMock,
+  resetMedicamentosMock,
   resetPreferenciasMock,
   resetPrescricoesMock,
   resetProcedimentosMock,
@@ -33,6 +34,7 @@ afterEach(() => {
   resetVacinacoesMock()
   resetProcedimentosMock()
   resetPrescricoesMock()
+  resetMedicamentosMock()
   resetAuditoriaMock()
 })
 afterAll(() => server.close())
