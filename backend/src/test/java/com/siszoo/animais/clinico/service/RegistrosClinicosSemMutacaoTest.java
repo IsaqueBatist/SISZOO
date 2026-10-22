@@ -51,6 +51,9 @@ class RegistrosClinicosSemMutacaoTest {
     // "findVigentesSobCustodiaParaKpiVacinacao" alimenta o KPI "% vacinados"
     // do dashboard (com.siszoo.relatorios, T38): tambem SELECT, deliberadamente
     // separada de findVigentesParaAlertaVacinal (ver comentario no repository).
+    // "countByDataAplicacaoBetween", "contarAplicacoesPorVacina" e
+    // "contarAplicacoesPorVeterinario" alimentam o relatorio de vacinacao
+    // (com.siszoo.relatorios, T41): COUNT/GROUP BY, tambem leitura pura.
     @Test
     @DisplayName("[RN-C01] repository de Vacinacao nao declara metodo de update/delete")
     void repositorioDeVacinacaoSoDeclaraFindersDeRetificacaoEFindAllComEntityGraph() {
@@ -62,7 +65,10 @@ class RegistrosClinicosSemMutacaoTest {
                 "findAll",
                 "findVigentesParaAlertaVacinal",
                 "existeVigenteDoAnimal",
-                "findVigentesSobCustodiaParaKpiVacinacao");
+                "findVigentesSobCustodiaParaKpiVacinacao",
+                "countByDataAplicacaoBetween",
+                "contarAplicacoesPorVacina",
+                "contarAplicacoesPorVeterinario");
     }
 
     @Test
