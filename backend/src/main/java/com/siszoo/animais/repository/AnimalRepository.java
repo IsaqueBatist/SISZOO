@@ -66,4 +66,9 @@ public interface AnimalRepository extends JpaRepository<Animal, UUID>, JpaSpecif
     long countSemAvaliacaoDesde(
             @Param("codigosForaDaCustodia") Collection<String> codigosForaDaCustodia,
             @Param("dataLimite") LocalDate dataLimite);
+
+    // Denominador de "% Animais vacinados" no relatorio de vacinacao (T41):
+    // total sob custodia, sem quebra por especie (ao contrario de
+    // contarSobCustodiaPorEspecie, usado pelo KPI do dashboard).
+    long countByStatus_CodigoNotIn(Collection<String> codigosForaDaCustodia);
 }
