@@ -103,6 +103,7 @@ export function processoFixture(sobrescrever: Partial<Processo> = {}): Processo 
     dataResultado: null,
     desfechoAnimal: null,
     resultados: [],
+    dataNotificacaoMunicipe: null,
     ...sobrescrever,
   }
 }
@@ -123,7 +124,8 @@ export function resultadoProcessoFixture(sobrescrever: Partial<ResultadoProcesso
 }
 
 // T34 + T37: processo com resultado já lançado (write-once) — para os testes
-// do modo somente-leitura/histórico do CardResultadoProcesso.
+// do modo somente-leitura/histórico do CardResultadoProcesso. Positivo já
+// notificado (T35-16): o SMTP aceitou o e-mail logo depois do lançamento.
 export function processoComResultadoFixture(sobrescrever: Partial<Processo> = {}): Processo {
   return processoFixture({
     statusProcesso: 'COM_RESULTADO',
@@ -131,6 +133,7 @@ export function processoComResultadoFixture(sobrescrever: Partial<Processo> = {}
     dataResultado: '2026-05-20',
     desfechoAnimal: { codigo: 'obito_eutanasia', nome: 'Óbito — Eutanásia' },
     resultados: [resultadoProcessoFixture()],
+    dataNotificacaoMunicipe: '2026-05-20T14:32:07.123456',
     ...sobrescrever,
   })
 }

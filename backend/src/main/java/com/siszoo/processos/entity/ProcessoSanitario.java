@@ -110,6 +110,12 @@ public class ProcessoSanitario {
     @Column(columnDefinition = "text")
     private String observacoes;
 
+    // T35/#37 (V21): quando o SMTP aceitou o e-mail de resultado positivo ao
+    // municipe. Gravada uma vez so, por registrarNotificacaoMunicipe.
+    @Column(name = "data_notificacao_municipe")
+    @Setter(AccessLevel.NONE)
+    private LocalDateTime dataNotificacaoMunicipe;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "criado_por_id", nullable = false)
     private Usuario criadoPor;
@@ -136,5 +142,15 @@ public class ProcessoSanitario {
         this.resultadoLaboratorial = registro.getResultadoLaboratorial();
         this.dataResultado = registro.getDataResultado();
         this.statusProcesso = StatusProcesso.COM_RESULTADO;
+    }
+
+    // Idempotente: a primeira data aceita fica (o positivo e definitivo, entao
+    // so ha uma notificacao por processo). Devolve se gravou.
+    public boolean registrarNotificacaoMunicipe(LocalDateTime aceitoEm) {
+        if (this.dataNotificacaoMunicipe != null) {
+            return false;
+        }
+        this.dataNotificacaoMunicipe = aceitoEm;
+        return true;
     }
 }

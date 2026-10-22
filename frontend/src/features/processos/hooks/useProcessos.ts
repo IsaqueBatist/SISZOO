@@ -5,6 +5,7 @@ import {
   buscarProcessoPorId,
   criarProcesso,
   listarProcessos,
+  reenviarNotificacaoMunicipe,
   registrarResultado,
   vincularOcorrencia,
 } from '../api/processosApi'
@@ -79,6 +80,17 @@ export function useRegistrarResultadoMutation(id: string) {
   const atualizarCache = useAtualizarCacheDoProcesso()
   return useMutation({
     mutationFn: (payload: RegistrarResultadoRequest) => registrarResultado(id, payload),
+    onSuccess: atualizarCache,
+  })
+}
+
+// T35 (pendência): reenvio manual quando o primeiro envio falhou. A resposta
+// ainda traz dataNotificacaoMunicipe nula (o envio é assíncrono) — a tela
+// volta a acompanhar o processo como no lançamento inicial do positivo.
+export function useReenviarNotificacaoMutation(id: string) {
+  const atualizarCache = useAtualizarCacheDoProcesso()
+  return useMutation({
+    mutationFn: () => reenviarNotificacaoMunicipe(id),
     onSuccess: atualizarCache,
   })
 }

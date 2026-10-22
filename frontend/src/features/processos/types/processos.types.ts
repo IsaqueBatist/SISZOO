@@ -154,6 +154,9 @@ export interface Processo {
   dataResultado: string | null
   desfechoAnimal: CatalogoItem | null
   resultados: ResultadoProcessoItem[]
+  // T35-16 (#37): quando o SMTP aceitou o e-mail de resultado positivo ao
+  // munícipe (LocalDateTime de Itu, sem fuso). Nulo: sem envio aceito.
+  dataNotificacaoMunicipe: string | null
 }
 
 // POST /api/processos/{id}/resultados (T34 + T37). resultado e desfechoAnimal

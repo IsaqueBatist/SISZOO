@@ -128,10 +128,14 @@ class ResultadoProcessoTransacaoIT extends AbstractIntegrationTest {
         assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM resultado_processo WHERE processo_id = CAST(? AS uuid)",
                 Integer.class, processoId), equalTo(0));
         Map<String, Object> processo = jdbcTemplate.queryForMap("SELECT status_processo, resultado_laboratorial_id,"
-                + " data_resultado FROM processo_sanitario WHERE id = CAST(? AS uuid)", processoId);
+                + " data_resultado, data_notificacao_municipe FROM processo_sanitario WHERE id = CAST(? AS uuid)",
+                processoId);
         assertThat(processo.get("status_processo"), equalTo("AGUARDANDO_RESULTADO"));
         assertThat(processo.get("resultado_laboratorial_id"), nullValue());
         assertThat(processo.get("data_resultado"), nullValue());
+        // T35-16: sem commit nao ha envio, entao nem data de notificacao (so o
+        // callback do envio a grava; o listener nunca roda, verificado abaixo).
+        assertThat(processo.get("data_notificacao_municipe"), nullValue());
         assertThat(eventosDeAtualizacao(processoId), equalTo(eventosAntes));
     }
 

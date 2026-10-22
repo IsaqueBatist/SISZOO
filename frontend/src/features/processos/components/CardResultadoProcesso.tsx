@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { useQueryClient } from '@tanstack/react-query'
@@ -12,17 +12,95 @@ import {
 } from '../schemas/processoResultadoFormSchema'
 import type { Processo, ResultadoProcessoItem } from '../types/processos.types'
 import { badgeDeResultado } from '../utils/statusBadge'
-import { useCatalogosProcessoQuery, useRegistrarResultadoMutation } from '../hooks/useProcessos'
+import {
+  useCatalogosProcessoQuery,
+  useReenviarNotificacaoMutation,
+  useRegistrarResultadoMutation,
+} from '../hooks/useProcessos'
+
+// Depois de lançar um positivo nesta tela, o e-mail sai em segundo plano
+// (depois do commit, T37/T35): por alguns segundos dataNotificacaoMunicipe
+// ainda vem nula. Em vez de acusar "NÃO notificado" na hora, a tela consulta
+// o processo de novo por um tempo (o envio tem timeouts SMTP de 5 s).
+export interface AcompanhamentoEnvio {
+  intervaloMs: number
+  duracaoMs: number
+}
+
+const ACOMPANHAMENTO_PADRAO: AcompanhamentoEnvio = { intervaloMs: 2000, duracaoMs: 20000 }
 
 interface CardResultadoProcessoProps {
   processo: Processo
   podeEscrever: boolean
+  acompanhamentoEnvio?: AcompanhamentoEnvio
 }
 
 // Regra 19 (DER, revisão 2026-10-17): só positivo notifica o município —
 // inconclusivo deixou de notificar. Dispara inclusive por correção (se o
 // vigente passar a positivo), mas a T37 não oferece correção nesta tela.
 const RESULTADO_QUE_NOTIFICA = 'positivo'
+
+// "2026-05-20T14:32:07.12" -> "20/05/2026 14:32" (LocalDateTime de Itu, sem
+// fuso). Hora por slice, sem import novo: a linha de import de datas e a que
+// a fix/ficha-completa-seed-fuso troca (hojeEmItu), e mexer nela conflitava.
+function formatarDataHoraNotificacao(valor: string): string {
+  return `${formatarData(valor)} ${valor.slice(11, 16)}`
+}
+
+// T35-16 (#37): situação do e-mail ao munícipe num resultado positivo. T35
+// (pendência de reenvio): sem data e sem envio em curso, quem pode escrever
+// no processo vê um botão para tentar de novo — bloqueado pelo backend
+// (422) se a notificação já tiver sido confirmada nesse meio tempo.
+function AvisoNotificacao({
+  processo,
+  enviando,
+  podeEscrever,
+  reenviando,
+  erroReenvio,
+  onReenviar,
+}: {
+  processo: Processo
+  enviando: boolean
+  podeEscrever: boolean
+  reenviando: boolean
+  erroReenvio: string | null
+  onReenviar: () => void
+}) {
+  if (processo.dataNotificacaoMunicipe) {
+    return (
+      <div className="alert success" role="status" style={{ marginTop: 'var(--space-3)' }}>
+        <span className="bullet" />
+        <div className="alert-content">
+          Munícipe notificado em {formatarDataHoraNotificacao(processo.dataNotificacaoMunicipe)}
+        </div>
+      </div>
+    )
+  }
+  if (enviando) {
+    return (
+      <div className="alert info" role="status" style={{ marginTop: 'var(--space-3)' }}>
+        <span className="bullet" />
+        <div className="alert-content">Enviando a notificação por e-mail ao munícipe…</div>
+      </div>
+    )
+  }
+  return (
+    <div className="alert danger" role="alert" style={{ marginTop: 'var(--space-3)' }}>
+      <span className="bullet" />
+      <div className="alert-content">
+        <strong>Munícipe NÃO notificado por e-mail — contatar por outro meio</strong>
+        {erroReenvio && <div style={{ marginTop: 'var(--space-2)' }}>{erroReenvio}</div>}
+        {podeEscrever && (
+          <div style={{ marginTop: 'var(--space-2)' }}>
+            <button type="button" className="btn btn-ghost btn-sm" disabled={reenviando} onClick={onReenviar}>
+              {reenviando ? 'Reenviando…' : 'Reenviar notificação'}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
 function Historico({ resultados }: { resultados: ResultadoProcessoItem[] }) {
   if (resultados.length === 0) return null
@@ -51,13 +129,46 @@ function Historico({ resultados }: { resultados: ResultadoProcessoItem[] }) {
 // (AGUARDANDO_RESULTADO sem resultado ainda) e somente leitura + histórico
 // (depois de lançado). Correção de um resultado já lançado (retificaId) é
 // suportada pelo backend, mas esta tela não oferece essa ação — só o
-// lançamento inicial.
-export function CardResultadoProcesso({ processo, podeEscrever }: CardResultadoProcessoProps) {
+// lançamento inicial. O positivo é definitivo (T35-15: nem o backend aceita
+// corrigi-lo), por isso o lançamento dele pede confirmação explícita.
+export function CardResultadoProcesso({
+  processo,
+  podeEscrever,
+  acompanhamentoEnvio = ACOMPANHAMENTO_PADRAO,
+}: CardResultadoProcessoProps) {
   const [erro, setErro] = useState<string | null>(null)
   const [pendente, setPendente] = useState<RegistrarResultadoFormValues | null>(null)
+  const [acompanhandoEnvio, setAcompanhandoEnvio] = useState(false)
+  const [erroReenvio, setErroReenvio] = useState<string | null>(null)
+  // T35-15: positivo é definitivo — confirmação explícita antes de enviar.
+  const [cienteDefinitivo, setCienteDefinitivo] = useState(false)
   const mutation = useRegistrarResultadoMutation(processo.id)
+  const reenvioMutation = useReenviarNotificacaoMutation(processo.id)
   const queryClient = useQueryClient()
   const { data: catalogos } = useCatalogosProcessoQuery()
+
+  const positivo = processo.resultado?.codigo === RESULTADO_QUE_NOTIFICA
+  const temEmail = Boolean(processo.responsavel?.email)
+  const aguardandoEnvio = acompanhandoEnvio && positivo && temEmail && !processo.dataNotificacaoMunicipe
+
+  // Consulta o processo até a data do envio aparecer ou o prazo acabar; aí o
+  // aviso passa a "notificado" ou a "NÃO notificado".
+  const { intervaloMs, duracaoMs } = acompanhamentoEnvio
+  useEffect(() => {
+    if (!aguardandoEnvio) return
+    const inicio = Date.now()
+    const timer = setInterval(() => {
+      if (Date.now() - inicio >= duracaoMs) {
+        clearInterval(timer)
+        setAcompanhandoEnvio(false)
+        return
+      }
+      buscarProcessoPorId(processo.id)
+        .then((atualizado) => queryClient.setQueryData(['processos', 'detalhe', processo.id], atualizado))
+        .catch(() => undefined)
+    }, intervaloMs)
+    return () => clearInterval(timer)
+  }, [aguardandoEnvio, intervaloMs, duracaoMs, processo.id, queryClient])
 
   const {
     register,
@@ -80,6 +191,7 @@ export function CardResultadoProcesso({ processo, podeEscrever }: CardResultadoP
         desfechoAnimal: dados.desfechoAnimal || undefined,
       })
       setPendente(null)
+      if (dados.resultado === RESULTADO_QUE_NOTIFICA) setAcompanhandoEnvio(true)
     } catch (falha) {
       setPendente(null)
       if (statusHttpDoErro(falha) === 422) {
@@ -101,6 +213,7 @@ export function CardResultadoProcesso({ processo, podeEscrever }: CardResultadoP
 
   function onSubmit(dados: RegistrarResultadoFormValues) {
     if (dados.resultado === RESULTADO_QUE_NOTIFICA) {
+      setCienteDefinitivo(false)
       setPendente(dados)
       return
     }
@@ -112,9 +225,18 @@ export function CardResultadoProcesso({ processo, podeEscrever }: CardResultadoP
     void handleSubmit(onSubmit)(event)
   }
 
+  async function reenviarNotificacao() {
+    setErroReenvio(null)
+    try {
+      await reenvioMutation.mutateAsync()
+      setAcompanhandoEnvio(true)
+    } catch (falha) {
+      setErroReenvio(mensagemDeRegraDaApi(falha) ?? 'Não foi possível reenviar a notificação. Tente novamente.')
+    }
+  }
+
   if (processo.resultado) {
     const badge = badgeDeResultado(processo.resultado)
-    const notificou = processo.resultado.codigo === RESULTADO_QUE_NOTIFICA
     return (
       <div className="card">
         <div className="card-header">
@@ -137,11 +259,15 @@ export function CardResultadoProcesso({ processo, podeEscrever }: CardResultadoP
               <div>{processo.desfechoAnimal ? processo.desfechoAnimal.nome : '—'}</div>
             </div>
           </div>
-          {notificou && (
-            <div className="alert warning" role="alert" style={{ marginTop: 'var(--space-3)' }}>
-              <span className="bullet" />
-              <div className="alert-content">Notificação solicitada ao responsável.</div>
-            </div>
+          {positivo && (
+            <AvisoNotificacao
+              processo={processo}
+              enviando={aguardandoEnvio}
+              podeEscrever={podeEscrever}
+              reenviando={reenvioMutation.isPending}
+              erroReenvio={erroReenvio}
+              onReenviar={() => void reenviarNotificacao()}
+            />
           )}
           <Historico resultados={processo.resultados} />
         </div>
@@ -253,13 +379,28 @@ export function CardResultadoProcesso({ processo, podeEscrever }: CardResultadoP
               <h3>Confirmar lançamento do resultado</h3>
             </div>
             <div className="modal-body">
-              <div className="alert warning" role="alert">
+              <div className="alert danger" role="alert">
+                <span className="bullet" />
+                <div className="alert-content">
+                  <strong>O resultado positivo é definitivo:</strong> depois de confirmado, não poderá ser corrigido —
+                  nem para outro resultado, nem para positivo de novo.
+                </div>
+              </div>
+              <div className="alert warning" style={{ marginTop: 'var(--space-3)' }}>
                 <span className="bullet" />
                 <div className="alert-content">
                   Ao confirmar, o sistema solicitará o envio de uma notificação automática ao responsável pelo animal
-                  e à Vigilância Epidemiológica de Itu. O resultado não poderá ser editado depois.
+                  e à Vigilância Epidemiológica de Itu.
                 </div>
               </div>
+              <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 'var(--space-3)' }}>
+                <input
+                  type="checkbox"
+                  checked={cienteDefinitivo}
+                  onChange={(event) => setCienteDefinitivo(event.target.checked)}
+                />
+                <span>Entendo que o resultado positivo não poderá ser corrigido</span>
+              </label>
             </div>
             <div className="modal-footer">
               <button type="button" className="btn btn-ghost" onClick={() => setPendente(null)} disabled={mutation.isPending}>
@@ -268,7 +409,7 @@ export function CardResultadoProcesso({ processo, podeEscrever }: CardResultadoP
               <button
                 type="button"
                 className="btn btn-primary"
-                disabled={mutation.isPending}
+                disabled={mutation.isPending || !cienteDefinitivo}
                 onClick={() => void enviar(pendente)}
               >
                 {mutation.isPending ? 'Registrando…' : 'Confirmar'}

@@ -22,6 +22,7 @@ import com.siszoo.processos.dto.ProcessoResumoResponse;
 import com.siszoo.processos.dto.ProcessoSanitarioResponse;
 import com.siszoo.processos.dto.RegistrarResultadoRequest;
 import com.siszoo.processos.entity.StatusProcesso;
+import com.siszoo.processos.service.NotificacaoResultadoService;
 import com.siszoo.processos.service.ProcessoSanitarioService;
 
 import jakarta.validation.Valid;
@@ -38,9 +39,12 @@ import jakarta.validation.Valid;
 public class ProcessoSanitarioController {
 
     private final ProcessoSanitarioService processoService;
+    private final NotificacaoResultadoService notificacaoResultadoService;
 
-    public ProcessoSanitarioController(ProcessoSanitarioService processoService) {
+    public ProcessoSanitarioController(
+            ProcessoSanitarioService processoService, NotificacaoResultadoService notificacaoResultadoService) {
         this.processoService = processoService;
+        this.notificacaoResultadoService = notificacaoResultadoService;
     }
 
     @PostMapping
@@ -83,5 +87,16 @@ public class ProcessoSanitarioController {
     public ProcessoSanitarioResponse registrarResultado(
             Authentication authentication, @PathVariable UUID id, @Valid @RequestBody RegistrarResultadoRequest request) {
         return processoService.registrarResultado(id, request, UUID.fromString(authentication.getName()));
+    }
+
+    // Reenvio manual da notificacao ao municipe (pendencia da T35): so com
+    // resultado positivo vigente e sem data de notificacao ainda gravada
+    // (422 nos dois casos — NotificacaoResultadoService). O envio continua
+    // assincrono; a resposta reflete o processo no instante da chamada.
+    @PostMapping("/{id}/notificacoes/reenviar")
+    @PreAuthorize("hasAuthority('PROCESSOS_SANITARIOS:escrita')")
+    public ProcessoSanitarioResponse reenviarNotificacao(@PathVariable UUID id) {
+        notificacaoResultadoService.reenviarNotificacaoMunicipe(id);
+        return processoService.buscarPorId(id);
     }
 }

@@ -99,6 +99,12 @@ export DB_PASSWORD=postgres
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
+**E-mail (opcional):** a notificação ao munícipe sai pelo SMTP de `SMTP_HOST`,
+`SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` e afins. Sem elas, o backend sobe
+normalmente e cada envio só gera um aviso no log. No desenvolvimento, use um
+SMTP sandbox (Mailtrap/Ethereal), nunca uma caixa real. Variáveis, sandbox e
+testes com GreenMail: [docs/email.md](docs/email.md).
+
 ### Frontend
 
 ```bash

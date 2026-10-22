@@ -565,6 +565,7 @@ Um `CHECK` amarra cada tipo à sua transição (tabela de regras de `ocorrencia`
 | `data_resultado`            | date                            | ?      | data do resultado vigente (idem)                                                           |
 | `desfecho_animal_id`        | FK `desfecho_animal`            | ?      |                                                                                            |
 | `observacoes`               | text                            | ?      |                                                                                            |
+| `data_notificacao_municipe` | timestamp                       | ?      | data/hora (relógio do projeto, America/Sao_Paulo) em que o servidor SMTP **aceitou** o e-mail de resultado positivo ao munícipe (#37, T35, V21). Nulo: sem positivo, sem e-mail cadastrado, envio em andamento ou com falha. Não prova entrega nem leitura. Exposta como `dataNotificacaoMunicipe` no `GET /api/processos/{id}` |
 | `criado_por_id`             | FK `usuario`                    | \*     | `ON DELETE RESTRICT`                                                                       |
 | `criado_em`                 | timestamp                       | \*     |                                                                                            |
 | `atualizado_em`             | timestamp                       | \*     |                                                                                            |
@@ -583,13 +584,15 @@ GAL/SINAN, envio e previsão existem no schema, mas nenhum fluxo os preenche. `r
   - Os cinco resultados lançáveis são `positivo`, `negativo`, `inconclusivo`, `material_inadequado` e `nao_realizado`; todos levam `AGUARDANDO_RESULTADO → COM_RESULTADO`. `aguardando`, código inexistente ou inativo → 422.
   - Sem `retificaId`: só em `AGUARDANDO_RESULTADO`. Em `ABERTO` ou `CONCLUIDO` → 422; em `COM_RESULTADO` (já há resultado) → 409.
   - **Correção** (`retificaId`): só em `COM_RESULTADO` (em `CONCLUIDO`, que é terminal, ou antes do resultado → 422) e não muda o status. `retificaId` precisa ser o resultado vigente do mesmo processo: de outro processo ou inexistente → 422; já corrigido → 409 (como RN-C02). O registro corrigido fica preservado.
+  - **Positivo é definitivo (T35, decisão de 2026-10-21, `docs/decisoes/T35.md` T35-15):** um resultado `positivo` não pode ser corrigido. `retificaId` apontando para um `positivo` → 422, para qualquer resultado novo (inclusive outro `positivo`). Vale também no banco: o trigger `tg_resultado_positivo_definitivo` (V21) recusa a inserção dessa correção para qualquer usuário ou caminho, inclusive SQL manual. A correção dos demais resultados continua valendo, inclusive para `positivo` (ex.: `negativo` → `positivo`). Consequência: cada processo tem **no máximo um** registro `positivo`, e ele é sempre o vigente.
   - Registro, vigente (`resultado_laboratorial_id`, `data_resultado`, status, `desfecho_animal_id`) e auditoria `ATUALIZACAO` de `processo_sanitario` (snapshot com o resultado vigente antes e depois) gravam numa única transação, sob o lock da linha do processo, que serializa lançamentos concorrentes. Uma falha desfaz tudo.
   - Não há edição nem exclusão de resultado (sem PUT/PATCH/DELETE: 405); ver `resultado_processo`.
 - Ao registrar `resultado_laboratorial` = `positivo` (**revisão de 2026-10-17, decisão de produto: `inconclusivo` deixa de notificar**, `docs/decisoes/T34.md` T34-4; a issue #37 ainda cita os dois):
-  - **(T37)** dispara notificação ao munícipe (tentativa real por e-mail, assíncrona — depois do commit, nunca bloqueia o lançamento; sem e-mail cadastrado ou com falha de envio, só loga).
+  - **(T37)** dispara notificação ao munícipe (tentativa real por e-mail, assíncrona — depois do commit, nunca bloqueia o lançamento; sem e-mail cadastrado ou com falha de envio, só loga). Desde a **T35**, o envio passa pelo `EmailService`, com o template `email/resultado-processo` em HTML e texto puro (`docs/email.md`, `docs/decisoes/T35.md`).
   - **(T37)** dispara notificação à **Vigilância Epidemiológica de Itu** — **mockada**: não há endereço real configurado ainda, só loga a intenção.
   - A notificação dispara quando o resultado **vigente passa a** `positivo`, **inclusive por correção** (ex.: `negativo` corrigido para `positivo`), no mesmo ponto único de gravação (`ProcessoSanitarioService.registrarResultado`).
-  - **Pendência (T36):** não há nada previsto para a correção de um `positivo` já notificado (ex.: `positivo` corrigido para `negativo`, ou uma segunda correção que volte a `positivo`). A T37 reenvia a mesma notificação sem diferenciar; a T36 decide se isso precisa de um e-mail de retificação diferente ao munícipe e à Vigilância.
+  - **Uma vez por processo (#37, T35):** como o `positivo` é definitivo, só um lançamento `positivo` existe por processo, e a notificação dispara no máximo uma vez. Não há reenvio, nem por correção (a sequência `positivo` → `negativo` → `positivo`, que o backend aceitava até a T35, deixou de ser possível) nem por retentativa. Por isso a antiga pendência de um "e-mail de retificação" de um `positivo` já notificado não se aplica mais.
+  - **Registro do envio (#37):** quando o servidor SMTP aceita o e-mail, o processo grava `data_notificacao_municipe`, depois do commit do resultado, com um evento de auditoria `ATUALIZACAO` de sistema (`usuario_id` nulo; payload só com `dataNotificacaoMunicipe`, sem dado pessoal). Sem e-mail cadastrado ou com falha de envio, a coluna fica nula e só há o log. Não existe reenvio automático nem manual (pendência em `docs/decisoes/T35.md`).
 - Processo é considerado `urgente` se ao menos 1 `animal_amostrado.contato_humano = true`. Ao vincular, a urgência do processo marca a ocorrência (D31).
 - Auditoria: `CRIACAO` e `ATUALIZACAO` de `processo_sanitario` registram um snapshot **sem nenhum dado pessoal do responsável** (como a D23); as amostras entram.
 
@@ -637,6 +640,8 @@ Não é catálogo: coluna `processo_sanitario.status_processo` varchar + `CHECK`
 
 > **Decidido (T34, fecha a R1 da T29):** "sem resultado" é `resultado_laboratorial_id` **nulo**. O código `aguardando` continua no catálogo (e em `GET /api/processos/catalogos`), mas não é um resultado lançável: o registro o recusa (422).
 
+> **`codigo` imutável (V22, T35):** as regras do processo se apoiam no código (`positivo` notifica e é definitivo, V21; `aguardando` não é lançável). Renomear um código mudaria o sentido de registros já gravados e contornaria o trigger da V21. Por isso o trigger `tg_resultado_laboratorial_codigo_imutavel` recusa `UPDATE` de `codigo` (`check_violation`, `ck_resultado_laboratorial_codigo_imutavel`), para qualquer usuário ou caminho. `nome` e `ativo` continuam alteráveis. Não há API de escrita nesse catálogo, e o seed só insere (V13).
+
 #### `resultado_processo`
 
 > Histórico imutável dos resultados laboratoriais do processo (V14, T34). Cada lançamento é uma linha nova; a correção é outra linha com `retifica_id` apontando para a corrigida, que fica preservada (mesmo mecanismo dos registros clínicos, RN-C02). O vigente é a única linha que nenhuma outra corrige, copiado em `processo_sanitario.resultado_laboratorial_id`/`data_resultado`.
@@ -658,12 +663,13 @@ Não é catálogo: coluna `processo_sanitario.status_processo` varchar + `CHECK`
 - A correção é sempre de um resultado do mesmo processo: FK composta `fk_resultado_processo_retifica (retifica_id, processo_id) → (id, processo_id)`.
 - **Imutável:** triggers recusam `UPDATE` e `DELETE` de qualquer linha (`tg_resultado_processo_imutavel`, V14) e `TRUNCATE` da tabela, direto ou em cascata (`tg_resultado_processo_sem_truncate`, V15), para qualquer usuário ou caminho, inclusive SQL manual (mesmo princípio do vínculo, DH-7). A única saída é o dono da tabela desativar os triggers (`ALTER TABLE … DISABLE TRIGGER`), fora de qualquer fluxo da aplicação. No código, a entidade não tem setters, as colunas ficam fora do UPDATE (`updatable = false`) e o repositório não declara escrita (herda `save`/`delete` de `JpaRepository`; quem barra é o trigger).
 - Índice `ix_resultado_processo_processo_id` (V15) para a leitura do histórico por processo.
+- **Positivo definitivo (V21, T35):** o trigger `tg_resultado_positivo_definitivo` (`BEFORE INSERT`, só em linha com `retifica_id`) recusa a correção de um registro cujo resultado é `positivo` (`check_violation`, constraint `ck_resultado_positivo_definitivo`). Junto com a imutabilidade acima, não há caminho por `INSERT`, `UPDATE`, `DELETE` ou `TRUNCATE` para trocar um `positivo` registrado, e o código do catálogo também é imutável (V22). Contornar exige um privilégio de dono da tabela ou de superusuário: desabilitar ou remover um trigger, ou mudar `session_replication_role` para `replica`.
 
 **Pendências (fora da T34)**
 
 - Motivo obrigatório da correção: não exigido, pendente de decisão do CCZ (como a retificação clínica, `docs/regras-negocio-clinico.md`). `observacoes` é opcional.
 - Desfecho do animal (`desfecho_animal_id`): preenchido pelo mesmo `POST …/resultados` (T37, DH-21), direto no processo e fora deste histórico imutável. Se ele precisa de histórico próprio ou de imutabilidade, e o que fazer numa correção sem desfecho, é decisão pendente do CCZ (`docs/decisoes/T34.md`, T34-11).
-- Notificação: implementada na T37 (regras de `processo_sanitario`); a correção de um `positivo` já notificado é pendência da T36.
+- Notificação: implementada na T37 (regras de `processo_sanitario`). A correção de um `positivo` já notificado deixou de ser possível com o positivo definitivo (T35, V21); não há e-mail de retificação a decidir.
 - Tela de correção de resultado: pendente (DH-28 da T37).
 
 #### `desfecho_animal` (catálogo)
@@ -919,7 +925,7 @@ consideram só quem está sob custódia (`StatusAnimal.CODIGOS_SOB_CUSTODIA`), e
 16. Animal amostrado: pode referenciar `animal` do canil OU registrar dados próprios.
 17. Campos clínicos da amostragem (`data_coleta`, `material_biologico`, sintomas, contato humano) são sempre próprios da amostragem — não puxam da ficha.
 18. Contato humano-animal em qualquer amostra → processo marcado urgente.
-19. Resultado `positivo` dispara notificação automática ao munícipe e à **Vigilância Epidemiológica de Itu** (revisão de 2026-10-17: `inconclusivo` deixou de notificar; a correção de um positivo já notificado é pendência da T36, §3.5).
+19. Resultado `positivo` dispara notificação automática ao munícipe e à **Vigilância Epidemiológica de Itu** (revisão de 2026-10-17: `inconclusivo` deixou de notificar). Revisão de 2026-10-21 (T35): o `positivo` é definitivo (não pode ser corrigido), então a notificação sai no máximo uma vez por processo, e a data/hora do envio aceito fica em `processo_sanitario.data_notificacao_municipe` (#37, §3.5).
 
 ### Relatórios
 
