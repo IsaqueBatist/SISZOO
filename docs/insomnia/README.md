@@ -76,13 +76,11 @@ Environment precisa estar correto.
 Para rodar: com o backend de pé, abra a aba **Unit Testing** no Insomnia,
 selecione uma suíte e clique em **Run Tests**.
 
-**Importante:** o teste `ut_usuarios_autodesativacao_admin` documenta um gap
-encontrado no código — hoje não existe nenhuma regra que impeça um
-Administrador de desativar a própria conta. O teste cria um Administrador
-temporário só para isso (nunca usa o admin seedado real), e a asserção
-reflete o comportamento *atual* (200, permite). Se a equipe decidir bloquear
-essa ação no futuro, o teste precisa ser atualizado para esperar o novo
-status.
+**Importante:** o teste `ut_usuarios_autodesativacao_admin` cobre a regra 24 do
+DER: nenhum usuário desativa a própria conta (422, "Nao e permitido desativar o
+proprio usuario", em `UsuarioService#alterarStatus`). O teste cria um
+Administrador temporário só para isso (nunca usa o admin seedado real) e
+confere que ele continua ativo depois da tentativa.
 
 Da mesma forma, `ut_baias_excluir_soft_delete_nao_bloqueia_ocupada` documenta
 que o backend não bloqueia excluir (desativar) uma baia ocupada: o único freio
