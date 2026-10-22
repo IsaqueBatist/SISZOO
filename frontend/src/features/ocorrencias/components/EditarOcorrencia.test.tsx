@@ -124,14 +124,16 @@ describe('EditarOcorrencia', () => {
 
     const telefone = await screen.findByLabelText('Telefone')
     await user.clear(telefone)
-    await user.type(telefone, '(11) 9 0000-1111')
+    // Digita só os dígitos — é como um usuário real digita num campo com
+    // máscara (a pontuação é inserida pela máscara, não digitada).
+    await user.type(telefone, '11900001111')
     await salvar(user)
 
     await waitFor(() => expect(corpos).toHaveLength(1))
     expect(corpos[0].denunciante).toEqual({
       nome: 'Maria Souza Oliveira',
-      cpf: '123.456.789-00',
-      telefone: '(11) 9 0000-1111',
+      cpf: '123.456.789-09',
+      telefone: '(11) 90000-1111',
       email: 'maria.souza@email.com',
       cep: '13301-000',
       endereco: 'Rua dos Ipês, 220',

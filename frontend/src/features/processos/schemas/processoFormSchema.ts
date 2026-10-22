@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { hojeEmItu } from '@/lib/datas'
+import { cepValido, cpfValido, emailValido, telefoneValido } from '@/lib/mascaras'
 import { MATERIAL_BIOLOGICO_OPCOES, STATUS_CLINICO_OPCOES, TIPO_ABRIGO_OPCOES } from '../utils/processosCatalogos'
 import type { MaterialBiologico, StatusClinicoAmostra, TipoAbrigo } from '../types/processos.types'
 
@@ -15,10 +16,30 @@ const MATERIAL_BIOLOGICO_VALORES = MATERIAL_BIOLOGICO_OPCOES.map((item) => item.
 
 const responsavelSchema = z.object({
   nome: z.string().trim().min(1, 'Informe o nome do responsável.').max(150, 'No máximo 150 caracteres.'),
-  cpf: z.string().trim().max(14, 'No máximo 14 caracteres.').optional(),
-  telefone: z.string().trim().max(20, 'No máximo 20 caracteres.').optional(),
-  email: z.string().trim().max(150, 'No máximo 150 caracteres.').optional(),
-  cep: z.string().trim().max(10, 'No máximo 10 caracteres.').optional(),
+  cpf: z
+    .string()
+    .trim()
+    .max(14, 'No máximo 14 caracteres.')
+    .optional()
+    .refine((valor) => !valor || cpfValido(valor), 'CPF inválido.'),
+  telefone: z
+    .string()
+    .trim()
+    .max(20, 'No máximo 20 caracteres.')
+    .optional()
+    .refine((valor) => !valor || telefoneValido(valor), 'Telefone inválido.'),
+  email: z
+    .string()
+    .trim()
+    .max(150, 'No máximo 150 caracteres.')
+    .optional()
+    .refine((valor) => !valor || emailValido(valor), 'E-mail inválido.'),
+  cep: z
+    .string()
+    .trim()
+    .max(10, 'No máximo 10 caracteres.')
+    .optional()
+    .refine((valor) => !valor || cepValido(valor), 'CEP inválido.'),
   endereco: z.string().trim().max(255, 'No máximo 255 caracteres.').optional(),
   bairroResidencial: z.string().trim().max(80, 'No máximo 80 caracteres.').optional(),
   bairroOcorrencia: z.string().trim().max(80, 'No máximo 80 caracteres.').optional(),

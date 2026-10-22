@@ -40,7 +40,7 @@ export const DENUNCIANTE_MASCARADO: Denunciante = {
 export const DENUNCIANTE_SIGILOSO_VISIVEL: Denunciante = {
   nome: 'João Pereira Lima',
   cpf: '987.654.321-00',
-  telefone: '(11) 9 1234-5678',
+  telefone: '(11) 91234-5678',
   email: 'joao.pereira@email.com',
   cep: '13302-100',
   endereco: 'Rua das Camélias, 88',
@@ -77,8 +77,8 @@ export function criarOcorrenciaFixture(sobrescrever: Partial<Ocorrencia> = {}): 
     processoVinculado: null,
     denunciante: {
       nome: 'Maria Souza Oliveira',
-      cpf: '123.456.789-00',
-      telefone: '(11) 9 8765-4321',
+      cpf: '123.456.789-09',
+      telefone: '(11) 98765-4321',
       email: 'maria.souza@email.com',
       cep: '13301-000',
       endereco: 'Rua dos Ipês, 220',
@@ -204,8 +204,8 @@ export function ocorrenciaProcessoPendente(): Ocorrencia {
     },
     denunciante: {
       nome: 'Carla Mendes',
-      cpf: '111.222.333-44',
-      telefone: '(11) 9 2222-3333',
+      cpf: '111.222.333-96',
+      telefone: '(11) 92222-3333',
       email: 'carla.mendes@email.com',
       cep: '13300-000',
       endereco: 'Avenida Brasil, 850',

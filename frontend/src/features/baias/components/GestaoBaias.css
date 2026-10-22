@@ -1,7 +1,8 @@
-/* Portado do <style> inline de docs/prototipo/baias.html — avatares de
-   residentes (.resi-*) e o card fantasma (.add-baia) foram deixados de fora:
-   o backend só devolve a contagem de ocupação, não a lista de animais, e o
-   botão "Adicionar Baia" já vive no page-header. */
+/* Portado do <style> inline de docs/prototipo/baias.html — o card fantasma
+   (.add-baia) foi deixado de fora: o botão "Adicionar Baia" já vive no
+   page-header. Os avatares de residentes (.resi-*) usam GET /animais
+   agrupado por baiaId no cliente (ver ResidentesBaia.tsx), já que a baia só
+   devolve a contagem de ocupação, não a lista. */
 
 .baia-section {
   margin-bottom: var(--space-5);
@@ -82,6 +83,60 @@
   align-items: center;
   gap: 8px;
   font-size: 11px;
+}
+/* Faltava no projeto real — só existia em docs/prototipo/assets/components.css,
+   nunca portado. Sem isso a barra fica sem altura/cor, invisível. */
+.occ-bar {
+  height: 10px;
+  background: var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+.occ-bar .fill {
+  display: block;
+  height: 100%;
+  background: var(--color-success);
+  border-radius: 999px;
+  transition: width 300ms, background 300ms;
+}
+.occ-bar.warn .fill { background: var(--color-alert); }
+.occ-bar.danger .fill { background: var(--color-danger); }
+
+.baia-card .resi-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.baia-card .resi-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--color-bg);
+  border: 2px solid var(--color-surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: -8px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  overflow: hidden;
+}
+.baia-card .resi-avatar:first-child { margin-left: 0; }
+.baia-card .resi-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.baia-card .resi-more {
+  font-size: 11px;
+  margin-left: 8px;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+.baia-card .resi-empty {
+  font-size: 11px;
+  color: var(--color-text-muted);
 }
 .baia-card .nums {
   font-family: var(--font-mono);

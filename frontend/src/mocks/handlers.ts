@@ -17,6 +17,7 @@ import type {
   Vacinacao,
 } from '@/features/animais/types/historico.types'
 import type { LoginRequest, LoginResponse } from '@/features/auth/types/auth.types'
+import type { EventoAuditoria } from '@/features/auditoria/types/auditoria.types'
 import { API_BASE_URL } from '../lib/env'
 import { ocorrenciasHandlers } from './ocorrenciasHandlers'
 import { processosHandlers } from './processosHandlers'
@@ -966,6 +967,63 @@ export function resetPrescricoesMock() {
   prescricoesMock = seedPrescricoesMock()
 }
 
+// Alguns eventos "hoje", alguns "ontem", um mais antigo — exercita o
+// agrupamento por dia da tela de Logs (agruparPorDia.ts) sem precisar de
+// fixture dedicada em cada teste.
+function seedAuditoriaMock(): EventoAuditoria[] {
+  const agora = Date.now()
+  const HORA_MS = 60 * 60 * 1000
+  const DIA_MS = 24 * HORA_MS
+  return [
+    {
+      id: 'e5000000-0000-0000-0000-000000000001',
+      usuarioEmail: 'stephanie.lima@itu.sp.gov.br',
+      acao: 'LOGIN',
+      entidade: 'usuario',
+      entidadeId: 'a1b2c3d4-0000-0000-0000-000000000001',
+      ocorreuEm: new Date(agora - 1 * HORA_MS).toISOString(),
+    },
+    {
+      id: 'e5000000-0000-0000-0000-000000000002',
+      usuarioEmail: 'stephanie.lima@itu.sp.gov.br',
+      acao: 'CRIACAO',
+      entidade: 'vacinacao',
+      entidadeId: 'd1000000-0000-0000-0000-000000000001',
+      ocorreuEm: new Date(agora - 2 * HORA_MS).toISOString(),
+    },
+    {
+      id: 'e5000000-0000-0000-0000-000000000003',
+      usuarioEmail: 'paulo.henriques@itu.sp.gov.br',
+      acao: 'ATUALIZACAO',
+      entidade: 'usuario',
+      entidadeId: 'a1b2c3d4-0000-0000-0000-000000000002',
+      ocorreuEm: new Date(agora - DIA_MS - 3 * HORA_MS).toISOString(),
+    },
+    {
+      id: 'e5000000-0000-0000-0000-000000000004',
+      usuarioEmail: 'rafael.santos@itu.sp.gov.br',
+      acao: 'VISUALIZACAO',
+      entidade: 'ocorrencia',
+      entidadeId: 'h5000000-0000-0000-0000-000000000001',
+      ocorreuEm: new Date(agora - DIA_MS - 5 * HORA_MS).toISOString(),
+    },
+    {
+      id: 'e5000000-0000-0000-0000-000000000005',
+      usuarioEmail: 'ana.silva@itu.sp.gov.br',
+      acao: 'CRIACAO',
+      entidade: 'processo_sanitario',
+      entidadeId: 'h7000000-0000-0000-0000-000000000001',
+      ocorreuEm: new Date(agora - 3 * DIA_MS).toISOString(),
+    },
+  ]
+}
+
+let auditoriaMock: EventoAuditoria[] = seedAuditoriaMock()
+
+export function resetAuditoriaMock() {
+  auditoriaMock = seedAuditoriaMock()
+}
+
 function paginar<T>(itens: T[], pagina: number, tamanho: number) {
   const totalItens = itens.length
   const totalPaginas = Math.max(Math.ceil(totalItens / tamanho), 1)
@@ -1415,6 +1473,13 @@ export const handlers = [
     prescricoesMock = [...prescricoesMock, novo]
     const [comStatus] = derivarStatusRegistro([novo])
     return HttpResponse.json(comStatus, { status: 201 })
+  }),
+
+  http.get(`${API_BASE_URL}/auditoria`, ({ request }) => {
+    const url = new URL(request.url)
+    const pagina = Number(url.searchParams.get('pagina') ?? '0')
+    const tamanho = Number(url.searchParams.get('tamanho') ?? '20')
+    return HttpResponse.json(paginar(auditoriaMock, pagina, tamanho))
   }),
 
   http.get(`${API_BASE_URL}/medicamentos`, ({ request }) => {

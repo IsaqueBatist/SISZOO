@@ -89,7 +89,7 @@ export function processoFixture(sobrescrever: Partial<Processo> = {}): Processo 
     responsavel: {
       id: 'h6000000-0000-0000-0000-000000000001',
       nome: 'Maria da Conceição',
-      cpf: '123.456.789-00',
+      cpf: '123.456.789-09',
       telefone: '(11) 99999-0000',
       email: 'maria@exemplo.com',
       cep: '13300-000',

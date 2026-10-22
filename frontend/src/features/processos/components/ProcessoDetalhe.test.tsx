@@ -67,7 +67,7 @@ describe('ProcessoDetalhe — dados', () => {
     expect(dados.getByText('Animal recolhido em via pública')).toBeInTheDocument()
 
     const responsavel = cardDe('Responsável / Munícipe')
-    for (const valor of ['Maria da Conceição', '123.456.789-00', '(11) 99999-0000', 'maria@exemplo.com', '13300-000',
+    for (const valor of ['Maria da Conceição', '123.456.789-09', '(11) 99999-0000', 'maria@exemplo.com', '13300-000',
       'Rua das Flores, 10', 'Centro', 'Vila Nova']) {
       expect(responsavel.getByText(valor)).toBeInTheDocument()
     }

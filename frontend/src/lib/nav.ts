@@ -19,7 +19,7 @@ export const ROLES: Record<RoleKey, Role> = {
     label: 'Administrador',
     short: 'ADMIN',
     badgeCls: 'badge-role-admin',
-    access: ['dashboard', 'animais', 'ocorrencias', 'processos', 'relatorios', 'medicamentos', 'baias', 'usuarios', 'config'],
+    access: ['dashboard', 'animais', 'ocorrencias', 'processos', 'relatorios', 'medicamentos', 'baias', 'usuarios', 'logs', 'config'],
   },
   vet: {
     label: 'Veterinária',
@@ -66,6 +66,7 @@ export const NAV_ALL: NavEntry[] = [
   { id: 'medicamentos', label: 'Medicamentos', to: '/medicamentos', icon: 'pill' },
   { id: 'baias', label: 'Gestão de Baias', to: '/baias', icon: 'grid' },
   { id: 'usuarios', label: 'Usuários', to: '/usuarios', icon: 'users' },
+  { id: 'logs', label: 'Logs', to: '/logs', icon: 'eye' },
   { id: 'config', label: 'Configurações', to: '/configuracoes', icon: 'cog' },
 ]
 

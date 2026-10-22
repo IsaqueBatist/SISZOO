@@ -3,7 +3,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
 import { API_BASE_URL } from '@/lib/env'
@@ -296,6 +296,112 @@ describe('OcorrenciaForm', () => {
       expect(screen.queryByText(/Há anexos pendentes/)).not.toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'Registrar Ocorrência' })).toBeEnabled()
       expect(contagem.uploads).toBe(2)
+    })
+  })
+
+  describe('máscara de campos e autopreenchimento de CEP (ViaCEP)', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    it('formata o CPF do denunciante enquanto o usuário digita', async () => {
+      const user = userEvent.setup()
+      renderForm()
+
+      await user.type(screen.getByLabelText('CPF'), '12345678909')
+
+      expect(screen.getByLabelText('CPF')).toHaveValue('123.456.789-09')
+    })
+
+    it('CEP válido preenche o endereço automaticamente, só se o campo estiver vazio', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ logradouro: 'Rua das Flores', bairro: 'Centro' }),
+        }),
+      )
+      const user = userEvent.setup()
+      renderForm()
+
+      await user.type(screen.getByLabelText('CEP'), '13300000')
+
+      expect(await screen.findByLabelText('Endereço residencial')).toHaveValue('Rua das Flores')
+    })
+
+    it('não sobrescreve o endereço se o usuário já tiver digitado algo', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ logradouro: 'Rua das Flores', bairro: 'Centro' }),
+        }),
+      )
+      const user = userEvent.setup()
+      renderForm()
+
+      await user.type(screen.getByLabelText('Endereço residencial'), 'Rua Já Digitada, 99')
+      await user.type(screen.getByLabelText('CEP'), '13300000')
+
+      await waitFor(() => expect(screen.getByLabelText('CEP')).toHaveValue('13300-000'))
+      expect(screen.getByLabelText('Endereço residencial')).toHaveValue('Rua Já Digitada, 99')
+    })
+
+    it('CEP com formato válido mas inexistente não preenche nada', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({ ok: true, json: async () => ({ erro: true }) }),
+      )
+      const user = userEvent.setup()
+      renderForm()
+
+      await user.type(screen.getByLabelText('CEP'), '00000000')
+
+      await waitFor(() => expect(screen.getByLabelText('CEP')).toHaveValue('00000-000'))
+      expect(screen.getByLabelText('Endereço residencial')).toHaveValue('')
+    })
+
+    it('ocorrência marcada como sigilosa não dispara o ViaCEP (dado do denunciante não vai a terceiro)', async () => {
+      // No cadastro (diferente da edição sem permissão), o campo continua
+      // visível — o usuário está digitando o dado pela primeira vez. Por
+      // isso a guarda dentro de aoMudarCepDenunciante é necessária de
+      // verdade, não só defesa redundante.
+      const fetchMock = vi.fn()
+      vi.stubGlobal('fetch', fetchMock)
+      const user = userEvent.setup()
+      renderForm()
+
+      await user.click(screen.getByLabelText('Ocorrência sigilosa'))
+      await user.type(screen.getByLabelText('CEP'), '13300000')
+
+      expect(fetchMock).not.toHaveBeenCalled()
+    })
+  })
+})
+
+describe('sugestão de bairro (datalist)', () => {
+  it('popula a datalist do campo Bairro com os bairros já usados em ocorrências existentes', async () => {
+    server.use(
+      http.get(`${API_BASE_URL}/ocorrencias`, () =>
+        HttpResponse.json({
+          itens: [{ bairro: 'Centro' }, { bairro: 'Centro' }, { bairro: 'Vila Nova' }],
+          pagina: 0,
+          tamanho: 500,
+          totalItens: 3,
+          totalPaginas: 1,
+        }),
+      ),
+    )
+    renderForm()
+
+    const campoBairro = await screen.findByLabelText(/^Bairro/i)
+    expect(campoBairro).toHaveAttribute('list', 'bairros-conhecidos')
+
+    await waitFor(() => {
+      const datalist = document.getElementById('bairros-conhecidos') as HTMLDataListElement | null
+      expect(datalist).not.toBeNull()
+      const opcoes = Array.from(datalist?.querySelectorAll('option') ?? [])
+      expect(opcoes.map((opcao) => opcao.value)).toEqual(['Centro', 'Vila Nova'])
     })
   })
 })
