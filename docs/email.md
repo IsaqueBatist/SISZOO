@@ -65,7 +65,12 @@ Os testes nunca falam com um SMTP externo:
   destinatário, assunto, remetente, partes MIME, template, envio assíncrono e
   log.
 - `EmailServiceFalhaSmtpIT` provoca uma falha real de conexão. Os ramos de
-  erro e a máscara estão em `EmailServiceTest`, só com Mockito.
+  erro, a máscara e a recusa do executor (proxy assíncrono sobre um executor
+  encerrado) estão em `EmailServiceTest`, só com Mockito.
+- `NotificacaoResultadoEmailIT` cobre a notificação de resultado de ponta a
+  ponta, sem mock no envio. Ele faz o POST do positivo, e o GreenMail recebe uma
+  mensagem com o texto da T36 e o nome escapado no HTML. A data do envio fica
+  gravada, e a tentativa de corrigir o positivo dá 422, sem segunda mensagem.
 - Para conferir o log, use `LogCapturado` (testes de `comum/service`): ele lê
   só o logger do `EmailService`. O console também recebe o log do GreenMail,
   que escreve o endereço completo.
@@ -87,14 +92,33 @@ emailService.enviar(
   `enviar(destinatario, assunto, corpoHtml)`: a mensagem sai como um único
   `text/html`. Prefira mandar as duas versões, que passam melhor pelos filtros
   de spam e funcionam em leitores de texto.
-- **Tudo é assíncrono, inclusive a validação.** A chamada volta na hora com um
+- **Validação e envio são assíncronos.** A chamada volta na hora com um
   future. Destinatário ou assunto em branco e falhas de SMTP só aparecem como
-  future concluído com erro: quem chama nunca recebe exceção, e o erro já foi
-  logado. Quem não precisa do resultado pode ignorar o future, como faz
-  `NotificacaoResultadoService`. Para saber o resultado, use
-  `future.get(timeout)` ou `whenComplete`, nunca na thread de um request.
+  future concluído com erro, já logado. Quem não precisa do resultado pode
+  ignorar o future. Para saber o resultado, use `future.get(timeout)` ou
+  `whenComplete`, nunca esperando na thread de um request.
+- **Exceção na própria chamada:** se o executor recusar a tarefa, por exemplo
+  com a aplicação já encerrando, a `TaskRejectedException` sobe na hora, não
+  no future (Spring 7, `submitCompletable`; `docs/decisoes/T35.md` T35-17).
+  Quem chama o serviço fora de um request deve tratá-la, como faz o
+  `NotificacaoResultadoService`.
 - O serviço não decide **quando** notificar. Essa regra fica em cada
   funcionalidade; hoje, só o resultado `positivo` (DER, regra 19).
+
+## Notificação de resultado positivo (T36/#37)
+
+- Dispara depois do commit do lançamento `positivo` (`NotificacaoResultadoListener`,
+  `@Async` + `AFTER_COMMIT`). Se a transação for desfeita, nada é enviado.
+- **Uma vez por processo:** o `positivo` é definitivo e não pode ser corrigido
+  (422 na API, trigger da V20). Por isso, só existe um lançamento `positivo` por
+  processo, e não há reenvio (`docs/decisoes/T35.md` T35-15).
+- **Registro:** quando o SMTP aceita o e-mail, o callback do future grava
+  `processo_sanitario.data_notificacao_municipe` com o relógio do projeto
+  (America/Sao_Paulo) e um evento de auditoria `ATUALIZACAO` de sistema
+  (`usuario_id` nulo, payload só com essa data). Sem e-mail cadastrado ou com
+  falha de envio, a coluna fica nula, e não há reenvio (T35-16).
+- Uma falha ao gravar a data depois do envio aceito gera `WARN` só com o
+  protocolo. Nesse caso o e-mail saiu e a coluna ficou nula (caso ambíguo).
 
 ## Como adicionar um template
 
@@ -122,8 +146,9 @@ comunicação oficial aprovada pelo CCZ.
 - No encerramento normal da aplicação, o executor espera até **20 s** pelos
   envios em curso (`spring.task.execution.shutdown`).
 - A notificação de resultado já roda num listener `@Async` (`AFTER_COMMIT`) e
-  chama o `enviar`, também `@Async`. Cada notificação passa, portanto, por
-  duas threads do pool (`docs/decisoes/T35.md`).
+  chama o `enviar`, também `@Async`. Cada notificação usa, portanto, duas
+  threads do pool **em sequência**: o listener só submete o envio e libera a
+  thread (`docs/decisoes/T35.md` T35-6).
 
 ## Falhas e logs
 
@@ -143,11 +168,13 @@ comunicação oficial aprovada pelo CCZ.
 - **"Aceito pelo servidor SMTP" não quer dizer entregue.** O sucesso não
   garante que a mensagem chegou à caixa de entrada nem que foi lida. Ela ainda
   pode ser recusada depois (bounce), cair no spam ou ser descartada.
-- Não há fila, retentativa nem garantia de entrega. Uma falha fica só no log.
+- Não há fila, retentativa nem garantia de entrega. Uma falha fica no log e,
+  na notificação de resultado, na `data_notificacao_municipe` nula.
 - Os envios em andamento se perdem se o processo for morto (`kill -9`, OOM,
-  `docker kill`) ou se passarem do prazo de 20 s no encerramento.
-- Nada registra que o envio aconteceu, nem no processo nem em tabela própria
-  (pendência da #37 em `docs/decisoes/T35.md`).
+  `docker kill`) ou se passarem do prazo de 20 s no encerramento. Na
+  notificação de resultado, a coluna fica nula e não há reenvio.
+- Só a notificação de resultado registra o envio no banco. O `EmailService`
+  em si não guarda nada além do log.
 - Não há SMTPS na porta 465 (`mail.smtp.ssl.enable`). Use STARTTLS na 587 ou
   na 2525.
 - Os padrões das variáveis estão duplicados entre `application.yml` e
