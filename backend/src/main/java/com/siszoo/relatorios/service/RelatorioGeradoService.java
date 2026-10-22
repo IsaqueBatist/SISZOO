@@ -186,6 +186,7 @@ public class RelatorioGeradoService {
                 registro.getPeriodoFim(),
                 geradoPor.getNome() + " " + geradoPor.getSobrenome(),
                 registro.getGeradoEm(),
-                registro.getTamanhoBytes());
+                registro.getTamanhoBytes(),
+                registro.getParametrosJson());
     }
 }
