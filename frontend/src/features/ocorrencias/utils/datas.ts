@@ -21,8 +21,3 @@ export function formatarHora(valor: string): string {
 export function formatarDataHora(valor: string): string {
   return `${formatarData(valor)} · ${formatarHora(valor.slice(11))}`
 }
-
-// Data de hoje (AAAA-MM-DD) no fuso do CCZ, para campos de data padrão.
-export function hojeIso(): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date())
-}

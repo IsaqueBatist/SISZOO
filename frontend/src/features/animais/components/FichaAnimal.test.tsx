@@ -8,8 +8,10 @@ import type { Usuario } from '@/features/auth/types/auth.types'
 import { FichaAnimal } from './FichaAnimal'
 
 const REX_ID = 'b2c3d4e5-0000-0000-0000-000000000001'
+// Microchip sem vacinação no mock: ficha incompleta (fichaCompletaMock).
+const LUNA_ID = 'b2c3d4e5-0000-0000-0000-000000000002'
 
-function renderFicha(cargos: string[] = ['Veterinário']) {
+function renderFicha(cargos: string[] = ['Veterinário'], animalId = REX_ID) {
   const usuario: Usuario = {
     id: 'a1b2c3d4-0000-0000-0000-000000000001',
     nome: 'Stéphanie',
@@ -23,7 +25,7 @@ function renderFicha(cargos: string[] = ['Veterinário']) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[`/animais/${REX_ID}`]}>
+      <MemoryRouter initialEntries={[`/animais/${animalId}`]}>
         <AuthProvider>
           <Routes>
             <Route path="/animais/:id" element={<FichaAnimal />} />
@@ -45,6 +47,22 @@ describe('FichaAnimal', () => {
     // kv-list do painel de identidade.
     expect(screen.getAllByText('Canino')).toHaveLength(2)
     expect(screen.getByText('Disponível').closest('.badge')).toHaveClass('badge-available')
+  })
+
+  it('mostra "Ficha completa" quando a API devolve fichaCompleta = true', async () => {
+    renderFicha(['Veterinário'], REX_ID)
+
+    const subtitulo = (await screen.findByText(/No CCZ desde/)).closest('p') as HTMLElement
+    expect(subtitulo).toHaveTextContent(/^Ficha completa ·/)
+    expect(within(subtitulo).queryByText('Ficha incompleta')).not.toBeInTheDocument()
+  })
+
+  it('mostra "Ficha incompleta" quando a API devolve fichaCompleta = false', async () => {
+    renderFicha(['Veterinário'], LUNA_ID)
+
+    const subtitulo = (await screen.findByText(/No CCZ desde/)).closest('p') as HTMLElement
+    expect(within(subtitulo).getByText('Ficha incompleta')).toBeInTheDocument()
+    expect(subtitulo).not.toHaveTextContent(/^Ficha completa/)
   })
 
   it('troca de aba ao clicar e mostra o conteúdo correspondente', async () => {

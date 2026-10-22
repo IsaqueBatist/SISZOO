@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Icon } from '@/components/layout/Icon'
+import { formatarDataBR, formatarDataHoraBR } from '@/lib/datas'
 import { ROLES, roleKeyFromCargos } from '@/lib/nav'
 import { useAlterarStatusUsuarioMutation, useUsuariosQuery } from '../hooks/useUsuarios'
 import { PERFIS_USUARIO, type PerfilUsuario, type UsuarioListItem } from '../types/usuarios.types'
@@ -8,15 +9,10 @@ import './Usuarios.css'
 
 type FiltroStatus = 'Todos' | 'Ativos' | 'Inativos'
 
-const FUSO_ITU = 'America/Sao_Paulo'
-
+// ultimoAcesso e criadoEm são LocalDateTime sem fuso, já no horário de Itu:
+// `new Date(iso)` os leria no fuso do navegador (ver lib/datas.ts).
 function formatarData(iso: string | null, comHora = false): string {
-  if (!iso) return '—'
-  const data = new Date(iso)
-  const opcoes: Intl.DateTimeFormatOptions = comHora
-    ? { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: FUSO_ITU }
-    : { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: FUSO_ITU }
-  return new Intl.DateTimeFormat('pt-BR', opcoes).format(data)
+  return comHora ? formatarDataHoraBR(iso) : formatarDataBR(iso)
 }
 
 function iniciais(nome: string, sobrenome: string): string {
