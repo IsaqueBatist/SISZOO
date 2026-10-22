@@ -37,6 +37,7 @@ services:
       SMTP_AUTH: ${SMTP_AUTH:-false}
       SMTP_STARTTLS: ${SMTP_STARTTLS:-false}
       SMTP_STARTTLS_REQUIRED: ${SMTP_STARTTLS_REQUIRED:-false}
+      SMTP_SSL: ${SMTP_SSL:-false}
       SISZOO_MAIL_FROM: ${SISZOO_MAIL_FROM:-nao-responda@itu.sp.gov.br}
     ports:
       - "8080:8080"

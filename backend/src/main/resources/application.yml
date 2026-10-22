@@ -31,6 +31,11 @@ spring:
             # true recusa a sessao se o servidor nao aceitar STARTTLS, em vez
             # de seguir em texto claro (o Angus tenta o STARTTLS so com isso).
             required: ${SMTP_STARTTLS_REQUIRED:false}
+          # SMTPS (TLS implicito desde a conexao, tipicamente porta 465):
+          # SMTP_SSL=true com SMTP_PORT=465; as SMTP_STARTTLS* nao se aplicam.
+          # O certificado do servidor e validado (cadeia e nome do host).
+          ssl:
+            enable: ${SMTP_SSL:false}
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
@@ -132,6 +137,8 @@ spring:
           starttls:
             enable: false
             required: false
+          ssl:
+            enable: false
   # Cache do dashboard desligado nos testes (T38): o banco de teste é
   # compartilhado entre métodos sem rollback (AbstractIntegrationTest), e um
   # TTL de 5 min faria um teste ler o resultado cacheado de outro.

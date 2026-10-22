@@ -25,13 +25,21 @@ e anularia o padrão do Spring.
 | `SMTP_AUTH` | `false` | `true` quando o servidor exige login. |
 | `SMTP_STARTTLS` | `false` | Tenta STARTTLS se o servidor oferecer. |
 | `SMTP_STARTTLS_REQUIRED` | `false` | Recusa a sessão se o STARTTLS não for possível. Sozinho, já faz o cliente tentar o STARTTLS. |
+| `SMTP_SSL` | `false` | SMTPS: TLS desde a conexão (`mail.smtp.ssl.enable`), tipicamente na porta 465. Com `true`, as `SMTP_STARTTLS*` não se aplicam. |
 | `SISZOO_MAIL_FROM` | `nao-responda@itu.sp.gov.br` | Remetente. **Obrigatório**: se for definido em branco, o backend não sobe (`siszoo.notificacoes.remetente ... ausente`). |
 
-Em produção, use `SMTP_AUTH=true`, `SMTP_STARTTLS=true` e
-`SMTP_STARTTLS_REQUIRED=true`. Com isso, a senha nunca trafega em texto
-claro.
+Em produção, a senha nunca deve trafegar em texto claro. Escolha uma das
+duas formas, conforme o servidor:
 
-**SMTPS na porta 465 (TLS direto) não está configurado.** Ver as limitações.
+- **STARTTLS** (porta 587 ou 2525): `SMTP_AUTH=true`, `SMTP_STARTTLS=true` e
+  `SMTP_STARTTLS_REQUIRED=true`.
+- **SMTPS** (porta 465, TLS implícito): `SMTP_AUTH=true`, `SMTP_SSL=true` e
+  `SMTP_PORT=465`.
+
+Nos dois casos, o certificado do servidor é validado: a cadeia, contra o
+truststore da JVM, e o nome do host (`checkserveridentity`, padrão do
+Angus 2.0.5). Um certificado autoassinado é recusado. O `application.yml` não
+desliga nenhuma das duas validações.
 
 Sem nenhuma variável definida, o backend sobe normalmente. Cada envio falha ao
 conectar em `localhost:25`, e a falha aparece como `WARN` (ver abaixo).
@@ -64,6 +72,11 @@ Os testes nunca falam com um SMTP externo:
   aponta o contexto para ele via `@DynamicPropertySource`. Ali se confere
   destinatário, assunto, remetente, partes MIME, template, envio assíncrono e
   log.
+- `EmailServiceSmtpsIT` sobe o GreenMail só em SMTPS e mostra duas coisas.
+  Com `mail.smtp.ssl.enable=true`, o envio pelo contexto real chega. Sem
+  confiança explícita, o certificado autoassinado do GreenMail é recusado no
+  handshake. A confiança nesse certificado (`ssl.trust` e
+  `checkserveridentity=false`) existe só nesse teste.
 - `EmailServiceFalhaSmtpIT` provoca uma falha real de conexão. Os ramos de
   erro, a máscara e a recusa do executor (proxy assíncrono sobre um executor
   encerrado) estão em `EmailServiceTest`, só com Mockito.
@@ -184,7 +197,8 @@ comunicação oficial aprovada pelo CCZ.
   notificação de resultado, a coluna fica nula e não há reenvio.
 - Só a notificação de resultado registra o envio no banco. O `EmailService`
   em si não guarda nada além do log.
-- Não há SMTPS na porta 465 (`mail.smtp.ssl.enable`). Use STARTTLS na 587 ou
-  na 2525.
+- O SMTPS (`SMTP_SSL`) foi testado só com o GreenMail, que usa um
+  certificado autoassinado aceito apenas no teste. Um handshake com um
+  servidor real na porta 465 não foi testado.
 - Os padrões das variáveis estão duplicados entre `application.yml` e
   `docker-compose.yml`. Se mudar um, mude o outro.
