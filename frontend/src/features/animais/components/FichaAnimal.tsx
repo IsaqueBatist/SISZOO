@@ -161,6 +161,24 @@ export function FichaAnimal() {
                 <span className="v mono">{animal.microchip ?? '—'}</span>
               </div>
               <div className="kv-row">
+                <span className="k">Implantação do chip</span>
+                <span className="v">{animal.dataImplantacaoChip ? formatarDataBR(animal.dataImplantacaoChip) : '—'}</span>
+              </div>
+              <div className="kv-row">
+                <span className="k">Medalha</span>
+                <span className="v mono">{animal.numeroMedalha ?? '—'}</span>
+              </div>
+              <div className="kv-row">
+                <span className="k">Procedência</span>
+                <span className="v">{animal.procedencia ?? '—'}</span>
+              </div>
+              {animal.statusCodigo === 'obito_eutanasia' && (
+                <div className="kv-row">
+                  <span className="k">Laudo de eutanásia</span>
+                  <span className="v">{animal.laudoEutanasia ?? '— (não informado)'}</span>
+                </div>
+              )}
+              <div className="kv-row">
                 <span className="k">Espécie</span>
                 <span className="v">{animal.especieNome}</span>
               </div>

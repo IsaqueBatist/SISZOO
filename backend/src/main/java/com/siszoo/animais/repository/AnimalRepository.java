@@ -17,6 +17,9 @@ public interface AnimalRepository extends JpaRepository<Animal, UUID>, JpaSpecif
 
     Optional<Animal> findByMicrochip(String microchip);
 
+    // F2-004: medalha única quando informada (uq_animal_numero_medalha, V23).
+    Optional<Animal> findByNumeroMedalha(String numeroMedalha);
+
     long countByBaia_IdAndStatus_CodigoNotIn(UUID baiaId, Collection<String> codigosExcluidos);
 
     // Agregação única (GROUP BY) para evitar N+1 ao calcular a ocupação de

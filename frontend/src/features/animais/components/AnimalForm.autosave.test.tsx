@@ -87,7 +87,9 @@ describe('AnimalForm — autosave do rascunho', () => {
     await waitFor(() => expect(agendarSalvarRascunhoAnimal).toHaveBeenCalled())
   })
 
-  it('agenda salvar com exatamente as 19 chaves de RascunhoAnimalValores', async () => {
+  // F2-004/F2-008 (Fase 3 do TG): 23 chaves — as 19 originais mais numeroMedalha,
+  // dataImplantacaoChip, procedencia e laudoEutanasia (opcionais em rascunhos antigos).
+  it('agenda salvar com exatamente as 23 chaves de RascunhoAnimalValores', async () => {
     vi.mocked(carregarRascunhoAnimal).mockResolvedValue(null)
 
     const user = userEvent.setup()
@@ -119,6 +121,10 @@ describe('AnimalForm — autosave do rascunho', () => {
         'baiaId',
         'fotoUrl',
         'observacoes',
+        'numeroMedalha',
+        'dataImplantacaoChip',
+        'procedencia',
+        'laudoEutanasia',
       ].sort(),
     )
   })

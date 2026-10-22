@@ -97,10 +97,20 @@ public class AnimalService {
                 request.esterilizado(), request.dataEsterilizacao());
         String microchip = normalizarMicrochip(request.microchip());
         verificarMicrochipDisponivel(microchip, null);
+        // F2-004 / F2-008: identificacao complementar e laudo de eutanasia.
+        String numeroMedalha = normalizarTexto(request.numeroMedalha());
+        verificarMedalhaDisponivel(numeroMedalha, null);
+        validarDataImplantacaoChip(request.dataImplantacaoChip(), microchip);
         StatusAnimal status = resolverStatus(request.status());
+        String laudoEutanasia = normalizarTexto(request.laudoEutanasia());
+        exigirLaudoNaEutanasia(null, status, laudoEutanasia);
         Baia baia = resolverBaia(request.baiaId(), status, null);
 
         Animal animal = new Animal();
+        animal.setNumeroMedalha(numeroMedalha);
+        animal.setDataImplantacaoChip(request.dataImplantacaoChip());
+        animal.setProcedencia(normalizarTexto(request.procedencia()));
+        animal.setLaudoEutanasia(laudoEutanasia);
         animal.setNome(request.nome());
         animal.setEspecie(resolverEspecie(request.especie()));
         animal.setSexo(request.sexo());
@@ -151,6 +161,22 @@ public class AnimalService {
         Baia baia = resolverBaia(request.baiaId(), status, animal);
 
         aplicarMicrochipNaAtualizacao(animal, request.microchip());
+
+        // F2-004: medalha unica; data de implantacao exige microchip (ja aplicado acima).
+        String numeroMedalha = normalizarTexto(request.numeroMedalha());
+        verificarMedalhaDisponivel(numeroMedalha, animal.getId());
+        validarDataImplantacaoChip(request.dataImplantacaoChip(), animal.getMicrochip());
+        // F2-008: laudo obrigatorio so na TRANSICAO para obito_eutanasia; quem ja
+        // estava em eutanasia (inclusive registros anteriores a V24) segue
+        // editavel, e um laudo ja gravado e mantido se o request vier vazio.
+        String laudoEutanasia = normalizarTexto(request.laudoEutanasia());
+        exigirLaudoNaEutanasia(animal.getStatus(), status, laudoEutanasia);
+        animal.setNumeroMedalha(numeroMedalha);
+        animal.setDataImplantacaoChip(request.dataImplantacaoChip());
+        animal.setProcedencia(normalizarTexto(request.procedencia()));
+        if (laudoEutanasia != null) {
+            animal.setLaudoEutanasia(laudoEutanasia);
+        }
 
         animal.setNome(request.nome());
         animal.setEspecie(resolverEspecie(request.especie()));
@@ -293,6 +319,58 @@ public class AnimalService {
 
     private boolean ocupaBaia(StatusAnimal status) {
         return status != null && !StatusAnimal.CODIGOS_FORA_DA_CUSTODIA.contains(status.getCodigo());
+    }
+
+    // ── F2-004 / F2-008 (Fase 3 do TG) ───────────────────
+
+    private static final String STATUS_OBITO_EUTANASIA = "obito_eutanasia";
+
+    // Texto livre opcional: sem espacos nas pontas; vazio vira null.
+    private static String normalizarTexto(String valor) {
+        if (valor == null) {
+            return null;
+        }
+        String limpo = valor.trim();
+        return limpo.isEmpty() ? null : limpo;
+    }
+
+    // Medalha e identificador fisico alternativo: unica quando informada (V23).
+    private void verificarMedalhaDisponivel(String numeroMedalha, UUID animalIdAtual) {
+        if (numeroMedalha == null) {
+            return;
+        }
+        animalRepository.findByNumeroMedalha(numeroMedalha)
+                .filter(outro -> animalIdAtual == null || !outro.getId().equals(animalIdAtual))
+                .ifPresent(outro -> {
+                    throw new CampoInvalidoException("numeroMedalha", "Numero de medalha ja cadastrado para outro animal");
+                });
+    }
+
+    // RN01: a data de implantacao e registrada junto com o numero do chip —
+    // sem microchip nao ha o que datar; e e fato ocorrido (nunca futura).
+    private void validarDataImplantacaoChip(LocalDate dataImplantacao, String microchip) {
+        if (dataImplantacao == null) {
+            return;
+        }
+        if (!StringUtils.hasText(microchip)) {
+            throw new CampoInvalidoException("dataImplantacaoChip",
+                    "Data de implantacao so pode ser informada junto com o microchip");
+        }
+        if (dataImplantacao.isAfter(LocalDate.now(clock))) {
+            throw new CampoInvalidoException("dataImplantacaoChip", "Data de implantacao nao pode ser futura");
+        }
+    }
+
+    // RF-A05 / Lei 14.228/2021: laudo do responsavel tecnico obrigatorio ao
+    // registrar o destino eutanasia. Vale so na transicao (statusAnterior nulo
+    // = cadastro novo); registros ja em eutanasia nao sao invalidados.
+    private static void exigirLaudoNaEutanasia(StatusAnimal statusAnterior, StatusAnimal statusNovo, String laudo) {
+        boolean entrandoEmEutanasia = statusNovo != null && STATUS_OBITO_EUTANASIA.equals(statusNovo.getCodigo())
+                && (statusAnterior == null || !STATUS_OBITO_EUTANASIA.equals(statusAnterior.getCodigo()));
+        if (entrandoEmEutanasia && laudo == null) {
+            throw new CampoInvalidoException("laudoEutanasia",
+                    "Informe o laudo do responsavel tecnico que justifica a eutanasia");
+        }
     }
 
     // Datas de fato ocorrido: nao podem ser futuras, com "hoje" do Clock do

@@ -34,6 +34,11 @@ export interface Animal {
   criadoPorNome: string
   criadoEm: string
   atualizadoEm: string
+  // F2-004 / F2-008 (Fase 3 do TG): opcionais no tipo para não quebrar fixtures antigas
+  numeroMedalha?: string | null
+  dataImplantacaoChip?: string | null
+  procedencia?: string | null
+  laudoEutanasia?: string | null
 }
 
 export interface CatalogoItem {
@@ -107,4 +112,8 @@ export interface AnimalRequest {
   baiaId?: string
   fotoUrl?: string
   observacoes?: string
+  numeroMedalha?: string
+  dataImplantacaoChip?: string
+  procedencia?: string
+  laudoEutanasia?: string
 }

@@ -35,5 +35,10 @@ public record AnimalResponse(
         UUID criadoPorId,
         String criadoPorNome,
         LocalDateTime criadoEm,
-        LocalDateTime atualizadoEm) {
+        LocalDateTime atualizadoEm,
+        // F2-004 / F2-008 (Fase 3 do TG)
+        String numeroMedalha,
+        LocalDate dataImplantacaoChip,
+        String procedencia,
+        String laudoEutanasia) {
 }

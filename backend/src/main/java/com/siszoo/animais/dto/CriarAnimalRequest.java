@@ -64,5 +64,28 @@ public record CriarAnimalRequest(
 
         String fotoUrl,
 
-        String observacoes) {
+        String observacoes,
+
+        // F2-004: identificação complementar (RF-A01/RN01). Opcionais.
+        @Size(max = 30)
+        String numeroMedalha,
+
+        LocalDate dataImplantacaoChip,
+
+        @Size(max = 200)
+        String procedencia,
+
+        // F2-008: exigido pelo AnimalService quando status = obito_eutanasia.
+        @Size(max = 4000)
+        String laudoEutanasia) {
+
+    // Compatibilidade com chamadas anteriores à F2-004/F2-008 (testes e fixtures).
+    public CriarAnimalRequest(String nome, String especie, String sexo, String raca, String coloracao, String pelagem,
+            String porte, BigDecimal pesoKg, String idadeAprox, LocalDate dataNascimentoAprox, String microchip,
+            Boolean esterilizado, LocalDate dataEsterilizacao, String status, String motivoEntrada,
+            LocalDateTime dataEntrada, UUID baiaId, String fotoUrl, String observacoes) {
+        this(nome, especie, sexo, raca, coloracao, pelagem, porte, pesoKg, idadeAprox, dataNascimentoAprox, microchip,
+                esterilizado, dataEsterilizacao, status, motivoEntrada, dataEntrada, baiaId, fotoUrl, observacoes,
+                null, null, null, null);
+    }
 }

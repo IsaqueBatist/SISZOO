@@ -6,7 +6,7 @@ import { Controller, useForm, type FieldErrors as RhfFieldErrors } from 'react-h
 import { z } from 'zod'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { hojeEmItu } from '@/lib/datas'
+import { formatarDataBR, hojeEmItu } from '@/lib/datas'
 import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
 import type { Animal, AnimalRequest, CatalogoItem, Pelagem, Porte, Sexo } from '../types/animais.types'
 import {
@@ -60,8 +60,8 @@ const animalFormUiSchema = animalFormSchema
 type AnimalFormUiValues = z.infer<typeof animalFormUiSchema>
 
 const CAMPOS_STEP: Record<1 | 2 | 3, (keyof AnimalFormUiValues)[]> = {
-  1: ['nome', 'especie', 'sexo', 'raca', 'coloracao', 'pelagem', 'porte', 'pesoKg', 'idadeAprox', 'dataNascimentoAprox', 'microchip'],
-  2: ['status', 'motivoEntrada', 'dataEntrada', 'baiaId', 'dataEsterilizacao'],
+  1: ['nome', 'especie', 'sexo', 'raca', 'coloracao', 'pelagem', 'porte', 'pesoKg', 'idadeAprox', 'dataNascimentoAprox', 'microchip', 'numeroMedalha', 'dataImplantacaoChip'],
+  2: ['status', 'motivoEntrada', 'dataEntrada', 'baiaId', 'dataEsterilizacao', 'procedencia', 'laudoEutanasia'],
   3: [],
 }
 
@@ -87,6 +87,11 @@ interface RascunhoAnimalValores {
   dataNascimentoAprox: string
   microchip: string
   castracaoOpcao: CastracaoOpcao
+  // F2-004 / F2-008: opcionais no rascunho (rascunhos antigos não os têm)
+  numeroMedalha?: string
+  dataImplantacaoChip?: string
+  procedencia?: string
+  laudoEutanasia?: string
   dataEsterilizacao: string
   status: string
   motivoEntrada: string
@@ -127,6 +132,10 @@ function valoresVazios(): RascunhoAnimalValores {
     idadeAprox: '',
     dataNascimentoAprox: '',
     microchip: '',
+    numeroMedalha: '',
+    dataImplantacaoChip: '',
+    procedencia: '',
+    laudoEutanasia: '',
     castracaoOpcao: 'nao_castrado',
     dataEsterilizacao: '',
     status: '',
@@ -151,6 +160,10 @@ function valoresDeAnimal(animal: Animal): RascunhoAnimalValores {
     idadeAprox: animal.idadeAprox ?? '',
     dataNascimentoAprox: animal.dataNascimentoAprox ?? '',
     microchip: animal.microchip ?? '',
+    numeroMedalha: animal.numeroMedalha ?? '',
+    dataImplantacaoChip: animal.dataImplantacaoChip ?? '',
+    procedencia: animal.procedencia ?? '',
+    laudoEutanasia: animal.laudoEutanasia ?? '',
     castracaoOpcao: esterilizadoParaCastracao(animal.esterilizado, animal.sexo),
     dataEsterilizacao: animal.dataEsterilizacao ?? '',
     status: animal.statusCodigo,
@@ -178,6 +191,10 @@ function valoresParaRascunho(valores: AnimalFormUiValues): RascunhoAnimalValores
     idadeAprox: valores.idadeAprox ?? '',
     dataNascimentoAprox: valores.dataNascimentoAprox ?? '',
     microchip: valores.microchip ?? '',
+    numeroMedalha: valores.numeroMedalha ?? '',
+    dataImplantacaoChip: valores.dataImplantacaoChip ?? '',
+    procedencia: valores.procedencia ?? '',
+    laudoEutanasia: valores.laudoEutanasia ?? '',
     castracaoOpcao: valores.castracaoOpcao,
     dataEsterilizacao: valores.dataEsterilizacao ?? '',
     status: valores.status,
@@ -205,6 +222,10 @@ function rascunhoParaValores(rascunho: RascunhoAnimalValores): AnimalFormUiValue
     idadeAprox: rascunho.idadeAprox || undefined,
     dataNascimentoAprox: rascunho.dataNascimentoAprox || undefined,
     microchip: rascunho.microchip || undefined,
+    numeroMedalha: rascunho.numeroMedalha || undefined,
+    dataImplantacaoChip: rascunho.dataImplantacaoChip || undefined,
+    procedencia: rascunho.procedencia || undefined,
+    laudoEutanasia: rascunho.laudoEutanasia || undefined,
     castracaoOpcao: rascunho.castracaoOpcao,
     dataEsterilizacao: rascunho.dataEsterilizacao || undefined,
     status: rascunho.status,
@@ -300,6 +321,8 @@ export function AnimalForm({ animal }: AnimalFormProps) {
   // quando cada campo era um useState controlado; preservar o comportamento
   // vem antes de qualquer ganho de performance que o RHF ofereceria por padrão.
   const valores = watch()
+  // F2-008: o laudo só aparece (e só é exigido) quando o destino é eutanásia.
+  const statusSelecionado = valores.status
   const castracaoOpcao = valores.castracaoOpcao
 
   // Carrega uma vez ao montar, só então começa a salvar (debounce de 800 ms),
@@ -372,6 +395,10 @@ export function AnimalForm({ animal }: AnimalFormProps) {
       idadeAprox: dados.idadeAprox,
       dataNascimentoAprox: dados.dataNascimentoAprox,
       microchip: dados.microchip,
+      numeroMedalha: dados.numeroMedalha,
+      dataImplantacaoChip: dados.dataImplantacaoChip,
+      procedencia: dados.procedencia,
+      laudoEutanasia: dados.laudoEutanasia,
       esterilizado: castracaoParaEsterilizado(dados.castracaoOpcao),
       // Rascunho antigo pode trazer data com "não castrado": não envia.
       dataEsterilizacao: dados.castracaoOpcao === 'nao_castrado' ? undefined : dados.dataEsterilizacao,
@@ -525,6 +552,39 @@ export function AnimalForm({ animal }: AnimalFormProps) {
                       ? 'Microchip já definido: não pode mais ser alterado.'
                       : '15 dígitos numéricos (ISO 11784). Ficha fica incompleta sem microchip.'}
                   </span>
+                )}
+              </div>
+
+              <div className="field">
+                <label htmlFor="dataImplantacaoChip">Data de implantação do chip</label>
+                <input
+                  id="dataImplantacaoChip"
+                  className={`input${errors.dataImplantacaoChip ? ' error' : ''}`}
+                  type="date"
+                  max={hojeEmItu()}
+                  {...register('dataImplantacaoChip', { setValueAs: semEspacos })}
+                />
+                {errors.dataImplantacaoChip ? (
+                  <span className="err">{errors.dataImplantacaoChip.message}</span>
+                ) : (
+                  <span className="hint">Registrada quando o chip é implantado no CCZ (RN01). Exige microchip.</span>
+                )}
+              </div>
+
+              <div className="field">
+                <label htmlFor="numeroMedalha">Número da medalha</label>
+                <input
+                  id="numeroMedalha"
+                  className={`input mono${errors.numeroMedalha ? ' error' : ''}`}
+                  type="text"
+                  maxLength={30}
+                  placeholder="Ex.: M-0042"
+                  {...register('numeroMedalha', { setValueAs: semEspacos })}
+                />
+                {errors.numeroMedalha ? (
+                  <span className="err">{errors.numeroMedalha.message}</span>
+                ) : (
+                  <span className="hint">Plaqueta de identificação; única quando informada.</span>
                 )}
               </div>
 
@@ -799,6 +859,44 @@ export function AnimalForm({ animal }: AnimalFormProps) {
                   {...register('observacoes', { setValueAs: semEspacos })}
                 />
               </div>
+
+              <div className="field">
+                <label htmlFor="procedencia">Procedência</label>
+                <input
+                  id="procedencia"
+                  className={`input${errors.procedencia ? ' error' : ''}`}
+                  type="text"
+                  maxLength={200}
+                  placeholder="Ex.: Recolhido na Rua das Flores, Vila Progresso"
+                  {...register('procedencia', { setValueAs: semEspacos })}
+                />
+                {errors.procedencia ? (
+                  <span className="err">{errors.procedencia.message}</span>
+                ) : (
+                  <span className="hint">Origem do animal na entrada (RF-A05), complementar ao motivo de entrada.</span>
+                )}
+              </div>
+
+              {statusSelecionado === 'obito_eutanasia' && (
+                <div className="field full">
+                  <label htmlFor="laudoEutanasia">
+                    Laudo de eutanásia <span className="req">*</span>
+                  </label>
+                  <textarea
+                    id="laudoEutanasia"
+                    className={`input${errors.laudoEutanasia ? ' error' : ''}`}
+                    rows={4}
+                    maxLength={4000}
+                    placeholder="Justificativa do responsável técnico (Lei nº 14.228/2021, art. 2º, § 1º)"
+                    {...register('laudoEutanasia', { setValueAs: semEspacos })}
+                  />
+                  {errors.laudoEutanasia ? (
+                    <span className="err">{errors.laudoEutanasia.message}</span>
+                  ) : (
+                    <span className="hint">Obrigatório ao registrar o destino óbito por eutanásia.</span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           <div
@@ -858,6 +956,18 @@ export function AnimalForm({ animal }: AnimalFormProps) {
                 <div className="review-row">
                   <span className="k">Microchip</span>
                   <span className="v mono">{valores.microchip || '—'}</span>
+                </div>
+                <div className="review-row">
+                  <span className="k">Medalha</span>
+                  <span className="v mono">{valores.numeroMedalha || '—'}</span>
+                </div>
+                <div className="review-row">
+                  <span className="k">Implantação do chip</span>
+                  <span className="v">{valores.dataImplantacaoChip ? formatarDataBR(valores.dataImplantacaoChip) : '—'}</span>
+                </div>
+                <div className="review-row">
+                  <span className="k">Procedência</span>
+                  <span className="v">{valores.procedencia || '—'}</span>
                 </div>
                 <div className="review-row">
                   <span className="k">Sexo</span>

@@ -123,9 +123,12 @@ public class ApiTesteFixture {
     }
 
     public String criarAnimal(String token, String status) {
+        // F2-008: o destino obito_eutanasia exige o laudo do responsavel tecnico.
+        String laudo = "obito_eutanasia".equals(status) ? "Laudo de teste: quadro irreversivel" : null;
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Animal de Teste", "canino", "macho", null, null, null, null, null, null, null,
-                microchipUnico(), false, null, status, "resgate", agora(), null, null, null);
+                microchipUnico(), false, null, status, "resgate", agora(), null, null, null,
+                null, null, null, laudo);
 
         return given()
                 .contentType(ContentType.JSON)
