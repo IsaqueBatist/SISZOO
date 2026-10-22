@@ -124,23 +124,43 @@ emailService.enviar(
   `@Async` + `AFTER_COMMIT`). Se a transação for desfeita, nada é enviado.
 - **Uma vez por processo:** o `positivo` é definitivo e não pode ser corrigido
   (422 na API, trigger da V20). Por isso, só existe um lançamento `positivo` por
-  processo, e não há reenvio (`docs/decisoes/T35.md` T35-15).
+  processo, e o lançamento em si nunca reenvia (`docs/decisoes/T35.md` T35-15).
 - **Registro:** quando o SMTP aceita o e-mail, o callback do future grava
   `processo_sanitario.data_notificacao_municipe` com o relógio do projeto
   (America/Sao_Paulo) e um evento de auditoria `ATUALIZACAO` de sistema
   (`usuario_id` nulo, payload só com essa data). Sem e-mail cadastrado ou com
-  falha de envio, a coluna fica nula, e não há reenvio (T35-16).
+  falha de envio, a coluna fica nula (T35-16).
 - Uma falha ao gravar a data depois do envio aceito gera `WARN` só com o
   protocolo. Nesse caso o e-mail saiu e a coluna ficou nula (caso ambíguo).
 - **Na tela:** o `GET /api/processos/{id}` devolve `dataNotificacaoMunicipe`
   (nula sem envio aceito). O detalhe de um processo com resultado positivo
   mostra uma de três mensagens:
   - "Munícipe notificado em dd/MM/aaaa HH:mm", quando há data;
-  - logo depois de lançar o positivo na própria tela, "Enviando a notificação
-    por e-mail ao munícipe…", enquanto a tela consulta o processo a cada 2 s por
-    até 20 s (o envio acontece depois do commit);
+  - logo depois de lançar o positivo (ou de um reenvio) na própria tela,
+    "Enviando a notificação por e-mail ao munícipe…", enquanto a tela consulta
+    o processo a cada 2 s por até 20 s (o envio acontece depois do commit);
   - fora disso, ou se o responsável não tem e-mail, o aviso destacado
-    "Munícipe NÃO notificado por e-mail — contatar por outro meio".
+    "Munícipe NÃO notificado por e-mail — contatar por outro meio", com um
+    botão "Reenviar notificação" para quem pode escrever no processo.
+
+### Reenvio manual (T35-21)
+
+`POST /api/processos/{id}/notificacoes/reenviar` — mesma autoridade de
+`/resultados` (`PROCESSOS_SANITARIOS:escrita`: Administrador, Veterinário e
+Agente Sanitário). Resolve a pendência "reenvio de notificação que falhou":
+cobre só a falha de envio (SMTP indisponível, timeout etc.), nunca a correção
+do resultado.
+
+- **Permitido só quando** o resultado vigente é `positivo` **e**
+  `data_notificacao_municipe` ainda está nula. Fora disso, 422:
+  `ReenvioNotificacaoNaoPermitidoException` (sem positivo vigente) ou
+  `NotificacaoJaConfirmadaException` (SMTP já aceitou antes).
+- Reaproveita o mesmo template e o mesmo registro de data/auditoria do envio
+  original (`NotificacaoResultadoService.enviarAoMunicipe`); por isso, se o
+  SMTP aceitar o reenvio, a data grava normalmente e um novo reenvio passa a
+  ser recusado.
+- Continua manual e sem fila: sem retentativa automática, e um reenvio não
+  reagenda outro se também falhar — é preciso clicar de novo.
 
 ## Como adicionar um template
 
@@ -190,11 +210,12 @@ comunicação oficial aprovada pelo CCZ.
 - **"Aceito pelo servidor SMTP" não quer dizer entregue.** O sucesso não
   garante que a mensagem chegou à caixa de entrada nem que foi lida. Ela ainda
   pode ser recusada depois (bounce), cair no spam ou ser descartada.
-- Não há fila, retentativa nem garantia de entrega. Uma falha fica no log e,
-  na notificação de resultado, na `data_notificacao_municipe` nula.
+- Não há fila nem garantia de entrega. Uma falha fica no log e, na
+  notificação de resultado, na `data_notificacao_municipe` nula — o reenvio
+  (T35-21) é manual, pela tela ou pelo endpoint, nunca automático.
 - Os envios em andamento se perdem se o processo for morto (`kill -9`, OOM,
   `docker kill`) ou se passarem do prazo de 20 s no encerramento. Na
-  notificação de resultado, a coluna fica nula e não há reenvio.
+  notificação de resultado, a coluna fica nula e o reenvio manual cobre esse caso.
 - Só a notificação de resultado registra o envio no banco. O `EmailService`
   em si não guarda nada além do log.
 - O SMTPS (`SMTP_SSL`) foi testado só com o GreenMail, que usa um
@@ -202,3 +223,9 @@ comunicação oficial aprovada pelo CCZ.
   servidor real na porta 465 não foi testado.
 - Os padrões das variáveis estão duplicados entre `application.yml` e
   `docker-compose.yml`. Se mudar um, mude o outro.
+- **Só existe um tipo de e-mail hoje** (resultado positivo ao munícipe). A
+  tela de preferências do protótipo (`configuracoes.html`) e a tabela
+  `preferencia_usuario` já têm campos para outros tipos (vacina vencendo,
+  superlotação, alertas críticos, e-mail diário), mas nenhum deles está
+  implementado nem é lido em lugar nenhum do código — ver pendência em
+  `docs/decisoes/T35.md`.
