@@ -1,5 +1,6 @@
 package com.siszoo.processos.repository;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -61,4 +62,49 @@ public interface ProcessoSanitarioRepository
             + "FROM ProcessoSanitario p WHERE p.resultadoLaboratorial.codigo IN ('positivo', 'negativo') "
             + "AND YEAR(p.dataResultado) = :ano GROUP BY p.doenca.codigo, p.doenca.nome")
     List<ResultadoCatalogoProjection> contarResultadosPorDoenca(@Param("ano") int ano);
+
+    // ── Relatorio Anual de Processos (T41) ──────────────────────────────
+    // Universo sempre "processos ABERTOS no periodo" (dataAbertura), nao
+    // "resultados lancados no periodo" como os metodos do dashboard acima —
+    // por isso novas queries em vez de reaproveitar as de cima (so
+    // contarPorDoenca(ano) e reaproveitado, ja que tem exatamente o mesmo escopo).
+
+    long countByDataAberturaBetween(LocalDate inicio, LocalDate fim);
+
+    long countByDataAberturaBetweenAndResultadoLaboratorial_Codigo(LocalDate inicio, LocalDate fim, String codigoResultado);
+
+    long countByOcorrenciaIsNullAndDataAberturaBetween(LocalDate inicio, LocalDate fim);
+
+    @Query("""
+            SELECT p.doenca.codigo AS codigo, p.doenca.nome AS nome, COUNT(p) AS investigados,
+                   SUM(CASE WHEN p.resultadoLaboratorial.codigo = 'positivo' THEN 1L ELSE 0L END) AS positivos,
+                   SUM(CASE WHEN p.resultadoLaboratorial.codigo = 'negativo' THEN 1L ELSE 0L END) AS negativos,
+                   SUM(CASE WHEN p.resultadoLaboratorial.codigo = 'inconclusivo' THEN 1L ELSE 0L END) AS inconclusivos,
+                   SUM(CASE WHEN p.resultadoLaboratorial IS NULL THEN 1L ELSE 0L END) AS aguardando
+            FROM ProcessoSanitario p
+            WHERE p.dataAbertura BETWEEN :inicio AND :fim
+            GROUP BY p.doenca.codigo, p.doenca.nome
+            """)
+    List<ResultadosLaboratoriaisProjection> contarResultadosDetalhadoPorDoenca(
+            @Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
+
+    @Query("SELECT p.dataAbertura AS dataAbertura, p.dataResultado AS dataResultado FROM ProcessoSanitario p "
+            + "WHERE p.dataAbertura BETWEEN :inicio AND :fim AND p.dataResultado IS NOT NULL")
+    List<TempoResolucaoProjection> listarTemposDeResolucao(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
+
+    @Query("SELECT p.laboratorio.codigo AS laboratorioCodigo, p.dataAbertura AS dataAbertura, p.dataResultado AS dataResultado "
+            + "FROM ProcessoSanitario p WHERE p.dataAbertura BETWEEN :inicio AND :fim AND p.dataResultado IS NOT NULL")
+    List<TempoResolucaoPorLaboratorioProjection> listarTemposDeResolucaoPorLaboratorio(
+            @Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
+
+    @Query("SELECT p.ocorrencia.bairro AS bairro, COUNT(p) AS processos, "
+            + "SUM(CASE WHEN p.resultadoLaboratorial.codigo = 'positivo' THEN 1L ELSE 0L END) AS positivos "
+            + "FROM ProcessoSanitario p WHERE p.dataAbertura BETWEEN :inicio AND :fim AND p.ocorrencia IS NOT NULL "
+            + "GROUP BY p.ocorrencia.bairro ORDER BY COUNT(p) DESC")
+    List<BairroProcessoProjection> contarPorBairro(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
+
+    @Query("SELECT p.ocorrencia.bairro AS bairro, p.doenca.nome AS doenca, COUNT(p) AS quantidade FROM ProcessoSanitario p "
+            + "WHERE p.dataAbertura BETWEEN :inicio AND :fim AND p.ocorrencia IS NOT NULL "
+            + "GROUP BY p.ocorrencia.bairro, p.doenca.nome")
+    List<BairroDoencaProjection> contarPorBairroEDoenca(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 }
