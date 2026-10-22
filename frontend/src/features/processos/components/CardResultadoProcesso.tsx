@@ -12,7 +12,11 @@ import {
 } from '../schemas/processoResultadoFormSchema'
 import type { Processo, ResultadoProcessoItem } from '../types/processos.types'
 import { badgeDeResultado } from '../utils/statusBadge'
-import { useCatalogosProcessoQuery, useRegistrarResultadoMutation } from '../hooks/useProcessos'
+import {
+  useCatalogosProcessoQuery,
+  useReenviarNotificacaoMutation,
+  useRegistrarResultadoMutation,
+} from '../hooks/useProcessos'
 
 // Depois de lançar um positivo nesta tela, o e-mail sai em segundo plano
 // (depois do commit, T37/T35): por alguns segundos dataNotificacaoMunicipe
@@ -43,8 +47,25 @@ function formatarDataHoraNotificacao(valor: string): string {
   return `${formatarData(valor)} ${valor.slice(11, 16)}`
 }
 
-// T35-16 (#37): situação do e-mail ao munícipe num resultado positivo.
-function AvisoNotificacao({ processo, enviando }: { processo: Processo; enviando: boolean }) {
+// T35-16 (#37): situação do e-mail ao munícipe num resultado positivo. T35
+// (pendência de reenvio): sem data e sem envio em curso, quem pode escrever
+// no processo vê um botão para tentar de novo — bloqueado pelo backend
+// (422) se a notificação já tiver sido confirmada nesse meio tempo.
+function AvisoNotificacao({
+  processo,
+  enviando,
+  podeEscrever,
+  reenviando,
+  erroReenvio,
+  onReenviar,
+}: {
+  processo: Processo
+  enviando: boolean
+  podeEscrever: boolean
+  reenviando: boolean
+  erroReenvio: string | null
+  onReenviar: () => void
+}) {
   if (processo.dataNotificacaoMunicipe) {
     return (
       <div className="alert success" role="status" style={{ marginTop: 'var(--space-3)' }}>
@@ -68,6 +89,14 @@ function AvisoNotificacao({ processo, enviando }: { processo: Processo; enviando
       <span className="bullet" />
       <div className="alert-content">
         <strong>Munícipe NÃO notificado por e-mail — contatar por outro meio</strong>
+        {erroReenvio && <div style={{ marginTop: 'var(--space-2)' }}>{erroReenvio}</div>}
+        {podeEscrever && (
+          <div style={{ marginTop: 'var(--space-2)' }}>
+            <button type="button" className="btn btn-ghost btn-sm" disabled={reenviando} onClick={onReenviar}>
+              {reenviando ? 'Reenviando…' : 'Reenviar notificação'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -110,9 +139,11 @@ export function CardResultadoProcesso({
   const [erro, setErro] = useState<string | null>(null)
   const [pendente, setPendente] = useState<RegistrarResultadoFormValues | null>(null)
   const [acompanhandoEnvio, setAcompanhandoEnvio] = useState(false)
+  const [erroReenvio, setErroReenvio] = useState<string | null>(null)
   // T35-15: positivo é definitivo — confirmação explícita antes de enviar.
   const [cienteDefinitivo, setCienteDefinitivo] = useState(false)
   const mutation = useRegistrarResultadoMutation(processo.id)
+  const reenvioMutation = useReenviarNotificacaoMutation(processo.id)
   const queryClient = useQueryClient()
   const { data: catalogos } = useCatalogosProcessoQuery()
 
@@ -194,6 +225,16 @@ export function CardResultadoProcesso({
     void handleSubmit(onSubmit)(event)
   }
 
+  async function reenviarNotificacao() {
+    setErroReenvio(null)
+    try {
+      await reenvioMutation.mutateAsync()
+      setAcompanhandoEnvio(true)
+    } catch (falha) {
+      setErroReenvio(mensagemDeRegraDaApi(falha) ?? 'Não foi possível reenviar a notificação. Tente novamente.')
+    }
+  }
+
   if (processo.resultado) {
     const badge = badgeDeResultado(processo.resultado)
     return (
@@ -218,7 +259,16 @@ export function CardResultadoProcesso({
               <div>{processo.desfechoAnimal ? processo.desfechoAnimal.nome : '—'}</div>
             </div>
           </div>
-          {positivo && <AvisoNotificacao processo={processo} enviando={aguardandoEnvio} />}
+          {positivo && (
+            <AvisoNotificacao
+              processo={processo}
+              enviando={aguardandoEnvio}
+              podeEscrever={podeEscrever}
+              reenviando={reenvioMutation.isPending}
+              erroReenvio={erroReenvio}
+              onReenviar={() => void reenviarNotificacao()}
+            />
+          )}
           <Historico resultados={processo.resultados} />
         </div>
       </div>

@@ -10,6 +10,9 @@ import com.siszoo.comum.service.EmailService;
 import com.siszoo.comum.service.EmailTemplateService;
 import com.siszoo.processos.entity.ProcessoSanitario;
 import com.siszoo.processos.entity.ResponsavelProcesso;
+import com.siszoo.processos.exception.NotificacaoJaConfirmadaException;
+import com.siszoo.processos.exception.ProcessoNaoEncontradoException;
+import com.siszoo.processos.exception.ReenvioNotificacaoNaoPermitidoException;
 import com.siszoo.processos.repository.ProcessoSanitarioRepository;
 import com.siszoo.processos.repository.ResponsavelProcessoRepository;
 
@@ -31,14 +34,21 @@ import java.util.concurrent.CompletableFuture;
  * {@value #TEMPLATE_EMAIL} em HTML e texto puro; melhor esforco — o envio e
  * assincrono e uma falha so e logada, nunca propaga (docs/decisoes/T37.md,
  * DH-24). Quando o SMTP aceita, grava a data/hora do envio no processo (#37,
- * T35-16); sem reenvio, porque o positivo e definitivo (T35-15). Vigilancia
- * Epidemiologica de Itu: nao existe endereco real configurado, entao fica
- * mockada (so loga a intencao).
+ * T35-16). O lancamento do resultado nunca reenvia por si so, porque o
+ * positivo e definitivo (T35-15); {@link #reenviarNotificacaoMunicipe}
+ * cobre so a falha de envio (e-mail nao aceito pelo SMTP), nunca a correcao
+ * do resultado. Vigilancia Epidemiologica de Itu: nao existe endereco real
+ * configurado, entao fica mockada (so loga a intencao).
  */
 @Service
 public class NotificacaoResultadoService {
 
     static final String TEMPLATE_EMAIL = "email/resultado-processo";
+
+    // Duplicada de ProcessoSanitarioService.RESULTADO_QUE_NOTIFICA (privada
+    // la, mesmo criterio do front em CardResultadoProcesso.tsx): so positivo
+    // tem notificacao a reenviar.
+    private static final String RESULTADO_QUE_NOTIFICA = "positivo";
 
     private static final Logger log = LoggerFactory.getLogger(NotificacaoResultadoService.class);
 
@@ -76,6 +86,26 @@ public class NotificacaoResultadoService {
         ResponsavelProcesso responsavel = responsavelRepository.findByProcessoId(processoId).orElse(null);
         enviarAoMunicipe(responsavel, processo);
         notificarVigilanciaEpidemiologica(processo);
+    }
+
+    // Reenvio manual da notificacao ao municipe (pendencia da T35, decisao de
+    // produto): so cobre falha de envio, nunca substitui a imutabilidade do
+    // resultado (T35-15). Chamado pelo controller, fora de qualquer
+    // transacao de escrita do resultado — @Transactional so para a leitura
+    // consistente do processo e do responsavel.
+    @Transactional(readOnly = true)
+    public void reenviarNotificacaoMunicipe(UUID processoId) {
+        ProcessoSanitario processo = processoRepository.findById(processoId)
+                .orElseThrow(ProcessoNaoEncontradoException::new);
+        if (processo.getResultadoLaboratorial() == null
+                || !RESULTADO_QUE_NOTIFICA.equals(processo.getResultadoLaboratorial().getCodigo())) {
+            throw new ReenvioNotificacaoNaoPermitidoException();
+        }
+        if (processo.getDataNotificacaoMunicipe() != null) {
+            throw new NotificacaoJaConfirmadaException();
+        }
+        ResponsavelProcesso responsavel = responsavelRepository.findByProcessoId(processoId).orElse(null);
+        enviarAoMunicipe(responsavel, processo);
     }
 
     private void enviarAoMunicipe(ResponsavelProcesso responsavel, ProcessoSanitario processo) {

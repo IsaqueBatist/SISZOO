@@ -59,3 +59,11 @@ export async function registrarResultado(id: string, payload: RegistrarResultado
   const { data } = await http.post<Processo>(`/processos/${id}/resultados`, payload)
   return data
 }
+
+// T35 (pendência): reenvio manual da notificação ao munícipe quando o
+// primeiro envio falhou. O backend recusa (422) sem resultado positivo
+// vigente ou com a notificação já confirmada pelo SMTP.
+export async function reenviarNotificacaoMunicipe(id: string): Promise<Processo> {
+  const { data } = await http.post<Processo>(`/processos/${id}/notificacoes/reenviar`)
+  return data
+}

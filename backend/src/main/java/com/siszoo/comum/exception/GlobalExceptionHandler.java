@@ -67,7 +67,9 @@ import com.siszoo.processos.exception.DoencaInvalidaException;
 import com.siszoo.processos.exception.IdentificacaoComAnimalDoCanilException;
 import com.siszoo.processos.exception.IdentificacaoObrigatoriaException;
 import com.siszoo.processos.exception.LaboratorioInvalidoException;
+import com.siszoo.processos.exception.NotificacaoJaConfirmadaException;
 import com.siszoo.processos.exception.ProcessoNaoEncontradoException;
+import com.siszoo.processos.exception.ReenvioNotificacaoNaoPermitidoException;
 import com.siszoo.processos.exception.ResultadoInvalidoException;
 import com.siszoo.processos.exception.ResultadoJaRegistradoException;
 import com.siszoo.processos.exception.ResultadoObrigatorioException;
@@ -449,6 +451,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroResponse> handleResultadoPositivoDefinitivo() {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
                 .body(new ErroResponse("Resultado positivo e definitivo e nao pode ser corrigido"));
+    }
+
+    @ExceptionHandler(ReenvioNotificacaoNaoPermitidoException.class)
+    public ResponseEntity<ErroResponse> handleReenvioNotificacaoNaoPermitido() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("So ha notificacao ao municipe para reenviar com resultado positivo vigente"));
+    }
+
+    @ExceptionHandler(NotificacaoJaConfirmadaException.class)
+    public ResponseEntity<ErroResponse> handleNotificacaoJaConfirmada() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErroResponse("Municipe ja foi notificado: o SMTP ja aceitou o envio"));
     }
 
     @ExceptionHandler(IdentificacaoComAnimalDoCanilException.class)

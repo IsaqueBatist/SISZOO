@@ -255,7 +255,60 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
                 .body("dataNotificacaoMunicipe", nullValue());
     }
 
+    // T35 (pendencia): reenvio manual quando o primeiro envio falhou —
+    // segunda tentativa real pelo EmailService, e so essa segunda grava a data.
+    @Test
+    @DisplayName("[T35] reenvio apos falha de SMTP: tenta de novo e grava a data no segundo aceite")
+    void reenvioAposFalhaTentaDeNovoEGravaData() {
+        when(emailService.enviar(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(CompletableFuture.failedFuture(new MailSendException("SMTP indisponivel")));
+        String processoId = processoAguardandoResultado("maria@exemplo.com");
+        lancarResultado(processoId, corpoComDesfecho("positivo", null)).then().statusCode(200);
+        envioAoMunicipe(processoId);
+        dataNotificacaoContinuaNula(processoId);
+        envioAceito();
+
+        reenviar(processoId).then().statusCode(200);
+
+        // envioAceito() reseta o mock: a chamada do reenvio e a unica apos o reset.
+        verify(emailService, timeout(5000).times(1)).enviar(any(), any(), any(), any());
+        assertThat(aguardarDataNotificacao(processoId), notNullValue());
+    }
+
+    // T35-16: ja confirmado pelo SMTP, o reenvio e recusado — sem segunda
+    // mensagem nem mudanca na data gravada.
+    @Test
+    @DisplayName("[T35] reenvio com notificacao ja confirmada: 422, sem segundo envio")
+    void reenvioComNotificacaoJaConfirmadaRecusado() {
+        String processoId = processoAguardandoResultado("maria@exemplo.com");
+        lancarResultado(processoId, corpoComDesfecho("positivo", null)).then().statusCode(200);
+        envioAoMunicipe(processoId);
+        LocalDateTime gravada = aguardarDataNotificacao(processoId);
+
+        reenviar(processoId).then().statusCode(422);
+
+        verify(emailService, after(500).times(1)).enviar(any(), any(), any(), any());
+        assertThat(dataNotificacao(processoId), equalTo(gravada));
+    }
+
+    // Sem resultado positivo vigente, nao ha notificacao para reenviar.
+    @Test
+    @DisplayName("[T35] reenvio sem resultado positivo vigente: 422")
+    void reenvioSemPositivoRecusado() {
+        String processoId = processoAguardandoResultado("maria@exemplo.com");
+        lancarResultado(processoId, corpoComDesfecho("negativo", null)).then().statusCode(200);
+
+        reenviar(processoId).then().statusCode(422);
+
+        semEnvio();
+    }
+
     // ── Apoio ────────────────────────────────────────────
+
+    private Response reenviar(String processoId) {
+        return given().header("Authorization", "Bearer " + tokenAgente)
+                .when().post(ROTA + "/" + processoId + "/notificacoes/reenviar");
+    }
 
     // Mock sem stub devolveria null no lugar do future.
     private void envioAceito() {
