@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/>
+<title>Relatório de Vacinação</title>
+<th:block th:replace="~{_fragmentos :: estilo}"></th:block>
+</head>
+<body>
+<div th:replace="~{_fragmentos :: cabecalho('Relatório de Vacinação', 'Período: ' + ${meta.subtituloPeriodo})}"></div>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="kpi-box"><div class="l">Vacinas aplicadas</div><div class="v" th:text="${d.kpis.vacinasAplicadas}">0</div></div></div>
+  <div class="kpi"><div class="kpi-box"><div class="l">% Animais vacinados</div><div class="v" th:text="${d.kpis.percentualAnimaisVacinados} + '%'">0%</div>
+    <div class="d" th:text="${d.kpis.animaisVacinados} + ' de ' + ${d.kpis.totalSobCustodia} + ' animais'">0 de 0 animais</div></div></div>
+  <div class="kpi"><div class="kpi-box"><div class="l">Vencidas (atraso)</div><div class="v" th:text="${d.kpis.vencidas}">0</div></div></div>
+  <div class="kpi"><div class="kpi-box"><div class="l">A vencer em 30 dias</div><div class="v" th:text="${d.kpis.aVencerEm30Dias}">0</div></div></div>
+</div>
+
+<h2 class="section">Aplicações por Vacina</h2>
+<table>
+  <thead><tr><th>Vacina</th><th>Aplicações</th><th>Cobertura atual</th><th>Vencendo em 30 dias</th></tr></thead>
+  <tbody>
+    <tr th:each="v : ${d.porVacina}">
+      <td th:text="${v.vacina}">Vacina</td>
+      <td class="mono" th:text="${v.aplicacoes}">0</td>
+      <td th:text="${v.coberturaAtualPercentual} + '%'">0%</td>
+      <td class="mono" th:text="${v.vencendoEm30Dias}">0</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 class="section">Aplicações por Veterinário</h2>
+<div th:if="${#lists.isEmpty(d.porVeterinario)}" class="note">Nenhuma aplicação registrada no período.</div>
+<div th:each="vet : ${d.porVeterinario}" class="bar-row">
+  <span class="label" th:text="${vet.veterinario}">Veterinário</span>
+  <span class="track"><span class="track-inner"><span class="fill"
+        th:style="'width:' + ${vet.aplicacoes * 100.0 / d.porVeterinario[0].aplicacoes} + '%;'"></span></span></span>
+  <span class="val" th:text="${vet.aplicacoes}">0</span>
+</div>
+
+<h2 class="section">Animais com Vacinas Vencidas</h2>
+<table>
+  <thead><tr><th>Animal</th><th>Microchip</th><th>Baia</th><th>Vacina vencida</th><th>Dias de atraso</th></tr></thead>
+  <tbody>
+    <tr th:each="a : ${d.animaisVencidos}">
+      <td th:text="${a.animal}">Animal</td>
+      <td class="mono" th:text="${a.microchip} ?: '—'">—</td>
+      <td th:text="${a.baia} ?: '—'">—</td>
+      <td th:text="${a.vacina}">Vacina</td>
+      <td class="mono status-atraso" th:text="${a.diasAtraso}">0</td>
+    </tr>
+    <tr th:if="${d.animaisVencidosExcedente} > 0">
+      <td th:text="'+ ' + ${d.animaisVencidosExcedente} + ' animais'">+ N animais</td>
+      <td class="mono">—</td>
+      <td>—</td>
+      <td>—</td>
+      <td class="mono">—</td>
+    </tr>
+  </tbody>
+</table>
+
+<div th:replace="~{_fragmentos :: rodape}"></div>
+</body>
+</html>

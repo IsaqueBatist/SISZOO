@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/>
+<title>Relatório de Adoções</title>
+<th:block th:replace="~{_fragmentos :: estilo}"></th:block>
+</head>
+<body>
+<div th:replace="~{_fragmentos :: cabecalho('Relatório de Adoções', 'Período: ' + ${meta.subtituloPeriodo})}"></div>
+
+<div class="note" th:text="${d.notaLimitacao}">Nota de limitação.</div>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="kpi-box"><div class="l">Animais adotados (total atual)</div><div class="v" th:text="${d.kpis.animaisAdotados}">0</div></div></div>
+</div>
+
+<h2 class="section">Perfil dos animais adotados</h2>
+<table>
+  <thead><tr><th>Característica</th><th>Quantidade</th><th>% do total</th></tr></thead>
+  <tbody>
+    <tr th:each="p : ${d.perfil}">
+      <td th:text="${p.caracteristica}">Característica</td>
+      <td class="mono" th:text="${p.quantidade}">0</td>
+      <td th:text="${p.percentual} + '%'">0%</td>
+    </tr>
+  </tbody>
+</table>
+
+<div th:replace="~{_fragmentos :: rodape}"></div>
+</body>
+</html>

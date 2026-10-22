@@ -28,4 +28,8 @@ public interface BaiaRepository extends JpaRepository<Baia, UUID>, JpaSpecificat
     // capacidade — so baias ativas entram na contagem, mesmo criterio de
     // "superlotada" ja usado em BaiaService#mapearComOcupacao (>= capacidade).
     List<Baia> findByAtivaTrue();
+
+    // Relatorio de ocupacao de baias (T41): ordem estavel para a tabela do
+    // preview/CSV/PDF nao variar a cada chamada.
+    List<Baia> findByAtivaTrueOrderByNomeAsc();
 }

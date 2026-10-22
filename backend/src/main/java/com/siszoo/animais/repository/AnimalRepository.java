@@ -66,4 +66,23 @@ public interface AnimalRepository extends JpaRepository<Animal, UUID>, JpaSpecif
     long countSemAvaliacaoDesde(
             @Param("codigosForaDaCustodia") Collection<String> codigosForaDaCustodia,
             @Param("dataLimite") LocalDate dataLimite);
+
+    // Denominador de "% Animais vacinados" no relatorio de vacinacao (T41):
+    // total sob custodia, sem quebra por especie (ao contrario de
+    // contarSobCustodiaPorEspecie, usado pelo KPI do dashboard).
+    long countByStatus_CodigoNotIn(Collection<String> codigosForaDaCustodia);
+
+    // Relatorio de adocoes (T41): snapshot ATUAL (status = 'adotado'), nao
+    // filtrado por periodo — nao ha campo de data de adocao no schema hoje
+    // (sem tabela `adocao`, DER §3.2 modelo-alvo ainda nao implementado).
+    // Decisao de simplificacao validada com o usuario.
+    long countByStatus_Codigo(String codigoStatus);
+
+    @Query("SELECT a.especie.nome AS caracteristica, COUNT(a) AS quantidade FROM Animal a "
+            + "WHERE a.status.codigo = :codigoStatus GROUP BY a.especie.nome")
+    List<ContagemPorCaracteristicaProjection> contarPorEspecieComStatus(@Param("codigoStatus") String codigoStatus);
+
+    @Query("SELECT a.porte AS caracteristica, COUNT(a) AS quantidade FROM Animal a "
+            + "WHERE a.status.codigo = :codigoStatus AND a.porte IS NOT NULL GROUP BY a.porte")
+    List<ContagemPorCaracteristicaProjection> contarPorPorteComStatus(@Param("codigoStatus") String codigoStatus);
 }

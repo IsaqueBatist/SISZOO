@@ -42,4 +42,8 @@ public interface PrescricaoRepository extends JpaRepository<Prescricao, UUID>, J
             LocalDate inicioJanela,
             LocalDate fimJanela,
             Collection<String> codigosForaDaCustodia);
+
+    // "Medicações" no relatorio de procedimentos (T41): prescricoes iniciadas
+    // no periodo.
+    long countByDataInicioBetween(LocalDate inicio, LocalDate fim);
 }

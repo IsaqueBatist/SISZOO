@@ -30,6 +30,10 @@ export type IconName =
   | 'scissors'
   | 'bat'
   | 'dog'
+  | 'fileText'
+  | 'download'
+  | 'inbox'
+  | 'map'
 
 interface IconProps {
   name: IconName
@@ -61,6 +65,11 @@ const STROKE_PATHS: Partial<Record<IconName, string>> = {
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 4-7 8-7s7 2 8 7"/>',
   pill: '<rect x="3" y="8" width="18" height="8" rx="4" transform="rotate(-30 12 12)"/><line x1="9" y1="9" x2="15" y2="15" transform="rotate(-30 12 12)"/>',
   scissors: '<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8" y2="16"/><line x1="20" y1="20" x2="14" y2="14"/>',
+  fileText:
+    '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><polyline points="14 3 14 8 19 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="14" y2="17"/>',
+  download: '<path d="M12 4v12"/><polyline points="7 11 12 16 17 11"/><line x1="4" y1="20" x2="20" y2="20"/>',
+  inbox: '<path d="M3 12l4-8h10l4 8v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6z"/><path d="M3 12h5l1 3h6l1-3h5"/>',
+  map: '<polygon points="3 6 9 4 15 6 21 4 21 18 15 20 9 18 3 20 3 6"/><line x1="9" y1="4" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="20"/>',
 }
 
 const FILL_PATHS: Partial<Record<IconName, string>> = {
