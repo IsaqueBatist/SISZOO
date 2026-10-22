@@ -12,6 +12,26 @@ export function hojeEmItu(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: FUSO_ITU }).format(new Date())
 }
 
+// Agora como LocalDateTime de Itu ("AAAA-MM-DDTHH:mm:ss"), o formato que a API
+// devolve em criadoEm/atualizadoEm (sem fuso). Usado pelo mock.
+export function agoraEmItu(): string {
+  const partes = Object.fromEntries(
+    new Intl.DateTimeFormat('en-CA', {
+      timeZone: FUSO_ITU,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hourCycle: 'h23',
+    })
+      .formatToParts(new Date())
+      .map((parte) => [parte.type, parte.value]),
+  )
+  return `${partes.year}-${partes.month}-${partes.day}T${partes.hour}:${partes.minute}:${partes.second}`
+}
+
 // "2026-10-11" ou "2026-10-11T19:28:59.97" -> "11/10/2026"; nulo ou vazio -> "—"
 export function formatarDataBR(iso: string | null | undefined): string {
   if (!iso) return '—'
