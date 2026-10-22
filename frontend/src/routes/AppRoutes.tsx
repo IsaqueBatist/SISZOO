@@ -63,6 +63,9 @@ const ProcessoDetalhe = lazy(() =>
 const CadastrarProcesso = lazy(() =>
   import('@/features/processos/components/CadastrarProcesso').then((m) => ({ default: m.CadastrarProcesso })),
 )
+const Relatorios = lazy(() =>
+  import('@/features/relatorios/components/Relatorios').then((m) => ({ default: m.Relatorios })),
+)
 const Perfil = lazy(() => import('@/features/perfil/components/Perfil').then((m) => ({ default: m.Perfil })))
 const Configuracoes = lazy(() =>
   import('@/features/configuracoes/components/Configuracoes').then((m) => ({ default: m.Configuracoes })),
@@ -124,6 +127,8 @@ export function AppRoutes() {
               <Route element={<RotaEscritaProcessos />}>
                 <Route path="/processos/novo" element={<CadastrarProcesso />} />
               </Route>
+              {/* RELATORIOS:leitura (todos os perfis) — sem guard extra, nav.ts ja libera os 3. */}
+              <Route path="/relatorios" element={<Relatorios />} />
               <Route path="/perfil" element={<Perfil />} />
               <Route path="/configuracoes" element={<Configuracoes />} />
               <Route element={<RotaAdmin />}>
