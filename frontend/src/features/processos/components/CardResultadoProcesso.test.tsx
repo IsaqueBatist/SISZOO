@@ -55,8 +55,82 @@ async function lancarPositivo() {
   await screen.findByRole('option', { name: 'Positivo' })
   await user.selectOptions(screen.getByLabelText('Resultado laboratorial'), 'positivo')
   await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
-  await user.click(await screen.findByRole('button', { name: 'Confirmar' }))
+  await user.click(await screen.findByRole('checkbox', { name: 'Entendo que o resultado positivo não poderá ser corrigido' }))
+  await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 }
+
+describe('CardResultadoProcesso — confirmação do positivo definitivo (T35-15)', () => {
+  it('avisa que o positivo é definitivo e só habilita Confirmar com a confirmação explícita', async () => {
+    const posts: unknown[] = []
+    servirProcesso(processoFixture(), () => processoComResultadoFixture())
+    server.use(
+      // Ja notificado na resposta: este teste e so da confirmacao, sem acompanhamento do envio.
+      http.post(`${API_BASE_URL}/processos/:id/resultados`, async ({ request }) => {
+        posts.push(await request.json())
+        return HttpResponse.json(processoComResultadoFixture())
+      }),
+    )
+    const user = userEvent.setup()
+    renderCard()
+    await screen.findByRole('option', { name: 'Positivo' })
+    await user.selectOptions(screen.getByLabelText('Resultado laboratorial'), 'positivo')
+    await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
+
+    expect(await screen.findByText('O resultado positivo é definitivo:')).toBeInTheDocument()
+    expect(screen.getByText(/não poderá ser corrigido — nem para outro resultado/)).toBeInTheDocument()
+    const confirmar = screen.getByRole('button', { name: 'Confirmar' })
+    const ciente = screen.getByRole('checkbox', { name: 'Entendo que o resultado positivo não poderá ser corrigido' })
+    expect(ciente).not.toBeChecked()
+    expect(confirmar).toBeDisabled()
+
+    await user.click(confirmar)
+    expect(posts).toHaveLength(0)
+
+    await user.click(ciente)
+    expect(confirmar).toBeEnabled()
+    await user.click(confirmar)
+
+    expect(await screen.findByText('Positivo', { selector: 'span' })).toBeInTheDocument()
+    expect(posts).toEqual([expect.objectContaining({ resultado: 'positivo' })])
+  })
+
+  it('cancelar e reabrir: a confirmação volta desmarcada e nada é enviado', async () => {
+    const posts: unknown[] = []
+    servirProcesso(processoFixture(), () => processoComResultadoFixture())
+    server.use(
+      http.post(`${API_BASE_URL}/processos/:id/resultados`, async ({ request }) => {
+        posts.push(await request.json())
+        return HttpResponse.json(processoComResultadoFixture())
+      }),
+    )
+    const user = userEvent.setup()
+    renderCard()
+    await screen.findByRole('option', { name: 'Positivo' })
+    await user.selectOptions(screen.getByLabelText('Resultado laboratorial'), 'positivo')
+    await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
+    await user.click(await screen.findByRole('checkbox', { name: 'Entendo que o resultado positivo não poderá ser corrigido' }))
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
+    expect(await screen.findByRole('checkbox', { name: 'Entendo que o resultado positivo não poderá ser corrigido' }))
+      .not.toBeChecked()
+    expect(screen.getByRole('button', { name: 'Confirmar' })).toBeDisabled()
+    expect(posts).toHaveLength(0)
+  })
+
+  it('resultado que não é positivo: registra direto, sem a confirmação', async () => {
+    servirProcesso(processoFixture(), () => processoComResultadoFixture())
+    const user = userEvent.setup()
+    renderCard()
+    await screen.findByRole('option', { name: 'Negativo' })
+    await user.selectOptions(screen.getByLabelText('Resultado laboratorial'), 'negativo')
+    await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
+
+    expect(screen.queryByText('O resultado positivo é definitivo:')).not.toBeInTheDocument()
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
+  })
+})
 
 describe('CardResultadoProcesso — notificação ao munícipe (T35-16, #37)', () => {
   it('positivo com envio aceito: mostra a data e a hora da notificação', async () => {

@@ -356,6 +356,8 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
     await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
 
     expect(await screen.findByText('Confirmar lançamento do resultado')).toBeInTheDocument()
+    // T35-15: positivo é definitivo, confirmação explícita antes de enviar.
+    await user.click(screen.getByRole('checkbox', { name: 'Entendo que o resultado positivo não poderá ser corrigido' }))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     // T35-16: o e-mail sai depois do commit; os estados seguintes do aviso

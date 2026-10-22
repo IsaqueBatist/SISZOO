@@ -97,7 +97,8 @@ function Historico({ resultados }: { resultados: ResultadoProcessoItem[] }) {
 // (AGUARDANDO_RESULTADO sem resultado ainda) e somente leitura + histórico
 // (depois de lançado). Correção de um resultado já lançado (retificaId) é
 // suportada pelo backend, mas esta tela não oferece essa ação — só o
-// lançamento inicial.
+// lançamento inicial. O positivo é definitivo (T35-15: nem o backend aceita
+// corrigi-lo), por isso o lançamento dele pede confirmação explícita.
 export function CardResultadoProcesso({
   processo,
   podeEscrever,
@@ -106,6 +107,8 @@ export function CardResultadoProcesso({
   const [erro, setErro] = useState<string | null>(null)
   const [pendente, setPendente] = useState<RegistrarResultadoFormValues | null>(null)
   const [acompanhandoEnvio, setAcompanhandoEnvio] = useState(false)
+  // T35-15: positivo é definitivo — confirmação explícita antes de enviar.
+  const [cienteDefinitivo, setCienteDefinitivo] = useState(false)
   const mutation = useRegistrarResultadoMutation(processo.id)
   const queryClient = useQueryClient()
   const { data: catalogos } = useCatalogosProcessoQuery()
@@ -176,6 +179,7 @@ export function CardResultadoProcesso({
 
   function onSubmit(dados: RegistrarResultadoFormValues) {
     if (dados.resultado === RESULTADO_QUE_NOTIFICA) {
+      setCienteDefinitivo(false)
       setPendente(dados)
       return
     }
@@ -322,13 +326,28 @@ export function CardResultadoProcesso({
               <h3>Confirmar lançamento do resultado</h3>
             </div>
             <div className="modal-body">
-              <div className="alert warning" role="alert">
+              <div className="alert danger" role="alert">
+                <span className="bullet" />
+                <div className="alert-content">
+                  <strong>O resultado positivo é definitivo:</strong> depois de confirmado, não poderá ser corrigido —
+                  nem para outro resultado, nem para positivo de novo.
+                </div>
+              </div>
+              <div className="alert warning" style={{ marginTop: 'var(--space-3)' }}>
                 <span className="bullet" />
                 <div className="alert-content">
                   Ao confirmar, o sistema solicitará o envio de uma notificação automática ao responsável pelo animal
-                  e à Vigilância Epidemiológica de Itu. O resultado não poderá ser editado depois.
+                  e à Vigilância Epidemiológica de Itu.
                 </div>
               </div>
+              <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 'var(--space-3)' }}>
+                <input
+                  type="checkbox"
+                  checked={cienteDefinitivo}
+                  onChange={(event) => setCienteDefinitivo(event.target.checked)}
+                />
+                <span>Entendo que o resultado positivo não poderá ser corrigido</span>
+              </label>
             </div>
             <div className="modal-footer">
               <button type="button" className="btn btn-ghost" onClick={() => setPendente(null)} disabled={mutation.isPending}>
@@ -337,7 +356,7 @@ export function CardResultadoProcesso({
               <button
                 type="button"
                 className="btn btn-primary"
-                disabled={mutation.isPending}
+                disabled={mutation.isPending || !cienteDefinitivo}
                 onClick={() => void enviar(pendente)}
               >
                 {mutation.isPending ? 'Registrando…' : 'Confirmar'}
