@@ -118,6 +118,9 @@ describe('AnimalForm — cadastro', () => {
       status: 'disponivel_adocao',
       motivoEntrada: 'resgate',
     })
+    // esterilizado é obrigatório no backend (422 sem ele, FS-6): o formulário
+    // sempre o envia, mesmo sem o usuário mexer nos cartões de castração.
+    expect(typeof (corpoCapturado as AnimalRequest | null)?.esterilizado).toBe('boolean')
     // Nomes de resposta (com sufixo) nunca devem ser reenviados no request.
     expect(corpoCapturado).not.toHaveProperty('especieNome')
     expect(corpoCapturado).not.toHaveProperty('statusNome')
@@ -212,6 +215,9 @@ describe('AnimalForm — edição', () => {
       nome: 'Rex',
       especie: 'canino',
       microchip: '985121234567890',
+      // O PUT substitui a ficha: o esterilizado do animal (Rex é castrado no
+      // mock) tem de voltar no corpo, senão o backend responde 422 (FS-6).
+      esterilizado: true,
     })
 
     expect(await screen.findByText('Lista de animais')).toBeInTheDocument()

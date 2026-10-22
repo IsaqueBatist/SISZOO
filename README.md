@@ -116,6 +116,22 @@ npm run dev
 
 O frontend sobe por padrão em `http://localhost:5173` e consome a API em `http://localhost:8080`.
 
+### Dados de teste (opcional)
+
+Com o Postgres **e o backend no ar** (o backend aplica as migrations e cria as
+vacinações, recalculando a ficha completa dos animais):
+
+```bash
+npm install
+npm run db:seed     # usuários, baias, animais e histórico clínico fictícios
+npm run test:seed   # confere a ficha completa dos animais semeados
+```
+
+O seed é idempotente. A API usada é `SEED_API_URL` (padrão `http://localhost:8080`, ver `.env.example`).
+Num banco semeado por uma versão anterior do seed, a primeira execução corrige pela API a ficha completa
+que aquela versão gravava errado (`ficha_corrigida_do_seed_anterior` na saída; ver
+`docs/decisoes/ficha-completa-seed-fuso.md`).
+
 > **Importante (LGPD):** nunca versione dados reais de munícipes, denunciantes ou animais. Utilize apenas dados fictícios em seeds e fixtures.
 
 ## Estrutura do repositório

@@ -42,6 +42,7 @@ code: |-
         nome: 'Animal Teste',
         especie: 'canino',
         sexo: 'macho',
+        esterilizado: false,
         status: 'disponivel_adocao',
         motivoEntrada: 'recolhimento',
         dataEntrada: '2026-08-30T09:00:00',
@@ -64,16 +65,24 @@ code: |-
 
   const adminToken = await login('{{ _.admin_email }}', '{{ _.admin_password }}');
 
-  const especieInvalida = await criarAnimal(adminToken, { especie: 'especie-que-nao-existe' });
-  expect(especieInvalida.status).to.equal(422);
+  // Controle: o payload base, sem nenhum catálogo inválido, é aceito. Assim
+  // cada 422 abaixo só pode vir do catálogo que o caso troca.
+  const base = await criarAnimal(adminToken, {});
+  expect(base.status).to.equal(200);
 
-  const statusInvalido = await criarAnimal(adminToken, { status: 'status-que-nao-existe' });
-  expect(statusInvalido.status).to.equal(422);
+  // Erro de catálogo é regra do serviço: mensagem própria e sem "campos"
+  // (campos só aparece na validação de campo, ex.: obrigatório ausente).
+  async function esperarCatalogoInvalido(overrides, mensagem) {
+    const res = await criarAnimal(adminToken, overrides);
+    expect(res.status).to.equal(422);
+    const corpo = JSON.parse(res.body);
+    expect(corpo.mensagem).to.equal(mensagem);
+    expect(corpo.campos === undefined).to.equal(true);
+  }
 
-  const motivoInvalido = await criarAnimal(adminToken, { motivoEntrada: 'motivo-que-nao-existe' });
-  expect(motivoInvalido.status).to.equal(422);
-
-  const baiaInvalida = await criarAnimal(adminToken, { baiaId: '00000000-0000-4000-8000-000000000099' });
-  expect(baiaInvalida.status).to.equal(422);
+  await esperarCatalogoInvalido({ especie: 'especie-que-nao-existe' }, 'Especie informada nao existe');
+  await esperarCatalogoInvalido({ status: 'status-que-nao-existe' }, 'Status informado nao existe');
+  await esperarCatalogoInvalido({ motivoEntrada: 'motivo-que-nao-existe' }, 'Motivo de entrada informado nao existe');
+  await esperarCatalogoInvalido({ baiaId: '00000000-0000-4000-8000-000000000099' }, 'Baia informada nao existe');
 
 metaSortKey: 30000000

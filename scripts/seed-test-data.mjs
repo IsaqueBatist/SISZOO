@@ -7,9 +7,14 @@
 // existem em schema (V1-V6). Ocorrências/Processos/Relatórios não têm
 // tabela ainda, então não são semeados aqui.
 //
-// Pré-requisito: Postgres do docker-compose no ar e migrations Flyway já
-// aplicadas (suba o backend uma vez: `docker compose up` ou
-// `mvn spring-boot:run`).
+// Vacinações são a exceção: vão pela API (POST /api/vacinacoes), não por
+// SQL, para o backend recalcular animal.ficha_completa com a regra dele
+// (FichaCompletaService). O seed não tem cópia dessa regra.
+//
+// Pré-requisito: Postgres do docker-compose e backend no ar, com as
+// migrations Flyway já aplicadas (`docker compose up` ou
+// `mvn spring-boot:run`). URL da API: SEED_API_URL (padrão
+// http://localhost:8080).
 
 import "dotenv/config";
 import bcrypt from "bcryptjs";
@@ -108,18 +113,22 @@ const ANIMAIS = Array.from({ length: TOTAL_ANIMAIS }, (_, i) => {
     motivoEntradaCodigo: MOTIVOS_ENTRADA[i % MOTIVOS_ENTRADA.length],
     diasDesdeEntrada: 5 + i * 3,
     baiaId: STATUS_COM_BAIA.has(statusCodigo) ? BAIAS[i % BAIAS.length].id : null,
-    fichaCompleta: i % 2 === 0,
     observacoes: null,
     criadoPorId: USUARIOS[(i % 4) + 1].id,
   };
 });
+// ficha_completa não é gravada aqui: o animal nasce com o DEFAULT false (V4),
+// o mesmo valor que o FichaCompletaService dá a um animal recém-cadastrado,
+// e é recalculada pelo VacinacaoService quando as vacinações são criadas pela
+// API (ver criarVacinacoesPelaApi). Assim a regra (DER §3.2) fica só no backend.
 
 const VACINAS_CODIGOS = [
   "antirrabica", "v10", "v8", "v4_felinos", "giardia", "gripe_canina", "felv", "leishmaniose",
 ];
+// Vacinações vão pela API (o id é gerado pelo backend); o lote identifica
+// cada uma para o seed continuar idempotente.
 const TOTAL_VACINACOES = 20;
 const VACINACOES = Array.from({ length: TOTAL_VACINACOES }, (_, i) => ({
-  id: id("50000000", i + 1),
   animalId: ANIMAIS[i % ANIMAIS.length].id,
   vacinaCodigo: VACINAS_CODIGOS[i % VACINAS_CODIGOS.length],
   aplicadoPorId: USUARIOS[1 + (i % 2)].id,
@@ -128,11 +137,10 @@ const VACINACOES = Array.from({ length: TOTAL_VACINACOES }, (_, i) => ({
   doseQuantidade: "1.000",
   doseUnidade: "MILILITRO",
   lote: `LT${String(i + 1).padStart(4, "0")}`,
-  retificaId: null,
+  retificaLote: null,
 }));
 // Exemplo de retificação: corrige o lote da primeira vacinação sem alterar a linha original.
 VACINACOES.push({
-  id: id("50000000", TOTAL_VACINACOES + 1),
   animalId: VACINACOES[0].animalId,
   vacinaCodigo: VACINACOES[0].vacinaCodigo,
   aplicadoPorId: VACINACOES[0].aplicadoPorId,
@@ -141,7 +149,7 @@ VACINACOES.push({
   doseQuantidade: VACINACOES[0].doseQuantidade,
   doseUnidade: VACINACOES[0].doseUnidade,
   lote: "LT0001-CORRIGIDO",
-  retificaId: VACINACOES[0].id,
+  retificaLote: VACINACOES[0].lote,
 });
 
 const TIPOS_PROCEDIMENTO_CODIGOS = ["atendimento_clinico", "castracao", "cirurgia_maior", "vacinacao"];
@@ -219,6 +227,134 @@ function dataPassada(dias) {
   return data;
 }
 
+// AAAA-MM-DD de "hoje - dias" no fuso do CCZ, para o LocalDate da API
+// (o backend recusa data de aplicação futura pelo dia de São Paulo).
+function dataPassadaIso(dias) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(
+    new Date(Date.now() - dias * 24 * 60 * 60 * 1000),
+  );
+}
+
+const API_URL = process.env.SEED_API_URL ?? "http://localhost:8080";
+
+async function chamarApi(caminho, { metodo = "POST", token, corpo } = {}) {
+  let resposta;
+  try {
+    resposta = await fetch(`${API_URL}${caminho}`, {
+      method: metodo,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: corpo === undefined ? undefined : JSON.stringify(corpo),
+    });
+  } catch (erro) {
+    throw new Error(
+      `Backend não respondeu em ${API_URL} (${erro.cause?.code ?? erro.message}). As vacinações são criadas pela API para o backend recalcular ficha_completa: suba o backend (docker compose up) ou ajuste SEED_API_URL.`,
+    );
+  }
+  const texto = await resposta.text();
+  if (!resposta.ok) {
+    throw new Error(`${metodo} ${caminho} respondeu ${resposta.status}: ${texto}`);
+  }
+  return JSON.parse(texto);
+}
+
+const tokens = new Map();
+async function tokenDe(usuarioId) {
+  if (!tokens.has(usuarioId)) {
+    const usuario = USUARIOS.find((u) => u.id === usuarioId);
+    const { token } = await chamarApi("/api/auth/login", { corpo: { email: usuario.email, senha: SENHA_TESTE } });
+    tokens.set(usuarioId, token);
+  }
+  return tokens.get(usuarioId);
+}
+
+// Cria as vacinações pelo VacinacaoService, que é quem recalcula
+// ficha_completa (FichaCompletaService). Idempotente pelo par (animal, lote):
+// o que já existe no banco é pulado.
+async function criarVacinacoesPelaApi(client) {
+  const idPorLote = async (animalId, lote) => {
+    const { rows } = await client.query("SELECT id FROM vacinacao WHERE animal_id = $1 AND lote = $2", [animalId, lote]);
+    return rows[0]?.id ?? null;
+  };
+
+  let criadas = 0;
+  for (const vacinacao of VACINACOES) {
+    if (await idPorLote(vacinacao.animalId, vacinacao.lote)) continue;
+    await chamarApi("/api/vacinacoes", {
+      token: await tokenDe(vacinacao.aplicadoPorId),
+      corpo: {
+        animalId: vacinacao.animalId,
+        vacina: vacinacao.vacinaCodigo,
+        dataAplicacao: dataPassadaIso(vacinacao.diasDesdeAplicacao),
+        numeroDose: vacinacao.numeroDose,
+        doseQuantidade: Number(vacinacao.doseQuantidade),
+        doseUnidade: vacinacao.doseUnidade,
+        lote: vacinacao.lote,
+        retificaId: vacinacao.retificaLote ? await idPorLote(vacinacao.animalId, vacinacao.retificaLote) : null,
+      },
+    });
+    criadas++;
+  }
+  return criadas;
+}
+
+// Bancos semeados pela versão anterior deste seed: ela gravava
+// ficha_completa = "tem microchip" direto no INSERT, sem passar pelo
+// backend, e assim marcava completo animal com microchip e sem vacinação.
+// Seleciona exatamente essa assinatura: animal do seed (id fixo) com
+// ficha_completa = true, nunca tocado pela aplicação (atualizado_em =
+// criado_em: toda edição, e a vacinação que completa a ficha, mudam
+// atualizado_em) e sem nenhuma vacinação. Para cada um, GET + PUT com os
+// mesmos valores: o AnimalService recalcula pelo FichaCompletaService (o
+// valor é sempre o do backend). A ficha muda, o registro sai da seleção, e a
+// execução seguinte não acha nada. Sem candidatos, o seed nem faz login: nenhuma
+// chamada à API, nenhum evento de auditoria (o login gera usuario/LOGIN).
+// Animais fora do seed e os já tocados pela aplicação nunca entram.
+async function recalcularFichasDoSeedAnterior(client) {
+  const { rows } = await client.query(
+    `SELECT a.id FROM animal a
+      WHERE a.id = ANY($1::uuid[]) AND a.ficha_completa AND a.atualizado_em = a.criado_em
+        AND NOT EXISTS (SELECT 1 FROM vacinacao v WHERE v.animal_id = a.id)
+      ORDER BY a.id`,
+    [ANIMAIS.map((animal) => animal.id)],
+  );
+  if (rows.length === 0) return 0;
+  const token = await tokenDe(USUARIOS[1].id); // Veterinário: GESTAO_ANIMAIS:escrita
+  let corrigidas = 0;
+  for (const { id } of rows) {
+    const atual = await chamarApi(`/api/animais/${id}`, { metodo: "GET", token });
+    const salvo = await chamarApi(`/api/animais/${id}`, {
+      metodo: "PUT",
+      token,
+      corpo: {
+        nome: atual.nome,
+        especie: atual.especieCodigo,
+        sexo: atual.sexo,
+        raca: atual.raca,
+        coloracao: atual.coloracao,
+        pelagem: atual.pelagem,
+        porte: atual.porte,
+        pesoKg: atual.pesoKg,
+        idadeAprox: atual.idadeAprox,
+        dataNascimentoAprox: atual.dataNascimentoAprox,
+        microchip: atual.microchip,
+        esterilizado: atual.esterilizado,
+        dataEsterilizacao: atual.dataEsterilizacao,
+        status: atual.statusCodigo,
+        motivoEntrada: atual.motivoEntradaCodigo,
+        dataEntrada: atual.dataEntrada,
+        baiaId: atual.baiaId,
+        fotoUrl: atual.fotoUrl,
+        observacoes: atual.observacoes,
+      },
+    });
+    if (salvo.fichaCompleta !== atual.fichaCompleta) corrigidas++;
+  }
+  return corrigidas;
+}
+
 async function seed() {
   const client = new pg.Client({
     host: process.env.SEED_DB_HOST ?? "localhost",
@@ -249,7 +385,6 @@ async function seed() {
     const statusAnimalIdPorCodigo = await mapaPorCodigo(client, "status_animal");
     const motivoEntradaIdPorCodigo = await mapaPorCodigo(client, "motivo_entrada");
     const tipoBaiaIdPorCodigo = await mapaPorCodigo(client, "tipo_baia");
-    const vacinaIdPorCodigo = await mapaPorCodigo(client, "vacina");
     const tipoProcedimentoIdPorCodigo = await mapaPorCodigo(client, "tipo_procedimento");
 
     const senhaHash = bcrypt.hashSync(SENHA_TESTE, 10);
@@ -312,8 +447,8 @@ async function seed() {
         `INSERT INTO animal (
            id, nome, especie_id, sexo, raca, coloracao, pelagem, porte, peso_kg,
            idade_aprox, microchip, esterilizado, status_id, motivo_entrada_id,
-           data_entrada, baia_id, ficha_completa, observacoes, criado_por_id
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+           data_entrada, baia_id, observacoes, criado_por_id
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
          ON CONFLICT (id) DO NOTHING`,
         [
           animal.id,
@@ -332,32 +467,8 @@ async function seed() {
           motivoEntradaIdPorCodigo[animal.motivoEntradaCodigo],
           dataPassada(animal.diasDesdeEntrada),
           animal.baiaId,
-          animal.fichaCompleta,
           animal.observacoes,
           animal.criadoPorId,
-        ],
-      );
-    }
-
-    for (const vacinacao of VACINACOES) {
-      await registrar(
-        "vacinacao",
-        `INSERT INTO vacinacao (
-           id, animal_id, vacina_id, aplicado_por_id, data_aplicacao,
-           numero_dose, dose_quantidade, dose_unidade, lote, retifica_id
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-         ON CONFLICT (id) DO NOTHING`,
-        [
-          vacinacao.id,
-          vacinacao.animalId,
-          vacinaIdPorCodigo[vacinacao.vacinaCodigo],
-          vacinacao.aplicadoPorId,
-          dataPassada(vacinacao.diasDesdeAplicacao),
-          vacinacao.numeroDose,
-          vacinacao.doseQuantidade,
-          vacinacao.doseUnidade,
-          vacinacao.lote,
-          vacinacao.retificaId,
         ],
       );
     }
@@ -432,7 +543,14 @@ async function seed() {
     await client.query("COMMIT");
   } catch (erro) {
     await client.query("ROLLBACK").catch(() => {});
+    await client.end();
     throw erro;
+  }
+
+  // Depois do COMMIT: a API precisa enxergar usuários e animais já gravados.
+  try {
+    contagens.vacinacao = await criarVacinacoesPelaApi(client);
+    contagens.ficha_corrigida_do_seed_anterior = await recalcularFichasDoSeedAnterior(client);
   } finally {
     await client.end();
   }

@@ -20,6 +20,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -40,6 +42,7 @@ import com.siszoo.animais.repository.BaiaRepository;
 import com.siszoo.animais.repository.ContagemPorEspecieProjection;
 import com.siszoo.animais.repository.EspecieRepository;
 import com.siszoo.animais.repository.OcupacaoBaiaProjection;
+import com.siszoo.comum.config.ClockConfig;
 import com.siszoo.ocorrencias.repository.OcorrenciaRepository;
 import com.siszoo.processos.entity.Doenca;
 import com.siszoo.processos.repository.AnimalAmostradoRepository;
@@ -288,6 +291,58 @@ class DashboardServiceTest {
 
         // CLOCK_10H esta fixo em 2026-09-10.
         verify(processoSanitarioRepository).contarPorDoenca(2026);
+    }
+
+    // Virada do dia UTC x Itu (FS-P7, mesmos instantes de
+    // RegrasDeDataNaViradaDoDiaTest): o dia, a hora e as janelas do dashboard
+    // sao os de Itu, com o fuso do Clock de producao (ClockConfig). As consultas
+    // so comparam colunas de data com esses parametros (sem CURRENT_DATE).
+    // registradasHoje = 42; mediaPorHora = 42 / hora de Itu (null a 0h).
+    @ParameterizedTest(name = "{0}: hoje {2}, hora {3}")
+    @CsvSource(nullValues = "nula", value = {
+            "20:59 BRT, 2030-03-15T23:59:00Z, 2030-03-15, 20, 2.1",
+            "21:00 BRT, 2030-03-16T00:00:00Z, 2030-03-15, 21, 2.0",
+            "23:59 BRT, 2030-03-16T02:59:00Z, 2030-03-15, 23, 1.8",
+            "00:00 BRT, 2030-03-16T03:00:00Z, 2030-03-16, 0, nula",
+            "30/04 21:30 BRT, 2030-05-01T00:30:00Z, 2030-04-30, 21, 2.0",
+            "31/12 21:30 BRT, 2031-01-01T00:30:00Z, 2030-12-31, 21, 2.0",
+    })
+    void kpisUsamODiaEAHoraDeItuNaViradaDoDia(String caso, String instante, String hoje, int hora, Double media) {
+        service = novoService(Clock.fixed(Instant.parse(instante), new ClockConfig().clock().getZone()));
+        LocalDate dia = LocalDate.parse(hoje);
+        semKpisBasicos();
+        semAlertas();
+        when(ocorrenciaRepository.contarRegistradasEm(dia)).thenReturn(42L);
+
+        DashboardKpisResponse resposta = service.obterKpis();
+
+        assertThat(resposta.ocorrencias().registradasHoje()).isEqualTo(42L);
+        assertThat(resposta.ocorrencias().mediaPorHora()).isEqualTo(media);
+        verify(animalRepository).countSemAvaliacaoDesde(anyCollection(), eq(dia.minusDays(30)));
+        verify(prescricaoRepository).countByStatusAndDataFimPrevistaBetweenAndAnimal_Status_CodigoNotIn(
+                eq(StatusPrescricao.ATIVA), eq(dia), eq(dia.plusDays(7)), anyCollection());
+    }
+
+    // Graficos sem ano informado: o ano corrente e o de Itu, nao o de UTC.
+    @ParameterizedTest(name = "{0} -> graficos de {2}")
+    @CsvSource({
+            "31/12 21:30 BRT, 2031-01-01T00:30:00Z, 2030",
+            "31/12 23:59 BRT, 2031-01-01T02:59:00Z, 2030",
+            "01/01 00:00 BRT, 2031-01-01T03:00:00Z, 2031",
+    })
+    void graficosUsamOAnoDeItu(String caso, String instante, int ano) {
+        service = novoService(Clock.fixed(Instant.parse(instante), new ClockConfig().clock().getZone()));
+        when(doencaRepository.findByAtivoTrueOrderByNomeAsc()).thenReturn(List.of());
+        when(especieRepository.findAll()).thenReturn(List.of());
+        when(processoSanitarioRepository.contarPorDoenca(anyInt())).thenReturn(List.of());
+        when(animalAmostradoRepository.contarRaivaPorEspecie(anyInt())).thenReturn(List.of());
+        when(processoSanitarioRepository.contarResultadosPorDoenca(anyInt())).thenReturn(List.of());
+
+        service.obterGraficos(null);
+
+        verify(processoSanitarioRepository).contarPorDoenca(ano);
+        verify(animalAmostradoRepository).contarRaivaPorEspecie(ano);
+        verify(processoSanitarioRepository).contarResultadosPorDoenca(ano);
     }
 
     private void semKpisBasicos() {

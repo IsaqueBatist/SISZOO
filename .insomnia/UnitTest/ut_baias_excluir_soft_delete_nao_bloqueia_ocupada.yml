@@ -44,6 +44,7 @@ code: |-
         nome: 'Animal Teste',
         especie: 'canino',
         sexo: 'macho',
+        esterilizado: false,
         status: 'disponivel_adocao',
         motivoEntrada: 'recolhimento',
         dataEntrada: '2026-08-30T09:00:00',

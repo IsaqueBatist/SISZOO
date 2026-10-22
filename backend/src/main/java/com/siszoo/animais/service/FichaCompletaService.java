@@ -10,6 +10,12 @@ import com.siszoo.animais.entity.Animal;
 // vacinacao vigente. Os obrigatorios ja sao garantidos por Bean Validation no
 // request e NOT NULL no schema. Fonte unica para o AnimalService (cadastro e
 // edicao) e o VacinacaoService (nova vacinacao).
+//
+// A V18 (backfill) tem esta regra em SQL, mas e uma copia congelada: ja foi
+// aplicada, nao roda de novo e nao pode ser editada (checksum do Flyway).
+// Mudar a regra aqui exige uma migration nova que recalcule os dados
+// existentes. Espelhos que precisam acompanhar: fichaCompletaMock
+// (frontend/src/mocks/handlers.ts) e scripts/seed-test-data.test.mjs.
 @Service
 public class FichaCompletaService {
 
