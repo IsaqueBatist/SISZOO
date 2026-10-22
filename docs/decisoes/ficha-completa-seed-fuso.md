@@ -18,44 +18,24 @@ Uma linha por decisão, no formato de `T29.md`. Origem: roteiro de testes manuai
   Não é regra nova: com o `boolean` primitivo, o campo ausente já era recusado (400 genérico do Spring); muda só a resposta. Os outros booleanos de request seguem a mesma lógica: obrigatórios onde a regra ou a substituição do PUT exige (`@NotNull`), opcionais com `false` explícito no serviço onde não (cadastro de ocorrência).
 - **FS-7** A coleção do Insomnia segue as regras atuais: os cadastros de animal enviam `esterilizado`, e alocar animal em baia sem vaga espera 409 (`ut_baias_animal_409_baia_superlotada`, antes `ut_baias_animal_pode_ser_alocado_em_baia_superlotada`). `ut_animais_criar_422_catalogos_invalidos` tem caso de controle (payload base aceito) e confere a mensagem de cada catálogo.
 - **FS-8** O alerta `baia_superlotada` (DER, `alerta_item`, ainda não implementado) usa `atual_ocupacao >= capacidade`, a mesma regra do indicador `superlotada` (`BaiaService.java`, `ocupacaoAtual >= capacidade`; `estadoLotacao.ts`, `>= 100%`) e do 409 de baia sem vaga (RN-AN02). Decisão da equipe na revisão desta branch; antes o DER dizia `>` só no alerta. Implementação, testes (`BaiaServiceTest`, `estadoLotacao.test.ts`, limite exato) e a exclusão de baia ocupada (AC-3) não mudam.
-- **FS-9** Autenticado sem permissão recebe **403 antes da validação do corpo**. A autorização é por método (`@PreAuthorize`, só `hasAuthority(...)`); o `@Valid` do `@RequestBody` era avaliado antes dele. `PreAutorizacaoInterceptor` (registrado em `WebMvcConfig`) avalia o mesmo `@PreAuthorize` com o `PreAuthorizeAuthorizationManager` antes de ler o corpo e lança `AccessDeniedException` (403 "Acesso negado" pelo `JwtAccessDeniedHandler`). Sem mudança na ordem dos filtros nem no `SecurityConfig`; sem autenticação o filtro continua respondendo 401; com permissão, o 422 de validação não muda; a checagem por método continua como segunda camada. Limite: o interceptor passa argumentos vazios ao avaliar a expressão, então um `@PreAuthorize` futuro que use argumentos do método (`#param`) não pode ser avaliado ali. Teste: `AutorizacaoAntesDaValidacaoIT`.
+- **FS-9** Autenticado sem permissão recebe **403 antes da validação do corpo**. A autorização é por método (`@PreAuthorize`, só `hasAuthority(...)`); o `@Valid` do `@RequestBody` era avaliado antes dele. `PreAutorizacaoInterceptor` (registrado em `WebMvcConfig`) avalia o mesmo `@PreAuthorize` com o `PreAuthorizeAuthorizationManager` antes de ler o corpo e lança `AccessDeniedException` (403 "Acesso negado" pelo `JwtAccessDeniedHandler`). Sem mudança na ordem dos filtros nem no `SecurityConfig`; sem autenticação o filtro continua respondendo 401; com permissão, o 422 de validação não muda; a checagem por método continua como segunda camada. Limite: os argumentos do método ainda não foram lidos quando o interceptor roda. Um `@PreAuthorize` com argumentos (`#param`) seria avaliado com tudo nulo, dando um resultado errado sem aviso. Por isso ele é **recusado de forma explícita**: o interceptor lança `IllegalStateException` com o endpoint e a expressão, e `PreAuthorizeSemArgumentosTest` varre os `@PreAuthorize` de todos os controllers e quebra o build se algum usar `#`. Testes: `AutorizacaoAntesDaValidacaoIT`, `PreAutorizacaoInterceptorTest`, `PreAuthorizeSemArgumentosTest`.
 - **FS-10** Datas com hora da API (`LocalDateTime`, horário de Itu) são exibidas separando a string, sem `new Date(iso)`: `formatarDataBR`/`formatarDataHoraBR` em `Perfil` e `Usuarios`. "Última atualização" na ficha do animal conta dias civis em Itu (`diasCivisAteHoje`). As datas relativas do mock partem de `hojeEmItu`. Testes: `lib/datasNaTela.test.tsx` (navegador em UTC e em São Paulo), `mocks/datasMock.test.ts`, `lib/datas.test.ts`.
 - **FS-11** A RN-AN04 tem IT pela API para cadastro, primeira vacinação, edição (microchip definido depois da vacina) e retificação de vacinação (`AnimalControllerIT#fichaCompletaNaEdicaoENaRetificacao`). Exclusão de vacinação não existe (V17).
+- **FS-12** O mock do front segue o contrato de datas da API: nenhum DTO de resposta usa instante (só `LocalDateTime`, `LocalDate` e `LocalTime`), então o mock não devolve datas com `Z` e cria registros com `agoraEmItu()` (`lib/datas.ts`). Teste: `mocks/contratoDatasMock.test.ts`.
+- **FS-13** O dashboard (T38, integrado pela `main`) calcula dia, hora e ano pelo `Clock`; as consultas comparam colunas de data civil com esses parâmetros, sem `CURRENT_DATE` no banco. Coberto nos instantes de FS-3 em `DashboardServiceTest`.
+- **FS-14** O seed corrige sozinho a ficha gravada pela versão anterior dele (ver a seção abaixo).
 
-## Procedimento: banco semeado pela versão anterior do seed
+## Bancos semeados pela versão anterior do seed
 
-A versão anterior do seed gravava `ficha_completa` = "tem microchip". Num banco semeado por ela, animais com microchip e sem vacinação ficam "completos" (no seed padrão: Apolo, Bolt, Chico, Frajola e Rocky), e `npm run test:seed` falha.
+A versão anterior do seed gravava `ficha_completa` = "tem microchip" direto no `INSERT`. Num banco semeado por ela, animais com microchip e sem vacinação ficam "completos" (no seed padrão: Apolo, Bolt, Chico, Frajola e Rocky).
 
-O seed **não corrige esses registros sozinho**, de propósito: para saber quais estão errados ele precisaria da regra (cópia que FS-1 eliminou), e regravar todos os animais a cada execução mudaria `atualizado_em` sempre, o que quebra a idempotência. Também não há migration: a V18 já aplicada recalculou os dados que existiam na época, e o problema só aparece em bancos de desenvolvimento semeados depois dela. Não corrija com `UPDATE` manual em `ficha_completa`: duplicaria a regra e não passaria pela aplicação.
+**O próprio seed corrige**, sem cópia da regra (FS-1) e sem migration (que rodaria também em produção). O registro errado é reconhecido pela **origem**, não pela regra: animal do seed (id fixo) com `ficha_completa = true` e `atualizado_em = criado_em`, ou seja, valor gravado por SQL e nunca recalculado pelo backend. Toda passagem pela aplicação muda `atualizado_em`, e o seed atual só deixa a ficha `true` por vacinação pela API. Para cada um, o seed faz GET + PUT com os mesmos valores (`recalcularFichasDoSeedAnterior`), e o `AnimalService` recalcula pelo `FichaCompletaService`:
+- ficha errada vira `false`;
+- ficha certa continua `true`, e o PUT não grava nada (o Hibernate não vê alteração).
 
-**Pré-condições:** banco de desenvolvimento local (nunca produção ou banco compartilhado); backend desta versão no ar, apontando para esse banco.
+Animais fora do seed e os já tocados pela aplicação nunca entram. O seed informa `ficha_corrigida_do_seed_anterior`.
 
-**Opção A — sem dados a preservar** (apaga o banco):
-
-```bash
-docker compose down -v          # remove o volume siszoo_db_data: APAGA TODOS OS DADOS
-docker compose up -d --build
-npm run db:seed
-npm run test:seed               # 4/4
-```
-
-**Opção B — com dados a preservar:**
-
-1. Backup: `docker exec siszoo-db-1 pg_dump -U postgres siszoo > backup-siszoo.sql`.
-2. Diagnóstico (só leitura), lista os animais "completos" que não atendem à regra:
-   ```sql
-   SELECT a.id, a.nome
-     FROM animal a
-    WHERE a.ficha_completa
-      AND (NOT COALESCE(a.microchip ~ '\S', false)
-           OR NOT EXISTS (SELECT 1 FROM vacinacao v
-                           WHERE v.animal_id = a.id
-                             AND NOT EXISTS (SELECT 1 FROM vacinacao r WHERE r.retifica_id = v.id)));
-   ```
-3. Para cada animal listado, recalcule pelo mecanismo oficial: na tela, **Editar → salvar sem mudar nada** (`PUT /api/animais/{id}` → `FichaCompletaService`). Salvaguardas: não restaure rascunho nessa edição e confira que porte e baia aparecem antes de salvar (N5 em `pendencias-auditoria-rn.md`: o PUT substitui a ficha inteira). A edição não gera evento de auditoria; só `ficha_completa` e `atualizado_em` mudam.
-4. Repita o diagnóstico (0 linhas) e rode `npm run test:seed`.
-
-**Validado** num banco descartável semeado pela versão anterior: o diagnóstico listou os 5; editar e salvar (GET + PUT com os mesmos valores, como a tela) levou os 5 de `true` para `false`; o diagnóstico voltou a 0; as demais colunas dos animais ficaram idênticas (hash antes = depois); o seed atual inseriu 0 linhas e `test:seed` passou 4/4.
+**Validado** num banco descartável semeado pela versão anterior: 15 completas, 5 fora da regra → 10 completas, 0 fora da regra; demais colunas dos animais idênticas (hash antes = depois); 2ª execução corrige 0 e não grava nada (`ficha_completa` e `atualizado_em` iguais). Banco limpo: corrige 0. Teste: `seed-test-data.test.mjs` simula o estado da versão anterior num animal do seed.
 
 ## Pendências da revisão
 
@@ -67,14 +47,16 @@ npm run test:seed               # 4/4
 | FS-P4 | Mock calculava "hoje" em UTC | **Corrigida** | FS-10; `datasMock.test.ts` (antes: 4/6 falham nos dois fusos; depois: 6/6) |
 | FS-P5 | `new Date(iso)` em `FichaAnimal`, `Perfil` e `Usuarios` | **Corrigida** | FS-10; `datasNaTela.test.tsx` (antes: 6/10 falham; depois: 10/10 em UTC e em São Paulo) |
 | FS-P6 | Testes não distinguem offset fixo `-03:00` de `America/Sao_Paulo` | **Não corrigível hoje** | Os dois são equivalentes desde 2019 (sem horário de verão); o código usa `ZoneId.of("America/Sao_Paulo")` e o front, `Intl` com `America/Sao_Paulo`. Nenhum offset fixo foi introduzido. |
-| FS-P7 | Filtros de relatório por dia sem teste de fuso | **Bloqueada nesta branch** | Na base desta branch (`872b607`) o módulo de relatórios não existia. A T38 (PR 101, já na `main`) acrescentou o dashboard, com janelas por dia calculadas pelo `Clock` (`LocalDate.now(clock)`, `Year.now(clock)`). Ao integrar a `main`, cobrir essas janelas com os instantes de FS-3. |
+| FS-P7 | Filtros de relatório por dia sem teste de fuso | **Corrigida** (sem defeito) | Bloqueada até a integração da `main`, porque a base da branch (`872b607`) não tinha o módulo; a T38 entrou pelo merge `c62b1db`. FS-13; `DashboardServiceTest` (contraprova: `ClockConfig` em UTC, 8 dos 9 casos novos falham) |
 | A | `esterilizado` ausente no cadastro e na edição | **Corrigida** (contrato mantido e fundamentado) | FS-6; ITs de cadastro e edição (422 com o campo) e `AnimalForm.test.tsx` (contraprova: sem o campo no payload, 2 testes falham) |
-| D | Animais com ficha errada em bancos semeados pela versão anterior | **Depende de ação explícita** (procedimento documentado e validado) | Seção "Procedimento" acima |
+| D | Animais com ficha errada em bancos semeados pela versão anterior | **Corrigida no seed** | FS-14 e a seção acima |
 | G | Cobertura da regra de ficha completa | **Corrigida** | FS-11 (contraprova: sem recálculo na edição, a IT falha) |
+| — | Mock com datas `Z`, fora do contrato da API | **Corrigida** | FS-12; `contratoDatasMock.test.ts` (antes: 8/9 falham; depois: 9/9) |
+| — | `ut_usuarios_autodesativacao_admin` esperava 200, contra a regra 24 do DER | **Corrigida** | Espera 422 e confere que o usuário continua ativo; a versão anterior falha contra o backend |
+| — | `@PreAuthorize` com `#param` seria avaliado em silêncio pelo interceptor | **Corrigida** | FS-9; recusa explícita + varredura no build (contraprovas: `#id` num controller real quebra a varredura; o interceptor anterior não recusava) |
 
 ## Riscos residuais e itens para a equipe
 
-- **Interceptor de autorização (FS-9):** vale para todos os endpoints com `@PreAuthorize`. Hoje todos usam `hasAuthority(...)`; um `@PreAuthorize` com argumentos do método precisaria de outro tratamento.
-- **Formato das datas no mock:** o mock do front usa instantes com `Z` (`'2026-05-20T14:32:00Z'`) em `criadoEm`, `ultimoAcesso` e `atualizadoEm`, enquanto a API envia `LocalDateTime` sem fuso. As telas corrigidas (FS-10) tratam os dois, mas o mock continua diferente do contrato real.
-- **`ut_usuarios_autodesativacao_admin` (Insomnia)** espera 200 ao Administrador desativar a si mesmo, mas a regra 24 do DER responde 422. Falha igual na `main`; não foi alterado nesta branch.
+- **Interceptor de autorização (FS-9):** vale para todos os endpoints com `@PreAuthorize`. Um `@PreAuthorize` com argumentos do método é recusado no build e em tempo de execução; se um dia for necessário, a checagem antecipada precisará de outro desenho.
+- **Seed em bancos antigos:** nas execuções seguintes à correção, as fichas `true` corretas do seed anterior continuam com `atualizado_em = criado_em` e são reconferidas (GET + PUT sem escrita) a cada execução. São no máximo 30 chamadas à API, sem alteração de dados.
 - **Insomnia sem o runner oficial:** não há o CLI do Insomnia (`inso`) no ambiente. Os UnitTests foram executados com um runner temporário (shim de `insomnia.send`/`expect` sobre `fetch`, que lê também as Requests da coleção pelo id), contra backends descartáveis. Convém rodar a coleção no Insomnia antes do merge.

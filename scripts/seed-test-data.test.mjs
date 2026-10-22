@@ -2,9 +2,9 @@
 // os animais do banco, sem depender de nomes ou ids do seed.
 //
 // Integração: precisa do Postgres e do backend no ar (as mesmas variáveis do
-// seed: SEED_DB_HOST, SEED_DB_PORT, POSTGRES_*, SEED_API_URL). Rode num banco
-// recém-criado: um banco semeado pela versão antiga do seed (que gravava
-// ficha_completa = "tem microchip") falha aqui até ser recriado.
+// seed: SEED_DB_HOST, SEED_DB_PORT, POSTGRES_*, SEED_API_URL). Num banco
+// semeado pela versão antiga do seed (que gravava ficha_completa = "tem
+// microchip"), o próprio seed rodado pelo before() corrige as fichas.
 //
 //   npm run test:seed
 

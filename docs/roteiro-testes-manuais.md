@@ -25,7 +25,7 @@ npm run db:seed                 # idempotente: rodar de novo não insere nada
 npm run test:seed               # confere a ficha completa de todos os animais
 ```
 
-Um banco semeado por uma versão anterior do seed (que gravava `ficha_completa` = "tem microchip") tem animais "completos" sem vacina, e o `test:seed` falha nele. Siga o procedimento de `docs/decisoes/ficha-completa-seed-fuso.md` (seção "Procedimento"): recriar o banco, que **apaga os dados**, ou, se houver dados a preservar, diagnosticar e editar/salvar esses animais pela tela.
+Um banco semeado por uma versão anterior do seed (que gravava `ficha_completa` = "tem microchip") tinha animais "completos" sem vacina. Rodar `npm run db:seed` de novo corrige esses animais pela API (`ficha_corrigida_do_seed_anterior` na saída; na execução seguinte, 0). Detalhes em `docs/decisoes/ficha-completa-seed-fuso.md`.
 
 ☐ Conferir migrations: `docker exec siszoo-db-1 psql -U postgres -d siszoo -c "select version, success from flyway_schema_history order by installed_rank desc limit 5;"` → 18, 17, 16, 15, 14 todos `t`.
 
