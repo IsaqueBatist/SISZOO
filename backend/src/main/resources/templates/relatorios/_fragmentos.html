@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<!--
+  Estilo proprio para PDF (T41): report.css (docs/prototipo/assets/report.css)
+  usa flexbox e CSS grid para layout (.r-header, .kpi-row, .bar-row, .legend-grid,
+  .r-footer) — nem Flying Saucer nem openhtmltopdf suportam flexbox/grid (ambos
+  sao motores CSS 2.1). Aqui o mesmo layout e refeito com display:table/table-cell,
+  mantendo cores e espacamento do protótipo. Fontes: Lato e IBM Plex Mono
+  (embutidas, OFL) substituem Inter/DM Sans/JetBrains Mono — o Google Fonts so
+  publica essas tres como fonte variavel hoje, que os renderizadores de PDF
+  legados (OpenPDF/iText2) nao leem corretamente.
+-->
+<th:block th:fragment="estilo">
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: 'Lato', sans-serif; font-size: 11pt; line-height: 1.5; color: #1A2332; margin: 0; padding: 12mm; }
+  .r-header { display: table; width: 100%; border-bottom: 2px solid #1B5E20; padding-bottom: 8mm; margin-bottom: 8mm; }
+  .r-brand { display: table-cell; text-align: left; vertical-align: top; }
+  .r-brand .wm { font-weight: 700; font-size: 20pt; letter-spacing: 0.02em; color: #1B5E20; }
+  .r-brand .wm-mark { display: inline-block; width: 10px; height: 10px; background: #1B5E20; margin-right: 6px; }
+  .r-brand .gov { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: #5A6A7E; margin-top: 2px; }
+  .r-meta { display: table-cell; text-align: right; vertical-align: top; font-size: 9pt; color: #5A6A7E; }
+  .r-meta .doc-id { font-family: 'IBM Plex Mono', monospace; font-size: 11pt; color: #1A2332; font-weight: 700; }
+  .r-title { font-weight: 700; font-size: 22pt; color: #1A2332; line-height: 1.15; margin-bottom: 3mm; }
+  .r-subtitle { color: #5A6A7E; font-size: 11pt; margin-bottom: 7mm; }
+  h2.section { font-weight: 700; font-size: 13pt; margin-top: 7mm; margin-bottom: 3mm; padding-bottom: 2mm; border-bottom: 1px solid #E0E4EA; }
+  .kpi-row { display: table; width: 100%; table-layout: fixed; margin: 3mm 0 6mm; }
+  .kpi { display: table-cell; width: 25%; padding: 0 2mm; vertical-align: top; }
+  .kpi-box { border: 1px solid #E0E4EA; border-top: 3px solid #1B5E20; padding: 3mm; }
+  .kpi .l { font-size: 8pt; text-transform: uppercase; letter-spacing: 0.06em; color: #5A6A7E; font-weight: 700; }
+  .kpi .v { font-weight: 700; font-size: 20pt; line-height: 1; margin-top: 1mm; }
+  .kpi .d { font-size: 8pt; color: #5A6A7E; margin-top: 1mm; }
+  table { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin-bottom: 6mm; }
+  table th { text-align: left; background: #F4F6F8; color: #5A6A7E; font-size: 8.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 2.5mm 3mm; border-bottom: 2px solid #E0E4EA; }
+  table td { padding: 2mm 3mm; border-bottom: 1px solid #E0E4EA; }
+  table tbody tr:nth-child(even) td { background: #F9FAFB; }
+  .mono { font-family: 'IBM Plex Mono', monospace; font-size: 9pt; }
+  .bar-row { display: table; width: 100%; margin-bottom: 2mm; font-size: 10pt; }
+  .bar-row .label { display: table-cell; width: 50mm; vertical-align: middle; }
+  .bar-row .track { display: table-cell; vertical-align: middle; }
+  .bar-row .track-inner { height: 4mm; background: #E0E4EA; }
+  .bar-row .fill { height: 100%; background: #1B5E20; }
+  .bar-row .val { display: table-cell; width: 14mm; text-align: right; vertical-align: middle; font-family: 'IBM Plex Mono', monospace; font-size: 9pt; font-weight: 700; }
+  .note { background: #F4F6F8; border-left: 3px solid #5A6A7E; padding: 3mm 4mm; font-size: 9.5pt; color: #5A6A7E; }
+  .r-footer { display: table; width: 100%; border-top: 1px solid #E0E4EA; padding-top: 3mm; margin-top: 8mm; font-size: 8pt; color: #5A6A7E; }
+  .r-footer .esq { display: table-cell; text-align: left; }
+  .r-footer .dir { display: table-cell; text-align: right; }
+  .status-superlotada { color: #C62828; font-weight: 700; }
+  .status-proximo-limite { color: #E65100; font-weight: 700; }
+  .status-atraso { color: #C62828; font-weight: 700; }
+  .status-atraso-medio { color: #E65100; font-weight: 700; }
+  tr.row-superlotada td { background: #FFEBEE; }
+  tr.row-proximo-limite td { background: #FFF8E1; }
+</style>
+</th:block>
+</head>
+<body>
+<div th:fragment="cabecalho(titulo, subtitulo)">
+  <div class="r-header">
+    <div class="r-brand">
+      <div class="wm"><span class="wm-mark"></span>SISZOO</div>
+      <div class="gov">Prefeitura Municipal de Itu · CCZ</div>
+    </div>
+    <div class="r-meta">
+      <div class="doc-id" th:text="${meta.docId}">DOC-2026-0001</div>
+      <div th:text="'Emitido em ' + ${meta.emitidoEm}">Emitido em 01/01/2026</div>
+      <div th:text="'Geração: ' + ${meta.geradoPor}">Geração: Usuário</div>
+    </div>
+  </div>
+  <h1 class="r-title" th:text="${titulo}">Título</h1>
+  <div class="r-subtitle" th:text="${subtitulo}">Período</div>
+</div>
+<div th:fragment="rodape">
+  <div class="r-footer">
+    <span class="esq" th:text="'SISZOO · ' + ${meta.docId}">SISZOO</span>
+    <span class="dir">Página 1 de 1</span>
+  </div>
+</div>
+</body>
+</html>

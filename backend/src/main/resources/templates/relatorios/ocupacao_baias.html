@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/>
+<title>Relatório de Ocupação de Baias</title>
+<th:block th:replace="~{_fragmentos :: estilo}"></th:block>
+</head>
+<body>
+<div th:replace="~{_fragmentos :: cabecalho('Ocupação de Baias', 'Período: ' + ${meta.subtituloPeriodo})}"></div>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="kpi-box"><div class="l">Ocupação média</div><div class="v" th:text="${d.kpis.ocupacaoMediaPercentual} + '%'">0%</div></div></div>
+  <div class="kpi"><div class="kpi-box"><div class="l">Baias superlotadas</div><div class="v" th:text="${d.kpis.baiasSuperlotadas}">0</div></div></div>
+  <div class="kpi"><div class="kpi-box"><div class="l">Baias no limite</div><div class="v" th:text="${d.kpis.baiasNoLimite}">0</div></div></div>
+  <div class="kpi"><div class="kpi-box"><div class="l">Capacidade total</div><div class="v" th:text="${d.kpis.capacidadeTotal}">0</div></div></div>
+</div>
+
+<h2 class="section">Ocupação atual por baia</h2>
+<table>
+  <thead><tr><th>Baia</th><th>Capacidade</th><th>Atual</th><th>% Ocupação</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr th:each="linha : ${d.baias}"
+        th:class="${linha.status == 'superlotada'} ? 'row-superlotada' : (${linha.status == 'proximo_limite'} ? 'row-proximo-limite' : '')">
+      <td th:text="${linha.baia}">Baia 1</td>
+      <td class="mono" th:text="${linha.capacidade}">6</td>
+      <td class="mono" th:text="${linha.atual}">5</td>
+      <td th:text="${linha.percentualOcupacao} + '%'">83%</td>
+      <td th:switch="${linha.status}">
+        <span th:case="'superlotada'" class="status-superlotada">Superlotada</span>
+        <span th:case="'proximo_limite'" class="status-proximo-limite">Próx. limite</span>
+        <span th:case="*">Normal</span>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div th:replace="~{_fragmentos :: rodape}"></div>
+</body>
+</html>

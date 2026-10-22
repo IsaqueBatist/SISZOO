@@ -77,6 +77,22 @@
 			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-thymeleaf</artifactId>
+		</dependency>
+		<!-- PDF dos relatorios (T41): Flying Saucer renderiza HTML/CSS 2.1 para
+		     PDF via OpenPDF (LGPL). Escolhida sobre openhtmltopdf por instrucao
+		     explicita do enunciado da T41 na ausencia de ganho concreto entre as
+		     duas — ambas estao sem release ha anos (Flying Saucer 9.3.2 e de
+		     dez/2023; openhtmltopdf, sob o groupId real com.openhtmltopdf, nao
+		     io.github.openhtmltopdf, esta parado na 1.0.10 desde set/2021),
+		     confirmado direto na API do Maven Central. -->
+		<dependency>
+			<groupId>org.xhtmlrenderer</groupId>
+			<artifactId>flying-saucer-pdf-openpdf</artifactId>
+			<version>9.3.2</version>
+		</dependency>
+		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-database-postgresql</artifactId>
 		</dependency>
