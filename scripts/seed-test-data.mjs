@@ -635,7 +635,9 @@ const RESULTADOS_PROCESSO = [];
       RESULTADOS_PROCESSO.push(original);
       indiceResultado++;
       // ~15% dos resultados recebem uma retificação (corrige sem apagar o original).
-      if (chance(0.15)) {
+      // Positivo é definitivo (V21, T35-16): o trigger recusa corrigi-lo. O
+      // sorteio vem antes do teste pra não deslocar a sequência do gerador.
+      if (chance(0.15) && resultadoCodigo !== "positivo") {
         const retificado = {
           id: id("A3000000", indiceResultado),
           processoId: processo.id,
@@ -781,13 +783,18 @@ async function seed() {
     }
 
     // ── Clínico: registros ──
+    // Tabelas com retificação usam ON CONFLICT sem alvo: além do id, há o
+    // UNIQUE de retifica_id. Se o cenário gerado mudar entre execuções (mais
+    // animais, outra ordem de sorteio), a linha de retificação ganha outro id
+    // mas aponta pro mesmo original — com ON CONFLICT (id) isso abortava o
+    // seed com violação de uq_<tabela>_retifica_id.
     for (const vacinacao of VACINACOES) {
       await registrar(
         "vacinacao",
         `INSERT INTO vacinacao (
            id, animal_id, vacina_id, aplicado_por_id, data_aplicacao,
            numero_dose, dose_quantidade, dose_unidade, lote, retifica_id
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT (id) DO NOTHING`,
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT DO NOTHING`,
         [
           vacinacao.id, vacinacao.animalId, vacinaIdPorCodigo[vacinacao.vacinaCodigo], vacinacao.aplicadoPorId,
           dataPassada(vacinacao.diasDesdeAplicacao), vacinacao.numeroDose, vacinacao.doseQuantidade,
@@ -800,7 +807,7 @@ async function seed() {
         "procedimento",
         `INSERT INTO procedimento (
            id, animal_id, tipo_procedimento_id, executado_por_id, data, descricao, resultado, retifica_id
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (id) DO NOTHING`,
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT DO NOTHING`,
         [
           procedimento.id, procedimento.animalId, tipoProcedimentoIdPorCodigo[procedimento.tipoProcedimentoCodigo],
           procedimento.executadoPorId, dataPassada(procedimento.diasDesde), procedimento.descricao,
@@ -815,7 +822,7 @@ async function seed() {
            id, animal_id, prescrito_por_id, medicamento_id, data_inicio,
            data_fim_prevista, frequencia_aplicada, unidade_frequencia, dose_quantidade,
            dose_unidade, via_administracao, status, retifica_id
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) ON CONFLICT (id) DO NOTHING`,
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) ON CONFLICT DO NOTHING`,
         [
           prescricao.id, prescricao.animalId, prescricao.prescritoPorId, prescricao.medicamentoId,
           dataPassada(prescricao.diasDesdeInicio), dataFutura(prescricao.diasAteFim),
@@ -959,7 +966,7 @@ async function seed() {
       await registrar(
         "resultado_processo",
         `INSERT INTO resultado_processo (id, processo_id, resultado_laboratorial_id, data_resultado, observacoes, retifica_id, registrado_por_id)
-         VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (id) DO NOTHING`,
+         VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING`,
         [resultado.id, resultado.processoId, resultadoLaboratorialIdPorCodigo[resultado.resultadoCodigo],
           dataPassada(resultado.diasDesde), resultado.observacoes, resultado.retificaId, resultado.registradoPorId],
       );
