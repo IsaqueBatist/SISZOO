@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { useQueryClient } from '@tanstack/react-query'
-import { formatarData, formatarDataHora, formatarHora, hojeIso } from '@/features/ocorrencias/utils/datas'
+import { formatarData, formatarDataHora, hojeIso } from '@/features/ocorrencias/utils/datas'
 import { mensagemDeRegraDaApi, statusHttpDoErro } from '@/lib/erroApi'
 import { buscarProcessoPorId } from '../api/processosApi'
 import {
@@ -35,9 +35,11 @@ interface CardResultadoProcessoProps {
 // vigente passar a positivo), mas a T37 não oferece correção nesta tela.
 const RESULTADO_QUE_NOTIFICA = 'positivo'
 
-// "2026-05-20T14:32:07.12" -> "20/05/2026 14:32" (LocalDateTime de Itu, sem fuso)
+// "2026-05-20T14:32:07.12" -> "20/05/2026 14:32" (LocalDateTime de Itu, sem
+// fuso). Hora por slice, sem import novo: a linha de import de datas e a que
+// a fix/ficha-completa-seed-fuso troca (hojeEmItu), e mexer nela conflitava.
 function formatarDataHoraNotificacao(valor: string): string {
-  return `${formatarData(valor)} ${formatarHora(valor.slice(11))}`
+  return `${formatarData(valor)} ${valor.slice(11, 16)}`
 }
 
 // T35-16 (#37): situação do e-mail ao munícipe num resultado positivo.
