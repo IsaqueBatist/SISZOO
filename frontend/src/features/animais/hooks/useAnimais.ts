@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import {
+  enviarAnexoAnimal,
+  listarAnexosAnimal,
   alterarStatusBaia,
   atualizarAnimal,
   atualizarBaia,
@@ -80,6 +82,23 @@ function invalidarAnimaisEBaias(queryClient: QueryClient) {
 // status em memória. Key própria, distinta de `['baias', { ativa: true }]`
 // (dropdown de filtro em /animais), mas invalidada junto por compartilhar o
 // prefixo `['baias']`.
+// F2-007 / RF-A04: anexos do animal.
+export function useAnexosAnimalQuery(animalId: string) {
+  return useQuery({
+    queryKey: ['animais', 'anexos', animalId],
+    queryFn: () => listarAnexosAnimal(animalId),
+    enabled: Boolean(animalId),
+  })
+}
+
+export function useEnviarAnexoAnimalMutation(animalId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ arquivo, descricao }: { arquivo: File; descricao?: string }) => enviarAnexoAnimal(animalId, arquivo, descricao),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['animais', 'anexos', animalId] }),
+  })
+}
+
 export function useBaiasQuery() {
   return useQuery({
     queryKey: BAIAS_QUERY_KEY,

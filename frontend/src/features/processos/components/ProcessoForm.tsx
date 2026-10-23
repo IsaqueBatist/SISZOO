@@ -5,6 +5,8 @@ import { useFieldArray, useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { mensagemDeRegraDaApi, statusHttpDoErro } from '@/lib/erroApi'
+import { aplicarMascaraAoDigitar, formatarCep, formatarCpf, formatarTelefone } from '@/lib/mascaras'
+import { buscarEnderecoPorCep } from '@/lib/viaCep'
 import { AmostraAnimalCard, type AmostraErros } from './AmostraAnimalCard'
 import './ProcessoForm.css'
 import { hojeEmItu } from '@/lib/datas'
@@ -48,6 +50,8 @@ function valoresVazios(): ProcessoFormValues {
     dataAbertura: hojeEmItu(),
     doenca: '',
     laboratorio: '',
+    galNumero: '',
+    sinanNumero: '',
     responsavel: {
       nome: '',
       cpf: '',
@@ -105,6 +109,8 @@ function paraRequisicao(valores: ProcessoFormValues): CriarProcessoRequest {
     dataAbertura: valores.dataAbertura,
     doenca: valores.doenca,
     laboratorio: valores.laboratorio,
+    galNumero: textoOuIndefinido(valores.galNumero),
+    sinanNumero: textoOuIndefinido(valores.sinanNumero),
     ocorrenciaId: valores.vinculoDecisao === 'vinculado' ? valores.ocorrenciaId : null,
     responsavel: {
       nome: valores.responsavel.nome.trim(),
@@ -176,6 +182,24 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular }: ProcessoFormProp
   const { fields, append, remove } = useFieldArray({ control, name: 'amostras' })
 
   const valores = watch()
+
+  const [buscandoCepResponsavel, setBuscandoCepResponsavel] = useState(false)
+
+  // Diferente do denunciante de ocorrência sigilosa, o responsável de
+  // processo não tem esse conceito de sigilo — sempre pode disparar o
+  // ViaCEP. Só preenche endereço/bairro se ainda estiverem vazios.
+  async function aoMudarCepResponsavel(valorDigitado: string) {
+    const digitos = valorDigitado.replace(/\D/g, '')
+    if (digitos.length !== 8) return
+
+    setBuscandoCepResponsavel(true)
+    const endereco = await buscarEnderecoPorCep(valorDigitado)
+    setBuscandoCepResponsavel(false)
+    if (!endereco) return
+
+    if (!getValues('responsavel.endereco')) setValue('responsavel.endereco', endereco.logradouro)
+    if (!getValues('responsavel.bairroResidencial')) setValue('responsavel.bairroResidencial', endereco.bairro)
+  }
 
   function aplicarVinculoDaUrl() {
     if (!ocorrenciaDaUrl) return
@@ -434,6 +458,34 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular }: ProcessoFormProp
                 </select>
                 {errors.laboratorio && <span className="err">{errors.laboratorio.message}</span>}
               </div>
+              <div className="field">
+                <label htmlFor="proc-gal">Nº GAL</label>
+                <input
+                  id="proc-gal"
+                  className={`input mono${errors.galNumero ? ' error' : ''}`}
+                  type="text"
+                  maxLength={40}
+                  placeholder="Protocolo no GAL (opcional)"
+                  {...register('galNumero')}
+                />
+                {errors.galNumero ? (
+                  <span className="err">{errors.galNumero.message}</span>
+                ) : (
+                  <span className="hint">Registro manual; sem integração com o sistema estadual.</span>
+                )}
+              </div>
+              <div className="field">
+                <label htmlFor="proc-sinan">Nº SINAN</label>
+                <input
+                  id="proc-sinan"
+                  className={`input mono${errors.sinanNumero ? ' error' : ''}`}
+                  type="text"
+                  maxLength={40}
+                  placeholder="Notificação no SINAN (opcional)"
+                  {...register('sinanNumero')}
+                />
+                {errors.sinanNumero && <span className="err">{errors.sinanNumero.message}</span>}
+              </div>
               <div className="field full">
                 <label htmlFor="proc-observacoes">Observações</label>
                 <textarea id="proc-observacoes" className="textarea" {...register('observacoes')} />
@@ -467,7 +519,13 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular }: ProcessoFormProp
               </div>
               <div className="field">
                 <label htmlFor="resp-cpf">CPF</label>
-                <input id="resp-cpf" className="input mono" type="text" placeholder="000.000.000-00" {...register('responsavel.cpf')} />
+                <input
+                  id="resp-cpf"
+                  className="input mono"
+                  type="text"
+                  placeholder="000.000.000-00"
+                  {...register('responsavel.cpf', { onChange: aplicarMascaraAoDigitar(formatarCpf) })}
+                />
                 {errors.responsavel?.cpf && <span className="err">{errors.responsavel.cpf.message}</span>}
               </div>
               <div className="field">
@@ -476,8 +534,8 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular }: ProcessoFormProp
                   id="resp-telefone"
                   className="input mono"
                   type="text"
-                  placeholder="(11) 9 0000-0000"
-                  {...register('responsavel.telefone')}
+                  placeholder="(11) 90000-0000"
+                  {...register('responsavel.telefone', { onChange: aplicarMascaraAoDigitar(formatarTelefone) })}
                 />
                 {errors.responsavel?.telefone && <span className="err">{errors.responsavel.telefone.message}</span>}
               </div>
@@ -488,8 +546,20 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular }: ProcessoFormProp
               </div>
               <div className="field">
                 <label htmlFor="resp-cep">CEP</label>
-                <input id="resp-cep" className="input mono" type="text" placeholder="00000-000" {...register('responsavel.cep')} />
+                <input
+                  id="resp-cep"
+                  className="input mono"
+                  type="text"
+                  placeholder="00000-000"
+                  {...register('responsavel.cep', {
+                    onChange: (evento) => {
+                      aplicarMascaraAoDigitar(formatarCep)(evento)
+                      void aoMudarCepResponsavel(evento.target.value)
+                    },
+                  })}
+                />
                 {errors.responsavel?.cep && <span className="err">{errors.responsavel.cep.message}</span>}
+                {buscandoCepResponsavel && <span className="subtitle">Buscando CEP…</span>}
               </div>
               <div className="field full">
                 <label htmlFor="resp-endereco">Endereço</label>

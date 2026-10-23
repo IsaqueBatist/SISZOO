@@ -21,11 +21,13 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Notificacao de resultado positivo (regra 19, DER; T34-4). Chamado so
+ * Notificacao de resultado positivo ou inconclusivo ao municipe (RN10 do TG,
+ * F2-014; {@link ResultadosNotificaveis}). Chamado so
  * pelo {@code NotificacaoResultadoListener}, depois do commit da escrita —
  * nunca na transacao que grava o resultado (ela nao pode ficar presa
  * esperando SMTP).
@@ -44,11 +46,6 @@ import java.util.concurrent.CompletableFuture;
 public class NotificacaoResultadoService {
 
     static final String TEMPLATE_EMAIL = "email/resultado-processo";
-
-    // Duplicada de ProcessoSanitarioService.RESULTADO_QUE_NOTIFICA (privada
-    // la, mesmo criterio do front em CardResultadoProcesso.tsx): so positivo
-    // tem notificacao a reenviar.
-    private static final String RESULTADO_QUE_NOTIFICA = "positivo";
 
     private static final Logger log = LoggerFactory.getLogger(NotificacaoResultadoService.class);
 
@@ -98,7 +95,7 @@ public class NotificacaoResultadoService {
         ProcessoSanitario processo = processoRepository.findById(processoId)
                 .orElseThrow(ProcessoNaoEncontradoException::new);
         if (processo.getResultadoLaboratorial() == null
-                || !RESULTADO_QUE_NOTIFICA.equals(processo.getResultadoLaboratorial().getCodigo())) {
+                || !ResultadosNotificaveis.notifica(processo.getResultadoLaboratorial().getCodigo())) {
             throw new ReenvioNotificacaoNaoPermitidoException();
         }
         if (processo.getDataNotificacaoMunicipe() != null) {
@@ -118,6 +115,9 @@ public class NotificacaoResultadoService {
         Map<String, Object> variaveis = new HashMap<>();
         variaveis.put("nome", responsavel.getNome());
         variaveis.put("protocolo", processo.getProtocolo());
+        // RN10 (F2-014): o template descreve o resultado vigente (positivo ou
+        // inconclusivo) em minusculas, no meio da frase.
+        variaveis.put("resultado", descricaoResultado(processo));
         UUID processoId = processo.getId();
         String protocolo = processo.getProtocolo();
         CompletableFuture<Void> envio;
@@ -158,8 +158,18 @@ public class NotificacaoResultadoService {
         }
     }
 
+    // Nome do catalogo em minusculas ("positivo", "inconclusivo"); sem resultado
+    // vigente (so nos testes unitarios) cai em "registrado".
+    private static String descricaoResultado(ProcessoSanitario processo) {
+        if (processo.getResultadoLaboratorial() == null || processo.getResultadoLaboratorial().getNome() == null) {
+            return "registrado";
+        }
+        return processo.getResultadoLaboratorial().getNome().toLowerCase(Locale.ROOT);
+    }
+
     // Mock: nao ha endereco real configurado para a Vigilancia Epidemiologica
-    // de Itu (docs/decisoes/T37.md). So registra a intencao no log.
+    // de Itu (docs/decisoes/T37.md). So registra a intencao no log. Pendencia
+    // documentada no TG (RN10, trabalho futuro).
     private void notificarVigilanciaEpidemiologica(ProcessoSanitario processo) {
         log.info("[MOCK] notificacao a Vigilancia Epidemiologica de Itu seria enviada para o processo {}",
                 processo.getProtocolo());

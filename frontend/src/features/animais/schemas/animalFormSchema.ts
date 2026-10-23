@@ -71,6 +71,17 @@ export const animalFormSchema = z.object({
     .refine(naoEhFutura, 'A data de nascimento não pode ser futura.')
     .optional(),
   microchip: z.string().trim().max(30, 'Máximo de 30 caracteres.').optional(),
+  // F2-004 (RF-A01/RN01): identificação complementar. A exigência de
+  // microchip para a data de implantação e a unicidade da medalha ficam no
+  // backend (AnimalService), que devolve 422 por campo.
+  numeroMedalha: z.string().trim().max(30, 'Máximo de 30 caracteres.').optional(),
+  dataImplantacaoChip: z
+    .string()
+    .refine(naoEhFutura, 'A data de implantação não pode ser futura.')
+    .optional(),
+  procedencia: z.string().trim().max(200, 'Máximo de 200 caracteres.').optional(),
+  // F2-008 (RF-A05): laudo exigido pelo backend só na transição para eutanásia.
+  laudoEutanasia: z.string().trim().max(4000, 'Máximo de 4000 caracteres.').optional(),
   esterilizado: z.boolean(),
   dataEsterilizacao: z
     .string()

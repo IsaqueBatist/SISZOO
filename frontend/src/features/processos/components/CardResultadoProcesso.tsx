@@ -18,7 +18,7 @@ import {
   useRegistrarResultadoMutation,
 } from '../hooks/useProcessos'
 
-// Depois de lançar um positivo nesta tela, o e-mail sai em segundo plano
+// Depois de lançar um resultado notificável nesta tela, o e-mail sai em segundo plano
 // (depois do commit, T37/T35): por alguns segundos dataNotificacaoMunicipe
 // ainda vem nula. Em vez de acusar "NÃO notificado" na hora, a tela consulta
 // o processo de novo por um tempo (o envio tem timeouts SMTP de 5 s).
@@ -35,10 +35,13 @@ interface CardResultadoProcessoProps {
   acompanhamentoEnvio?: AcompanhamentoEnvio
 }
 
-// Regra 19 (DER, revisão 2026-10-17): só positivo notifica o município —
-// inconclusivo deixou de notificar. Dispara inclusive por correção (se o
-// vigente passar a positivo), mas a T37 não oferece correção nesta tela.
-const RESULTADO_QUE_NOTIFICA = 'positivo'
+// RN10 do TG (F2-014, 22/10/2026): Positivo e Inconclusivo notificam o
+// munícipe por e-mail — mesmo critério de ResultadosNotificaveis no backend.
+// Dispara inclusive por correção (se o vigente passar a um deles), mas a T37
+// não oferece correção nesta tela.
+const RESULTADOS_QUE_NOTIFICAM = ['positivo', 'inconclusivo']
+// T35-15: só o positivo é definitivo (não se corrige) e pede confirmação.
+const RESULTADO_DEFINITIVO = 'positivo'
 
 // "2026-05-20T14:32:07.12" -> "20/05/2026 14:32" (LocalDateTime de Itu, sem
 // fuso). Hora por slice, sem import novo: a linha de import de datas e a que
@@ -47,7 +50,7 @@ function formatarDataHoraNotificacao(valor: string): string {
   return `${formatarData(valor)} ${valor.slice(11, 16)}`
 }
 
-// T35-16 (#37): situação do e-mail ao munícipe num resultado positivo. T35
+// T35-16 (#37): situação do e-mail ao munícipe num resultado notificável (positivo ou inconclusivo). T35
 // (pendência de reenvio): sem data e sem envio em curso, quem pode escrever
 // no processo vê um botão para tentar de novo — bloqueado pelo backend
 // (422) se a notificação já tiver sido confirmada nesse meio tempo.
@@ -147,9 +150,9 @@ export function CardResultadoProcesso({
   const queryClient = useQueryClient()
   const { data: catalogos } = useCatalogosProcessoQuery()
 
-  const positivo = processo.resultado?.codigo === RESULTADO_QUE_NOTIFICA
+  const notifica = RESULTADOS_QUE_NOTIFICAM.includes(processo.resultado?.codigo ?? '')
   const temEmail = Boolean(processo.responsavel?.email)
-  const aguardandoEnvio = acompanhandoEnvio && positivo && temEmail && !processo.dataNotificacaoMunicipe
+  const aguardandoEnvio = acompanhandoEnvio && notifica && temEmail && !processo.dataNotificacaoMunicipe
 
   // Consulta o processo até a data do envio aparecer ou o prazo acabar; aí o
   // aviso passa a "notificado" ou a "NÃO notificado".
@@ -191,7 +194,7 @@ export function CardResultadoProcesso({
         desfechoAnimal: dados.desfechoAnimal || undefined,
       })
       setPendente(null)
-      if (dados.resultado === RESULTADO_QUE_NOTIFICA) setAcompanhandoEnvio(true)
+      if (RESULTADOS_QUE_NOTIFICAM.includes(dados.resultado)) setAcompanhandoEnvio(true)
     } catch (falha) {
       setPendente(null)
       if (statusHttpDoErro(falha) === 422) {
@@ -212,7 +215,7 @@ export function CardResultadoProcesso({
   }
 
   function onSubmit(dados: RegistrarResultadoFormValues) {
-    if (dados.resultado === RESULTADO_QUE_NOTIFICA) {
+    if (dados.resultado === RESULTADO_DEFINITIVO) {
       setCienteDefinitivo(false)
       setPendente(dados)
       return
@@ -259,7 +262,7 @@ export function CardResultadoProcesso({
               <div>{processo.desfechoAnimal ? processo.desfechoAnimal.nome : '—'}</div>
             </div>
           </div>
-          {positivo && (
+          {notifica && (
             <AvisoNotificacao
               processo={processo}
               enviando={aguardandoEnvio}

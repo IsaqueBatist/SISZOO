@@ -73,6 +73,7 @@ const Configuracoes = lazy(() =>
 const Usuarios = lazy(() =>
   import('@/features/usuarios/components/Usuarios').then((m) => ({ default: m.Usuarios })),
 )
+const Logs = lazy(() => import('@/features/auditoria/components/Logs').then((m) => ({ default: m.Logs })))
 
 function CarregandoRota() {
   return (
@@ -133,6 +134,7 @@ export function AppRoutes() {
               <Route path="/configuracoes" element={<Configuracoes />} />
               <Route element={<RotaAdmin />}>
                 <Route path="/usuarios" element={<Usuarios />} />
+                <Route path="/logs" element={<Logs />} />
               </Route>
               <Route path="*" element={<EmConstrucao />} />
             </Route>

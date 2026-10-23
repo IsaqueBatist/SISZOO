@@ -130,6 +130,7 @@ class EmailServiceIT extends AbstractIntegrationTest {
         Map<String, Object> variaveis = new HashMap<>();
         variaveis.put("nome", "<script>alert(1)</script> Ana");
         variaveis.put("protocolo", "007/2026");
+        variaveis.put("resultado", "positivo");
         String html = emailTemplateService.renderizarHtml("email/resultado-processo", variaveis);
         String texto = emailTemplateService.renderizarTexto("email/resultado-processo", variaveis);
 

@@ -8,6 +8,7 @@ import { AbaHistorico } from './AbaHistorico'
 import { AbaMedicamentos } from './AbaMedicamentos'
 import { AbaProcedimentos } from './AbaProcedimentos'
 import { AbaVacinas } from './AbaVacinas'
+import { AnexosAnimal } from './AnexosAnimal'
 import './FichaAnimal.css'
 import { badgeDeEspecie, badgeDeStatus } from '../utils/statusBadge'
 import { useAnimalQuery } from '../hooks/useAnimais'
@@ -161,6 +162,24 @@ export function FichaAnimal() {
                 <span className="v mono">{animal.microchip ?? '—'}</span>
               </div>
               <div className="kv-row">
+                <span className="k">Implantação do chip</span>
+                <span className="v">{animal.dataImplantacaoChip ? formatarDataBR(animal.dataImplantacaoChip) : '—'}</span>
+              </div>
+              <div className="kv-row">
+                <span className="k">Medalha</span>
+                <span className="v mono">{animal.numeroMedalha ?? '—'}</span>
+              </div>
+              <div className="kv-row">
+                <span className="k">Procedência</span>
+                <span className="v">{animal.procedencia ?? '—'}</span>
+              </div>
+              {animal.statusCodigo === 'obito_eutanasia' && (
+                <div className="kv-row">
+                  <span className="k">Laudo de eutanásia</span>
+                  <span className="v">{animal.laudoEutanasia ?? '— (não informado)'}</span>
+                </div>
+              )}
+              <div className="kv-row">
                 <span className="k">Espécie</span>
                 <span className="v">{animal.especieNome}</span>
               </div>
@@ -206,6 +225,9 @@ export function FichaAnimal() {
               </div>
             </div>
           </div>
+
+          {/* F2-007 / RF-A04: documentos e fotos do animal (Quadro 69). */}
+          <AnexosAnimal animalId={id} podeEscrever={podeEscrever} />
         </div>
 
         <div className="right-panel">
@@ -243,7 +265,7 @@ export function FichaAnimal() {
                 {tab === 'medicamentos' && (
                   <AbaMedicamentos animalId={id} onRegistroCriado={handleRegistroCriado} />
                 )}
-                {tab === 'exames' && <AbaExames />}
+                {tab === 'exames' && <AbaExames animalId={id} onRegistroCriado={handleRegistroCriado} />}
               </div>
             </div>
           </div>

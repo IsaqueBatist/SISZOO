@@ -130,6 +130,9 @@ export interface OcorrenciasFiltro {
   tipo?: TipoOcorrencia
   status?: StatusOcorrencia
   q?: string
+  // F2-010 (RF-E02): período da data de abertura (AAAA-MM-DD, dias inclusivos)
+  de?: string
+  ate?: string
   pagina: number
   tamanho: number
 }

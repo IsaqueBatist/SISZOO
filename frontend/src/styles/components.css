@@ -175,6 +175,50 @@
 .alert.success { border-color: var(--color-success); background: var(--color-success-bg); }
 .alert.success .bullet { background: var(--color-success); }
 
+/* ===== Menu de perfil (topbar) ===== */
+.menu-perfil {
+  position: relative;
+}
+.menu-perfil-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 220px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-2);
+  z-index: 20;
+}
+.menu-perfil-header {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-2);
+}
+.menu-perfil-nome { font-weight: 600; font-size: 13px; color: var(--color-text-primary); }
+.menu-perfil-email {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin: 2px 0 8px;
+  word-break: break-all;
+}
+.menu-perfil-item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: none;
+}
+.menu-perfil-item:hover { background: var(--color-bg); text-decoration: none; }
+
 /* ===== Badge ===== */
 .badge {
   display: inline-flex; align-items: center; gap: 4px;

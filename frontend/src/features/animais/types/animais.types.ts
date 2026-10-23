@@ -34,6 +34,11 @@ export interface Animal {
   criadoPorNome: string
   criadoEm: string
   atualizadoEm: string
+  // F2-004 / F2-008 (Fase 3 do TG): opcionais no tipo para não quebrar fixtures antigas
+  numeroMedalha?: string | null
+  dataImplantacaoChip?: string | null
+  procedencia?: string | null
+  laudoEutanasia?: string | null
 }
 
 export interface CatalogoItem {
@@ -47,6 +52,22 @@ export interface CatalogosAnimal {
   status: CatalogoItem[]
   motivosEntrada: CatalogoItem[]
   tiposBaia: CatalogoItem[]
+  // F2-007 / RF-A04: catálogos do registro de exame (aditivos; opcionais para fixtures antigas)
+  tiposExame?: CatalogoItem[]
+  laboratorios?: CatalogoItem[]
+}
+
+// F2-007 / RF-A04 — espelha com.siszoo.animais.dto.AnexoAnimalResponse.
+export interface AnexoAnimal {
+  id: string
+  animalId: string
+  nome: string
+  mimeType: string
+  tamanho: number
+  descricao: string | null
+  criadoPorId: string | null
+  criadoPorNome: string | null
+  criadoEm: string
 }
 
 // Espelha com.siszoo.animais.dto.BaiaResponse.
@@ -107,4 +128,8 @@ export interface AnimalRequest {
   baiaId?: string
   fotoUrl?: string
   observacoes?: string
+  numeroMedalha?: string
+  dataImplantacaoChip?: string
+  procedencia?: string
+  laudoEutanasia?: string
 }

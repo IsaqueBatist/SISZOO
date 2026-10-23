@@ -267,10 +267,12 @@ class BaiaControllerIT extends AbstractIntegrationTest {
     }
 
     private void criarAnimalNaBaia(String baiaId, String statusCodigo) {
+        // F2-008: o destino obito_eutanasia exige o laudo do responsavel tecnico.
+        String laudo = "obito_eutanasia".equals(statusCodigo) ? "Laudo de teste: quadro irreversivel" : null;
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Animal Teste", "canino", "macho", null, null, null, null, null, null, null,
                 fixture.microchipUnico(), false, null, statusCodigo, "resgate", fixture.agora(),
-                UUID.fromString(baiaId), null, null);
+                UUID.fromString(baiaId), null, null, null, null, null, laudo);
 
         given()
                 .contentType(ContentType.JSON)

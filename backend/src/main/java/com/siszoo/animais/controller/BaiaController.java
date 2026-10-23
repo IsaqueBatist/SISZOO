@@ -3,6 +3,7 @@ package com.siszoo.animais.controller;
 import java.util.UUID;
 
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -50,20 +51,22 @@ public class BaiaController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('GESTAO_ANIMAIS:escrita')")
-    public BaiaResponse criar(@Valid @RequestBody CriarBaiaRequest request) {
-        return baiaService.criar(request);
+    public BaiaResponse criar(Authentication authentication, @Valid @RequestBody CriarBaiaRequest request) {
+        return baiaService.criar(request, usuarioId(authentication));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('GESTAO_ANIMAIS:escrita')")
-    public BaiaResponse atualizar(@PathVariable UUID id, @Valid @RequestBody AtualizarBaiaRequest request) {
-        return baiaService.atualizar(id, request);
+    public BaiaResponse atualizar(Authentication authentication, @PathVariable UUID id,
+            @Valid @RequestBody AtualizarBaiaRequest request) {
+        return baiaService.atualizar(id, request, usuarioId(authentication));
     }
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAuthority('GESTAO_ANIMAIS:escrita')")
-    public BaiaResponse alterarStatus(@PathVariable UUID id, @Valid @RequestBody AtualizarStatusBaiaRequest request) {
-        return baiaService.alterarStatus(id, request);
+    public BaiaResponse alterarStatus(Authentication authentication, @PathVariable UUID id,
+            @Valid @RequestBody AtualizarStatusBaiaRequest request) {
+        return baiaService.alterarStatus(id, request, usuarioId(authentication));
     }
 
     /**
@@ -73,7 +76,11 @@ public class BaiaController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('GESTAO_ANIMAIS:exclusao')")
-    public BaiaResponse desativar(@PathVariable UUID id) {
-        return baiaService.desativar(id);
+    public BaiaResponse desativar(Authentication authentication, @PathVariable UUID id) {
+        return baiaService.desativar(id, usuarioId(authentication));
+    }
+
+    private static UUID usuarioId(Authentication authentication) {
+        return UUID.fromString(authentication.getName());
     }
 }

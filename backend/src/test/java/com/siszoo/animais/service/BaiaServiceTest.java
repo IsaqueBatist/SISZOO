@@ -5,12 +5,14 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 import java.util.UUID;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,6 +27,9 @@ import com.siszoo.animais.mapper.BaiaMapper;
 import com.siszoo.animais.repository.AnimalRepository;
 import com.siszoo.animais.repository.BaiaRepository;
 import com.siszoo.animais.repository.TipoBaiaRepository;
+import com.siszoo.usuarios.entity.Usuario;
+import com.siszoo.usuarios.repository.UsuarioRepository;
+import com.siszoo.usuarios.service.AuditoriaEventoService;
 
 @ExtendWith(MockitoExtension.class)
 class BaiaServiceTest {
@@ -41,8 +46,24 @@ class BaiaServiceTest {
     @Mock
     private BaiaMapper baiaMapper;
 
+    @Mock
+    private UsuarioRepository usuarioRepository;
+
+    @Mock
+    private AuditoriaEventoService auditoriaEventoService;
+
     @InjectMocks
     private BaiaService baiaService;
+
+    private static final UUID USUARIO_ID = UUID.randomUUID();
+
+    // RNF10 (F2-078): toda escrita resolve o autor da auditoria.
+    @BeforeEach
+    void autorDaAuditoria() {
+        Usuario usuario = new Usuario();
+        usuario.setId(USUARIO_ID);
+        lenient().when(usuarioRepository.findById(USUARIO_ID)).thenReturn(Optional.of(usuario));
+    }
 
     @Test
     void deveMarcarComoNaoSuperlotadaQuandoOcupacaoAbaixoDaCapacidade() {
@@ -55,7 +76,7 @@ class BaiaServiceTest {
         when(baiaMapper.toResponse(any(), eq(3L), eq(false)))
                 .thenReturn(new BaiaResponse(id, "Baia", "interna", "Interna", (short) 5, null, true, null, 3L, false));
 
-        BaiaResponse response = baiaService.atualizar(id, atualizacao("interna", (short) 5));
+        BaiaResponse response = baiaService.atualizar(id, atualizacao("interna", (short) 5), USUARIO_ID);
 
         assertThat(response.ocupacaoAtual()).isEqualTo(3L);
         assertThat(response.superlotada()).isFalse();
@@ -72,7 +93,7 @@ class BaiaServiceTest {
         when(baiaMapper.toResponse(any(), eq(2L), eq(true)))
                 .thenReturn(new BaiaResponse(id, "Baia", "interna", "Interna", (short) 2, null, true, null, 2L, true));
 
-        BaiaResponse response = baiaService.atualizar(id, atualizacao("interna", (short) 2));
+        BaiaResponse response = baiaService.atualizar(id, atualizacao("interna", (short) 2), USUARIO_ID);
 
         assertThat(response.superlotada()).isTrue();
     }
@@ -88,7 +109,7 @@ class BaiaServiceTest {
         when(baiaMapper.toResponse(any(), eq(3L), eq(true)))
                 .thenReturn(new BaiaResponse(id, "Baia", "interna", "Interna", (short) 2, null, true, null, 3L, true));
 
-        BaiaResponse response = assertDoesNotThrow(() -> baiaService.atualizar(id, atualizacao("interna", (short) 2)));
+        BaiaResponse response = assertDoesNotThrow(() -> baiaService.atualizar(id, atualizacao("interna", (short) 2), USUARIO_ID));
 
         assertThat(response.superlotada()).isTrue();
         verify(baiaRepository).save(baia);

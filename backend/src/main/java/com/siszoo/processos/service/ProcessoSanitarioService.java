@@ -120,9 +120,10 @@ public class ProcessoSanitarioService {
     // catalogo nao e um resultado lancavel.
     private static final String RESULTADO_SEM_RESULTADO = "aguardando";
 
-    // Regra 19 (DER, revisao 2026-10-17): so positivo notifica o municipe.
-    // Tambem e o resultado definitivo, que nao se corrige (T35-15).
-    private static final String RESULTADO_QUE_NOTIFICA = "positivo";
+    // Resultado definitivo, que nao se corrige (T35-15, trigger V21). A
+    // notificacao ao municipe e criterio separado (RN10, F2-014: positivo e
+    // inconclusivo) — ver ResultadosNotificaveis.
+    private static final String RESULTADO_DEFINITIVO = "positivo";
 
     // Unico campo do evento de auditoria do envio da notificacao (T35-16).
     private static final String CAMPO_NOTIFICACAO_AUDITORIA = "dataNotificacaoMunicipe";
@@ -230,6 +231,9 @@ public class ProcessoSanitarioService {
         processo.setCid(doenca.getCid());
         processo.setLaboratorio(laboratorio);
         processo.setObservacoes(request.observacoes());
+        // F2-012: numeros GAL/SINAN registrados manualmente (RF-B01; sem integracao, 3.5.2).
+        processo.setGalNumero(normalizarNumeroExterno(request.galNumero()));
+        processo.setSinanNumero(normalizarNumeroExterno(request.sinanNumero()));
         // DER regra 18: contato humano em qualquer amostra torna o processo urgente.
         processo.setUrgente(request.amostras().stream().anyMatch(AmostraAnimalRequest::contatoHumano));
         processo.setCriadoPor(autor);
@@ -479,17 +483,24 @@ public class ProcessoSanitarioService {
         if (desfecho != null) {
             processo.setDesfechoAnimal(desfecho);
         }
+        // RN10 (F2-014): positivo e inconclusivo notificam o municipe. Um novo
+        // lancamento notificavel (ex.: inconclusivo corrigido para positivo) e
+        // uma nova notificacao: a data do envio anterior e zerada para que o
+        // aceite deste envio seja gravado (registrarNotificacaoMunicipe e
+        // idempotente so dentro de um mesmo lancamento).
+        boolean notifica = ResultadosNotificaveis.notifica(resultado.getCodigo());
+        if (notifica) {
+            processo.reiniciarNotificacaoMunicipe();
+        }
         processoRepository.saveAndFlush(processo);
 
         auditoriaEventoService.registrar(autor, AcaoAuditoria.ATUALIZACAO, ENTIDADE_AUDITORIA, id, antes,
                 toSnapshot(processo));
-        // Ponto unico de gravacao do resultado: regra 19 (DER, revisao
-        // 2026-10-17) — so positivo notifica, inclusive por correcao (ex.:
-        // negativo -> positivo). O envio roda fora desta transacao, depois do
-        // commit (NotificacaoResultadoListener). Como o positivo e definitivo
-        // (resultadoACorrigir, T35-15), so um lancamento positivo existe por
-        // processo: a notificacao sai no maximo uma vez (#37).
-        if (RESULTADO_QUE_NOTIFICA.equals(resultado.getCodigo())) {
+        // Ponto unico de gravacao do resultado. O envio roda fora desta
+        // transacao, depois do commit (NotificacaoResultadoListener). O envio
+        // de um mesmo lancamento nao se repete (#37); a Vigilancia
+        // Epidemiologica continua mockada (pendencia documentada no TG).
+        if (notifica) {
             eventPublisher.publishEvent(new ResultadoLancadoEvent(id));
         }
         return toResponse(processo);
@@ -519,7 +530,7 @@ public class ProcessoSanitarioService {
         if (resultadoProcessoRepository.existsByRetificaId(retificaId)) {
             throw new RegistroJaRetificadoException();
         }
-        if (RESULTADO_QUE_NOTIFICA.equals(anterior.getResultadoLaboratorial().getCodigo())) {
+        if (RESULTADO_DEFINITIVO.equals(anterior.getResultadoLaboratorial().getCodigo())) {
             throw new ResultadoPositivoDefinitivoException();
         }
         return anterior;
@@ -553,6 +564,15 @@ public class ProcessoSanitarioService {
                 .toList();
     }
 
+    // F2-012: GAL/SINAN sao texto livre opcional (sem espacos nas pontas; vazio = null).
+    private static String normalizarNumeroExterno(String valor) {
+        if (valor == null) {
+            return null;
+        }
+        String limpo = valor.trim();
+        return limpo.isEmpty() ? null : limpo;
+    }
+
     private ProcessoSanitarioResponse toResponse(ProcessoSanitario processo) {
         ResponsavelProcessoResponse responsavel = responsavelRepository.findByProcessoId(processo.getId())
                 .map(ProcessoSanitarioService::toResponsavelResponse)
@@ -577,7 +597,9 @@ public class ProcessoSanitarioService {
                 processo.getDataResultado(),
                 catalogoDeDesfecho(processo),
                 resultadosDe(processo),
-                processo.getDataNotificacaoMunicipe());
+                processo.getDataNotificacaoMunicipe(),
+                processo.getGalNumero(),
+                processo.getSinanNumero());
     }
 
     // Historico em ordem de cadeia: o original e, a seguir, cada correcao da

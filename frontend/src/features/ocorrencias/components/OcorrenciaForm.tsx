@@ -5,6 +5,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { mensagemDeRegraDaApi, statusHttpDoErro } from '@/lib/erroApi'
+import { aplicarMascaraAoDigitar, formatarCep, formatarCpf, formatarTelefone } from '@/lib/mascaras'
+import { buscarEnderecoPorCep } from '@/lib/viaCep'
 import { AnexoInvalidoError, MAXIMO_ANEXOS, validarAnexo } from '../utils/anexoOcorrencia'
 import './OcorrenciaForm.css'
 import { ocorrenciaFormSchema, TIPOS_OCORRENCIA_VALORES, type OcorrenciaFormValues } from '../schemas/ocorrenciaFormSchema'
@@ -29,6 +31,7 @@ import { formatarHora } from '../utils/datas'
 import { formatarProtocoloOcorrencia } from '../utils/protocolo'
 import { useAtualizarOcorrenciaMutation, useCriarOcorrenciaMutation } from '../hooks/useOcorrencias'
 import { useAnexosPendentes } from '../hooks/useAnexosPendentes'
+import { useSugestoesBairroQuery } from '../hooks/useSugestoesBairro'
 import { AvisoAnexosPendentes } from './AvisoAnexosPendentes'
 
 const DENUNCIANTE_VAZIO = { nome: '', cpf: '', telefone: '', email: '', cep: '', endereco: '', bairroResidencial: '' }
@@ -206,6 +209,31 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
   })
 
   const valores = watch()
+
+  // Sugestão de preenchimento (datalist nativo) com bairros já usados em
+  // ocorrências existentes — reduz grafias divergentes do mesmo bairro sem
+  // travar o campo (continua texto livre) nem exigir catálogo no backend.
+  // Falha ao carregar não afeta o formulário: o campo segue editável.
+  const { data: bairrosConhecidos } = useSugestoesBairroQuery()
+
+  const [buscandoCepDenunciante, setBuscandoCepDenunciante] = useState(false)
+
+  // Não dispara em ocorrência sigilosa: dado do denunciante não pode ir a um
+  // serviço de terceiro (ViaCEP) nesse caso. Só preenche endereço/bairro se
+  // ainda estiverem vazios — nunca sobrescreve o que o usuário já digitou.
+  async function aoMudarCepDenunciante(valorDigitado: string) {
+    if (valores.sigilosa) return
+    const digitos = valorDigitado.replace(/\D/g, '')
+    if (digitos.length !== 8) return
+
+    setBuscandoCepDenunciante(true)
+    const endereco = await buscarEnderecoPorCep(valorDigitado)
+    setBuscandoCepDenunciante(false)
+    if (!endereco) return
+
+    if (!getValues('denunciante.endereco')) setValue('denunciante.endereco', endereco.logradouro)
+    if (!getValues('denunciante.bairroResidencial')) setValue('denunciante.bairroResidencial', endereco.bairro)
+  }
 
   useEffect(() => {
     let cancelado = false
@@ -500,8 +528,14 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
                     className={`input${errors.bairro ? ' error' : ''}`}
                     type="text"
                     placeholder="Ex: Vila Esperança"
+                    list="bairros-conhecidos"
                     {...register('bairro')}
                   />
+                  <datalist id="bairros-conhecidos">
+                    {(bairrosConhecidos ?? []).map((bairro) => (
+                      <option key={bairro} value={bairro} />
+                    ))}
+                  </datalist>
                   {errors.bairro && <span className="err">{errors.bairro.message}</span>}
                 </div>
                 <div className="field">
@@ -633,7 +667,14 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
                   </div>
                   <div className="field">
                     <label htmlFor="den-cpf">CPF</label>
-                    <input id="den-cpf" className="input mono" type="text" placeholder="000.000.000-00" {...register('denunciante.cpf')} />
+                    <input
+                      id="den-cpf"
+                      className="input mono"
+                      type="text"
+                      placeholder="000.000.000-00"
+                      {...register('denunciante.cpf', { onChange: aplicarMascaraAoDigitar(formatarCpf) })}
+                    />
+                    {errors.denunciante?.cpf && <span className="err">{errors.denunciante.cpf.message}</span>}
                   </div>
                   <div className="field">
                     <label htmlFor="den-telefone">Telefone</label>
@@ -641,17 +682,32 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
                       id="den-telefone"
                       className="input mono"
                       type="text"
-                      placeholder="(11) 9 0000-0000"
-                      {...register('denunciante.telefone')}
+                      placeholder="(11) 90000-0000"
+                      {...register('denunciante.telefone', { onChange: aplicarMascaraAoDigitar(formatarTelefone) })}
                     />
+                    {errors.denunciante?.telefone && <span className="err">{errors.denunciante.telefone.message}</span>}
                   </div>
                   <div className="field">
                     <label htmlFor="den-email">E-mail</label>
                     <input id="den-email" className="input" type="email" placeholder="exemplo@email.com" {...register('denunciante.email')} />
+                    {errors.denunciante?.email && <span className="err">{errors.denunciante.email.message}</span>}
                   </div>
                   <div className="field">
                     <label htmlFor="den-cep">CEP</label>
-                    <input id="den-cep" className="input mono" type="text" placeholder="00000-000" {...register('denunciante.cep')} />
+                    <input
+                      id="den-cep"
+                      className="input mono"
+                      type="text"
+                      placeholder="00000-000"
+                      {...register('denunciante.cep', {
+                        onChange: (evento) => {
+                          aplicarMascaraAoDigitar(formatarCep)(evento)
+                          void aoMudarCepDenunciante(evento.target.value)
+                        },
+                      })}
+                    />
+                    {errors.denunciante?.cep && <span className="err">{errors.denunciante.cep.message}</span>}
+                    {buscandoCepDenunciante && <span className="subtitle">Buscando CEP…</span>}
                   </div>
                   <div className="field">
                     <label htmlFor="den-endereco">Endereço residencial</label>
@@ -693,7 +749,13 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
                   </div>
                   <div className="field">
                     <label htmlFor="dcd-cpf">CPF</label>
-                    <input id="dcd-cpf" className="input mono" type="text" placeholder="000.000.000-00" {...register('denunciado.cpf')} />
+                    <input
+                      id="dcd-cpf"
+                      className="input mono"
+                      type="text"
+                      placeholder="000.000.000-00"
+                      {...register('denunciado.cpf', { onChange: aplicarMascaraAoDigitar(formatarCpf) })}
+                    />
                   </div>
                   <div className="field full">
                     <label htmlFor="dcd-endereco">Endereço</label>
@@ -711,8 +773,8 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
                       id="dcd-telefone"
                       className="input mono"
                       type="text"
-                      placeholder="(11) 9 0000-0000"
-                      {...register('denunciado.telefone')}
+                      placeholder="(11) 90000-0000"
+                      {...register('denunciado.telefone', { onChange: aplicarMascaraAoDigitar(formatarTelefone) })}
                     />
                   </div>
                   <div className="field">

@@ -71,6 +71,38 @@ export interface CriarProcedimentoRequest {
   retificaId?: string
 }
 
+// F2-007 / RF-A04 — espelha com.siszoo.animais.clinico.dto.ExameResponse.
+export interface Exame {
+  id: string
+  animalId: string
+  tipoExameCodigo: string
+  tipoExameNome: string
+  laboratorioCodigo: string | null
+  laboratorioNome: string | null
+  solicitadoPorId: string | null
+  solicitadoPorNome: string | null
+  dataSolicitacao: string
+  dataResultado: string | null
+  resultado: string | null
+  observacoes: string | null
+  retificaId: string | null
+  retificadoPorId: string | null
+  statusRegistro: StatusRegistroClinico
+  criadoEm: string
+}
+
+// Espelha com.siszoo.animais.clinico.dto.CriarExameRequest.
+export interface CriarExameRequest {
+  animalId: string
+  tipoExame: string
+  laboratorio?: string
+  dataSolicitacao: string
+  dataResultado?: string
+  resultado?: string
+  observacoes?: string
+  retificaId?: string
+}
+
 // Espelha com.siszoo.animais.clinico.dto.PrescricaoResponse.
 export interface Prescricao {
   id: string

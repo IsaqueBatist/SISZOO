@@ -1,23 +1,48 @@
 import { z } from 'zod'
+import { cepValido, cpfValido, emailValido, telefoneValido } from '@/lib/mascaras'
 import { MAXIMO_ANEXOS } from '../utils/anexoOcorrencia'
 import type { TipoOcorrencia } from '../types/ocorrencias.types'
 
 export const TIPOS_OCORRENCIA_VALORES: TipoOcorrencia[] = ['zoonose', 'morcegos', 'irregular', 'agressivo', 'outros']
 
+// Campos opcionais: a validação de formato só roda quando preenchidos — um
+// campo vazio continua válido. Os valores viajam MASCARADOS até a API (ver
+// frontend/src/lib/mascaras.ts).
+const campoCpf = z
+  .string()
+  .trim()
+  .optional()
+  .refine((valor) => !valor || cpfValido(valor), 'CPF inválido.')
+const campoTelefone = z
+  .string()
+  .trim()
+  .optional()
+  .refine((valor) => !valor || telefoneValido(valor), 'Telefone inválido.')
+const campoEmail = z
+  .string()
+  .trim()
+  .optional()
+  .refine((valor) => !valor || emailValido(valor), 'E-mail inválido.')
+const campoCep = z
+  .string()
+  .trim()
+  .optional()
+  .refine((valor) => !valor || cepValido(valor), 'CEP inválido.')
+
 const denuncianteSchema = z.object({
   nome: z.string().trim().optional(),
-  cpf: z.string().trim().optional(),
-  telefone: z.string().trim().optional(),
-  email: z.string().trim().optional(),
-  cep: z.string().trim().optional(),
+  cpf: campoCpf,
+  telefone: campoTelefone,
+  email: campoEmail,
+  cep: campoCep,
   endereco: z.string().trim().optional(),
   bairroResidencial: z.string().trim().optional(),
 })
 
 const denunciadoSchema = z.object({
   nome: z.string().trim().optional(),
-  cpf: z.string().trim().optional(),
-  telefone: z.string().trim().optional(),
+  cpf: campoCpf,
+  telefone: campoTelefone,
   endereco: z.string().trim().optional(),
   observacoes: z.string().trim().optional(),
 })

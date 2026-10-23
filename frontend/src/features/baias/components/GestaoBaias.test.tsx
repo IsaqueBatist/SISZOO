@@ -201,6 +201,21 @@ describe('GestaoBaias', () => {
     expect(await screen.findByText('Baia Interditada')).toBeInTheDocument()
   })
 
+  it('mostra o avatar do animal residente (Rex, sem fotoUrl) linkando para a ficha dele', async () => {
+    renderGestaoBaias()
+
+    const cardBaia3 = (await screen.findByText('Baia 3')).closest('.baia-card') as HTMLElement
+    const linkResidente = within(cardBaia3).getByRole('link', { name: 'Rex' })
+    expect(linkResidente).toHaveAttribute('href', '/animais/b2c3d4e5-0000-0000-0000-000000000001')
+  })
+
+  it('baia sem nenhum animal sob custódia mostra "Vazia"', async () => {
+    renderGestaoBaias()
+
+    const cardBaia10 = (await screen.findByText('Baia 10')).closest('.baia-card') as HTMLElement
+    expect(within(cardBaia10).getByText('Vazia')).toBeInTheDocument()
+  })
+
   it('o link "Ver animais" aponta para a listagem de animais filtrada pela baia', async () => {
     renderGestaoBaias()
 

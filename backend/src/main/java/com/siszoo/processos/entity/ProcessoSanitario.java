@@ -144,13 +144,20 @@ public class ProcessoSanitario {
         this.statusProcesso = StatusProcesso.COM_RESULTADO;
     }
 
-    // Idempotente: a primeira data aceita fica (o positivo e definitivo, entao
-    // so ha uma notificacao por processo). Devolve se gravou.
+    // Idempotente dentro de um mesmo lancamento: a primeira data aceita fica
+    // (o envio de um lancamento nao se repete). Devolve se gravou.
     public boolean registrarNotificacaoMunicipe(LocalDateTime aceitoEm) {
         if (this.dataNotificacaoMunicipe != null) {
             return false;
         }
         this.dataNotificacaoMunicipe = aceitoEm;
         return true;
+    }
+
+    // RN10 (F2-014): um novo lancamento notificavel (ex.: inconclusivo corrigido
+    // para positivo) e uma nova notificacao — a data do envio anterior deixa de
+    // valer ate o SMTP aceitar o novo e-mail.
+    public void reiniciarNotificacaoMunicipe() {
+        this.dataNotificacaoMunicipe = null;
     }
 }

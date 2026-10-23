@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw'
 import type { AlertaVacinalAnimal, AlertaVacinalItem } from '@/features/alertas/types/alertas.types'
-import type { Animal, AnimalRequest, Baia, BaiaRequest, CatalogosAnimal } from '@/features/animais/types/animais.types'
+import type { Animal, AnimalRequest, AnexoAnimal, Baia, BaiaRequest, CatalogosAnimal } from '@/features/animais/types/animais.types'
+import type { CriarExameRequest, Exame } from '@/features/animais/types/historico.types'
 import { VACINAS, TIPOS_PROCEDIMENTO } from '@/features/animais/utils/catalogoClinico'
 import { DIAS_ANTECEDENCIA_ALERTA_VACINA, diasAteVencimento, hojeEmItu } from '@/features/animais/utils/regrasVacina'
 import { adicionarDiasIso, agoraEmItu } from '@/lib/datas'
@@ -17,6 +18,7 @@ import type {
   Vacinacao,
 } from '@/features/animais/types/historico.types'
 import type { LoginRequest, LoginResponse } from '@/features/auth/types/auth.types'
+import type { EventoAuditoria } from '@/features/auditoria/types/auditoria.types'
 import { API_BASE_URL } from '../lib/env'
 import { ocorrenciasHandlers } from './ocorrenciasHandlers'
 import { processosHandlers } from './processosHandlers'
@@ -565,6 +567,15 @@ const CATALOGOS_ANIMAIS_MOCK: CatalogosAnimal = {
     { codigo: 'entrega_voluntaria', nome: 'Entrega voluntária' },
     { codigo: 'apreensao', nome: 'Apreensão' },
   ],
+  tiposExame: [
+    { codigo: 'hemograma', nome: 'Hemograma' },
+    { codigo: 'raspado_pele', nome: 'Raspado de pele' },
+    { codigo: 'sorologia', nome: 'Sorologia' },
+  ],
+  laboratorios: [
+    { codigo: 'ial_sorocaba', nome: 'Instituto Adolfo Lutz - Sorocaba' },
+    { codigo: 'pasteur_sp', nome: 'Instituto Pasteur' },
+  ],
   tiposBaia: [
     { codigo: 'canil', nome: 'Canil' },
     { codigo: 'gatil', nome: 'Gatil' },
@@ -903,6 +914,15 @@ function seedProcedimentosMock(): ProcedimentoMockInterno[] {
 
 let procedimentosMock: ProcedimentoMockInterno[] = seedProcedimentosMock()
 
+// F2-007 / RF-A04: exames e anexos do animal (vazios por padrão; os testes semeiam o que precisam).
+type ExameMockInterno = Omit<Exame, 'retificadoPorId' | 'statusRegistro'>
+let examesMock: ExameMockInterno[] = []
+let anexosAnimalMock: AnexoAnimal[] = []
+export function resetExamesEAnexosMock() {
+  examesMock = []
+  anexosAnimalMock = []
+}
+
 export function resetProcedimentosMock() {
   procedimentosMock = seedProcedimentosMock()
 }
@@ -964,6 +984,63 @@ let prescricoesMock: PrescricaoMockInterna[] = seedPrescricoesMock()
 
 export function resetPrescricoesMock() {
   prescricoesMock = seedPrescricoesMock()
+}
+
+// Alguns eventos "hoje", alguns "ontem", um mais antigo — exercita o
+// agrupamento por dia da tela de Logs (agruparPorDia.ts) sem precisar de
+// fixture dedicada em cada teste.
+function seedAuditoriaMock(): EventoAuditoria[] {
+  const agora = Date.now()
+  const HORA_MS = 60 * 60 * 1000
+  const DIA_MS = 24 * HORA_MS
+  return [
+    {
+      id: 'e5000000-0000-0000-0000-000000000001',
+      usuarioEmail: 'stephanie.lima@itu.sp.gov.br',
+      acao: 'LOGIN',
+      entidade: 'usuario',
+      entidadeId: 'a1b2c3d4-0000-0000-0000-000000000001',
+      ocorreuEm: new Date(agora - 1 * HORA_MS).toISOString(),
+    },
+    {
+      id: 'e5000000-0000-0000-0000-000000000002',
+      usuarioEmail: 'stephanie.lima@itu.sp.gov.br',
+      acao: 'CRIACAO',
+      entidade: 'vacinacao',
+      entidadeId: 'd1000000-0000-0000-0000-000000000001',
+      ocorreuEm: new Date(agora - 2 * HORA_MS).toISOString(),
+    },
+    {
+      id: 'e5000000-0000-0000-0000-000000000003',
+      usuarioEmail: 'paulo.henriques@itu.sp.gov.br',
+      acao: 'ATUALIZACAO',
+      entidade: 'usuario',
+      entidadeId: 'a1b2c3d4-0000-0000-0000-000000000002',
+      ocorreuEm: new Date(agora - DIA_MS - 3 * HORA_MS).toISOString(),
+    },
+    {
+      id: 'e5000000-0000-0000-0000-000000000004',
+      usuarioEmail: 'rafael.santos@itu.sp.gov.br',
+      acao: 'VISUALIZACAO',
+      entidade: 'ocorrencia',
+      entidadeId: 'h5000000-0000-0000-0000-000000000001',
+      ocorreuEm: new Date(agora - DIA_MS - 5 * HORA_MS).toISOString(),
+    },
+    {
+      id: 'e5000000-0000-0000-0000-000000000005',
+      usuarioEmail: 'ana.silva@itu.sp.gov.br',
+      acao: 'CRIACAO',
+      entidade: 'processo_sanitario',
+      entidadeId: 'h7000000-0000-0000-0000-000000000001',
+      ocorreuEm: new Date(agora - 3 * DIA_MS).toISOString(),
+    },
+  ]
+}
+
+let auditoriaMock: EventoAuditoria[] = seedAuditoriaMock()
+
+export function resetAuditoriaMock() {
+  auditoriaMock = seedAuditoriaMock()
 }
 
 function paginar<T>(itens: T[], pagina: number, tamanho: number) {
@@ -1359,6 +1436,67 @@ export const handlers = [
     return HttpResponse.json(paginar(filtrados, pagina, tamanho))
   }),
 
+  // F2-007 / RF-A04: exames (registro imutável, correção por retificaId).
+  http.get(`${API_BASE_URL}/exames`, ({ request }) => {
+    const url = new URL(request.url)
+    const animalId = url.searchParams.get('animalId')
+    const pagina = Number(url.searchParams.get('pagina') ?? '0')
+    const tamanho = Number(url.searchParams.get('tamanho') ?? '20')
+    const filtrados = derivarStatusRegistro(examesMock).filter((e) => !animalId || e.animalId === animalId)
+    return HttpResponse.json(paginar(filtrados, pagina, tamanho))
+  }),
+
+  http.post(`${API_BASE_URL}/exames`, async ({ request }) => {
+    const body = (await request.json()) as CriarExameRequest
+    const novo: ExameMockInterno = {
+      id: crypto.randomUUID(),
+      animalId: body.animalId,
+      tipoExameCodigo: body.tipoExame,
+      tipoExameNome: CATALOGOS_ANIMAIS_MOCK.tiposExame?.find((item) => item.codigo === body.tipoExame)?.nome ?? body.tipoExame,
+      laboratorioCodigo: body.laboratorio ?? null,
+      laboratorioNome: CATALOGOS_ANIMAIS_MOCK.laboratorios?.find((item) => item.codigo === body.laboratorio)?.nome ?? null,
+      solicitadoPorId: usuariosMock[0].id,
+      solicitadoPorNome: `${usuariosMock[0].nome} ${usuariosMock[0].sobrenome}`,
+      dataSolicitacao: body.dataSolicitacao,
+      dataResultado: body.dataResultado ?? null,
+      resultado: body.resultado ?? null,
+      observacoes: body.observacoes ?? null,
+      retificaId: body.retificaId ?? null,
+      criadoEm: agoraEmItu(),
+    }
+    examesMock = [...examesMock, novo]
+    const [comStatus] = derivarStatusRegistro([novo])
+    return HttpResponse.json(comStatus, { status: 201 })
+  }),
+
+  // F2-007 / RF-A04: anexos do animal (metadados; download devolve bytes).
+  http.get(`${API_BASE_URL}/animais/:id/anexos`, ({ params }) => {
+    return HttpResponse.json(anexosAnimalMock.filter((a) => a.animalId === params.id))
+  }),
+
+  http.post(`${API_BASE_URL}/animais/:id/anexos`, async ({ params, request }) => {
+    const formulario = await request.formData()
+    const arquivo = formulario.get('arquivo') as File | null
+    if (!arquivo) return HttpResponse.json({ mensagem: 'Anexo invalido' }, { status: 422 })
+    const novo: AnexoAnimal = {
+      id: crypto.randomUUID(),
+      animalId: String(params.id),
+      nome: arquivo.name,
+      mimeType: arquivo.type || 'application/octet-stream',
+      tamanho: arquivo.size,
+      descricao: (formulario.get('descricao') as string | null) ?? null,
+      criadoPorId: usuariosMock[0].id,
+      criadoPorNome: `${usuariosMock[0].nome} ${usuariosMock[0].sobrenome}`,
+      criadoEm: agoraEmItu(),
+    }
+    anexosAnimalMock = [...anexosAnimalMock, novo]
+    return HttpResponse.json(novo, { status: 201 })
+  }),
+
+  http.get(`${API_BASE_URL}/animais/:id/anexos/:anexoId`, () => {
+    return new HttpResponse(new Uint8Array([0x89, 0x50, 0x4e, 0x47]), { headers: { 'Content-Type': 'image/png' } })
+  }),
+
   http.post(`${API_BASE_URL}/procedimentos`, async ({ request }) => {
     const body = (await request.json()) as CriarProcedimentoRequest
     const novo: ProcedimentoMockInterno = {
@@ -1415,6 +1553,29 @@ export const handlers = [
     prescricoesMock = [...prescricoesMock, novo]
     const [comStatus] = derivarStatusRegistro([novo])
     return HttpResponse.json(comStatus, { status: 201 })
+  }),
+
+  // F2-027: catálogo de filtros (toda a trilha) e filtros de servidor na listagem.
+  http.get(`${API_BASE_URL}/auditoria/filtros`, () =>
+    HttpResponse.json({
+      acoes: [...new Set(auditoriaMock.map((e) => e.acao))].sort(),
+      entidades: [...new Set(auditoriaMock.map((e) => e.entidade))].sort(),
+      usuarios: [...new Set(auditoriaMock.map((e) => e.usuarioEmail).filter((e): e is string => Boolean(e)))].sort(),
+      modulos: ['USUARIOS_ACESSO', 'GESTAO_ANIMAIS', 'OCORRENCIAS_DENUNCIAS', 'PROCESSOS_SANITARIOS', 'RELATORIOS'],
+    }),
+  ),
+
+  http.get(`${API_BASE_URL}/auditoria`, ({ request }) => {
+    const url = new URL(request.url)
+    const pagina = Number(url.searchParams.get('pagina') ?? '0')
+    const tamanho = Number(url.searchParams.get('tamanho') ?? '20')
+    const acao = url.searchParams.get('acao')
+    const entidade = url.searchParams.get('entidade')
+    const usuarioEmail = url.searchParams.get('usuarioEmail')
+    const filtrados = auditoriaMock.filter(
+      (e) => (!acao || e.acao === acao) && (!entidade || e.entidade === entidade) && (!usuarioEmail || e.usuarioEmail === usuarioEmail),
+    )
+    return HttpResponse.json(paginar(filtrados, pagina, tamanho))
   }),
 
   http.get(`${API_BASE_URL}/medicamentos`, ({ request }) => {

@@ -67,7 +67,7 @@ describe('ProcessoDetalhe — dados', () => {
     expect(dados.getByText('Animal recolhido em via pública')).toBeInTheDocument()
 
     const responsavel = cardDe('Responsável / Munícipe')
-    for (const valor of ['Maria da Conceição', '123.456.789-00', '(11) 99999-0000', 'maria@exemplo.com', '13300-000',
+    for (const valor of ['Maria da Conceição', '123.456.789-09', '(11) 99999-0000', 'maria@exemplo.com', '13300-000',
       'Rua das Flores, 10', 'Centro', 'Vila Nova']) {
       expect(responsavel.getByText(valor)).toBeInTheDocument()
     }
@@ -367,9 +367,10 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
     ).toBeInTheDocument()
   })
 
-  // Revisão de 2026-10-17 (regra 19, DER): inconclusivo deixou de notificar
-  // — registra direto, sem confirmação nem aviso de notificação.
-  it('resultado inconclusivo: NÃO notifica mais — sem confirmação, registra direto', async () => {
+  // RN10 do TG (F2-014, 22/10/2026): inconclusivo volta a notificar o munícipe.
+  // Não é definitivo (T35-15 vale só para o positivo): registra sem a
+  // confirmação, mas mostra o envio da notificação em andamento.
+  it('resultado inconclusivo: notifica — sem confirmação, registra direto e acompanha o envio', async () => {
     const user = userEvent.setup()
     renderDetalhe(PROCESSO_PENDENTE_ID, AGENTE)
     await esperarDetalhe('045/2026')
@@ -380,7 +381,9 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
 
     expect(screen.queryByText('Confirmar lançamento do resultado')).not.toBeInTheDocument()
     expect(await cardDe('Resultado Laboratorial').findByText('Inconclusivo', { selector: 'span' })).toBeInTheDocument()
-    expect(cardDe('Resultado Laboratorial').queryByText(/notifica/i)).not.toBeInTheDocument()
+    expect(
+      await cardDe('Resultado Laboratorial').findByText('Enviando a notificação por e-mail ao munícipe…'),
+    ).toBeInTheDocument()
   })
 
   it('confirmação de positivo pode ser cancelada sem enviar nada', async () => {

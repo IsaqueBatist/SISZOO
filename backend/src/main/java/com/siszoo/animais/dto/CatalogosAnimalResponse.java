@@ -6,5 +6,8 @@ public record CatalogosAnimalResponse(
         List<CatalogoItemResponse> especies,
         List<CatalogoItemResponse> status,
         List<CatalogoItemResponse> motivosEntrada,
-        List<CatalogoItemResponse> tiposBaia) {
+        List<CatalogoItemResponse> tiposBaia,
+        // F2-007 / RF-A04: catalogos do registro de exame (aditivos).
+        List<CatalogoItemResponse> tiposExame,
+        List<CatalogoItemResponse> laboratorios) {
 }

@@ -1,12 +1,19 @@
-import { useEffect, useState } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '@/components/layout/Icon'
+import { Skeleton } from '@/components/layout/Skeleton'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import type { OcorrenciaResumo, StatusOcorrencia, TipoOcorrencia } from '../types/ocorrencias.types'
 import { badgeDeStatus, iconeDeTipo, labelDeTipo } from '../utils/statusBadge'
 import { formatarData } from '../utils/datas'
 import { formatarProtocoloOcorrencia, formatarProtocoloProcesso } from '../utils/protocolo'
 import { useOcorrenciasQuery } from '../hooks/useOcorrencias'
+
+// Lazy: isola o chunk do Recharts do carregamento inicial da tela de
+// Ocorrências — máquinas do CCZ têm ~2GB RAM (ver CLAUDE.md).
+const GraficoOcorrenciasPorBairro = lazy(() =>
+  import('./GraficoOcorrenciasPorBairro').then((m) => ({ default: m.GraficoOcorrenciasPorBairro })),
+)
 
 const TAMANHO_PAGINA = 20
 const LINHAS_SKELETON = [0, 1, 2, 3, 4]
@@ -33,8 +40,11 @@ export function Ocorrencias() {
   const [buscaDebounced, setBuscaDebounced] = useState('')
   const [tipoFiltro, setTipoFiltro] = useState('')
   const [statusFiltro, setStatusFiltro] = useState('')
+  // F2-010 (RF-E02): período da data de abertura, aplicado no servidor.
+  const [deFiltro, setDeFiltro] = useState('')
+  const [ateFiltro, setAteFiltro] = useState('')
   const [pagina, setPagina] = useState(0)
-  const [filtroAnterior, setFiltroAnterior] = useState({ busca: '', tipo: '', status: '' })
+  const [filtroAnterior, setFiltroAnterior] = useState({ busca: '', tipo: '', status: '', de: '', ate: '' })
 
   useEffect(() => {
     const timeout = setTimeout(() => setBuscaDebounced(busca.trim()), 300)
@@ -44,9 +54,13 @@ export function Ocorrencias() {
   // Reset da página ao mudar de filtro, ajustado durante a renderização (em
   // vez de um efeito) — mesmo padrão de Animais.tsx.
   const filtroMudou =
-    filtroAnterior.busca !== buscaDebounced || filtroAnterior.tipo !== tipoFiltro || filtroAnterior.status !== statusFiltro
+    filtroAnterior.busca !== buscaDebounced ||
+    filtroAnterior.tipo !== tipoFiltro ||
+    filtroAnterior.status !== statusFiltro ||
+    filtroAnterior.de !== deFiltro ||
+    filtroAnterior.ate !== ateFiltro
   if (filtroMudou) {
-    setFiltroAnterior({ busca: buscaDebounced, tipo: tipoFiltro, status: statusFiltro })
+    setFiltroAnterior({ busca: buscaDebounced, tipo: tipoFiltro, status: statusFiltro, de: deFiltro, ate: ateFiltro })
     setPagina(0)
   }
 
@@ -54,6 +68,8 @@ export function Ocorrencias() {
     tipo: (tipoFiltro || undefined) as TipoOcorrencia | undefined,
     status: (statusFiltro || undefined) as StatusOcorrencia | undefined,
     q: buscaDebounced || undefined,
+    de: deFiltro || undefined,
+    ate: ateFiltro || undefined,
     pagina,
     tamanho: TAMANHO_PAGINA,
   })
@@ -80,6 +96,10 @@ export function Ocorrencias() {
           </div>
         )}
       </div>
+
+      <Suspense fallback={<Skeleton width="100%" height={220} />}>
+        <GraficoOcorrenciasPorBairro />
+      </Suspense>
 
       <div className="filter-bar">
         <div className="search-input">
@@ -117,6 +137,24 @@ export function Ocorrencias() {
             </option>
           ))}
         </select>
+        <input
+          className="filter-select"
+          type="date"
+          aria-label="Abertura a partir de"
+          title="Abertura a partir de"
+          value={deFiltro}
+          max={ateFiltro || undefined}
+          onChange={(event) => setDeFiltro(event.target.value)}
+        />
+        <input
+          className="filter-select"
+          type="date"
+          aria-label="Abertura até"
+          title="Abertura até"
+          value={ateFiltro}
+          min={deFiltro || undefined}
+          onChange={(event) => setAteFiltro(event.target.value)}
+        />
       </div>
 
       {isError && (
