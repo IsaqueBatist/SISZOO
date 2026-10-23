@@ -8,6 +8,7 @@ import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.in;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 
@@ -91,8 +92,11 @@ class AuditoriaFiltrosIT extends AbstractIntegrationTest {
 
         Response usuarios = listar("?modulo=USUARIOS_ACESSO&tamanho=50");
         usuarios.then().statusCode(200);
+        // O modulo USUARIOS_ACESSO cobre usuario e preferencia_usuario; outros
+        // testes da suite podem ter gravado eventos de preferencias antes.
         List<String> entidadesUsuarios = usuarios.path("itens.entidade");
-        assertThat(entidadesUsuarios, everyItem(equalTo("usuario")));
+        assertThat(entidadesUsuarios, hasItem("usuario"));
+        assertThat(entidadesUsuarios, everyItem(in(List.of("usuario", "preferencia_usuario"))));
     }
 
     @Test
