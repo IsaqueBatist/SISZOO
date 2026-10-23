@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Icon, type IconName } from '@/components/layout/Icon'
+import { hojeEmItu } from '@/lib/datas'
 import { validarFiltro } from '../utils/filtroRelatorio'
 import type { FiltroRelatorio, JanelaOcupacao, TipoRelatorioInfo } from '../types/relatorios.types'
 
@@ -54,11 +55,13 @@ const INFO_VISUAL: Record<string, InfoVisualCard> = {
   },
 }
 
+// Último mês até hoje, em datas civis do fuso do CCZ (toISOString daria o dia
+// em UTC, que à noite em Itu já é o dia seguinte).
 function periodoPadrao() {
-  const fim = new Date()
-  const inicio = new Date()
-  inicio.setMonth(inicio.getMonth() - 1)
-  return { inicio: inicio.toISOString().slice(0, 10), fim: fim.toISOString().slice(0, 10) }
+  const fim = hojeEmItu()
+  const [ano, mes, dia] = fim.split('-').map(Number)
+  const inicio = new Date(Date.UTC(ano, mes - 2, dia)).toISOString().slice(0, 10)
+  return { inicio, fim }
 }
 
 interface CardRelatorioProps {
@@ -67,7 +70,7 @@ interface CardRelatorioProps {
 }
 
 export function CardRelatorio({ info, onGerar }: CardRelatorioProps) {
-  const anoAtual = new Date().getFullYear()
+  const anoAtual = Number(hojeEmItu().slice(0, 4))
   const periodo = periodoPadrao()
 
   const [ano, setAno] = useState(anoAtual)

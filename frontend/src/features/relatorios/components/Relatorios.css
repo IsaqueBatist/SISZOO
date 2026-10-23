@@ -1,13 +1,16 @@
 /* Portado de docs/prototipo/relatorios.html (bloco <style> da tela) */
 
+/* minmax(0, 1fr): as colunas não podem crescer além do contêiner por causa da
+   largura mínima dos inputs de data (em 1366 px a grade transbordava a tela).
+   Abaixo de 1440 px os dois inputs de data não cabem em três colunas. */
 .reports-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-4);
 }
-@media (max-width: 1200px) {
+@media (max-width: 1440px) {
   .reports-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 @media (max-width: 760px) {
@@ -52,6 +55,11 @@
   display: flex;
   gap: 8px;
   align-items: center;
+}
+
+.report-card .period-row > .input,
+.report-card .period-row > .select {
+  min-width: 0;
 }
 
 .report-card .period-row label {
