@@ -1,16 +1,7 @@
-/* Portado do <style> inline de docs/prototipo/dashboard.html (grid de KPIs +
-   grid de Alertas Críticos — os gráficos completos ficam para uma tarefa
-   futura). */
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-4);
-}
-@media (max-width: 1280px) {
-  .kpi-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
+/* Portado do <style> inline de docs/prototipo/dashboard.html (grid de Alertas
+   Críticos — os gráficos completos ficam para uma tarefa futura). A grade de
+   KPIs (.kpi-grid) é global, em styles/components.css, porque as pré-visualizações
+   de relatórios também a usam. */
 
 .alerts-grid {
   display: grid;
