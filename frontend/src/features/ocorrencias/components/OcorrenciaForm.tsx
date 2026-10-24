@@ -2,8 +2,17 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
+import { BannerRascunho } from '@/components/BannerRascunho'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import {
+  carregarArquivoRascunho,
+  removerArquivoRascunho,
+  removerArquivosDoRascunho,
+  salvarArquivoRascunho,
+  type DonoArquivoRascunho,
+  type ReferenciaArquivoRascunho,
+} from '@/lib/rascunhoDb'
 import { mensagemDeRegraDaApi, statusHttpDoErro } from '@/lib/erroApi'
 import { aplicarMascaraAoDigitar, formatarCep, formatarCpf, formatarTelefone } from '@/lib/mascaras'
 import { buscarEnderecoPorCep } from '@/lib/viaCep'
@@ -35,6 +44,9 @@ import { useSugestoesBairroQuery } from '../hooks/useSugestoesBairro'
 import { AvisoAnexosPendentes } from './AvisoAnexosPendentes'
 
 const DENUNCIANTE_VAZIO = { nome: '', cpf: '', telefone: '', email: '', cep: '', endereco: '', bairroResidencial: '' }
+
+const AVISO_ANEXO_SIGILOSO =
+  'Em ocorrência sigilosa os anexos não são guardados no rascunho: se a página for recarregada, anexe os arquivos de novo.'
 
 function valoresVazios(): OcorrenciaFormValues {
   return {
@@ -160,12 +172,22 @@ function paraAtualizacao(
   }
 }
 
-// LGPD: máquinas do CCZ podem ser compartilhadas. Se a ocorrência é
-// sigilosa (ou anônima), os dados do denunciante não são persistidos no
-// IndexedDB — ao restaurar o rascunho, o usuário precisa redigitá-los.
-function paraRascunho(valores: OcorrenciaFormValues): OcorrenciaFormValues {
-  if (!valores.sigilosa && !valores.anonima) return valores
-  return { ...valores, denunciante: { ...DENUNCIANTE_VAZIO } }
+// O que vai para o IndexedDB: igual aos valores do formulário, menos os
+// anexos, que entram como referência (id, nome, tamanho, tipo) ao arquivo
+// guardado na store 'arquivos'. O conteúdo nunca fica no rascunho de texto.
+type RascunhoOcorrenciaValores = Omit<OcorrenciaFormValues, 'anexos'> & {
+  anexos: ReferenciaArquivoRascunho[]
+}
+
+// T42: os dados do denunciante PASSAM a ser persistidos, inclusive em
+// ocorrência sigilosa — decisão dos dois autores, revertendo a "rev. 12 item 3"
+// (ver docs/decisoes/T42.md). Motivo: não perder o que foi digitado numa queda
+// de rede. Risco aceito: o dado fica em claro no disco de uma máquina
+// compartilhada até a submissão, o descarte, o logout ou a expiração de 7 dias.
+// Em denúncia anônima não há o que guardar: o próprio formulário limpa os
+// campos ao marcar a opção (handleAnonimaChange).
+function paraRascunho(valores: OcorrenciaFormValues, anexos: ReferenciaArquivoRascunho[]): RascunhoOcorrenciaValores {
+  return { ...valores, anexos }
 }
 
 interface OcorrenciaFormProps {
@@ -188,9 +210,36 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
 
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [anexoErro, setAnexoErro] = useState<string | null>(null)
-  const [rascunhoDisponivel, setRascunhoDisponivel] = useState<OcorrenciaFormValues | null>(null)
+  const [anexoAviso, setAnexoAviso] = useState<string | null>(null)
+  const [rascunhoDisponivel, setRascunhoDisponivel] = useState<RascunhoOcorrenciaValores | null>(null)
+  const [rascunhoSalvoEm, setRascunhoSalvoEm] = useState<number | null>(null)
   const [rascunhoMensagem, setRascunhoMensagem] = useState<string | null>(null)
   const [prontoParaAutoSalvar, setProntoParaAutoSalvar] = useState(false)
+
+  // T42: id na store 'arquivos' de cada anexo que está no formulário. Em ref
+  // porque só alimenta o que é gravado no rascunho; mudar não redesenha a tela.
+  const idsDosAnexos = useRef(new Map<File, string>())
+  const donoDosArquivos: DonoArquivoRascunho = { store: 'ocorrencias', chave: chaveRascunho }
+
+  // Referências dos anexos que realmente foram para o disco, na ordem do
+  // formulário. Anexo de ocorrência sigilosa e anexo que não caiu na cota não
+  // têm referência: ficam só em memória.
+  function referenciasDosAnexos(anexos: File[]): ReferenciaArquivoRascunho[] {
+    return anexos.flatMap((arquivo) => {
+      const id = idsDosAnexos.current.get(arquivo)
+      return id ? [{ id, nome: arquivo.name, tamanho: arquivo.size, tipo: arquivo.type }] : []
+    })
+  }
+
+  // O autosave disparado pelo `watch` calcula as referências no instante do
+  // evento, e a gravação do arquivo só termina depois dele. Sem reagendar, o
+  // salvamento pendente levaria a lista de referências de antes — por isso
+  // quem mexe nos arquivos chama isto ao terminar (o agendamento substitui o
+  // anterior da mesma chave).
+  function reagendarRascunho() {
+    const valores = getValues()
+    agendarSalvarRascunhoOcorrencia(paraRascunho(valores, referenciasDosAnexos(valores.anexos)), chaveRascunho)
+  }
 
   const {
     register,
@@ -237,9 +286,12 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
 
   useEffect(() => {
     let cancelado = false
-    carregarRascunhoOcorrencia<OcorrenciaFormValues>(chaveRascunho).then((valoresSalvos) => {
+    carregarRascunhoOcorrencia<RascunhoOcorrenciaValores>(chaveRascunho).then((registro) => {
       if (cancelado) return
-      if (valoresSalvos) setRascunhoDisponivel(valoresSalvos)
+      if (registro) {
+        setRascunhoDisponivel(registro.dados)
+        setRascunhoSalvoEm(registro.salvoEm)
+      }
       setProntoParaAutoSalvar(true)
     })
     return () => {
@@ -257,35 +309,60 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
     if (!prontoParaAutoSalvar) return
     const inscricao = watch((valoresAtuais) => {
       if (autosaveSuspenso.current) return
-      agendarSalvarRascunhoOcorrencia(paraRascunho(valoresAtuais as OcorrenciaFormValues), chaveRascunho)
+      const valores = valoresAtuais as OcorrenciaFormValues
+      agendarSalvarRascunhoOcorrencia(paraRascunho(valores, referenciasDosAnexos(valores.anexos)), chaveRascunho)
     })
     return () => inscricao.unsubscribe()
+    // referenciasDosAnexos só lê uma ref, não precisa recriar a assinatura.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prontoParaAutoSalvar, watch, chaveRascunho])
 
   // keepDefaultValues: na edição, "alterado" continua sendo em relação à
-  // ocorrência original, não ao rascunho restaurado.
-  function handleRestaurarRascunho() {
-    if (rascunhoDisponivel) reset(rascunhoDisponivel, { keepDefaultValues: true })
+  // ocorrência original, não ao rascunho restaurado. Os anexos voltam da store
+  // de arquivos, o que é assíncrono: o rascunho de texto só tem a referência.
+  async function handleRestaurarRascunho() {
+    if (!rascunhoDisponivel) return
+    const salvo = rascunhoDisponivel
     setRascunhoDisponivel(null)
+    setRascunhoSalvoEm(null)
+
+    const restaurados: File[] = []
+    idsDosAnexos.current = new Map()
+    for (const referencia of salvo.anexos) {
+      const blob = await carregarArquivoRascunho(user?.id ?? '', referencia.id)
+      if (!blob) continue
+      const arquivo = new File([blob], referencia.nome, { type: referencia.tipo })
+      restaurados.push(arquivo)
+      idsDosAnexos.current.set(arquivo, referencia.id)
+    }
+    reset({ ...salvo, anexos: restaurados }, { keepDefaultValues: true })
+    if (restaurados.length < salvo.anexos.length) {
+      setAnexoAviso('Alguns anexos do rascunho não foram encontrados e precisam ser anexados de novo.')
+    }
   }
 
   async function handleDescartarRascunho() {
     setRascunhoDisponivel(null)
+    setRascunhoSalvoEm(null)
     await removerRascunhoOcorrencia(chaveRascunho)
+    await removerArquivosDoRascunho(donoDosArquivos)
+    idsDosAnexos.current = new Map()
   }
 
   async function handleSalvarRascunhoAgora() {
-    await salvarRascunhoOcorrencia(paraRascunho(getValues()), chaveRascunho)
+    const valores = getValues()
+    await salvarRascunhoOcorrencia(paraRascunho(valores, referenciasDosAnexos(valores.anexos)), chaveRascunho)
     setRascunhoMensagem('Rascunho salvo.')
     setTimeout(() => setRascunhoMensagem(null), 3000)
   }
 
-  function handleArquivosAnexo(event: ChangeEvent<HTMLInputElement>) {
+  async function handleArquivosAnexo(event: ChangeEvent<HTMLInputElement>) {
     const arquivos = Array.from(event.target.files ?? [])
     event.target.value = ''
     if (arquivos.length === 0) return
 
     setAnexoErro(null)
+    setAnexoAviso(null)
     const atuais = getValues('anexos')
     if (atuais.length + arquivos.length > MAXIMO_ANEXOS) {
       setAnexoErro(`Máximo de ${MAXIMO_ANEXOS} anexos.`)
@@ -300,15 +377,54 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
     }
 
     setValue('anexos', [...atuais, ...arquivos], { shouldDirty: true })
+    await guardarAnexosNoRascunho(arquivos)
   }
 
-  function removerAnexo(indice: number) {
+  // Grava cada anexo UMA vez, aqui — fora do debounce do rascunho de texto.
+  // Ocorrência sigilosa não grava nada em disco (decisão da T42): o anexo pode
+  // ser a foto do local ou um documento do denunciante protegido.
+  async function guardarAnexosNoRascunho(arquivos: File[]) {
+    if (getValues('sigilosa')) {
+      setAnexoAviso(AVISO_ANEXO_SIGILOSO)
+      return
+    }
+    let algumFalhou = false
+    for (const arquivo of arquivos) {
+      const referencia = await salvarArquivoRascunho(user?.id ?? '', donoDosArquivos, arquivo)
+      if (referencia) idsDosAnexos.current.set(arquivo, referencia.id)
+      else algumFalhou = true
+    }
+    reagendarRascunho()
+    // Sem IndexedDB ou sem cota: o anexo segue no formulário e no envio, só não
+    // sobrevive a um recarregamento.
+    if (algumFalhou) setAnexoAviso('Um anexo não ficou salvo no rascunho, mas continua no formulário.')
+  }
+
+  // Marcar o sigilo depois de anexar não pode deixar resto no disco.
+  async function handleSigilosaChange(marcada: boolean, onChange: (valor: boolean) => void) {
+    onChange(marcada)
+    if (!marcada) return
+    const tinhaArquivos = idsDosAnexos.current.size > 0
+    idsDosAnexos.current = new Map()
+    await removerArquivosDoRascunho(donoDosArquivos)
+    reagendarRascunho()
+    if (tinhaArquivos) setAnexoAviso(AVISO_ANEXO_SIGILOSO)
+  }
+
+  async function removerAnexo(indice: number) {
     const atuais = getValues('anexos')
+    const removido = atuais[indice]
     setValue(
       'anexos',
       atuais.filter((_, i) => i !== indice),
       { shouldDirty: true },
     )
+    // Tirar o anexo da tela tira o arquivo do disco na hora.
+    const id = idsDosAnexos.current.get(removido)
+    if (!id) return
+    idsDosAnexos.current.delete(removido)
+    await removerArquivoRascunho(user?.id ?? '', id)
+    reagendarRascunho()
   }
 
   // D15, fase 1: um único POST /ocorrencias. Daqui em diante a ocorrência
@@ -329,6 +445,10 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
     autosaveSuspenso.current = true
     cancelarRascunhoAgendadoOcorrencia(chaveRascunho)
     await removerRascunhoOcorrencia(chaveRascunho)
+    // Os arquivos do rascunho saem aqui: daqui para frente quem guarda os que
+    // ainda não subiram é a pendência de anexos da D15, com outro ciclo de vida.
+    await removerArquivosDoRascunho(donoDosArquivos)
+    idsDosAnexos.current = new Map()
 
     if (dados.anexos.length === 0) {
       navigate(`/ocorrencias/${nova.id}`)
@@ -363,6 +483,8 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
     autosaveSuspenso.current = true
     cancelarRascunhoAgendadoOcorrencia(chaveRascunho)
     await removerRascunhoOcorrencia(chaveRascunho)
+    await removerArquivosDoRascunho(donoDosArquivos)
+    idsDosAnexos.current = new Map()
     navigate(`/ocorrencias/${original.id}`)
   }
 
@@ -432,20 +554,11 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
       )}
 
       {rascunhoDisponivel && (
-        <div className="alert info" role="alert">
-          <span className="bullet" />
-          <div className="alert-content">
-            Encontramos um rascunho salvo deste formulário.
-            <div className="flex gap-2" style={{ marginTop: 8 }}>
-              <button type="button" className="btn btn-sm btn-primary" onClick={handleRestaurarRascunho}>
-                Restaurar rascunho
-              </button>
-              <button type="button" className="btn btn-sm btn-ghost" onClick={handleDescartarRascunho}>
-                Descartar
-              </button>
-            </div>
-          </div>
-        </div>
+        <BannerRascunho
+          onRestaurar={() => void handleRestaurarRascunho()}
+          onDescartar={() => void handleDescartarRascunho()}
+          salvoEm={rascunhoSalvoEm}
+        />
       )}
 
       {submitError && (
@@ -585,7 +698,7 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
                           type="checkbox"
                           checked={field.value}
                           disabled={valores.anonima || (emEdicao && !ocorrencia.podeVerDenunciante)}
-                          onChange={(event) => field.onChange(event.target.checked)}
+                          onChange={(event) => void handleSigilosaChange(event.target.checked, field.onChange)}
                           aria-label="Ocorrência sigilosa"
                         />
                         <span className="slider" />
@@ -802,6 +915,7 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
                     <div className="alert-content">{anexoErro}</div>
                   </div>
                 )}
+                {anexoAviso && <span className="hint">{anexoAviso}</span>}
                 {valores.anexos.length === 0 && (
                   <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Nenhum anexo adicionado.</p>
                 )}
@@ -821,7 +935,7 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
                       type="button"
                       className="btn btn-ghost btn-sm btn-icon-only"
                       aria-label={`Remover ${arquivo.name}`}
-                      onClick={() => removerAnexo(indice)}
+                      onClick={() => void removerAnexo(indice)}
                     >
                       <Icon name="x" size={14} />
                     </button>

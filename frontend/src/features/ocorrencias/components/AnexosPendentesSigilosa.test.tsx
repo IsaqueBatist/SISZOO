@@ -46,7 +46,7 @@ function renderCadastroComo(usuarioId: string) {
 }
 
 describe('ocorrência sigilosa no IndexedDB', () => {
-  let conteudo: (store: string) => Record<string, unknown>
+  let conteudo: (store: string) => Promise<Record<string, unknown>>
 
   beforeEach(() => {
     conteudo = instalarIndexedDbEmMemoria().conteudo
@@ -60,7 +60,7 @@ describe('ocorrência sigilosa no IndexedDB', () => {
     vi.unstubAllGlobals()
   })
 
-  it('rascunho e pendência de anexos não guardam o denunciante, e a pendência não aparece para outro usuário', async () => {
+  it('o anexo da sigilosa não vai para o disco, e a pendência não aparece para outro usuário', async () => {
     const user = userEvent.setup()
     const { unmount } = renderCadastroComo(USUARIO_A)
 
@@ -71,20 +71,29 @@ describe('ocorrência sigilosa no IndexedDB', () => {
     await user.type(screen.getByLabelText(/^Bairro/i), 'Bairro Teste')
     await user.type(screen.getByLabelText(/Descrição da ocorrência/i), 'Descrição de teste para a ocorrência.')
 
-    // Rascunho (debounce): gravado, mas sem o denunciante.
-    await waitFor(() => expect(JSON.stringify(conteudo('ocorrencias')[`${USUARIO_A}:novo`])).toContain('Descrição de teste'))
-    expect(JSON.stringify(conteudo('ocorrencias'))).not.toContain(NOME_DENUNCIANTE)
-    expect(JSON.stringify(conteudo('ocorrencias'))).not.toContain(CPF_DENUNCIANTE)
+    // T42: o rascunho agora guarda o denunciante, inclusive na sigilosa
+    // (decisão dos dois autores, docs/decisoes/T42.md).
+    await waitFor(async () =>
+      expect(JSON.stringify((await conteudo('ocorrencias'))[`${USUARIO_A}:novo`])).toContain('Descrição de teste'),
+    )
+    expect(JSON.stringify(await conteudo('ocorrencias'))).toContain(NOME_DENUNCIANTE)
 
+    // Já o ANEXO da sigilosa não é gravado: pode ser a foto do local ou um
+    // documento do denunciante protegido.
     await user.upload(screen.getByLabelText('Adicionar anexo'), [new File(['a'], 'a.png', { type: 'image/png' })])
+    expect(await screen.findByText(/anexos não são guardados no rascunho/)).toBeInTheDocument()
+    expect(await conteudo('arquivos')).toEqual({})
+
     await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
     await screen.findByText(/Há anexos pendentes/)
 
-    // Depois do POST: só a pendência, com id, protocolo e arquivos.
-    const store = conteudo('ocorrencias')
+    // Depois do POST: só a pendência, com id, protocolo e arquivos — e nada do
+    // denunciante nela (D15 inalterada), nem resto na store de arquivos.
+    const store = await conteudo('ocorrencias')
     expect(Object.keys(store)).toEqual([`${USUARIO_A}:anexos-pendentes`])
     expect(Object.keys(store[`${USUARIO_A}:anexos-pendentes`] as object).sort()).toEqual(['anexos', 'ocorrenciaId', 'protocolo'])
     expect(JSON.stringify(store)).not.toContain(NOME_DENUNCIANTE)
+    expect(await conteudo('arquivos')).toEqual({})
 
     unmount()
     sessionStorage.clear()
@@ -93,5 +102,54 @@ describe('ocorrência sigilosa no IndexedDB', () => {
     const registrar = await screen.findByRole('button', { name: 'Registrar Ocorrência' })
     await waitFor(() => expect(registrar).toBeEnabled())
     expect(screen.queryByText(/Há anexos pendentes/)).not.toBeInTheDocument()
+  }, 15000)
+
+  it('ocorrência comum guarda o anexo e o devolve na restauração', async () => {
+    const user = userEvent.setup()
+    const { unmount } = renderCadastroComo(USUARIO_A)
+
+    await user.type(screen.getByLabelText(/Nome completo/i), 'Denunciante Comum')
+    await user.type(screen.getByLabelText(/^Bairro/i), 'Bairro Teste')
+    await user.upload(screen.getByLabelText('Adicionar anexo'), [new File(['conteudo'], 'laudo.png', { type: 'image/png' })])
+
+    await waitFor(async () => expect(Object.keys(await conteudo('arquivos'))).toHaveLength(1))
+    await waitFor(async () =>
+      expect(JSON.stringify((await conteudo('ocorrencias'))[`${USUARIO_A}:novo`])).toContain('laudo.png'),
+    )
+    // No rascunho de texto fica só a referência, nunca o conteúdo.
+    expect(JSON.stringify((await conteudo('ocorrencias'))[`${USUARIO_A}:novo`])).not.toContain('conteudo')
+
+    unmount()
+    renderCadastroComo(USUARIO_A)
+    await user.click(await screen.findByRole('button', { name: 'Restaurar rascunho' }))
+
+    expect(await screen.findByText('laudo.png')).toBeInTheDocument()
+  }, 15000)
+
+  it('remover o anexo apaga o arquivo do disco', async () => {
+    const user = userEvent.setup()
+    renderCadastroComo(USUARIO_A)
+
+    await user.type(screen.getByLabelText(/^Bairro/i), 'Bairro Teste')
+    await user.upload(screen.getByLabelText('Adicionar anexo'), [new File(['x'], 'remover.png', { type: 'image/png' })])
+    await waitFor(async () => expect(Object.keys(await conteudo('arquivos'))).toHaveLength(1))
+
+    await user.click(screen.getByRole('button', { name: 'Remover remover.png' }))
+
+    await waitFor(async () => expect(await conteudo('arquivos')).toEqual({}))
+  }, 15000)
+
+  it('marcar o sigilo depois de anexar apaga o arquivo já gravado', async () => {
+    const user = userEvent.setup()
+    renderCadastroComo(USUARIO_A)
+
+    await user.type(screen.getByLabelText(/^Bairro/i), 'Bairro Teste')
+    await user.upload(screen.getByLabelText('Adicionar anexo'), [new File(['x'], 'antes.png', { type: 'image/png' })])
+    await waitFor(async () => expect(Object.keys(await conteudo('arquivos'))).toHaveLength(1))
+
+    await user.click(screen.getByLabelText('Ocorrência sigilosa'))
+
+    await waitFor(async () => expect(await conteudo('arquivos')).toEqual({}))
+    expect(await screen.findByText(/anexos não são guardados no rascunho/)).toBeInTheDocument()
   }, 15000)
 })

@@ -25,6 +25,7 @@ vi.mock('../storage/rascunhoOcorrenciaStorage', async () => {
   }
 })
 
+import type { RegistroRascunho } from '@/lib/rascunhoDb'
 import { agendarSalvarRascunhoOcorrencia, carregarRascunhoOcorrencia } from '../storage/rascunhoOcorrenciaStorage'
 
 function renderForm() {
@@ -59,7 +60,7 @@ describe('OcorrenciaForm — autosave do rascunho', () => {
   })
 
   it('não agenda salvar o rascunho antes da checagem inicial terminar', async () => {
-    let resolverCarregamento: (valor: unknown) => void = () => {}
+    let resolverCarregamento: (valor: RegistroRascunho<unknown> | null) => void = () => {}
     vi.mocked(carregarRascunhoOcorrencia).mockImplementation(
       () => new Promise((resolve) => { resolverCarregamento = resolve }),
     )
@@ -108,7 +109,12 @@ describe('OcorrenciaForm — autosave do rascunho', () => {
     )
   })
 
-  it('não persiste os dados do denunciante no rascunho quando a ocorrência é sigilosa (LGPD)', async () => {
+  // T42: decisão dos dois autores, revertendo a "rev. 12 item 3" — o rascunho
+  // passa a guardar o denunciante mesmo em ocorrência sigilosa, para não perder
+  // o que foi digitado numa queda de rede. O risco aceito (dado em claro no
+  // disco de uma máquina compartilhada até a submissão, o descarte, o logout ou
+  // a expiração) está registrado em docs/decisoes/T42.md.
+  it('persiste os dados do denunciante no rascunho mesmo com a ocorrência sigilosa', async () => {
     vi.mocked(carregarRascunhoOcorrencia).mockResolvedValue(null)
 
     const user = userEvent.setup()
@@ -122,13 +128,15 @@ describe('OcorrenciaForm — autosave do rascunho', () => {
 
     await waitFor(() => expect(agendarSalvarRascunhoOcorrencia).toHaveBeenCalled())
     const chamadas = vi.mocked(agendarSalvarRascunhoOcorrencia).mock.calls
-    const ultimaComSigilo = chamadas.map(([valores]) => valores as { sigilosa: boolean; denunciante: { nome: string } }).findLast(
-      (valores) => valores.sigilosa,
-    )
-    expect(ultimaComSigilo?.denunciante.nome).toBe('')
+    const ultimaComSigilo = chamadas
+      .map(([valores]) => valores as { sigilosa: boolean; denunciante: { nome: string } })
+      .findLast((valores) => valores.sigilosa)
+    expect(ultimaComSigilo?.denunciante.nome).toBe('Fulano de Tal')
   })
 
-  it('não persiste os dados do denunciante no rascunho quando a denúncia é anônima (LGPD)', async () => {
+  // Em denúncia anônima não há o que guardar: o formulário limpa os campos ao
+  // marcar a opção, e o schema recusa o envio com dados do denunciante.
+  it('denúncia anônima continua sem dados do denunciante no rascunho', async () => {
     vi.mocked(carregarRascunhoOcorrencia).mockResolvedValue(null)
 
     const user = userEvent.setup()
@@ -145,5 +153,16 @@ describe('OcorrenciaForm — autosave do rascunho', () => {
       .findLast((valores) => valores.anonima)
     expect(ultimaAnonima).toBeDefined()
     expect(Object.values(ultimaAnonima!.denunciante).every((valor) => valor === '')).toBe(true)
+  })
+
+  it('o aviso de restauração mostra quando o rascunho foi salvo', async () => {
+    vi.mocked(carregarRascunhoOcorrencia).mockResolvedValue({
+      salvoEm: new Date('2026-10-24T22:42:00Z').getTime(),
+      dados: { bairro: 'Centro', anexos: [] },
+    })
+
+    renderForm()
+
+    expect(await screen.findByText('Salvo em 24/10/2026, 19:42.')).toBeInTheDocument()
   })
 })

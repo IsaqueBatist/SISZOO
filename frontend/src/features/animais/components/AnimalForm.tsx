@@ -1,5 +1,5 @@
 import { isAxiosError } from 'axios'
-import { useState, type ChangeEvent, type FormEvent } from 'react'
+import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm, type FieldErrors as RhfFieldErrors } from 'react-hook-form'
@@ -19,7 +19,7 @@ import {
   esterilizadoParaCastracao,
   type CastracaoOpcao,
 } from '../schemas/animalFormSchema'
-import { ImagemInvalidaError, comprimirImagem } from '../utils/comprimirImagem'
+import { ImagemInvalidaError, blobParaDataUri, comprimirImagem, dataUriParaBlob } from '../utils/comprimirImagem'
 import {
   agendarSalvarRascunhoAnimal,
   cancelarSalvamentoRascunhoAnimal,
@@ -29,7 +29,13 @@ import {
   salvarRascunhoAnimal,
 } from '../storage/rascunhoAnimalStorage'
 import { BannerRascunho } from '@/components/BannerRascunho'
-import type { ArmazenamentoRascunho } from '@/lib/rascunhoDb'
+import {
+  carregarArquivoRascunho,
+  removerArquivosDoRascunho,
+  salvarArquivoRascunho,
+  type ArmazenamentoRascunho,
+  type DonoArquivoRascunho,
+} from '@/lib/rascunhoDb'
 import { useRascunho } from '@/lib/useRascunho'
 import { useAtualizarAnimalMutation, useBaiasAtivasQuery, useCatalogosAnimaisQuery, useCriarAnimalMutation } from '../hooks/useAnimais'
 
@@ -97,9 +103,18 @@ interface RascunhoAnimalValores {
   motivoEntrada: string
   dataEntrada: string
   baiaId: string
-  fotoUrl: string
+  // T42: a foto NÃO vai mais aqui como data URI. O rascunho guarda só o id do
+  // arquivo na store 'arquivos', onde a imagem comprimida fica como Blob.
+  // Rascunhos gravados antes da T42 ainda têm `fotoUrl` preenchido; ele é
+  // ignorado na restauração (ver rascunhoParaValores).
+  fotoArquivoId?: string
   observacoes: string
 }
+
+// Valores iniciais do formulário. Diferem do rascunho só na foto: aqui ela é o
+// data URI que a API devolve e recebe (`fotoUrl`, String no DTO); no rascunho é
+// o id do arquivo guardado como Blob.
+type ValoresIniciaisAnimal = Omit<RascunhoAnimalValores, 'fotoArquivoId'> & { fotoUrl: string }
 
 // dataEntrada é LocalDateTime: o formulário só edita o dia. Se o dia não
 // mudou na edição, reenvia o valor original completo para não zerar a hora;
@@ -119,7 +134,7 @@ const ARMAZENAMENTO_RASCUNHO_ANIMAL: ArmazenamentoRascunho<RascunhoAnimalValores
   cancelarAgendado: (chave) => cancelarSalvamentoRascunhoAnimal(chave),
 }
 
-function valoresVazios(): RascunhoAnimalValores {
+function valoresVazios(): ValoresIniciaisAnimal {
   return {
     nome: '',
     especie: '',
@@ -147,7 +162,7 @@ function valoresVazios(): RascunhoAnimalValores {
   }
 }
 
-function valoresDeAnimal(animal: Animal): RascunhoAnimalValores {
+function valoresDeAnimal(animal: Animal): ValoresIniciaisAnimal {
   return {
     nome: animal.nome,
     especie: animal.especieCodigo,
@@ -176,9 +191,9 @@ function valoresDeAnimal(animal: Animal): RascunhoAnimalValores {
 }
 
 // Converte o valor do formulário (RHF, com número/undefined) para o formato
-// persistido em IndexedDB (RascunhoAnimalValores, todo em string) — o shape
-// exato não pode mudar, ou rascunhos já salvos por usuários ficam órfãos.
-function valoresParaRascunho(valores: AnimalFormUiValues): RascunhoAnimalValores {
+// persistido em IndexedDB (RascunhoAnimalValores, todo em string). A foto entra
+// como id do arquivo na store 'arquivos' — nunca o data URI (T42).
+function valoresParaRascunho(valores: AnimalFormUiValues, fotoArquivoId: string | null): RascunhoAnimalValores {
   return {
     nome: valores.nome,
     especie: valores.especie,
@@ -201,15 +216,17 @@ function valoresParaRascunho(valores: AnimalFormUiValues): RascunhoAnimalValores
     motivoEntrada: valores.motivoEntrada,
     dataEntrada: valores.dataEntrada,
     baiaId: valores.baiaId ?? '',
-    fotoUrl: valores.fotoUrl ?? '',
+    fotoArquivoId: fotoArquivoId ?? undefined,
     observacoes: valores.observacoes ?? '',
   }
 }
 
 // Inverso: um rascunho carregado do IndexedDB (todo string) vira valores do
-// formulário RHF. Aceita tanto o formato atual quanto um rascunho salvo
-// antes desta migração (mesmo shape — RascunhoAnimalValores não mudou).
-function rascunhoParaValores(rascunho: RascunhoAnimalValores): AnimalFormUiValues {
+// formulário RHF. Aceita também um rascunho salvo antes da T42 — o `fotoUrl`
+// que ele traz é ignorado, porque a foto do rascunho agora vem da store de
+// arquivos, de forma assíncrona (ver handleRestaurarRascunho). `fotoUrlAtual`
+// preserva o que já está na tela, que na edição é a foto do próprio animal.
+function rascunhoParaValores(rascunho: RascunhoAnimalValores, fotoUrlAtual: string | undefined): AnimalFormUiValues {
   return {
     nome: rascunho.nome,
     especie: rascunho.especie,
@@ -232,7 +249,7 @@ function rascunhoParaValores(rascunho: RascunhoAnimalValores): AnimalFormUiValue
     motivoEntrada: rascunho.motivoEntrada,
     dataEntrada: rascunho.dataEntrada,
     baiaId: rascunho.baiaId || undefined,
-    fotoUrl: rascunho.fotoUrl || undefined,
+    fotoUrl: fotoUrlAtual || undefined,
     observacoes: rascunho.observacoes || undefined,
   }
 }
@@ -269,8 +286,14 @@ export function AnimalForm({ animal }: AnimalFormProps) {
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [fotoErro, setFotoErro] = useState<string | null>(null)
+  const [fotoAviso, setFotoAviso] = useState<string | null>(null)
   const [fotoCarregando, setFotoCarregando] = useState(false)
   const [rascunhoMensagem, setRascunhoMensagem] = useState<string | null>(null)
+
+  // T42: id da foto na store 'arquivos'. Em ref, não em estado, porque só
+  // alimenta o que é gravado no rascunho — mudar não precisa redesenhar a tela.
+  const fotoArquivoId = useRef<string | null>(null)
+  const donoDosArquivos: DonoArquivoRascunho = { store: 'animais', chave: chaveRascunho }
 
   const { data: catalogos } = useCatalogosAnimaisQuery()
   const { data: baias } = useBaiasAtivasQuery()
@@ -333,8 +356,8 @@ export function AnimalForm({ animal }: AnimalFormProps) {
     watch,
     reset,
     getValues,
-    paraRascunho: valoresParaRascunho,
-    deRascunho: rascunhoParaValores,
+    paraRascunho: (valoresAtuais) => valoresParaRascunho(valoresAtuais, fotoArquivoId.current),
+    deRascunho: (salvo) => rascunhoParaValores(salvo, getValues('fotoUrl')),
   })
 
   async function handleSalvarRascunhoAgora() {
@@ -343,21 +366,62 @@ export function AnimalForm({ animal }: AnimalFormProps) {
     setTimeout(() => setRascunhoMensagem(null), 3000)
   }
 
+  // A foto do rascunho vem da store de arquivos, o que é assíncrono e não cabe
+  // na conversão síncrona do `deRascunho` — por isso o restaurar é envolvido
+  // aqui, lendo o id antes de o aviso ser fechado.
+  async function handleRestaurarRascunho() {
+    const id = rascunho.rascunhoDisponivel?.fotoArquivoId ?? null
+    rascunho.restaurar()
+    if (!id) return
+    fotoArquivoId.current = id
+    const blob = await carregarArquivoRascunho(user?.id ?? '', id)
+    if (blob) setValue('fotoUrl', await blobParaDataUri(blob))
+  }
+
+  async function handleDescartarRascunho() {
+    await rascunho.descartar()
+    fotoArquivoId.current = null
+    await removerArquivosDoRascunho(donoDosArquivos)
+  }
+
   async function handleArquivoFoto(event: ChangeEvent<HTMLInputElement>) {
     const arquivo = event.target.files?.[0]
     event.target.value = ''
     if (!arquivo) return
 
     setFotoErro(null)
+    setFotoAviso(null)
     setFotoCarregando(true)
     try {
       const dataUri = await comprimirImagem(arquivo)
       setValue('fotoUrl', dataUri)
+      await guardarFotoNoRascunho(dataUri)
     } catch (erro) {
       setFotoErro(erro instanceof ImagemInvalidaError ? erro.message : 'Não foi possível processar a imagem.')
     } finally {
       setFotoCarregando(false)
     }
+  }
+
+  // Grava a imagem comprimida como Blob, UMA vez, aqui — fora do debounce do
+  // rascunho de texto, que guarda só o id. A foto anterior sai antes, para o
+  // rascunho não acumular arquivos trocados.
+  async function guardarFotoNoRascunho(dataUri: string) {
+    const blob = dataUriParaBlob(dataUri)
+    if (!blob) return
+    await removerArquivosDoRascunho(donoDosArquivos)
+    const referencia = await salvarArquivoRascunho(
+      user?.id ?? '',
+      donoDosArquivos,
+      new File([blob], 'foto.jpg', { type: blob.type }),
+    )
+    fotoArquivoId.current = referencia?.id ?? null
+    // O autosave disparado pelo setValue da foto foi montado antes desta
+    // gravação e não tem o id; salvar agora o substitui.
+    await rascunho.salvarAgora()
+    // Sem IndexedDB ou sem cota: a foto segue na tela e no envio, só não
+    // sobrevive a um recarregamento.
+    if (!referencia) setFotoAviso('A foto não ficou salva no rascunho, mas continua no formulário.')
   }
 
   function tratarErroSubmit(erro: unknown) {
@@ -417,6 +481,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
         await criarMutation.mutateAsync(payload)
       }
       await rascunho.removerAposSucesso()
+      await removerArquivosDoRascunho(donoDosArquivos)
       navigate('/animais')
     } catch (erro) {
       tratarErroSubmit(erro)
@@ -451,7 +516,11 @@ export function AnimalForm({ animal }: AnimalFormProps) {
       </div>
 
       {rascunho.rascunhoDisponivel && (
-        <BannerRascunho onRestaurar={rascunho.restaurar} onDescartar={() => void rascunho.descartar()} />
+        <BannerRascunho
+          onRestaurar={() => void handleRestaurarRascunho()}
+          onDescartar={() => void handleDescartarRascunho()}
+          salvoEm={rascunho.rascunhoSalvoEm}
+        />
       )}
 
       <div className="stepper">
@@ -940,6 +1009,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
                 <p>JPG ou PNG, até 5MB.</p>
               </label>
               {fotoErro && <span className="err">{fotoErro}</span>}
+              {fotoAviso && <span className="hint">{fotoAviso}</span>}
             </div>
 
             <div className="fieldset">
