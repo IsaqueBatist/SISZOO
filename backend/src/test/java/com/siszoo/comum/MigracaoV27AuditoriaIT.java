@@ -143,8 +143,10 @@ class MigracaoV27AuditoriaIT extends AbstractIntegrationTest {
         assertThat(linha(evento), equalTo(original));
     }
 
+    // Caso (a): o usuario ainda existe — falham a checagem de existencia e a
+    // de profundidade (UPDATE direto tem pg_trigger_depth() = 1).
     @Test
-    @DisplayName("[T43] usuario_id -> NULL por SQL direto e recusado, sozinho ou com outra coluna, com o usuario existente")
+    @DisplayName("[T43] (a) usuario_id -> NULL por SQL direto e recusado, sozinho ou com outra coluna, com o usuario existente")
     void setNullDiretoRecusado() throws Exception {
         migrarAte("27");
         UUID usuario = inserirUsuario();
@@ -155,6 +157,32 @@ class MigracaoV27AuditoriaIT extends AbstractIntegrationTest {
         assertViolacao(transacao("UPDATE " + S + "auditoria_evento SET usuario_id = NULL, ip = '203.0.113.9'"
                 + " WHERE id = '" + evento + "'"), RECUSA);
         assertThat(usuarioDoEvento(evento), equalTo(usuario));
+    }
+
+    // Caso (b): o usuario ja nao existe, mas o UPDATE nao vem da cascata. Para
+    // chegar a esse estado, a exclusao roda com session_replication_role =
+    // replica, que desliga os triggers da FK e os da V27 so nesse comando
+    // (exige superusuario, o usuario do PostgreSQL de teste); o evento fica
+    // apontando para um usuario inexistente. De volta ao modo normal, o
+    // UPDATE direto satisfaz todas as condicoes da excecao menos uma — a
+    // profundidade — e tem de ser recusado. Tudo numa transacao: a recusa
+    // desfaz tambem a exclusao.
+    @Test
+    @DisplayName("[T43] (b) usuario_id -> NULL por SQL direto e recusado mesmo com o usuario ja excluido (fora da cascata)")
+    void setNullForaDaCascataComUsuarioExcluidoRecusado() throws Exception {
+        migrarAte("27");
+        UUID usuario = inserirUsuario();
+        UUID evento = inserirEvento("LOGIN", usuario);
+
+        assertViolacao(transacao(
+                "SET LOCAL session_replication_role = replica",
+                "DELETE FROM " + S + "usuario WHERE id = '" + usuario + "'",
+                "SET LOCAL session_replication_role = origin",
+                "UPDATE " + S + "auditoria_evento SET usuario_id = NULL WHERE id = '" + evento + "'"), RECUSA);
+
+        assertThat(usuarioDoEvento(evento), equalTo(usuario));
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM " + S + "usuario WHERE id = ?", Integer.class,
+                usuario), equalTo(1));
     }
 
     @Test
