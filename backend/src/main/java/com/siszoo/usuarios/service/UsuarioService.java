@@ -3,9 +3,9 @@ package com.siszoo.usuarios.service;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -194,11 +194,12 @@ public class UsuarioService {
         usuario.setTelefone(telefoneNovo);
         usuarioRepository.save(usuario);
 
-        Map<String, String> antes = new HashMap<>();
-        antes.put("telefone", telefoneAnterior);
-        Map<String, String> depois = new HashMap<>();
-        depois.put("telefone", telefoneNovo);
-        auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "usuario", usuario.getId(), antes, depois);
+        // T43/LGPD: auditoria_evento e imutavel e sem expurgo, entao o telefone
+        // nao entra no evento — so se mudou, no padrao do denuncianteAlterado
+        // da ocorrencia (D23).
+        boolean telefoneAlterado = !Objects.equals(telefoneAnterior, telefoneNovo);
+        auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "usuario", usuario.getId(),
+                Map.of("telefoneAlterado", false), Map.of("telefoneAlterado", telefoneAlterado));
 
         return usuarioMapper.toResponse(usuario);
     }

@@ -219,6 +219,37 @@ class AuditoriaEventosIT extends AbstractIntegrationTest {
         }
     }
 
+    @Test
+    @DisplayName("[T43/LGPD] PATCH /me registra so se o telefone mudou, nunca o telefone (antes ou depois)")
+    void perfilSemTelefoneNoEvento() throws Exception {
+        String email = emailUnico("perfil");
+        String token = fixture.tokenComCargo(email, "Perfil", "Eventos", ApiTesteFixture.CARGO_VETERINARIO_ID);
+        UUID usuarioId = usuarioId(email);
+        String primeiro = "(11) 98765-4321";
+        String segundo = "(11) 91234-5678";
+
+        for (String telefone : List.of(primeiro, primeiro, segundo)) {
+            comToken(token).contentType(ContentType.JSON).body(Map.of("telefone", telefone))
+                    .when().patch("/api/usuarios/me").then().statusCode(200);
+        }
+        assertThat(jdbcTemplate.queryForObject("SELECT telefone FROM usuario WHERE id = ?", String.class, usuarioId),
+                equalTo(segundo));
+
+        List<Map<String, Object>> perfil = eventos("usuario", usuarioId.toString()).stream()
+                .filter(e -> "ATUALIZACAO".equals(e.get("acao"))).toList();
+        assertThat(perfil, hasSize(3));
+        JsonNode naoAlterado = objectMapper.readTree("{\"telefoneAlterado\": false}");
+        JsonNode alterado = objectMapper.readTree("{\"telefoneAlterado\": true}");
+        assertThat(perfil.stream().map(e -> json(e.get("antes"))).toList(), equalTo(List.of(naoAlterado, naoAlterado,
+                naoAlterado)));
+        assertThat(perfil.stream().map(e -> json(e.get("depois"))).toList(), equalTo(List.of(alterado, naoAlterado,
+                alterado)));
+        String linha = linhaCompleta(usuarioId);
+        for (String telefone : List.of(primeiro, segundo, "98765", "91234")) {
+            assertThat(linha, not(containsString(telefone)));
+        }
+    }
+
     // ── LOGIN ────────────────────────────────────────────
 
     @Test
