@@ -249,6 +249,42 @@ Para cada um: **modal de vacina**, **procedimento**, **prescrição/medicamento*
 9. ☐ Outro usuário no mesmo navegador não vê o rascunho do primeiro.
 10. ☐ Cadastro de animal continua com rascunho funcionando (regressão).
 
+### 3.6.1 Rascunho offline, data e arquivos (T42) [UI]
+Pré-requisito: DevTools aberto em **Application → IndexedDB → siszoo-rascunhos**
+(stores `animais`, `ocorrencias`, `processos`, `clinico` e `arquivos`).
+
+**Aviso de conexão**
+1. ☐ DevTools → Network → **Offline** → banner *"Sem conexão com a internet."* em qualquer tela autenticada.
+2. ☐ Voltar para **Online** → o banner some.
+3. ☐ Ainda online, derrubar só o backend (parar o processo) e tentar salvar algo → banner *"Possível instabilidade na conexão."* (não fala em offline). Subir o backend e fazer qualquer ação com resposta → o banner some. Alternativa: voltar o foco para a aba também limpa o aviso.
+
+**Rascunho com data**
+4. ☐ Preencher parcialmente **cadastro de animal**, **registro de ocorrência** e o **wizard de processo**; esperar ~1 s.
+5. ☐ Recarregar cada tela → o aviso traz *"Salvo em DD/MM/AAAA, HH:MM"* com a hora de Itu, e o formulário continua **vazio** até **Restaurar rascunho**.
+6. ☐ Com a rede offline (passo 1), preencher e recarregar → os dados voltam ao restaurar.
+
+**Foto e anexos**
+7. ☐ No cadastro de animal, escolher uma foto → a store `arquivos` ganha um registro, e o rascunho em `animais` guarda `fotoArquivoId`, **sem** `data:image` no conteúdo.
+8. ☐ Recarregar e **Restaurar rascunho** → a foto reaparece na pré-visualização.
+9. ☐ Na ocorrência, adicionar um anexo → registro em `arquivos`; recarregar e restaurar → o anexo volta na lista.
+10. ☐ Remover um anexo no formulário → o registro sai de `arquivos` na hora.
+11. ☐ **Ocorrência sigilosa**: marcar o sigilo e anexar → aviso *"os anexos não são guardados no rascunho"* e `arquivos` continua **vazia**. Anexar primeiro e marcar o sigilo depois → o registro já gravado é apagado.
+12. ☐ Ocorrência sigilosa: os campos do denunciante **são** guardados no rascunho (decisão da T42, `docs/decisoes/T42.md`) e voltam ao restaurar.
+
+**Limpeza**
+13. ☐ Submeter com sucesso → a chave do rascunho sai da store e `arquivos` não tem resto.
+14. ☐ Submeter **offline** → a submissão falha e o rascunho **permanece**.
+15. ☐ **Logout** → todas as stores ficam vazias, inclusive `arquivos`.
+16. ☐ Expiração: na aba Console, envelhecer um rascunho em mais de 7 dias e recarregar → o aviso não aparece e a chave sai do disco.
+```js
+// Console do DevTools: envelhece o rascunho de animal do usuário logado em 8 dias
+const db = await new Promise(r => { const q = indexedDB.open('siszoo-rascunhos', 4); q.onsuccess = () => r(q.result) })
+const chave = (await new Promise(r => { const t = db.transaction('animais').objectStore('animais').getAllKeys(); t.onsuccess = () => r(t.result) }))[0]
+const tx = db.transaction('animais', 'readwrite'), store = tx.objectStore('animais')
+const reg = await new Promise(r => { const g = store.get(chave); g.onsuccess = () => r(g.result) })
+store.put({ ...reg, salvoEm: Date.now() - 8 * 24 * 60 * 60 * 1000 }, chave)
+```
+
 ### 3.7 Medicamentos e categorias (AC-8) [UI + API]
 - ☐ Menu tem **"Medicamentos"** para Admin, Veterinário e Agente.
 - ☐ Agente: vê a lista, **não** vê os formulários de cadastro. API: `Api POST "/categorias-farmacologicas" @{nome="Teste"} $AGE` → 403.
