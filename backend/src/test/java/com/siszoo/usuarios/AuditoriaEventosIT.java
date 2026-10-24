@@ -187,7 +187,7 @@ class AuditoriaEventosIT extends AbstractIntegrationTest {
     @DisplayName("[T43] troca de senha registra so senhaAlteradaEm antes/depois, igual ao gravado, sem senha nem hash")
     void trocaDeSenhaSemSegredos() throws Exception {
         String email = emailUnico("senha");
-        String token = fixture.tokenComCargo(email, "Senha", "Eventos", ApiTesteFixture.CARGO_VETERINARIO_ID);
+        String token = fixture.tokenComCargo(email, "Troca", "Eventos", ApiTesteFixture.CARGO_VETERINARIO_ID);
         UUID usuarioId = usuarioId(email);
         String novaSenha = "NovaSenhaT43-" + marcador();
 

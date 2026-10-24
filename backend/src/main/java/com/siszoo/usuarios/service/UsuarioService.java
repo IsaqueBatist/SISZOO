@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.siszoo.comum.dto.PaginaResponse;
+import com.siszoo.comum.exception.CampoInvalidoException;
 import com.siszoo.usuarios.dto.AtualizarPerfilRequest;
 import com.siszoo.usuarios.dto.AtualizarStatusUsuarioRequest;
 import com.siszoo.usuarios.dto.CriarUsuarioRequest;
@@ -86,6 +87,11 @@ public class UsuarioService {
         if (CARGO_VETERINARIO.equals(cargo.getNome()) && !StringUtils.hasText(request.crmv())) {
             throw new CrmvObrigatorioException();
         }
+
+        PoliticaSenha.violacao(request.senhaInicial(), request.email(), request.nome(), request.sobrenome())
+                .ifPresent(mensagem -> {
+                    throw new CampoInvalidoException("senhaInicial", mensagem);
+                });
 
         Usuario usuario = new Usuario();
         usuario.setNome(request.nome());
