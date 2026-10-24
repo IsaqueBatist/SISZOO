@@ -106,6 +106,25 @@ describe('Usuarios', () => {
     expect((await screen.findAllByRole('row')).length).toBe(totalInicial)
   })
 
+  it('rejeita senha inicial fora da política de senha sem chamar a API', async () => {
+    const user = userEvent.setup()
+    renderUsuarios()
+
+    const totalInicial = (await screen.findAllByRole('row')).length
+    await user.click(screen.getByRole('button', { name: /adicionar usuário/i }))
+
+    await user.type(screen.getByLabelText(/nome completo/i), 'Fernanda Rocha')
+    await user.type(screen.getByLabelText(/e-mail institucional/i), 'fernanda.rocha@itu.sp.gov.br')
+    await user.selectOptions(screen.getByLabelText(/^perfil/i), 'Agente Sanitário')
+    const campoSenha = screen.getByLabelText(/senha inicial/i)
+    await user.clear(campoSenha)
+    await user.type(campoSenha, 'Rocha-2026!')
+    await user.click(screen.getByRole('button', { name: /^criar usuário$/i }))
+
+    expect(await screen.findByText(/partes do nome do usuário/i)).toBeInTheDocument()
+    expect((await screen.findAllByRole('row')).length).toBe(totalInicial)
+  })
+
   it('cria um novo usuário e fecha o modal', async () => {
     const user = userEvent.setup()
     renderUsuarios()

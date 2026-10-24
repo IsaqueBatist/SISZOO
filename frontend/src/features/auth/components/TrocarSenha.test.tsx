@@ -50,12 +50,28 @@ describe('TrocarSenha', () => {
     expect(screen.queryByText('Dashboard')).not.toBeInTheDocument()
   })
 
+  it.each([
+    ['somente-minusculas', /3 tipos de caractere/i],
+    ['Beatriz-2026!', /partes do nome/i],
+    ['X1-beatriz.camargo', /nome da conta/i],
+  ])('recusa "%s" pela política de senha sem chamar a API', async (senha, mensagem) => {
+    const user = userEvent.setup()
+    renderTrocarSenha()
+
+    await user.type(screen.getByLabelText(/^nova senha/i), senha)
+    await user.type(screen.getByLabelText(/confirmar nova senha/i), senha)
+    await user.click(screen.getByRole('button', { name: /salvar nova senha/i }))
+
+    expect(await screen.findByText(mensagem)).toBeInTheDocument()
+    expect(screen.queryByText('Dashboard')).not.toBeInTheDocument()
+  })
+
   it('troca a senha com sucesso e navega para /dashboard', async () => {
     const user = userEvent.setup()
     renderTrocarSenha()
 
-    await user.type(screen.getByLabelText(/^nova senha/i), 'nova-senha-forte')
-    await user.type(screen.getByLabelText(/confirmar nova senha/i), 'nova-senha-forte')
+    await user.type(screen.getByLabelText(/^nova senha/i), 'Nova-Senha-2026')
+    await user.type(screen.getByLabelText(/confirmar nova senha/i), 'Nova-Senha-2026')
     await user.click(screen.getByRole('button', { name: /salvar nova senha/i }))
 
     expect(await screen.findByText('Dashboard')).toBeInTheDocument()
