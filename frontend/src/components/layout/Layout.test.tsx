@@ -1,11 +1,13 @@
-import { render, screen } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Layout } from './Layout'
 import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
+import { salvarRascunho, VALIDADE_RASCUNHO_MS, abrirBancoRascunhos } from '@/lib/rascunhoDb'
+import { instalarIndexedDbEmMemoria } from '@/test/indexedDbEmMemoria'
 
 const CHAVE_SIDEBAR_COLAPSADA = 'siszoo:sidebar-collapsed'
 
@@ -72,5 +74,44 @@ describe('Layout', () => {
     expect(screen.getByRole('button', { name: /recolher menu/i })).toBeInTheDocument()
 
     Object.defineProperty(window, 'localStorage', { value: original, configurable: true })
+  })
+})
+
+// T42: o aviso de conexão fica no Layout, visível em qualquer tela
+// autenticada, e a varredura de rascunhos vencidos roda uma vez por carga.
+describe('Layout — conexão e manutenção dos rascunhos', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('mostra o aviso de conexão quando a rede cai e some quando volta', () => {
+    renderLayout()
+
+    act(() => {
+      window.dispatchEvent(new Event('offline'))
+    })
+    expect(screen.getByText('Sem conexão com a internet.')).toBeInTheDocument()
+
+    act(() => {
+      window.dispatchEvent(new Event('online'))
+    })
+    expect(screen.queryByText('Sem conexão com a internet.')).not.toBeInTheDocument()
+  })
+
+  it('apaga os rascunhos vencidos ao abrir o sistema', async () => {
+    const { conteudo } = instalarIndexedDbEmMemoria()
+    const banco = await abrirBancoRascunhos()
+    await banco.put(
+      'animais',
+      { dados: { nome: 'Vencido' }, salvoEm: Date.now() - VALIDADE_RASCUNHO_MS - 1000 } as never,
+      'u1:novo',
+    )
+    banco.close()
+    await salvarRascunho('ocorrencias', 'u1:novo', { bairro: 'Recente' })
+
+    renderLayout()
+
+    await waitFor(async () => expect(await conteudo('animais')).toEqual({}))
+    expect(await conteudo('ocorrencias')).toHaveProperty('u1:novo')
   })
 })
