@@ -958,6 +958,10 @@ consideram só quem está sob custódia (`StatusAnimal.CODIGOS_SOB_CUSTODIA`), e
 25. O animal só passa a ocupar uma baia ativa e com vaga; quem já a ocupa não é barrado por mudanças posteriores na baia; a conferência é serializada por trava na baia (ver §3.2 e AC-3/AC-4).
 26. `ficha_completa` = campos obrigatórios + microchip + ao menos 1 vacinação, recalculada no animal e na vacinação; V18 para os dados existentes (AC-5).
 
+### Acesso e segurança (adendo 2)
+
+27. Política de senha (modelo "Passwords must meet complexity requirements" do Windows), aplicada na senha inicial (`POST /api/usuarios`) e na troca de senha (`POST /api/auth/senha`); recusa = 422 no campo. Não vale para o login nem para senhas já gravadas, nem para o admin do seed (`ADMIN_SEED_PASSWORD`). Regras: mínimo de 8 caracteres; não conter o nome da conta (parte do e-mail antes do `@`, inteira, sem diferenciar maiúsculas, ignorada se tiver menos de 3 caracteres); não conter nenhuma parte do nome de exibição (nome + sobrenome dividido em vírgula, ponto, hífen, sublinhado, espaço, cerquilha e tab) com 3 ou mais caracteres; e ter ao menos 3 de 5 categorias — maiúsculas, minúsculas (com acento, grego e cirílico), dígitos de 0 a 9, símbolos `` '-!"#$%&()*,./:;?@[]^_`{|}~+<=> `` (moeda não conta) e letras sem maiúscula/minúscula (ex.: ideogramas). Fonte única: `PoliticaSenha` (backend), espelhada em `politicaSenha.ts` (front). Decisões: `docs/decisoes/politica-senha.md`.
+
 ---
 
 ## 6. Catálogos exigidos pelo frontend (resumo)
