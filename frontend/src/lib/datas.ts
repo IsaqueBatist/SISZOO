@@ -50,6 +50,27 @@ export function formatarDataHoraBR(iso: string | null | undefined): string {
   return `${data}, ${hora}`
 }
 
+// Instante local (Date.now(), do próprio navegador) -> "24/10/2026, 19:42" no
+// fuso do CCZ. Diferente de formatarDataHoraBR, que recebe o LocalDateTime em
+// string que a API devolve: aqui a origem é um timestamp epoch gravado pelo
+// front (o `salvoEm` do rascunho, T42), que precisa passar por Date.
+export function formatarInstanteBR(ms: number): string {
+  const partes = Object.fromEntries(
+    new Intl.DateTimeFormat('en-CA', {
+      timeZone: FUSO_ITU,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    })
+      .formatToParts(new Date(ms))
+      .map((parte) => [parte.type, parte.value]),
+  )
+  return `${partes.day}/${partes.month}/${partes.year}, ${partes.hour}:${partes.minute}`
+}
+
 // Soma dias a uma data civil (AAAA-MM-DD), sem hora e sem fuso.
 export function adicionarDiasIso(isoDate: string, dias: number): string {
   const [ano, mes, dia] = isoDate.slice(0, 10).split('-').map(Number)

@@ -3,6 +3,7 @@ import { isAxiosError } from 'axios'
 import { Fragment, useEffect, useState, type FormEvent } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
+import { BannerRascunho } from '@/components/BannerRascunho'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { mensagemDeRegraDaApi, statusHttpDoErro } from '@/lib/erroApi'
 import { aplicarMascaraAoDigitar, formatarCep, formatarCpf, formatarTelefone } from '@/lib/mascaras'
@@ -157,7 +158,9 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular }: ProcessoFormProp
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
   const [vinculoTravado, setVinculoTravado] = useState(false)
-  const [rascunhoSalvo, setRascunhoSalvo] = useState<RascunhoProcesso<ProcessoFormValues> | null>(null)
+  const [rascunhoSalvo, setRascunhoSalvo] = useState<(RascunhoProcesso<ProcessoFormValues> & { salvoEm: number | null }) | null>(
+    null,
+  )
   const [conflitoRascunho, setConflitoRascunho] = useState(false)
   const [prontoParaAutoSalvar, setProntoParaAutoSalvar] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -361,20 +364,11 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular }: ProcessoFormProp
       )}
 
       {rascunhoSalvo && !conflitoRascunho && (
-        <div className="alert info" role="alert">
-          <span className="bullet" />
-          <div className="alert-content">
-            Encontramos um rascunho salvo deste formulário.
-            <div className="flex gap-2" style={{ marginTop: 8 }}>
-              <button type="button" className="btn btn-sm btn-primary" onClick={handleRestaurarRascunho}>
-                Restaurar rascunho
-              </button>
-              <button type="button" className="btn btn-sm btn-ghost" onClick={handleDescartarRascunho}>
-                Descartar
-              </button>
-            </div>
-          </div>
-        </div>
+        <BannerRascunho
+          onRestaurar={handleRestaurarRascunho}
+          onDescartar={() => void handleDescartarRascunho()}
+          salvoEm={rascunhoSalvo.salvoEm}
+        />
       )}
 
       {submitError && (

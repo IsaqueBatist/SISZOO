@@ -33,6 +33,9 @@ export function useRascunho<TForm extends FieldValues, TSalvo = TForm>({
   deRascunho,
 }: OpcoesRascunho<TForm, TSalvo>) {
   const [rascunhoDisponivel, setRascunhoDisponivel] = useState<TSalvo | null>(null)
+  // Instante do último salvamento, para o aviso dizer de quando é o rascunho.
+  // null também em rascunho gravado antes da T42, que não tem o instante.
+  const [rascunhoSalvoEm, setRascunhoSalvoEm] = useState<number | null>(null)
   const [prontoParaAutoSalvar, setProntoParaAutoSalvar] = useState(false)
 
   // Funções em ref: quem chama costuma passá-las inline, e mudar a cada
@@ -51,9 +54,12 @@ export function useRascunho<TForm extends FieldValues, TSalvo = TForm>({
 
   useEffect(() => {
     let cancelado = false
-    conversoes.current.armazenamento.carregar(chave).then((salvo) => {
+    conversoes.current.armazenamento.carregar(chave).then((registro) => {
       if (cancelado) return
-      if (salvo) setRascunhoDisponivel(salvo)
+      if (registro) {
+        setRascunhoDisponivel(registro.dados)
+        setRascunhoSalvoEm(registro.salvoEm)
+      }
       setProntoParaAutoSalvar(true)
     })
     return () => {
@@ -77,14 +83,20 @@ export function useRascunho<TForm extends FieldValues, TSalvo = TForm>({
       reset(converter ? converter(rascunhoDisponivel) : (rascunhoDisponivel as unknown as TForm))
     }
     setRascunhoDisponivel(null)
+    setRascunhoSalvoEm(null)
   }
 
   async function descartar() {
     setRascunhoDisponivel(null)
+    setRascunhoSalvoEm(null)
     await conversoes.current.armazenamento.remover(chave)
   }
 
+  // Salvamento explícito (botão "Salvar rascunho", gravação de um arquivo).
+  // Cancela antes o salvamento ainda agendado: ele foi montado com os valores
+  // de até 800 ms atrás e sobrescreveria este, que é o mais recente.
   function salvarAgora(): Promise<void> {
+    conversoes.current.armazenamento.cancelarAgendado?.(chave)
     return conversoes.current.armazenamento.salvar(chave, converterParaRascunho(getValues()))
   }
 
@@ -95,5 +107,5 @@ export function useRascunho<TForm extends FieldValues, TSalvo = TForm>({
     await conversoes.current.armazenamento.remover(chave)
   }
 
-  return { rascunhoDisponivel, restaurar, descartar, salvarAgora, removerAposSucesso }
+  return { rascunhoDisponivel, rascunhoSalvoEm, restaurar, descartar, salvarAgora, removerAposSucesso }
 }

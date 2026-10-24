@@ -1,23 +1,29 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { useForm } from 'react-hook-form'
 import { describe, expect, it, vi } from 'vitest'
-import type { ArmazenamentoRascunho } from './rascunhoDb'
+import type { ArmazenamentoRascunho, RegistroRascunho } from './rascunhoDb'
 import { useRascunho } from './useRascunho'
 
 interface Valores {
   lote: string
 }
 
-function armazenamentoFalso(salvo: Valores | null) {
-  let resolverCarga: (valor: Valores | null) => void = () => {}
+// 24/10/2026 19:42 no fuso de Itu, para a asserção da data no aviso.
+const SALVO_EM = new Date('2026-10-24T22:42:00Z').getTime()
+
+function armazenamentoFalso(salvo: Valores | null, salvoEm: number | null = SALVO_EM) {
+  let resolverCarga: (valor: RegistroRascunho<Valores> | null) => void = () => {}
   const armazenamento = {
-    carregar: vi.fn(() => new Promise<Valores | null>((resolve) => (resolverCarga = resolve))),
+    carregar: vi.fn(() => new Promise<RegistroRascunho<Valores> | null>((resolve) => (resolverCarga = resolve))),
     agendarSalvar: vi.fn(),
     salvar: vi.fn().mockResolvedValue(undefined),
     remover: vi.fn().mockResolvedValue(undefined),
     cancelarAgendado: vi.fn(),
   } satisfies ArmazenamentoRascunho<Valores>
-  return { armazenamento, terminarCarga: () => act(() => resolverCarga(salvo)) }
+  return {
+    armazenamento,
+    terminarCarga: () => act(() => resolverCarga(salvo ? { dados: salvo, salvoEm } : null)),
+  }
 }
 
 function renderRascunho(armazenamento: ArmazenamentoRascunho<Valores>) {
@@ -74,5 +80,50 @@ describe('useRascunho', () => {
     expect(armazenamento.cancelarAgendado.mock.invocationCallOrder[0]).toBeLessThan(
       armazenamento.remover.mock.invocationCallOrder[0],
     )
+  })
+
+  it('expõe o instante do salvamento e o zera ao restaurar', async () => {
+    const { armazenamento, terminarCarga } = armazenamentoFalso({ lote: 'SALVO' })
+    const { result } = renderRascunho(armazenamento)
+
+    await terminarCarga()
+    expect(result.current.rascunho.rascunhoSalvoEm).toBe(SALVO_EM)
+
+    act(() => result.current.rascunho.restaurar())
+
+    expect(result.current.rascunho.rascunhoSalvoEm).toBeNull()
+  })
+
+  it('rascunho gravado antes da T42 vem sem instante, mas continua restaurável', async () => {
+    const { armazenamento, terminarCarga } = armazenamentoFalso({ lote: 'LEGADO' }, null)
+    const { result } = renderRascunho(armazenamento)
+
+    await terminarCarga()
+
+    expect(result.current.rascunho.rascunhoDisponivel).toEqual({ lote: 'LEGADO' })
+    expect(result.current.rascunho.rascunhoSalvoEm).toBeNull()
+  })
+
+  it('o descarte zera o aviso e apaga do armazenamento', async () => {
+    const { armazenamento, terminarCarga } = armazenamentoFalso({ lote: 'SALVO' })
+    const { result } = renderRascunho(armazenamento)
+    await terminarCarga()
+
+    await act(() => result.current.rascunho.descartar())
+
+    expect(result.current.rascunho.rascunhoDisponivel).toBeNull()
+    expect(result.current.rascunho.rascunhoSalvoEm).toBeNull()
+    expect(armazenamento.remover).toHaveBeenCalledWith('u1:vacina:a1')
+  })
+
+  it('sem chamada de removerAposSucesso (envio que falhou) o rascunho fica', async () => {
+    const { armazenamento, terminarCarga } = armazenamentoFalso({ lote: 'SALVO' })
+    const { result } = renderRascunho(armazenamento)
+    await terminarCarga()
+
+    act(() => result.current.form.setValue('lote', 'L3'))
+
+    await waitFor(() => expect(armazenamento.agendarSalvar).toHaveBeenCalled())
+    expect(armazenamento.remover).not.toHaveBeenCalled()
   })
 })

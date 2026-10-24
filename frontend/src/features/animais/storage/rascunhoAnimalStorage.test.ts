@@ -23,7 +23,8 @@ describe('rascunho de animal por usuário', () => {
   it('o rascunho de um usuário não aparece para outro', async () => {
     await salvarRascunhoAnimal(chaveRascunhoAnimal(USUARIO_A, undefined), { nome: 'Rex' })
 
-    expect(await carregarRascunhoAnimal(chaveRascunhoAnimal(USUARIO_A, undefined))).toEqual({ nome: 'Rex' })
+    // T42: a leitura devolve o envelope `{ dados, salvoEm }`.
+    expect(await carregarRascunhoAnimal(chaveRascunhoAnimal(USUARIO_A, undefined))).toMatchObject({ dados: { nome: 'Rex' } })
     expect(await carregarRascunhoAnimal(chaveRascunhoAnimal(USUARIO_B, undefined))).toBeNull()
   })
 

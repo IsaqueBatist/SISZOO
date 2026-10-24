@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest'
 import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
 import { salvarRascunho } from '@/lib/rascunhoDb'
@@ -52,11 +52,19 @@ function renderCadastroComo(usuarioId: string) {
 }
 
 describe('rascunho e anexos pendentes têm escopo por usuário', () => {
+  // Contador de aberturas do banco: é como os testes esperam pelas leituras do
+  // IndexedDB antes de afirmar que o aviso NÃO apareceu. Duas aberturas da
+  // preparação (os dois salvamentos) mais duas do componente (rascunho e
+  // pendência de anexos).
+  let aberturas: MockInstance
+
   beforeEach(() => {
     instalarIndexedDbEmMemoria()
+    aberturas = vi.spyOn(indexedDB, 'open')
   })
 
   afterEach(() => {
+    vi.restoreAllMocks()
     vi.unstubAllGlobals()
   })
 
@@ -79,7 +87,7 @@ describe('rascunho e anexos pendentes têm escopo por usuário', () => {
 
     const registrar = await screen.findByRole('button', { name: 'Registrar Ocorrência' })
     // Dá tempo para as leituras do IndexedDB terminarem antes de afirmar ausência.
-    await waitFor(() => expect(indexedDB.open).toHaveBeenCalledTimes(4))
+    await waitFor(() => expect(aberturas).toHaveBeenCalledTimes(4))
     expect(screen.queryByText(/Encontramos um rascunho salvo/)).not.toBeInTheDocument()
     expect(screen.queryByText(/Há anexos pendentes/)).not.toBeInTheDocument()
     expect(registrar).toBeEnabled()
@@ -92,7 +100,7 @@ describe('rascunho e anexos pendentes têm escopo por usuário', () => {
     renderCadastroComo(USUARIO_A)
 
     const registrar = await screen.findByRole('button', { name: 'Registrar Ocorrência' })
-    await waitFor(() => expect(indexedDB.open).toHaveBeenCalledTimes(4))
+    await waitFor(() => expect(aberturas).toHaveBeenCalledTimes(4))
     expect(screen.queryByText(/Encontramos um rascunho salvo/)).not.toBeInTheDocument()
     expect(screen.queryByText(/Há anexos pendentes/)).not.toBeInTheDocument()
     expect(registrar).toBeEnabled()

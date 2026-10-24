@@ -81,14 +81,14 @@ function renderApp(queryClient: QueryClient) {
 
 async function digitarRascunhoEEsperarGravacao(
   user: ReturnType<typeof userEvent.setup>,
-  conteudo: (store: string) => Record<string, unknown>,
+  conteudo: (store: string) => Promise<Record<string, unknown>>,
 ) {
   await user.type(await screen.findByLabelText(/^Bairro/i), 'Bairro do A')
-  await waitFor(() => expect(conteudo('ocorrencias')).toHaveProperty(`${USUARIO_A.id}:novo`))
+  await waitFor(async () => expect(await conteudo('ocorrencias')).toHaveProperty(`${USUARIO_A.id}:novo`))
 }
 
 describe('logout limpa cache e IndexedDB', () => {
-  let conteudo: (store: string) => Record<string, unknown>
+  let conteudo: (store: string) => Promise<Record<string, unknown>>
 
   beforeEach(() => {
     conteudo = instalarIndexedDbEmMemoria().conteudo
@@ -116,7 +116,7 @@ describe('logout limpa cache e IndexedDB', () => {
 
     await user.click(screen.getByRole('button', { name: 'Sair' }))
 
-    await waitFor(() => expect(conteudo('ocorrencias')).toEqual({}))
+    await waitFor(async () => expect(await conteudo('ocorrencias')).toEqual({}))
     await waitFor(() => expect(queryClient.getQueryData(['dados-de-a'])).toBeUndefined())
 
     await user.click(screen.getByRole('button', { name: 'Entrar como B' }))
@@ -136,9 +136,9 @@ describe('logout limpa cache e IndexedDB', () => {
     await user.type(screen.getByLabelText(/^Bairro/i), ' 2')
     await user.click(screen.getByRole('button', { name: 'Sair' }))
 
-    await waitFor(() => expect(conteudo('ocorrencias')).toEqual({}))
+    await waitFor(async () => expect(await conteudo('ocorrencias')).toEqual({}))
     await act(() => new Promise((resolve) => setTimeout(resolve, 1200)))
-    expect(conteudo('ocorrencias')).toEqual({})
+    expect(await conteudo('ocorrencias')).toEqual({})
   })
 
   it('sessão expirada (401) limpa o cache mas preserva o rascunho do usuário', async () => {
@@ -156,7 +156,7 @@ describe('logout limpa cache e IndexedDB', () => {
 
     expect(await screen.findByRole('button', { name: 'Entrar como A' })).toBeInTheDocument()
     await waitFor(() => expect(queryClient.getQueryData(['dados-de-a'])).toBeUndefined())
-    expect(conteudo('ocorrencias')).toHaveProperty(`${USUARIO_A.id}:novo`)
+    expect(await conteudo('ocorrencias')).toHaveProperty(`${USUARIO_A.id}:novo`)
 
     await user.click(screen.getByRole('button', { name: 'Entrar como A' }))
     expect(await screen.findByText(/Encontramos um rascunho salvo/)).toBeInTheDocument()
@@ -185,7 +185,7 @@ describe('logout limpa cache e IndexedDB', () => {
     await user.click(await screen.findByRole('button', { name: 'Reenviar' }))
 
     expect(await screen.findByRole('button', { name: 'Entrar como A' })).toBeInTheDocument()
-    expect(conteudo('ocorrencias')[`${USUARIO_A.id}:anexos-pendentes`]).toMatchObject({ ocorrenciaId: OCORRENCIA_ABERTA_ID })
+    expect((await conteudo('ocorrencias'))[`${USUARIO_A.id}:anexos-pendentes`]).toMatchObject({ ocorrenciaId: OCORRENCIA_ABERTA_ID })
 
     sessaoValida = true
     await user.click(screen.getByRole('button', { name: 'Entrar como A' }))
@@ -193,6 +193,6 @@ describe('logout limpa cache e IndexedDB', () => {
 
     expect(await screen.findByText('Detalhe da ocorrência')).toBeInTheDocument()
     expect(uploads).toBe(1)
-    expect(conteudo('ocorrencias')).not.toHaveProperty(`${USUARIO_A.id}:anexos-pendentes`)
+    expect(await conteudo('ocorrencias')).not.toHaveProperty(`${USUARIO_A.id}:anexos-pendentes`)
   })
 })
