@@ -1,5 +1,6 @@
 package com.siszoo.usuarios.service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -48,8 +49,13 @@ public class PreferenciaUsuarioService {
             throw new NotificacaoCriticaObrigatoriaException();
         }
 
-        PreferenciaUsuario preferencias = preferenciaUsuarioRepository.findByUsuarioId(usuarioId)
-                .orElseGet(() -> criarPreferenciasPadrao(usuarioId));
+        // T43: o "antes" so existe se a linha ja estava gravada. Sem linha, ela
+        // nasce nesta requisicao (defaults + valores do pedido) e o evento e
+        // CRIACAO: montar um "antes" com os defaults recem-criados fingiria um
+        // estado que nunca esteve no banco.
+        Optional<PreferenciaUsuario> existentes = preferenciaUsuarioRepository.findByUsuarioId(usuarioId);
+        PreferenciaUsuarioResponse antes = existentes.map(preferenciaUsuarioMapper::toResponse).orElse(null);
+        PreferenciaUsuario preferencias = existentes.orElseGet(() -> criarPreferenciasPadrao(usuarioId));
 
         preferencias.setTema(request.tema());
         preferencias.setDensidade(request.densidade());
@@ -63,7 +69,8 @@ public class PreferenciaUsuarioService {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(UsuarioNaoEncontradoException::new);
         PreferenciaUsuarioResponse response = preferenciaUsuarioMapper.toResponse(preferencias);
-        auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "preferencia_usuario", preferencias.getId(), null, response);
+        AcaoAuditoria acao = antes == null ? AcaoAuditoria.CRIACAO : AcaoAuditoria.ATUALIZACAO;
+        auditoriaEventoService.registrar(usuario, acao, "preferencia_usuario", preferencias.getId(), antes, response);
 
         return response;
     }

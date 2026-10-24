@@ -87,6 +87,7 @@ import com.siszoo.usuarios.exception.CargoInvalidoException;
 import com.siszoo.usuarios.exception.CredencialInvalidaException;
 import com.siszoo.usuarios.exception.CrmvObrigatorioException;
 import com.siszoo.usuarios.exception.EmailJaCadastradoException;
+import com.siszoo.usuarios.exception.FalhaAuditoriaException;
 import com.siszoo.usuarios.exception.NotificacaoCriticaObrigatoriaException;
 import com.siszoo.usuarios.exception.SenhasDivergentesException;
 import com.siszoo.usuarios.exception.UsuarioNaoEncontradoException;
@@ -105,6 +106,15 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroResponse> handleCredencialInvalida() {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ErroResponse("Credenciais invalidas"));
+    }
+
+    // T43: a causa (SQL do INSERT do evento, so ids) vai so para o log; o
+    // cliente recebe mensagem generica, sem nenhum dado da requisicao.
+    @ExceptionHandler(FalhaAuditoriaException.class)
+    public ResponseEntity<ErroResponse> handleFalhaAuditoria(FalhaAuditoriaException ex) {
+        log.error("Evento de auditoria obrigatorio nao foi gravado", ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErroResponse("Nao foi possivel concluir a operacao"));
     }
 
     @ExceptionHandler(SenhasDivergentesException.class)
