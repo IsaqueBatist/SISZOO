@@ -101,10 +101,13 @@ siszoo:
     expiracao-minutos: 60
 
 ---
+# `prod` tem a mesma configuracao do `docker` (o docker-compose continua com
+# `docker`). Os dois existem tambem para o seed de dados ficticios recusar a
+# subida neles (com.siszoo.seed.SeedDevGuarda).
 spring:
   config:
     activate:
-      on-profile: docker
+      on-profile: "docker | prod"
   datasource:
     url: ${DB_URL}
     username: ${DB_USER}
@@ -173,3 +176,16 @@ siszoo:
     expiracao-minutos: 60
   notificacoes:
     remetente: nao-responda@siszoo.test
+
+---
+# Seed de dados ficticios (com.siszoo.seed, docs/decisoes/seed-dev.md): so com
+# `dev` ou `test` junto, nunca com `docker`/`prod` (a subida falha), e so cria
+# dados com SISZOO_SEED_HABILITADO=true. Idempotente: reexecutar nao duplica.
+spring:
+  config:
+    activate:
+      on-profile: seed
+
+siszoo:
+  seed:
+    habilitado: ${SISZOO_SEED_HABILITADO:false}
