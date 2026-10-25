@@ -237,13 +237,14 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular }: ProcessoFormProp
     // A assinatura só é criada depois que a checagem inicial de rascunho
     // termina, senão um callback com closure obsoleto pode sobrescrever um
     // rascunho real (mesmo gate de AnimalForm/OcorrenciaForm).
+    // Refeita a cada troca de etapa: o callback grava a etapa em que o
+    // usuário está, não a de quando a assinatura nasceu.
     if (!prontoParaAutoSalvar) return
     const inscricao = watch((valoresAtuais) => {
       agendarSalvarRascunhoProcesso(chaveRascunho, { etapaAtual: step, valores: valoresAtuais as ProcessoFormValues })
     })
     return () => inscricao.unsubscribe()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prontoParaAutoSalvar, watch])
+  }, [prontoParaAutoSalvar, watch, chaveRascunho, step])
 
   function handleRestaurarRascunho() {
     if (!rascunhoSalvo) return
