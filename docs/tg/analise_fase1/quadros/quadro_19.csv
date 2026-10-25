@@ -1,0 +1,20 @@
+﻿Quadro 19 – Caso de uso de baixo nível Gerenciar Usuários
+Gerenciar Usuários
+Caso de Uso Geral;Controle de Acesso
+Ator Principal;Administrador
+Atores Secundários;
+Resumo;O Administrador cadastra, edita e atribui cargos e permissões aos usuários do sistema.
+Pré-Condições;O ator deve estar autenticado com cargo de Administrador.
+Pós-Condições;"Usuário criado ou atualizado, com cargo e permissões definidos; evento registrado em auditoria."
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Administrador acessa a gestão de usuários e seleciona criar ou editar um usuário.;
+O Administrador informa os dados do usuário (nome, e-mail, telefone, CRMV quando aplicável).;
+O Administrador atribui um ou mais cargos ao usuário (Atribuir Cargo e Permissões).;
+O Administrador confirma a operação.;
+;Valida os dados, verifica a unicidade do e-mail e persiste o usuário e seus vínculos de cargo.
+;Registra o evento de auditoria (CRIACAO ou ATUALIZACAO) com os valores anterior e posterior.
+Restrições/Validações;Apenas o Administrador possui acesso total (RN09). E-mail deve ser único. Toda ação crítica gera AuditoriaEvento (RN06, RNF10).
+Fluxo Alternativo I;E-mail já cadastrado: o sistema informa a duplicidade e não conclui o cadastro.
+Fluxo Alternativo II;Desativar/Reativar usuário: ver o caso de uso Desativar/Reativar Usuário.
+Requisitos relacionados;RF-C02, RN09, RNF10

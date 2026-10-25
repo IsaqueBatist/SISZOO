@@ -1,6 +1,10 @@
 # Pedido — filtro de data em GET /api/ocorrencias
 
-Status: **pedido do frontend, endpoint existente, filtro ainda não suportado**.
+Status: **implementado (22/10/2026, alinhamento com o TG — `docs/decisoes/alinhamento-tg.md` AT-11)**.
+`GET /api/ocorrencias?de=AAAA-MM-DD&ate=AAAA-MM-DD` filtra pela `data_abertura` (limites inclusivos; qualquer um dos
+dois pode faltar), combinável com `tipo`, `status` e `q`. A tela de Ocorrências expõe os dois campos de data.
+Teste: `OcorrenciaFiltroDataIT`. O KPI "ocorrências registradas hoje" do dashboard é calculado no backend
+(`DashboardService`, T38), então o pedido abaixo ficou coberto pelos dois lados. O texto abaixo é o pedido original.
 
 ## Contexto
 

@@ -1,0 +1,155 @@
+@startuml enumeracoes_m2_m4
+' Enumerações e catálogos implementados — Módulos 2 e 4 (substitui as Figuras 21 e 24 do TG)
+' Fonte: CHECKs e seeds das migrações V4, V6, V10, V13, V20; enums Java em backend/src/main/java. Fase 3, 22/10/2026.
+!pragma layout smetana
+skinparam defaultFontName Arial
+
+package "Módulo 2 — Gestão de Animais" {
+  enum Sexo {
+  macho
+  femea
+  nao_identificado
+}
+  enum Porte {
+  pequeno
+  medio
+  grande
+}
+  enum Pelagem {
+  curta
+  longa
+}
+  class "catálogo especie" as Especie <<tabela>> {
+  canino
+  felino
+  quiroptero
+  pnh (primata não-humano)
+}
+  class "catálogo status_animal" as StatusAnimal <<tabela>> {
+  disponivel_adocao
+  em_tratamento
+  em_quarentena
+  adotado
+  obito_natural
+  obito_eutanasia
+  transferido
+}
+  class "catálogo motivo_entrada" as MotivoEntrada <<tabela>> {
+  recolhimento
+  abandono
+  entrega_voluntaria
+  resgate
+  apreensao_judicial
+}
+  class "catálogo tipo_baia" as TipoBaia <<tabela>> {
+  interna
+  gatil
+  externa
+}
+  enum UnidadeDose {
+  MILIGRAMA
+  MICROGRAMA
+  GRAMA
+  MILILITRO
+  UNIDADE_INTERNACIONAL
+}
+  enum UnidadeFrequencia {
+  HORAS
+  DIAS
+}
+  enum ViaAdministracao {
+  ORAL
+  INTRAVENOSA
+  INTRAMUSCULAR
+  SUBCUTANEA
+  TOPICA
+}
+  enum StatusPrescricao {
+  ATIVA
+  CONCLUIDA
+  SUSPENSA
+  CANCELADA
+}
+  enum SeveridadeAlerta {
+  VENCIDA
+  A_VENCER
+}
+}
+
+package "Módulo 4 — Processos Sanitários" {
+  enum StatusProcesso {
+  ABERTO
+  AGUARDANDO_RESULTADO
+  COM_RESULTADO
+  CONCLUIDO
+}
+  class "catálogo resultado_laboratorial" as ResultadoLaboratorial <<tabela>> {
+  aguardando
+  positivo (definitivo)
+  negativo
+  inconclusivo
+  material_inadequado
+  nao_realizado
+}
+  class "catálogo desfecho_animal" as DesfechoAnimal <<tabela>> {
+  em_acompanhamento
+  obito_natural
+  obito_eutanasia
+  obito_outro
+}
+  enum StatusClinicoAmostra {
+  SINTOMATICO
+  ASSINTOMATICO
+  OBITO
+}
+  enum TipoAbrigo {
+  INTRADOMICILIAR
+  PERIDOMICILIAR
+  SILVESTRE
+  NAO_IDENTIFICADO
+}
+  enum MaterialBiologico {
+  TECIDO_ENCEFALICO
+  SORO
+  SANGUE
+  SALIVA
+  URINA
+}
+  enum NivelContato {
+  DIRETA
+  INDIRETA
+}
+}
+
+package "Módulo 3 — Ocorrências" {
+  enum StatusOcorrencia {
+  ABERTA
+  EM_ATENDIMENTO
+  ENCERRADA
+}
+  enum TipoMovimentacaoOcorrencia {
+  REGISTRADA
+  EQUIPE_DESPACHADA
+  PROCESSO_VINCULADO
+  AGUARDANDO_RESULTADO
+  ENCERRADA
+  NOTA_INTERNA
+}
+}
+
+package "Módulo 5 — Relatórios" {
+  enum TipoRelatorio {
+  ANUAL_PROCESSOS
+  VACINACAO
+  ADOCOES
+  PROCEDIMENTOS
+  OCUPACAO_BAIAS
+  OCORRENCIAS_BAIRRO
+}
+}
+
+note as N1
+  Não implementados (apenas modelados): TipoAmostra, StatusDocumento,
+  StatusRelatorio e o valor EM_ANDAMENTO de StatusProcesso.
+end note
+@enduml

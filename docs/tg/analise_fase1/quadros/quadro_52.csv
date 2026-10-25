@@ -1,0 +1,15 @@
+﻿Quadro 52 – Dicionário de dados – tabela Usuario
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único do usuário.
+email;varchar(255);UQ;E-mail de login, único no sistema.
+senha;varchar(255);;Hash da senha (bcrypt).
+nome;varchar(100);;Primeiro nome do usuário.
+sobrenome;varchar(100);;Sobrenome do usuário.
+crmv;varchar(20);;Registro profissional do veterinário, quando aplicável.
+telefone;varchar(20);;Telefone de contato.
+ativo;boolean;;Indica se a conta está ativa.
+ultimo_acesso;timestamp;;Data e hora do último acesso.
+criado_em;timestamp;;Data e hora de criação do registro.
+senha_alterada_em;timestamp;;Data e hora da última alteração de senha.
+desativado_em;timestamp;;Data e hora da desativação da conta.
+data_modificacao;timestamp;;Data e hora da última modificação do registro.

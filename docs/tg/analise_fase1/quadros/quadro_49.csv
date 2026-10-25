@@ -1,0 +1,17 @@
+﻿Quadro 49 – Caso de uso de baixo nível Solicitar Geração de Relatório
+Solicitar Geração de Relatório
+Caso de Uso Geral;Relatórios
+Ator Principal;Veterinário ou Agente Sanitário
+Atores Secundários;
+Resumo;O usuário solicita a geração de um relatório, processado de forma assíncrona.
+Pré-Condições;O ator deve estar autenticado com permissão para gerar relatórios.
+Pós-Condições;Solicitação registrada com status Pendente e processada em segundo plano.
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O usuário seleciona o tipo de relatório (ocorrências por bairro, ocupação de baias, procedimentos, adoções, anual de processos ou vacinação) e informa o período e os parâmetros.;
+O usuário confirma a solicitação.;
+;Cria o registro do relatório com status Pendente e inicia o processamento assíncrono (RN11).
+;Ao concluir, atualiza o status para Concluído e disponibiliza o arquivo por URL com expiração.
+Restrições/Validações;A geração segue os estados Pendente → Em Processamento → Concluído/Falha (RN11). O binário não é armazenado no banco.
+Fluxo Alternativo I;Falha no processamento: o sistema marca o relatório como Falha e permite nova solicitação.
+Requisitos relacionados;RF-D02, RF-B07, RN11

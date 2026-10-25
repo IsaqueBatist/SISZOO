@@ -1,0 +1,18 @@
+﻿Quadro 42 – Caso de uso de baixo nível Registrar Resultado Laboratorial
+Registrar Resultado Laboratorial
+Caso de Uso Geral;Gestão de Processos
+Ator Principal;Agente Sanitário
+Atores Secundários;
+Resumo;O Agente Sanitário registra o resultado da análise laboratorial e o desfecho do processo.
+Pré-Condições;O processo deve estar em andamento ou aguardando resultado (não pode estar com status ABERTO).
+Pós-Condições;"Resultado e desfecho registrados; em caso positivo ou inconclusivo, o responsável e a Vigilância Epidemiológica são notificados por e-mail."
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Agente Sanitário abre o processo e seleciona registrar resultado.;
+O Agente Sanitário informa o resultado (Negativo, Positivo, Material Inadequado, Inconclusivo, Não Realizado ou Aguardando) e a data.;
+O Agente Sanitário confirma o registro.;
+;Valida que o status permite o resultado (RN12) e persiste o resultado e o desfecho.
+;Caso o resultado seja Positivo ou Inconclusivo, envia e-mail ao responsável, quando houver e-mail cadastrado, e à Vigilância Epidemiológica, e registra o envio (RN10).
+Restrições/Validações;O resultado não pode ser preenchido com status ABERTO (RN12). Resultado Positivo ou Inconclusivo dispara notificação (RN10).
+Fluxo Alternativo I;Sem e-mail do responsável: o sistema registra o resultado, e notifica apenas a Vigilância Epidemiológica.
+Requisitos relacionados;RF-B03, RN10, RN12

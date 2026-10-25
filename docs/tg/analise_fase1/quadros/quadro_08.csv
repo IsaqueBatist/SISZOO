@@ -1,0 +1,5 @@
+﻿Quadro 8 – Requisitos funcionais do Módulo 3: Ocorrências e Denúncias
+ID;Nome;Descrição;Prior.
+RF-E01;Registro de Ocorrência;Registrar ocorrência com protocolo (0000/AAAA, RN02), tipo, bairro, descrição, urgente, sigilosa (RN03), denunciante, denunciado (opcional) e movimentações.;Alta
+RF-E02;Consulta e Filtragem;Consultar por protocolo, período, tipo, denunciante, bairro e status. Denunciante oculto em ocorrências sigilosas para não-Administradores (RN03).;Alta
+RF-E03;Encerramento;Encerrar com providência tomada, descrição (obrigatória quando a providência for “Outro”) e data. Somente Agente Sanitário ou Administrador. Não pode ser encerrada enquanto houver processo sanitário vinculado sem resultado (RN05). Registro imutável após encerramento (RN06).;Alta

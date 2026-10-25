@@ -325,3 +325,44 @@ Os UnitTests de animais e baias (`.insomnia/UnitTest/ut_animais_*` e `ut_baias_*
 - Duas criações simultâneas com o mesmo microchip → 409 genérico (P5).
 - Cargo alterado só vale no próximo login (P6).
 - Erro de microchip no formulário é detectado pelo texto da mensagem.
+
+## 6. Alinhamento com o TG (22/10/2026 — PRs #108 a #110)
+
+Decisões em `docs/decisoes/alinhamento-tg.md`. Logado como Veterinário, salvo indicação.
+
+### 6.1 Identificação do animal e laudo [UI + API]
+
+1. Cadastrar animal com microchip e **data de implantação** futura → 422 no campo; sem microchip e com data de
+   implantação → 422 ("exige microchip"). Com número de medalha já usado por outro animal → 422 `numeroMedalha`.
+2. Editar um animal e mudar o status para **Óbito eutanásia** sem laudo → 422 `laudoEutanasia`; com laudo → salva e a
+   ficha mostra o laudo. Animal que já estava em óbito por eutanásia (dados antigos) continua editável sem laudo.
+3. Ficha (T06): cabeçalho exibe medalha, data de implantação e procedência; `GET /api/auditoria?entidade=animal`
+   (Admin) mostra CRIACAO/ATUALIZACAO com snapshot sem dado pessoal.
+
+### 6.2 Exames e anexos [UI + API]
+
+1. Aba **Exames** → registrar exame só com data de solicitação → salva; registrar com resultado sem data de resultado
+   (ou vice-versa) → 422; data de resultado anterior à solicitação → 422.
+2. Corrigir um exame (novo registro com `retificaId`) → o original fica listado como retificado; segunda correção do
+   mesmo original → 409. `DELETE` direto no banco → recusado (trigger V17).
+3. Cartão **Anexos**: enviar PDF de 5 MB → ok; 6 MB → 422; `.exe` renomeado para `.png` → 422 (tipo pelos bytes);
+   11º anexo → 422. Upload e download aparecem em `/logs` com entidade `anexo_animal`.
+
+### 6.3 Processos: GAL/SINAN, notificação e reenvio [UI + API]
+
+1. Abrir processo informando **Nº GAL** e **Nº SINAN** → aparecem no detalhe (T13); vazios → "—".
+2. Lançar resultado **inconclusivo** em processo com e-mail do responsável → e-mail no sandbox SMTP e
+   `data_notificacao_municipe` preenchida; corrigir para **positivo** → novo e-mail. `negativo`, `material_inadequado`
+   e `nao_realizado` não notificam.
+3. Reenvio (`POST /api/processos/{id}/notificacoes/reenviar`) com inconclusivo ainda não confirmado → 200; já
+   confirmado → 422.
+
+### 6.4 Ocorrências, auditoria e relatórios [UI]
+
+1. Ocorrências (T08): filtrar por período de abertura (de/até) combinado com tipo e status; limites inclusivos.
+2. Como Agente, abrir ocorrência sigilosa → denunciante visível e evento `VISUALIZACAO` em `/logs` (Admin); como
+   Veterinário, `/ocorrencias` → 403.
+3. Logs (T26, Admin): filtrar por módulo "Gestão de animais" lista animal, baia, vacinação, procedimento, prescrição,
+   medicamento, exame e anexo_animal; filtro por período e por e-mail do usuário; o aviso informa o total filtrado.
+4. Central de relatórios (T14) aberta direto pela URL: os quatro cartões de KPI da pré-visualização ficam lado a lado
+   (PR #110); a grade de cartões não transborda em 1366 px; o período padrão é "último mês até hoje" no fuso de Itu.

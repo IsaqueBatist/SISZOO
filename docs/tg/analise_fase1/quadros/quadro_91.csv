@@ -1,0 +1,11 @@
+﻿Quadro 91 – Dicionário de dados – tabela DocumentoProcesso
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único do documento.
+processo_id;uuid;FK;Processo associado (ProcessoSanitario).
+criado_por;uuid;FK;Usuário que gerou o documento (Usuario).
+nome;varchar(255);;Nome do arquivo.
+url;varchar(500);;URL de armazenamento do arquivo.
+tipo_id;uuid;FK;Tipo do documento (TipoDocumentoProcesso).
+tamanho_bytes;bigint;;Tamanho do arquivo em bytes.
+status;StatusDocumento;;Situação da geração do documento (RN11).
+criado_em;timestamp;;Data e hora de geração.

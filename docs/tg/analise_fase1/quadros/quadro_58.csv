@@ -1,0 +1,5 @@
+﻿Quadro 58 – Dicionário de dados – tabela MotivoEntrada
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único do motivo de entrada.
+nome;varchar(100);;Descrição do motivo (resgate, denúncia etc.).
+ativo;boolean;;Indica se o motivo está disponível para uso.

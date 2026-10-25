@@ -1,0 +1,16 @@
+﻿Quadro 43 – Caso de uso de baixo nível Consultar e Filtrar Processos
+Consultar e Filtrar Processos
+Caso de Uso Geral;Gestão de Processos
+Ator Principal;Agente Sanitário
+Atores Secundários;
+Resumo;O Agente Sanitário consulta processos sanitários aplicando filtros, com os urgentes fixados no topo.
+Pré-Condições;O ator deve estar autenticado com permissão de leitura no módulo.
+Pós-Condições;Processos exibidos conforme os filtros, com urgentes priorizados.
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Agente Sanitário acessa a consulta e define filtros (protocolo, período, doença, responsável, bairro, status).;
+;Consulta os processos conforme os filtros.
+;Exibe a listagem com os processos urgentes fixados no topo (RN04).
+Restrições/Validações;Processos urgentes são fixados no topo das listagens (RN04).
+Fluxo Alternativo I;Nenhum processo encontrado: o sistema informa que não há resultados.
+Requisitos relacionados;RF-B02, RN04

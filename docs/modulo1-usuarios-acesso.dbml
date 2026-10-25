@@ -52,10 +52,10 @@ Table Usuario {
   crmv               varchar(20)
   telefone           varchar(20)
   ativo              boolean      [not null, default: true]
-  dois_fatores_ativo boolean      [not null, default: false]
+  dois_fatores_ativo boolean      [not null, default: false, note: 'reservado: nenhum uso na aplicação (docs/pendencias-documentacao.md)']
   ultimo_acesso      timestamp
   criado_em          timestamp    [not null, default: `now()`]
-  senha_alterada_em  timestamp
+  senha_alterada_em  timestamp    [note: 'NULL = troca de senha obrigatória no primeiro acesso (POST /api/auth/senha); política de senha = regra 27 do DER']
   desativado_em      timestamp
   data_modificacao   timestamp    [not null, default: `now()`]
 
@@ -80,13 +80,15 @@ Table UsuarioCargo {
   indexes {
     (usuario_id, cargo_id) [pk]
   }
+
+  Note: 'N:N no schema, mas a aplicação atribui exatamente um cargo por usuário (RF-C02; docs/decisoes/alinhamento-tg.md AT-4).'
 }
 
 Table CargoPermissao {
   id       uuid    [pk, not null, default: `gen_random_uuid()`]
   cargo_id uuid    [not null, ref: > Cargo.id]
   modulo   Modulo  [not null]
-  feature  varchar(100) [not null]
+  feature  varchar(100) [not null, note: 'geral (módulo inteiro) ou denunciante_sigiloso (OCORRENCIAS_DENUNCIAS, só leitura: Administrador e Agente Sanitário, V10)']
   leitura  boolean [not null, default: false]
   escrita  boolean [not null, default: false]
   exclusao boolean [not null, default: false]
@@ -94,6 +96,8 @@ Table CargoPermissao {
   indexes {
     (cargo_id, modulo, feature) [unique]
   }
+
+  Note: 'Matriz fixa (V3/V10/V11): Admin RWD em tudo (R em relatórios); Veterinário RW animais e processos, R relatórios, sem ocorrências; Agente R animais, RW ocorrências e processos, R relatórios. Resolvida do banco a cada requisição.'
 }
 
 // ── Preferências ───────────────────────────────────────

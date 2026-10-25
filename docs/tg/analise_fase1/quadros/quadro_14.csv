@@ -1,0 +1,19 @@
+﻿Quadro 14 – Bibliotecas utilizadas no SISZOO
+Biblioteca;Camada;Uso no SISZOO;Requisito ou regra
+Spring Security;Backend;Autenticação e autorização por perfil;RF-C01, RN09
+jjwt;Backend;Emissão e validação do token JWT;RF-C01
+Bean Validation (Spring Validation);Backend;Validação de campos obrigatórios e formatos;RN07, RN08
+Spring Data JPA e Hibernate;Backend;Mapeamento das entidades para as tabelas;RNF09
+Flyway;Backend;Criação e versionamento do esquema do banco;RNF09
+Spring Boot Mail e Thymeleaf;Backend;E-mail de resultado laboratorial com modelo HTML;RN10
+OpenPDF;Backend;Geração dos relatórios em PDF;RF-D02
+Lombok;Backend;Redução de código repetitivo nas classes;RNF08
+React Router;Frontend;Navegação e bloqueio de telas sem autenticação;RF-C01, RN09
+TanStack Query e Axios;Frontend;Comunicação com a API, cache das consultas e envio do token;RNF01
+Zod;Frontend;Validação dos formulários no navegador;RN07, RN08
+idb;Frontend;Rascunho local de formulários no IndexedDB;RNF03
+Recharts;Frontend;Gráficos do painel de indicadores;RF-D01
+JUnit 5, Testcontainers e Rest Assured;Testes;Testes de integração da API com PostgreSQL em contêiner;RNF08
+GreenMail;Testes;Servidor de e-mail simulado nos testes;RN10
+Vitest, Testing Library e MSW;Testes;Testes de componentes com API simulada;RNF08
+Playwright;Testes;Testes ponta a ponta no navegador;RNF08

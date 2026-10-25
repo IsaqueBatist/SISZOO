@@ -1,0 +1,20 @@
+﻿Quadro 23 – Caso de uso de baixo nível Cadastrar Animal
+Cadastrar Animal
+Caso de Uso Geral;Gestão de Animais
+Ator Principal;Veterinário
+Atores Secundários;
+Resumo;O Veterinário registra um novo animal no canil com seus dados de identificação, características e localização.
+Pré-Condições;O ator deve estar autenticado com permissão de escrita no módulo de animais.
+Pós-Condições;"Animal cadastrado e vinculado a uma baia; ocupação da baia atualizada."
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Veterinário aciona a opção de cadastrar animal.;
+O Veterinário informa o número do microchip (quando o animal já o possuir), espécie, sexo, porte, baia e demais dados (nome, raça, pelagem, coloração, peso, foto, motivo de entrada).;
+O Veterinário confirma o cadastro.;
+;Valida os campos obrigatórios (RN07) e verifica a unicidade do microchip, quando informado (RN01).
+;Verifica a disponibilidade de vaga na baia selecionada.
+;Persiste o animal, atualiza a ocupação da baia e registra o evento de auditoria.
+Restrições/Validações;Microchip único quando informado (RN01). Campos obrigatórios: espécie, sexo, porte, baia, esterilizado, status, motivo e data de entrada (RN07).
+Fluxo Alternativo I;Microchip já cadastrado: o sistema rejeita o cadastro e informa a duplicidade.
+Fluxo Alternativo II;Baia sem vaga: o sistema alerta sobre a superlotação e solicita outra baia.
+Requisitos relacionados;RF-A01, RN01, RN07

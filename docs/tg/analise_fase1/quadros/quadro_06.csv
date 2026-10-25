@@ -1,0 +1,5 @@
+﻿Quadro 6 – Requisitos funcionais do Módulo 1: Autenticação e Controle de Acesso
+ID;Nome;Descrição;Prior.
+RF-C01;Autenticação;"Login com e-mail institucional e senha, com troca de senha obrigatória no primeiro acesso. Autenticação por token JWT com prazo de validade; no logout, o token é descartado (RNF06).";Alta
+RF-C02;Gestão de Usuários;Administrador cadastra, edita, desativa e reativa usuários, atribuindo cargos com permissões por módulo (leitura, escrita e exclusão). Toda ação crítica gera AuditoriaEvento (RN06, RNF10).;Alta
+RF-C03;Preferências do Usuário;"O usuário ajusta o tema, densidade da interface e as notificações que deseja receber; as preferências são individuais e não afetam outros usuários.";Baixa

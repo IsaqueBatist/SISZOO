@@ -1,0 +1,23 @@
+﻿Quadro 90 – Dicionário de dados – tabela ProcessoSanitario
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único do processo sanitário.
+protocolo;varchar(50);UQ;Protocolo sequencial anual 0000/AAAA (RN02).
+criado_por;uuid;FK;Usuário que criou o processo (Usuario).
+doenca_id;uuid;FK;Doença investigada (Doenca).
+status_processo;StatusProcesso;;Situação no ciclo de vida (RN12).
+laboratorio_id;uuid;FK;Laboratório de análise (Laboratorio).
+resultado_laboratorial;ResultadoLaboratorial;;Resultado da análise laboratorial.
+desfecho_animal;DesfechoAnimal;;Desfecho do animal investigado.
+responsavel_id;uuid;FK;Responsável pelo animal (ResponsavelProcesso).
+ocorrencia_id;uuid;FK;Ocorrência de origem, quando houver (Ocorrencia).
+urgente;boolean;;Indica urgência epidemiológica (RN04).
+gal_numero;varchar(50);;Número de protocolo no sistema estadual GAL.
+sinan_numero;varchar(50);;Número de notificação no SINAN.
+data_abertura;date;;Data de abertura do processo.
+data_envio_amostras;date;;Data de envio das amostras ao laboratório.
+data_resultado;date;;Data de recebimento do resultado.
+notificado_em;timestamp;;Data e hora do envio da notificação de resultado (RN10).
+previsao_retorno;date;;Previsão de retorno do resultado.
+observacoes;text;;Observações gerais do processo.
+criado_em;timestamp;;Data e hora de criação do registro.
+atualizado_em;timestamp;;Data e hora da última atualização.

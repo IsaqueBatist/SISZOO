@@ -1,0 +1,14 @@
+﻿Quadro 13 – Regras de negócio do SISZOO
+ID;Regra;Descrição
+RN01;Microchip Único;"O número do microchip identifica o animal de forma única; o sistema rejeita número já cadastrado. O animal que chega sem microchip é cadastrado e recebe o chip no CCZ; o número e a data de implantação são registrados nesse momento."
+RN02;Protocolo por Ano;O protocolo (processo sanitário e ocorrência) é gerado automaticamente no formato 0000/AAAA, sequencial, reiniciando em 0001 a cada ano civil.
+RN03;Sigilo do Denunciante;"Em ocorrências sigilosas, os dados do denunciante não são exibidos para nenhum perfil exceto Administrador; o acesso do Administrador é registrado em auditoria."
+RN04;Contato Humano-Animal;Processos com AmostraAnimal cujo contato humano seja verdadeiro são marcados como urgentes e fixados no topo das listagens.
+RN05;Encerramento de Ocorrência;Ocorrência com processo sanitário vinculado só pode ser encerrada depois de registrado o resultado desse processo.
+RN06;Imutabilidade;"Histórico veterinário, processos e resultados não podem ser excluídos; a correção gera novo registro, com registro em AuditoriaEvento."
+RN07;Campos Obrigatórios – Animal;Obrigatórios: espécie, sexo, porte, baia, esterilizado, status, motivo de entrada e data de entrada. O microchip é obrigatório para a ficha ser considerada completa, não para o cadastro de entrada.
+RN08;Campos Obrigatórios – Processo;Obrigatórios: data de abertura, doença, laboratório, ao menos uma amostra e os dados mínimos do responsável (nome, endereço).
+RN09;Controle de Acesso;Administrador: acesso total. Veterinário: Gestão de Animais (A) e Dashboard/Relatórios (D). Agente Sanitário: Processos (B), Ocorrências (E) e Dashboard/Relatórios (D).
+RN10;Notificação de Resultado;Ao registrar resultado Positivo ou Inconclusivo, o sistema envia e-mail ao responsável (quando houver e-mail cadastrado) e à Vigilância Epidemiológica do município. O envio é registrado e não se repete.
+RN11;Estado de Exportação;RelatorioGerado com estados Pendente→Em Processamento→Concluído/Falha. Binário não armazenado no banco, apenas URL com política de expiração.
+RN12;Ciclo do Processo;Transições: ABERTO→EM_ANDAMENTO→AGUARDANDO_RESULTADO→CONCLUIDO. Resultado não pode ser preenchido com status=ABERTO.

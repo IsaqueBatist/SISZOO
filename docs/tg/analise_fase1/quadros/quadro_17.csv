@@ -1,0 +1,16 @@
+﻿Quadro 17 – Caso de uso de baixo nível Encerrar Sessão (Logout)
+Encerrar Sessão (Logout)
+Caso de Uso Geral;Autenticação
+Ator Principal;Veterinário, Agente Sanitário ou Administrador
+Atores Secundários;
+Resumo;O usuário encerra o uso do sistema, descartando o token JWT em uso.
+Pré-Condições;O usuário deve estar autenticado com token válido.
+Pós-Condições;"Token descartado; usuário redirecionado à tela de login."
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O usuário aciona a opção de sair do sistema.;
+;Descarta o token JWT armazenado no navegador.
+;Registra o evento de auditoria de LOGOUT e redireciona à tela de login.
+Restrições/Validações;O token deixa de ser usado no logout e perde a validade na expiração (RNF06).
+Fluxo Alternativo I;Token já expirado: o sistema apenas redireciona à tela de login, sem ação adicional.
+Requisitos relacionados;RF-C01, RNF10

@@ -1,0 +1,16 @@
+﻿Quadro 22 – Caso de uso de baixo nível Consultar Trilha de Auditoria
+Consultar Trilha de Auditoria
+Caso de Uso Geral;Controle de Acesso
+Ator Principal;Administrador
+Atores Secundários;
+Resumo;O Administrador consulta o histórico de ações críticas registradas no sistema.
+Pré-Condições;O ator deve estar autenticado com cargo de Administrador.
+Pós-Condições;Eventos de auditoria exibidos conforme os filtros aplicados.
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Administrador acessa a trilha de auditoria e define filtros (usuário, entidade, período).;
+;Consulta os eventos de auditoria que satisfazem os filtros.
+;Exibe a lista com usuário, ação, entidade, data/hora e os valores anterior e posterior.
+Restrições/Validações;Os registros de auditoria são imutáveis (RN06) e acessíveis apenas ao Administrador.
+Fluxo Alternativo I;Nenhum evento encontrado: o sistema informa que não há registros para os filtros aplicados.
+Requisitos relacionados;RF-C02, RN06, RNF10

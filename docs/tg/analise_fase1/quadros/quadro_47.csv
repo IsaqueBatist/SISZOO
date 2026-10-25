@@ -1,0 +1,17 @@
+﻿Quadro 47 – Caso de uso de baixo nível Consultar Alertas Vacinais
+Consultar Alertas Vacinais
+Caso de Uso Geral;Visualizar Dashboard em Tempo Real (extensão)
+Ator Principal;Veterinário
+Atores Secundários;
+Resumo;O Veterinário consulta os animais com reforço vacinal próximo ou vencido.
+Pré-Condições;O Veterinário está no painel inicial.
+Pós-Condições;"Lista de alertas exibida; nenhum dado é alterado."
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Veterinário aciona o alerta de vacinas no painel.;
+;Lista as vacinações com validade nos próximos 7 dias e as já vencidas, com animal, vacina, dias restantes e severidade.
+O Veterinário seleciona um animal da lista.;
+;Abre a ficha do animal na aba de vacinas.
+Restrições/Validações;"Janela de 7 dias (RF-A03); vacinas vencidas aparecem com severidade maior."
+Fluxo Alternativo I;Nenhuma vacina a vencer: o sistema informa que não há alertas.
+Requisitos relacionados;RF-A03, RF-D01

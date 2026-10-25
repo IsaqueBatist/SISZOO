@@ -1,0 +1,4 @@
+﻿Quadro 93 – Dicionário de dados – tabela AmostraSintoma
+Campo;Tipo;Chave;Descrição
+amostra_id;uuid;PK, FK;Amostra (AmostraAnimal).
+sintoma_id;uuid;PK, FK;Sintoma observado na coleta (Sintoma).

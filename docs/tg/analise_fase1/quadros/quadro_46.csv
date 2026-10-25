@@ -1,0 +1,18 @@
+﻿Quadro 46 – Caso de uso de baixo nível Visualizar Dashboard em Tempo Real
+Visualizar Dashboard em Tempo Real
+Caso de Uso Geral;Dashboard
+Ator Principal;Veterinário ou Agente Sanitário
+Atores Secundários;
+Resumo;O usuário visualiza indicadores operacionais consolidados em tempo real.
+Pré-Condições;O ator deve estar autenticado com permissão de acesso ao dashboard.
+Pós-Condições;Indicadores exibidos com dados atualizados do banco.
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O usuário acessa o dashboard.;
+;Consulta em tempo real os totais por status de animal, a ocupação das baias e os alertas vacinais de 7 dias.
+;Consulta os processos aguardando resultado, os processos urgentes e o resumo mensal por doença.
+;Exibe os indicadores e gráficos consolidados (RF-D01).
+Restrições/Validações;O dashboard é alimentado por consultas em tempo real e não gera entidade persistida.
+Fluxo Alternativo I;Consultar alertas vacinais: o usuário detalha os animais com reforço previsto para os próximos 7 dias (RF-A03), conforme o caso de uso Consultar Alertas Vacinais.
+Fluxo Alternativo II;Monitorar ocupação de baias: o usuário detalha a ocupação atual versus a capacidade de cada baia, conforme o caso de uso Monitorar Ocupação de Baias.
+Requisitos relacionados;RF-D01

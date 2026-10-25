@@ -1,0 +1,18 @@
+﻿Quadro 39 – Caso de uso de baixo nível Encerrar Ocorrência
+Encerrar Ocorrência
+Caso de Uso Geral;Gestão de Ocorrências
+Ator Principal;Agente Sanitário
+Atores Secundários;
+Resumo;O Agente Sanitário encerra uma ocorrência, registrando a providência tomada.
+Pré-Condições;A ocorrência deve estar aberta ou em atendimento e o ator ter permissão para encerrá-la.
+Pós-Condições;"Ocorrência encerrada com descrição e providência; registro torna-se imutável."
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Agente Sanitário abre a ocorrência e seleciona encerrar.;
+O Agente Sanitário informa a descrição de encerramento e a providência tomada.;
+O Agente Sanitário confirma o encerramento.;
+;Atualiza o status para encerrada, registra a data de encerramento e a movimentação de ENCERRAMENTO.
+Restrições/Validações;Somente Agente Sanitário ou Administrador podem encerrar. Após o encerramento, o registro é imutável (RN06). Ocorrência com processo sanitário vinculado só pode ser encerrada após o registro do resultado desse processo (RN05).
+Fluxo Alternativo I;Providência não informada: o sistema impede o encerramento até que a providência seja selecionada.
+Fluxo Alternativo II;Processo vinculado sem resultado: o sistema impede o encerramento e informa o protocolo do processo pendente (RN05).
+Requisitos relacionados;RF-E03, RN05, RN06

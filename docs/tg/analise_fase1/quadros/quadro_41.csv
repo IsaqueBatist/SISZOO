@@ -1,0 +1,19 @@
+﻿Quadro 41 – Caso de uso de baixo nível Registrar Animal Amostrado
+Registrar Animal Amostrado
+Caso de Uso Geral;Gestão de Processos
+Ator Principal;Agente Sanitário
+Atores Secundários;
+Resumo;O Agente Sanitário registra os dados do animal investigado e da amostra coletada dentro de um processo.
+Pré-Condições;Deve existir um processo sanitário em aberto.
+Pós-Condições;Animal amostrado vinculado ao processo, com material biológico e indicadores de contato registrados.
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Agente Sanitário informa as características do animal (espécie, sexo, raça, coloração, pelagem, peso, estado clínico, tipo de abrigo e sintomas).;
+O Agente Sanitário informa o material biológico, o tipo de amostra e a data de coleta.;
+O Agente Sanitário informa o contato com humano, o nível de contato e se houve agressão.;
+O Agente Sanitário confirma o registro.;
+;Persiste o animal amostrado vinculado ao processo.
+;Avalia o indicador de contato humano e, se verdadeiro, sinaliza a urgência do processo (RN04).
+Restrições/Validações;O indicador de contato humano verdadeiro aciona a urgência do processo (RN04, RF-B05).
+Fluxo Alternativo I;Animal interno: quando o investigado for um animal do canil, o registro pode referenciar o cadastro existente.
+Requisitos relacionados;RF-B04, RN04

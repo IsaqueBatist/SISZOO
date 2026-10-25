@@ -229,3 +229,13 @@ comunicação oficial aprovada pelo CCZ.
   superlotação, alertas críticos, e-mail diário), mas nenhum deles está
   implementado nem é lido em lugar nenhum do código — ver pendência em
   `docs/decisoes/T35.md`.
+
+## Revisão de 22/10/2026 — resultado `inconclusivo` também notifica
+
+Com o alinhamento ao TG (`docs/decisoes/alinhamento-tg.md` AT-1), a notificação ao munícipe sai para `positivo` **ou**
+`inconclusivo` (`ResultadosNotificaveis.CODIGOS`). Onde este documento diz "só o resultado `positivo`", leia "resultado
+notificável". Consequências: (1) um `inconclusivo` corrigido para `positivo` dispara nova notificação, porque o processo
+zera `data_notificacao_municipe` ao receber outro resultado notificável; (2) o reenvio manual vale para qualquer
+resultado notificável ainda não confirmado pelo SMTP; (3) os templates usam a variável `resultado` no assunto e no corpo.
+Testes: `NotificacaoResultadoControllerIT` (inconclusivo notifica; negativo, material inadequado e não realizado não
+notificam; reenvio de inconclusivo responde 200), `NotificacaoResultadoServiceTest`, `EmailServiceIT`.

@@ -1,0 +1,1083 @@
+[
+ {
+  "num": 1,
+  "titulo": "Diagrama de casos de uso geral do SISZOO",
+  "separador": "–",
+  "bloco_legenda": 411,
+  "secao": "4.1 DIAGRAMAS DE CASOS DE USO",
+  "rIds": [
+   "rId48"
+  ],
+  "arquivos": [
+   "image1.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 413,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 2,
+  "titulo": "Diagrama de casos de uso – Módulo 1: Autenticação e Controle de Acesso",
+  "separador": "–",
+  "bloco_legenda": 414,
+  "secao": "4.1 DIAGRAMAS DE CASOS DE USO",
+  "rIds": [
+   "rId49"
+  ],
+  "arquivos": [
+   "image2.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 416,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 3,
+  "titulo": "Diagrama de casos de uso – Módulo 2: Gestão de Animais do Canil",
+  "separador": "–",
+  "bloco_legenda": 417,
+  "secao": "4.1 DIAGRAMAS DE CASOS DE USO",
+  "rIds": [
+   "rId50"
+  ],
+  "arquivos": [
+   "image3.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 419,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 4,
+  "titulo": "Diagrama de casos de uso – Módulo 3: Ocorrências e Denúncias",
+  "separador": "–",
+  "bloco_legenda": 420,
+  "secao": "4.1 DIAGRAMAS DE CASOS DE USO",
+  "rIds": [
+   "rId51"
+  ],
+  "arquivos": [
+   "image4.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 422,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 5,
+  "titulo": "Diagrama de casos de uso – Módulo 4: Processos Sanitários",
+  "separador": "–",
+  "bloco_legenda": 423,
+  "secao": "4.1 DIAGRAMAS DE CASOS DE USO",
+  "rIds": [
+   "rId52"
+  ],
+  "arquivos": [
+   "image5.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 425,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 6,
+  "titulo": "Diagrama de casos de uso – Módulo 5: Dashboard e Relatórios",
+  "separador": "–",
+  "bloco_legenda": 426,
+  "secao": "4.1 DIAGRAMAS DE CASOS DE USO",
+  "rIds": [
+   "rId53"
+  ],
+  "arquivos": [
+   "image6.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 428,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 7,
+  "titulo": "DER conceitual – Módulo 1: Usuários e Acesso",
+  "separador": "–",
+  "bloco_legenda": 431,
+  "secao": "4.2 DIAGRAMAS ENTIDADE-RELACIONAMENTO (DER)",
+  "rIds": [
+   "rId54"
+  ],
+  "arquivos": [
+   "image7.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 433,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 8,
+  "titulo": "DER conceitual – Módulo 2: Gestão de Animais do Canil",
+  "separador": "–",
+  "bloco_legenda": 434,
+  "secao": "4.2 DIAGRAMAS ENTIDADE-RELACIONAMENTO (DER)",
+  "rIds": [
+   "rId55"
+  ],
+  "arquivos": [
+   "image8.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 436,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 9,
+  "titulo": "DER conceitual – Módulo 3: Ocorrências e Denúncias",
+  "separador": "–",
+  "bloco_legenda": 437,
+  "secao": "4.2 DIAGRAMAS ENTIDADE-RELACIONAMENTO (DER)",
+  "rIds": [
+   "rId56"
+  ],
+  "arquivos": [
+   "image9.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 439,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 10,
+  "titulo": "DER conceitual – Módulo 4: Processos Sanitários",
+  "separador": "–",
+  "bloco_legenda": 440,
+  "secao": "4.2 DIAGRAMAS ENTIDADE-RELACIONAMENTO (DER)",
+  "rIds": [
+   "rId57"
+  ],
+  "arquivos": [
+   "image10.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 442,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 11,
+  "titulo": "DER conceitual – Módulo 5: Relatórios",
+  "separador": "–",
+  "bloco_legenda": 443,
+  "secao": "4.2 DIAGRAMAS ENTIDADE-RELACIONAMENTO (DER)",
+  "rIds": [
+   "rId58"
+  ],
+  "arquivos": [
+   "image11.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 445,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 12,
+  "titulo": "Diagrama lógico – Módulo 1: Autenticação e Controle de Acesso",
+  "separador": "–",
+  "bloco_legenda": 448,
+  "secao": "4.3 DIAGRAMAS LÓGICOS",
+  "rIds": [
+   "rId59"
+  ],
+  "arquivos": [
+   "image12.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 450,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 13,
+  "titulo": "Diagrama lógico – Módulo 2: Gestão de Animais do Canil",
+  "separador": "–",
+  "bloco_legenda": 451,
+  "secao": "4.3 DIAGRAMAS LÓGICOS",
+  "rIds": [
+   "rId60"
+  ],
+  "arquivos": [
+   "image13.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 453,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 14,
+  "titulo": "Diagrama lógico – Módulo 3: Ocorrências e Denúncias",
+  "separador": "–",
+  "bloco_legenda": 454,
+  "secao": "4.3 DIAGRAMAS LÓGICOS",
+  "rIds": [
+   "rId61"
+  ],
+  "arquivos": [
+   "image14.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 456,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 15,
+  "titulo": "Diagrama lógico – Módulo 4: Processos Sanitários",
+  "separador": "–",
+  "bloco_legenda": 457,
+  "secao": "4.3 DIAGRAMAS LÓGICOS",
+  "rIds": [
+   "rId62"
+  ],
+  "arquivos": [
+   "image15.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 459,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 16,
+  "titulo": "Diagrama lógico – Módulo 5: Relatórios",
+  "separador": "–",
+  "bloco_legenda": 460,
+  "secao": "4.3 DIAGRAMAS LÓGICOS",
+  "rIds": [
+   "rId63"
+  ],
+  "arquivos": [
+   "image16.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 462,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 17,
+  "titulo": "Diagrama de classes – Módulo 1: Usuários e Acesso",
+  "separador": "–",
+  "bloco_legenda": 469,
+  "secao": "4.5 DIAGRAMAS DE CLASSE",
+  "rIds": [
+   "rId64"
+  ],
+  "arquivos": [
+   "image17.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 471,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 18,
+  "titulo": "Diagrama de classes – Módulo 2: animal, baias e adoção",
+  "separador": "–",
+  "bloco_legenda": 472,
+  "secao": "4.5 DIAGRAMAS DE CLASSE",
+  "rIds": [
+   "rId65"
+  ],
+  "arquivos": [
+   "image18.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 474,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 19,
+  "titulo": "Diagrama de classes – Módulo 2: vacinação e prescrição",
+  "separador": "–",
+  "bloco_legenda": 475,
+  "secao": "4.5 DIAGRAMAS DE CLASSE",
+  "rIds": [
+   "rId66"
+  ],
+  "arquivos": [
+   "image19.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 477,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 20,
+  "titulo": "Diagrama de classes – Módulo 2: procedimentos, exames e sintomas",
+  "separador": "–",
+  "bloco_legenda": 478,
+  "secao": "4.5 DIAGRAMAS DE CLASSE",
+  "rIds": [
+   "rId67"
+  ],
+  "arquivos": [
+   "image20.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 480,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 21,
+  "titulo": "Diagrama de classes – Módulo 2: enumerações",
+  "separador": "–",
+  "bloco_legenda": 481,
+  "secao": "4.5 DIAGRAMAS DE CLASSE",
+  "rIds": [
+   "rId68"
+  ],
+  "arquivos": [
+   "image21.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 483,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 22,
+  "titulo": "Diagrama de classes – Módulo 3: Ocorrências e Denúncias",
+  "separador": "–",
+  "bloco_legenda": 484,
+  "secao": "4.5 DIAGRAMAS DE CLASSE",
+  "rIds": [
+   "rId69"
+  ],
+  "arquivos": [
+   "image22.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 486,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 23,
+  "titulo": "Diagrama de classes – Módulo 4: Processos Sanitários",
+  "separador": "–",
+  "bloco_legenda": 487,
+  "secao": "4.5 DIAGRAMAS DE CLASSE",
+  "rIds": [
+   "rId70"
+  ],
+  "arquivos": [
+   "image23.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 489,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 24,
+  "titulo": "Diagrama de classes – Módulo 4: enumerações",
+  "separador": "–",
+  "bloco_legenda": 490,
+  "secao": "4.5 DIAGRAMAS DE CLASSE",
+  "rIds": [
+   "rId71"
+  ],
+  "arquivos": [
+   "image24.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 492,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 25,
+  "titulo": "Diagrama de classes – Módulo 5: Relatórios",
+  "separador": "–",
+  "bloco_legenda": 493,
+  "secao": "4.5 DIAGRAMAS DE CLASSE",
+  "rIds": [
+   "rId72"
+  ],
+  "arquivos": [
+   "image25.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 495,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 26,
+  "titulo": "Protótipo da tela T02: Dashboard operacional",
+  "separador": "–",
+  "bloco_legenda": 499,
+  "secao": "4.6 PROTOTIPAÇÃO DAS INTERFACES",
+  "rIds": [
+   "rId73"
+  ],
+  "arquivos": [
+   "image26.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 501,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 27,
+  "titulo": "Protótipo da tela T06: Ficha do animal",
+  "separador": "–",
+  "bloco_legenda": 503,
+  "secao": "4.6 PROTOTIPAÇÃO DAS INTERFACES",
+  "rIds": [
+   "rId74"
+  ],
+  "arquivos": [
+   "image27.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 505,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 28,
+  "titulo": "Protótipo da tela T10: Detalhe da ocorrência",
+  "separador": "–",
+  "bloco_legenda": 507,
+  "secao": "4.6 PROTOTIPAÇÃO DAS INTERFACES",
+  "rIds": [
+   "rId75"
+  ],
+  "arquivos": [
+   "image28.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 509,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 29,
+  "titulo": "Protótipo da tela T07: Gestão de baias",
+  "separador": "–",
+  "bloco_legenda": 511,
+  "secao": "4.6 PROTOTIPAÇÃO DAS INTERFACES",
+  "rIds": [
+   "rId76"
+  ],
+  "arquivos": [
+   "image29.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 513,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 30,
+  "titulo": "Protótipo da tela T14: Central de relatórios",
+  "separador": "–",
+  "bloco_legenda": 515,
+  "secao": "4.6 PROTOTIPAÇÃO DAS INTERFACES",
+  "rIds": [
+   "rId77"
+  ],
+  "arquivos": [
+   "image30.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 517,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 31,
+  "titulo": "Tela T01: Login",
+  "separador": "–",
+  "bloco_legenda": 531,
+  "secao": "5.2 TELAS DO SISTEMA",
+  "rIds": [],
+  "arquivos": [],
+  "placeholder": "[INSERIR CAPTURA DA TELA T01 – LOGIN]",
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 533,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 32,
+  "titulo": "Tela T02: Dashboard operacional",
+  "separador": "–",
+  "bloco_legenda": 535,
+  "secao": "5.2 TELAS DO SISTEMA",
+  "rIds": [],
+  "arquivos": [],
+  "placeholder": "[INSERIR CAPTURA DA TELA T02 – DASHBOARD OPERACIONAL]",
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 537,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 33,
+  "titulo": "Tela T03: Alertas",
+  "separador": "–",
+  "bloco_legenda": 539,
+  "secao": "5.2 TELAS DO SISTEMA",
+  "rIds": [],
+  "arquivos": [],
+  "placeholder": "[INSERIR CAPTURA DA TELA T03 – ALERTAS]",
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 541,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 34,
+  "titulo": "Tela T04: Animais do canil",
+  "separador": "–",
+  "bloco_legenda": 543,
+  "secao": "5.2 TELAS DO SISTEMA",
+  "rIds": [],
+  "arquivos": [],
+  "placeholder": "[INSERIR CAPTURA DA TELA T04 – ANIMAIS DO CANIL]",
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 545,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 35,
+  "titulo": "Tela T05: Cadastro de animal",
+  "separador": "–",
+  "bloco_legenda": 547,
+  "secao": "5.2 TELAS DO SISTEMA",
+  "rIds": [],
+  "arquivos": [],
+  "placeholder": "[INSERIR CAPTURA DA TELA T05 – CADASTRO DE ANIMAL]",
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 549,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 36,
+  "titulo": "Tela T06: Ficha do animal",
+  "separador": "–",
+  "bloco_legenda": 551,
+  "secao": "5.2 TELAS DO SISTEMA",
+  "rIds": [],
+  "arquivos": [],
+  "placeholder": "[INSERIR CAPTURA DA TELA T06 – FICHA DO ANIMAL]",
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 553,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 37,
+  "titulo": "Tela T07: Gestão de baias",
+  "separador": "–",
+  "bloco_legenda": 555,
+  "secao": "5.2 TELAS DO SISTEMA",
+  "rIds": [],
+  "arquivos": [],
+  "placeholder": "[INSERIR CAPTURA DA TELA T07 – GESTÃO DE BAIAS]",
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 557,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 38,
+  "titulo": "Tela T08: Ocorrências",
+  "separador": "–",
+  "bloco_legenda": 559,
+  "secao": "5.2 TELAS DO SISTEMA",
+  "rIds": [],
+  "arquivos": [],
+  "placeholder": "[INSERIR CAPTURA DA TELA T08 – OCORRÊNCIAS]",
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 561,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 39,
+  "titulo": "Tela T09: Registro de ocorrência",
+  "separador": "–",
+  "bloco_legenda": 563,
+  "secao": "5.2 TELAS DO SISTEMA",
+  "rIds": [],
+  "arquivos": [],
+  "placeholder": "[INSERIR CAPTURA DA TELA T09 – REGISTRO DE OCORRÊNCIA]",
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 565,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 40,
+  "titulo": "Tela T10: Detalhe da ocorrência",
+  "separador": "–",
+  "bloco_legenda": 567,
+  "secao": "5.2 TELAS DO SISTEMA",
+  "rIds": [],
+  "arquivos": [],
+  "placeholder": "[INSERIR CAPTURA DA TELA T10 – DETALHE DA OCORRÊNCIA]",
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 569,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 41,
+  "titulo": "Tela T11: Processos sanitários",
+  "separador": "–",
+  "bloco_legenda": 571,
+  "secao": "5.2 TELAS DO SISTEMA",
+  "rIds": [],
+  "arquivos": [],
+  "placeholder": "[INSERIR CAPTURA DA TELA T11 – PROCESSOS SANITÁRIOS]",
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 573,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 42,
+  "titulo": "Tela T12: Abertura de processo",
+  "separador": "–",
+  "bloco_legenda": 575,
+  "secao": "5.2 TELAS DO SISTEMA",
+  "rIds": [],
+  "arquivos": [],
+  "placeholder": "[INSERIR CAPTURA DA TELA T12 – ABERTURA DE PROCESSO]",
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 577,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 43,
+  "titulo": "Tela T13: Detalhe do processo",
+  "separador": "–",
+  "bloco_legenda": 579,
+  "secao": "5.2 TELAS DO SISTEMA",
+  "rIds": [],
+  "arquivos": [],
+  "placeholder": "[INSERIR CAPTURA DA TELA T13 – DETALHE DO PROCESSO]",
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 581,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 44,
+  "titulo": "Tela T14: Central de relatórios",
+  "separador": "–",
+  "bloco_legenda": 583,
+  "secao": "5.2 TELAS DO SISTEMA",
+  "rIds": [],
+  "arquivos": [],
+  "placeholder": "[INSERIR CAPTURA DA TELA T14 – CENTRAL DE RELATÓRIOS]",
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 585,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 45,
+  "titulo": "Tela T15: Usuários",
+  "separador": "–",
+  "bloco_legenda": 587,
+  "secao": "5.2 TELAS DO SISTEMA",
+  "rIds": [],
+  "arquivos": [],
+  "placeholder": "[INSERIR CAPTURA DA TELA T15 – USUÁRIOS]",
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 589,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 46,
+  "titulo": "Tela T16: Configurações",
+  "separador": "–",
+  "bloco_legenda": 591,
+  "secao": "5.2 TELAS DO SISTEMA",
+  "rIds": [],
+  "arquivos": [],
+  "placeholder": "[INSERIR CAPTURA DA TELA T16 – CONFIGURAÇÕES]",
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 593,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 47,
+  "titulo": "Tela T17: Perfil e Ajuda",
+  "separador": "–",
+  "bloco_legenda": 595,
+  "secao": "5.2 TELAS DO SISTEMA",
+  "rIds": [],
+  "arquivos": [],
+  "placeholder": "[INSERIR CAPTURA DA TELA T17 – PERFIL E AJUDA]",
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 597,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 48,
+  "titulo": "Ficha física de controle do canil",
+  "separador": "–",
+  "bloco_legenda": 1201,
+  "secao": "APÊNDICE D – REGISTRO FOTOGRÁFICO DA VISITA AO CCZ DE ITU",
+  "rIds": [
+   "rId78"
+  ],
+  "arquivos": [
+   "image31.jpeg"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Acervo dos autores (2026).",
+  "bloco_fonte": 1203,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 49,
+  "titulo": "Planilha de registro dos animais do canil",
+  "separador": "–",
+  "bloco_legenda": 1205,
+  "secao": "APÊNDICE D – REGISTRO FOTOGRÁFICO DA VISITA AO CCZ DE ITU",
+  "rIds": [
+   "rId79"
+  ],
+  "arquivos": [
+   "image32.jpeg"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Acervo dos autores (2026).",
+  "bloco_fonte": 1207,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 50,
+  "titulo": "Continuação da planilha de animais do canil",
+  "separador": "–",
+  "bloco_legenda": 1209,
+  "secao": "APÊNDICE D – REGISTRO FOTOGRÁFICO DA VISITA AO CCZ DE ITU",
+  "rIds": [
+   "rId80"
+  ],
+  "arquivos": [
+   "image33.jpeg"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Acervo dos autores (2026)",
+  "bloco_fonte": 1211,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 51,
+  "titulo": "Planilha de controle dos processos sanitários",
+  "separador": "–",
+  "bloco_legenda": 1214,
+  "secao": "APÊNDICE D – REGISTRO FOTOGRÁFICO DA VISITA AO CCZ DE ITU",
+  "rIds": [
+   "rId81"
+  ],
+  "arquivos": [
+   "image34.jpeg"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Acervo dos autores (2026)",
+  "bloco_fonte": 1216,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 52,
+  "titulo": "Capa de processo sanitário em manuseio",
+  "separador": "–",
+  "bloco_legenda": 1219,
+  "secao": "APÊNDICE D – REGISTRO FOTOGRÁFICO DA VISITA AO CCZ DE ITU",
+  "rIds": [
+   "rId82"
+  ],
+  "arquivos": [
+   "image35.jpeg"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Acervo dos autores (2026)",
+  "bloco_fonte": 1221,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 53,
+  "titulo": "Ficha de notificação de cão com suspeita de leishmaniose visceral",
+  "separador": "–",
+  "bloco_legenda": 1224,
+  "secao": "APÊNDICE D – REGISTRO FOTOGRÁFICO DA VISITA AO CCZ DE ITU",
+  "rIds": [
+   "rId83"
+  ],
+  "arquivos": [
+   "image36.jpeg"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Acervo dos autores (2026)",
+  "bloco_fonte": 1226,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 54,
+  "titulo": "Requisição de exame no GAL",
+  "separador": "–",
+  "bloco_legenda": 1229,
+  "secao": "APÊNDICE D – REGISTRO FOTOGRÁFICO DA VISITA AO CCZ DE ITU",
+  "rIds": [
+   "rId84"
+  ],
+  "arquivos": [
+   "image37.jpeg"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Acervo dos autores (2026)",
+  "bloco_fonte": 1231,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 55,
+  "titulo": "Etiqueta de protocolo do GAL",
+  "separador": "–",
+  "bloco_legenda": 1233,
+  "secao": "APÊNDICE D – REGISTRO FOTOGRÁFICO DA VISITA AO CCZ DE ITU",
+  "rIds": [
+   "rId85"
+  ],
+  "arquivos": [
+   "image38.jpeg"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Acervo dos autores (2026)",
+  "bloco_fonte": 1235,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 56,
+  "titulo": "Requisição de exame molecular e notificação no SINAN",
+  "separador": "–",
+  "bloco_legenda": 1237,
+  "secao": "APÊNDICE D – REGISTRO FOTOGRÁFICO DA VISITA AO CCZ DE ITU",
+  "rIds": [
+   "rId86"
+  ],
+  "arquivos": [
+   "image39.jpeg"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Acervo dos autores (2026)",
+  "bloco_fonte": 1239,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 57,
+  "titulo": "Folha de coleta e exame laboratorial",
+  "separador": "–",
+  "bloco_legenda": 1242,
+  "secao": "APÊNDICE D – REGISTRO FOTOGRÁFICO DA VISITA AO CCZ DE ITU",
+  "rIds": [
+   "rId87"
+  ],
+  "arquivos": [
+   "image40.jpeg"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Acervo dos autores (2026).",
+  "bloco_fonte": 1244,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 58,
+  "titulo": "Gráficos de casos suspeitos de zoonoses afixados em mural",
+  "separador": "–",
+  "bloco_legenda": 1246,
+  "secao": "APÊNDICE D – REGISTRO FOTOGRÁFICO DA VISITA AO CCZ DE ITU",
+  "rIds": [
+   "rId88"
+  ],
+  "arquivos": [
+   "image41.jpeg"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Acervo dos autores (2026)",
+  "bloco_fonte": 1248,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 59,
+  "titulo": "Gráficos de resultados laboratoriais afixados em mural",
+  "separador": "–",
+  "bloco_legenda": 1252,
+  "secao": "APÊNDICE D – REGISTRO FOTOGRÁFICO DA VISITA AO CCZ DE ITU",
+  "rIds": [
+   "rId89"
+  ],
+  "arquivos": [
+   "image42.jpeg"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Acervo dos autores (2026)",
+  "bloco_fonte": 1254,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 49,
+  "titulo": "Tela T18: Relatório anual de processos",
+  "separador": "–",
+  "bloco_legenda": 1258,
+  "secao": "APÊNDICE E – TELAS DOS RELATÓRIOS DO SISZOO",
+  "rIds": [],
+  "arquivos": [],
+  "placeholder": "[INSERIR CAPTURA DA TELA T18 – RELATÓRIO ANUAL DE PROCESSOS]",
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 1260,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 50,
+  "titulo": "Tela T19: Relatório de vacinação",
+  "separador": "–",
+  "bloco_legenda": 1261,
+  "secao": "APÊNDICE E – TELAS DOS RELATÓRIOS DO SISZOO",
+  "rIds": [],
+  "arquivos": [],
+  "placeholder": "[INSERIR CAPTURA DA TELA T19 – RELATÓRIO DE VACINAÇÃO]",
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 1263,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 51,
+  "titulo": "Tela T20: Relatório de adoções",
+  "separador": "–",
+  "bloco_legenda": 1264,
+  "secao": "APÊNDICE E – TELAS DOS RELATÓRIOS DO SISZOO",
+  "rIds": [],
+  "arquivos": [],
+  "placeholder": "[INSERIR CAPTURA DA TELA T20 – RELATÓRIO DE ADOÇÕES]",
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 1266,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 52,
+  "titulo": "Tela T21: Relatório de procedimentos",
+  "separador": "–",
+  "bloco_legenda": 1267,
+  "secao": "APÊNDICE E – TELAS DOS RELATÓRIOS DO SISZOO",
+  "rIds": [],
+  "arquivos": [],
+  "placeholder": "[INSERIR CAPTURA DA TELA T21 – RELATÓRIO DE PROCEDIMENTOS]",
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 1269,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 53,
+  "titulo": "Tela T22: Relatório de ocupação de baias",
+  "separador": "–",
+  "bloco_legenda": 1270,
+  "secao": "APÊNDICE E – TELAS DOS RELATÓRIOS DO SISZOO",
+  "rIds": [],
+  "arquivos": [],
+  "placeholder": "[INSERIR CAPTURA DA TELA T22 – RELATÓRIO DE OCUPAÇÃO DE BAIAS]",
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 1272,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 54,
+  "titulo": "Tela T23: Relatório de ocorrências por bairro",
+  "separador": "–",
+  "bloco_legenda": 1273,
+  "secao": "APÊNDICE E – TELAS DOS RELATÓRIOS DO SISZOO",
+  "rIds": [],
+  "arquivos": [],
+  "placeholder": "[INSERIR CAPTURA DA TELA T23 – RELATÓRIO DE OCORRÊNCIAS POR BAIRRO]",
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "bloco_fonte": 1275,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 60,
+  "titulo": "Trecho da planilha “Animais do Canil”",
+  "separador": "-",
+  "bloco_legenda": 1281,
+  "secao": "ANEXO A – PLANILHAS DE CONTROLE DO CCZ DE ITU",
+  "rIds": [
+   "rId90"
+  ],
+  "arquivos": [
+   "image43.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Centro de Controle de Zoonoses de Itu (2026).",
+  "bloco_fonte": 1283,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 61,
+  "titulo": "Trecho da planilha “Animais do Canil”: cães e gatos por situação",
+  "separador": "-",
+  "bloco_legenda": 1286,
+  "secao": "ANEXO A – PLANILHAS DE CONTROLE DO CCZ DE ITU",
+  "rIds": [
+   "rId91"
+  ],
+  "arquivos": [
+   "image44.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Centro de Controle de Zoonoses de Itu (2026).",
+  "bloco_fonte": 1288,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 62,
+  "titulo": "Trecho da planilha “Controle de Processos Zoonoses”: processos por doença",
+  "separador": "-",
+  "bloco_legenda": 1291,
+  "secao": "ANEXO A – PLANILHAS DE CONTROLE DO CCZ DE ITU",
+  "rIds": [
+   "rId92"
+  ],
+  "arquivos": [
+   "image45.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Centro de Controle de Zoonoses de Itu (2026).",
+  "bloco_fonte": 1293,
+  "imagem_antes_da_legenda": []
+ },
+ {
+  "num": 63,
+  "titulo": "Trecho da planilha “Controle de Processos Zoonoses”: processos aguardando resultado",
+  "separador": "-",
+  "bloco_legenda": 1296,
+  "secao": "ANEXO A – PLANILHAS DE CONTROLE DO CCZ DE ITU",
+  "rIds": [
+   "rId93"
+  ],
+  "arquivos": [
+   "image46.png"
+  ],
+  "placeholder": null,
+  "fonte": "Fonte: Centro de Controle de Zoonoses de Itu (2026).",
+  "bloco_fonte": 1298,
+  "imagem_antes_da_legenda": []
+ }
+]

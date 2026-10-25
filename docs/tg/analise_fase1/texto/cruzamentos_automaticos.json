@@ -1,0 +1,1717 @@
+{
+ "rf_ids": [
+  "RF-A01",
+  "RF-A02",
+  "RF-A03",
+  "RF-A04",
+  "RF-A05",
+  "RF-B01",
+  "RF-B02",
+  "RF-B03",
+  "RF-B04",
+  "RF-B05",
+  "RF-B06",
+  "RF-B07",
+  "RF-C01",
+  "RF-C02",
+  "RF-C03",
+  "RF-D01",
+  "RF-D02",
+  "RF-E01",
+  "RF-E02",
+  "RF-E03"
+ ],
+ "rnf_ids": [
+  "RNF01",
+  "RNF02",
+  "RNF03",
+  "RNF04",
+  "RNF05",
+  "RNF06",
+  "RNF07",
+  "RNF08",
+  "RNF09",
+  "RNF10"
+ ],
+ "rn_ids": [
+  "RN01",
+  "RN02",
+  "RN03",
+  "RN04",
+  "RN05",
+  "RN06",
+  "RN07",
+  "RN08",
+  "RN09",
+  "RN10",
+  "RN11",
+  "RN12"
+ ],
+ "rf_prefixo_por_quadro": {
+  "C->Quadro 6": 3,
+  "A->Quadro 7": 5,
+  "E->Quadro 8": 3,
+  "B->Quadro 9": 7,
+  "D->Quadro 10": 2
+ },
+ "uc": {
+  "Realizar Login": {
+   "quadro": 16,
+   "nome": "Realizar Login",
+   "Caso de Uso Geral": "Autenticação",
+   "Ator Principal": "Veterinário, Agente Sanitário ou Administrador",
+   "Atores Secundários": "",
+   "Resumo": "O usuário autentica-se no sistema com e-mail e senha para acessar as funcionalidades de acordo com seu perfil.",
+   "Pré-Condições": "O usuário deve estar cadastrado e ativo, com um cargo atribuído pelo Administrador.",
+   "Pós-Condições": "Token JWT válido emitido; usuário redirecionado ao painel inicial conforme suas permissões.",
+   "Restrições/Validações": "O usuário precisa estar cadastrado e ativo (RNF06). Senhas trafegam apenas via HTTPS.",
+   "Fluxo Alternativo I": "Senha inválida: o sistema informa credenciais inválidas e mantém a tela de login, sem revelar qual campo falhou.",
+   "Fluxo Alternativo II": "Usuário inexistente ou inativo: o sistema informa credenciais inválidas e retorna à tela de login.",
+   "Fluxo Alternativo III": "Primeiro acesso: o sistema exige a troca da senha antes de liberar o painel inicial.",
+   "Requisitos relacionados": "RF-C01, RNF06, RNF10",
+   "rf": [
+    "RF-C01"
+   ],
+   "rn": [
+    "RN09"
+   ],
+   "rnf": [
+    "RNF06",
+    "RNF10"
+   ]
+  },
+  "Encerrar Sessão (Logout)": {
+   "quadro": 17,
+   "nome": "Encerrar Sessão (Logout)",
+   "Caso de Uso Geral": "Autenticação",
+   "Ator Principal": "Veterinário, Agente Sanitário ou Administrador",
+   "Atores Secundários": "",
+   "Resumo": "O usuário encerra o uso do sistema, descartando o token JWT em uso.",
+   "Pré-Condições": "O usuário deve estar autenticado com token válido.",
+   "Pós-Condições": "Token descartado; usuário redirecionado à tela de login.",
+   "Restrições/Validações": "O token deixa de ser usado no logout e perde a validade na expiração (RNF06).",
+   "Fluxo Alternativo I": "Token já expirado: o sistema apenas redireciona à tela de login, sem ação adicional.",
+   "Requisitos relacionados": "RF-C01, RNF10",
+   "rf": [
+    "RF-C01"
+   ],
+   "rn": [],
+   "rnf": [
+    "RNF06",
+    "RNF10"
+   ]
+  },
+  "Editar Preferências do Usuário": {
+   "quadro": 18,
+   "nome": "Editar Preferências do Usuário",
+   "Caso de Uso Geral": "Gestão de Preferências",
+   "Ator Principal": "Veterinário, Agente Sanitário ou Administrador",
+   "Atores Secundários": "",
+   "Resumo": "O usuário ajusta o tema, a densidade da interface e as notificações que deseja receber.",
+   "Pré-Condições": "O usuário deve estar autenticado.",
+   "Pós-Condições": "Preferências persistidas e aplicadas à interface do usuário.",
+   "Restrições/Validações": "As preferências são individuais e não afetam outros usuários.",
+   "Fluxo Alternativo I": "Nenhuma alteração realizada: o sistema mantém as preferências vigentes.",
+   "Requisitos relacionados": "RF-C03",
+   "rf": [
+    "RF-C03"
+   ],
+   "rn": [],
+   "rnf": []
+  },
+  "Gerenciar Usuários": {
+   "quadro": 19,
+   "nome": "Gerenciar Usuários",
+   "Caso de Uso Geral": "Controle de Acesso",
+   "Ator Principal": "Administrador",
+   "Atores Secundários": "",
+   "Resumo": "O Administrador cadastra, edita e atribui cargos e permissões aos usuários do sistema.",
+   "Pré-Condições": "O ator deve estar autenticado com cargo de Administrador.",
+   "Pós-Condições": "Usuário criado ou atualizado, com cargo e permissões definidos; evento registrado em auditoria.",
+   "Restrições/Validações": "Apenas o Administrador possui acesso total (RN09). E-mail deve ser único. Toda ação crítica gera AuditoriaEvento (RN06, RNF10).",
+   "Fluxo Alternativo I": "E-mail já cadastrado: o sistema informa a duplicidade e não conclui o cadastro.",
+   "Fluxo Alternativo II": "Desativar/Reativar usuário: ver o caso de uso Desativar/Reativar Usuário.",
+   "Requisitos relacionados": "RF-C02, RN09, RNF10",
+   "rf": [
+    "RF-C02"
+   ],
+   "rn": [
+    "RN06",
+    "RN09"
+   ],
+   "rnf": [
+    "RNF10"
+   ]
+  },
+  "Atribuir Cargo e Permissões": {
+   "quadro": 20,
+   "nome": "Atribuir Cargo e Permissões",
+   "Caso de Uso Geral": "Gerenciar Usuários (inclusão)",
+   "Ator Principal": "Administrador",
+   "Atores Secundários": "",
+   "Resumo": "O Administrador vincula ao usuário um ou mais cargos; as permissões de acesso decorrem dos cargos atribuídos.",
+   "Pré-Condições": "O Administrador está cadastrando ou editando um usuário.",
+   "Pós-Condições": "Vínculos entre usuário e cargo gravados com a data de inclusão; evento registrado na auditoria.",
+   "Restrições/Validações": "Todo usuário tem ao menos um cargo. As permissões por módulo (leitura, escrita e exclusão) são definidas no cargo (CargoPermissao), não no usuário.",
+   "Fluxo Alternativo I": "Remoção do último cargo: o sistema recusa e informa que o usuário precisa de ao menos um cargo.",
+   "Requisitos relacionados": "RF-C02, RN09, RNF10",
+   "rf": [
+    "RF-C02"
+   ],
+   "rn": [
+    "RN09"
+   ],
+   "rnf": [
+    "RNF10"
+   ]
+  },
+  "Desativar/Reativar Usuário": {
+   "quadro": 21,
+   "nome": "Desativar/Reativar Usuário",
+   "Caso de Uso Geral": "Gerenciar Usuários (extensão)",
+   "Ator Principal": "Administrador",
+   "Atores Secundários": "",
+   "Resumo": "O Administrador impede ou restabelece o acesso de um usuário ao sistema, sem excluir seu cadastro.",
+   "Pré-Condições": "O Administrador está autenticado e o usuário-alvo está cadastrado.",
+   "Pós-Condições": "Situação do usuário atualizada (ativo ou inativo) e evento registrado na auditoria.",
+   "Restrições/Validações": "Somente o Administrador executa (RN09). O cadastro não é excluído, para preservar o histórico e a autoria dos registros (RN06).",
+   "Fluxo Alternativo I": "O Administrador cancela a confirmação: a situação permanece inalterada.",
+   "Fluxo Alternativo II": "Usuário desativado tenta entrar: o sistema informa credenciais inválidas (caso de uso Realizar Login).",
+   "Requisitos relacionados": "RF-C02, RN06, RN09, RNF10",
+   "rf": [
+    "RF-C02"
+   ],
+   "rn": [
+    "RN06",
+    "RN09"
+   ],
+   "rnf": [
+    "RNF10"
+   ]
+  },
+  "Consultar Trilha de Auditoria": {
+   "quadro": 22,
+   "nome": "Consultar Trilha de Auditoria",
+   "Caso de Uso Geral": "Controle de Acesso",
+   "Ator Principal": "Administrador",
+   "Atores Secundários": "",
+   "Resumo": "O Administrador consulta o histórico de ações críticas registradas no sistema.",
+   "Pré-Condições": "O ator deve estar autenticado com cargo de Administrador.",
+   "Pós-Condições": "Eventos de auditoria exibidos conforme os filtros aplicados.",
+   "Restrições/Validações": "Os registros de auditoria são imutáveis (RN06) e acessíveis apenas ao Administrador.",
+   "Fluxo Alternativo I": "Nenhum evento encontrado: o sistema informa que não há registros para os filtros aplicados.",
+   "Requisitos relacionados": "RF-C02, RN06, RNF10",
+   "rf": [
+    "RF-C02"
+   ],
+   "rn": [
+    "RN06"
+   ],
+   "rnf": [
+    "RNF10"
+   ]
+  },
+  "Cadastrar Animal": {
+   "quadro": 23,
+   "nome": "Cadastrar Animal",
+   "Caso de Uso Geral": "Gestão de Animais",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário registra um novo animal no canil com seus dados de identificação, características e localização.",
+   "Pré-Condições": "O ator deve estar autenticado com permissão de escrita no módulo de animais.",
+   "Pós-Condições": "Animal cadastrado e vinculado a uma baia; ocupação da baia atualizada.",
+   "Restrições/Validações": "Microchip único quando informado (RN01). Campos obrigatórios: espécie, sexo, porte, baia, esterilizado, status, motivo e data de entrada (RN07).",
+   "Fluxo Alternativo I": "Microchip já cadastrado: o sistema rejeita o cadastro e informa a duplicidade.",
+   "Fluxo Alternativo II": "Baia sem vaga: o sistema alerta sobre a superlotação e solicita outra baia.",
+   "Requisitos relacionados": "RF-A01, RN01, RN07",
+   "rf": [
+    "RF-A01"
+   ],
+   "rn": [
+    "RN01",
+    "RN07"
+   ],
+   "rnf": []
+  },
+  "Editar Dados do Animal": {
+   "quadro": 24,
+   "nome": "Editar Dados do Animal",
+   "Caso de Uso Geral": "Gestão de Animais",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário atualiza informações cadastrais de um animal já registrado.",
+   "Pré-Condições": "O animal deve estar cadastrado e o ator autenticado com permissão de escrita.",
+   "Pós-Condições": "Dados do animal atualizados; alteração registrada em auditoria.",
+   "Restrições/Validações": "A alteração do microchip não pode gerar duplicidade (RN01). Histórico preservado por auditoria (RN06).",
+   "Fluxo Alternativo I": "Tentativa de microchip duplicado: o sistema rejeita a alteração e informa a duplicidade.",
+   "Requisitos relacionados": "RF-A01, RN06, RNF10",
+   "rf": [
+    "RF-A01"
+   ],
+   "rn": [
+    "RN01",
+    "RN06"
+   ],
+   "rnf": [
+    "RNF10"
+   ]
+  },
+  "Registrar Saída/Desfecho": {
+   "quadro": 25,
+   "nome": "Registrar Saída/Desfecho",
+   "Caso de Uso Geral": "Gestão de Animais",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário registra a saída do animal do canil, informando o destino.",
+   "Pré-Condições": "O animal deve estar alojado e o ator autenticado com permissão de escrita.",
+   "Pós-Condições": "Animal com status de saída registrado; vaga liberada na baia.",
+   "Restrições/Validações": "Valores de saída restritos a Adotado, Resgatado, Óbito, Eutanásia e Transferido. Histórico imutável (RN06).",
+   "Fluxo Alternativo I": "Destino não informado: o sistema impede a conclusão até que o destino seja selecionado.",
+   "Fluxo Alternativo II": "Destino Adotado: o sistema solicita os dados do adotante (caso de uso Registrar Adoção).",
+   "Requisitos relacionados": "RF-A05, RN06",
+   "rf": [
+    "RF-A05"
+   ],
+   "rn": [
+    "RN06"
+   ],
+   "rnf": []
+  },
+  "Registrar Adoção": {
+   "quadro": 26,
+   "nome": "Registrar Adoção",
+   "Caso de Uso Geral": "Registrar Saída/Desfecho (extensão, quando o destino é Adotado)",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário registra os dados do adotante e da adoção do animal.",
+   "Pré-Condições": "O Veterinário está registrando a saída de um animal com destino Adotado.",
+   "Pós-Condições": "Adoção registrada e vinculada ao animal; animal com status Adotado e data de saída; evento registrado na auditoria.",
+   "Restrições/Validações": "Os dados do adotante são dados pessoais e só são acessados pelos perfis autorizados (LGPD, RNF06).",
+   "Fluxo Alternativo I": "Devolução: o Veterinário registra a data e o motivo da devolução; o animal volta a ficar disponível para adoção e a adoção anterior permanece no histórico.",
+   "Requisitos relacionados": "RF-A05, RN06, RNF06",
+   "rf": [
+    "RF-A05"
+   ],
+   "rn": [
+    "RN06"
+   ],
+   "rnf": [
+    "RNF06"
+   ]
+  },
+  "Transferir Animal de Baia": {
+   "quadro": 27,
+   "nome": "Transferir Animal de Baia",
+   "Caso de Uso Geral": "Gestão de Animais",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário move um animal de uma baia para outra.",
+   "Pré-Condições": "O animal deve estar alojado e a baia de destino deve existir.",
+   "Pós-Condições": "Animal vinculado à nova baia; ocupação das baias de origem e destino atualizadas.",
+   "Restrições/Validações": "A baia de destino deve possuir vaga disponível.",
+   "Fluxo Alternativo I": "Baia de destino lotada: o sistema alerta e solicita outra baia.",
+   "Requisitos relacionados": "RF-A02",
+   "rf": [
+    "RF-A02"
+   ],
+   "rn": [],
+   "rnf": []
+  },
+  "Consultar Animais por Baia": {
+   "quadro": 28,
+   "nome": "Consultar Animais por Baia",
+   "Caso de Uso Geral": "Gestão de Animais",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário visualiza e filtra os animais alojados, organizados por baia.",
+   "Pré-Condições": "O ator deve estar autenticado com permissão de leitura no módulo.",
+   "Pós-Condições": "Listagem de animais exibida conforme os filtros, com ocupação por baia.",
+   "Restrições/Validações": "Baias disponíveis: BAIA 1–16 (internas), E1–E4 (externas) e CORREDOR.",
+   "Fluxo Alternativo I": "Nenhum animal para o filtro: o sistema informa que não há resultados.",
+   "Requisitos relacionados": "RF-A02",
+   "rf": [
+    "RF-A02"
+   ],
+   "rn": [],
+   "rnf": []
+  },
+  "Registrar Aplicação de Vacina": {
+   "quadro": 29,
+   "nome": "Registrar Aplicação de Vacina",
+   "Caso de Uso Geral": "Histórico Veterinário",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário registra a aplicação de uma vacina em um animal e o sistema calcula a previsão de reforço.",
+   "Pré-Condições": "O animal deve estar cadastrado e a vacina disponível.",
+   "Pós-Condições": "Vacinação registrada; previsão de retorno calculada para o alerta vacinal.",
+   "Restrições/Validações": "Registros do histórico são imutáveis (RN06, RNF10). A previsão de reforço baseia-se no intervalo da vacina.",
+   "Fluxo Alternativo I": "Anexar comprovante: o Veterinário pode anexar um documento à vacinação registrada.",
+   "Requisitos relacionados": "RF-A03, RF-A04, RN06",
+   "rf": [
+    "RF-A03",
+    "RF-A04"
+   ],
+   "rn": [
+    "RN06"
+   ],
+   "rnf": [
+    "RNF10"
+   ]
+  },
+  "Prescrever Medicamento": {
+   "quadro": 30,
+   "nome": "Prescrever Medicamento",
+   "Caso de Uso Geral": "Histórico Veterinário",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário prescreve um medicamento a um animal, definindo dose, via e frequência.",
+   "Pré-Condições": "O animal deve estar cadastrado e o medicamento disponível.",
+   "Pós-Condições": "Prescrição registrada com status ativo no histórico do animal.",
+   "Restrições/Validações": "Registros do histórico são imutáveis (RN06).",
+   "Fluxo Alternativo I": "Concluir, suspender ou cancelar: o Veterinário altera o status de uma prescrição ativa, mantendo o registro.",
+   "Requisitos relacionados": "RF-A04, RN06",
+   "rf": [
+    "RF-A04"
+   ],
+   "rn": [
+    "RN06"
+   ],
+   "rnf": []
+  },
+  "Registrar Procedimento Clínico": {
+   "quadro": 31,
+   "nome": "Registrar Procedimento Clínico",
+   "Caso de Uso Geral": "Histórico Veterinário",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário registra um procedimento realizado no animal.",
+   "Pré-Condições": "O animal deve estar cadastrado.",
+   "Pós-Condições": "Procedimento registrado no histórico do animal.",
+   "Restrições/Validações": "Registros do histórico são imutáveis (RN06).",
+   "Fluxo Alternativo I": "Anexar documento: o Veterinário pode anexar arquivos ao procedimento registrado.",
+   "Requisitos relacionados": "RF-A04, RN06",
+   "rf": [
+    "RF-A04"
+   ],
+   "rn": [
+    "RN06"
+   ],
+   "rnf": []
+  },
+  "Registrar Exame": {
+   "quadro": 32,
+   "nome": "Registrar Exame",
+   "Caso de Uso Geral": "Histórico Veterinário",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário solicita e registra o resultado de um exame laboratorial do animal.",
+   "Pré-Condições": "O animal deve estar cadastrado e o laboratório disponível.",
+   "Pós-Condições": "Exame registrado com solicitação e, posteriormente, resultado no histórico do animal.",
+   "Restrições/Validações": "Registros do histórico são imutáveis (RN06).",
+   "Fluxo Alternativo I": "Anexar laudo: o Veterinário pode anexar o laudo ao exame registrado.",
+   "Requisitos relacionados": "RF-A04, RN06",
+   "rf": [
+    "RF-A04"
+   ],
+   "rn": [
+    "RN06"
+   ],
+   "rnf": []
+  },
+  "Gerenciar Baias": {
+   "quadro": 33,
+   "nome": "Gerenciar Baias",
+   "Caso de Uso Geral": "Gestão de Animais do Canil",
+   "Ator Principal": "Administrador",
+   "Atores Secundários": "",
+   "Resumo": "O Administrador cadastra e edita as baias do canil, com tipo, capacidade e finalidade.",
+   "Pré-Condições": "O Administrador está autenticado.",
+   "Pós-Condições": "Baia criada ou atualizada; evento registrado na auditoria.",
+   "Restrições/Validações": "Capacidade maior que zero. A ocupação não é digitada: é calculada pela contagem de animais alojados (RF-A02).",
+   "Fluxo Alternativo I": "Capacidade informada menor que a ocupação atual: o sistema grava e exibe aviso de superlotação.",
+   "Requisitos relacionados": "RF-A02, RN09, RNF10",
+   "rf": [
+    "RF-A02"
+   ],
+   "rn": [
+    "RN09"
+   ],
+   "rnf": [
+    "RNF10"
+   ]
+  },
+  "Anexar Documento ao Animal": {
+   "quadro": 34,
+   "nome": "Anexar Documento ao Animal",
+   "Caso de Uso Geral": "Registrar Aplicação de Vacina, Registrar Procedimento Clínico e Registrar Exame (extensão)",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário anexa um arquivo (laudo, receita, imagem) ao registro clínico do animal.",
+   "Pré-Condições": "O Veterinário está registrando uma vacinação, um procedimento ou um exame.",
+   "Pós-Condições": "Arquivo armazenado e vinculado ao registro, com nome, endereço e tamanho.",
+   "Restrições/Validações": "O anexo não pode ser excluído depois de gravado (RN06).",
+   "Fluxo Alternativo I": "Arquivo inválido ou acima do limite: o sistema informa o motivo e não anexa.",
+   "Requisitos relacionados": "RF-A04, RN06",
+   "rf": [
+    "RF-A04"
+   ],
+   "rn": [
+    "RN06"
+   ],
+   "rnf": []
+  },
+  "Registrar Nova Ocorrência": {
+   "quadro": 35,
+   "nome": "Registrar Nova Ocorrência",
+   "Caso de Uso Geral": "Gestão de Ocorrências",
+   "Ator Principal": "Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O Agente Sanitário registra uma nova ocorrência ou denúncia, com geração automática de protocolo.",
+   "Pré-Condições": "O ator deve estar autenticado com permissão de escrita no módulo de ocorrências.",
+   "Pós-Condições": "Ocorrência persistida com protocolo anual, denunciante vinculado e movimentação inicial registrada.",
+   "Restrições/Validações": "Protocolo sequencial e anual 0000/AAAA (RN02). Em ocorrências sigilosas, o denunciante fica oculto para não-Administradores (RN03).",
+   "Fluxo Alternativo I": "Informar denunciado: ver o caso de uso Informar Denunciado.",
+   "Fluxo Alternativo II": "CEP não localizado: o sistema informa a falha e o Agente Sanitário preenche o endereço manualmente.",
+   "Fluxo Alternativo III": "Anexar documento: ver o caso de uso Anexar Documento à Ocorrência.",
+   "Requisitos relacionados": "RF-E01, RN02, RN03",
+   "rf": [
+    "RF-E01"
+   ],
+   "rn": [
+    "RN02",
+    "RN03"
+   ],
+   "rnf": []
+  },
+  "Informar Denunciado": {
+   "quadro": 36,
+   "nome": "Informar Denunciado",
+   "Caso de Uso Geral": "Registrar Nova Ocorrência (extensão, quando há denunciado)",
+   "Ator Principal": "Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O Agente Sanitário registra os dados da pessoa apontada na denúncia.",
+   "Pré-Condições": "O Agente Sanitário está registrando uma ocorrência e o denunciante identificou um denunciado.",
+   "Pós-Condições": "Denunciado vinculado à ocorrência.",
+   "Restrições/Validações": "Todos os campos são opcionais; o CPF só é registrado quando necessário (LGPD, princípio da necessidade).",
+   "Fluxo Alternativo I": "O Agente Sanitário desmarca a opção antes de salvar: nenhum denunciado é gravado.",
+   "Requisitos relacionados": "RF-E01, RNF06",
+   "rf": [
+    "RF-E01"
+   ],
+   "rn": [],
+   "rnf": [
+    "RNF06"
+   ]
+  },
+  "Anexar Documento à Ocorrência": {
+   "quadro": 37,
+   "nome": "Anexar Documento à Ocorrência",
+   "Caso de Uso Geral": "Registrar Nova Ocorrência (extensão, quando há documento)",
+   "Ator Principal": "Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O Agente Sanitário anexa fotos ou documentos que acompanham a denúncia.",
+   "Pré-Condições": "O Agente Sanitário está registrando uma ocorrência.",
+   "Pós-Condições": "Arquivo armazenado e vinculado à ocorrência.",
+   "Restrições/Validações": "O anexo não pode ser excluído depois de gravado (RN06).",
+   "Fluxo Alternativo I": "Arquivo inválido ou acima do limite: o sistema informa o motivo e não anexa.",
+   "Requisitos relacionados": "RF-E01, RN06",
+   "rf": [
+    "RF-E01"
+   ],
+   "rn": [
+    "RN06"
+   ],
+   "rnf": []
+  },
+  "Consultar e Filtrar Ocorrências": {
+   "quadro": 38,
+   "nome": "Consultar e Filtrar Ocorrências",
+   "Caso de Uso Geral": "Gestão de Ocorrências",
+   "Ator Principal": "Agente Sanitário",
+   "Atores Secundários": "Administrador",
+   "Resumo": "O Agente Sanitário consulta ocorrências aplicando filtros; dados sigilosos do denunciante são restritos.",
+   "Pré-Condições": "O ator deve estar autenticado com permissão de leitura no módulo.",
+   "Pós-Condições": "Ocorrências exibidas conforme os filtros, respeitando o sigilo do denunciante.",
+   "Restrições/Validações": "Os dados do denunciante em ocorrências sigilosas só são exibidos ao Administrador (RN03).",
+   "Fluxo Alternativo I": "Acesso como Administrador: os dados do denunciante são exibidos mesmo em ocorrências sigilosas.",
+   "Fluxo Alternativo II": "Nenhuma ocorrência encontrada: o sistema informa que não há resultados.",
+   "Requisitos relacionados": "RF-E02, RN03",
+   "rf": [
+    "RF-E02"
+   ],
+   "rn": [
+    "RN03"
+   ],
+   "rnf": []
+  },
+  "Encerrar Ocorrência": {
+   "quadro": 39,
+   "nome": "Encerrar Ocorrência",
+   "Caso de Uso Geral": "Gestão de Ocorrências",
+   "Ator Principal": "Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O Agente Sanitário encerra uma ocorrência, registrando a providência tomada.",
+   "Pré-Condições": "A ocorrência deve estar aberta ou em atendimento e o ator ter permissão para encerrá-la.",
+   "Pós-Condições": "Ocorrência encerrada com descrição e providência; registro torna-se imutável.",
+   "Restrições/Validações": "Somente Agente Sanitário ou Administrador podem encerrar. Após o encerramento, o registro é imutável (RN06). Ocorrência com processo sanitário vinculado só pode ser encerrada após o registro do resultado desse processo (RN05).",
+   "Fluxo Alternativo I": "Providência não informada: o sistema impede o encerramento até que a providência seja selecionada.",
+   "Fluxo Alternativo II": "Processo vinculado sem resultado: o sistema impede o encerramento e informa o protocolo do processo pendente (RN05).",
+   "Requisitos relacionados": "RF-E03, RN05, RN06",
+   "rf": [
+    "RF-E03"
+   ],
+   "rn": [
+    "RN05",
+    "RN06"
+   ],
+   "rnf": []
+  },
+  "Abrir Processo Sanitário": {
+   "quadro": 40,
+   "nome": "Abrir Processo Sanitário",
+   "Caso de Uso Geral": "Gestão de Processos",
+   "Ator Principal": "Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O Agente Sanitário abre um processo sanitário para investigação de zoonose, com geração de protocolo e registro do animal amostrado.",
+   "Pré-Condições": "O ator deve estar autenticado com permissão de escrita no módulo de processos.",
+   "Pós-Condições": "Processo persistido com protocolo anual, responsável e animal amostrado vinculados.",
+   "Restrições/Validações": "Protocolo sequencial e anual (RN02). Obrigatórios: data de abertura, doença, laboratório e dados mínimos do responsável (RN08).",
+   "Fluxo Alternativo I": "Contato humano-animal: o sistema torna o processo urgente e bloqueia o encerramento sem resultado (RN04, RF-B05).",
+   "Requisitos relacionados": "RF-B01, RN02, RN04, RN08",
+   "rf": [
+    "RF-B01",
+    "RF-B05"
+   ],
+   "rn": [
+    "RN02",
+    "RN04",
+    "RN08"
+   ],
+   "rnf": []
+  },
+  "Registrar Animal Amostrado": {
+   "quadro": 41,
+   "nome": "Registrar Animal Amostrado",
+   "Caso de Uso Geral": "Gestão de Processos",
+   "Ator Principal": "Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O Agente Sanitário registra os dados do animal investigado e da amostra coletada dentro de um processo.",
+   "Pré-Condições": "Deve existir um processo sanitário em aberto.",
+   "Pós-Condições": "Animal amostrado vinculado ao processo, com material biológico e indicadores de contato registrados.",
+   "Restrições/Validações": "O indicador de contato humano verdadeiro aciona a urgência do processo (RN04, RF-B05).",
+   "Fluxo Alternativo I": "Animal interno: quando o investigado for um animal do canil, o registro pode referenciar o cadastro existente.",
+   "Requisitos relacionados": "RF-B04, RN04",
+   "rf": [
+    "RF-B04",
+    "RF-B05"
+   ],
+   "rn": [
+    "RN04"
+   ],
+   "rnf": []
+  },
+  "Registrar Resultado Laboratorial": {
+   "quadro": 42,
+   "nome": "Registrar Resultado Laboratorial",
+   "Caso de Uso Geral": "Gestão de Processos",
+   "Ator Principal": "Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O Agente Sanitário registra o resultado da análise laboratorial e o desfecho do processo.",
+   "Pré-Condições": "O processo deve estar em andamento ou aguardando resultado (não pode estar com status ABERTO).",
+   "Pós-Condições": "Resultado e desfecho registrados; em caso positivo ou inconclusivo, o responsável e a Vigilância Epidemiológica são notificados por e-mail.",
+   "Restrições/Validações": "O resultado não pode ser preenchido com status ABERTO (RN12). Resultado Positivo ou Inconclusivo dispara notificação (RN10).",
+   "Fluxo Alternativo I": "Sem e-mail do responsável: o sistema registra o resultado, e notifica apenas a Vigilância Epidemiológica.",
+   "Requisitos relacionados": "RF-B03, RN10, RN12",
+   "rf": [
+    "RF-B03"
+   ],
+   "rn": [
+    "RN10",
+    "RN12"
+   ],
+   "rnf": []
+  },
+  "Consultar e Filtrar Processos": {
+   "quadro": 43,
+   "nome": "Consultar e Filtrar Processos",
+   "Caso de Uso Geral": "Gestão de Processos",
+   "Ator Principal": "Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O Agente Sanitário consulta processos sanitários aplicando filtros, com os urgentes fixados no topo.",
+   "Pré-Condições": "O ator deve estar autenticado com permissão de leitura no módulo.",
+   "Pós-Condições": "Processos exibidos conforme os filtros, com urgentes priorizados.",
+   "Restrições/Validações": "Processos urgentes são fixados no topo das listagens (RN04).",
+   "Fluxo Alternativo I": "Nenhum processo encontrado: o sistema informa que não há resultados.",
+   "Requisitos relacionados": "RF-B02, RN04",
+   "rf": [
+    "RF-B02"
+   ],
+   "rn": [
+    "RN04"
+   ],
+   "rnf": []
+  },
+  "Encerrar Processo": {
+   "quadro": 44,
+   "nome": "Encerrar Processo",
+   "Caso de Uso Geral": "Gestão de Processos",
+   "Ator Principal": "Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O Agente Sanitário encerra um processo sanitário após a conclusão da investigação.",
+   "Pré-Condições": "O processo deve possuir resultado registrado quando houver contato humano (RF-B05).",
+   "Pós-Condições": "Processo concluído; registro torna-se imutável.",
+   "Restrições/Validações": "Processos com contato humano não podem ser encerrados sem resultado (RF-B05). Registro imutável (RN06).",
+   "Fluxo Alternativo I": "Resultado ausente em processo urgente: o sistema bloqueia o encerramento e solicita o registro do resultado.",
+   "Requisitos relacionados": "RF-B05, RN06, RN12",
+   "rf": [
+    "RF-B05"
+   ],
+   "rn": [
+    "RN06",
+    "RN12"
+   ],
+   "rnf": []
+  },
+  "Gerar Documento do Processo": {
+   "quadro": 45,
+   "nome": "Gerar Documento do Processo",
+   "Caso de Uso Geral": "Gestão de Processos",
+   "Ator Principal": "Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O Agente Sanitário gera o documento em PDF de um processo sanitário.",
+   "Pré-Condições": "O processo deve estar cadastrado.",
+   "Pós-Condições": "Documento gerado e disponibilizado para download.",
+   "Restrições/Validações": "A geração segue os estados Pendente → Em Processamento → Concluído/Falha (RN11).",
+   "Fluxo Alternativo I": "Falha na geração: o sistema marca o documento como Falha e permite nova tentativa.",
+   "Requisitos relacionados": "RF-B06, RN11",
+   "rf": [
+    "RF-B06"
+   ],
+   "rn": [
+    "RN11"
+   ],
+   "rnf": []
+  },
+  "Visualizar Dashboard em Tempo Real": {
+   "quadro": 46,
+   "nome": "Visualizar Dashboard em Tempo Real",
+   "Caso de Uso Geral": "Dashboard",
+   "Ator Principal": "Veterinário ou Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O usuário visualiza indicadores operacionais consolidados em tempo real.",
+   "Pré-Condições": "O ator deve estar autenticado com permissão de acesso ao dashboard.",
+   "Pós-Condições": "Indicadores exibidos com dados atualizados do banco.",
+   "Restrições/Validações": "O dashboard é alimentado por consultas em tempo real e não gera entidade persistida.",
+   "Fluxo Alternativo I": "Consultar alertas vacinais: o usuário detalha os animais com reforço previsto para os próximos 7 dias (RF-A03), conforme o caso de uso Consultar Alertas Vacinais.",
+   "Fluxo Alternativo II": "Monitorar ocupação de baias: o usuário detalha a ocupação atual versus a capacidade de cada baia, conforme o caso de uso Monitorar Ocupação de Baias.",
+   "Requisitos relacionados": "RF-D01",
+   "rf": [
+    "RF-A03",
+    "RF-D01"
+   ],
+   "rn": [],
+   "rnf": []
+  },
+  "Consultar Alertas Vacinais": {
+   "quadro": 47,
+   "nome": "Consultar Alertas Vacinais",
+   "Caso de Uso Geral": "Visualizar Dashboard em Tempo Real (extensão)",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário consulta os animais com reforço vacinal próximo ou vencido.",
+   "Pré-Condições": "O Veterinário está no painel inicial.",
+   "Pós-Condições": "Lista de alertas exibida; nenhum dado é alterado.",
+   "Restrições/Validações": "Janela de 7 dias (RF-A03); vacinas vencidas aparecem com severidade maior.",
+   "Fluxo Alternativo I": "Nenhuma vacina a vencer: o sistema informa que não há alertas.",
+   "Requisitos relacionados": "RF-A03, RF-D01",
+   "rf": [
+    "RF-A03",
+    "RF-D01"
+   ],
+   "rn": [],
+   "rnf": []
+  },
+  "Monitorar Ocupação de Baias": {
+   "quadro": 48,
+   "nome": "Monitorar Ocupação de Baias",
+   "Caso de Uso Geral": "Visualizar Dashboard em Tempo Real (extensão)",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário acompanha a ocupação de cada baia em relação à capacidade.",
+   "Pré-Condições": "O Veterinário está no painel inicial.",
+   "Pós-Condições": "Ocupação exibida; nenhum dado é alterado.",
+   "Restrições/Validações": "A ocupação conta apenas animais alojados (exclui adotados, transferidos e óbitos).",
+   "Fluxo Alternativo I": "Baia sem animais: o sistema exibe ocupação zero.",
+   "Requisitos relacionados": "RF-A02, RF-D01",
+   "rf": [
+    "RF-A02",
+    "RF-D01"
+   ],
+   "rn": [],
+   "rnf": []
+  },
+  "Solicitar Geração de Relatório": {
+   "quadro": 49,
+   "nome": "Solicitar Geração de Relatório",
+   "Caso de Uso Geral": "Relatórios",
+   "Ator Principal": "Veterinário ou Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O usuário solicita a geração de um relatório, processado de forma assíncrona.",
+   "Pré-Condições": "O ator deve estar autenticado com permissão para gerar relatórios.",
+   "Pós-Condições": "Solicitação registrada com status Pendente e processada em segundo plano.",
+   "Restrições/Validações": "A geração segue os estados Pendente → Em Processamento → Concluído/Falha (RN11). O binário não é armazenado no banco.",
+   "Fluxo Alternativo I": "Falha no processamento: o sistema marca o relatório como Falha e permite nova solicitação.",
+   "Requisitos relacionados": "RF-D02, RF-B07, RN11",
+   "rf": [
+    "RF-B07",
+    "RF-D02"
+   ],
+   "rn": [
+    "RN11"
+   ],
+   "rnf": []
+  },
+  "Acompanhar Status do Relatório": {
+   "quadro": 50,
+   "nome": "Acompanhar Status do Relatório",
+   "Caso de Uso Geral": "Relatórios",
+   "Ator Principal": "Veterinário ou Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O usuário acompanha o andamento da geração de um relatório solicitado.",
+   "Pré-Condições": "Deve existir ao menos um relatório solicitado pelo usuário.",
+   "Pós-Condições": "Status atual do relatório exibido ao usuário.",
+   "Restrições/Validações": "O status reflete o ciclo de vida assíncrono do relatório (RN11).",
+   "Fluxo Alternativo I": "Relatório concluído: o sistema habilita a opção de download (Baixar Relatório Gerado).",
+   "Requisitos relacionados": "RF-D02, RN11",
+   "rf": [
+    "RF-D02"
+   ],
+   "rn": [
+    "RN11"
+   ],
+   "rnf": []
+  },
+  "Baixar Relatório Gerado": {
+   "quadro": 51,
+   "nome": "Baixar Relatório Gerado",
+   "Caso de Uso Geral": "Relatórios",
+   "Ator Principal": "Veterinário ou Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O usuário baixa o arquivo de um relatório concluído.",
+   "Pré-Condições": "O relatório deve estar com status Concluído e a URL não expirada.",
+   "Pós-Condições": "Arquivo do relatório transferido ao usuário.",
+   "Restrições/Validações": "O download só é permitido com status Concluído e dentro da validade da URL (RN11).",
+   "Fluxo Alternativo I": "URL expirada: o sistema informa a expiração e orienta a solicitar uma nova geração.",
+   "Requisitos relacionados": "RF-D02, RN11",
+   "rf": [
+    "RF-D02"
+   ],
+   "rn": [
+    "RN11"
+   ],
+   "rnf": []
+  }
+ },
+ "rf_sem_uc": [],
+ "rf_para_uc": {
+  "RF-A01": [
+   "Cadastrar Animal",
+   "Editar Dados do Animal"
+  ],
+  "RF-A02": [
+   "Transferir Animal de Baia",
+   "Consultar Animais por Baia",
+   "Gerenciar Baias",
+   "Monitorar Ocupação de Baias"
+  ],
+  "RF-A03": [
+   "Registrar Aplicação de Vacina",
+   "Consultar Alertas Vacinais"
+  ],
+  "RF-A04": [
+   "Registrar Aplicação de Vacina",
+   "Prescrever Medicamento",
+   "Registrar Procedimento Clínico",
+   "Registrar Exame",
+   "Anexar Documento ao Animal"
+  ],
+  "RF-A05": [
+   "Registrar Saída/Desfecho",
+   "Registrar Adoção"
+  ],
+  "RF-B01": [
+   "Abrir Processo Sanitário"
+  ],
+  "RF-B02": [
+   "Consultar e Filtrar Processos"
+  ],
+  "RF-B03": [
+   "Registrar Resultado Laboratorial"
+  ],
+  "RF-B04": [
+   "Registrar Animal Amostrado"
+  ],
+  "RF-B05": [
+   "Encerrar Processo"
+  ],
+  "RF-B06": [
+   "Gerar Documento do Processo"
+  ],
+  "RF-B07": [
+   "Solicitar Geração de Relatório"
+  ],
+  "RF-C01": [
+   "Realizar Login",
+   "Encerrar Sessão (Logout)"
+  ],
+  "RF-C02": [
+   "Gerenciar Usuários",
+   "Atribuir Cargo e Permissões",
+   "Desativar/Reativar Usuário",
+   "Consultar Trilha de Auditoria"
+  ],
+  "RF-C03": [
+   "Editar Preferências do Usuário"
+  ],
+  "RF-D01": [
+   "Visualizar Dashboard em Tempo Real",
+   "Consultar Alertas Vacinais",
+   "Monitorar Ocupação de Baias"
+  ],
+  "RF-D02": [
+   "Solicitar Geração de Relatório",
+   "Acompanhar Status do Relatório",
+   "Baixar Relatório Gerado"
+  ],
+  "RF-E01": [
+   "Registrar Nova Ocorrência",
+   "Informar Denunciado",
+   "Anexar Documento à Ocorrência"
+  ],
+  "RF-E02": [
+   "Consultar e Filtrar Ocorrências"
+  ],
+  "RF-E03": [
+   "Encerrar Ocorrência"
+  ]
+ },
+ "uc_sem_rf": [],
+ "rf_referenciados_inexistentes": [],
+ "rn_referenciadas": [
+  "RN01",
+  "RN02",
+  "RN03",
+  "RN04",
+  "RN05",
+  "RN06",
+  "RN07",
+  "RN08",
+  "RN09",
+  "RN10",
+  "RN11",
+  "RN12"
+ ],
+ "rn_referenciadas_inexistentes": [],
+ "rn_nunca_referenciadas_fora_quadro13": [],
+ "rnf_referenciadas_inexistentes": [],
+ "rnf_nunca_referenciadas_fora_quadro12": [
+  "RNF07"
+ ],
+ "rf_nunca_referenciados_fora_quadros6a10": [],
+ "telas_quadro15": [
+  "T01",
+  "T02",
+  "T03",
+  "T04",
+  "T05",
+  "T06",
+  "T07",
+  "T08",
+  "T09",
+  "T10",
+  "T11",
+  "T12",
+  "T13",
+  "T14",
+  "T15",
+  "T16",
+  "T17"
+ ],
+ "telas_em_figuras": [
+  "T01",
+  "T02",
+  "T03",
+  "T04",
+  "T05",
+  "T06",
+  "T07",
+  "T08",
+  "T09",
+  "T10",
+  "T11",
+  "T12",
+  "T13",
+  "T14",
+  "T15",
+  "T16",
+  "T17",
+  "T18",
+  "T19",
+  "T20",
+  "T21",
+  "T22",
+  "T23"
+ ],
+ "telas_figura_sem_quadro15": [
+  "T18",
+  "T19",
+  "T20",
+  "T21",
+  "T22",
+  "T23"
+ ],
+ "telas_quadro15_sem_figura": [],
+ "nao_citados_antes": [
+  "Quadro 6",
+  "Quadro 7",
+  "Quadro 8",
+  "Quadro 9",
+  "Quadro 10",
+  "Quadro 12",
+  "Quadro 13",
+  "Quadro 16",
+  "Quadro 17",
+  "Quadro 18",
+  "Quadro 19",
+  "Quadro 20",
+  "Quadro 21",
+  "Quadro 22",
+  "Quadro 23",
+  "Quadro 24",
+  "Quadro 25",
+  "Quadro 26",
+  "Quadro 27",
+  "Quadro 28",
+  "Quadro 29",
+  "Quadro 30",
+  "Quadro 31",
+  "Quadro 32",
+  "Quadro 33",
+  "Quadro 34",
+  "Quadro 35",
+  "Quadro 36",
+  "Quadro 37",
+  "Quadro 38",
+  "Quadro 39",
+  "Quadro 40",
+  "Quadro 41",
+  "Quadro 42",
+  "Quadro 43",
+  "Quadro 44",
+  "Quadro 45",
+  "Quadro 46",
+  "Quadro 47",
+  "Quadro 48",
+  "Quadro 49",
+  "Quadro 50",
+  "Quadro 51",
+  "Quadro 52",
+  "Quadro 53",
+  "Quadro 54",
+  "Quadro 55",
+  "Quadro 56",
+  "Quadro 57",
+  "Quadro 58",
+  "Quadro 59",
+  "Quadro 60",
+  "Quadro 61",
+  "Quadro 62",
+  "Quadro 63",
+  "Quadro 64",
+  "Quadro 65",
+  "Quadro 66",
+  "Quadro 67",
+  "Quadro 68",
+  "Quadro 69",
+  "Quadro 70",
+  "Quadro 71",
+  "Quadro 72",
+  "Quadro 73",
+  "Quadro 74",
+  "Quadro 75",
+  "Quadro 76",
+  "Quadro 77",
+  "Quadro 78",
+  "Quadro 79",
+  "Quadro 80",
+  "Quadro 81",
+  "Quadro 82",
+  "Quadro 83",
+  "Quadro 84",
+  "Quadro 85",
+  "Quadro 86",
+  "Quadro 87",
+  "Quadro 88",
+  "Quadro 89",
+  "Quadro 90",
+  "Quadro 91",
+  "Quadro 92",
+  "Quadro 93",
+  "Quadro 94",
+  "Figura 3 (bloco 417)",
+  "Figura 4 (bloco 420)",
+  "Figura 5 (bloco 423)",
+  "Figura 7 (bloco 431)",
+  "Figura 8 (bloco 434)",
+  "Figura 9 (bloco 437)",
+  "Figura 10 (bloco 440)",
+  "Figura 11 (bloco 443)",
+  "Figura 12 (bloco 448)",
+  "Figura 13 (bloco 451)",
+  "Figura 14 (bloco 454)",
+  "Figura 15 (bloco 457)",
+  "Figura 16 (bloco 460)",
+  "Figura 17 (bloco 469)",
+  "Figura 19 (bloco 475)",
+  "Figura 20 (bloco 478)",
+  "Figura 22 (bloco 484)",
+  "Figura 23 (bloco 487)",
+  "Figura 25 (bloco 493)",
+  "Figura 26 (bloco 499)",
+  "Figura 27 (bloco 503)",
+  "Figura 28 (bloco 507)",
+  "Figura 29 (bloco 511)",
+  "Figura 30 (bloco 515)",
+  "Figura 48 (bloco 1201)",
+  "Figura 49 (bloco 1205)",
+  "Figura 51 (bloco 1214)",
+  "Figura 52 (bloco 1219)",
+  "Figura 53 (bloco 1224)",
+  "Figura 54 (bloco 1229)",
+  "Figura 55 (bloco 1233)",
+  "Figura 56 (bloco 1237)",
+  "Figura 57 (bloco 1242)",
+  "Figura 58 (bloco 1246)",
+  "Figura 59 (bloco 1252)",
+  "Figura 49 (bloco 1258)",
+  "Figura 51 (bloco 1264)",
+  "Figura 52 (bloco 1267)",
+  "Figura 53 (bloco 1270)",
+  "Figura 54 (bloco 1273)",
+  "Figura 60 (bloco 1281)",
+  "Figura 61 (bloco 1286)",
+  "Figura 62 (bloco 1291)",
+  "Figura 63 (bloco 1296)"
+ ],
+ "nunca_citados": [
+  "Quadro 6",
+  "Quadro 7",
+  "Quadro 8",
+  "Quadro 9",
+  "Quadro 10",
+  "Quadro 12",
+  "Quadro 13",
+  "Quadro 16",
+  "Quadro 17",
+  "Quadro 18",
+  "Quadro 19",
+  "Quadro 20",
+  "Quadro 21",
+  "Quadro 22",
+  "Quadro 23",
+  "Quadro 24",
+  "Quadro 25",
+  "Quadro 26",
+  "Quadro 27",
+  "Quadro 28",
+  "Quadro 29",
+  "Quadro 30",
+  "Quadro 31",
+  "Quadro 32",
+  "Quadro 33",
+  "Quadro 34",
+  "Quadro 35",
+  "Quadro 36",
+  "Quadro 37",
+  "Quadro 38",
+  "Quadro 39",
+  "Quadro 40",
+  "Quadro 41",
+  "Quadro 42",
+  "Quadro 43",
+  "Quadro 44",
+  "Quadro 45",
+  "Quadro 46",
+  "Quadro 47",
+  "Quadro 48",
+  "Quadro 49",
+  "Quadro 50",
+  "Quadro 51",
+  "Quadro 52",
+  "Quadro 53",
+  "Quadro 54",
+  "Quadro 55",
+  "Quadro 56",
+  "Quadro 57",
+  "Quadro 58",
+  "Quadro 59",
+  "Quadro 60",
+  "Quadro 61",
+  "Quadro 62",
+  "Quadro 63",
+  "Quadro 64",
+  "Quadro 65",
+  "Quadro 66",
+  "Quadro 67",
+  "Quadro 68",
+  "Quadro 69",
+  "Quadro 70",
+  "Quadro 71",
+  "Quadro 72",
+  "Quadro 73",
+  "Quadro 74",
+  "Quadro 75",
+  "Quadro 76",
+  "Quadro 77",
+  "Quadro 78",
+  "Quadro 79",
+  "Quadro 80",
+  "Quadro 81",
+  "Quadro 82",
+  "Quadro 83",
+  "Quadro 84",
+  "Quadro 85",
+  "Quadro 86",
+  "Quadro 87",
+  "Quadro 88",
+  "Quadro 89",
+  "Quadro 90",
+  "Quadro 91",
+  "Quadro 92",
+  "Quadro 93",
+  "Quadro 94",
+  "Figura 3 (bloco 417)",
+  "Figura 4 (bloco 420)",
+  "Figura 5 (bloco 423)",
+  "Figura 7 (bloco 431)",
+  "Figura 8 (bloco 434)",
+  "Figura 9 (bloco 437)",
+  "Figura 10 (bloco 440)",
+  "Figura 11 (bloco 443)",
+  "Figura 12 (bloco 448)",
+  "Figura 13 (bloco 451)",
+  "Figura 14 (bloco 454)",
+  "Figura 15 (bloco 457)",
+  "Figura 16 (bloco 460)",
+  "Figura 17 (bloco 469)",
+  "Figura 19 (bloco 475)",
+  "Figura 20 (bloco 478)",
+  "Figura 22 (bloco 484)",
+  "Figura 23 (bloco 487)",
+  "Figura 25 (bloco 493)",
+  "Figura 26 (bloco 499)",
+  "Figura 27 (bloco 503)",
+  "Figura 28 (bloco 507)",
+  "Figura 29 (bloco 511)",
+  "Figura 30 (bloco 515)",
+  "Figura 48 (bloco 1201)",
+  "Figura 49 (bloco 1205)",
+  "Figura 51 (bloco 1214)",
+  "Figura 52 (bloco 1219)",
+  "Figura 53 (bloco 1224)",
+  "Figura 54 (bloco 1229)",
+  "Figura 55 (bloco 1233)",
+  "Figura 56 (bloco 1237)",
+  "Figura 57 (bloco 1242)",
+  "Figura 58 (bloco 1246)",
+  "Figura 59 (bloco 1252)",
+  "Figura 49 (bloco 1258)",
+  "Figura 51 (bloco 1264)",
+  "Figura 52 (bloco 1267)",
+  "Figura 53 (bloco 1270)",
+  "Figura 54 (bloco 1273)",
+  "Figura 60 (bloco 1281)",
+  "Figura 61 (bloco 1286)",
+  "Figura 62 (bloco 1291)",
+  "Figura 63 (bloco 1296)"
+ ],
+ "figuras_duplicadas": [
+  49,
+  50,
+  51,
+  52,
+  53,
+  54
+ ],
+ "figuras_separador_hifen": [
+  60,
+  61,
+  62,
+  63
+ ],
+ "lista_figuras_entradas": 55,
+ "lista_figuras_ausentes": [
+  56,
+  57,
+  58,
+  59,
+  60,
+  61,
+  62,
+  63
+ ],
+ "lista_figuras_titulo_divergente": [
+  {
+   "num": 48,
+   "lista": "Figura 48 – [DESCRIÇÃO DA FOTOGRAFIA]",
+   "legenda": "Figura 48 – Ficha física de controle do canil",
+   "secao": "APÊNDICE D – REGISTRO FOTOGRÁFICO DA VISITA AO CCZ DE ITU"
+  },
+  {
+   "num": 49,
+   "lista": "Figura 49 – Tela T18: Relatório anual de processos",
+   "legenda": "Figura 49 – Planilha de registro dos animais do canil",
+   "secao": "APÊNDICE D – REGISTRO FOTOGRÁFICO DA VISITA AO CCZ DE ITU"
+  },
+  {
+   "num": 50,
+   "lista": "Figura 50 – Tela T19: Relatório de vacinação",
+   "legenda": "Figura 50 – Continuação da planilha de animais do canil",
+   "secao": "APÊNDICE D – REGISTRO FOTOGRÁFICO DA VISITA AO CCZ DE ITU"
+  },
+  {
+   "num": 51,
+   "lista": "Figura 51 – Tela T20: Relatório de adoções",
+   "legenda": "Figura 51 – Planilha de controle dos processos sanitários",
+   "secao": "APÊNDICE D – REGISTRO FOTOGRÁFICO DA VISITA AO CCZ DE ITU"
+  },
+  {
+   "num": 52,
+   "lista": "Figura 52 – Tela T21: Relatório de procedimentos",
+   "legenda": "Figura 52 – Capa de processo sanitário em manuseio",
+   "secao": "APÊNDICE D – REGISTRO FOTOGRÁFICO DA VISITA AO CCZ DE ITU"
+  },
+  {
+   "num": 53,
+   "lista": "Figura 53 – Tela T22: Relatório de ocupação de baias",
+   "legenda": "Figura 53 – Ficha de notificação de cão com suspeita de leishmaniose visceral",
+   "secao": "APÊNDICE D – REGISTRO FOTOGRÁFICO DA VISITA AO CCZ DE ITU"
+  },
+  {
+   "num": 54,
+   "lista": "Figura 54 – Tela T23: Relatório de ocorrências por bairro",
+   "legenda": "Figura 54 – Requisição de exame no GAL",
+   "secao": "APÊNDICE D – REGISTRO FOTOGRÁFICO DA VISITA AO CCZ DE ITU"
+  },
+  {
+   "num": 55,
+   "lista": "Figura 55 – [PLANILHA E TRECHO APRESENTADO]",
+   "legenda": "Figura 55 – Etiqueta de protocolo do GAL",
+   "secao": "APÊNDICE D – REGISTRO FOTOGRÁFICO DA VISITA AO CCZ DE ITU"
+  }
+ ],
+ "lista_quadros_titulo_divergente": [],
+ "fonte_sem_ponto_final": [
+  [
+   1211,
+   "Fonte: Acervo dos autores (2026)"
+  ],
+  [
+   1216,
+   "Fonte: Acervo dos autores (2026)"
+  ],
+  [
+   1221,
+   "Fonte: Acervo dos autores (2026)"
+  ],
+  [
+   1226,
+   "Fonte: Acervo dos autores (2026)"
+  ],
+  [
+   1231,
+   "Fonte: Acervo dos autores (2026)"
+  ],
+  [
+   1235,
+   "Fonte: Acervo dos autores (2026)"
+  ],
+  [
+   1239,
+   "Fonte: Acervo dos autores (2026)"
+  ],
+  [
+   1248,
+   "Fonte: Acervo dos autores (2026)"
+  ],
+  [
+   1254,
+   "Fonte: Acervo dos autores (2026)"
+  ]
+ ],
+ "placeholders": [
+  [
+   168,
+   "Figura 48 – [DESCRIÇÃO DA FOTOGRAFIA]\t128"
+  ],
+  [
+   175,
+   "Figura 55 – [PLANILHA E TRECHO APRESENTADO]\t130"
+  ],
+  [
+   532,
+   "[INSERIR CAPTURA DA TELA T01 – LOGIN]"
+  ],
+  [
+   536,
+   "[INSERIR CAPTURA DA TELA T02 – DASHBOARD OPERACIONAL]"
+  ],
+  [
+   540,
+   "[INSERIR CAPTURA DA TELA T03 – ALERTAS]"
+  ],
+  [
+   544,
+   "[INSERIR CAPTURA DA TELA T04 – ANIMAIS DO CANIL]"
+  ],
+  [
+   548,
+   "[INSERIR CAPTURA DA TELA T05 – CADASTRO DE ANIMAL]"
+  ],
+  [
+   552,
+   "[INSERIR CAPTURA DA TELA T06 – FICHA DO ANIMAL]"
+  ],
+  [
+   556,
+   "[INSERIR CAPTURA DA TELA T07 – GESTÃO DE BAIAS]"
+  ],
+  [
+   560,
+   "[INSERIR CAPTURA DA TELA T08 – OCORRÊNCIAS]"
+  ],
+  [
+   564,
+   "[INSERIR CAPTURA DA TELA T09 – REGISTRO DE OCORRÊNCIA]"
+  ],
+  [
+   568,
+   "[INSERIR CAPTURA DA TELA T10 – DETALHE DA OCORRÊNCIA]"
+  ],
+  [
+   572,
+   "[INSERIR CAPTURA DA TELA T11 – PROCESSOS SANITÁRIOS]"
+  ],
+  [
+   576,
+   "[INSERIR CAPTURA DA TELA T12 – ABERTURA DE PROCESSO]"
+  ],
+  [
+   580,
+   "[INSERIR CAPTURA DA TELA T13 – DETALHE DO PROCESSO]"
+  ],
+  [
+   584,
+   "[INSERIR CAPTURA DA TELA T14 – CENTRAL DE RELATÓRIOS]"
+  ],
+  [
+   588,
+   "[INSERIR CAPTURA DA TELA T15 – USUÁRIOS]"
+  ],
+  [
+   592,
+   "[INSERIR CAPTURA DA TELA T16 – CONFIGURAÇÕES]"
+  ],
+  [
+   596,
+   "[INSERIR CAPTURA DA TELA T17 – PERFIL E AJUDA]"
+  ],
+  [
+   601,
+   "Os objetivos de mapear o fluxo de trabalho vigente, levantar os requisitos e modelar o sistema foram atingidos: foram especificados 20 requisitos funcionais, 10 requisitos não funcionais e 12 regras de negócio, detalhados em diagramas de casos de uso, com 36 especificações de baixo nível, diagramas entidade-relacionamento, lógicos e de classes, dicionário de dados e protótipos das interfaces. [DESCREVER O QUE FOI IMPLEMENTADO E O QUE FICOU PENDENTE NA ENTREGA.] [DESCREVER OS TESTES REALIZADOS E SEUS RESULTADOS, SE HOUVER.]"
+  ],
+  [
+   603,
+   "O desenvolvimento permitiu aplicar conhecimentos de engenharia de requisitos, modelagem orientada a objetos, banco de dados relacional, segurança de aplicações web e desenvolvimento full stack. [APRENDIZADOS E DIFICULDADES, NAS PALAVRAS DOS AUTORES.]"
+  ],
+  [
+   604,
+   "Entre as limitações, destacam-se a restrição do escopo ao CCZ de Itu e a ausência de integração com os sistemas de vigilância SINAN e GAL, cujos números são apenas registrados. [ACRESCENTAR REQUISITOS NÃO IMPLEMENTADOS, SE HOUVER.]"
+  ],
+  [
+   686,
+   "SÃO PAULO (Estado). Secretaria de Estado da Saúde. Centro de Vigilância Epidemiológica “Prof. Alexandre Vranjac”. [Boletim de esporotricose]. São Paulo: CVE, fev. 2026. Disponível em: https://www.saude.sp.gov.br/resources/cve-centro-de-vigilancia-epidemiologica/areas-de-vigilancia/doencas-de-transmissao-por-vetores-e-zoonoses/boletim/esporotricose/boletim_esporotricose_fev2026.pdf. Acesso em: 11 out. 2026."
+  ],
+  [
+   989,
+   "[Pausa de 4 minutos e 35 segundos]"
+  ],
+  [
+   1083,
+   "[Deslocamento até o canil para demonstração prática]"
+  ],
+  [
+   1087,
+   "[Corte na gravação]"
+  ],
+  [
+   1259,
+   "[INSERIR CAPTURA DA TELA T18 – RELATÓRIO ANUAL DE PROCESSOS]"
+  ],
+  [
+   1262,
+   "[INSERIR CAPTURA DA TELA T19 – RELATÓRIO DE VACINAÇÃO]"
+  ],
+  [
+   1265,
+   "[INSERIR CAPTURA DA TELA T20 – RELATÓRIO DE ADOÇÕES]"
+  ],
+  [
+   1268,
+   "[INSERIR CAPTURA DA TELA T21 – RELATÓRIO DE PROCEDIMENTOS]"
+  ],
+  [
+   1271,
+   "[INSERIR CAPTURA DA TELA T22 – RELATÓRIO DE OCUPAÇÃO DE BAIAS]"
+  ],
+  [
+   1274,
+   "[INSERIR CAPTURA DA TELA T23 – RELATÓRIO DE OCORRÊNCIAS POR BAIRRO]"
+  ]
+ ],
+ "sumario_texto": [
+  "No table of contents entries found."
+ ],
+ "n_referencias": 48,
+ "referencias_chaves": [
+  "ALMEIDA | 2022 | ALMEIDA, Bruna Machado de; CALDAS, Aline Cirilo. Responsabilidade do Centro de C",
+  "APACHE SOFTWARE FOUNDATION | 2026,2026 | APACHE SOFTWARE FOUNDATION. Apache Maven project. [S. l.], 2026. Disponível em: ",
+  "BALBE | 2010 | BALBE, Ronald da Silva. Uso de tecnologias de informação e comunicação na gestão",
+  "BARROSO | 2012,2012 | BARROSO, José Eduardo Machado; LIMA, Elaine Euzébio de. O Centro de Controle de ",
+  "BRASIL | 2014,2014,2014,2026 | BRASIL. Ministério da Saúde. Portaria nº 1.138, de 23 de maio de 2014. Define as",
+  "BRASIL | 2016,2026 | BRASIL. Ministério da Saúde. Secretaria de Vigilância em Saúde. Manual de vigilâ",
+  "BRASIL | 2018,2018,2018,2018,2026 | BRASIL. Lei nº 13.709, de 14 de agosto de 2018. Dispõe sobre a proteção de dados",
+  "BRASIL | 2021,2021a,2022,2021,2025 | BRASIL. Lei nº 14.129, de 29 de março de 2021. Dispõe sobre princípios, regras e",
+  "BRASIL | 2021,2021b,2022,2021,2026 | BRASIL. Lei nº 14.228, de 20 de outubro de 2021. Dispõe sobre a proibição da eli",
+  "BRASIL | 2023 | BRASIL. Ministério da Saúde. Secretaria de Vigilância em Saúde e Ambiente. Guia ",
+  "BRASIL | 2024,2024,2026,2024,2026 | BRASIL. Lei nº 15.046, de 17 de dezembro de 2024. Autoriza a criação do Cadastro",
+  "BRASIL | 2025,2017,2025a,2026 | BRASIL. Ministério da Saúde. Portaria GM/MS nº 6.734, de 18 de março de 2025. Al",
+  "BRASIL | 2025,2025b | BRASIL. Ministério da Saúde. Secretaria de Vigilância em Saúde e Ambiente. Depar",
+  "BRASIL | 2026,2017,2026a,2026,2017,2026 | BRASIL. Ministério da Saúde. Portaria GM/MS nº 10.175, de 23 de janeiro de 2026.",
+  "BRASIL | 2026b,2026 | BRASIL. Ministério da Saúde. Notificação compulsória. Brasília, DF: Ministério d",
+  "BRASIL | 2026,2017,2026c,2026,2026 | BRASIL. Ministério da Saúde. Portaria GM/MS nº 11.211, de 13 de maio de 2026. Al",
+  "BRASIL | 2026d | BRASIL. Ministério da Saúde. Secretaria de Vigilância em Saúde e Ambiente. Depar",
+  "CAMPO GRANDE | 2025 | CAMPO GRANDE (Município). Coordenadoria de Controle de Zoonoses. Castração de ga",
+  "CÂNDIDO | 2026,2026 | CÂNDIDO, Carlos Henrique. brModelo. [S. l.], [2026]. Disponível em: https://gith",
+  "CHACON | 2014,2026 | CHACON, Scott; STRAUB, Ben. Pro Git. 2. ed. [S. l.]: Apress, 2014. Disponível em",
+  "CHEN | 1976 | CHEN, Peter Pin-Shan. The entity-relationship model: toward a unified view of da",
+  "DOCKER | 2026,2026 | DOCKER. Docker docs. [S. l.], 2026. Disponível em: https://docs.docker.com/. Ace",
+  "ELLWANGER | 2022 | ELLWANGER, Joel Henrique; CHIES, José Artur Bogo. Saúde Única (One Health): uma ",
+  "FIELDING | 2000,2000,2026 | FIELDING, Roy Thomas. Architectural styles and the design of network-based softw",
+  "GITHUB | 2026,2026 | GITHUB. Sobre o GitHub e o Git. GitHub Docs, 2026. Disponível em: https://docs.g",
+  "GOIÁS | 2020,2026 | GOIÁS (Estado). Secretaria de Estado da Saúde. GAL – Sistema Gerenciador de Ambi",
+  "HEUSER | 2009 | HEUSER, Carlos Alberto. Projeto de banco de dados. 6. ed. Porto Alegre: Bookman,",
+  "HOLISTICS | 2026,2026 | HOLISTICS. dbdiagram.io. [S. l.], 2026. Disponível em: https://dbdiagram.io/. Ac",
+  "IBGE | 2026,2026 | IBGE. Itu. In: IBGE. Cidades@. Rio de Janeiro: IBGE, [2026]. Disponível em: http",
+  "JONES | 2015,2026 | JONES, M.; BRADLEY, J.; SAKIMURA, N. JSON Web Token (JWT): RFC 7519. [S. l.]: IE",
+  "KONG | 2026,2026 | KONG. Insomnia. GitHub, 2026. Disponível em: https://github.com/Kong/insomnia. A",
+  "MICROSOFT | 2026,2026 | MICROSOFT. TypeScript documentation. [S. l.], 2026. Disponível em: https://www.t",
+  "ONE HEALTH HIGH-LEVEL EXPERT P | 2022 | ONE HEALTH HIGH-LEVEL EXPERT PANEL (OHHLEP) et al. One Health: a new definition ",
+  "ORACLE | 2023,2026 | ORACLE. JDK 21 documentation. [S. l.], 2023. Disponível em: https://docs.oracle.",
+  "PLANTUML | 2026,2026 | PLANTUML. PlantUML. [S. l.], 2026. Disponível em: https://plantuml.com/. Acesso ",
+  "POSTGRESQL GLOBAL DEVELOPMENT GROUP | 2023,2026 | POSTGRESQL GLOBAL DEVELOPMENT GROUP. PostgreSQL 16 documentation. [S. l.], 2023.",
+  "PRODANOV | 2013 | PRODANOV, Cleber Cristiano; FREITAS, Ernani Cesar de. Metodologia do trabalho ci",
+  "REACT | 2026,2026 | REACT. React documentation. [S. l.], 2026. Disponível em: https://react.dev/. Ac",
+  "RECHARTS | 2026,2026 | RECHARTS. Recharts. [S. l.], 2026. Disponível em: https://recharts.org/. Acesso ",
+  "RIBEIRO | 2022,2022,2026 | RIBEIRO, Rodrigo Luiz. Prefeitura lança site do CCZ com adoção online de cães e ",
+  "SÃO PAULO | 2026,2026 | SÃO PAULO (Estado). Secretaria de Estado da Saúde. Centro de Vigilância Epidemio",
+  "SÃO PAULO | 2017 | SÃO PAULO (Município). Secretaria Municipal da Saúde. Site do CCZ mostra animais",
+  "SCHWABER | 2020,2026 | SCHWABER, Ken; SUTHERLAND, Jeff. The Scrum guide. [S. l.], 2020. Disponível em: ",
+  "SOMMERVILLE | 2011 | SOMMERVILLE, Ian. Engenharia de software. 9. ed. São Paulo: Pearson Prentice Hal",
+  "SPRING | 2026a,2026 | SPRING. Spring Boot reference documentation. [S. l.], 2026a. Disponível em: http",
+  "SPRING | 2026b,2026 | SPRING. Spring Security reference. [S. l.], 2026b. Disponível em: https://docs.s",
+  "SPRING | 2026c,2026 | SPRING. Spring Data JPA reference. [S. l.], 2026c. Disponível em: https://docs.s",
+  "VITE | 2026,2026 | VITE. Vite documentation. [S. l.], 2026. Disponível em: https://vite.dev/. Acess"
+ ],
+ "citacoes_encontradas": [
+  "APACHE SOFTWARE FOUNDATION 2026",
+  "BALBE 2010",
+  "BRASIL 2014",
+  "BRASIL 2016",
+  "BRASIL 2021a",
+  "BRASIL 2023",
+  "BRASIL 2024",
+  "BRASIL 2025a",
+  "BRASIL 2025b",
+  "BRASIL 2026a",
+  "BRASIL 2026c",
+  "BRASIL 2026d",
+  "BRASIL [2026b]",
+  "CALDAS 2022",
+  "CAMPO GRANDE 2025",
+  "CAMPOS 2022",
+  "CHEN 1976",
+  "CHIES 2022",
+  "CÂNDIDO [2026]",
+  "DOCKER 2026",
+  "FIELDING 2000",
+  "FREITAS 2013",
+  "GITHUB 2026",
+  "GOIÁS 2020",
+  "GRANDE 2025",
+  "HEUSER 2009",
+  "HOLISTICS 2026",
+  "IBGE [2026]",
+  "ITU 2026",
+  "KONG 2026",
+  "LIMA 2012",
+  "MICROSOFT 2026",
+  "ONE HEALTH HIGH-LEVEL EXPERT PANEL 2022",
+  "ORACLE 2023",
+  "PAULO 2026",
+  "PLANTUML 2026",
+  "POSTGRESQL GLOBAL DEVELOPMENT GROUP 2023",
+  "REACT 2026",
+  "SAKIMURA 2015",
+  "SOMMERVILLE 2011",
+  "SPRING 2026a",
+  "SPRING 2026b",
+  "SPRING 2026c",
+  "STRAUB 2014",
+  "SUTHERLAND 2020",
+  "SÃO PAULO 2017",
+  "SÃO PAULO 2026",
+  "VITE 2026"
+ ],
+ "citacoes_sem_referencia": [
+  "CALDAS 2022",
+  "CAMPOS 2022",
+  "CHIES 2022",
+  "FREITAS 2013",
+  "ITU 2026",
+  "LIMA 2012",
+  "ONE HEALTH HIGH-LEVEL EXPERT PANEL 2022",
+  "SAKIMURA 2015",
+  "STRAUB 2014",
+  "SUTHERLAND 2020"
+ ],
+ "referencias_nao_citadas": [
+  "ALMEIDA, Bruna Machado de; CALDAS, Aline Cirilo. Responsabilidade do Centro de C",
+  "BARROSO, José Eduardo Machado; LIMA, Elaine Euzébio de. O Centro de Controle de ",
+  "BRASIL. Lei nº 13.709, de 14 de agosto de 2018. Dispõe sobre a proteção de dados",
+  "BRASIL. Lei nº 14.228, de 20 de outubro de 2021. Dispõe sobre a proibição da eli",
+  "CHACON, Scott; STRAUB, Ben. Pro Git. 2. ed. [S. l.]: Apress, 2014. Disponível em",
+  "ELLWANGER, Joel Henrique; CHIES, José Artur Bogo. Saúde Única (One Health): uma ",
+  "JONES, M.; BRADLEY, J.; SAKIMURA, N. JSON Web Token (JWT): RFC 7519. [S. l.]: IE",
+  "ONE HEALTH HIGH-LEVEL EXPERT PANEL (OHHLEP) et al. One Health: a new definition ",
+  "PRODANOV, Cleber Cristiano; FREITAS, Ernani Cesar de. Metodologia do trabalho ci",
+  "RECHARTS. Recharts. [S. l.], 2026. Disponível em: https://recharts.org/. Acesso ",
+  "RIBEIRO, Rodrigo Luiz. Prefeitura lança site do CCZ com adoção online de cães e ",
+  "SCHWABER, Ken; SUTHERLAND, Jeff. The Scrum guide. [S. l.], 2020. Disponível em: "
+ ],
+ "variacoes_nome_modulo": {
+  "Módulo 3: Ocorrências e Denúncias": 5,
+  "Módulo 4: Processos Sanitários": 5,
+  "Módulo 2: Gestão de Animais do Canil": 4,
+  "Módulo 3: Ocorrências e Denúncias  Fonte: Elaborado pelos autores": 4,
+  "Módulo 4: Processos Sanitários  Fonte: Elaborado pelos autores": 4,
+  "Módulo 1: Autenticação e Controle de Acesso": 3,
+  "Módulo 5: Relatórios": 3,
+  "Módulo 2: Gestão de Animais do Canil  Fonte: Elaborado pelos autores": 3,
+  "Módulo 5: Relatórios  Fonte: Elaborado pelos autores": 3,
+  "Módulo 5: Dashboard e Relatórios": 2,
+  "Módulo 1: Usuários e Acesso": 2,
+  "Módulo 1: Autenticação e Controle de Acesso  Fonte: Elaborado pelos aut": 2,
+  "Módulo 1: Usuários e Acesso  Fonte: Elaborado pelos autores": 2,
+  "Módulo 1 – Autenticação e Controle de Acesso": 1,
+  "Módulo 2 – Gestão de Animais do Canil": 1,
+  "Módulo 3 – Ocorrências e Denúncias": 1,
+  "Módulo 4 – Processos Sanitários": 1,
+  "Módulo 5 – Dashboard e Relatórios": 1,
+  "Módulo 1 – Autenticação e Controle de Acesso Quadro 6 – Requisitos funci": 1,
+  "Módulo 1: Autenticação e Controle de Acesso ID": 1,
+  "Módulo 2 – Gestão de Animais do Canil Quadro 7 – Requisitos funcionais d": 1,
+  "Módulo 2: Gestão de Animais do Canil ID": 1,
+  "Módulo 3 – Ocorrências e Denúncias Quadro 8 – Requisitos funcionais do M": 1,
+  "Módulo 4 – Processos Sanitários Quadro 9 – Requisitos funcionais do Módu": 1,
+  "Módulo 5 – Dashboard e Relatórios Quadro 10 – Requisitos funcionais do M": 1,
+  "Módulo 5: Dashboard e Relatórios  Fonte: Elaborado pelos autores": 1
+ },
+ "dicionario_tabelas": [
+  "Adocao",
+  "AmostraAnimal",
+  "AmostraSintoma",
+  "AnexoAnimal",
+  "AnexoExame",
+  "AnexoOcorrencia",
+  "AnexoProcedimento",
+  "AnexoVacinacao",
+  "Animal",
+  "AnimalSintoma",
+  "AuditoriaEvento",
+  "Baia",
+  "Cargo",
+  "CargoPermissao",
+  "CategoriaFarmacologica",
+  "Denunciado",
+  "Denunciante",
+  "DocumentoProcesso",
+  "Doenca",
+  "Exame",
+  "Laboratorio",
+  "Medicamento",
+  "MotivoEntrada",
+  "MovimentacaoOcorrencia",
+  "Ocorrencia",
+  "PreferenciaUsuario",
+  "Prescricao",
+  "Procedimento",
+  "ProcessoSanitario",
+  "ProvidenciaTomada",
+  "RelatorioGerado",
+  "ResponsavelProcesso",
+  "Sintoma",
+  "TipoBaia",
+  "TipoDocumentoProcesso",
+  "TipoExame",
+  "TipoOcorrencia",
+  "TipoProcedimento",
+  "Usuario",
+  "UsuarioCargo",
+  "Vacina",
+  "VacinaEspecie",
+  "Vacinacao"
+ ],
+ "dicionario_enums": {
+  "Modulo": 1,
+  "TemaUsuario": 1,
+  "DensidadeUsuario": 1,
+  "AcaoAuditoria": 1,
+  "Especie": 3,
+  "Sexo": 2,
+  "Porte": 1,
+  "StatusAnimal": 1,
+  "UnidadeDose": 2,
+  "UnidadeFrequencia": 1,
+  "ViaAdministracao": 1,
+  "StatusPrescricao": 1,
+  "StatusOcorrencia": 1,
+  "TipoMovimentacaoOcorrencia": 1,
+  "StatusProcesso": 1,
+  "ResultadoLaboratorial": 1,
+  "DesfechoAnimal": 1,
+  "StatusDocumento": 1,
+  "TipoAbrigo": 1,
+  "MaterialBiologico": 1,
+  "TipoAmostra": 1,
+  "NivelContato": 1,
+  "TipoRelatorio": 1,
+  "StatusRelatorio": 1
+ },
+ "dicionario_grafias_criado_em": [
+  "atualizado_em",
+  "criado_em",
+  "criado_por",
+  "data_modificacao"
+ ]
+}

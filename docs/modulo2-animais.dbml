@@ -1,65 +1,37 @@
 // ══════════════════════════════════════════════════════
-// MÓDULO 02 — GESTÃO DE ANIMAIS DO CANIL
-// Tabelas: MotivoEntrada, TipoBaia, Baia, Sintoma,
-//          Vacina, VacinaEspecie, TipoProcedimento,
-//          Laboratorio, Animal, AnimalSintoma,
-//          AnexoAnimal, Vacinacao, AnexoVacinacao,
-//          Procedimento, AnexoProcedimento,
-//          CategoriaFarmacologica, Medicamento,
-//          Prescricao, TipoExame, Exame, AnexoExame
-// Enums:   Especie, StatusAnimal, Sexo, Porte,
-//          UnidadeFrequencia, StatusPrescricao,
-//          ViaAdministracao, UnidadeDose
-// Compartilhada: Laboratorio, Usuario
+// MÓDULO 02 — GESTÃO DE ANIMAIS DO CANIL E HISTÓRICO CLÍNICO
+// Espelha as migrations V4, V5, V6, V7, V16, V18, V23–V26, V28
+// (revisão de 25/10/2026, docs/decisoes/alinhamento-tg.md).
+// Tabelas implementadas: Especie, StatusAnimal, MotivoEntrada,
+//   TipoBaia, Baia, Animal, Vacina, Vacinacao, TipoProcedimento,
+//   Procedimento, CategoriaFarmacologica, Medicamento, Prescricao,
+//   TipoExame, Exame, AnexoAnimal, AnexoAnimalConteudo
+// Modelo-alvo (SEM tabela — trabalho futuro): Adocao, AnexoVacinacao,
+//   AnexoProcedimento, AnexoExame, VacinaEspecie, AnimalSintoma
+// Enums (CHECK em varchar): Sexo, Porte, Pelagem, UnidadeDose,
+//   UnidadeFrequencia, ViaAdministracao, StatusPrescricao
+// Compartilhadas: Laboratorio (módulo 04), Usuario (módulo 01)
+// Catálogos de espécie, status e motivo são TABELAS (codigo/nome),
+// não enums — a API recebe e devolve o codigo.
 // ══════════════════════════════════════════════════════
 
-// ── Enums ──────────────────────────────────────────────
-
-Enum Especie {
-  CANINO
-  FELINO
-}
-
-Enum StatusAnimal {
-  DISPONIVEL_ADOCAO
-  EM_TRATAMENTO
-  QUARENTENA
-  ADOTADO
-  RESGATADO
-  OBITO
-  EUTANASIA
-  TRANSFERIDO
-}
+// ── Enums (valores do CHECK) ───────────────────────────
 
 Enum Sexo {
-  MACHO
-  FEMEA
+  macho
+  femea
+  nao_identificado
 }
 
 Enum Porte {
-  P
-  M
-  G
+  pequeno
+  medio
+  grande
 }
 
-Enum UnidadeFrequencia {
-  HORAS
-  DIAS
-}
-
-Enum StatusPrescricao {
-  ATIVA
-  CONCLUIDA
-  SUSPENSA
-  CANCELADA
-}
-
-Enum ViaAdministracao {
-  ORAL
-  INTRAVENOSA
-  INTRAMUSCULAR
-  SUBCUTANEA
-  TOPICA
+Enum Pelagem {
+  curta
+  longa
 }
 
 Enum UnidadeDose {
@@ -70,48 +42,65 @@ Enum UnidadeDose {
   UNIDADE_INTERNACIONAL
 }
 
-// ── Lookup tables ──────────────────────────────────────
+Enum UnidadeFrequencia {
+  HORAS
+  DIAS
+}
+
+Enum ViaAdministracao {
+  ORAL
+  INTRAVENOSA
+  INTRAMUSCULAR
+  SUBCUTANEA
+  TOPICA
+}
+
+Enum StatusPrescricao {
+  ATIVA
+  CONCLUIDA
+  SUSPENSA
+  CANCELADA
+}
+
+// ── Catálogos (tabelas) ────────────────────────────────
+
+Table Especie {
+  id     uuid        [pk, not null, default: `gen_random_uuid()`]
+  codigo varchar(30) [not null, unique, note: 'canino, felino, quiroptero, pnh']
+  nome   varchar(60) [not null]
+}
+
+Table StatusAnimal {
+  id     uuid        [pk, not null, default: `gen_random_uuid()`]
+  codigo varchar(30) [not null, unique, note: 'disponivel_adocao, em_tratamento, em_quarentena, adotado, obito_natural, obito_eutanasia, transferido']
+  nome   varchar(60) [not null]
+}
 
 Table MotivoEntrada {
-  id    uuid         [pk, not null, default: `gen_random_uuid()`]
-  nome  varchar(100) [not null]
-  ativo boolean      [not null, default: true]
+  id     uuid        [pk, not null, default: `gen_random_uuid()`]
+  codigo varchar(30) [not null, unique, note: 'recolhimento, abandono, entrega_voluntaria, resgate, apreensao_judicial']
+  nome   varchar(60) [not null]
 }
 
 Table TipoBaia {
-  id    uuid         [pk, not null, default: `gen_random_uuid()`]
-  nome  varchar(100) [not null]
-  ativo boolean      [not null, default: true]
-}
-
-Table Sintoma {
-  id     uuid         [pk, not null, default: `gen_random_uuid()`]
-  codigo varchar(100)
-  nome   varchar(100) [not null]
-  ativo  boolean      [not null, default: true]
+  id     uuid        [pk, not null, default: `gen_random_uuid()`]
+  codigo varchar(30) [not null, unique, note: 'interna, gatil, externa']
+  nome   varchar(60) [not null]
 }
 
 Table Vacina {
   id              uuid         [pk, not null, default: `gen_random_uuid()`]
-  codigo          varchar(100) [unique]
+  codigo          varchar(30)  [not null, unique]
   nome            varchar(100) [not null]
-  intervalo_meses integer
+  intervalo_meses integer      [note: 'base da data de validade derivada (alerta de 7 dias)']
   ativo           boolean      [not null, default: true]
 }
 
-Table VacinaEspecie {
-  vacina_id  uuid    [not null, ref: > Vacina.id]
-  especie    Especie [not null]
-
-  indexes {
-    (vacina_id, especie) [pk]
-  }
-}
-
 Table TipoProcedimento {
-  id    uuid         [pk, not null, default: `gen_random_uuid()`]
-  nome  varchar(100) [not null]
-  ativo boolean      [not null, default: true]
+  id     uuid         [pk, not null, default: `gen_random_uuid()`]
+  codigo varchar(30)  [not null, unique]
+  nome   varchar(100) [not null]
+  ativo  boolean      [not null, default: true]
 }
 
 Table CategoriaFarmacologica {
@@ -120,14 +109,25 @@ Table CategoriaFarmacologica {
   ativo boolean      [not null, default: true]
 }
 
-// ── Compartilhada: Canil + Processos Sanitários ────────
+Table Medicamento {
+  id           uuid         [pk, not null, default: `gen_random_uuid()`]
+  nome         varchar(100) [not null]
+  categoria_id uuid         [not null, ref: > CategoriaFarmacologica.id]
+  ativo        boolean      [not null, default: true]
+}
+
+Table TipoExame {
+  id     uuid         [pk, not null, default: `gen_random_uuid()`]
+  codigo varchar(30)  [not null, unique, note: 'V25: hemograma, bioquimico, parasitologico, raspado_pele, citologia, sorologia, urinalise, radiografia, ultrassonografia']
+  nome   varchar(100) [not null]
+  ativo  boolean      [not null, default: true]
+}
+
+// ── Compartilhadas (definidas em outros módulos) ──────
 
 Table Laboratorio {
-  id      uuid         [pk, not null, default: `gen_random_uuid()`]
-  nome    varchar(150) [not null]
-  tipo    varchar(50)
-  contato varchar(200)
-  ativo   boolean      [not null, default: true]
+  id uuid [pk, not null]
+  Note: 'Módulo 04 (V13): codigo, nome, tipo, contato, ativo.'
 }
 
 Table Usuario {
@@ -137,235 +137,233 @@ Table Usuario {
 // ── Baia ───────────────────────────────────────────────
 
 Table Baia {
-  id           uuid         [pk, not null, default: `gen_random_uuid()`]
-  nome         varchar(100) [not null]
-  capacidade   integer      [not null]
-  ocupacaoAtual     integer      [not null, default: 0]
-  finalidade   varchar(100)
-  ativa        boolean      [not null, default: true]
+  id           uuid        [pk, not null, default: `gen_random_uuid()`]
+  nome         varchar(40) [not null]
+  tipo_baia_id uuid        [not null, ref: > TipoBaia.id]
+  capacidade   smallint    [not null]
+  finalidade   varchar(80)
+  ativa        boolean     [not null, default: true]
   observacoes  text
-  tipo_baia_id uuid         [not null, ref: > TipoBaia.id]
+
+  Note: 'Ocupação não é coluna: contagem de animais sob custódia na baia. Criação/edição por Admin e Veterinário; desativação e exclusão lógica só Admin; tudo auditado (AT-5).'
 }
 
 // ── Animal ─────────────────────────────────────────────
 
 Table Animal {
   id                    uuid         [pk, not null, default: `gen_random_uuid()`]
-  numero_medalha        varchar(50)  [unique]
-  data_implantacao_chip date
-  numero_microchip      varchar(50)  [unique]
+  nome                  varchar(80)  [not null]
+  especie_id            uuid         [not null, ref: > Especie.id]
+  sexo                  Sexo         [not null]
+  raca                  varchar(80)
+  coloracao             varchar(80)
+  pelagem               Pelagem
+  porte                 Porte
   peso_kg               decimal(5,2)
+  idade_aprox           varchar(30)
   data_nascimento_aprox date
-  nome                  varchar(100)
-  foto_url              varchar(500)
-  coloracao             varchar(100)
+  microchip             varchar(30)  [unique, note: 'único quando informado (índice parcial, V16); normalizado sem espaços; imutável depois de definido']
+  numero_medalha        varchar(30)  [unique, note: 'V23: único quando informado (índice parcial); normalizado sem espaços']
+  data_implantacao_chip date         [note: 'V23: CHECK exige microchip; não futura']
+  procedencia           varchar(200) [note: 'V23: origem na entrada, texto livre']
   esterilizado          boolean      [not null, default: false]
   data_esterilizacao    date
-  idade_aprox           varchar(50)
-  raca                  varchar(100)
-  sexo                  Sexo
-  porte                 Porte
-  especie               Especie      [not null]
+  status_id             uuid         [not null, ref: > StatusAnimal.id]
+  motivo_entrada_id     uuid         [not null, ref: > MotivoEntrada.id]
+  data_entrada          timestamp    [not null]
+  baia_id               uuid         [ref: > Baia.id, note: 'NULL = em trânsito; baia ativa e com vaga ao alocar']
+  ficha_completa        boolean      [not null, default: false, note: 'calculado: obrigatórios + microchip + ao menos 1 vacinação (V18)']
+  laudo_eutanasia       text         [note: 'V24: obrigatório só na transição para obito_eutanasia (validado no serviço, sem CHECK)']
+  foto_url              text
+  foto_miniatura        text         [note: 'V28 (T45): miniatura para listagens']
   observacoes           text
-  procedencia           varchar(200)
-  data_entrada          date
-  status_animal         StatusAnimal [not null]
-  motivo_entrada_id     uuid         [ref: > MotivoEntrada.id]
-  baia_id               uuid         [ref: > Baia.id]
-  cadastrado_por        uuid         [ref: > Usuario.id]
+  criado_por_id         uuid         [not null, ref: > Usuario.id]
   criado_em             timestamp    [not null, default: `now()`]
   atualizado_em         timestamp    [not null, default: `now()`]
 
   indexes {
-    numero_microchip [unique]
-    numero_medalha   [unique]
-    status_animal
-    especie
+    microchip      [unique]
+    numero_medalha [unique]
+    status_id
+    especie_id
     baia_id
-    cadastrado_por
   }
+
+  Note: 'Sem data_saida: a saída é a mudança de status (limitação registrada no TG). Cadastro/edição auditados (AT-5).'
 }
 
-// ── Sintomas do Animal ─────────────────────────────────
+// ── Vacinação (registro clínico imutável) ─────────────
 
-Table AnimalSintoma {
-  animal_id  uuid [not null, ref: > Animal.id]
-  sintoma_id uuid [not null, ref: > Sintoma.id]
+Table Vacinacao {
+  id              uuid         [pk, not null, default: `gen_random_uuid()`]
+  animal_id       uuid         [not null, ref: > Animal.id]
+  vacina_id       uuid         [not null, ref: > Vacina.id]
+  aplicado_por_id uuid         [ref: > Usuario.id]
+  data_aplicacao  date         [not null, note: 'não futura; validade = aplicação + intervalo da vacina (derivada)']
+  numero_dose     integer
+  dose_quantidade decimal(8,3) [not null]
+  dose_unidade    UnidadeDose  [not null]
+  lote            varchar(100)
+  observacoes     text
+  retifica_id     uuid         [unique, ref: - Vacinacao.id, note: 'correção: nova linha que aponta para a vigente (RN06)']
+  criado_em       timestamp    [not null, default: `now()`]
 
-  indexes {
-    (animal_id, sintoma_id) [pk]
-  }
+  Note: 'Sem UPDATE/DELETE (triggers V17).'
 }
 
-// ── Anexos do Animal ───────────────────────────────────
+// ── Procedimento (registro clínico imutável) ──────────
+
+Table Procedimento {
+  id                   uuid      [pk, not null, default: `gen_random_uuid()`]
+  animal_id            uuid      [not null, ref: > Animal.id]
+  tipo_procedimento_id uuid      [not null, ref: > TipoProcedimento.id]
+  executado_por_id     uuid      [ref: > Usuario.id]
+  data                 date      [not null]
+  descricao            text
+  resultado            text
+  retifica_id          uuid      [unique, ref: - Procedimento.id]
+  criado_em            timestamp [not null, default: `now()`]
+
+  Note: 'Sem UPDATE/DELETE (triggers V17).'
+}
+
+// ── Prescrição (registro clínico imutável) ────────────
+
+Table Prescricao {
+  id                  uuid              [pk, not null, default: `gen_random_uuid()`]
+  animal_id           uuid              [not null, ref: > Animal.id]
+  prescrito_por_id    uuid              [ref: > Usuario.id]
+  medicamento_id      uuid              [not null, ref: > Medicamento.id]
+  data_inicio         date              [not null]
+  data_fim_prevista   date
+  data_fim_real       date
+  frequencia_aplicada integer           [not null]
+  unidade_frequencia  UnidadeFrequencia [not null]
+  dose_quantidade     decimal(8,3)      [not null]
+  dose_unidade        UnidadeDose       [not null]
+  via_administracao   ViaAdministracao  [not null]
+  status              StatusPrescricao  [not null]
+  retifica_id         uuid              [unique, ref: - Prescricao.id]
+  criado_em           timestamp         [not null, default: `now()`]
+
+  Note: 'Sem UPDATE/DELETE (triggers V17).'
+}
+
+// ── Exame (V25, registro clínico imutável) ────────────
+
+Table Exame {
+  id                uuid      [pk, not null, default: `gen_random_uuid()`]
+  animal_id         uuid      [not null, ref: > Animal.id]
+  tipo_exame_id     uuid      [not null, ref: > TipoExame.id]
+  laboratorio_id    uuid      [ref: > Laboratorio.id]
+  solicitado_por_id uuid      [ref: > Usuario.id]
+  data_solicitacao  date      [not null, note: 'não futura']
+  data_resultado    date      [note: 'CHECK >= data_solicitacao; vem junto com resultado']
+  resultado         text
+  observacoes       text
+  retifica_id       uuid      [unique, ref: - Exame.id]
+  criado_em         timestamp [not null, default: `now()`]
+
+  Note: 'Sem UPDATE/DELETE (triggers V17). API: GET/POST /api/exames (AT-8).'
+}
+
+// ── Anexos do animal (V26) ────────────────────────────
 
 Table AnexoAnimal {
   id            uuid         [pk, not null, default: `gen_random_uuid()`]
   animal_id     uuid         [not null, ref: > Animal.id]
   nome          varchar(255) [not null]
-  url           varchar(500) [not null]
-  tamanho_bytes bigint
+  mime_type     varchar(50)  [not null, note: 'CHECK: image/jpeg, image/png, application/pdf (detectado pelos bytes)']
+  tamanho       integer      [not null, note: 'CHECK <= 5242880 (5 MB)']
+  descricao     varchar(200)
+  criado_por_id uuid         [not null, ref: > Usuario.id]
   criado_em     timestamp    [not null, default: `now()`]
 
-  indexes {
-    animal_id
-  }
+  Note: 'Máximo 10 por animal; upload e download auditados. Conteúdo em AnexoAnimalConteudo (padrão D9).'
 }
 
-// ── Vacinação ──────────────────────────────────────────
+Table AnexoAnimalConteudo {
+  anexo_id uuid  [pk, not null, ref: - AnexoAnimal.id]
+  conteudo bytea [not null]
+}
 
-Table Vacinacao {
-  id              uuid        [pk, not null, default: `gen_random_uuid()`]
-  animal_id       uuid        [not null, ref: > Animal.id]
-  vacina_id       uuid        [not null, ref: > Vacina.id]
-  aplicado_por    uuid        [ref: > Usuario.id]
-  data_aplicacao  date        [not null]
-  numero_dose     integer
-  dose_quantidade decimal(8,3) [not null]
-  dose_unidade    UnidadeDose
-  lote            varchar(100)
-  observacoes     text
-  criado_em       timestamp   [not null, default: `now()`]
+// ── Modelo-alvo (SEM tabela; trabalho futuro — AT-7/AT-8/AT-13) ──
 
-  indexes {
-    animal_id
-    vacina_id
-  }
+Table Adocao {
+  id                uuid         [pk]
+  animal_id         uuid         [ref: - Animal.id]
+  registrado_por    uuid         [ref: > Usuario.id]
+  adotante_nome     varchar(150)
+  adotante_cpf      varchar(14)
+  adotante_telefone varchar(20)
+  adotante_email    varchar(150)
+  adotante_cep      varchar(10)
+  adotante_endereco varchar(255)
+  adotante_bairro   varchar(80)
+  data_adocao       date
+  data_devolucao    date
+  motivo_devolucao  text
+  observacoes       text
+  criado_em         timestamp
+
+  Note: 'MODELO-ALVO — não implementada. Hoje a adoção é só o status adotado do animal.'
 }
 
 Table AnexoVacinacao {
-  id            uuid         [pk, not null, default: `gen_random_uuid()`]
-  vacinacao_id  uuid         [not null, ref: > Vacinacao.id]
-  nome          varchar(255) [not null]
-  url           varchar(500) [not null]
-  tamanho_bytes bigint
-  criado_em     timestamp    [not null, default: `now()`]
-
-  indexes {
-    vacinacao_id
-  }
-}
-
-// ── Procedimento ───────────────────────────────────────
-
-Table Procedimento {
-  id                   uuid [pk, not null, default: `gen_random_uuid()`]
-  animal_id            uuid [not null, ref: > Animal.id]
-  tipo_procedimento_id uuid [not null, ref: > TipoProcedimento.id]
-  executado_por        uuid [ref: > Usuario.id]
-  data                 date [not null]
-  descricao            text
-  resultado            text
-  criado_em            timestamp [not null, default: `now()`]
-
-  indexes {
-    animal_id
-    tipo_procedimento_id
-  }
+  id           uuid [pk]
+  vacinacao_id uuid [ref: > Vacinacao.id]
+  Note: 'MODELO-ALVO — não implementada; anexos ficam em AnexoAnimal.'
 }
 
 Table AnexoProcedimento {
-  id               uuid         [pk, not null, default: `gen_random_uuid()`]
-  procedimento_id  uuid         [not null, ref: > Procedimento.id]
-  nome             varchar(255) [not null]
-  url              varchar(500) [not null]
-  tamanho_bytes    bigint
-  criado_em        timestamp    [not null, default: `now()`]
-
-  indexes {
-    procedimento_id
-  }
-}
-
-// ── Medicamento e Prescrição ───────────────────────────
-
-Table Medicamento {
-  id           uuid         [pk, not null, default: `gen_random_uuid()`]
-  nome         varchar(100) [not null]
-  categoria_id uuid         [not null, ref: > CategoriaFarmacologica.id]
-  ativo        boolean      [not null, default: true]
-}
-
-Table Prescricao {
-  id                  uuid             [pk, not null, default: `gen_random_uuid()`]
-  animal_id           uuid             [not null, ref: > Animal.id]
-  prescrito_por       uuid             [ref: > Usuario.id]
-  medicamento_id      uuid             [not null, ref: > Medicamento.id]
-  data_inicio         date             [not null]
-  data_fim_prevista   date
-  data_fim_real       date
-  frequencia_aplicada integer          [not null]
-  unidade_frequencia  UnidadeFrequencia [not null]
-  dose_quantidade     decimal(8,3)     [not null]
-  dose_unidade        UnidadeDose      [not null]
-  via_administracao   ViaAdministracao [not null]
-  status              StatusPrescricao [not null]
-  criado_em           timestamp        [not null, default: `now()`]
-
-  indexes {
-    animal_id
-    medicamento_id
-  }
-}
-
-// ── Exame ──────────────────────────────────────────────
-
-Table TipoExame {
-  id    uuid         [pk, not null, default: `gen_random_uuid()`]
-  nome  varchar(100) [not null, unique]
-  ativo boolean      [not null, default: true]
-}
-
-Table Exame {
-  id               uuid         [pk, not null, default: `gen_random_uuid()`]
-  animal_id        uuid         [not null, ref: > Animal.id]
-  laboratorio_id   uuid         [not null, ref: > Laboratorio.id]
-  tipo_exame_id    uuid         [not null, ref: > TipoExame.id]
-  data_solicitacao date         [not null]
-  data_resultado   date
-  resultado        text
-  criado_em        timestamp    [not null, default: `now()`]
-
-  indexes {
-    animal_id
-    laboratorio_id
-    tipo_exame_id
-  }
+  id              uuid [pk]
+  procedimento_id uuid [ref: > Procedimento.id]
+  Note: 'MODELO-ALVO — não implementada; anexos ficam em AnexoAnimal.'
 }
 
 Table AnexoExame {
-  id            uuid         [pk, not null, default: `gen_random_uuid()`]
-  exame_id      uuid         [not null, ref: > Exame.id]
-  nome          varchar(255) [not null]
-  url           varchar(500) [not null]
-  tamanho_bytes bigint
-  criado_em     timestamp    [not null, default: `now()`]
+  id       uuid [pk]
+  exame_id uuid [ref: > Exame.id]
+  Note: 'MODELO-ALVO — não implementada; anexos ficam em AnexoAnimal.'
+}
 
-  indexes {
-    exame_id
-  }
+Table VacinaEspecie {
+  vacina_id  uuid [pk, ref: > Vacina.id]
+  especie_id uuid [pk, ref: > Especie.id]
+  Note: 'MODELO-ALVO — não implementada (vacina não é restrita por espécie).'
+}
+
+Table AnimalSintoma {
+  animal_id  uuid [pk, ref: > Animal.id]
+  sintoma_id uuid [pk]
+  Note: 'MODELO-ALVO — não implementada (sintomas só na amostra do processo, módulo 04).'
 }
 
 TableGroup Canil {
+  Especie
+  StatusAnimal
   MotivoEntrada
   TipoBaia
   Baia
-  Sintoma
-  Vacina
-  VacinaEspecie
-  TipoProcedimento
-  CategoriaFarmacologica
-  Laboratorio
   Animal
-  AnimalSintoma
-  AnexoAnimal
+  Vacina
   Vacinacao
-  AnexoVacinacao
+  TipoProcedimento
   Procedimento
-  AnexoProcedimento
+  CategoriaFarmacologica
   Medicamento
   Prescricao
   TipoExame
   Exame
+  AnexoAnimal
+  AnexoAnimalConteudo
+}
+
+TableGroup Canil_modelo_alvo {
+  Adocao
+  AnexoVacinacao
+  AnexoProcedimento
   AnexoExame
+  VacinaEspecie
+  AnimalSintoma
 }

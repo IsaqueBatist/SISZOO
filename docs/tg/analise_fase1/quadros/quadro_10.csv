@@ -1,0 +1,4 @@
+﻿Quadro 10 – Requisitos funcionais do Módulo 5: Dashboard e Relatórios
+ID;Nome;Descrição;Prior.
+RF-D01;Dashboard;Exibir em tempo real: total por StatusAnimal, ocupação de baias, alertas vacinais 7 dias (RF-A03), processos aguardando resultado, processos urgentes e resumo mensal por doença.;Alta
+RF-D02;Relatórios;Gerar, em PDF e CSV, os relatórios de ocorrências por bairro, ocupação de baias, procedimentos, adoções, anual de processos e vacinação, por meio de RelatorioGerado com ciclo Pendente→Em Processamento→Concluído/Falha (RN11). O arquivo é armazenado fora do banco e acessado por URL com expiração.;Média

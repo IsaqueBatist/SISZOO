@@ -1,0 +1,19 @@
+﻿Quadro 15 – Telas do SISZOO
+Cód.;Tela;Perfis;Requisitos e regras;Substitui no CCZ
+T01;Login;Todos;RF-C01;—
+T02;Dashboard operacional;Todos;RF-D01, RF-A03;Contagens manuais e gráficos montados à mão
+T03;Alertas;Todos;RF-A03;Controle de memória do reforço vacinal
+T04;Animais do canil;Veterinário, Administrador;RF-A02;Planilha de controle por baias
+T05;Cadastro de animal;Veterinário, Administrador;RF-A01, RN01, RN07;Ficha manuscrita e cadastro no AnimalTag
+T06;Ficha do animal;Veterinário, Administrador;RF-A01, RF-A03, RF-A04, RF-A05;Ficha manuscrita
+T07;Gestão de baias;"Administrador (edição); Veterinário (consulta)";RF-A02;Planilha de controle por baias
+T08;Ocorrências;Agente Sanitário, Administrador;RF-E02, RN03;Caderno de ocorrências
+T09;Registro de ocorrência;Agente Sanitário, Administrador;RF-E01, RN02;Caderno de ocorrências
+T10;Detalhe da ocorrência;Agente Sanitário, Administrador;RF-E03, RN05;Caderno de ocorrências
+T11;Processos sanitários;Agente Sanitário, Administrador;RF-B02, RN04;Planilha de processos
+T12;Abertura de processo;Agente Sanitário, Administrador;RF-B01, RF-B04, RN08;Formulário físico e planilha
+T13;Detalhe do processo;Agente Sanitário, Administrador;RF-B03, RF-B05, RN10, RN12;Planilha de resultados
+T14;Central de relatórios;Todos;RF-D02, RN11;Relatórios montados à mão
+T15;Usuários;Administrador;RF-C02, RN09;—
+T16;Configurações;Todos;RF-C03;—
+T17;Perfil e Ajuda;Todos;RF-C01;—

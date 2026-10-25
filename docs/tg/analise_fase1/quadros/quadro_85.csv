@@ -1,0 +1,8 @@
+﻿Quadro 85 – Dicionário de dados – tabela AnexoOcorrencia
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único do anexo.
+ocorrencia_id;uuid;FK;Ocorrência associada (Ocorrencia).
+nome;varchar(255);;Nome do arquivo anexado.
+url;varchar(500);;URL de armazenamento do arquivo.
+tamanho_bytes;bigint;;Tamanho do arquivo em bytes.
+criado_em;timestamp;;Data e hora do upload.

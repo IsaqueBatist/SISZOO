@@ -1,0 +1,19 @@
+﻿Quadro 21 – Caso de uso de baixo nível Desativar/Reativar Usuário
+Desativar/Reativar Usuário
+Caso de Uso Geral;Gerenciar Usuários (extensão)
+Ator Principal;Administrador
+Atores Secundários;
+Resumo;O Administrador impede ou restabelece o acesso de um usuário ao sistema, sem excluir seu cadastro.
+Pré-Condições;O Administrador está autenticado e o usuário-alvo está cadastrado.
+Pós-Condições;Situação do usuário atualizada (ativo ou inativo) e evento registrado na auditoria.
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Administrador seleciona um usuário na gestão de usuários.;
+;Exibe os dados e a situação atual do usuário.
+O Administrador aciona “Desativar” (ou “Reativar”) e confirma.;
+;Atualiza a situação e a data de desativação (ou a limpa, na reativação).
+;Registra o evento DESATIVACAO ou REATIVACAO na trilha de auditoria.
+Restrições/Validações;Somente o Administrador executa (RN09). O cadastro não é excluído, para preservar o histórico e a autoria dos registros (RN06).
+Fluxo Alternativo I;O Administrador cancela a confirmação: a situação permanece inalterada.
+Fluxo Alternativo II;Usuário desativado tenta entrar: o sistema informa credenciais inválidas (caso de uso Realizar Login).
+Requisitos relacionados;RF-C02, RN06, RN09, RNF10

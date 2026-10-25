@@ -1,0 +1,17 @@
+﻿Quadro 30 – Caso de uso de baixo nível Prescrever Medicamento
+Prescrever Medicamento
+Caso de Uso Geral;Histórico Veterinário
+Ator Principal;Veterinário
+Atores Secundários;
+Resumo;O Veterinário prescreve um medicamento a um animal, definindo dose, via e frequência.
+Pré-Condições;O animal deve estar cadastrado e o medicamento disponível.
+Pós-Condições;Prescrição registrada com status ativo no histórico do animal.
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Veterinário acessa o histórico do animal e seleciona prescrever medicamento.;
+O Veterinário informa o medicamento, a dose, a via de administração, a frequência e as datas de início e fim previstas.;
+O Veterinário confirma a prescrição.;
+;Persiste a prescrição com status ativo e registra o evento de auditoria.
+Restrições/Validações;Registros do histórico são imutáveis (RN06).
+Fluxo Alternativo I;Concluir, suspender ou cancelar: o Veterinário altera o status de uma prescrição ativa, mantendo o registro.
+Requisitos relacionados;RF-A04, RN06

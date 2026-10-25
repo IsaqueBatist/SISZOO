@@ -1,0 +1,41 @@
+@startuml logico_m5_relatorios
+' Diagrama lógico — Módulo 5: Dashboard e Relatórios (substitui a Figura 16 do TG)
+' Fonte: migração Flyway V20. Fase 3, 22/10/2026.
+' O dashboard não persiste entidade (consultas agregadas com cache de 5 minutos).
+!pragma layout smetana
+skinparam linetype ortho
+skinparam defaultFontName Arial
+hide circle
+
+entity "relatorio_gerado" as relatorio_gerado {
+  * id : uuid <<PK>>
+  --
+  * doc_id : varchar(30) <<UQ>> (DOC-AAAA-NNNN)
+  * tipo_relatorio : varchar(30) {ANUAL_PROCESSOS, VACINACAO, ADOCOES,\n PROCEDIMENTOS, OCUPACAO_BAIAS, OCORRENCIAS_BAIRRO}
+  * periodo_inicio : date
+  * periodo_fim : date
+  parametros_jsonb : jsonb
+  * gerado_por_id : uuid <<FK usuario>>
+  * gerado_em : timestamptz
+  arquivo_url : text
+  tamanho_bytes : integer
+}
+entity "usuario (M1)" as usuario {
+  * id : uuid <<PK>>
+}
+entity "protocolo_sequencia (M3)" as protocolo_sequencia {
+  * entidade : varchar(20) <<PK>> (RELATORIO)
+  * ano : integer <<PK>>
+  --
+  * ultimo : integer
+}
+
+usuario ||--o{ relatorio_gerado
+protocolo_sequencia .. relatorio_gerado : numera doc_id
+
+note bottom of relatorio_gerado
+  Exportação síncrona (RN11): sem status,
+  sem URL com expiração e sem binário no banco.
+  Cada exportação em PDF/CSV gera uma linha.
+end note
+@enduml

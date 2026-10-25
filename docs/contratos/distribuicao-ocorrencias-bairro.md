@@ -1,6 +1,8 @@
 # Pedido — agregação de ocorrências por bairro
 
-Status: **pedido do frontend, endpoint existente, sem agregação dedicada**.
+Status: **implementado (T45, PR #113)**. `GET /api/ocorrencias/estatisticas/bairro` devolve a contagem por bairro
+agregada no banco; o gráfico e as sugestões de bairro do formulário usam esse endpoint (`ocorrencias/api`,
+`useSugestoesBairro`). O texto abaixo é o pedido original.
 
 ## Contexto
 

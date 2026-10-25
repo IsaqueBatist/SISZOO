@@ -1,0 +1,2 @@
+docker ok
+COMPILE_EXIT=0

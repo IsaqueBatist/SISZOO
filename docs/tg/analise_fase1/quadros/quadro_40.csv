@@ -1,0 +1,20 @@
+﻿Quadro 40 – Caso de uso de baixo nível Abrir Processo Sanitário
+Abrir Processo Sanitário
+Caso de Uso Geral;Gestão de Processos
+Ator Principal;Agente Sanitário
+Atores Secundários;
+Resumo;O Agente Sanitário abre um processo sanitário para investigação de zoonose, com geração de protocolo e registro do animal amostrado.
+Pré-Condições;O ator deve estar autenticado com permissão de escrita no módulo de processos.
+Pós-Condições;Processo persistido com protocolo anual, responsável e animal amostrado vinculados.
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Agente Sanitário aciona a opção de abrir processo sanitário.;
+;Gera o protocolo no formato 0000/AAAA e preenche a data de abertura (RN02).
+O Agente Sanitário informa a doença, o laboratório, o responsável e os números GAL (Gerenciador de Ambiente Laboratorial) e SINAN (Sistema de Informação de Agravos de Notificação), quando houver, e, opcionalmente, a ocorrência de origem, que não poderá ser alterada depois.;
+O Agente Sanitário registra os dados do animal amostrado (Registrar Animal Amostrado).;
+O Agente Sanitário confirma a abertura.;
+;Valida os campos obrigatórios (RN08), persiste o processo com status ABERTO e o animal amostrado.
+;Caso o contato humano seja verdadeiro, marca o processo como urgente e o fixa no topo das listagens (RN04, RF-B05).
+Restrições/Validações;Protocolo sequencial e anual (RN02). Obrigatórios: data de abertura, doença, laboratório e dados mínimos do responsável (RN08).
+Fluxo Alternativo I;Contato humano-animal: o sistema torna o processo urgente e bloqueia o encerramento sem resultado (RN04, RF-B05).
+Requisitos relacionados;RF-B01, RN02, RN04, RN08

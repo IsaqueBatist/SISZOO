@@ -1,0 +1,5 @@
+﻿Quadro 80 – Dicionário de dados – tabela TipoOcorrencia
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único do tipo de ocorrência.
+nome;varchar(100);;Nome do tipo de ocorrência.
+ativo;boolean;;Indica se o tipo está disponível para uso.

@@ -1,0 +1,22 @@
+﻿Quadro 35 – Caso de uso de baixo nível Registrar Nova Ocorrência
+Registrar Nova Ocorrência
+Caso de Uso Geral;Gestão de Ocorrências
+Ator Principal;Agente Sanitário
+Atores Secundários;
+Resumo;O Agente Sanitário registra uma nova ocorrência ou denúncia, com geração automática de protocolo.
+Pré-Condições;O ator deve estar autenticado com permissão de escrita no módulo de ocorrências.
+Pós-Condições;Ocorrência persistida com protocolo anual, denunciante vinculado e movimentação inicial registrada.
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Agente Sanitário aciona a opção de criar ocorrência.;
+;Gera o protocolo no formato 0000/AAAA e preenche a data de abertura com a data corrente (RN02).
+O Agente Sanitário informa os dados do denunciante (nome, telefone, e-mail, CEP).;
+;Busca o endereço pelo CEP em serviço externo e preenche os campos de endereço.
+O Agente Sanitário informa o tipo, o bairro, a descrição e, se necessário, marca a ocorrência como sigilosa.;
+O Agente Sanitário confirma o registro.;
+;Valida os dados, persiste a ocorrência com o denunciante e cria a movimentação inicial de ABERTURA.
+Restrições/Validações;Protocolo sequencial e anual 0000/AAAA (RN02). Em ocorrências sigilosas, o denunciante fica oculto para não-Administradores (RN03).
+Fluxo Alternativo I;Informar denunciado: ver o caso de uso Informar Denunciado.
+Fluxo Alternativo II;CEP não localizado: o sistema informa a falha e o Agente Sanitário preenche o endereço manualmente.
+Fluxo Alternativo III;Anexar documento: ver o caso de uso Anexar Documento à Ocorrência.
+Requisitos relacionados;RF-E01, RN02, RN03

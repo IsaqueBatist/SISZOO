@@ -1,0 +1,16 @@
+﻿Quadro 45 – Caso de uso de baixo nível Gerar Documento do Processo
+Gerar Documento do Processo
+Caso de Uso Geral;Gestão de Processos
+Ator Principal;Agente Sanitário
+Atores Secundários;
+Resumo;O Agente Sanitário gera o documento em PDF de um processo sanitário.
+Pré-Condições;O processo deve estar cadastrado.
+Pós-Condições;Documento gerado e disponibilizado para download.
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Agente Sanitário abre o processo e solicita a geração do documento.;
+;Cria o documento com estado Pendente e processa a geração de forma assíncrona (RN11).
+;Ao concluir, disponibiliza o documento por URL para download.
+Restrições/Validações;A geração segue os estados Pendente → Em Processamento → Concluído/Falha (RN11).
+Fluxo Alternativo I;Falha na geração: o sistema marca o documento como Falha e permite nova tentativa.
+Requisitos relacionados;RF-B06, RN11

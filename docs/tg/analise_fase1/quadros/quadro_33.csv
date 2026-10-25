@@ -1,0 +1,17 @@
+﻿Quadro 33 – Caso de uso de baixo nível Gerenciar Baias
+Gerenciar Baias
+Caso de Uso Geral;Gestão de Animais do Canil
+Ator Principal;Administrador
+Atores Secundários;
+Resumo;O Administrador cadastra e edita as baias do canil, com tipo, capacidade e finalidade.
+Pré-Condições;O Administrador está autenticado.
+Pós-Condições;"Baia criada ou atualizada; evento registrado na auditoria."
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Administrador acessa a gestão de baias.;
+;Lista as baias com tipo, capacidade, ocupação atual e indicação de superlotação.
+O Administrador seleciona criar ou editar e informa nome, tipo, capacidade, finalidade e situação (ativa ou inativa).;
+;Valida os dados, grava a baia e registra o evento de auditoria.
+Restrições/Validações;Capacidade maior que zero. A ocupação não é digitada: é calculada pela contagem de animais alojados (RF-A02).
+Fluxo Alternativo I;Capacidade informada menor que a ocupação atual: o sistema grava e exibe aviso de superlotação.
+Requisitos relacionados;RF-A02, RN09, RNF10

@@ -1,0 +1,6 @@
+﻿Quadro 87 – Dicionário de dados – tabela Doenca
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único da doença.
+nome;varchar(150);;Nome da doença/zoonose.
+cid;varchar(20);;Código CID associado à doença.
+ativo;boolean;;Indica se a doença está disponível para uso.

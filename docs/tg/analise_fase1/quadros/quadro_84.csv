@@ -1,0 +1,21 @@
+﻿Quadro 84 – Dicionário de dados – tabela Ocorrencia
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único da ocorrência.
+protocolo;varchar(50);UQ;Protocolo sequencial anual 0000/AAAA (RN02).
+registrado_por;uuid;FK;Usuário que registrou (Usuario).
+tipo_ocorrencia_id;uuid;FK;Tipo da ocorrência (TipoOcorrencia).
+status_ocorrencia;StatusOcorrencia;;Situação atual da ocorrência.
+providencia_tomada_id;uuid;FK;Providência no encerramento (ProvidenciaTomada).
+denunciante_id;uuid;FK;Denunciante vinculado (Denunciante).
+denunciado_id;uuid;FK;Denunciado vinculado, quando houver (Denunciado).
+data_abertura;date;;Data de abertura da ocorrência.
+hora_abertura;time;;Hora de abertura.
+bairro;varchar(100);;Bairro da ocorrência.
+ponto_referencia;varchar(200);;Ponto de referência do local.
+descricao;text;;Descrição da ocorrência.
+urgente;boolean;;Indica prioridade de atendimento.
+sigilosa;boolean;;Oculta dados do denunciante para não-Administradores (RN03).
+descricao_encerramento;text;;Descrição registrada no encerramento.
+encerrada_em;timestamp;;Data e hora de encerramento.
+criado_em;timestamp;;Data e hora de criação do registro.
+atualizado_em;timestamp;;Data e hora da última atualização.

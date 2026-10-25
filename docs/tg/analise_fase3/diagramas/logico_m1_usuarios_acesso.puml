@@ -1,0 +1,92 @@
+@startuml logico_m1_usuarios_acesso
+' Diagrama lógico — Módulo 1: Autenticação e Controle de Acesso (substitui a Figura 12 do TG)
+' Fonte: migrações Flyway V2, V3, V8 (remove sessao), V9, V12. Fase 3, 22/10/2026.
+!pragma layout smetana
+skinparam linetype ortho
+skinparam defaultFontName Arial
+hide circle
+
+entity "usuario" as usuario {
+  * id : uuid <<PK>>
+  --
+  * email : varchar(255) <<UQ>>
+  * senha : varchar(255)
+  * nome : varchar(100)
+  * sobrenome : varchar(100)
+  crmv : varchar(20)
+  telefone : varchar(20)
+  * ativo : boolean
+  * dois_fatores_ativo : boolean (reservado)
+  ultimo_acesso : timestamp
+  * criado_em : timestamp
+  senha_alterada_em : timestamp
+  desativado_em : timestamp
+  * data_modificacao : timestamp
+}
+
+entity "cargo" as cargo {
+  * id : uuid <<PK>>
+  --
+  * nome : varchar(100)
+  descricao : text
+}
+
+entity "usuario_cargo" as usuario_cargo {
+  * usuario_id : uuid <<PK, FK>>
+  * cargo_id : uuid <<PK, FK>>
+  --
+  * adicionado_em : timestamp
+}
+
+entity "cargo_permissao" as cargo_permissao {
+  * id : uuid <<PK>>
+  --
+  * cargo_id : uuid <<FK>>
+  * modulo : varchar(30) {USUARIOS_ACESSO, GESTAO_ANIMAIS,\n OCORRENCIAS_DENUNCIAS, PROCESSOS_SANITARIOS, RELATORIOS}
+  * feature : varchar(100) {geral, denunciante_sigiloso}
+  * leitura : boolean
+  * escrita : boolean
+  * exclusao : boolean
+}
+
+entity "preferencia_usuario" as preferencia_usuario {
+  * id : uuid <<PK>>
+  --
+  * usuario_id : uuid <<FK, UQ>>
+  * tema : varchar(10)
+  * densidade : varchar(15)
+  * notif_alertas_criticos : boolean
+  * notif_vacina_vencendo : boolean
+  * notif_superlotacao : boolean
+  * notif_resultado_lab : boolean
+  * notif_email_diario : boolean
+}
+
+entity "auditoria_evento" as auditoria_evento {
+  * id : uuid <<PK>>
+  --
+  usuario_id : uuid <<FK>>
+  * acao : varchar(20) {CRIACAO, ATUALIZACAO, DESATIVACAO,\n REATIVACAO, LOGIN, LOGOUT, EXPORTACAO,\n ENCERRAMENTO, VISUALIZACAO}
+  * entidade : varchar(100)
+  entidade_id : uuid
+  payload_antes : jsonb
+  payload_depois : jsonb
+  ip : varchar(45) (não preenchido)
+  * ocorreu_em : timestamp
+}
+
+usuario ||--o{ usuario_cargo
+cargo ||--o{ usuario_cargo
+cargo ||--o{ cargo_permissao
+usuario ||--o| preferencia_usuario
+usuario |o--o{ auditoria_evento
+
+note bottom of usuario_cargo
+  Na versão implementada cada usuário
+  recebe exatamente um cargo (RF-C02).
+end note
+note right of auditoria_evento
+  Sem tabela de sessão: autenticação
+  stateless por JWT (V8 removeu "sessao").
+end note
+@enduml

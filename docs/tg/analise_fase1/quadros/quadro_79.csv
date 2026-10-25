@@ -1,0 +1,17 @@
+﻿Quadro 79 – Dicionário de dados – tabela Adocao
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único da adoção.
+animal_id;uuid;FK;Animal adotado (Animal).
+registrado_por;uuid;FK;Usuário que registrou a adoção (Usuario).
+adotante_nome;varchar(150);;Nome do adotante.
+adotante_cpf;varchar(14);;CPF do adotante.
+adotante_telefone;varchar(20);;Telefone do adotante.
+adotante_email;varchar(150);;E-mail do adotante, quando houver.
+adotante_cep;varchar(10);;CEP do adotante.
+adotante_endereco;varchar(255);;Endereço do adotante.
+adotante_bairro;varchar(80);;Bairro do adotante.
+data_adocao;date;;Data da adoção.
+data_devolucao;date;;Data da devolução, quando houver.
+motivo_devolucao;text;;Motivo da devolução, quando houver.
+observacoes;text;;Observações da adoção.
+criado_em;timestamp;;Data e hora de registro.

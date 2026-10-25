@@ -1,0 +1,18 @@
+﻿Quadro 25 – Caso de uso de baixo nível Registrar Saída/Desfecho
+Registrar Saída/Desfecho
+Caso de Uso Geral;Gestão de Animais
+Ator Principal;Veterinário
+Atores Secundários;
+Resumo;O Veterinário registra a saída do animal do canil, informando o destino.
+Pré-Condições;O animal deve estar alojado e o ator autenticado com permissão de escrita.
+Pós-Condições;"Animal com status de saída registrado; vaga liberada na baia."
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Veterinário acessa o cadastro do animal e seleciona registrar saída.;
+O Veterinário informa o destino (Adotado, Resgatado, Óbito, Eutanásia ou Transferido) e a data.;
+O Veterinário confirma o registro.;
+;Atualiza o status do animal, libera a vaga na baia e registra o evento de auditoria.
+Restrições/Validações;Valores de saída restritos a Adotado, Resgatado, Óbito, Eutanásia e Transferido. Histórico imutável (RN06).
+Fluxo Alternativo I;Destino não informado: o sistema impede a conclusão até que o destino seja selecionado.
+Fluxo Alternativo II;Destino Adotado: o sistema solicita os dados do adotante (caso de uso Registrar Adoção).
+Requisitos relacionados;RF-A05, RN06

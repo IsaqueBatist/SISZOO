@@ -1,0 +1,17 @@
+﻿Quadro 48 – Caso de uso de baixo nível Monitorar Ocupação de Baias
+Monitorar Ocupação de Baias
+Caso de Uso Geral;Visualizar Dashboard em Tempo Real (extensão)
+Ator Principal;Veterinário
+Atores Secundários;
+Resumo;O Veterinário acompanha a ocupação de cada baia em relação à capacidade.
+Pré-Condições;O Veterinário está no painel inicial.
+Pós-Condições;"Ocupação exibida; nenhum dado é alterado."
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Veterinário aciona o indicador de ocupação no painel.;
+;Exibe, por baia, a ocupação calculada, a capacidade e a situação (normal, próxima do limite ou superlotada).
+O Veterinário seleciona uma baia.;
+;Lista os animais alojados nela.
+Restrições/Validações;A ocupação conta apenas animais alojados (exclui adotados, transferidos e óbitos).
+Fluxo Alternativo I;Baia sem animais: o sistema exibe ocupação zero.
+Requisitos relacionados;RF-A02, RF-D01

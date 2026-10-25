@@ -1,0 +1,9 @@
+﻿Quadro 55 – Dicionário de dados – tabela CargoPermissao
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único da permissão.
+cargo_id;uuid;FK;Cargo ao qual a permissão pertence (Cargo).
+modulo;Modulo;;Módulo funcional alvo da permissão.
+feature;varchar(100);;Funcionalidade específica controlada.
+leitura;boolean;;Permite consultar a funcionalidade.
+escrita;boolean;;Permite criar ou editar registros.
+exclusao;boolean;;Permite excluir/desativar registros.

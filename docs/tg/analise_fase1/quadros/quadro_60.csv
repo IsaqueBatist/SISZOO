@@ -1,0 +1,9 @@
+﻿Quadro 60 – Dicionário de dados – tabela Baia
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único da baia.
+nome;varchar(100);;Identificação da baia (BAIA 1–16, E1–E4, CORREDOR).
+capacidade;integer;;Número máximo de animais comportados.
+finalidade;varchar(100);;Finalidade de uso da baia.
+ativa;boolean;;Indica se a baia está em uso.
+observacoes;text;;Observações gerais sobre a baia.
+tipo_baia_id;uuid;FK;Tipo da baia (TipoBaia).

@@ -87,3 +87,23 @@ A unidade de uma vacinação legada é informada por **retificação** (RN-C02):
 - Baia de animal fora da custódia: hoje não é conferida (RN-AN02).
 - Hora da entrada: o formulário só edita o dia; mudar o dia grava 00:00.
 - Lista inicial de medicamentos e categorias farmacológicas (não há seed); quem pode cadastrar categoria (hoje Administrador e Veterinária, como o medicamento) e se acento/maiúscula distinguem categorias.
+
+## Revisão de 22/10/2026 — exames, anexos do animal, medalha e laudo (alinhamento com o TG)
+
+- **Exame** (`exame`, V25) é registro clínico imutável como vacinação, procedimento e prescrição: `POST /api/exames`
+  com `animalId`, `tipoExame` (código do catálogo `tipo_exame`: hemograma, bioquimico, parasitologico, raspado_pele,
+  citologia, sorologia, urinalise, radiografia, ultrassonografia), `laboratorio` (código, opcional), `dataSolicitacao`
+  (obrigatória, não futura), `dataResultado` e `resultado` (vêm juntos ou nenhum; `dataResultado >= dataSolicitacao`,
+  não futura), `observacoes`, `retificaId` (correção: só do vigente do mesmo animal; 409 se já retificado). Triggers da
+  V17 recusam exclusão. `GET /api/exames?animalId=` lista com `retificadoPorId`. Rascunho local `exame`
+  (`rascunhoClinicoStorage`). Decisão: `docs/decisoes/alinhamento-tg.md` AT-8.
+- **Anexos do animal** (`anexo_animal` + `anexo_animal_conteudo`, V26): vinculados ao animal, não a cada registro
+  clínico (anexos por vacinação/procedimento/exame são modelo-alvo). JPG/PNG/PDF pelos bytes, 5 MB, 10 por animal,
+  `descricao` opcional; upload e download auditados (`entidade = anexo_animal`). `GET/POST /api/animais/{id}/anexos`,
+  `GET /api/animais/{id}/anexos/{anexoId}`. Decisão: AT-8.
+- **Identificação** (V23): `numero_medalha` único quando informado (normalizado sem espaços), `data_implantacao_chip`
+  exige microchip e não pode ser futura, `procedencia` livre. Microchip, uma vez definido, não muda. Decisão: AT-6.
+- **Laudo de eutanásia** (V24): `laudo_eutanasia` obrigatório **somente na transição** para `obito_eutanasia`
+  (criação já nesse status ou edição que muda para ele); registros existentes não são invalidados; um laudo gravado é
+  mantido se a edição vier sem o campo. Não existe `data_saida`: a saída é a mudança de status. Decisão: AT-7.
+- Datas de solicitação e de resultado de exame seguem a regra geral (não futuras pelo `Clock` do projeto).

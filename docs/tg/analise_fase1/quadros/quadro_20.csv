@@ -1,0 +1,16 @@
+﻿Quadro 20 – Caso de uso de baixo nível Atribuir Cargo e Permissões
+Atribuir Cargo e Permissões
+Caso de Uso Geral;Gerenciar Usuários (inclusão)
+Ator Principal;Administrador
+Atores Secundários;
+Resumo;"O Administrador vincula ao usuário um ou mais cargos; as permissões de acesso decorrem dos cargos atribuídos."
+Pré-Condições;O Administrador está cadastrando ou editando um usuário.
+Pós-Condições;"Vínculos entre usuário e cargo gravados com a data de inclusão; evento registrado na auditoria."
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+;Exibe os cargos disponíveis (Administrador, Veterinário e Agente Sanitário) e as permissões de cada um por módulo.
+O Administrador seleciona o cargo ou os cargos do usuário.;
+;Grava os vínculos (UsuarioCargo) e registra o evento ATUALIZACAO com os valores anterior e posterior.
+Restrições/Validações;Todo usuário tem ao menos um cargo. As permissões por módulo (leitura, escrita e exclusão) são definidas no cargo (CargoPermissao), não no usuário.
+Fluxo Alternativo I;Remoção do último cargo: o sistema recusa e informa que o usuário precisa de ao menos um cargo.
+Requisitos relacionados;RF-C02, RN09, RNF10

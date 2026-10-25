@@ -1,0 +1,15 @@
+﻿Quadro 50 – Caso de uso de baixo nível Acompanhar Status do Relatório
+Acompanhar Status do Relatório
+Caso de Uso Geral;Relatórios
+Ator Principal;Veterinário ou Agente Sanitário
+Atores Secundários;
+Resumo;O usuário acompanha o andamento da geração de um relatório solicitado.
+Pré-Condições;Deve existir ao menos um relatório solicitado pelo usuário.
+Pós-Condições;Status atual do relatório exibido ao usuário.
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O usuário acessa a lista de relatórios solicitados.;
+;Exibe cada relatório com seu status atual (Pendente, Em Processamento, Concluído ou Falha).
+Restrições/Validações;O status reflete o ciclo de vida assíncrono do relatório (RN11).
+Fluxo Alternativo I;Relatório concluído: o sistema habilita a opção de download (Baixar Relatório Gerado).
+Requisitos relacionados;RF-D02, RN11

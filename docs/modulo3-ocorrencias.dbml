@@ -1,9 +1,13 @@
 // ══════════════════════════════════════════════════════
 // MÓDULO 03 — GESTÃO DE OCORRÊNCIAS & DENÚNCIAS
-// Tabelas: TipoOcorrencia, ProvidenciaTomada,
-//          Denunciante, Denunciado,
-//          Ocorrencia, AnexoOcorrencia, MovimentacaoOcorrencia
-// Enums:   StatusOcorrencia, TipoMovimentacaoOcorrencia
+// Espelha a migration V10 (+ V20 para RELATORIO em protocolo_sequencia).
+// Revisão de 25/10/2026 (docs/decisoes/alinhamento-tg.md).
+// Tabelas: ProtocoloSequencia, TipoOcorrencia, ProvidenciaTomada,
+//          Ocorrencia, Denunciante, Denunciado,
+//          MovimentacaoOcorrencia, AnexoOcorrencia, AnexoOcorrenciaConteudo
+// Enums (CHECK em varchar): StatusOcorrencia, TipoMovimentacaoOcorrencia
+// Vínculo com processo: mora em ProcessoSanitario.ocorrencia_id (módulo 04,
+// único e opcional) — a ocorrência não tem coluna de processo.
 // ══════════════════════════════════════════════════════
 
 // ── Enums ──────────────────────────────────────────────
@@ -11,146 +15,153 @@
 Enum StatusOcorrencia {
   ABERTA
   EM_ATENDIMENTO
-  AGUARDANDO_RETORNO
   ENCERRADA
 }
 
 Enum TipoMovimentacaoOcorrencia {
-  ABERTURA
-  ATRIBUICAO
-  ATUALIZACAO
-  GERACAO_PROCESSO
-  ENCERRAMENTO
+  REGISTRADA            // cadastro → ABERTA
+  EQUIPE_DESPACHADA     // ABERTA → EM_ATENDIMENTO
+  PROCESSO_VINCULADO    // sem mudança de status
+  AGUARDANDO_RESULTADO  // sem mudança de status
+  ENCERRADA             // ABERTA|EM_ATENDIMENTO → ENCERRADA
+  NOTA_INTERNA          // sem mudança de status; descrição obrigatória
 }
 
-// ── Lookup tables ──────────────────────────────────────
+// ── Sequência de protocolo (RN02) ─────────────────────
+
+Table ProtocoloSequencia {
+  entidade varchar(20) [pk, not null, note: 'OCORRENCIA, PROCESSO, RELATORIO (V20)']
+  ano      integer     [pk, not null]
+  ultimo   integer     [not null, note: 'CHECK > 0; lock de linha ao gerar']
+
+  Note: 'Uma sequência por entidade e por ano: NNN/AAAA para ocorrência e processo (cresce além de 999), DOC-AAAA-NNNN para relatório.'
+}
+
+// ── Catálogos ──────────────────────────────────────────
 
 Table TipoOcorrencia {
   id     uuid         [pk, not null, default: `gen_random_uuid()`]
-  nome   varchar(100) [not null]
+  codigo varchar(30)  [not null, unique]
+  nome   varchar(100) [not null, note: 'Suspeita de Zoonose, Infestação de Morcegos, Criação Irregular, Animal Agressivo, Outros']
   ativo  boolean      [not null, default: true]
 }
 
 Table ProvidenciaTomada {
   id     uuid         [pk, not null, default: `gen_random_uuid()`]
+  codigo varchar(30)  [not null, unique, note: 'outro exige descricao_encerramento']
   nome   varchar(100) [not null]
-  ativo boolean     [not null, default: true]
+  ativo  boolean      [not null, default: true]
 }
 
-// ── Partes envolvidas ──────────────────────────────────
-
-Table Denunciante {
-  id                 uuid         [pk, not null, default: `gen_random_uuid()`]
-  nome               varchar(200) [not null]
-  cpf                varchar(14)
-  telefone           varchar(20)
-  email              varchar(255)
-  cep                varchar(10)
-  endereco           varchar(300)
-  bairro_residencial varchar(100)
-}
-
-Table Denunciado {
-  id          uuid         [pk, not null, default: `gen_random_uuid()`]
-  nome        varchar(200) [not null]
-  cpf         varchar(14)
-  telefone    varchar(20)
-  endereco    varchar(300)
-  observacoes text
-}
+// ── Referência externa ─────────────────────────────────
 
 Table Usuario {
-  id                 uuid         [pk, not null, default: `gen_random_uuid()`]
-  email              varchar(255) [not null, unique]
-  senha              varchar(255) [not null]
-  nome               varchar(100) [not null]
-  sobrenome          varchar(100) [not null]
-  crmv               varchar(20)
-  telefone           varchar(20)
-  ativo              boolean      [not null, default: true]
-  dois_fatores_ativo boolean      [not null, default: false]
-  ultimo_acesso      timestamp
-  criado_em          timestamp    [not null, default: `now()`]
-  senha_alterada_em  timestamp
-  desativado_em      timestamp
-  data_modificacao   timestamp    [not null, default: `now()`]
-
-  indexes {
-    email [unique]
-  }
+  id uuid [pk, not null]
 }
 
 // ── Ocorrência (entidade central) ──────────────────────
 
 Table Ocorrencia {
-  id                    uuid          [pk, not null, default: `gen_random_uuid()`]
-  protocolo             varchar(50)   [not null, unique]
-  registrado_por        uuid          [not null, ref: > Usuario.id]
-  tipo_ocorrencia_id    uuid          [not null, ref: > TipoOcorrencia.id]
-  status_ocorrencia     StatusOcorrencia [not null, default: 'ABERTA']
-  providencia_tomada_id uuid          [ref: > ProvidenciaTomada.id]
-  denunciante_id        uuid          [ref: > Denunciante.id]
-  denunciado_id         uuid          [ref: > Denunciado.id]
-  data_abertura         date          [not null]
-  hora_abertura         time
-  bairro                varchar(100)
-  ponto_referencia      varchar(200)
-  descricao             text          [not null]
-  urgente               boolean       [not null, default: false]
-  sigilosa              boolean       [not null, default: false]
+  id                     uuid             [pk, not null, default: `gen_random_uuid()`]
+  protocolo              varchar(20)      [not null, unique, note: 'NNN/AAAA gerado no servidor']
+  tipo_ocorrencia_id     uuid             [not null, ref: > TipoOcorrencia.id]
+  status_ocorrencia      StatusOcorrencia [not null, default: 'ABERTA']
+  data_abertura          date             [not null, note: 'não futura; filtros de/ate da listagem (AT-11)']
+  hora_abertura          time
+  endereco               varchar(255)     [not null]
+  bairro                 varchar(80)      [not null, note: 'texto livre; contagem agregada em GET /api/ocorrencias/estatisticas/bairro (T45)']
+  ponto_referencia       varchar(255)
+  descricao              text             [not null]
+  urgente                boolean          [not null, default: false]
+  sigilosa               boolean          [not null, default: false, note: 'denunciante mascarado para quem não tem denunciante_sigiloso (RN03)']
+  anonima                boolean          [not null, default: false, note: 'CHECK NOT (anonima AND sigilosa); anônima não tem linha em Denunciante']
+  latitude               decimal(9,6)     [note: 'CHECK -90..90; reservado (sem mapa)']
+  longitude              decimal(9,6)     [note: 'CHECK -180..180']
+  registrado_por_id      uuid             [not null, ref: > Usuario.id]
+  providencia_tomada_id  uuid             [ref: > ProvidenciaTomada.id, note: 'só quando ENCERRADA (CHECK de encerramento)']
   descricao_encerramento text
-  encerrada_em          timestamp
-  criado_em             timestamp     [not null, default: `now()`]
-  atualizado_em         timestamp     [not null, default: `now()`]
+  encerrada_em           timestamp
+  encerrada_por_id       uuid             [ref: > Usuario.id]
+  criado_em              timestamp        [not null, default: `now()`]
+  atualizado_em          timestamp        [not null, default: `now()`]
 
   indexes {
-    protocolo         [unique]
-    registrado_por
+    protocolo [unique]
     tipo_ocorrencia_id
     status_ocorrencia
     data_abertura
   }
+
+  Note: 'Sem DELETE. Encerramento só com processo vinculado CONCLUIDO (RN05).'
 }
 
-// ── Anexos ─────────────────────────────────────────────
+// ── Partes envolvidas (FK no filho, 1:0..1) ────────────
 
-Table AnexoOcorrencia {
+Table Denunciante {
+  id                 uuid         [pk, not null, default: `gen_random_uuid()`]
+  ocorrencia_id      uuid         [not null, unique, ref: - Ocorrencia.id]
+  nome               varchar(150)
+  cpf                varchar(14)
+  telefone           varchar(20)
+  email              varchar(150)
+  cep                varchar(10)
+  endereco           varchar(255)
+  bairro_residencial varchar(80)
+
+  Note: 'Em ocorrência sigilosa, campos pessoais vêm null sem a permissão; entrega gera VISUALIZACAO, recusa gera ACESSO_NEGADO (T26/T43).'
+}
+
+Table Denunciado {
   id            uuid         [pk, not null, default: `gen_random_uuid()`]
-  ocorrencia_id uuid         [not null, ref: > Ocorrencia.id]
-  nome          varchar(255) [not null]
-  url           varchar(500) [not null]
-  tamanho_bytes bigint
-  
-  criado_em     timestamp    [not null, default: `now()`]
-
-  indexes {
-    ocorrencia_id
-  }
+  ocorrencia_id uuid         [not null, unique, ref: - Ocorrencia.id]
+  nome          varchar(150)
+  cpf           varchar(14)
+  telefone      varchar(20)
+  endereco      varchar(255)
+  observacoes   text
 }
 
 // ── Histórico de movimentações ─────────────────────────
 
 Table MovimentacaoOcorrencia {
-  id                uuid                     [pk, not null, default: `gen_random_uuid()`]
-  ocorrencia_id     uuid                     [not null, ref: > Ocorrencia.id]
-  usuario_id        uuid                     [ref: > Usuario.id]
+  id                uuid                       [pk, not null, default: `gen_random_uuid()`]
+  ocorrencia_id     uuid                       [not null, ref: > Ocorrencia.id]
+  usuario_id        uuid                       [not null, ref: > Usuario.id]
   tipo_movimentacao TipoMovimentacaoOcorrencia [not null]
-  data              timestamp                [not null, default: `now()`]
+  status_anterior   varchar(20)                [note: 'CHECK de transição por tipo']
+  status_novo       varchar(20)
+  data              timestamp                  [not null]
   descricao         text
-  criado_em         timestamp                [not null, default: `now()`]
+  criado_em         timestamp                  [not null, default: `now()`]
+}
 
-  indexes {
-    ocorrencia_id
-    usuario_id
-  }
+// ── Anexos (metadados + conteúdo bytea, padrão D9) ────
+
+Table AnexoOcorrencia {
+  id            uuid         [pk, not null, default: `gen_random_uuid()`]
+  ocorrencia_id uuid         [not null, ref: > Ocorrencia.id]
+  nome          varchar(255) [not null]
+  mime_type     varchar(50)  [not null, note: 'CHECK: image/jpeg, image/png, application/pdf']
+  tamanho       integer      [not null, note: 'CHECK <= 5242880 (5 MB)']
+  criado_por_id uuid         [not null, ref: > Usuario.id]
+  criado_em     timestamp    [not null, default: `now()`]
+
+  Note: 'Máximo 5 por ocorrência; download de sigilosa só com denunciante_sigiloso (403 + ACESSO_NEGADO).'
+}
+
+Table AnexoOcorrenciaConteudo {
+  anexo_id uuid  [pk, not null, ref: - AnexoOcorrencia.id]
+  conteudo bytea [not null]
 }
 
 TableGroup Ocorrencias_Denuncias {
+  ProtocoloSequencia
   TipoOcorrencia
   ProvidenciaTomada
+  Ocorrencia
   Denunciante
   Denunciado
-  Ocorrencia
-  AnexoOcorrencia
   MovimentacaoOcorrencia
+  AnexoOcorrencia
+  AnexoOcorrenciaConteudo
 }

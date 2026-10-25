@@ -1,0 +1,13 @@
+﻿Quadro 94 – Dicionário de dados – tabela RelatorioGerado
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único do relatório.
+gerado_por;uuid;FK;Usuário solicitante (Usuario).
+tipo_relatorio;TipoRelatorio;;Tipo de relatório: ocorrências por bairro, ocupação de baias, procedimentos, adoções, anual de processos ou vacinação.
+periodo_inicio;date;;Início do período de referência.
+periodo_fim;date;;Fim do período de referência.
+parametros_jsonb;jsonb;;Parâmetros de geração em formato JSON.
+gerado_em;timestamp;;Data e hora da solicitação.
+status;StatusRelatorio;;Situação do processamento (RN11).
+arquivo_url;varchar(500);;URL do arquivo gerado, com expiração.
+url_expira_em;timestamp;;Momento em que a URL do arquivo deixa de valer (RN11).
+tamanho_bytes;bigint;;Tamanho do arquivo em bytes.

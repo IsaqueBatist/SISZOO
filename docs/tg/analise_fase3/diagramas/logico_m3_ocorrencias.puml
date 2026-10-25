@@ -1,0 +1,127 @@
+@startuml logico_m3_ocorrencias
+' Diagrama lógico — Módulo 3: Ocorrências e Denúncias (substitui a Figura 14 do TG)
+' Fonte: migrações Flyway V10, V20 (protocolo_sequencia inclui RELATORIO). Fase 3, 22/10/2026.
+!pragma layout smetana
+skinparam linetype ortho
+skinparam defaultFontName Arial
+hide circle
+
+entity "protocolo_sequencia" as protocolo_sequencia {
+  * entidade : varchar(20) <<PK>> {OCORRENCIA, PROCESSO, RELATORIO}
+  * ano : integer <<PK>>
+  --
+  * ultimo : integer
+}
+entity "tipo_ocorrencia" as tipo_ocorrencia {
+  * id : uuid <<PK>>
+  --
+  * codigo : varchar(30) <<UQ>>
+  * nome : varchar(100)
+  * ativo : boolean
+}
+entity "providencia_tomada" as providencia_tomada {
+  * id : uuid <<PK>>
+  --
+  * codigo : varchar(30) <<UQ>>
+  * nome : varchar(100)
+  * ativo : boolean
+}
+entity "ocorrencia" as ocorrencia {
+  * id : uuid <<PK>>
+  --
+  * protocolo : varchar(20) <<UQ>> (NNN/AAAA)
+  * tipo_ocorrencia_id : uuid <<FK>>
+  * status_ocorrencia : varchar(20) {ABERTA, EM_ATENDIMENTO, ENCERRADA}
+  * data_abertura : date
+  hora_abertura : time
+  * endereco : varchar(255)
+  * bairro : varchar(80)
+  ponto_referencia : varchar(255)
+  * descricao : text
+  * urgente : boolean
+  * sigilosa : boolean
+  * anonima : boolean (excludente com sigilosa)
+  latitude : decimal(9,6)
+  longitude : decimal(9,6)
+  * registrado_por_id : uuid <<FK usuario>>
+  providencia_tomada_id : uuid <<FK>>
+  descricao_encerramento : text
+  encerrada_em : timestamp
+  encerrada_por_id : uuid <<FK usuario>>
+  * criado_em : timestamp
+  * atualizado_em : timestamp
+}
+entity "denunciante" as denunciante {
+  * id : uuid <<PK>>
+  --
+  * ocorrencia_id : uuid <<FK, UQ>>
+  nome : varchar(150)
+  cpf : varchar(14)
+  telefone : varchar(20)
+  email : varchar(150)
+  cep : varchar(10)
+  endereco : varchar(255)
+  bairro_residencial : varchar(80)
+}
+entity "denunciado" as denunciado {
+  * id : uuid <<PK>>
+  --
+  * ocorrencia_id : uuid <<FK, UQ>>
+  nome : varchar(150)
+  cpf : varchar(14)
+  telefone : varchar(20)
+  endereco : varchar(255)
+  observacoes : text
+}
+entity "movimentacao_ocorrencia" as movimentacao_ocorrencia {
+  * id : uuid <<PK>>
+  --
+  * ocorrencia_id : uuid <<FK>>
+  * usuario_id : uuid <<FK usuario>>
+  * tipo_movimentacao : varchar(30) {REGISTRADA, EQUIPE_DESPACHADA,\n PROCESSO_VINCULADO, AGUARDANDO_RESULTADO,\n ENCERRADA, NOTA_INTERNA}
+  status_anterior : varchar(20)
+  status_novo : varchar(20)
+  * data : timestamp
+  descricao : text
+  * criado_em : timestamp
+}
+entity "anexo_ocorrencia" as anexo_ocorrencia {
+  * id : uuid <<PK>>
+  --
+  * ocorrencia_id : uuid <<FK>>
+  * nome : varchar(255)
+  * mime_type : varchar(50) {image/jpeg, image/png, application/pdf}
+  * tamanho : integer (<= 5 MB)
+  * criado_por_id : uuid <<FK usuario>>
+  * criado_em : timestamp
+}
+entity "anexo_ocorrencia_conteudo" as anexo_ocorrencia_conteudo {
+  * anexo_id : uuid <<PK, FK>>
+  --
+  * conteudo : bytea
+}
+entity "processo_sanitario (M4)" as processo_sanitario {
+  * id : uuid <<PK>>
+  --
+  ocorrencia_id : uuid <<FK, UQ>>
+}
+
+tipo_ocorrencia ||--o{ ocorrencia
+providencia_tomada |o--o{ ocorrencia
+ocorrencia ||--o| denunciante
+ocorrencia ||--o| denunciado
+ocorrencia ||--o{ movimentacao_ocorrencia
+ocorrencia ||--o{ anexo_ocorrencia
+anexo_ocorrencia ||--|| anexo_ocorrencia_conteudo
+ocorrencia |o--o| processo_sanitario
+
+note right of protocolo_sequencia
+  Uma sequência por entidade e ano,
+  com bloqueio de linha (RN02).
+end note
+note bottom of denunciante
+  Dados mascarados no servidor para perfis sem a
+  permissão denunciante_sigiloso quando sigilosa = true;
+  acesso registrado em auditoria (RN03).
+end note
+@enduml

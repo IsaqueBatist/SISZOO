@@ -1,0 +1,17 @@
+﻿Quadro 38 – Caso de uso de baixo nível Consultar e Filtrar Ocorrências
+Consultar e Filtrar Ocorrências
+Caso de Uso Geral;Gestão de Ocorrências
+Ator Principal;Agente Sanitário
+Atores Secundários;Administrador
+Resumo;"O Agente Sanitário consulta ocorrências aplicando filtros; dados sigilosos do denunciante são restritos."
+Pré-Condições;O ator deve estar autenticado com permissão de leitura no módulo.
+Pós-Condições;Ocorrências exibidas conforme os filtros, respeitando o sigilo do denunciante.
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Agente Sanitário acessa a consulta de ocorrências e define filtros (protocolo, período, tipo, bairro, status).;
+;Consulta as ocorrências conforme os filtros.
+;"Exibe a listagem; em ocorrências sigilosas, oculta os dados do denunciante para perfis que não sejam Administrador (RN03)."
+Restrições/Validações;Os dados do denunciante em ocorrências sigilosas só são exibidos ao Administrador (RN03).
+Fluxo Alternativo I;Acesso como Administrador: os dados do denunciante são exibidos mesmo em ocorrências sigilosas.
+Fluxo Alternativo II;Nenhuma ocorrência encontrada: o sistema informa que não há resultados.
+Requisitos relacionados;RF-E02, RN03

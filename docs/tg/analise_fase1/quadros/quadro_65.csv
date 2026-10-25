@@ -1,0 +1,5 @@
+﻿Quadro 65 – Dicionário de dados – tabela CategoriaFarmacologica
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único da categoria.
+nome;varchar(100);UQ;Nome da categoria farmacológica.
+ativo;boolean;;Indica se a categoria está disponível para uso.

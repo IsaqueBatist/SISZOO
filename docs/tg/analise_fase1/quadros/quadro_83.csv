@@ -1,0 +1,8 @@
+﻿Quadro 83 – Dicionário de dados – tabela Denunciado
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único do denunciado.
+nome;varchar(200);;Nome do denunciado.
+cpf;varchar(14);;CPF do denunciado.
+telefone;varchar(20);;Telefone de contato.
+endereco;varchar(300);;Endereço do denunciado.
+observacoes;text;;Observações sobre o denunciado.

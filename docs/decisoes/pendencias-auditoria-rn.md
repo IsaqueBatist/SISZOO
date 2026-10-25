@@ -154,3 +154,12 @@ Classificação provisória de cada divergência da seção 11.5 do relatório d
 - **Classificação provisória.** Erro de implementação: a dessincronia do select quando as opções chegam depois da ficha (cenário 2b) e a perda que ela causa na restauração. Decisão em aberto: a semântica da restauração (o rascunho sobrescreve campos que mudaram na ficha?) e a política para rascunhos sem máscara.
 - **Pergunta.** Restaurar um rascunho deve sobrescrever campos que mudaram na ficha depois de o rascunho ser salvo? Um campo apagado pelo usuário deve voltar vazio? A tela deve mostrar a baia atual mesmo quando ela está inativa?
 - **Impacto.** Independentemente da decisão, a tela enganosa e a perda vêm da dessincronia do select; corrigi-la (manter o select coerente com o valor do formulário quando as opções chegam) tira a dependência da ordem de carregamento. A semântica de restauração depende da resposta: merge por campos alterados (máscara de `dirtyFields`) ou restauração integral documentada. "Campo ausente no rascunho mantém o valor atual" não basta, porque o rascunho grava `''` tanto para "o usuário apagou" quanto para "a ficha não tinha o valor quando o rascunho foi salvo".
+
+## Revisão de 25/10/2026 — divergências com o DOCX resolvidas no alinhamento com o TG
+
+As divergências desta lista que opunham o código ao texto do TG (DOCX) foram resolvidas **a favor do código** no
+alinhamento de 22–24/10/2026 (`docs/decisoes/alinhamento-tg.md`): o documento final (`docs/tg/SISZOO_v3_final.docx`)
+passou a dizer `NNN/AAAA` (D3/P3), a máquina de estados `ABERTO → AGUARDANDO_RESULTADO → COM_RESULTADO → CONCLUIDO`
+(sem `EM_ANDAMENTO`), microchip opcional no cadastro com ficha completa calculada (D1), a matriz de permissões real
+(AT-4) e o sigilo por permissão `denunciante_sigiloso` (AT-3). Única mudança no sentido inverso: a RN10 volta a
+notificar também o resultado `inconclusivo` (AT-1), como o DOCX previa.

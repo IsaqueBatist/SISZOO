@@ -1,0 +1,21 @@
+﻿Quadro 16 – Caso de uso de baixo nível Realizar Login
+Realizar Login
+Caso de Uso Geral;Autenticação
+Ator Principal;Veterinário, Agente Sanitário ou Administrador
+Atores Secundários;
+Resumo;O usuário autentica-se no sistema com e-mail e senha para acessar as funcionalidades de acordo com seu perfil.
+Pré-Condições;O usuário deve estar cadastrado e ativo, com um cargo atribuído pelo Administrador.
+Pós-Condições;"Token JWT válido emitido; usuário redirecionado ao painel inicial conforme suas permissões."
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O usuário acessa a página de login e informa e-mail e senha.;
+O usuário confirma o envio das credenciais.;
+;Valida o formato do e-mail e a presença da senha.
+;Verifica se o usuário existe e está ativo e compara o hash da senha (bcrypt).
+;Gera o token JWT e registra o evento de auditoria de LOGIN.
+;Redireciona o usuário ao painel inicial conforme seu cargo (RN09).
+Restrições/Validações;O usuário precisa estar cadastrado e ativo (RNF06). Senhas trafegam apenas via HTTPS.
+Fluxo Alternativo I;Senha inválida: o sistema informa credenciais inválidas e mantém a tela de login, sem revelar qual campo falhou.
+Fluxo Alternativo II;Usuário inexistente ou inativo: o sistema informa credenciais inválidas e retorna à tela de login.
+Fluxo Alternativo III;Primeiro acesso: o sistema exige a troca da senha antes de liberar o painel inicial.
+Requisitos relacionados;RF-C01, RNF06, RNF10
