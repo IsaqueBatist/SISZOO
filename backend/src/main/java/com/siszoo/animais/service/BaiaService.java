@@ -160,19 +160,10 @@ public class BaiaService {
                         .collect(Collectors.toMap(
                                 OcupacaoBaiaProjection::getBaiaId, OcupacaoBaiaProjection::getTotal));
 
-        List<BaiaResponse> itens = paginaBaias.getContent().stream()
-                .map(baia -> {
+        return PaginaResponse.de(paginaBaias.map(baia -> {
                     long ocupacaoAtual = ocupacaoPorBaia.getOrDefault(baia.getId(), 0L);
                     return baiaMapper.toResponse(baia, ocupacaoAtual, ocupacaoAtual >= baia.getCapacidade());
-                })
-                .toList();
-
-        return new PaginaResponse<>(
-                itens,
-                paginaBaias.getNumber(),
-                paginaBaias.getSize(),
-                paginaBaias.getTotalElements(),
-                paginaBaias.getTotalPages());
+                }));
     }
 
     // T45: residentes (sob custodia, mesmo criterio da ocupacao) de todas as

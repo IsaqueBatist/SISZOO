@@ -23,10 +23,10 @@ import java.time.LocalDate;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.siszoo.comum.dto.ArquivoAnexo;
 import com.siszoo.comum.dto.PaginaResponse;
 import com.siszoo.ocorrencias.dto.AlterarStatusOcorrenciaRequest;
 import com.siszoo.ocorrencias.dto.AnexoOcorrenciaResponse;
-import com.siszoo.ocorrencias.dto.ArquivoAnexo;
 import com.siszoo.ocorrencias.dto.AtualizarOcorrenciaRequest;
 import com.siszoo.ocorrencias.dto.CatalogosOcorrenciaResponse;
 import com.siszoo.ocorrencias.dto.CriarNotaRequest;

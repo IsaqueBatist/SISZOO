@@ -23,7 +23,6 @@ import com.siszoo.animais.clinico.entity.StatusPrescricao;
 import com.siszoo.animais.clinico.entity.Vacinacao;
 import com.siszoo.animais.clinico.repository.PrescricaoRepository;
 import com.siszoo.animais.clinico.repository.VacinacaoRepository;
-import com.siszoo.animais.dto.CatalogoItemResponse;
 import com.siszoo.animais.entity.Baia;
 import com.siszoo.animais.entity.Especie;
 import com.siszoo.animais.entity.StatusAnimal;
@@ -32,10 +31,11 @@ import com.siszoo.animais.repository.BaiaRepository;
 import com.siszoo.animais.repository.ContagemPorEspecieProjection;
 import com.siszoo.animais.repository.EspecieRepository;
 import com.siszoo.animais.repository.OcupacaoBaiaProjection;
+import com.siszoo.comum.dto.CatalogoItemResponse;
+import com.siszoo.comum.repository.ContagemCatalogoProjection;
 import com.siszoo.ocorrencias.repository.OcorrenciaRepository;
 import com.siszoo.processos.entity.Doenca;
 import com.siszoo.processos.repository.AnimalAmostradoRepository;
-import com.siszoo.processos.repository.ContagemCatalogoProjection;
 import com.siszoo.processos.repository.DoencaRepository;
 import com.siszoo.processos.repository.ProcessoSanitarioRepository;
 import com.siszoo.relatorios.dto.AlertaCriticoResponse;
@@ -164,7 +164,7 @@ public class DashboardService {
 
         Set<UUID> animaisEmDia = new HashSet<>();
         for (Vacinacao vacinacao : vigentes) {
-            LocalDate dataValidade = calcularDataValidade(vacinacao);
+            LocalDate dataValidade = vacinacao.calcularDataValidade();
             if (!dataValidade.isBefore(hoje)) {
                 animaisEmDia.add(vacinacao.getAnimal().getId());
             }
@@ -173,12 +173,6 @@ public class DashboardService {
         long vacinados = animaisEmDia.size();
         int percentual = totalSobCustodia == 0 ? 0 : (int) Math.round(vacinados * 100.0 / totalSobCustodia);
         return new KpiVacinacaoResponse(percentual, vacinados, totalSobCustodia);
-    }
-
-    // Mesma formula de AlertaVacinalService#calcularDataValidade /
-    // VacinacaoMapper#calcularDataValidade.
-    private LocalDate calcularDataValidade(Vacinacao vacinacao) {
-        return vacinacao.getDataAplicacao().plusMonths(vacinacao.getVacina().getIntervaloMeses());
     }
 
     // Denominador de mediaPorHora = hora atual em America/Sao_Paulo (0-23),

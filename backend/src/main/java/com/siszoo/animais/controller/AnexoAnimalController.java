@@ -20,7 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.siszoo.animais.dto.AnexoAnimalResponse;
 import com.siszoo.animais.service.AnexoAnimalService;
-import com.siszoo.ocorrencias.dto.ArquivoAnexo;
+import com.siszoo.comum.dto.ArquivoAnexo;
 
 // F2-007 / RF-A04: anexos do animal (fotos, laudos, documentos). Sem exclusao
 // (historico imutavel). Mesmo contrato dos anexos de ocorrencia.

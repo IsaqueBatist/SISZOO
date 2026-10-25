@@ -12,12 +12,12 @@ import java.util.OptionalDouble;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.siszoo.comum.repository.ContagemCatalogoProjection;
 import com.siszoo.comum.util.BlocoCsv;
 import com.siszoo.ocorrencias.repository.BairroTipoProjection;
 import com.siszoo.ocorrencias.repository.ContagemPorBairroProjection;
 import com.siszoo.ocorrencias.repository.OcorrenciaRepository;
 import com.siszoo.ocorrencias.repository.TempoAtendimentoProjection;
-import com.siszoo.processos.repository.ContagemCatalogoProjection;
 import com.siszoo.relatorios.dto.KpisOcorrenciasBairroResponse;
 import com.siszoo.relatorios.dto.LinhaBairroOcorrenciaResponse;
 import com.siszoo.relatorios.dto.PeriodoRelatorio;

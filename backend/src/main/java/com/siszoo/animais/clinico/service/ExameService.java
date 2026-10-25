@@ -132,11 +132,7 @@ public class ExameService {
                 ? Map.of()
                 : exameRepository.findByRetificaIdIn(ids).stream()
                         .collect(Collectors.toMap(e -> e.getRetifica().getId(), Exame::getId));
-        List<ExameResponse> itens = paginaExames.getContent().stream()
-                .map(e -> exameMapper.toResponse(e, retificadoPorPorId.get(e.getId())))
-                .toList();
-        return new PaginaResponse<>(itens, paginaExames.getNumber(), paginaExames.getSize(),
-                paginaExames.getTotalElements(), paginaExames.getTotalPages());
+        return PaginaResponse.de(paginaExames.map(e -> exameMapper.toResponse(e, retificadoPorPorId.get(e.getId()))));
     }
 
     // Fatos ocorridos: nenhuma das datas e futura; resultado nao antecede a solicitacao.

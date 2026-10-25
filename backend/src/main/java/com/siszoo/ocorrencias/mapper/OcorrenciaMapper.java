@@ -44,7 +44,7 @@ public interface OcorrenciaMapper {
 
     @Named("nomeCompleto")
     default String nomeCompleto(Usuario usuario) {
-        return usuario == null ? null : usuario.getNome() + " " + usuario.getSobrenome();
+        return usuario == null ? null : usuario.nomeCompleto();
     }
 
     default DenuncianteResponse denuncianteVisivel(Ocorrencia ocorrencia, Denunciante denunciante, boolean podeVerSigilo) {

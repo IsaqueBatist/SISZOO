@@ -15,8 +15,8 @@ import com.siszoo.animais.clinico.entity.Vacinacao;
 import com.siszoo.animais.clinico.repository.VacinacaoRepository;
 import com.siszoo.animais.entity.StatusAnimal;
 import com.siszoo.animais.repository.AnimalRepository;
+import com.siszoo.comum.repository.ContagemCatalogoProjection;
 import com.siszoo.comum.util.BlocoCsv;
-import com.siszoo.processos.repository.ContagemCatalogoProjection;
 import com.siszoo.relatorios.dto.AnimalVacinaVencidaResponse;
 import com.siszoo.relatorios.dto.AplicacaoPorVacinaResponse;
 import com.siszoo.relatorios.dto.AplicacaoPorVeterinarioResponse;
@@ -112,16 +112,16 @@ public class RelatorioVacinacaoService implements GeradorRelatorio<RelatorioVaci
         long vacinasAplicadas = vacinacaoRepository.countByDataAplicacaoBetween(periodo.inicio(), periodo.fim());
 
         long animaisVacinados = vigentes.stream()
-                .filter(v -> !calcularDataValidade(v).isBefore(hoje))
+                .filter(v -> !v.calcularDataValidade().isBefore(hoje))
                 .map(v -> v.getAnimal().getId())
                 .distinct()
                 .count();
         int percentual = totalSobCustodia == 0 ? 0 : (int) Math.round(animaisVacinados * 100.0 / totalSobCustodia);
 
-        long vencidas = vigentes.stream().filter(v -> calcularDataValidade(v).isBefore(hoje)).count();
+        long vencidas = vigentes.stream().filter(v -> v.calcularDataValidade().isBefore(hoje)).count();
         long aVencer = vigentes.stream()
                 .filter(v -> {
-                    LocalDate validade = calcularDataValidade(v);
+                    LocalDate validade = v.calcularDataValidade();
                     return !validade.isBefore(hoje) && !validade.isAfter(hoje.plusDays(DIAS_A_VENCER));
                 })
                 .count();
@@ -142,10 +142,10 @@ public class RelatorioVacinacaoService implements GeradorRelatorio<RelatorioVaci
                 .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
                 .map(entry -> {
                     List<Vacinacao> dessaVacina = vigentesPorVacina.getOrDefault(entry.getKey(), List.of());
-                    long cobertura = dessaVacina.stream().filter(v -> !calcularDataValidade(v).isBefore(hoje)).count();
+                    long cobertura = dessaVacina.stream().filter(v -> !v.calcularDataValidade().isBefore(hoje)).count();
                     long vencendo = dessaVacina.stream()
                             .filter(v -> {
-                                LocalDate validade = calcularDataValidade(v);
+                                LocalDate validade = v.calcularDataValidade();
                                 return !validade.isBefore(hoje) && !validade.isAfter(hoje.plusDays(DIAS_A_VENCER));
                             })
                             .count();
@@ -165,7 +165,7 @@ public class RelatorioVacinacaoService implements GeradorRelatorio<RelatorioVaci
     private List<AnimalVacinaVencidaResponse> montarVencidas(List<Vacinacao> vigentes, LocalDate hoje) {
         List<AnimalVacinaVencidaResponse> vencidas = new ArrayList<>();
         for (Vacinacao v : vigentes) {
-            LocalDate validade = calcularDataValidade(v);
+            LocalDate validade = v.calcularDataValidade();
             if (validade.isBefore(hoje)) {
                 String baia = v.getAnimal().getBaia() != null ? v.getAnimal().getBaia().getNome() : null;
                 long diasAtraso = java.time.temporal.ChronoUnit.DAYS.between(validade, hoje);
@@ -178,10 +178,5 @@ public class RelatorioVacinacaoService implements GeradorRelatorio<RelatorioVaci
 
     private String valorOuTraco(String valor) {
         return valor != null ? valor : "—";
-    }
-
-    // Mesma formula de DashboardService#calcularDataValidade / VacinacaoMapper.
-    private LocalDate calcularDataValidade(Vacinacao vacinacao) {
-        return vacinacao.getDataAplicacao().plusMonths(vacinacao.getVacina().getIntervaloMeses());
     }
 }

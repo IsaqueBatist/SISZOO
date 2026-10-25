@@ -123,7 +123,7 @@ public class RelatorioGeradoService {
             MetadadosDocumento metadados = new MetadadosDocumento(
                     docId,
                     Formatadores.DATA_HORA.format(LocalDateTime.now(clock)),
-                    usuario.getNome() + " " + usuario.getSobrenome(),
+                    usuario.nomeCompleto(),
                     Formatadores.DATA.format(periodo.inicio()) + " a " + Formatadores.DATA.format(periodo.fim()));
             conteudo = pdfRenderer.renderizar(tipo, gerador.gerarPreview(periodo), metadados);
             contentType = "application/pdf";
@@ -202,7 +202,7 @@ public class RelatorioGeradoService {
                 registro.getTipoRelatorio().nomeExibicao(),
                 registro.getPeriodoInicio(),
                 registro.getPeriodoFim(),
-                geradoPor.getNome() + " " + geradoPor.getSobrenome(),
+                geradoPor.nomeCompleto(),
                 registro.getGeradoEm(),
                 registro.getTamanhoBytes(),
                 registro.getParametrosJson());

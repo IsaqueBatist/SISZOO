@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import com.siszoo.animais.dto.CatalogoItemResponse;
+import com.siszoo.comum.dto.CatalogoItemResponse;
 import com.siszoo.processos.entity.StatusProcesso;
 
 // Os campos da versao minima (T25) continuam com os mesmos nomes; os da T29

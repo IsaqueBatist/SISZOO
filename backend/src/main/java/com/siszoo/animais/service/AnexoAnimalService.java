@@ -1,6 +1,5 @@
 package com.siszoo.animais.service;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -10,9 +9,9 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.siszoo.animais.dto.AnexoAnimalResponse;
-import com.siszoo.animais.entity.Animal;
 import com.siszoo.animais.entity.AnexoAnimal;
 import com.siszoo.animais.entity.AnexoAnimalConteudo;
+import com.siszoo.animais.entity.Animal;
 import com.siszoo.animais.exception.AnexoAnimalInvalidoException;
 import com.siszoo.animais.exception.AnexoAnimalNaoEncontradoException;
 import com.siszoo.animais.exception.AnimalNaoEncontradoException;
@@ -20,7 +19,8 @@ import com.siszoo.animais.exception.LimiteAnexosAnimalAtingidoException;
 import com.siszoo.animais.repository.AnexoAnimalConteudoRepository;
 import com.siszoo.animais.repository.AnexoAnimalRepository;
 import com.siszoo.animais.repository.AnimalRepository;
-import com.siszoo.ocorrencias.dto.ArquivoAnexo;
+import com.siszoo.comum.anexo.ConteudoAnexo;
+import com.siszoo.comum.dto.ArquivoAnexo;
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.exception.UsuarioNaoEncontradoException;
@@ -35,7 +35,6 @@ import com.siszoo.usuarios.service.AuditoriaEventoService;
 @Service
 public class AnexoAnimalService {
 
-    static final int TAMANHO_MAXIMO_ANEXO = 5 * 1024 * 1024;
     static final int MAXIMO_ANEXOS = 10;
     private static final int TAMANHO_MAXIMO_NOME = 255;
     private static final String ENTIDADE_AUDITORIA = "anexo_animal";
@@ -71,11 +70,9 @@ public class AnexoAnimalService {
     public AnexoAnimalResponse adicionar(UUID animalId, MultipartFile arquivo, String descricao, UUID usuarioAutenticadoId) {
         Animal animal = animalRepository.findById(animalId).orElseThrow(AnimalNaoEncontradoException::new);
         Usuario autor = usuarioRepository.findById(usuarioAutenticadoId).orElseThrow(UsuarioNaoEncontradoException::new);
-        byte[] conteudo = lerConteudo(arquivo);
-        if (conteudo.length == 0 || conteudo.length > TAMANHO_MAXIMO_ANEXO) {
-            throw new AnexoAnimalInvalidoException();
-        }
-        String mimeType = detectarTipo(conteudo);
+        ConteudoAnexo.Validado validado = ConteudoAnexo.validar(arquivo, AnexoAnimalInvalidoException::new);
+        byte[] conteudo = validado.conteudo();
+        String mimeType = validado.mimeType();
         if (anexoRepository.countByAnimalId(animalId) >= MAXIMO_ANEXOS) {
             throw new LimiteAnexosAnimalAtingidoException();
         }
@@ -112,41 +109,7 @@ public class AnexoAnimalService {
         Usuario autor = anexo.getCriadoPor();
         return new AnexoAnimalResponse(anexo.getId(), anexo.getAnimal().getId(), anexo.getNome(), anexo.getMimeType(),
                 anexo.getTamanho(), anexo.getDescricao(), autor == null ? null : autor.getId(),
-                autor == null ? null : autor.getNome() + " " + autor.getSobrenome(), anexo.getCriadoEm());
-    }
-
-    private static byte[] lerConteudo(MultipartFile arquivo) {
-        try {
-            return arquivo.getBytes();
-        } catch (IOException e) {
-            throw new AnexoAnimalInvalidoException();
-        }
-    }
-
-    // O tipo vem dos bytes iniciais, nao do Content-Type informado pelo cliente.
-    private static String detectarTipo(byte[] conteudo) {
-        if (comecaCom(conteudo, 0xFF, 0xD8, 0xFF)) {
-            return "image/jpeg";
-        }
-        if (comecaCom(conteudo, 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)) {
-            return "image/png";
-        }
-        if (comecaCom(conteudo, 0x25, 0x50, 0x44, 0x46, 0x2D)) {
-            return "application/pdf";
-        }
-        throw new AnexoAnimalInvalidoException();
-    }
-
-    private static boolean comecaCom(byte[] conteudo, int... assinatura) {
-        if (conteudo.length < assinatura.length) {
-            return false;
-        }
-        for (int i = 0; i < assinatura.length; i++) {
-            if ((conteudo[i] & 0xFF) != assinatura[i]) {
-                return false;
-            }
-        }
-        return true;
+                autor == null ? null : autor.nomeCompleto(), anexo.getCriadoEm());
     }
 
     private static String nomeDoArquivo(String original) {

@@ -16,9 +16,9 @@ import com.siszoo.animais.clinico.repository.PrescricaoRepository;
 import com.siszoo.animais.clinico.repository.ProcedimentoRepository;
 import com.siszoo.animais.clinico.repository.ProdutividadeProcedimentoProjection;
 import com.siszoo.animais.clinico.repository.VacinacaoRepository;
+import com.siszoo.comum.repository.ContagemCatalogoProjection;
 import com.siszoo.comum.util.BlocoCsv;
 import com.siszoo.comum.util.Formatadores;
-import com.siszoo.processos.repository.ContagemCatalogoProjection;
 import com.siszoo.relatorios.dto.CirurgiaRealizadaResponse;
 import com.siszoo.relatorios.dto.KpisProcedimentosResponse;
 import com.siszoo.relatorios.dto.PeriodoRelatorio;
@@ -207,7 +207,7 @@ public class RelatorioProcedimentosService implements GeradorRelatorio<Relatorio
                 ? procedimento.getDescricao()
                 : procedimento.getTipoProcedimento().getNome();
         String veterinario = procedimento.getExecutadoPor() != null
-                ? procedimento.getExecutadoPor().getNome() + " " + procedimento.getExecutadoPor().getSobrenome()
+                ? procedimento.getExecutadoPor().nomeCompleto()
                 : "—";
         return new CirurgiaRealizadaResponse(
                 procedimento.getData(), procedimento.getAnimal().getNome(), nomeProcedimento, veterinario,

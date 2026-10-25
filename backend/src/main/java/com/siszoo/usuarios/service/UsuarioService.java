@@ -133,8 +133,7 @@ public class UsuarioService {
                         uc -> uc.getUsuario().getId(),
                         Collectors.mapping(uc -> uc.getCargo().getNome(), Collectors.toList())));
 
-        List<UsuarioResponse> itens = paginaUsuarios.getContent().stream()
-                .map(usuario -> new UsuarioResponse(
+        return PaginaResponse.de(paginaUsuarios.map(usuario -> new UsuarioResponse(
                         usuario.getId(),
                         usuario.getEmail(),
                         usuario.getNome(),
@@ -144,15 +143,7 @@ public class UsuarioService {
                         usuario.isAtivo(),
                         usuario.getUltimoAcesso(),
                         usuario.getCriadoEm(),
-                        usuario.getSenhaAlteradaEm()))
-                .toList();
-
-        return new PaginaResponse<>(
-                itens,
-                paginaUsuarios.getNumber(),
-                paginaUsuarios.getSize(),
-                paginaUsuarios.getTotalElements(),
-                paginaUsuarios.getTotalPages());
+                        usuario.getSenhaAlteradaEm())));
     }
 
     @Transactional

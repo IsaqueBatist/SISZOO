@@ -129,16 +129,7 @@ public class ProcedimentoService {
                 : procedimentoRepository.findByRetificaIdIn(ids).stream()
                         .collect(Collectors.toMap(p -> p.getRetifica().getId(), Procedimento::getId));
 
-        List<ProcedimentoResponse> itens = paginaProcedimentos.getContent().stream()
-                .map(p -> procedimentoMapper.toResponse(p, retificadoPorPorId.get(p.getId())))
-                .toList();
-
-        return new PaginaResponse<>(
-                itens,
-                paginaProcedimentos.getNumber(),
-                paginaProcedimentos.getSize(),
-                paginaProcedimentos.getTotalElements(),
-                paginaProcedimentos.getTotalPages());
+        return PaginaResponse.de(paginaProcedimentos.map(p -> procedimentoMapper.toResponse(p, retificadoPorPorId.get(p.getId()))));
     }
 
     private Procedimento validarRetificacao(UUID retificaId, UUID animalId) {

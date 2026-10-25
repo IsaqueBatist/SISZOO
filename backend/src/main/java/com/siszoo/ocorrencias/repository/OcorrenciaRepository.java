@@ -15,8 +15,8 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.siszoo.comum.repository.ContagemCatalogoProjection;
 import com.siszoo.ocorrencias.entity.Ocorrencia;
-import com.siszoo.processos.repository.ContagemCatalogoProjection;
 
 import jakarta.persistence.LockModeType;
 

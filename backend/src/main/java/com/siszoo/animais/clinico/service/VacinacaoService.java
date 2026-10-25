@@ -140,16 +140,7 @@ public class VacinacaoService {
                 : vacinacaoRepository.findByRetificaIdIn(ids).stream()
                         .collect(Collectors.toMap(v -> v.getRetifica().getId(), Vacinacao::getId));
 
-        List<VacinacaoResponse> itens = paginaVacinacoes.getContent().stream()
-                .map(v -> vacinacaoMapper.toResponse(v, retificadoPorPorId.get(v.getId())))
-                .toList();
-
-        return new PaginaResponse<>(
-                itens,
-                paginaVacinacoes.getNumber(),
-                paginaVacinacoes.getSize(),
-                paginaVacinacoes.getTotalElements(),
-                paginaVacinacoes.getTotalPages());
+        return PaginaResponse.de(paginaVacinacoes.map(v -> vacinacaoMapper.toResponse(v, retificadoPorPorId.get(v.getId()))));
     }
 
     private Vacinacao validarRetificacao(UUID retificaId, UUID animalId) {

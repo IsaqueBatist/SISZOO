@@ -77,4 +77,11 @@ public class Usuario {
 
     @OneToMany(mappedBy = "usuario", fetch = FetchType.LAZY)
     private Set<UsuarioCargo> cargos = new HashSet<>();
+
+    // "Nome Sobrenome" exibido como autor em fichas, listagens e relatorios
+    // (antes, a mesma concatenacao em 12 lugares). Sem prefixo get de
+    // proposito: nao vira propriedade para o MapStruct nem para o Hibernate.
+    public String nomeCompleto() {
+        return nome + " " + sobrenome;
+    }
 }

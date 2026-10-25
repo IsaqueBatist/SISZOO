@@ -129,16 +129,7 @@ public class PrescricaoService {
                 : prescricaoRepository.findByRetificaIdIn(ids).stream()
                         .collect(Collectors.toMap(p -> p.getRetifica().getId(), Prescricao::getId));
 
-        List<PrescricaoResponse> itens = paginaPrescricoes.getContent().stream()
-                .map(p -> prescricaoMapper.toResponse(p, retificadoPorPorId.get(p.getId())))
-                .toList();
-
-        return new PaginaResponse<>(
-                itens,
-                paginaPrescricoes.getNumber(),
-                paginaPrescricoes.getSize(),
-                paginaPrescricoes.getTotalElements(),
-                paginaPrescricoes.getTotalPages());
+        return PaginaResponse.de(paginaPrescricoes.map(p -> prescricaoMapper.toResponse(p, retificadoPorPorId.get(p.getId()))));
     }
 
     private Prescricao validarRetificacao(UUID retificaId, UUID animalId) {

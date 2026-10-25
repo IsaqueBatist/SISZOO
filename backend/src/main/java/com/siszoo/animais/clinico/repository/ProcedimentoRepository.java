@@ -16,7 +16,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.siszoo.animais.clinico.entity.Procedimento;
-import com.siszoo.processos.repository.ContagemCatalogoProjection;
+import com.siszoo.comum.repository.ContagemCatalogoProjection;
 
 // Sem metodo de update/delete: registro clinico imutavel (regra de negocio). Ver
 // VacinacaoRepository.

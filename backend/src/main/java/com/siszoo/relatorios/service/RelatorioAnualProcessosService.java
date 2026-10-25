@@ -12,11 +12,11 @@ import java.util.OptionalDouble;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.siszoo.comum.repository.ContagemCatalogoProjection;
 import com.siszoo.comum.util.BlocoCsv;
 import com.siszoo.processos.repository.AnimalAmostradoRepository;
 import com.siszoo.processos.repository.BairroDoencaProjection;
 import com.siszoo.processos.repository.BairroProcessoProjection;
-import com.siszoo.processos.repository.ContagemCatalogoProjection;
 import com.siszoo.processos.repository.ProcessoSanitarioRepository;
 import com.siszoo.processos.repository.ResultadosLaboratoriaisProjection;
 import com.siszoo.processos.repository.TempoResolucaoPorLaboratorioProjection;

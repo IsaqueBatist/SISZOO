@@ -41,6 +41,6 @@ public interface AnimalMapper {
 
     @Named("nomeCompleto")
     default String nomeCompleto(Usuario usuario) {
-        return usuario.getNome() + " " + usuario.getSobrenome();
+        return usuario.nomeCompleto();
     }
 }

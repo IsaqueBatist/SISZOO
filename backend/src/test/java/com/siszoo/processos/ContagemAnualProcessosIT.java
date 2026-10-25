@@ -17,8 +17,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.siszoo.comum.AbstractIntegrationTest;
 import com.siszoo.comum.ApiTesteFixture;
+import com.siszoo.comum.repository.ContagemCatalogoProjection;
 import com.siszoo.processos.repository.AnimalAmostradoRepository;
-import com.siszoo.processos.repository.ContagemCatalogoProjection;
 import com.siszoo.processos.repository.ProcessoSanitarioRepository;
 
 import io.restassured.http.ContentType;

@@ -16,6 +16,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.siszoo.comum.repository.ContagemCatalogoProjection;
 import com.siszoo.processos.entity.ProcessoSanitario;
 
 import jakarta.persistence.LockModeType;

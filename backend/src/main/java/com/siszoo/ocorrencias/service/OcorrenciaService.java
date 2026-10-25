@@ -1,6 +1,5 @@
 package com.siszoo.ocorrencias.service;
 
-import java.io.IOException;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -22,13 +21,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.siszoo.animais.dto.CatalogoItemResponse;
+import com.siszoo.comum.anexo.ConteudoAnexo;
+import com.siszoo.comum.dto.ArquivoAnexo;
+import com.siszoo.comum.dto.CatalogoItemResponse;
 import com.siszoo.comum.dto.PaginaResponse;
 import com.siszoo.comum.service.ProtocoloService;
 import com.siszoo.comum.util.Paginacao;
 import com.siszoo.ocorrencias.dto.AlterarStatusOcorrenciaRequest;
 import com.siszoo.ocorrencias.dto.AnexoOcorrenciaResponse;
-import com.siszoo.ocorrencias.dto.ArquivoAnexo;
 import com.siszoo.ocorrencias.dto.AtualizarOcorrenciaRequest;
 import com.siszoo.ocorrencias.dto.CatalogosOcorrenciaResponse;
 import com.siszoo.ocorrencias.dto.CriarNotaRequest;
@@ -110,7 +110,6 @@ public class OcorrenciaService {
     private static final String ENTIDADE_DENUNCIANTE = "denunciante";
     private static final String ENTIDADE_MOVIMENTACAO = "movimentacao_ocorrencia";
     private static final int MAXIMO_ANEXOS = 5;
-    private static final int TAMANHO_MAXIMO_ANEXO = 5 * 1024 * 1024;
     private static final int TAMANHO_MAXIMO_NOME_ANEXO = 255;
 
     // D36: a busca aceita o protocolo com o prefixo de exibicao "OC" (com ou
@@ -472,11 +471,9 @@ public class OcorrenciaService {
         if (ocorrencia.isEncerrada()) {
             throw new OcorrenciaEncerradaException();
         }
-        byte[] conteudo = lerConteudo(arquivo);
-        if (conteudo.length == 0 || conteudo.length > TAMANHO_MAXIMO_ANEXO) {
-            throw new AnexoInvalidoException();
-        }
-        String mimeType = detectarTipo(conteudo);
+        ConteudoAnexo.Validado validado = ConteudoAnexo.validar(arquivo, AnexoInvalidoException::new);
+        byte[] conteudo = validado.conteudo();
+        String mimeType = validado.mimeType();
         if (anexoRepository.countByOcorrenciaId(id) >= MAXIMO_ANEXOS) {
             throw new LimiteAnexosAtingidoException();
         }
@@ -755,41 +752,6 @@ public class OcorrenciaService {
             }
             return cb.and(predicados.toArray(new Predicate[0]));
         };
-    }
-
-    private static byte[] lerConteudo(MultipartFile arquivo) {
-        try {
-            return arquivo.getBytes();
-        } catch (IOException e) {
-            throw new AnexoInvalidoException();
-        }
-    }
-
-    // O tipo vem dos bytes iniciais, nao do Content-Type informado pelo
-    // cliente (que so reflete a extensao do arquivo).
-    private static String detectarTipo(byte[] conteudo) {
-        if (comecaCom(conteudo, 0xFF, 0xD8, 0xFF)) {
-            return "image/jpeg";
-        }
-        if (comecaCom(conteudo, 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)) {
-            return "image/png";
-        }
-        if (comecaCom(conteudo, 0x25, 0x50, 0x44, 0x46, 0x2D)) {
-            return "application/pdf";
-        }
-        throw new AnexoInvalidoException();
-    }
-
-    private static boolean comecaCom(byte[] conteudo, int... assinatura) {
-        if (conteudo.length < assinatura.length) {
-            return false;
-        }
-        for (int i = 0; i < assinatura.length; i++) {
-            if ((conteudo[i] & 0xFF) != assinatura[i]) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private static String nomeDoArquivo(String original) {

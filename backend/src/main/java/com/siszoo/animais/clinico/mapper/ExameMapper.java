@@ -27,6 +27,6 @@ public interface ExameMapper {
 
     @Named("nomeCompleto")
     default String nomeCompleto(Usuario usuario) {
-        return usuario == null ? null : usuario.getNome() + " " + usuario.getSobrenome();
+        return usuario == null ? null : usuario.nomeCompleto();
     }
 }

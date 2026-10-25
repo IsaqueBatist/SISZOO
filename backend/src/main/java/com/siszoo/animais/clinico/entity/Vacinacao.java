@@ -84,4 +84,15 @@ public class Vacinacao {
     @CreationTimestamp
     @Column(name = "criado_em", nullable = false, updatable = false)
     private LocalDateTime criadoEm;
+
+    // DER.md: data_validade = data_aplicacao + intervalo da vacina (RN-A01).
+    // Fonte unica da regra para ficha, alerta vacinal, dashboard e relatorio
+    // (antes, 4 copias). Nao e coluna persistida (um campo derivado ficaria
+    // desatualizado); null se a vacina ainda nao tiver intervalo_meses.
+    public LocalDate calcularDataValidade() {
+        if (vacina == null || vacina.getIntervaloMeses() == null || dataAplicacao == null) {
+            return null;
+        }
+        return dataAplicacao.plusMonths(vacina.getIntervaloMeses());
+    }
 }

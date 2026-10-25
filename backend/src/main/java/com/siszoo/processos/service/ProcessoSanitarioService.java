@@ -24,12 +24,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.siszoo.animais.clinico.exception.RegistroJaRetificadoException;
-import com.siszoo.animais.dto.CatalogoItemResponse;
 import com.siszoo.animais.entity.Animal;
 import com.siszoo.animais.exception.AnimalNaoEncontradoException;
 import com.siszoo.animais.exception.EspecieInvalidaException;
 import com.siszoo.animais.repository.AnimalRepository;
 import com.siszoo.animais.repository.EspecieRepository;
+import com.siszoo.comum.dto.CatalogoItemResponse;
 import com.siszoo.comum.dto.PaginaResponse;
 import com.siszoo.comum.service.ProtocoloService;
 import com.siszoo.comum.util.Paginacao;
@@ -634,7 +634,7 @@ public class ProcessoSanitarioService {
                 registro.getObservacoes(),
                 registro.getRetifica() == null ? null : registro.getRetifica().getId(),
                 autor.getId(),
-                autor.getNome() + " " + autor.getSobrenome(),
+                autor.nomeCompleto(),
                 registro.getRegistradoEm());
     }
 
