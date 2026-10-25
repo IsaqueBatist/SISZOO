@@ -29,6 +29,7 @@ import com.siszoo.animais.clinico.entity.ViaAdministracao;
 import com.siszoo.animais.clinico.repository.CategoriaFarmacologicaRepository;
 import com.siszoo.animais.clinico.repository.MedicamentoRepository;
 import com.siszoo.animais.clinico.repository.PrescricaoRepository;
+import com.siszoo.animais.dto.AtualizarAnimalRequest;
 import com.siszoo.animais.dto.CriarAnimalRequest;
 import com.siszoo.animais.repository.AnimalRepository;
 import com.siszoo.comum.AbstractIntegrationTest;
@@ -158,6 +159,39 @@ class DashboardControllerIT extends AbstractIntegrationTest {
         Map<String, Long> depois = kpisAnimais();
         assertThat(depois.get("total"), equalTo(antes.get("total") + 1));
         assertThat(depois.get("caninos"), equalTo(antes.get("caninos") + 1));
+    }
+
+    // ---- Cenarios: KPI "adocoes" (snapshot pelo status do animal) ----
+
+    @Test
+    @DisplayName("kpis.adocoes soma +1 em disponiveis ao criar e move para adotados ao mudar o status")
+    void kpiAdocoesDeveSeguirOStatusAtualDoAnimal() {
+        Map<String, Long> antes = kpisAdocoes();
+
+        String microchip = fixture.microchipUnico();
+        String animalId = given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .body(new CriarAnimalRequest(
+                        "Animal Adocao Teste", "canino", "macho", null, null, null, null, null, null, null,
+                        microchip, false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null))
+                .when().post("/api/animais")
+                .then().statusCode(200)
+                .extract().path("id");
+        Map<String, Long> aposCriar = kpisAdocoes();
+        assertThat(aposCriar.get("disponiveis"), equalTo(antes.get("disponiveis") + 1));
+        assertThat(aposCriar.get("adotados"), equalTo(antes.get("adotados")));
+
+        given().contentType(ContentType.JSON).header("Authorization", "Bearer " + tokenAdmin)
+                .body(new AtualizarAnimalRequest(
+                        "Animal Adocao Teste", "canino", "macho", null, null, null, null, null, null, null,
+                        microchip, false, null, "adotado", "resgate", fixture.agora(), null, null, null))
+                .when().put("/api/animais/" + animalId)
+                .then().statusCode(200);
+
+        Map<String, Long> aposAdotar = kpisAdocoes();
+        assertThat(aposAdotar.get("disponiveis"), equalTo(antes.get("disponiveis")));
+        assertThat(aposAdotar.get("adotados"), equalTo(antes.get("adotados") + 1));
     }
 
     // ---- Cenarios: animal recem-criado contribui pra 3 alertas ao mesmo tempo ----
@@ -311,6 +345,15 @@ class DashboardControllerIT extends AbstractIntegrationTest {
         valores.put("total", json.getLong("animais.total"));
         valores.put("caninos", json.getLong("animais.caninos"));
         valores.put("felinos", json.getLong("animais.felinos"));
+        return valores;
+    }
+
+    private Map<String, Long> kpisAdocoes() {
+        var json = given().header("Authorization", "Bearer " + tokenAdmin).when().get(ROTA_KPIS)
+                .then().statusCode(200).extract().jsonPath();
+        Map<String, Long> valores = new HashMap<>();
+        valores.put("adotados", json.getLong("adocoes.adotados"));
+        valores.put("disponiveis", json.getLong("adocoes.disponiveis"));
         return valores;
     }
 

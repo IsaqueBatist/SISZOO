@@ -2,6 +2,7 @@ package com.siszoo.animais.controller;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasItem;
@@ -530,6 +531,23 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .body("status.size()", equalTo(7))
                 .body("motivosEntrada.size()", equalTo(5))
                 .body("tiposBaia.size()", equalTo(3));
+    }
+
+    // Os codigos sao os do seed da V5 — os mesmos que o front grava nos
+    // rascunhos dos modais de vacina/procedimento (antes copiados em
+    // catalogoClinico.ts).
+    @Test
+    void deveListarVacinasETiposDeProcedimentoDaV5() {
+        given()
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .when()
+                .get("/api/animais/catalogos")
+                .then()
+                .statusCode(200)
+                .body("vacinas.codigo", containsInAnyOrder(
+                        "antirrabica", "v10", "v8", "v4_felinos", "giardia", "gripe_canina", "felv", "leishmaniose"))
+                .body("tiposProcedimento.codigo", containsInAnyOrder(
+                        "atendimento_clinico", "castracao", "cirurgia_maior", "vacinacao"));
     }
 
     private CriarAnimalRequest animalMinimo(String microchip) {

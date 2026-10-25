@@ -43,6 +43,7 @@ import com.siszoo.relatorios.dto.CasoPorDoencaResponse;
 import com.siszoo.relatorios.dto.CasoRaivaPorEspecieResponse;
 import com.siszoo.relatorios.dto.DashboardGraficosResponse;
 import com.siszoo.relatorios.dto.DashboardKpisResponse;
+import com.siszoo.relatorios.dto.KpiAdocoesResponse;
 import com.siszoo.relatorios.dto.KpiAnimaisResponse;
 import com.siszoo.relatorios.dto.KpiOcorrenciasResponse;
 import com.siszoo.relatorios.dto.KpiVacinacaoResponse;
@@ -60,6 +61,7 @@ public class DashboardService {
     private static final int DIAS_ANTECEDENCIA_MEDICACAO = 7;
     private static final int DIAS_SEM_AVALIACAO = 30;
     private static final String STATUS_DISPONIVEL_ADOCAO = "disponivel_adocao";
+    private static final String STATUS_ADOTADO = "adotado";
     private static final String ESPECIE_CANINO = "canino";
     private static final String ESPECIE_FELINO = "felino";
 
@@ -109,9 +111,18 @@ public class DashboardService {
         KpiAnimaisResponse animais = calcularKpiAnimais(foraDaCustodia);
         KpiVacinacaoResponse vacinacao = calcularKpiVacinacao(foraDaCustodia, hoje, animais.total());
         KpiOcorrenciasResponse ocorrencias = calcularKpiOcorrencias(hoje);
+        KpiAdocoesResponse adocoes = calcularKpiAdocoes();
         List<AlertaCriticoResponse> alertas = calcularAlertas(foraDaCustodia, hoje);
 
-        return new DashboardKpisResponse(animais, vacinacao, ocorrencias, alertas);
+        return new DashboardKpisResponse(animais, vacinacao, ocorrencias, adocoes, alertas);
+    }
+
+    // Snapshot pelo status atual, como RelatorioAdocoesService: sem data de
+    // adocao no schema, nao ha "adocoes no mes".
+    private KpiAdocoesResponse calcularKpiAdocoes() {
+        return new KpiAdocoesResponse(
+                animalRepository.countByStatus_Codigo(STATUS_ADOTADO),
+                animalRepository.countByStatus_Codigo(STATUS_DISPONIVEL_ADOCAO));
     }
 
     @Cacheable("dashboardGraficos")

@@ -188,6 +188,19 @@ class DashboardServiceTest {
     }
 
     @Test
+    void deveContarAdocoesPeloStatusAtualDoAnimal() {
+        semKpisBasicos();
+        semAlertas();
+        when(animalRepository.countByStatus_Codigo("adotado")).thenReturn(6L);
+        when(animalRepository.countByStatus_Codigo("disponivel_adocao")).thenReturn(12L);
+
+        DashboardKpisResponse resposta = service.obterKpis();
+
+        assertThat(resposta.adocoes().adotados()).isEqualTo(6L);
+        assertThat(resposta.adocoes().disponiveis()).isEqualTo(12L);
+    }
+
+    @Test
     void deveMontarOsSeteAlertasComTotaisDoDer37() {
         semKpisBasicos();
 

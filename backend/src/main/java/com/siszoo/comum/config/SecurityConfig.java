@@ -54,6 +54,9 @@ public class SecurityConfig {
         configuracao.setAllowedOrigins(List.of(origemPermitida));
         configuracao.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuracao.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        // O front (outra origem) le o nome do arquivo exportado em
+        // POST /api/relatorios/exportar; sem isto o navegador esconde o header.
+        configuracao.setExposedHeaders(List.of("Content-Disposition"));
         configuracao.setAllowCredentials(false);
 
         UrlBasedCorsConfigurationSource fonte = new UrlBasedCorsConfigurationSource();
