@@ -43,11 +43,16 @@ public interface ProcessoSanitarioRepository
     // processo = 1 caso, por ano de abertura (decisao registrada em
     // docs/contratos/dashboard-graficos.md — doenca vive direto no processo,
     // nao na amostra). O service preenche com quantidade:0 as doencas do
-    // catalogo sem nenhuma linha aqui.
+    // catalogo sem nenhuma linha aqui. O ano vira intervalo de datas (e nao
+    // YEAR(col) = :ano) para o filtro usar o indice de data_abertura.
+    default List<ContagemCatalogoProjection> contarPorDoenca(int ano) {
+        return contarPorDoencaEntre(LocalDate.of(ano, 1, 1), LocalDate.of(ano, 12, 31));
+    }
+
     @Query("SELECT p.doenca.codigo AS codigo, p.doenca.nome AS nome, COUNT(p) AS quantidade "
-            + "FROM ProcessoSanitario p WHERE YEAR(p.dataAbertura) = :ano "
+            + "FROM ProcessoSanitario p WHERE p.dataAbertura BETWEEN :inicio AND :fim "
             + "GROUP BY p.doenca.codigo, p.doenca.nome")
-    List<ContagemCatalogoProjection> contarPorDoenca(@Param("ano") int ano);
+    List<ContagemCatalogoProjection> contarPorDoencaEntre(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
     // Grafico "Resultados Laboratoriais" (com.siszoo.relatorios, T38): so
     // positivo/negativo do RESULTADO VIGENTE do processo (campo
@@ -55,13 +60,19 @@ public interface ProcessoSanitarioRepository
     // aguardando/inconclusivo/material_inadequado/nao_realizado nunca contam
     // como positivo nem negativo. Ano = ano em que o resultado foi lancado
     // (dataResultado), nao o ano de abertura do processo. Lista dinamica por
-    // natureza: so aparecem as doencas com pelo menos 1 linha aqui.
+    // natureza: so aparecem as doencas com pelo menos 1 linha aqui. Intervalo
+    // de datas pelo mesmo motivo de contarPorDoenca (indice de data_resultado).
+    default List<ResultadoCatalogoProjection> contarResultadosPorDoenca(int ano) {
+        return contarResultadosPorDoencaEntre(LocalDate.of(ano, 1, 1), LocalDate.of(ano, 12, 31));
+    }
+
     @Query("SELECT p.doenca.codigo AS codigo, p.doenca.nome AS nome, "
             + "SUM(CASE WHEN p.resultadoLaboratorial.codigo = 'positivo' THEN 1L ELSE 0L END) AS positivos, "
             + "SUM(CASE WHEN p.resultadoLaboratorial.codigo = 'negativo' THEN 1L ELSE 0L END) AS negativos "
             + "FROM ProcessoSanitario p WHERE p.resultadoLaboratorial.codigo IN ('positivo', 'negativo') "
-            + "AND YEAR(p.dataResultado) = :ano GROUP BY p.doenca.codigo, p.doenca.nome")
-    List<ResultadoCatalogoProjection> contarResultadosPorDoenca(@Param("ano") int ano);
+            + "AND p.dataResultado BETWEEN :inicio AND :fim GROUP BY p.doenca.codigo, p.doenca.nome")
+    List<ResultadoCatalogoProjection> contarResultadosPorDoencaEntre(
+            @Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
     // ── Relatorio Anual de Processos (T41) ──────────────────────────────
     // Universo sempre "processos ABERTOS no periodo" (dataAbertura), nao

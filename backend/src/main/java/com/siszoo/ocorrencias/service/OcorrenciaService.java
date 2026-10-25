@@ -553,13 +553,11 @@ public class OcorrenciaService {
         return resposta;
     }
 
-    @Transactional(readOnly = true)
-    public PaginaResponse<OcorrenciaResumoResponse> listar(String tipo, StatusOcorrencia status, String q,
-            int pagina, int tamanho, PermissoesOcorrencia permissoes) {
-        return listar(tipo, status, q, null, null, pagina, tamanho, permissoes);
-    }
-
     // F2-010 (RF-E02): filtro por periodo da data de abertura (dias inclusivos).
+    // readOnly na sobrecarga que o controller chama: pagina, denunciantes e
+    // processos da pagina lidos na mesma transacao (antes cada consulta rodava
+    // em auto-commit, porque o readOnly estava numa sobrecarga sem chamadores).
+    @Transactional(readOnly = true)
     public PaginaResponse<OcorrenciaResumoResponse> listar(String tipo, StatusOcorrencia status, String q,
             LocalDate de, LocalDate ate, int pagina, int tamanho, PermissoesOcorrencia permissoes) {
         Page<Ocorrencia> paginaOcorrencias = ocorrenciaRepository.findAll(

@@ -6,6 +6,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -14,6 +18,13 @@ import org.springframework.data.repository.query.Param;
 import com.siszoo.animais.entity.Animal;
 
 public interface AnimalRepository extends JpaRepository<Animal, UUID>, JpaSpecificationExecutor<Animal> {
+
+    // Relacoes to-one que o AnimalMapper le na listagem; sem isto, N+1 por
+    // linha (uma consulta por especie/status/motivo/baia/tipo de baia/autor).
+    // So *ToOne: a paginacao continua no banco.
+    @Override
+    @EntityGraph(attributePaths = {"especie", "status", "motivoEntrada", "baia", "baia.tipoBaia", "criadoPor"})
+    Page<Animal> findAll(Specification<Animal> spec, Pageable pageable);
 
     Optional<Animal> findByMicrochip(String microchip);
 

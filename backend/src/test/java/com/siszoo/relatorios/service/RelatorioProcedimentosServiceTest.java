@@ -3,6 +3,8 @@ package com.siszoo.relatorios.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -68,6 +70,16 @@ class RelatorioProcedimentosServiceTest {
         assertThat(resposta.kpis().cirurgiasMaiores()).isEqualTo(12);
         // 34 (castracoes) + 87 (atendimentos) + 12 (cirurgias) + 159 (vacinacoes) + 26 (medicacoes)
         assertThat(resposta.kpis().totalProcedimentos()).isEqualTo(318);
+
+        // T45: KPIs e grafico por tipo compartilham as contagens; cada uma vai
+        // ao banco uma vez por preview.
+        verify(procedimentoRepository, times(1)).contarPorTipo(PERIODO.inicio(), PERIODO.fim());
+        verify(vacinacaoRepository, times(1)).countByDataAplicacaoBetween(PERIODO.inicio(), PERIODO.fim());
+        verify(prescricaoRepository, times(1)).countByDataInicioBetween(PERIODO.inicio(), PERIODO.fim());
+        verify(procedimentoRepository, times(1)).countByTipoProcedimento_CodigoAndDataBetweenAndAnimal_Sexo(
+                "castracao", PERIODO.inicio(), PERIODO.fim(), "macho");
+        verify(procedimentoRepository, times(1)).countByTipoProcedimento_CodigoAndDataBetweenAndAnimal_Sexo(
+                "castracao", PERIODO.inicio(), PERIODO.fim(), "femea");
     }
 
     @Test

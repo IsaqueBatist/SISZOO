@@ -55,10 +55,12 @@ public class RelatorioOcorrenciasBairroService implements GeradorRelatorio<Relat
         LocalDate inicio = periodo.inicio();
         LocalDate fim = periodo.fim();
 
-        List<LinhaBairroOcorrenciaResponse> todosBairros = montarBairros(inicio, fim);
+        // Uma consulta de tempos de atendimento para os KPIs e para as linhas por bairro.
+        List<TempoAtendimentoProjection> tempos = ocorrenciaRepository.listarTemposDeAtendimento(inicio, fim);
+        List<LinhaBairroOcorrenciaResponse> todosBairros = montarBairros(inicio, fim, tempos);
         List<LinhaBairroOcorrenciaResponse> bairrosComOutros = aplicarTopNComOutros(todosBairros);
         List<TipoOcorrenciaContagemResponse> tipos = montarTipos(inicio, fim);
-        KpisOcorrenciasBairroResponse kpis = calcularKpis(inicio, fim);
+        KpisOcorrenciasBairroResponse kpis = calcularKpis(inicio, fim, tempos);
         String nota = montarNotaFocoGeografico(todosBairros, kpis.ocorrenciasRegistradas());
 
         return new RelatorioOcorrenciasBairroResponse(inicio, fim, kpis, bairrosComOutros, tipos, nota);
@@ -71,7 +73,7 @@ public class RelatorioOcorrenciasBairroService implements GeradorRelatorio<Relat
         LocalDate fim = periodo.fim();
 
         // CSV exporta a lista COMPLETA de bairros, sem a agregacao "Outros" do preview/PDF.
-        List<List<String>> linhasBairros = montarBairros(inicio, fim).stream()
+        List<List<String>> linhasBairros = montarBairros(inicio, fim, ocorrenciaRepository.listarTemposDeAtendimento(inicio, fim)).stream()
                 .map(l -> List.of(l.bairro(), String.valueOf(l.ocorrencias()), l.tipoPredominante(),
                         l.tempoMedioHoras() != null ? formatarComVirgula(l.tempoMedioHoras()) : "—"))
                 .toList();
@@ -86,13 +88,14 @@ public class RelatorioOcorrenciasBairroService implements GeradorRelatorio<Relat
                 new BlocoCsv("Tipos de ocorrência", List.of("Tipo", "Quantidade"), linhasTipos));
     }
 
-    private KpisOcorrenciasBairroResponse calcularKpis(LocalDate inicio, LocalDate fim) {
+    private KpisOcorrenciasBairroResponse calcularKpis(
+            LocalDate inicio, LocalDate fim, List<TempoAtendimentoProjection> tempos) {
         long registradas = ocorrenciaRepository.contarRegistradasNoPeriodo(inicio, fim);
         long bairrosAtingidos = ocorrenciaRepository.contarBairrosAtingidos(inicio, fim);
         long encerradas = ocorrenciaRepository.contarEncerradasNoPeriodo(inicio, fim);
         int percentualEncerradas = registradas == 0 ? 0 : (int) Math.round(encerradas * 100.0 / registradas);
 
-        List<Double> todasAsHoras = ocorrenciaRepository.listarTemposDeAtendimento(inicio, fim).stream()
+        List<Double> todasAsHoras = tempos.stream()
                 .map(this::horasEntre)
                 .toList();
         Double tempoMedio = media(todasAsHoras);
@@ -100,7 +103,8 @@ public class RelatorioOcorrenciasBairroService implements GeradorRelatorio<Relat
         return new KpisOcorrenciasBairroResponse(registradas, bairrosAtingidos, tempoMedio, encerradas, percentualEncerradas);
     }
 
-    private List<LinhaBairroOcorrenciaResponse> montarBairros(LocalDate inicio, LocalDate fim) {
+    private List<LinhaBairroOcorrenciaResponse> montarBairros(
+            LocalDate inicio, LocalDate fim, List<TempoAtendimentoProjection> tempos) {
         List<ContagemPorBairroProjection> contagens = ocorrenciaRepository.contarPorBairro(inicio, fim);
         if (contagens.isEmpty()) {
             return List.of();
@@ -112,7 +116,7 @@ public class RelatorioOcorrenciasBairroService implements GeradorRelatorio<Relat
         }
 
         Map<String, List<Double>> horasPorBairro = new HashMap<>();
-        for (TempoAtendimentoProjection linha : ocorrenciaRepository.listarTemposDeAtendimento(inicio, fim)) {
+        for (TempoAtendimentoProjection linha : tempos) {
             horasPorBairro.computeIfAbsent(linha.getBairro(), k -> new ArrayList<>()).add(horasEntre(linha));
         }
 
