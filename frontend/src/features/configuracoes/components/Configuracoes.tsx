@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { Switch } from '@/components/Switch'
 import { Icon } from '@/components/layout/Icon'
 import { aplicarPreferenciasVisuais } from '@/lib/theme'
 import type { DensidadeUsuario, TemaUsuario } from '../types/configuracoes.types'
@@ -216,66 +217,51 @@ export function Configuracoes() {
                     <div className="title">Alertas críticos</div>
                     <div className="desc">Casos urgentes com contato humano-animal — sempre ligado</div>
                   </div>
-                  <label className="switch">
-                    <input type="checkbox" checked disabled />
-                    <span className="slider" />
-                  </label>
+                  <Switch checked disabled onChange={() => undefined} aria-label="Alertas críticos" />
                 </div>
                 <div className="pref-row">
                   <div>
                     <div className="title">Lembretes de vacinação</div>
                     <div className="desc">Avisar 7 dias antes de uma vacina vencer</div>
                   </div>
-                  <label className="switch">
-                    <input
-                      type="checkbox"
-                      checked={form.notifVacinaVencendo}
-                      onChange={(event) => setForm({ ...form, notifVacinaVencendo: event.target.checked })}
-                    />
-                    <span className="slider" />
-                  </label>
+                  <Switch
+                    checked={form.notifVacinaVencendo}
+                    onChange={(marcado) => setForm({ ...form, notifVacinaVencendo: marcado })}
+                    aria-label="Lembretes de vacinação"
+                  />
                 </div>
                 <div className="pref-row">
                   <div>
                     <div className="title">Superlotação de baias</div>
                     <div className="desc">Alertar quando uma baia atingir 80% de ocupação</div>
                   </div>
-                  <label className="switch">
-                    <input
-                      type="checkbox"
-                      checked={form.notifSuperlotacao}
-                      onChange={(event) => setForm({ ...form, notifSuperlotacao: event.target.checked })}
-                    />
-                    <span className="slider" />
-                  </label>
+                  <Switch
+                    checked={form.notifSuperlotacao}
+                    onChange={(marcado) => setForm({ ...form, notifSuperlotacao: marcado })}
+                    aria-label="Superlotação de baias"
+                  />
                 </div>
                 <div className="pref-row">
                   <div>
                     <div className="title">Resultados laboratoriais</div>
                     <div className="desc">Notificar imediatamente quando um resultado for registrado</div>
                   </div>
-                  <label className="switch">
-                    <input
-                      type="checkbox"
-                      checked={form.notifResultadoLab}
-                      onChange={(event) => setForm({ ...form, notifResultadoLab: event.target.checked })}
-                    />
-                    <span className="slider" />
-                  </label>
+                  <Switch
+                    checked={form.notifResultadoLab}
+                    onChange={(marcado) => setForm({ ...form, notifResultadoLab: marcado })}
+                    aria-label="Resultados laboratoriais"
+                  />
                 </div>
                 <div className="pref-row">
                   <div>
                     <div className="title">E-mail diário</div>
                     <div className="desc">Resumo do dia enviado às 18h</div>
                   </div>
-                  <label className="switch">
-                    <input
-                      type="checkbox"
-                      checked={form.notifEmailDiario}
-                      onChange={(event) => setForm({ ...form, notifEmailDiario: event.target.checked })}
-                    />
-                    <span className="slider" />
-                  </label>
+                  <Switch
+                    checked={form.notifEmailDiario}
+                    onChange={(marcado) => setForm({ ...form, notifEmailDiario: marcado })}
+                    aria-label="E-mail diário"
+                  />
                 </div>
               </div>
             </div>
