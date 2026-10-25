@@ -1,7 +1,5 @@
 package com.siszoo.usuarios.controller;
 
-import java.util.UUID;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -9,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.siszoo.comum.security.UsuarioAutenticado;
 import com.siszoo.usuarios.dto.LoginRequest;
 import com.siszoo.usuarios.dto.LoginResponse;
 import com.siszoo.usuarios.dto.TrocarSenhaRequest;
@@ -33,7 +32,7 @@ public class AuthController {
 
     @PostMapping("/senha")
     public ResponseEntity<Void> trocarSenha(Authentication authentication, @Valid @RequestBody TrocarSenhaRequest request) {
-        authService.trocarSenha(UUID.fromString(authentication.getName()), request);
+        authService.trocarSenha(UsuarioAutenticado.id(authentication), request);
         return ResponseEntity.noContent().build();
     }
 }

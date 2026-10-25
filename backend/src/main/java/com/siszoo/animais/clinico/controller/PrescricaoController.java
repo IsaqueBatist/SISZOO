@@ -16,6 +16,7 @@ import com.siszoo.animais.clinico.dto.CriarPrescricaoRequest;
 import com.siszoo.animais.clinico.dto.PrescricaoResponse;
 import com.siszoo.animais.clinico.service.PrescricaoService;
 import com.siszoo.comum.dto.PaginaResponse;
+import com.siszoo.comum.security.UsuarioAutenticado;
 
 import jakarta.validation.Valid;
 
@@ -48,6 +49,6 @@ public class PrescricaoController {
     @PostMapping
     @PreAuthorize("hasAuthority('GESTAO_ANIMAIS:escrita')")
     public PrescricaoResponse criar(Authentication authentication, @Valid @RequestBody CriarPrescricaoRequest request) {
-        return prescricaoService.criar(request, UUID.fromString(authentication.getName()));
+        return prescricaoService.criar(request, UsuarioAutenticado.id(authentication));
     }
 }

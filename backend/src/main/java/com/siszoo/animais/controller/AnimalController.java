@@ -18,6 +18,7 @@ import com.siszoo.animais.dto.AtualizarAnimalRequest;
 import com.siszoo.animais.dto.CriarAnimalRequest;
 import com.siszoo.animais.service.AnimalService;
 import com.siszoo.comum.dto.PaginaResponse;
+import com.siszoo.comum.security.UsuarioAutenticado;
 
 import jakarta.validation.Valid;
 
@@ -52,13 +53,13 @@ public class AnimalController {
     @PostMapping
     @PreAuthorize("hasAuthority('GESTAO_ANIMAIS:escrita')")
     public AnimalResponse criar(Authentication authentication, @Valid @RequestBody CriarAnimalRequest request) {
-        return animalService.criar(request, UUID.fromString(authentication.getName()));
+        return animalService.criar(request, UsuarioAutenticado.id(authentication));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('GESTAO_ANIMAIS:escrita')")
     public AnimalResponse atualizar(Authentication authentication, @PathVariable UUID id,
             @Valid @RequestBody AtualizarAnimalRequest request) {
-        return animalService.atualizar(id, request, UUID.fromString(authentication.getName()));
+        return animalService.atualizar(id, request, UsuarioAutenticado.id(authentication));
     }
 }

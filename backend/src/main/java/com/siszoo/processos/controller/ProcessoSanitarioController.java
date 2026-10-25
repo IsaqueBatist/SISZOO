@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.siszoo.comum.dto.PaginaResponse;
+import com.siszoo.comum.security.UsuarioAutenticado;
 import com.siszoo.ocorrencias.service.PermissoesOcorrencia;
 import com.siszoo.processos.dto.AlterarStatusProcessoRequest;
 import com.siszoo.processos.dto.CatalogosProcessoResponse;
@@ -80,14 +81,14 @@ public class ProcessoSanitarioController {
     @PreAuthorize("hasAuthority('PROCESSOS_SANITARIOS:escrita')")
     public ProcessoSanitarioResponse alterarStatus(
             Authentication authentication, @PathVariable UUID id, @Valid @RequestBody AlterarStatusProcessoRequest request) {
-        return processoService.alterarStatus(id, request, UUID.fromString(authentication.getName()));
+        return processoService.alterarStatus(id, request, UsuarioAutenticado.id(authentication));
     }
 
     @PostMapping("/{id}/resultados")
     @PreAuthorize("hasAuthority('PROCESSOS_SANITARIOS:escrita')")
     public ProcessoSanitarioResponse registrarResultado(
             Authentication authentication, @PathVariable UUID id, @Valid @RequestBody RegistrarResultadoRequest request) {
-        return processoService.registrarResultado(id, request, UUID.fromString(authentication.getName()));
+        return processoService.registrarResultado(id, request, UsuarioAutenticado.id(authentication));
     }
 
     // Reenvio manual da notificacao ao municipe (pendencia da T35): so com

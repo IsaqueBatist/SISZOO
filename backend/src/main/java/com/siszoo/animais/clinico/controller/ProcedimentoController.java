@@ -16,6 +16,7 @@ import com.siszoo.animais.clinico.dto.CriarProcedimentoRequest;
 import com.siszoo.animais.clinico.dto.ProcedimentoResponse;
 import com.siszoo.animais.clinico.service.ProcedimentoService;
 import com.siszoo.comum.dto.PaginaResponse;
+import com.siszoo.comum.security.UsuarioAutenticado;
 
 import jakarta.validation.Valid;
 
@@ -48,6 +49,6 @@ public class ProcedimentoController {
     @PostMapping
     @PreAuthorize("hasAuthority('GESTAO_ANIMAIS:escrita')")
     public ProcedimentoResponse criar(Authentication authentication, @Valid @RequestBody CriarProcedimentoRequest request) {
-        return procedimentoService.criar(request, UUID.fromString(authentication.getName()));
+        return procedimentoService.criar(request, UsuarioAutenticado.id(authentication));
     }
 }

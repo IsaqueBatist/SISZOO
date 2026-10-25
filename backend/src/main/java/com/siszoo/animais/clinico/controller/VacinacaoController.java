@@ -16,6 +16,7 @@ import com.siszoo.animais.clinico.dto.CriarVacinacaoRequest;
 import com.siszoo.animais.clinico.dto.VacinacaoResponse;
 import com.siszoo.animais.clinico.service.VacinacaoService;
 import com.siszoo.comum.dto.PaginaResponse;
+import com.siszoo.comum.security.UsuarioAutenticado;
 
 import jakarta.validation.Valid;
 
@@ -51,6 +52,6 @@ public class VacinacaoController {
     @PostMapping
     @PreAuthorize("hasAuthority('GESTAO_ANIMAIS:escrita')")
     public VacinacaoResponse criar(Authentication authentication, @Valid @RequestBody CriarVacinacaoRequest request) {
-        return vacinacaoService.criar(request, UUID.fromString(authentication.getName()));
+        return vacinacaoService.criar(request, UsuarioAutenticado.id(authentication));
     }
 }

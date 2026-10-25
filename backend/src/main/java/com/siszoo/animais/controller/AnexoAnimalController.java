@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.siszoo.animais.dto.AnexoAnimalResponse;
 import com.siszoo.animais.service.AnexoAnimalService;
 import com.siszoo.comum.dto.ArquivoAnexo;
+import com.siszoo.comum.security.UsuarioAutenticado;
 
 // F2-007 / RF-A04: anexos do animal (fotos, laudos, documentos). Sem exclusao
 // (historico imutavel). Mesmo contrato dos anexos de ocorrencia.
@@ -47,7 +48,7 @@ public class AnexoAnimalController {
             @PathVariable UUID animalId,
             @RequestParam("arquivo") MultipartFile arquivo,
             @RequestParam(required = false) String descricao) {
-        return anexoAnimalService.adicionar(animalId, arquivo, descricao, UUID.fromString(authentication.getName()));
+        return anexoAnimalService.adicionar(animalId, arquivo, descricao, UsuarioAutenticado.id(authentication));
     }
 
     @GetMapping("/{anexoId}")
