@@ -20,6 +20,7 @@ const MODULO_POR_ENTIDADE: Record<string, Modulo> = {
   relatorio_gerado: 'RELATORIOS',
   ocorrencia: 'OCORRENCIAS_DENUNCIAS',
   anexo_ocorrencia: 'OCORRENCIAS_DENUNCIAS',
+  movimentacao_ocorrencia: 'OCORRENCIAS_DENUNCIAS',
   processo_sanitario: 'PROCESSOS_SANITARIOS',
 }
 

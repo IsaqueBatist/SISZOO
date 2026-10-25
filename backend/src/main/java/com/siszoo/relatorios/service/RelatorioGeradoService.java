@@ -29,9 +29,11 @@ import com.siszoo.relatorios.dto.TipoRelatorioResponse;
 import com.siszoo.relatorios.entity.RelatorioGerado;
 import com.siszoo.relatorios.entity.TipoRelatorio;
 import com.siszoo.relatorios.repository.RelatorioGeradoRepository;
+import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.exception.UsuarioNaoEncontradoException;
 import com.siszoo.usuarios.repository.UsuarioRepository;
+import com.siszoo.usuarios.service.AuditoriaEventoService;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -52,6 +54,7 @@ public class RelatorioGeradoService {
     private final ProtocoloService protocoloService;
     private final RelatorioGeradoRepository relatorioGeradoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final AuditoriaEventoService auditoriaEventoService;
     private final ObjectMapper objectMapper;
     private final Clock clock;
 
@@ -63,6 +66,7 @@ public class RelatorioGeradoService {
             ProtocoloService protocoloService,
             RelatorioGeradoRepository relatorioGeradoRepository,
             UsuarioRepository usuarioRepository,
+            AuditoriaEventoService auditoriaEventoService,
             ObjectMapper objectMapper,
             Clock clock) {
         this.geradoresPorTipo = geradores.stream().collect(Collectors.toMap(GeradorRelatorio::tipo, g -> g));
@@ -72,6 +76,7 @@ public class RelatorioGeradoService {
         this.protocoloService = protocoloService;
         this.relatorioGeradoRepository = relatorioGeradoRepository;
         this.usuarioRepository = usuarioRepository;
+        this.auditoriaEventoService = auditoriaEventoService;
         this.objectMapper = objectMapper;
         this.clock = clock;
     }
@@ -135,6 +140,19 @@ public class RelatorioGeradoService {
         registro.setGeradoEm(OffsetDateTime.now(clock));
         registro.setTamanhoBytes(conteudo.length);
         relatorioGeradoRepository.save(registro);
+
+        // T43: EXPORTACAO na mesma transacao — se o evento nao for gravado, o
+        // commit falha antes de o controller montar a resposta e o arquivo
+        // nao sai. O payload identifica a exportacao; nunca leva o conteudo.
+        Map<String, Object> exportacao = new LinkedHashMap<>();
+        exportacao.put("docId", docId);
+        exportacao.put("tipoRelatorio", tipo.codigo());
+        exportacao.put("formato", extensao);
+        exportacao.put("periodoInicio", periodo.inicio().toString());
+        exportacao.put("periodoFim", periodo.fim().toString());
+        exportacao.put("tamanhoBytes", conteudo.length);
+        auditoriaEventoService.registrar(usuario, AcaoAuditoria.EXPORTACAO, "relatorio_gerado", registro.getId(),
+                null, exportacao);
 
         String nomeArquivo = tipo.codigo() + "-" + periodo.inicio() + "_" + periodo.fim() + "." + extensao;
         return new ArquivoRelatorio(conteudo, nomeArquivo, contentType);

@@ -84,14 +84,19 @@ class MigracaoV12AuditoriaIT extends AbstractIntegrationTest {
         }
     }
 
+    // O enum Java cresce com as migrations seguintes (ACESSO_NEGADO, V27): a
+    // V12 so precisa aceitar os valores que existiam nela. O alinhamento do
+    // enum inteiro com o CHECK mais recente fica em
+    // MigracaoV27AuditoriaIT#enumECheckAlinhados.
     @Test
-    @DisplayName("[T26] todo valor de AcaoAuditoria e aceito pelo CHECK da V12")
+    @DisplayName("[T26] os 9 valores de AcaoAuditoria existentes na V12 sao aceitos pelo CHECK da V12")
     void enumECheckAlinhados() {
         migrarAte("12");
 
-        for (AcaoAuditoria acao : AcaoAuditoria.values()) {
-            inserirEvento(acao.name());
+        for (String acao : ACOES_ANTERIORES) {
+            inserirEvento(acao);
         }
+        inserirEvento(AcaoAuditoria.VISUALIZACAO.name());
     }
 
     private MigrateResult migrarAte(String versao) {

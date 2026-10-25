@@ -37,6 +37,8 @@ Enum AcaoAuditoria {
   LOGOUT
   EXPORTACAO
   ENCERRAMENTO
+  VISUALIZACAO  // T26 (V12): acesso autorizado ao denunciante de ocorrência sigilosa
+  ACESSO_NEGADO // T43 (V27): acesso ao denunciante sigiloso recusado pela regra de sigilo
 }
 
 // ── Usuario ────────────────────────────────────────────
@@ -115,9 +117,10 @@ Table AuditoriaEvento {
   usuario_id     uuid          [ref: > Usuario.id]
   acao           AcaoAuditoria [not null]
   entidade       varchar(100)  [not null]
+  entidade_id    uuid          [note: 'V9: id do registro de entidade, polimórfico, sem FK']
   payload_antes  jsonb
   payload_depois jsonb
-  ip             varchar(45)
+  ip             varchar(45)   [note: 'T43: endereço do socket da requisição; nulo fora de requisição HTTP']
   ocorreu_em     timestamp     [not null, default: `now()`]
 
   indexes {
@@ -125,6 +128,8 @@ Table AuditoriaEvento {
     entidade
     ocorreu_em
   }
+
+  Note: 'Imutável no banco (V27, T43): UPDATE, DELETE e TRUNCATE recusados; só o ON DELETE SET NULL de usuario_id passa. Fonte: DER §3.8.'
 }
 
 TableGroup Usuarios_Acesso {

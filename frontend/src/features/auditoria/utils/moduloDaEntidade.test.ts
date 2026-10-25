@@ -10,6 +10,7 @@ describe('moduloDaEntidade', () => {
     ['prescricao', 'GESTAO_ANIMAIS'],
     ['ocorrencia', 'OCORRENCIAS_DENUNCIAS'],
     ['anexo_ocorrencia', 'OCORRENCIAS_DENUNCIAS'],
+    ['movimentacao_ocorrencia', 'OCORRENCIAS_DENUNCIAS'],
     ['processo_sanitario', 'PROCESSOS_SANITARIOS'],
   ] as const)('mapeia a entidade "%s" para o módulo %s', (entidade, moduloEsperado) => {
     expect(moduloDaEntidade(entidade)).toBe(moduloEsperado)

@@ -2,12 +2,15 @@ package com.siszoo.usuarios.service;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.UUID;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.siszoo.comum.exception.CampoInvalidoException;
 import com.siszoo.usuarios.dto.LoginRequest;
 import com.siszoo.usuarios.dto.LoginResponse;
 import com.siszoo.usuarios.dto.TrocarSenhaRequest;
@@ -64,11 +67,23 @@ public class AuthService {
 
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(CredencialInvalidaException::new);
+        PoliticaSenha.violacao(request.novaSenha(), usuario.getEmail(), usuario.getNome(), usuario.getSobrenome())
+                .ifPresent(mensagem -> {
+                    throw new CampoInvalidoException("novaSenha", mensagem);
+                });
 
+        // T43: o evento registra so a data da troca, nunca senha nem hash. A
+        // data vai truncada em microssegundos, a precisao do timestamp do
+        // PostgreSQL (que arredondaria os nanossegundos): assim o payload_depois
+        // e o valor gravado, nao uma aproximacao dele.
+        LocalDateTime alteradaAntes = usuario.getSenhaAlteradaEm();
+        LocalDateTime alteradaAgora = LocalDateTime.now(clock).truncatedTo(ChronoUnit.MICROS);
         usuario.setSenha(passwordEncoder.encode(request.novaSenha()));
-        usuario.setSenhaAlteradaEm(LocalDateTime.now(clock));
+        usuario.setSenhaAlteradaEm(alteradaAgora);
         usuarioRepository.save(usuario);
 
-        auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "usuario", usuario.getId(), null, null);
+        auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "usuario", usuario.getId(),
+                Collections.singletonMap("senhaAlteradaEm", alteradaAntes),
+                Collections.singletonMap("senhaAlteradaEm", alteradaAgora));
     }
 }

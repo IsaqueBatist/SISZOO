@@ -245,6 +245,40 @@ class AuthControllerIT extends AbstractIntegrationTest {
                 .statusCode(422);
     }
 
+    // Politica de senha na troca: os dados de nome e e-mail vem do usuario
+    // autenticado, nao do corpo. Senha recusada => 422 em novaSenha e a senha
+    // atual continua valendo.
+    @Test
+    void deveRetornar422QuandoNovaSenhaForaDaPoliticaEManterASenhaAtual() {
+        String email = "teste.politica.troca@itu.sp.gov.br";
+        String senhaAtual = "SenhaAntiga123";
+        Usuario usuario = new Usuario();
+        usuario.setEmail(email);
+        usuario.setSenha(passwordEncoder.encode(senhaAtual));
+        usuario.setNome("Graciliano");
+        usuario.setSobrenome("Ramos");
+        usuarioRepository.save(usuario);
+
+        String token = fixture.login(email, senhaAtual);
+
+        for (String senha : List.of("somenteminusculas", "SomenteLetras", "X1-teste.politica.troca",
+                "Graciliano-2026", "Novo#ramos9")) {
+            given()
+                    .contentType(ContentType.JSON)
+                    .header("Authorization", "Bearer " + token)
+                    .body(new TrocarSenhaRequest(senha, senha))
+                    .when()
+                    .post("/api/auth/senha")
+                    .then()
+                    .statusCode(422)
+                    .body("campos[0].campo", equalTo("novaSenha"));
+        }
+
+        Usuario atual = usuarioRepository.findByEmail(email).orElseThrow();
+        assertThat(passwordEncoder.matches(senhaAtual, atual.getSenha()), equalTo(true));
+        assertThat(atual.getSenhaAlteradaEm(), nullValue());
+    }
+
     @Test
     void deveRetornar401AoTrocarSenhaSemToken() {
         given()

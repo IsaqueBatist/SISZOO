@@ -5,12 +5,15 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.in;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -41,9 +44,11 @@ class AuditoriaSigiloIT extends AbstractIntegrationTest {
     private static final String ROTA = "/api/ocorrencias";
     private static final byte[] PNG = {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x01};
     private static final String MARCA_FALHA = "FALHA-AUDITORIA";
+    private static final Set<String> IPS_LOOPBACK = Set.of("127.0.0.1", "0:0:0:0:0:0:0:1");
 
     private static final String EMAIL_ADMIN = "admin.sigilo@itu.sp.gov.br";
     private static final String EMAIL_AGENTE = "agente.sigilo@itu.sp.gov.br";
+    private static final String EMAIL_LEITOR = "leitor.sigilo@itu.sp.gov.br";
 
     @Autowired
     private ApiTesteFixture fixture;
@@ -65,7 +70,7 @@ class AuditoriaSigiloIT extends AbstractIntegrationTest {
         tokenAgente = fixture.tokenComCargo(EMAIL_AGENTE, "Agente", "Sigilo", ApiTesteFixture.CARGO_AGENTE_SANITARIO_ID);
         tokenVet = fixture.tokenComCargo("vet.sigilo@itu.sp.gov.br", "Vet", "Sigilo",
                 ApiTesteFixture.CARGO_VETERINARIO_ID);
-        tokenLeitor = fixture.tokenLeitorOcorrencias("leitor.sigilo@itu.sp.gov.br", "Sigilo");
+        tokenLeitor = fixture.tokenLeitorOcorrencias(EMAIL_LEITOR, "Sigilo");
     }
 
     // ── Detalhe ──────────────────────────────────────────
@@ -96,8 +101,11 @@ class AuditoriaSigiloIT extends AbstractIntegrationTest {
         assertThat(eventos("denunciante", denuncianteId, null), hasSize(2));
     }
 
+    // T43: o 403 do Vet vem da permissao do modulo (PreAutorizacaoInterceptor),
+    // nao da regra de sigilo — ele e barrado em toda ocorrencia, sigilosa ou
+    // nao. Por decisao, nao gera ACESSO_NEGADO.
     @Test
-    @DisplayName("[T26] Vet no detalhe e no download de sigilosa: 403 de acesso ao modulo (V11), nenhum dado, zero eventos")
+    @DisplayName("[T26/T43] Vet no detalhe e no download de sigilosa: 403 de acesso ao modulo (V11), nenhum dado, zero eventos")
     void vetRecebe403SemEvento() {
         String marcador = marcador();
         String id = criarSigilosaComDenunciante(marcador, false);
@@ -109,23 +117,91 @@ class AuditoriaSigiloIT extends AbstractIntegrationTest {
         baixar(tokenVet, id, anexoId).then().statusCode(403);
 
         assertThat(eventosDaOcorrencia(id), equalTo(0));
+        assertThat(acessosNegados(id), equalTo(0));
     }
 
+    // T43 (revisa a T26-7): a recusa pela regra de sigilo passa a ser auditada.
+    // O 403 e o detalhe mascarado nao mudam; o evento e commitado mesmo com o
+    // 403 (noRollbackFor) e nao leva nenhum dado pessoal.
     @Test
-    @DisplayName("[T26] leitor sem denunciante_sigiloso: detalhe mascarado e download 403, zero eventos")
-    void leitorSemAPermissaoNaoGeraEvento() {
+    @DisplayName("[T43] leitor sem denunciante_sigiloso: detalhe mascarado e download 403, um ACESSO_NEGADO cada,"
+            + " nenhum VISUALIZACAO")
+    void leitorSemAPermissaoGeraAcessoNegado() throws Exception {
         String marcador = marcador();
         String id = criarSigilosaComDenunciante(marcador, false);
         String anexoId = anexar(id);
+        UUID denuncianteId = denuncianteDe(id);
+        UUID leitorId = usuarioId(EMAIL_LEITOR);
 
         Response detalhe = detalhe(tokenLeitor, id);
         detalhe.then().statusCode(200);
         assertThat(detalhe.path("denunciante.nome"), nullValue());
         assertThat(detalhe.path("podeVerDenunciante"), equalTo(false));
         assertThat(detalhe.asString(), not(containsString(marcador)));
-        baixar(tokenLeitor, id, anexoId).then().statusCode(403);
+        Response download = baixar(tokenLeitor, id, anexoId);
+        download.then().statusCode(403);
+        assertThat(objectMapper.readTree(download.asString()), equalTo(objectMapper.readTree("{\"mensagem\":\"Acesso negado\"}")));
 
         assertThat(eventosDaOcorrencia(id), equalTo(0));
+        List<Map<String, Object>> negados = new ArrayList<>(eventos("denunciante", denuncianteId, leitorId));
+        negados.addAll(eventos("anexo_ocorrencia", UUID.fromString(anexoId), leitorId));
+        assertThat(negados, hasSize(2));
+        for (Map<String, Object> evento : negados) {
+            assertThat(evento.get("acao"), equalTo("ACESSO_NEGADO"));
+            assertThat(evento.get("antes"), nullValue());
+            assertThat((String) evento.get("ip"), in(IPS_LOOPBACK));
+            JsonNode payload = objectMapper.readTree((String) evento.get("depois"));
+            assertThat(payload.size() == 1 && payload.has("ocorrenciaId"), equalTo(true));
+            assertThat(payload.get("ocorrenciaId").asString(), equalTo(id));
+            assertSemDadoPessoal((String) evento.get("depois"), marcador);
+        }
+        assertThat(acessosNegados(id), equalTo(2));
+    }
+
+    @Test
+    @DisplayName("[T43] se o INSERT do ACESSO_NEGADO falha (erro generico ou violacao de integridade), detalhe e"
+            + " download respondem 500 sem dado e nada fica gravado")
+    void falhaNaAuditoriaDoAcessoNegadoResponde500() {
+        for (String erro : List.of("RAISE EXCEPTION 'falha simulada na auditoria'",
+                "RAISE EXCEPTION 'falha simulada na auditoria' USING ERRCODE = 'check_violation'")) {
+            String marcador = marcador();
+            String id = criarSigilosaComDenunciante(marcador, true);
+            String anexoId = anexar(id);
+            // Gatilho temporario: recusa so o ACESSO_NEGADO desta ocorrencia. A
+            // violacao de integridade (23514) cairia no handler generico (409)
+            // sem a FalhaAuditoriaException; aqui tem de ser 500 nos dois casos.
+            jdbcTemplate.execute("""
+                    CREATE OR REPLACE FUNCTION t43_falhar_acesso_negado() RETURNS trigger AS $$
+                    BEGIN
+                        IF NEW.acao = 'ACESSO_NEGADO' AND EXISTS (SELECT 1 FROM ocorrencia
+                                WHERE id::text = NEW.payload_depois ->> 'ocorrenciaId' AND descricao LIKE '%s%%') THEN
+                            %s;
+                        END IF;
+                        RETURN NEW;
+                    END $$ LANGUAGE plpgsql
+                    """.formatted(MARCA_FALHA, erro));
+            jdbcTemplate.execute("DROP TRIGGER IF EXISTS t43_falhar_acesso_negado ON auditoria_evento");
+            jdbcTemplate.execute("CREATE TRIGGER t43_falhar_acesso_negado BEFORE INSERT ON auditoria_evento"
+                    + " FOR EACH ROW EXECUTE FUNCTION t43_falhar_acesso_negado()");
+            try {
+                Response detalhe = detalhe(tokenLeitor, id);
+                detalhe.then().statusCode(500);
+                assertThat(detalhe.asString(), not(containsString(marcador)));
+                assertThat(detalhe.asString(), not(containsString("111.222.333-44")));
+                assertThat(detalhe.asString(), not(containsString("falha simulada")));
+
+                Response download = baixar(tokenLeitor, id, anexoId);
+                download.then().statusCode(500);
+                assertThat(download.contentType(), not(containsString("image/png")));
+                assertThat(download.asByteArray(), not(equalTo(PNG)));
+                assertThat(download.asString(), not(containsString("falha simulada")));
+            } finally {
+                jdbcTemplate.execute("DROP TRIGGER IF EXISTS t43_falhar_acesso_negado ON auditoria_evento");
+                jdbcTemplate.execute("DROP FUNCTION IF EXISTS t43_falhar_acesso_negado()");
+            }
+
+            assertThat(acessosNegados(id), equalTo(0));
+        }
     }
 
     @Test
@@ -143,15 +219,19 @@ class AuditoriaSigiloIT extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("[T26] sigilosa sem denunciante cadastrado: detalhe nao entrega dado pessoal e nao gera evento")
+    @DisplayName("[T26/T43] sigilosa sem denunciante cadastrado: detalhe nao entrega dado pessoal e nao gera evento"
+            + " (nem VISUALIZACAO, nem ACESSO_NEGADO)")
     void sigilosaSemDenuncianteNaoGeraEvento() {
         String id = criarOcorrencia(true, null, null);
 
-        Response resposta = detalhe(tokenAdmin, id);
-        resposta.then().statusCode(200);
-        assertThat(resposta.path("denunciante"), nullValue());
+        for (String token : List.of(tokenAdmin, tokenLeitor)) {
+            Response resposta = detalhe(token, id);
+            resposta.then().statusCode(200);
+            assertThat(resposta.path("denunciante"), nullValue());
+        }
 
         assertThat(eventosDaOcorrencia(id), equalTo(0));
+        assertThat(acessosNegados(id), equalTo(0));
     }
 
     @Test
@@ -168,15 +248,19 @@ class AuditoriaSigiloIT extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("[T26] ocorrencia ou anexo inexistentes: 404 e zero eventos")
+    @DisplayName("[T26/T43] ocorrencia ou anexo inexistentes: 404 e zero eventos, inclusive para o leitor sem a permissao")
     void inexistenteNaoGeraEvento() {
         String id = criarSigilosaComDenunciante(marcador(), false);
         long antes = totalVisualizacoes();
+        long negadosAntes = totalAcessosNegados();
 
-        comToken(tokenAdmin).when().get(ROTA + "/" + UUID.randomUUID()).then().statusCode(404);
-        baixar(tokenAdmin, id, UUID.randomUUID().toString()).then().statusCode(404);
+        for (String token : List.of(tokenAdmin, tokenLeitor)) {
+            comToken(token).when().get(ROTA + "/" + UUID.randomUUID()).then().statusCode(404);
+            baixar(token, id, UUID.randomUUID().toString()).then().statusCode(404);
+        }
 
         assertThat(totalVisualizacoes(), equalTo(antes));
+        assertThat(totalAcessosNegados(), equalTo(negadosAntes));
     }
 
     // ── Download ─────────────────────────────────────────
@@ -217,10 +301,14 @@ class AuditoriaSigiloIT extends AbstractIntegrationTest {
                 + " WHERE acao = 'VISUALIZACAO' AND payload_depois ->> 'ocorrenciaId' = ?", String.class, id);
         assertThat(payloads, hasSize(2));
         for (String payload : payloads) {
-            for (String pessoal : List.of("Nome " + marcador, "111.222.333-44", "9" + marcador.substring(0, 4),
-                    "email" + marcador, "13300-222", "Rua do Denunciante " + marcador, "Residencial" + marcador)) {
-                assertThat(payload, not(containsString(pessoal)));
-            }
+            assertSemDadoPessoal(payload, marcador);
+        }
+    }
+
+    private static void assertSemDadoPessoal(String texto, String marcador) {
+        for (String pessoal : List.of("Nome " + marcador, "111.222.333-44", "9" + marcador.substring(0, 4),
+                "email" + marcador, "13300-222", "Rua do Denunciante " + marcador, "Residencial" + marcador)) {
+            assertThat(texto, not(containsString(pessoal)));
         }
     }
 
@@ -315,15 +403,28 @@ class AuditoriaSigiloIT extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("[A04] nota em sigilosa pelo Admin: resposta mascarada e nenhum VISUALIZACAO")
-    void notaDevolveDenuncianteMascarado() {
+    @DisplayName("[A04/T43] nota em sigilosa pelo Admin: resposta mascarada, nenhum VISUALIZACAO e um CRIACAO da"
+            + " movimentacao sem o texto da nota")
+    void notaDevolveDenuncianteMascarado() throws Exception {
         String marcador = marcador();
         String id = criarSigilosaComDenunciante(marcador, false);
+        // Marcador proprio: o texto da nota sai (corretamente) na timeline da
+        // resposta, que nao pode conter o marcador do denunciante.
+        String texto = "Nota interna " + marcador();
 
         Response resposta = comToken(tokenAdmin).contentType(ContentType.JSON)
-                .body(Map.of("descricao", "Nota interna")).when().post(ROTA + "/" + id + "/notas");
+                .body(Map.of("descricao", texto)).when().post(ROTA + "/" + id + "/notas");
 
         assertMascaradaSemVisualizacao(resposta, marcador, id);
+        UUID notaId = jdbcTemplate.queryForObject("SELECT id FROM movimentacao_ocorrencia"
+                + " WHERE ocorrencia_id = CAST(? AS uuid) AND tipo_movimentacao = 'NOTA_INTERNA'", UUID.class, id);
+        List<Map<String, Object>> eventos = eventos("movimentacao_ocorrencia", notaId, usuarioId(EMAIL_ADMIN));
+        assertThat(eventos, hasSize(1));
+        assertThat(eventos.get(0).get("acao"), equalTo("CRIACAO"));
+        assertThat(eventos.get(0).get("antes"), nullValue());
+        assertThat(objectMapper.readTree((String) eventos.get(0).get("depois")), equalTo(objectMapper.readTree(
+                "{\"ocorrenciaId\": \"%s\", \"tipoMovimentacao\": \"NOTA_INTERNA\"}".formatted(id))));
+        assertThat((String) eventos.get(0).get("depois"), not(containsString(texto)));
     }
 
     @Test
@@ -415,7 +516,7 @@ class AuditoriaSigiloIT extends AbstractIntegrationTest {
 
     // Eventos de uma entidade (todas as acoes), opcionalmente de um usuario.
     private List<Map<String, Object>> eventos(String entidade, UUID entidadeId, UUID usuarioId) {
-        return jdbcTemplate.queryForList("SELECT acao, CAST(usuario_id AS varchar) AS usuario,"
+        return jdbcTemplate.queryForList("SELECT acao, CAST(usuario_id AS varchar) AS usuario, ip,"
                 + " CAST(payload_antes AS text) AS antes, CAST(payload_depois AS text) AS depois"
                 + " FROM auditoria_evento WHERE entidade = ? AND entidade_id = ?"
                 + " AND (CAST(? AS uuid) IS NULL OR usuario_id = CAST(? AS uuid)) ORDER BY ocorreu_em",
@@ -430,6 +531,17 @@ class AuditoriaSigiloIT extends AbstractIntegrationTest {
 
     private long totalVisualizacoes() {
         return jdbcTemplate.queryForObject("SELECT count(*) FROM auditoria_evento WHERE acao = 'VISUALIZACAO'",
+                Long.class);
+    }
+
+    // T43: ACESSO_NEGADO ligados a ocorrencia, pelas duas entidades auditadas.
+    private Integer acessosNegados(String ocorrenciaId) {
+        return jdbcTemplate.queryForObject("SELECT count(*) FROM auditoria_evento"
+                + " WHERE acao = 'ACESSO_NEGADO' AND payload_depois ->> 'ocorrenciaId' = ?", Integer.class, ocorrenciaId);
+    }
+
+    private long totalAcessosNegados() {
+        return jdbcTemplate.queryForObject("SELECT count(*) FROM auditoria_evento WHERE acao = 'ACESSO_NEGADO'",
                 Long.class);
     }
 }
