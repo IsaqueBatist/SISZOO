@@ -14,14 +14,14 @@ export async function buscarKpisDashboard(): Promise<DashboardKpisApi> {
 // arquivo de teste). Não é usada para decidir o import() dinâmico do mock —
 // ver `buscarKpisReaisOuMock` abaixo, que mantém a condição literal.
 export function kpisUsamMock(): boolean {
-  return import.meta.env.VITE_USE_MOCK_KPIS !== 'false'
+  return import.meta.env.VITE_USE_MOCK_KPIS === 'true'
 }
 
 async function buscarKpisReaisOuMock(): Promise<DashboardKpisApi> {
   // Condição literal e INLINE (não uma constante/função importada): é o que
   // permite ao Rollup podar o chunk de dashboardApi.mock.ts do bundle de
-  // produção quando a flag é 'false' em build time.
-  if (import.meta.env.VITE_USE_MOCK_KPIS !== 'false') {
+  // produção quando a flag não é 'true' em build time. Ausente = dados reais.
+  if (import.meta.env.VITE_USE_MOCK_KPIS === 'true') {
     const { buscarKpisReaisMock } = await import('./dashboardApi.mock')
     return buscarKpisReaisMock()
   }

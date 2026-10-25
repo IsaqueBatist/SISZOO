@@ -18,7 +18,7 @@ afterEach(() => {
 })
 
 describe('useKpisDashboardQuery', () => {
-  it('usa o mock por padrão para animais/vacinação/ocorrências/alertas, e também mocka adoções (sem fonte real)', async () => {
+  it('usa o mock quando VITE_USE_MOCK_KPIS=true (setup) para animais/vacinação/ocorrências/alertas, e também mocka adoções (sem fonte real)', async () => {
     const { result } = renderHook(() => useKpisDashboardQuery(), { wrapper: Wrapper })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
@@ -56,5 +56,23 @@ describe('useKpisDashboardQuery', () => {
     expect(result.current.data?.alertas).toEqual(kpisReais.alertas)
     // adocoes continua vindo do mock, mesmo com o resto real.
     expect(result.current.data?.adocoes.noMes).toBe(8)
+  })
+
+  it('chama a API real quando VITE_USE_MOCK_KPIS está ausente', async () => {
+    vi.stubEnv('VITE_USE_MOCK_KPIS', undefined)
+
+    const kpisReais: DashboardKpisApi = {
+      animais: { total: 3, caninos: 2, felinos: 1 },
+      vacinacao: { percentualVacinados: 100, vacinados: 3, total: 3 },
+      ocorrencias: { registradasHoje: 1 },
+      alertas: [],
+    }
+    server.use(http.get(`${API_BASE_URL}/dashboard/kpis`, () => HttpResponse.json(kpisReais)))
+
+    const { result } = renderHook(() => useKpisDashboardQuery(), { wrapper: Wrapper })
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(result.current.data?.animais).toEqual(kpisReais.animais)
+    expect(result.current.data?.alertas).toEqual([])
   })
 })

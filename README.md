@@ -288,12 +288,8 @@ O modelo completo, com valores fictícios, está em [.env.example](.env.example)
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_AUTH`, `SMTP_STARTTLS`, `SMTP_STARTTLS_REQUIRED`, `SMTP_SSL`, `SISZOO_MAIL_FROM` | Envio de e-mail ao munícipe. Sem SMTP, a falha de envio só é registrada no log. Em desenvolvimento, use um SMTP sandbox, nunca uma caixa real. Detalhes em [docs/email.md](docs/email.md) | Não |
 | `SISZOO_CORS_ORIGIN` | Única origem do frontend aceita pela API (CORS). Ajuste se o frontend for servido em outro endereço | Não (padrão `http://localhost:5173`) |
 | `VITE_API_BASE_URL` | Endereço da API usado pelo frontend, definido no build | Não (padrão `http://localhost:8080`) |
-| `VITE_USE_MOCK_KPIS`, `VITE_USE_MOCK_GRAFICOS` | Indicadores e gráficos de exemplo, para trabalhar no frontend sem backend | Ver abaixo |
+| `VITE_USE_MOCK_KPIS`, `VITE_USE_MOCK_GRAFICOS` | Com `true`, o dashboard usa indicadores e gráficos de exemplo, para trabalhar no frontend sem backend | Não (ausente = dados reais) |
 | `SEED_DB_HOST`, `SEED_DB_PORT` | Host e porta do banco usados pelo seed | Não (padrão `localhost`/`5432`) |
-
-As flags `VITE_USE_MOCK_*` só usam dados reais quando valem exatamente `false`. Se estiverem ausentes, o frontend exibe
-dados de exemplo. O [frontend/.env.example](frontend/.env.example) já traz `false`, e a imagem Docker do frontend é
-construída com `false` por padrão.
 
 ## Testes e qualidade
 
