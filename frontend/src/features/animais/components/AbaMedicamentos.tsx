@@ -5,16 +5,11 @@ import { ModalRegistrarMedicamento } from './ModalRegistrarMedicamento'
 import { LABELS_STATUS_PRESCRICAO, LABELS_UNIDADE_DOSE, LABELS_UNIDADE_FREQUENCIA, LABELS_VIA_ADMINISTRACAO } from '../utils/historicoLabels'
 import { usePrescricoesQuery } from '../hooks/useHistoricoAnimal'
 import type { Prescricao } from '../types/historico.types'
+import { formatarDataBR } from '@/lib/datas'
 
 interface AbaMedicamentosProps {
   animalId: string
   onRegistroCriado: () => void
-}
-
-function formatarData(iso: string | null): string {
-  if (!iso) return '—'
-  const [ano, mes, dia] = iso.split('-')
-  return `${dia}/${mes}/${ano}`
 }
 
 export function AbaMedicamentos({ animalId, onRegistroCriado }: AbaMedicamentosProps) {
@@ -98,16 +93,16 @@ export function AbaMedicamentos({ animalId, onRegistroCriado }: AbaMedicamentosP
                 </div>
                 <div className="kv">
                   <span className="k">Início:</span>
-                  <span className="mono">{formatarData(prescricao.dataInicio)}</span>
+                  <span className="mono">{formatarDataBR(prescricao.dataInicio)}</span>
                 </div>
                 <div className="kv">
                   <span className="k">Término previsto:</span>
-                  <span className="mono">{formatarData(prescricao.dataFimPrevista)}</span>
+                  <span className="mono">{formatarDataBR(prescricao.dataFimPrevista)}</span>
                 </div>
                 {prescricao.dataFimReal && (
                   <div className="kv">
                     <span className="k">Encerrado em:</span>
-                    <span className="mono">{formatarData(prescricao.dataFimReal)}</span>
+                    <span className="mono">{formatarDataBR(prescricao.dataFimReal)}</span>
                   </div>
                 )}
                 <div className="kv">

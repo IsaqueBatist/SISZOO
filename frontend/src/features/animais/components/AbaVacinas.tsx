@@ -4,6 +4,7 @@ import { ModalRegistrarVacina } from './ModalRegistrarVacina'
 import { badgeReforcoVacina } from '../utils/regrasVacina'
 import { useVacinacoesQuery } from '../hooks/useHistoricoAnimal'
 import type { Vacinacao } from '../types/historico.types'
+import { formatarDataBR } from '@/lib/datas'
 
 interface AbaVacinasProps {
   animalId: string
@@ -11,12 +12,6 @@ interface AbaVacinasProps {
 }
 
 const LINHAS_SKELETON = [0, 1, 2, 3]
-
-function formatarData(iso: string | null): string {
-  if (!iso) return '—'
-  const [ano, mes, dia] = iso.split('-')
-  return `${dia}/${mes}/${ano}`
-}
 
 export function AbaVacinas({ animalId, onRegistroCriado }: AbaVacinasProps) {
   const { roleKey } = useAuth()
@@ -114,8 +109,8 @@ export function AbaVacinas({ animalId, onRegistroCriado }: AbaVacinasProps) {
                           </span>
                         )}
                       </td>
-                      <td className="mono">{formatarData(vacinacao.dataAplicacao)}</td>
-                      <td className="mono">{formatarData(vacinacao.dataValidade)}</td>
+                      <td className="mono">{formatarDataBR(vacinacao.dataAplicacao)}</td>
+                      <td className="mono">{formatarDataBR(vacinacao.dataValidade)}</td>
                       <td>{vacinacao.aplicadoPorNome ?? '—'}</td>
                       <td>{badge && <span className={`badge ${badge.classeBadge}`}>{badge.label}</span>}</td>
                       {podeEscrever && (

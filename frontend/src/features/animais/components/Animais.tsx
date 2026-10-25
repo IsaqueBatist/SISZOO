@@ -5,7 +5,8 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { formatarDataBR } from '@/lib/datas'
 import { useAnimaisQuery, useBaiasAtivasQuery, useCatalogosAnimaisQuery } from '../hooks/useAnimais'
 import { badgeDeEspecie, badgeDeStatus } from '../utils/statusBadge'
-import type { Animal, Pelagem, Porte, Sexo } from '../types/animais.types'
+import type { Animal, Pelagem } from '../types/animais.types'
+import { formatarPorte, formatarSexo } from '../utils/rotulosAnimal'
 
 const TAMANHO_PAGINA = 20
 const LINHAS_SKELETON = [0, 1, 2, 3, 4]
@@ -14,19 +15,6 @@ const COLUNAS_TABELA = ['animal', 'especie', 'baia', 'status', 'sexo', 'porte', 
 // dataEntrada é LocalDateTime sem fuso, já no horário do CCZ: separar a
 // string não depende do fuso do navegador (ver lib/datas.ts).
 const formatarData = formatarDataBR
-
-function formatarSexo(sexo: Sexo): string {
-  if (sexo === 'macho') return 'Macho'
-  if (sexo === 'femea') return 'Fêmea'
-  return 'Não identificado'
-}
-
-function formatarPorte(porte: Porte | null): string {
-  if (porte === 'pequeno') return 'Pequeno'
-  if (porte === 'medio') return 'Médio'
-  if (porte === 'grande') return 'Grande'
-  return '—'
-}
 
 function formatarPelagem(pelagem: Pelagem | null): string {
   if (pelagem === 'curta') return 'Curta'

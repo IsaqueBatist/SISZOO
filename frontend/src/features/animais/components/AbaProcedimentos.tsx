@@ -3,6 +3,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { ModalRegistrarProcedimento } from './ModalRegistrarProcedimento'
 import { useProcedimentosQuery } from '../hooks/useHistoricoAnimal'
 import type { Procedimento } from '../types/historico.types'
+import { formatarDataBR } from '@/lib/datas'
 
 interface AbaProcedimentosProps {
   animalId: string
@@ -10,11 +11,6 @@ interface AbaProcedimentosProps {
 }
 
 const LINHAS_SKELETON = [0, 1, 2, 3]
-
-function formatarData(iso: string): string {
-  const [ano, mes, dia] = iso.split('-')
-  return `${dia}/${mes}/${ano}`
-}
 
 export function AbaProcedimentos({ animalId, onRegistroCriado }: AbaProcedimentosProps) {
   const { roleKey } = useAuth()
@@ -100,7 +96,7 @@ export function AbaProcedimentos({ animalId, onRegistroCriado }: AbaProcedimento
               <tbody>
                 {data.itens.map((procedimento) => (
                   <tr key={procedimento.id}>
-                    <td className="mono">{formatarData(procedimento.data)}</td>
+                    <td className="mono">{formatarDataBR(procedimento.data)}</td>
                     <td>
                       {procedimento.tipoProcedimentoNome}
                       {procedimento.statusRegistro === 'RETIFICADO' && (

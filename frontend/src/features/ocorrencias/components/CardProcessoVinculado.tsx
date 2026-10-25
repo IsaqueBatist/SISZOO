@@ -4,7 +4,8 @@ import { mensagemDeRegraDaApi } from '@/lib/erroApi'
 import type { Ocorrencia } from '../types/ocorrencias.types'
 import { useAvancarStatusProcessoMutation } from '../hooks/useOcorrencias'
 import { formatarProtocoloProcesso } from '../utils/protocolo'
-import { labelDeStatusProcesso, proximoStatusProcesso } from '../utils/statusBadge'
+import { badgeDeStatusProcesso } from '@/features/processos/utils/statusBadge'
+import { proximoStatusProcesso } from '../utils/statusBadge'
 
 interface CardProcessoVinculadoProps {
   ocorrencia: Ocorrencia
@@ -51,7 +52,7 @@ export function CardProcessoVinculado({ ocorrencia, podeAbrir, podeAvancar }: Ca
           Ver processo
         </Link>
         <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 6 }}>
-          {labelDeStatusProcesso(processo.statusProcesso)}
+          {badgeDeStatusProcesso(processo.statusProcesso).label}
         </div>
         {podeAvancar && proximo && (
           <div style={{ marginTop: 10 }}>
@@ -64,7 +65,7 @@ export function CardProcessoVinculado({ ocorrencia, podeAbrir, podeAvancar }: Ca
               Avançar status do processo (provisório)
             </button>
             <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4 }}>
-              Próximo: {labelDeStatusProcesso(proximo)}. Avança um passo por vez, sem registrar resultado.
+              Próximo: {badgeDeStatusProcesso(proximo).label}. Avança um passo por vez, sem registrar resultado.
             </p>
           </div>
         )}

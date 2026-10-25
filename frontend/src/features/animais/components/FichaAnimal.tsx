@@ -12,7 +12,7 @@ import { AnexosAnimal } from './AnexosAnimal'
 import './FichaAnimal.css'
 import { badgeDeEspecie, badgeDeStatus } from '../utils/statusBadge'
 import { useAnimalQuery } from '../hooks/useAnimais'
-import type { Sexo } from '../types/animais.types'
+import { formatarPorte, formatarSexo } from '../utils/rotulosAnimal'
 
 type TabKey = 'historico' | 'vacinas' | 'procedimentos' | 'medicamentos' | 'exames'
 
@@ -36,19 +36,6 @@ function formatarRelativo(iso: string): string {
   if (dias <= 0) return 'hoje'
   if (dias === 1) return 'há 1 dia'
   return `há ${dias} dias`
-}
-
-function formatarSexo(sexo: Sexo): string {
-  if (sexo === 'macho') return 'Macho'
-  if (sexo === 'femea') return 'Fêmea'
-  return 'Não identificado'
-}
-
-function formatarPorte(porte: string | null): string {
-  if (porte === 'pequeno') return 'Pequeno'
-  if (porte === 'medio') return 'Médio'
-  if (porte === 'grande') return 'Grande'
-  return '—'
 }
 
 export function FichaAnimal() {

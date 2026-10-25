@@ -1,5 +1,6 @@
 import { Icon, type IconName } from '@/components/layout/Icon'
 import type { EventoTimeline, TipoEventoTimeline } from '../hooks/useTimelineAnimal'
+import { formatarDataBR } from '@/lib/datas'
 
 interface TimelineProps {
   eventos: EventoTimeline[]
@@ -34,11 +35,6 @@ function classeCss(tipo: TipoEventoTimeline): string {
   return tipo === 'procedimento' ? 'cirurgia' : tipo
 }
 
-function formatarData(iso: string): string {
-  const [ano, mes, dia] = iso.split('-')
-  return `${dia}/${mes}/${ano}`
-}
-
 // Segurança explícita na borda de apresentação: o hook já entrega `eventos`
 // ordenado por data desc (merge k-way), mas a ordenação aqui garante o
 // contrato de `<Timeline>` mesmo se a prop vier de outra fonte no futuro.
@@ -55,7 +51,7 @@ function ItemTimeline({ evento }: { evento: EventoTimeline }) {
         <Icon name={ICONE_EVENTO[evento.tipo]} size={12} />
       </div>
       <div className="meta">
-        {formatarData(evento.data)} · <strong style={{ color: 'var(--color-text-primary)' }}>{LABEL_EVENTO[evento.tipo]}</strong>
+        {formatarDataBR(evento.data)} · <strong style={{ color: 'var(--color-text-primary)' }}>{LABEL_EVENTO[evento.tipo]}</strong>
       </div>
       <div className="ev-title">
         {evento.titulo}
