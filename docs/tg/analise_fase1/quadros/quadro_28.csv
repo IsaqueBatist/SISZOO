@@ -1,0 +1,16 @@
+﻿Quadro 28 – Caso de uso de baixo nível Consultar Animais por Baia
+Consultar Animais por Baia
+Caso de Uso Geral;Gestão de Animais
+Ator Principal;Veterinário
+Atores Secundários;
+Resumo;O Veterinário visualiza e filtra os animais alojados, organizados por baia.
+Pré-Condições;O ator deve estar autenticado com permissão de leitura no módulo.
+Pós-Condições;Listagem de animais exibida conforme os filtros, com ocupação por baia.
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Veterinário acessa a consulta por baia e define filtros (baia, espécie, status).;
+;Consulta os animais conforme os filtros e calcula a ocupação atual versus a capacidade.
+;Exibe a listagem com indicação visual de status e a ocupação de cada baia (RF-A02).
+Restrições/Validações;Baias disponíveis: BAIA 1–16 (internas), E1–E4 (externas) e CORREDOR.
+Fluxo Alternativo I;Nenhum animal para o filtro: o sistema informa que não há resultados.
+Requisitos relacionados;RF-A02

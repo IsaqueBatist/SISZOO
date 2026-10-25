@@ -1,0 +1,2949 @@
+{
+ "tabelas": {
+  "usuario": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V2"
+    },
+    "email": {
+     "tipo": "varchar(255)",
+     "not_null": true,
+     "default": null,
+     "migration": "V2"
+    },
+    "senha": {
+     "tipo": "varchar(255)",
+     "not_null": true,
+     "default": null,
+     "migration": "V2"
+    },
+    "nome": {
+     "tipo": "varchar(100)",
+     "not_null": true,
+     "default": null,
+     "migration": "V2"
+    },
+    "sobrenome": {
+     "tipo": "varchar(100)",
+     "not_null": true,
+     "default": null,
+     "migration": "V2"
+    },
+    "crmv": {
+     "tipo": "varchar(20)",
+     "not_null": false,
+     "default": null,
+     "migration": "V2"
+    },
+    "telefone": {
+     "tipo": "varchar(20)",
+     "not_null": false,
+     "default": null,
+     "migration": "V2"
+    },
+    "ativo": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "true",
+     "migration": "V2"
+    },
+    "dois_fatores_ativo": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "false",
+     "migration": "V2"
+    },
+    "ultimo_acesso": {
+     "tipo": "timestamp",
+     "not_null": false,
+     "default": null,
+     "migration": "V2"
+    },
+    "criado_em": {
+     "tipo": "timestamp",
+     "not_null": true,
+     "default": "now()",
+     "migration": "V2"
+    },
+    "senha_alterada_em": {
+     "tipo": "timestamp",
+     "not_null": false,
+     "default": null,
+     "migration": "V2"
+    },
+    "desativado_em": {
+     "tipo": "timestamp",
+     "not_null": false,
+     "default": null,
+     "migration": "V2"
+    },
+    "data_modificacao": {
+     "tipo": "timestamp",
+     "not_null": true,
+     "default": "now()",
+     "migration": "V2"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_usuario PRIMARY KEY (id)",
+    "CONSTRAINT uq_usuario_email UNIQUE (email)"
+   ],
+   "indexes": [],
+   "triggers": [],
+   "migration": "V2"
+  },
+  "cargo": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V2"
+    },
+    "nome": {
+     "tipo": "varchar(100)",
+     "not_null": true,
+     "default": null,
+     "migration": "V2"
+    },
+    "descricao": {
+     "tipo": "text",
+     "not_null": false,
+     "default": null,
+     "migration": "V2"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_cargo PRIMARY KEY (id)"
+   ],
+   "indexes": [],
+   "triggers": [],
+   "migration": "V2"
+  },
+  "usuario_cargo": {
+   "columns": {
+    "usuario_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V2"
+    },
+    "cargo_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V2"
+    },
+    "adicionado_em": {
+     "tipo": "timestamp",
+     "not_null": true,
+     "default": "now()",
+     "migration": "V2"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_usuario_cargo PRIMARY KEY (usuario_id, cargo_id)",
+    "CONSTRAINT fk_usuario_cargo_usuario FOREIGN KEY (usuario_id) REFERENCES usuario (id) ON DELETE CASCADE",
+    "CONSTRAINT fk_usuario_cargo_cargo FOREIGN KEY (cargo_id) REFERENCES cargo (id) ON DELETE CASCADE"
+   ],
+   "indexes": [],
+   "triggers": [],
+   "migration": "V2"
+  },
+  "cargo_permissao": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V2"
+    },
+    "cargo_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V2"
+    },
+    "modulo": {
+     "tipo": "varchar(30)",
+     "not_null": true,
+     "default": null,
+     "migration": "V2"
+    },
+    "feature": {
+     "tipo": "varchar(100)",
+     "not_null": true,
+     "default": null,
+     "migration": "V2"
+    },
+    "leitura": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "false",
+     "migration": "V2"
+    },
+    "escrita": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "false",
+     "migration": "V2"
+    },
+    "exclusao": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "false",
+     "migration": "V2"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_cargo_permissao PRIMARY KEY (id)",
+    "CONSTRAINT uq_cargo_permissao UNIQUE (cargo_id, modulo, feature)",
+    "CONSTRAINT fk_cargo_permissao_cargo FOREIGN KEY (cargo_id) REFERENCES cargo (id) ON DELETE CASCADE",
+    "CONSTRAINT ck_cargo_permissao_modulo CHECK (modulo IN ( 'USUARIOS_ACESSO', 'GESTAO_ANIMAIS', 'OCORRENCIAS_DENUNCIAS', 'PROCESSOS_SANITARIOS', 'RELATORIOS' ))"
+   ],
+   "indexes": [],
+   "triggers": [],
+   "migration": "V2"
+  },
+  "preferencia_usuario": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V2"
+    },
+    "usuario_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V2"
+    },
+    "tema": {
+     "tipo": "varchar(10)",
+     "not_null": true,
+     "default": "'LIGHT'",
+     "migration": "V2"
+    },
+    "densidade": {
+     "tipo": "varchar(15)",
+     "not_null": true,
+     "default": "'NORMAL'",
+     "migration": "V2"
+    },
+    "notif_alertas_criticos": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "true",
+     "migration": "V2"
+    },
+    "notif_vacina_vencendo": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "true",
+     "migration": "V2"
+    },
+    "notif_superlotacao": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "true",
+     "migration": "V2"
+    },
+    "notif_resultado_lab": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "true",
+     "migration": "V2"
+    },
+    "notif_email_diario": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "false",
+     "migration": "V2"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_preferencia_usuario PRIMARY KEY (id)",
+    "CONSTRAINT uq_preferencia_usuario_usuario_id UNIQUE (usuario_id)",
+    "CONSTRAINT fk_preferencia_usuario_usuario FOREIGN KEY (usuario_id) REFERENCES usuario (id) ON DELETE CASCADE",
+    "CONSTRAINT ck_preferencia_usuario_tema CHECK (tema IN ('LIGHT', 'DARK'))",
+    "CONSTRAINT ck_preferencia_usuario_densidade CHECK (densidade IN ('COMPACTO', 'NORMAL', 'CONFORTAVEL'))"
+   ],
+   "indexes": [],
+   "triggers": [],
+   "migration": "V2"
+  },
+  "auditoria_evento": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V2"
+    },
+    "usuario_id": {
+     "tipo": "uuid",
+     "not_null": false,
+     "default": null,
+     "migration": "V2"
+    },
+    "acao": {
+     "tipo": "varchar(20)",
+     "not_null": true,
+     "default": null,
+     "migration": "V2"
+    },
+    "entidade": {
+     "tipo": "varchar(100)",
+     "not_null": true,
+     "default": null,
+     "migration": "V2"
+    },
+    "payload_antes": {
+     "tipo": "jsonb",
+     "not_null": false,
+     "default": null,
+     "migration": "V2"
+    },
+    "payload_depois": {
+     "tipo": "jsonb",
+     "not_null": false,
+     "default": null,
+     "migration": "V2"
+    },
+    "ip": {
+     "tipo": "varchar(45)",
+     "not_null": false,
+     "default": null,
+     "migration": "V2"
+    },
+    "ocorreu_em": {
+     "tipo": "timestamp",
+     "not_null": true,
+     "default": "now()",
+     "migration": "V2"
+    },
+    "entidade_id": {
+     "tipo": "uuid",
+     "not_null": false,
+     "default": null,
+     "migration": "V9"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_auditoria_evento PRIMARY KEY (id)",
+    "CONSTRAINT fk_auditoria_evento_usuario FOREIGN KEY (usuario_id) REFERENCES usuario (id) ON DELETE SET NULL",
+    "CONSTRAINT ck_auditoria_evento_acao CHECK (acao IN ( 'CRIACAO', 'ATUALIZACAO', 'DESATIVACAO', 'REATIVACAO', 'LOGIN', 'LOGOUT', 'EXPORTACAO', 'ENCERRAMENTO' ))",
+    "DROP CONSTRAINT ck_auditoria_evento_acao [V12]",
+    "ADD CONSTRAINT ck_auditoria_evento_acao CHECK (acao IN ( 'CRIACAO', 'ATUALIZACAO', 'DESATIVACAO', 'REATIVACAO', 'LOGIN', 'LOGOUT', 'EXPORTACAO', 'ENCERRAMENTO', 'VISUALIZACAO' )) [V12]"
+   ],
+   "indexes": [
+    "ix_auditoria_evento_usuario_id (usuario_id) [V2]",
+    "ix_auditoria_evento_entidade (entidade) [V2]",
+    "ix_auditoria_evento_ocorreu_em (ocorreu_em) [V2]"
+   ],
+   "triggers": [],
+   "migration": "V2"
+  },
+  "especie": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V4"
+    },
+    "codigo": {
+     "tipo": "varchar(30)",
+     "not_null": true,
+     "default": null,
+     "migration": "V4"
+    },
+    "nome": {
+     "tipo": "varchar(60)",
+     "not_null": true,
+     "default": null,
+     "migration": "V4"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_especie PRIMARY KEY (id)",
+    "CONSTRAINT uq_especie_codigo UNIQUE (codigo)"
+   ],
+   "indexes": [],
+   "triggers": [],
+   "migration": "V4"
+  },
+  "status_animal": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V4"
+    },
+    "codigo": {
+     "tipo": "varchar(30)",
+     "not_null": true,
+     "default": null,
+     "migration": "V4"
+    },
+    "nome": {
+     "tipo": "varchar(60)",
+     "not_null": true,
+     "default": null,
+     "migration": "V4"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_status_animal PRIMARY KEY (id)",
+    "CONSTRAINT uq_status_animal_codigo UNIQUE (codigo)"
+   ],
+   "indexes": [],
+   "triggers": [],
+   "migration": "V4"
+  },
+  "motivo_entrada": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V4"
+    },
+    "codigo": {
+     "tipo": "varchar(30)",
+     "not_null": true,
+     "default": null,
+     "migration": "V4"
+    },
+    "nome": {
+     "tipo": "varchar(60)",
+     "not_null": true,
+     "default": null,
+     "migration": "V4"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_motivo_entrada PRIMARY KEY (id)",
+    "CONSTRAINT uq_motivo_entrada_codigo UNIQUE (codigo)"
+   ],
+   "indexes": [],
+   "triggers": [],
+   "migration": "V4"
+  },
+  "tipo_baia": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V4"
+    },
+    "codigo": {
+     "tipo": "varchar(30)",
+     "not_null": true,
+     "default": null,
+     "migration": "V4"
+    },
+    "nome": {
+     "tipo": "varchar(60)",
+     "not_null": true,
+     "default": null,
+     "migration": "V4"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_tipo_baia PRIMARY KEY (id)",
+    "CONSTRAINT uq_tipo_baia_codigo UNIQUE (codigo)"
+   ],
+   "indexes": [],
+   "triggers": [],
+   "migration": "V4"
+  },
+  "baia": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V4"
+    },
+    "nome": {
+     "tipo": "varchar(40)",
+     "not_null": true,
+     "default": null,
+     "migration": "V4"
+    },
+    "tipo_baia_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V4"
+    },
+    "capacidade": {
+     "tipo": "smallint",
+     "not_null": true,
+     "default": null,
+     "migration": "V4"
+    },
+    "finalidade": {
+     "tipo": "varchar(80)",
+     "not_null": false,
+     "default": null,
+     "migration": "V4"
+    },
+    "ativa": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "true",
+     "migration": "V4"
+    },
+    "observacoes": {
+     "tipo": "text",
+     "not_null": false,
+     "default": null,
+     "migration": "V4"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_baia PRIMARY KEY (id)",
+    "CONSTRAINT fk_baia_tipo_baia FOREIGN KEY (tipo_baia_id) REFERENCES tipo_baia (id)"
+   ],
+   "indexes": [
+    "ix_baia_tipo_baia_id (tipo_baia_id) [V4]"
+   ],
+   "triggers": [],
+   "migration": "V4"
+  },
+  "animal": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V4"
+    },
+    "nome": {
+     "tipo": "varchar(80)",
+     "not_null": true,
+     "default": null,
+     "migration": "V4"
+    },
+    "especie_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V4"
+    },
+    "sexo": {
+     "tipo": "varchar(20)",
+     "not_null": true,
+     "default": null,
+     "migration": "V4"
+    },
+    "raca": {
+     "tipo": "varchar(80)",
+     "not_null": false,
+     "default": null,
+     "migration": "V4"
+    },
+    "coloracao": {
+     "tipo": "varchar(80)",
+     "not_null": false,
+     "default": null,
+     "migration": "V4"
+    },
+    "pelagem": {
+     "tipo": "varchar(10)",
+     "not_null": false,
+     "default": null,
+     "migration": "V4"
+    },
+    "porte": {
+     "tipo": "varchar(10)",
+     "not_null": false,
+     "default": null,
+     "migration": "V4"
+    },
+    "peso_kg": {
+     "tipo": "decimal(5,2)",
+     "not_null": false,
+     "default": null,
+     "migration": "V4"
+    },
+    "idade_aprox": {
+     "tipo": "varchar(30)",
+     "not_null": false,
+     "default": null,
+     "migration": "V4"
+    },
+    "data_nascimento_aprox": {
+     "tipo": "date",
+     "not_null": false,
+     "default": null,
+     "migration": "V4"
+    },
+    "microchip": {
+     "tipo": "varchar(30)",
+     "not_null": false,
+     "default": null,
+     "migration": "V4"
+    },
+    "esterilizado": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "false",
+     "migration": "V4"
+    },
+    "data_esterilizacao": {
+     "tipo": "date",
+     "not_null": false,
+     "default": null,
+     "migration": "V4"
+    },
+    "status_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V4"
+    },
+    "motivo_entrada_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V4"
+    },
+    "data_entrada": {
+     "tipo": "timestamp",
+     "not_null": true,
+     "default": null,
+     "migration": "V4"
+    },
+    "baia_id": {
+     "tipo": "uuid",
+     "not_null": false,
+     "default": null,
+     "migration": "V4"
+    },
+    "ficha_completa": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "false",
+     "migration": "V4"
+    },
+    "foto_url": {
+     "tipo": "text",
+     "not_null": false,
+     "default": null,
+     "migration": "V4"
+    },
+    "observacoes": {
+     "tipo": "text",
+     "not_null": false,
+     "default": null,
+     "migration": "V4"
+    },
+    "criado_por_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V4"
+    },
+    "criado_em": {
+     "tipo": "timestamp",
+     "not_null": true,
+     "default": "now()",
+     "migration": "V4"
+    },
+    "atualizado_em": {
+     "tipo": "timestamp",
+     "not_null": true,
+     "default": "now()",
+     "migration": "V4"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_animal PRIMARY KEY (id)",
+    "CONSTRAINT uq_animal_microchip UNIQUE (microchip)",
+    "CONSTRAINT fk_animal_especie FOREIGN KEY (especie_id) REFERENCES especie (id)",
+    "CONSTRAINT fk_animal_status_animal FOREIGN KEY (status_id) REFERENCES status_animal (id)",
+    "CONSTRAINT fk_animal_motivo_entrada FOREIGN KEY (motivo_entrada_id) REFERENCES motivo_entrada (id)",
+    "CONSTRAINT fk_animal_baia FOREIGN KEY (baia_id) REFERENCES baia (id) ON DELETE SET NULL",
+    "CONSTRAINT fk_animal_usuario FOREIGN KEY (criado_por_id) REFERENCES usuario (id)",
+    "CONSTRAINT ck_animal_sexo CHECK (sexo IN ('macho', 'femea', 'nao_identificado'))",
+    "CONSTRAINT ck_animal_pelagem CHECK (pelagem IN ('curta', 'longa'))",
+    "CONSTRAINT ck_animal_porte CHECK (porte IN ('pequeno', 'medio', 'grande'))",
+    "DROP CONSTRAINT uq_animal_microchip [V16]"
+   ],
+   "indexes": [
+    "ix_animal_especie_id (especie_id) [V4]",
+    "ix_animal_status_id (status_id) [V4]",
+    "ix_animal_motivo_entrada_id (motivo_entrada_id) [V4]",
+    "ix_animal_baia_id (baia_id) [V4]",
+    "ix_animal_criado_por_id (criado_por_id) [V4]",
+    "UNIQUE uq_animal_microchip (microchip)WHERE microchip IS NOT NULL [V16]"
+   ],
+   "triggers": [],
+   "migration": "V4"
+  },
+  "vacina": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V5"
+    },
+    "codigo": {
+     "tipo": "varchar(30)",
+     "not_null": true,
+     "default": null,
+     "migration": "V5"
+    },
+    "nome": {
+     "tipo": "varchar(100)",
+     "not_null": true,
+     "default": null,
+     "migration": "V5"
+    },
+    "intervalo_meses": {
+     "tipo": "integer",
+     "not_null": false,
+     "default": null,
+     "migration": "V5"
+    },
+    "ativo": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "true",
+     "migration": "V5"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_vacina PRIMARY KEY (id)",
+    "CONSTRAINT uq_vacina_codigo UNIQUE (codigo)"
+   ],
+   "indexes": [],
+   "triggers": [],
+   "migration": "V5"
+  },
+  "tipo_procedimento": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V5"
+    },
+    "codigo": {
+     "tipo": "varchar(30)",
+     "not_null": true,
+     "default": null,
+     "migration": "V5"
+    },
+    "nome": {
+     "tipo": "varchar(100)",
+     "not_null": true,
+     "default": null,
+     "migration": "V5"
+    },
+    "ativo": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "true",
+     "migration": "V5"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_tipo_procedimento PRIMARY KEY (id)",
+    "CONSTRAINT uq_tipo_procedimento_codigo UNIQUE (codigo)"
+   ],
+   "indexes": [],
+   "triggers": [],
+   "migration": "V5"
+  },
+  "categoria_farmacologica": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V5"
+    },
+    "nome": {
+     "tipo": "varchar(100)",
+     "not_null": true,
+     "default": null,
+     "migration": "V5"
+    },
+    "ativo": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "true",
+     "migration": "V5"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_categoria_farmacologica PRIMARY KEY (id)",
+    "CONSTRAINT uq_categoria_farmacologica_nome UNIQUE (nome)"
+   ],
+   "indexes": [],
+   "triggers": [],
+   "migration": "V5"
+  },
+  "medicamento": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V5"
+    },
+    "nome": {
+     "tipo": "varchar(100)",
+     "not_null": true,
+     "default": null,
+     "migration": "V5"
+    },
+    "categoria_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V5"
+    },
+    "ativo": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "true",
+     "migration": "V5"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_medicamento PRIMARY KEY (id)",
+    "CONSTRAINT fk_medicamento_categoria_farmacologica FOREIGN KEY (categoria_id) REFERENCES categoria_farmacologica (id)"
+   ],
+   "indexes": [
+    "ix_medicamento_categoria_id (categoria_id) [V5]"
+   ],
+   "triggers": [],
+   "migration": "V5"
+  },
+  "vacinacao": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V6"
+    },
+    "animal_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V6"
+    },
+    "vacina_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V6"
+    },
+    "aplicado_por_id": {
+     "tipo": "uuid",
+     "not_null": false,
+     "default": null,
+     "migration": "V6"
+    },
+    "data_aplicacao": {
+     "tipo": "date",
+     "not_null": true,
+     "default": null,
+     "migration": "V6"
+    },
+    "numero_dose": {
+     "tipo": "integer",
+     "not_null": false,
+     "default": null,
+     "migration": "V6"
+    },
+    "dose_quantidade": {
+     "tipo": "decimal(8,3)",
+     "not_null": true,
+     "default": null,
+     "migration": "V6"
+    },
+    "dose_unidade": {
+     "tipo": "varchar(30)",
+     "not_null": false,
+     "default": null,
+     "migration": "V6"
+    },
+    "lote": {
+     "tipo": "varchar(100)",
+     "not_null": false,
+     "default": null,
+     "migration": "V6"
+    },
+    "observacoes": {
+     "tipo": "text",
+     "not_null": false,
+     "default": null,
+     "migration": "V6"
+    },
+    "retifica_id": {
+     "tipo": "uuid",
+     "not_null": false,
+     "default": null,
+     "migration": "V6"
+    },
+    "criado_em": {
+     "tipo": "timestamp",
+     "not_null": true,
+     "default": "now()",
+     "migration": "V6"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_vacinacao PRIMARY KEY (id)",
+    "CONSTRAINT fk_vacinacao_animal FOREIGN KEY (animal_id) REFERENCES animal (id)",
+    "CONSTRAINT fk_vacinacao_vacina FOREIGN KEY (vacina_id) REFERENCES vacina (id)",
+    "CONSTRAINT fk_vacinacao_usuario FOREIGN KEY (aplicado_por_id) REFERENCES usuario (id) ON DELETE SET NULL",
+    "CONSTRAINT fk_vacinacao_retifica FOREIGN KEY (retifica_id) REFERENCES vacinacao (id)",
+    "CONSTRAINT uq_vacinacao_retifica_id UNIQUE (retifica_id)",
+    "CONSTRAINT ck_vacinacao_dose_unidade CHECK (dose_unidade IN ( 'MILIGRAMA', 'MICROGRAMA', 'GRAMA', 'MILILITRO', 'UNIDADE_INTERNACIONAL' ))",
+    "DROP CONSTRAINT IF EXISTS ck_vacinacao_dose_unidade_obrigatoria [V7]",
+    "ADD CONSTRAINT ck_vacinacao_dose_unidade_obrigatoria CHECK (dose_unidade IS NOT NULL) NOT VALID [V7]",
+    "DROP CONSTRAINT fk_vacinacao_usuario [V7]",
+    "ADD CONSTRAINT fk_vacinacao_usuario FOREIGN KEY (aplicado_por_id) REFERENCES usuario (id) ON DELETE RESTRICT [V7]"
+   ],
+   "indexes": [
+    "ix_vacinacao_animal_id (animal_id) [V6]",
+    "ix_vacinacao_vacina_id (vacina_id) [V6]"
+   ],
+   "triggers": [
+    "tg_vacinacao_sem_exclusao BEFORE DELETE [V17]",
+    "tg_vacinacao_sem_truncate BEFORE TRUNCATE [V17]"
+   ],
+   "migration": "V6"
+  },
+  "procedimento": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V6"
+    },
+    "animal_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V6"
+    },
+    "tipo_procedimento_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V6"
+    },
+    "executado_por_id": {
+     "tipo": "uuid",
+     "not_null": false,
+     "default": null,
+     "migration": "V6"
+    },
+    "data": {
+     "tipo": "date",
+     "not_null": true,
+     "default": null,
+     "migration": "V6"
+    },
+    "descricao": {
+     "tipo": "text",
+     "not_null": false,
+     "default": null,
+     "migration": "V6"
+    },
+    "resultado": {
+     "tipo": "text",
+     "not_null": false,
+     "default": null,
+     "migration": "V6"
+    },
+    "retifica_id": {
+     "tipo": "uuid",
+     "not_null": false,
+     "default": null,
+     "migration": "V6"
+    },
+    "criado_em": {
+     "tipo": "timestamp",
+     "not_null": true,
+     "default": "now()",
+     "migration": "V6"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_procedimento PRIMARY KEY (id)",
+    "CONSTRAINT fk_procedimento_animal FOREIGN KEY (animal_id) REFERENCES animal (id)",
+    "CONSTRAINT fk_procedimento_tipo_procedimento FOREIGN KEY (tipo_procedimento_id) REFERENCES tipo_procedimento (id)",
+    "CONSTRAINT fk_procedimento_usuario FOREIGN KEY (executado_por_id) REFERENCES usuario (id) ON DELETE SET NULL",
+    "CONSTRAINT fk_procedimento_retifica FOREIGN KEY (retifica_id) REFERENCES procedimento (id)",
+    "CONSTRAINT uq_procedimento_retifica_id UNIQUE (retifica_id)",
+    "DROP CONSTRAINT fk_procedimento_usuario [V7]",
+    "ADD CONSTRAINT fk_procedimento_usuario FOREIGN KEY (executado_por_id) REFERENCES usuario (id) ON DELETE RESTRICT [V7]"
+   ],
+   "indexes": [
+    "ix_procedimento_animal_id (animal_id) [V6]",
+    "ix_procedimento_tipo_procedimento_id (tipo_procedimento_id) [V6]"
+   ],
+   "triggers": [
+    "tg_procedimento_sem_exclusao BEFORE DELETE [V17]",
+    "tg_procedimento_sem_truncate BEFORE TRUNCATE [V17]"
+   ],
+   "migration": "V6"
+  },
+  "prescricao": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V6"
+    },
+    "animal_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V6"
+    },
+    "prescrito_por_id": {
+     "tipo": "uuid",
+     "not_null": false,
+     "default": null,
+     "migration": "V6"
+    },
+    "medicamento_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V6"
+    },
+    "data_inicio": {
+     "tipo": "date",
+     "not_null": true,
+     "default": null,
+     "migration": "V6"
+    },
+    "data_fim_prevista": {
+     "tipo": "date",
+     "not_null": false,
+     "default": null,
+     "migration": "V6"
+    },
+    "data_fim_real": {
+     "tipo": "date",
+     "not_null": false,
+     "default": null,
+     "migration": "V6"
+    },
+    "frequencia_aplicada": {
+     "tipo": "integer",
+     "not_null": true,
+     "default": null,
+     "migration": "V6"
+    },
+    "unidade_frequencia": {
+     "tipo": "varchar(10)",
+     "not_null": true,
+     "default": null,
+     "migration": "V6"
+    },
+    "dose_quantidade": {
+     "tipo": "decimal(8,3)",
+     "not_null": true,
+     "default": null,
+     "migration": "V6"
+    },
+    "dose_unidade": {
+     "tipo": "varchar(30)",
+     "not_null": true,
+     "default": null,
+     "migration": "V6"
+    },
+    "via_administracao": {
+     "tipo": "varchar(20)",
+     "not_null": true,
+     "default": null,
+     "migration": "V6"
+    },
+    "status": {
+     "tipo": "varchar(20)",
+     "not_null": true,
+     "default": null,
+     "migration": "V6"
+    },
+    "retifica_id": {
+     "tipo": "uuid",
+     "not_null": false,
+     "default": null,
+     "migration": "V6"
+    },
+    "criado_em": {
+     "tipo": "timestamp",
+     "not_null": true,
+     "default": "now()",
+     "migration": "V6"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_prescricao PRIMARY KEY (id)",
+    "CONSTRAINT fk_prescricao_animal FOREIGN KEY (animal_id) REFERENCES animal (id)",
+    "CONSTRAINT fk_prescricao_medicamento FOREIGN KEY (medicamento_id) REFERENCES medicamento (id)",
+    "CONSTRAINT fk_prescricao_usuario FOREIGN KEY (prescrito_por_id) REFERENCES usuario (id) ON DELETE SET NULL",
+    "CONSTRAINT fk_prescricao_retifica FOREIGN KEY (retifica_id) REFERENCES prescricao (id)",
+    "CONSTRAINT uq_prescricao_retifica_id UNIQUE (retifica_id)",
+    "CONSTRAINT ck_prescricao_unidade_frequencia CHECK (unidade_frequencia IN ('HORAS', 'DIAS'))",
+    "CONSTRAINT ck_prescricao_dose_unidade CHECK (dose_unidade IN ( 'MILIGRAMA', 'MICROGRAMA', 'GRAMA', 'MILILITRO', 'UNIDADE_INTERNACIONAL' ))",
+    "CONSTRAINT ck_prescricao_via_administracao CHECK (via_administracao IN ( 'ORAL', 'INTRAVENOSA', 'INTRAMUSCULAR', 'SUBCUTANEA', 'TOPICA' ))",
+    "CONSTRAINT ck_prescricao_status CHECK (status IN ('ATIVA', 'CONCLUIDA', 'SUSPENSA', 'CANCELADA'))",
+    "DROP CONSTRAINT fk_prescricao_usuario [V7]",
+    "ADD CONSTRAINT fk_prescricao_usuario FOREIGN KEY (prescrito_por_id) REFERENCES usuario (id) ON DELETE RESTRICT [V7]"
+   ],
+   "indexes": [
+    "ix_prescricao_animal_id (animal_id) [V6]",
+    "ix_prescricao_medicamento_id (medicamento_id) [V6]",
+    "ix_prescricao_status_data_fim_prevista (status, data_fim_prevista) [V19]"
+   ],
+   "triggers": [
+    "tg_prescricao_sem_exclusao BEFORE DELETE [V17]",
+    "tg_prescricao_sem_truncate BEFORE TRUNCATE [V17]"
+   ],
+   "migration": "V6"
+  },
+  "tipo_ocorrencia": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V10"
+    },
+    "codigo": {
+     "tipo": "varchar(30)",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "nome": {
+     "tipo": "varchar(100)",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "ativo": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "true",
+     "migration": "V10"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_tipo_ocorrencia PRIMARY KEY (id)",
+    "CONSTRAINT uq_tipo_ocorrencia_codigo UNIQUE (codigo)"
+   ],
+   "indexes": [],
+   "triggers": [],
+   "migration": "V10"
+  },
+  "providencia_tomada": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V10"
+    },
+    "codigo": {
+     "tipo": "varchar(30)",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "nome": {
+     "tipo": "varchar(100)",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "ativo": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "true",
+     "migration": "V10"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_providencia_tomada PRIMARY KEY (id)",
+    "CONSTRAINT uq_providencia_tomada_codigo UNIQUE (codigo)"
+   ],
+   "indexes": [],
+   "triggers": [],
+   "migration": "V10"
+  },
+  "protocolo_sequencia": {
+   "columns": {
+    "entidade": {
+     "tipo": "varchar(20)",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "ano": {
+     "tipo": "integer",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "ultimo": {
+     "tipo": "integer",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_protocolo_sequencia PRIMARY KEY (entidade, ano)",
+    "CONSTRAINT ck_protocolo_sequencia_entidade CHECK (entidade IN ('OCORRENCIA', 'PROCESSO'))",
+    "CONSTRAINT ck_protocolo_sequencia_ultimo CHECK (ultimo > 0)",
+    "DROP CONSTRAINT ck_protocolo_sequencia_entidade [V20]",
+    "ADD CONSTRAINT ck_protocolo_sequencia_entidade CHECK (entidade IN ('OCORRENCIA', 'PROCESSO', 'RELATORIO')) [V20]"
+   ],
+   "indexes": [],
+   "triggers": [],
+   "migration": "V10"
+  },
+  "ocorrencia": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V10"
+    },
+    "protocolo": {
+     "tipo": "varchar(20)",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "tipo_ocorrencia_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "status_ocorrencia": {
+     "tipo": "varchar(20)",
+     "not_null": true,
+     "default": "'ABERTA'",
+     "migration": "V10"
+    },
+    "data_abertura": {
+     "tipo": "date",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "hora_abertura": {
+     "tipo": "time",
+     "not_null": false,
+     "default": null,
+     "migration": "V10"
+    },
+    "endereco": {
+     "tipo": "varchar(255)",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "bairro": {
+     "tipo": "varchar(80)",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "ponto_referencia": {
+     "tipo": "varchar(255)",
+     "not_null": false,
+     "default": null,
+     "migration": "V10"
+    },
+    "descricao": {
+     "tipo": "text",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "urgente": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "false",
+     "migration": "V10"
+    },
+    "sigilosa": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "false",
+     "migration": "V10"
+    },
+    "anonima": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "false",
+     "migration": "V10"
+    },
+    "latitude": {
+     "tipo": "decimal(9,6)",
+     "not_null": false,
+     "default": null,
+     "migration": "V10"
+    },
+    "longitude": {
+     "tipo": "decimal(9,6)",
+     "not_null": false,
+     "default": null,
+     "migration": "V10"
+    },
+    "registrado_por_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "providencia_tomada_id": {
+     "tipo": "uuid",
+     "not_null": false,
+     "default": null,
+     "migration": "V10"
+    },
+    "descricao_encerramento": {
+     "tipo": "text",
+     "not_null": false,
+     "default": null,
+     "migration": "V10"
+    },
+    "encerrada_em": {
+     "tipo": "timestamp",
+     "not_null": false,
+     "default": null,
+     "migration": "V10"
+    },
+    "encerrada_por_id": {
+     "tipo": "uuid",
+     "not_null": false,
+     "default": null,
+     "migration": "V10"
+    },
+    "criado_em": {
+     "tipo": "timestamp",
+     "not_null": true,
+     "default": "now()",
+     "migration": "V10"
+    },
+    "atualizado_em": {
+     "tipo": "timestamp",
+     "not_null": true,
+     "default": "now()",
+     "migration": "V10"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_ocorrencia PRIMARY KEY (id)",
+    "CONSTRAINT uq_ocorrencia_protocolo UNIQUE (protocolo)",
+    "CONSTRAINT fk_ocorrencia_tipo_ocorrencia FOREIGN KEY (tipo_ocorrencia_id) REFERENCES tipo_ocorrencia (id)",
+    "CONSTRAINT fk_ocorrencia_providencia_tomada FOREIGN KEY (providencia_tomada_id) REFERENCES providencia_tomada (id)",
+    "CONSTRAINT fk_ocorrencia_registrado_por FOREIGN KEY (registrado_por_id) REFERENCES usuario (id) ON DELETE RESTRICT",
+    "CONSTRAINT fk_ocorrencia_encerrada_por FOREIGN KEY (encerrada_por_id) REFERENCES usuario (id) ON DELETE RESTRICT",
+    "CONSTRAINT ck_ocorrencia_status CHECK (status_ocorrencia IN ('ABERTA', 'EM_ATENDIMENTO', 'ENCERRADA'))",
+    "CONSTRAINT ck_ocorrencia_encerramento CHECK ( (status_ocorrencia = 'ENCERRADA' AND providencia_tomada_id IS NOT NULL AND encerrada_em IS NOT NULL AND encerrada_por_id IS NOT NULL) OR (status_ocorrencia <> 'ENCERRADA' AND providencia_tomada_id IS NULL AND encerrada_em IS NULL AND encerrada_por_id IS NULL AND descricao_encerramento IS NULL) )",
+    "CONSTRAINT ck_ocorrencia_anonima_sigilosa CHECK (NOT (anonima AND sigilosa))",
+    "CONSTRAINT ck_ocorrencia_latitude CHECK (latitude BETWEEN -90 AND 90)",
+    "CONSTRAINT ck_ocorrencia_longitude CHECK (longitude BETWEEN -180 AND 180)"
+   ],
+   "indexes": [
+    "ix_ocorrencia_status_ocorrencia (status_ocorrencia) [V10]",
+    "ix_ocorrencia_tipo_ocorrencia_id (tipo_ocorrencia_id) [V10]",
+    "ix_ocorrencia_data_abertura (data_abertura) [V10]",
+    "ix_ocorrencia_registrado_por_id (registrado_por_id) [V10]"
+   ],
+   "triggers": [],
+   "migration": "V10"
+  },
+  "denunciante": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V10"
+    },
+    "ocorrencia_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "nome": {
+     "tipo": "varchar(150)",
+     "not_null": false,
+     "default": null,
+     "migration": "V10"
+    },
+    "cpf": {
+     "tipo": "varchar(14)",
+     "not_null": false,
+     "default": null,
+     "migration": "V10"
+    },
+    "telefone": {
+     "tipo": "varchar(20)",
+     "not_null": false,
+     "default": null,
+     "migration": "V10"
+    },
+    "email": {
+     "tipo": "varchar(150)",
+     "not_null": false,
+     "default": null,
+     "migration": "V10"
+    },
+    "cep": {
+     "tipo": "varchar(10)",
+     "not_null": false,
+     "default": null,
+     "migration": "V10"
+    },
+    "endereco": {
+     "tipo": "varchar(255)",
+     "not_null": false,
+     "default": null,
+     "migration": "V10"
+    },
+    "bairro_residencial": {
+     "tipo": "varchar(80)",
+     "not_null": false,
+     "default": null,
+     "migration": "V10"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_denunciante PRIMARY KEY (id)",
+    "CONSTRAINT uq_denunciante_ocorrencia_id UNIQUE (ocorrencia_id)",
+    "CONSTRAINT fk_denunciante_ocorrencia FOREIGN KEY (ocorrencia_id) REFERENCES ocorrencia (id)"
+   ],
+   "indexes": [],
+   "triggers": [],
+   "migration": "V10"
+  },
+  "denunciado": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V10"
+    },
+    "ocorrencia_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "nome": {
+     "tipo": "varchar(150)",
+     "not_null": false,
+     "default": null,
+     "migration": "V10"
+    },
+    "cpf": {
+     "tipo": "varchar(14)",
+     "not_null": false,
+     "default": null,
+     "migration": "V10"
+    },
+    "telefone": {
+     "tipo": "varchar(20)",
+     "not_null": false,
+     "default": null,
+     "migration": "V10"
+    },
+    "endereco": {
+     "tipo": "varchar(255)",
+     "not_null": false,
+     "default": null,
+     "migration": "V10"
+    },
+    "observacoes": {
+     "tipo": "text",
+     "not_null": false,
+     "default": null,
+     "migration": "V10"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_denunciado PRIMARY KEY (id)",
+    "CONSTRAINT uq_denunciado_ocorrencia_id UNIQUE (ocorrencia_id)",
+    "CONSTRAINT fk_denunciado_ocorrencia FOREIGN KEY (ocorrencia_id) REFERENCES ocorrencia (id)"
+   ],
+   "indexes": [],
+   "triggers": [],
+   "migration": "V10"
+  },
+  "processo_sanitario": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V10"
+    },
+    "protocolo": {
+     "tipo": "varchar(20)",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "data_abertura": {
+     "tipo": "date",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "ocorrencia_id": {
+     "tipo": "uuid",
+     "not_null": false,
+     "default": null,
+     "migration": "V10"
+    },
+    "urgente": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "false",
+     "migration": "V10"
+    },
+    "status_processo": {
+     "tipo": "varchar(30)",
+     "not_null": true,
+     "default": "'ABERTO'",
+     "migration": "V10"
+    },
+    "criado_por_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "criado_em": {
+     "tipo": "timestamp",
+     "not_null": true,
+     "default": "now()",
+     "migration": "V10"
+    },
+    "atualizado_em": {
+     "tipo": "timestamp",
+     "not_null": true,
+     "default": "now()",
+     "migration": "V10"
+    },
+    "doenca_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V13"
+    },
+    "laboratorio_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V13"
+    },
+    "cid": {
+     "tipo": "varchar(20)",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "gal_numero": {
+     "tipo": "varchar(40)",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "sinan_numero": {
+     "tipo": "varchar(40)",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "data_envio_amostras": {
+     "tipo": "timestamp",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "previsao_retorno": {
+     "tipo": "date",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "resultado_laboratorial_id": {
+     "tipo": "uuid",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "data_resultado": {
+     "tipo": "date",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "desfecho_animal_id": {
+     "tipo": "uuid",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "observacoes": {
+     "tipo": "text",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "data_notificacao_municipe": {
+     "tipo": "timestamp",
+     "not_null": false,
+     "default": null,
+     "migration": "V21"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_processo_sanitario PRIMARY KEY (id)",
+    "CONSTRAINT uq_processo_sanitario_protocolo UNIQUE (protocolo)",
+    "CONSTRAINT uq_processo_sanitario_ocorrencia_id UNIQUE (ocorrencia_id)",
+    "CONSTRAINT fk_processo_sanitario_ocorrencia FOREIGN KEY (ocorrencia_id) REFERENCES ocorrencia (id)",
+    "CONSTRAINT fk_processo_sanitario_criado_por FOREIGN KEY (criado_por_id) REFERENCES usuario (id) ON DELETE RESTRICT",
+    "CONSTRAINT ck_processo_sanitario_status CHECK (status_processo IN ( 'ABERTO', 'AGUARDANDO_RESULTADO', 'COM_RESULTADO', 'CONCLUIDO' ))",
+    "ADD CONSTRAINT fk_processo_sanitario_doenca FOREIGN KEY (doenca_id) REFERENCES doenca (id) [V13]",
+    "ADD CONSTRAINT fk_processo_sanitario_laboratorio FOREIGN KEY (laboratorio_id) REFERENCES laboratorio (id) [V13]",
+    "ADD CONSTRAINT fk_processo_sanitario_resultado_laboratorial FOREIGN KEY (resultado_laboratorial_id) REFERENCES resultado_laboratorial (id) [V13]",
+    "ADD CONSTRAINT fk_processo_sanitario_desfecho_animal FOREIGN KEY (desfecho_animal_id) REFERENCES desfecho_animal (id) [V13]"
+   ],
+   "indexes": [
+    "ix_processo_sanitario_criado_por_id (criado_por_id) [V10]",
+    "ix_processo_sanitario_doenca_id (doenca_id) [V13]",
+    "ix_processo_sanitario_status_processo (status_processo) [V13]",
+    "ix_processo_sanitario_data_abertura (data_abertura) [V13]",
+    "ix_processo_sanitario_data_resultado (data_resultado) [V19]"
+   ],
+   "triggers": [
+    "tg_processo_sanitario_completo AFTER INSERT [V13]",
+    "tg_processo_sanitario_vinculo_imutavel BEFORE UPDATE OF ocorrencia_id [V13]",
+    "tg_processo_sanitario_sem_exclusao BEFORE DELETE [V17]",
+    "tg_processo_sanitario_sem_truncate BEFORE TRUNCATE [V17]"
+   ],
+   "migration": "V10"
+  },
+  "movimentacao_ocorrencia": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V10"
+    },
+    "ocorrencia_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "usuario_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "tipo_movimentacao": {
+     "tipo": "varchar(30)",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "status_anterior": {
+     "tipo": "varchar(20)",
+     "not_null": false,
+     "default": null,
+     "migration": "V10"
+    },
+    "status_novo": {
+     "tipo": "varchar(20)",
+     "not_null": false,
+     "default": null,
+     "migration": "V10"
+    },
+    "data": {
+     "tipo": "timestamp",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "descricao": {
+     "tipo": "text",
+     "not_null": false,
+     "default": null,
+     "migration": "V10"
+    },
+    "criado_em": {
+     "tipo": "timestamp",
+     "not_null": true,
+     "default": "now()",
+     "migration": "V10"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_movimentacao_ocorrencia PRIMARY KEY (id)",
+    "CONSTRAINT fk_movimentacao_ocorrencia_ocorrencia FOREIGN KEY (ocorrencia_id) REFERENCES ocorrencia (id)",
+    "CONSTRAINT fk_movimentacao_ocorrencia_usuario FOREIGN KEY (usuario_id) REFERENCES usuario (id) ON DELETE RESTRICT",
+    "CONSTRAINT ck_movimentacao_ocorrencia_tipo CHECK (tipo_movimentacao IN ( 'REGISTRADA', 'EQUIPE_DESPACHADA', 'PROCESSO_VINCULADO', 'AGUARDANDO_RESULTADO', 'ENCERRADA', 'NOTA_INTERNA' ))",
+    "CONSTRAINT ck_movimentacao_ocorrencia_transicao CHECK ( (tipo_movimentacao = 'REGISTRADA' AND status_anterior IS NULL AND status_novo = 'ABERTA') OR (tipo_movimentacao = 'EQUIPE_DESPACHADA' AND status_anterior = 'ABERTA' AND status_novo = 'EM_ATENDIMENTO') OR (tipo_movimentacao = 'ENCERRADA' AND status_anterior IN ('ABERTA', 'EM_ATENDIMENTO') AND status_novo = 'ENCERRADA') OR (tipo_movimentacao IN ('PROCESSO_VINCULADO', 'AGUARDANDO_RESULTADO', 'NOTA_INTERNA') AND status_anterior IS NULL AND status_novo IS NULL) )",
+    "CONSTRAINT ck_movimentacao_ocorrencia_nota_descricao CHECK ( tipo_movimentacao <> 'NOTA_INTERNA' OR (descricao IS NOT NULL AND btrim(descricao) <> '') )"
+   ],
+   "indexes": [
+    "ix_movimentacao_ocorrencia_ocorrencia_id (ocorrencia_id) [V10]",
+    "ix_movimentacao_ocorrencia_usuario_id (usuario_id) [V10]"
+   ],
+   "triggers": [],
+   "migration": "V10"
+  },
+  "anexo_ocorrencia": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V10"
+    },
+    "ocorrencia_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "nome": {
+     "tipo": "varchar(255)",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "mime_type": {
+     "tipo": "varchar(50)",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "tamanho": {
+     "tipo": "integer",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "criado_por_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "criado_em": {
+     "tipo": "timestamp",
+     "not_null": true,
+     "default": "now()",
+     "migration": "V10"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_anexo_ocorrencia PRIMARY KEY (id)",
+    "CONSTRAINT fk_anexo_ocorrencia_ocorrencia FOREIGN KEY (ocorrencia_id) REFERENCES ocorrencia (id)",
+    "CONSTRAINT fk_anexo_ocorrencia_criado_por FOREIGN KEY (criado_por_id) REFERENCES usuario (id) ON DELETE RESTRICT",
+    "CONSTRAINT ck_anexo_ocorrencia_mime_type CHECK (mime_type IN ('image/jpeg', 'image/png', 'application/pdf'))",
+    "CONSTRAINT ck_anexo_ocorrencia_tamanho CHECK (tamanho > 0 AND tamanho <= 5242880)"
+   ],
+   "indexes": [
+    "ix_anexo_ocorrencia_ocorrencia_id (ocorrencia_id) [V10]"
+   ],
+   "triggers": [],
+   "migration": "V10"
+  },
+  "anexo_ocorrencia_conteudo": {
+   "columns": {
+    "anexo_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    },
+    "conteudo": {
+     "tipo": "bytea",
+     "not_null": true,
+     "default": null,
+     "migration": "V10"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_anexo_ocorrencia_conteudo PRIMARY KEY (anexo_id)",
+    "CONSTRAINT fk_anexo_ocorrencia_conteudo_anexo FOREIGN KEY (anexo_id) REFERENCES anexo_ocorrencia (id)"
+   ],
+   "indexes": [],
+   "triggers": [],
+   "migration": "V10"
+  },
+  "doenca": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V13"
+    },
+    "codigo": {
+     "tipo": "varchar(30)",
+     "not_null": true,
+     "default": null,
+     "migration": "V13"
+    },
+    "nome": {
+     "tipo": "varchar(150)",
+     "not_null": true,
+     "default": null,
+     "migration": "V13"
+    },
+    "cid": {
+     "tipo": "varchar(20)",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "ativo": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "true",
+     "migration": "V13"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_doenca PRIMARY KEY (id)",
+    "CONSTRAINT uq_doenca_codigo UNIQUE (codigo)"
+   ],
+   "indexes": [],
+   "triggers": [],
+   "migration": "V13"
+  },
+  "laboratorio": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V13"
+    },
+    "codigo": {
+     "tipo": "varchar(30)",
+     "not_null": true,
+     "default": null,
+     "migration": "V13"
+    },
+    "nome": {
+     "tipo": "varchar(100)",
+     "not_null": true,
+     "default": null,
+     "migration": "V13"
+    },
+    "tipo": {
+     "tipo": "varchar(50)",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "contato": {
+     "tipo": "varchar(255)",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "ativo": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "true",
+     "migration": "V13"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_laboratorio PRIMARY KEY (id)",
+    "CONSTRAINT uq_laboratorio_codigo UNIQUE (codigo)"
+   ],
+   "indexes": [],
+   "triggers": [],
+   "migration": "V13"
+  },
+  "sintoma": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V13"
+    },
+    "codigo": {
+     "tipo": "varchar(30)",
+     "not_null": true,
+     "default": null,
+     "migration": "V13"
+    },
+    "nome": {
+     "tipo": "varchar(100)",
+     "not_null": true,
+     "default": null,
+     "migration": "V13"
+    },
+    "ativo": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "true",
+     "migration": "V13"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_sintoma PRIMARY KEY (id)",
+    "CONSTRAINT uq_sintoma_codigo UNIQUE (codigo)"
+   ],
+   "indexes": [],
+   "triggers": [],
+   "migration": "V13"
+  },
+  "resultado_laboratorial": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V13"
+    },
+    "codigo": {
+     "tipo": "varchar(30)",
+     "not_null": true,
+     "default": null,
+     "migration": "V13"
+    },
+    "nome": {
+     "tipo": "varchar(100)",
+     "not_null": true,
+     "default": null,
+     "migration": "V13"
+    },
+    "ativo": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "true",
+     "migration": "V13"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_resultado_laboratorial PRIMARY KEY (id)",
+    "CONSTRAINT uq_resultado_laboratorial_codigo UNIQUE (codigo)"
+   ],
+   "indexes": [],
+   "triggers": [
+    "tg_resultado_laboratorial_codigo_imutavel BEFORE UPDATE OF codigo [V22]"
+   ],
+   "migration": "V13"
+  },
+  "desfecho_animal": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V13"
+    },
+    "codigo": {
+     "tipo": "varchar(30)",
+     "not_null": true,
+     "default": null,
+     "migration": "V13"
+    },
+    "nome": {
+     "tipo": "varchar(100)",
+     "not_null": true,
+     "default": null,
+     "migration": "V13"
+    },
+    "ativo": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": "true",
+     "migration": "V13"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_desfecho_animal PRIMARY KEY (id)",
+    "CONSTRAINT uq_desfecho_animal_codigo UNIQUE (codigo)"
+   ],
+   "indexes": [],
+   "triggers": [],
+   "migration": "V13"
+  },
+  "responsavel_processo": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V13"
+    },
+    "processo_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V13"
+    },
+    "nome": {
+     "tipo": "varchar(150)",
+     "not_null": true,
+     "default": null,
+     "migration": "V13"
+    },
+    "cpf": {
+     "tipo": "varchar(14)",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "telefone": {
+     "tipo": "varchar(20)",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "email": {
+     "tipo": "varchar(150)",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "cep": {
+     "tipo": "varchar(10)",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "endereco": {
+     "tipo": "varchar(255)",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "bairro_residencial": {
+     "tipo": "varchar(80)",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "bairro_ocorrencia": {
+     "tipo": "varchar(80)",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_responsavel_processo PRIMARY KEY (id)",
+    "CONSTRAINT uq_responsavel_processo_processo_id UNIQUE (processo_id)",
+    "CONSTRAINT fk_responsavel_processo_processo FOREIGN KEY (processo_id) REFERENCES processo_sanitario (id)",
+    "CONSTRAINT ck_responsavel_processo_nome CHECK (btrim(nome) <> '')"
+   ],
+   "indexes": [],
+   "triggers": [
+    "tg_responsavel_processo_obrigatorio AFTER DELETE OR UPDATE OF processo_id [V13]"
+   ],
+   "migration": "V13"
+  },
+  "animal_amostrado": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V13"
+    },
+    "processo_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V13"
+    },
+    "animal_id": {
+     "tipo": "uuid",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "especie_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V13"
+    },
+    "sexo": {
+     "tipo": "varchar(20)",
+     "not_null": true,
+     "default": null,
+     "migration": "V13"
+    },
+    "raca": {
+     "tipo": "varchar(80)",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "coloracao": {
+     "tipo": "varchar(80)",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "pelagem": {
+     "tipo": "varchar(10)",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "idade_aprox": {
+     "tipo": "varchar(30)",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "peso_kg": {
+     "tipo": "decimal(5,2)",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "status_clinico": {
+     "tipo": "varchar(20)",
+     "not_null": true,
+     "default": null,
+     "migration": "V13"
+    },
+    "tipo_abrigo": {
+     "tipo": "varchar(20)",
+     "not_null": true,
+     "default": null,
+     "migration": "V13"
+    },
+    "alteracao_comportamental": {
+     "tipo": "text",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "data_coleta": {
+     "tipo": "date",
+     "not_null": true,
+     "default": null,
+     "migration": "V13"
+    },
+    "material_biologico": {
+     "tipo": "varchar(20)",
+     "not_null": true,
+     "default": null,
+     "migration": "V13"
+    },
+    "contato_humano": {
+     "tipo": "boolean",
+     "not_null": true,
+     "default": null,
+     "migration": "V13"
+    },
+    "nivel_contato": {
+     "tipo": "varchar(10)",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "agrediu_humano": {
+     "tipo": "boolean",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "observacoes": {
+     "tipo": "text",
+     "not_null": false,
+     "default": null,
+     "migration": "V13"
+    },
+    "criado_em": {
+     "tipo": "timestamp",
+     "not_null": true,
+     "default": "now()",
+     "migration": "V13"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_animal_amostrado PRIMARY KEY (id)",
+    "CONSTRAINT fk_animal_amostrado_processo FOREIGN KEY (processo_id) REFERENCES processo_sanitario (id)",
+    "CONSTRAINT fk_animal_amostrado_animal FOREIGN KEY (animal_id) REFERENCES animal (id) ON DELETE RESTRICT",
+    "CONSTRAINT fk_animal_amostrado_especie FOREIGN KEY (especie_id) REFERENCES especie (id)",
+    "CONSTRAINT ck_animal_amostrado_sexo CHECK (sexo IN ('macho', 'femea', 'nao_identificado'))",
+    "CONSTRAINT ck_animal_amostrado_pelagem CHECK (pelagem IN ('curta', 'longa'))",
+    "CONSTRAINT ck_animal_amostrado_peso_kg CHECK (peso_kg > 0)",
+    "CONSTRAINT ck_animal_amostrado_status_clinico CHECK (status_clinico IN ('SINTOMATICO', 'ASSINTOMATICO', 'OBITO'))",
+    "CONSTRAINT ck_animal_amostrado_tipo_abrigo CHECK (tipo_abrigo IN ( 'INTRADOMICILIAR', 'PERIDOMICILIAR', 'SILVESTRE', 'NAO_IDENTIFICADO' ))",
+    "CONSTRAINT ck_animal_amostrado_material_biologico CHECK (material_biologico IN ( 'TECIDO_ENCEFALICO', 'SORO', 'SANGUE', 'SALIVA', 'URINA' ))",
+    "CONSTRAINT ck_animal_amostrado_nivel_contato CHECK (nivel_contato IN ('DIRETA', 'INDIRETA'))",
+    "CONSTRAINT ck_animal_amostrado_contato CHECK ( (contato_humano AND nivel_contato IS NOT NULL AND agrediu_humano IS NOT NULL) OR (NOT contato_humano AND nivel_contato IS NULL AND agrediu_humano IS NULL) )"
+   ],
+   "indexes": [
+    "ix_animal_amostrado_processo_id (processo_id) [V13]",
+    "ix_animal_amostrado_animal_id (animal_id) [V13]",
+    "ix_animal_amostrado_especie_id (especie_id) [V19]"
+   ],
+   "triggers": [
+    "tg_animal_amostrado_minimo AFTER DELETE OR UPDATE OF processo_id [V13]"
+   ],
+   "migration": "V13"
+  },
+  "amostra_sintoma": {
+   "columns": {
+    "animal_amostrado_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V13"
+    },
+    "sintoma_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V13"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_amostra_sintoma PRIMARY KEY (animal_amostrado_id, sintoma_id)",
+    "CONSTRAINT fk_amostra_sintoma_animal_amostrado FOREIGN KEY (animal_amostrado_id) REFERENCES animal_amostrado (id)",
+    "CONSTRAINT fk_amostra_sintoma_sintoma FOREIGN KEY (sintoma_id) REFERENCES sintoma (id)"
+   ],
+   "indexes": [
+    "ix_amostra_sintoma_sintoma_id (sintoma_id) [V13]"
+   ],
+   "triggers": [],
+   "migration": "V13"
+  },
+  "resultado_processo": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V14"
+    },
+    "processo_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V14"
+    },
+    "resultado_laboratorial_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V14"
+    },
+    "data_resultado": {
+     "tipo": "date",
+     "not_null": true,
+     "default": null,
+     "migration": "V14"
+    },
+    "observacoes": {
+     "tipo": "text",
+     "not_null": false,
+     "default": null,
+     "migration": "V14"
+    },
+    "retifica_id": {
+     "tipo": "uuid",
+     "not_null": false,
+     "default": null,
+     "migration": "V14"
+    },
+    "registrado_por_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V14"
+    },
+    "registrado_em": {
+     "tipo": "timestamp",
+     "not_null": true,
+     "default": "now()",
+     "migration": "V14"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_resultado_processo PRIMARY KEY (id)",
+    "CONSTRAINT uq_resultado_processo_id_processo UNIQUE (id, processo_id)",
+    "CONSTRAINT fk_resultado_processo_processo FOREIGN KEY (processo_id) REFERENCES processo_sanitario (id)",
+    "CONSTRAINT fk_resultado_processo_resultado_laboratorial FOREIGN KEY (resultado_laboratorial_id) REFERENCES resultado_laboratorial (id)",
+    "CONSTRAINT fk_resultado_processo_registrado_por FOREIGN KEY (registrado_por_id) REFERENCES usuario (id) ON DELETE RESTRICT",
+    "CONSTRAINT fk_resultado_processo_retifica FOREIGN KEY (retifica_id, processo_id) REFERENCES resultado_processo (id, processo_id)",
+    "CONSTRAINT uq_resultado_processo_retifica_id UNIQUE (retifica_id)",
+    "ADD CONSTRAINT ck_resultado_processo_retifica_outro CHECK (retifica_id IS NULL OR retifica_id <> id) [V15]"
+   ],
+   "indexes": [
+    "UNIQUE uq_resultado_processo_original (processo_id)WHERE retifica_id IS NULL [V14]",
+    "ix_resultado_processo_resultado_laboratorial_id (resultado_laboratorial_id) [V14]",
+    "ix_resultado_processo_registrado_por_id (registrado_por_id) [V14]",
+    "ix_resultado_processo_processo_id (processo_id) [V15]"
+   ],
+   "triggers": [
+    "tg_resultado_processo_imutavel BEFORE UPDATE OR DELETE [V14]",
+    "tg_resultado_processo_sem_truncate BEFORE TRUNCATE [V15]",
+    "tg_resultado_positivo_definitivo BEFORE INSERT [V21]"
+   ],
+   "migration": "V14"
+  },
+  "relatorio_gerado": {
+   "columns": {
+    "id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": "gen_random_uuid()",
+     "migration": "V20"
+    },
+    "doc_id": {
+     "tipo": "varchar(30)",
+     "not_null": true,
+     "default": null,
+     "migration": "V20"
+    },
+    "tipo_relatorio": {
+     "tipo": "varchar(30)",
+     "not_null": true,
+     "default": null,
+     "migration": "V20"
+    },
+    "periodo_inicio": {
+     "tipo": "date",
+     "not_null": true,
+     "default": null,
+     "migration": "V20"
+    },
+    "periodo_fim": {
+     "tipo": "date",
+     "not_null": true,
+     "default": null,
+     "migration": "V20"
+    },
+    "parametros_jsonb": {
+     "tipo": "jsonb",
+     "not_null": false,
+     "default": null,
+     "migration": "V20"
+    },
+    "gerado_por_id": {
+     "tipo": "uuid",
+     "not_null": true,
+     "default": null,
+     "migration": "V20"
+    },
+    "gerado_em": {
+     "tipo": "timestamptz",
+     "not_null": true,
+     "default": null,
+     "migration": "V20"
+    },
+    "arquivo_url": {
+     "tipo": "text",
+     "not_null": false,
+     "default": null,
+     "migration": "V20"
+    },
+    "tamanho_bytes": {
+     "tipo": "integer",
+     "not_null": false,
+     "default": null,
+     "migration": "V20"
+    }
+   },
+   "constraints": [
+    "CONSTRAINT pk_relatorio_gerado PRIMARY KEY (id)",
+    "CONSTRAINT uq_relatorio_gerado_doc_id UNIQUE (doc_id)",
+    "CONSTRAINT ck_relatorio_gerado_tipo CHECK (tipo_relatorio IN ( 'ANUAL_PROCESSOS', 'VACINACAO', 'ADOCOES', 'PROCEDIMENTOS', 'OCUPACAO_BAIAS', 'OCORRENCIAS_BAIRRO'))",
+    "CONSTRAINT ck_relatorio_gerado_periodo CHECK (periodo_inicio <= periodo_fim)",
+    "CONSTRAINT fk_relatorio_gerado_gerado_por FOREIGN KEY (gerado_por_id) REFERENCES usuario (id) ON DELETE RESTRICT"
+   ],
+   "indexes": [
+    "ix_relatorio_gerado_gerado_em (gerado_em DESC) [V20]"
+   ],
+   "triggers": [],
+   "migration": "V20"
+  }
+ },
+ "removidas": [
+  "sessao [V8]"
+ ],
+ "seeds": {
+  "cargo": [
+   {
+    "id": "00000000-0000-4000-8000-000000000001",
+    "nome": "Administrador",
+    "descricao": "Acesso completo a todos os módulos do sistema."
+   },
+   {
+    "id": "00000000-0000-4000-8000-000000000002",
+    "nome": "Veterinário",
+    "descricao": "Responsável clínico: animais"
+   },
+   {
+    "id": "00000000-0000-4000-8000-000000000003",
+    "nome": "Agente Sanitário",
+    "descricao": "Atendimento de ocorrências e denúncias"
+   }
+  ],
+  "cargo_permissao": [
+   {
+    "cargo_id": "00000000-0000-4000-8000-000000000001",
+    "modulo": "USUARIOS_ACESSO",
+    "feature": "geral",
+    "leitura": "true",
+    "escrita": "true",
+    "exclusao": "true"
+   },
+   {
+    "cargo_id": "00000000-0000-4000-8000-000000000001",
+    "modulo": "GESTAO_ANIMAIS",
+    "feature": "geral",
+    "leitura": "true",
+    "escrita": "true",
+    "exclusao": "true"
+   },
+   {
+    "cargo_id": "00000000-0000-4000-8000-000000000001",
+    "modulo": "OCORRENCIAS_DENUNCIAS",
+    "feature": "geral",
+    "leitura": "true",
+    "escrita": "true",
+    "exclusao": "true"
+   },
+   {
+    "cargo_id": "00000000-0000-4000-8000-000000000001",
+    "modulo": "PROCESSOS_SANITARIOS",
+    "feature": "geral",
+    "leitura": "true",
+    "escrita": "true",
+    "exclusao": "true"
+   },
+   {
+    "cargo_id": "00000000-0000-4000-8000-000000000001",
+    "modulo": "RELATORIOS",
+    "feature": "geral",
+    "leitura": "true",
+    "escrita": "false",
+    "exclusao": "false"
+   },
+   {
+    "cargo_id": "00000000-0000-4000-8000-000000000002",
+    "modulo": "USUARIOS_ACESSO",
+    "feature": "geral",
+    "leitura": "false",
+    "escrita": "false",
+    "exclusao": "false"
+   },
+   {
+    "cargo_id": "00000000-0000-4000-8000-000000000002",
+    "modulo": "GESTAO_ANIMAIS",
+    "feature": "geral",
+    "leitura": "true",
+    "escrita": "true",
+    "exclusao": "false"
+   },
+   {
+    "cargo_id": "00000000-0000-4000-8000-000000000002",
+    "modulo": "OCORRENCIAS_DENUNCIAS",
+    "feature": "geral",
+    "leitura": "true",
+    "escrita": "false",
+    "exclusao": "false"
+   },
+   {
+    "cargo_id": "00000000-0000-4000-8000-000000000002",
+    "modulo": "PROCESSOS_SANITARIOS",
+    "feature": "geral",
+    "leitura": "true",
+    "escrita": "true",
+    "exclusao": "false"
+   },
+   {
+    "cargo_id": "00000000-0000-4000-8000-000000000002",
+    "modulo": "RELATORIOS",
+    "feature": "geral",
+    "leitura": "true",
+    "escrita": "false",
+    "exclusao": "false"
+   },
+   {
+    "cargo_id": "00000000-0000-4000-8000-000000000003",
+    "modulo": "USUARIOS_ACESSO",
+    "feature": "geral",
+    "leitura": "false",
+    "escrita": "false",
+    "exclusao": "false"
+   },
+   {
+    "cargo_id": "00000000-0000-4000-8000-000000000003",
+    "modulo": "GESTAO_ANIMAIS",
+    "feature": "geral",
+    "leitura": "true",
+    "escrita": "false",
+    "exclusao": "false"
+   },
+   {
+    "cargo_id": "00000000-0000-4000-8000-000000000003",
+    "modulo": "OCORRENCIAS_DENUNCIAS",
+    "feature": "geral",
+    "leitura": "true",
+    "escrita": "true",
+    "exclusao": "false"
+   },
+   {
+    "cargo_id": "00000000-0000-4000-8000-000000000003",
+    "modulo": "PROCESSOS_SANITARIOS",
+    "feature": "geral",
+    "leitura": "true",
+    "escrita": "true",
+    "exclusao": "false"
+   },
+   {
+    "cargo_id": "00000000-0000-4000-8000-000000000003",
+    "modulo": "RELATORIOS",
+    "feature": "geral",
+    "leitura": "true",
+    "escrita": "false",
+    "exclusao": "false"
+   },
+   {
+    "cargo_id": "00000000-0000-4000-8000-000000000001",
+    "modulo": "OCORRENCIAS_DENUNCIAS",
+    "feature": "denunciante_sigiloso",
+    "leitura": "true",
+    "escrita": "false",
+    "exclusao": "false"
+   },
+   {
+    "cargo_id": "00000000-0000-4000-8000-000000000003",
+    "modulo": "OCORRENCIAS_DENUNCIAS",
+    "feature": "denunciante_sigiloso",
+    "leitura": "true",
+    "escrita": "false",
+    "exclusao": "false"
+   }
+  ],
+  "especie": [
+   {
+    "codigo": "canino",
+    "nome": "Canino"
+   },
+   {
+    "codigo": "felino",
+    "nome": "Felino"
+   },
+   {
+    "codigo": "quiroptero",
+    "nome": "Quiróptero"
+   },
+   {
+    "codigo": "pnh",
+    "nome": "Primata não-humano"
+   }
+  ],
+  "status_animal": [
+   {
+    "codigo": "disponivel_adocao",
+    "nome": "Disponível"
+   },
+   {
+    "codigo": "em_tratamento",
+    "nome": "Em tratamento"
+   },
+   {
+    "codigo": "em_quarentena",
+    "nome": "Em quarentena"
+   },
+   {
+    "codigo": "adotado",
+    "nome": "Adotado"
+   },
+   {
+    "codigo": "obito_natural",
+    "nome": "Óbito natural"
+   },
+   {
+    "codigo": "obito_eutanasia",
+    "nome": "Óbito eutanásia"
+   },
+   {
+    "codigo": "transferido",
+    "nome": "Transferido"
+   }
+  ],
+  "motivo_entrada": [
+   {
+    "codigo": "recolhimento",
+    "nome": "Recolhimento"
+   },
+   {
+    "codigo": "abandono",
+    "nome": "Abandono"
+   },
+   {
+    "codigo": "entrega_voluntaria",
+    "nome": "Entrega voluntária"
+   },
+   {
+    "codigo": "resgate",
+    "nome": "Resgate"
+   },
+   {
+    "codigo": "apreensao_judicial",
+    "nome": "Apreensão judicial"
+   }
+  ],
+  "tipo_baia": [
+   {
+    "codigo": "interna",
+    "nome": "Interna"
+   },
+   {
+    "codigo": "gatil",
+    "nome": "Gatil"
+   },
+   {
+    "codigo": "externa",
+    "nome": "Externa"
+   }
+  ],
+  "vacina": [
+   {
+    "codigo": "antirrabica",
+    "nome": "Antirrábica",
+    "intervalo_meses": "12"
+   },
+   {
+    "codigo": "v10",
+    "nome": "V10",
+    "intervalo_meses": "12"
+   },
+   {
+    "codigo": "v8",
+    "nome": "V8",
+    "intervalo_meses": "12"
+   },
+   {
+    "codigo": "felinos"
+   },
+   {
+    "codigo": "giardia",
+    "nome": "Giárdia",
+    "intervalo_meses": "12"
+   },
+   {
+    "codigo": "gripe_canina",
+    "nome": "Gripe canina",
+    "intervalo_meses": "12"
+   },
+   {
+    "codigo": "felv",
+    "nome": "FeLV",
+    "intervalo_meses": "12"
+   },
+   {
+    "codigo": "leishmaniose",
+    "nome": "Leishmaniose",
+    "intervalo_meses": "12"
+   }
+  ],
+  "tipo_procedimento": [
+   {
+    "codigo": "atendimento_clinico",
+    "nome": "Atendimento clínico"
+   },
+   {
+    "codigo": "castracao",
+    "nome": "Castração"
+   },
+   {
+    "codigo": "cirurgia_maior",
+    "nome": "Cirurgia maior"
+   },
+   {
+    "codigo": "vacinacao",
+    "nome": "Vacinação"
+   }
+  ],
+  "tipo_ocorrencia": [
+   {
+    "codigo": "zoonose",
+    "nome": "Suspeita de Zoonose"
+   },
+   {
+    "codigo": "morcegos",
+    "nome": "Infestação de Morcegos"
+   },
+   {
+    "codigo": "irregular",
+    "nome": "Criação Irregular"
+   },
+   {
+    "codigo": "agressivo",
+    "nome": "Animal Agressivo"
+   },
+   {
+    "codigo": "outros",
+    "nome": "Outros"
+   }
+  ],
+  "providencia_tomada": [
+   {
+    "codigo": "orientacao_municipe",
+    "nome": "Orientação ao munícipe"
+   },
+   {
+    "codigo": "encaminhamento_gepar",
+    "nome": "Encaminhamento ao GEPAR"
+   },
+   {
+    "codigo": "abertura_processo",
+    "nome": "Abertura de processo sanitário"
+   },
+   {
+    "codigo": "captura_remocao",
+    "nome": "Captura e remoção"
+   },
+   {
+    "codigo": "sem_acao",
+    "nome": "Sem ação necessária"
+   },
+   {
+    "codigo": "outro",
+    "nome": "Outro"
+   },
+   {
+    "codigo": "registro_indevido",
+    "nome": "Registro duplicado/indevido"
+   }
+  ],
+  "doenca": [
+   {
+    "codigo": "raiva",
+    "nome": "Raiva",
+    "cid": "A82"
+   },
+   {
+    "codigo": "esporotricose",
+    "nome": "Esporotricose",
+    "cid": "B42"
+   },
+   {
+    "codigo": "leishmaniose_visceral",
+    "nome": "Leishmaniose Visceral",
+    "cid": "B55.0"
+   },
+   {
+    "codigo": "leptospirose",
+    "nome": "Leptospirose",
+    "cid": "A27"
+   },
+   {
+    "codigo": "febre_maculosa",
+    "nome": "Febre Maculosa",
+    "cid": "A77"
+   },
+   {
+    "codigo": "febre_amarela",
+    "nome": "Febre Amarela",
+    "cid": "A95"
+   }
+  ],
+  "laboratorio": [
+   {
+    "codigo": "pasteur_sp",
+    "nome": "Pasteur — SP"
+   },
+   {
+    "codigo": "ial_sorocaba",
+    "nome": "IAL — Sorocaba"
+   },
+   {
+    "codigo": "ccz_sp",
+    "nome": "CCZ — SP"
+   },
+   {
+    "codigo": "itu_ll01",
+    "nome": "ITU-LL01"
+   }
+  ],
+  "sintoma": [
+   {
+    "codigo": "apatia",
+    "nome": "Apatia"
+   },
+   {
+    "codigo": "alt_comportamental",
+    "nome": "Alt. comportamental"
+   },
+   {
+    "codigo": "descamacao",
+    "nome": "Descamação"
+   },
+   {
+    "codigo": "ulcera_pele",
+    "nome": "Úlcera de pele"
+   },
+   {
+    "codigo": "ceratoconjuntivite",
+    "nome": "Ceratoconjuntivite"
+   },
+   {
+    "codigo": "coriza",
+    "nome": "Coriza"
+   },
+   {
+    "codigo": "emagrecimento",
+    "nome": "Emagrecimento"
+   },
+   {
+    "codigo": "diarreia",
+    "nome": "Diarreia"
+   },
+   {
+    "codigo": "salivacao_excessiva",
+    "nome": "Salivação excessiva"
+   },
+   {
+    "codigo": "hemorragia_interna",
+    "nome": "Hemorragia interna"
+   },
+   {
+    "codigo": "vomito",
+    "nome": "Vômito"
+   },
+   {
+    "codigo": "aumento_linfonodo",
+    "nome": "Aumento de linfonodo"
+   }
+  ],
+  "resultado_laboratorial": [
+   {
+    "codigo": "aguardando",
+    "nome": "Aguardando"
+   },
+   {
+    "codigo": "positivo",
+    "nome": "Positivo"
+   },
+   {
+    "codigo": "negativo",
+    "nome": "Negativo"
+   },
+   {
+    "codigo": "inconclusivo",
+    "nome": "Inconclusivo"
+   },
+   {
+    "codigo": "material_inadequado",
+    "nome": "Material Inadequado"
+   },
+   {
+    "codigo": "nao_realizado",
+    "nome": "Não Realizado"
+   }
+  ],
+  "desfecho_animal": [
+   {
+    "codigo": "em_acompanhamento",
+    "nome": "Em acompanhamento"
+   },
+   {
+    "codigo": "obito_natural",
+    "nome": "Óbito natural"
+   },
+   {
+    "codigo": "obito_eutanasia",
+    "nome": "Óbito eutanásia"
+   },
+   {
+    "codigo": "obito_outro",
+    "nome": "Óbito outro"
+   }
+  ]
+ },
+ "ordem": [
+  "usuario",
+  "cargo",
+  "usuario_cargo",
+  "cargo_permissao",
+  "preferencia_usuario",
+  "auditoria_evento",
+  "especie",
+  "status_animal",
+  "motivo_entrada",
+  "tipo_baia",
+  "baia",
+  "animal",
+  "vacina",
+  "tipo_procedimento",
+  "categoria_farmacologica",
+  "medicamento",
+  "vacinacao",
+  "procedimento",
+  "prescricao",
+  "tipo_ocorrencia",
+  "providencia_tomada",
+  "protocolo_sequencia",
+  "ocorrencia",
+  "denunciante",
+  "denunciado",
+  "processo_sanitario",
+  "movimentacao_ocorrencia",
+  "anexo_ocorrencia",
+  "anexo_ocorrencia_conteudo",
+  "doenca",
+  "laboratorio",
+  "sintoma",
+  "resultado_laboratorial",
+  "desfecho_animal",
+  "responsavel_processo",
+  "animal_amostrado",
+  "amostra_sintoma",
+  "resultado_processo",
+  "relatorio_gerado"
+ ]
+}

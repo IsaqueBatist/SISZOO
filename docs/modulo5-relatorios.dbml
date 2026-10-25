@@ -1,53 +1,47 @@
 // ══════════════════════════════════════════════════════
-// MÓDULO 05 — RELATÓRIOS
-// Tabelas: RelatorioGerado
-// Enums:   StatusRelatorio, TipoRelatorio
-// Dependências externas: Usuario (Módulo 01)
+// MÓDULO 05 — DASHBOARD E RELATÓRIOS
+// Espelha a migration V20 (T41). Revisão de 25/10/2026.
+// Tabelas: RelatorioGerado (histórico de exportações).
+// O dashboard (KPIs, alertas, gráficos) é computado por consultas
+// agregadas com cache de 5 minutos — não tem tabela.
+// Geração SÍNCRONA (RN11): não há status, URL com expiração nem
+// binário armazenado; cada exportação CSV/PDF bem-sucedida grava uma linha.
+// Dependência externa: Usuario (módulo 01); numeração via
+//   ProtocoloSequencia (módulo 03, entidade RELATORIO).
 // ══════════════════════════════════════════════════════
-
-// ── Enums ──────────────────────────────────────────────
-
-Enum StatusRelatorio {
-  PENDENTE
-  EM_PROCESSAMENTO
-  CONCLUIDO
-  FALHA
-}
 
 Enum TipoRelatorio {
   ANUAL_PROCESSOS
-  ANUAL_ANIMAIS
+  VACINACAO
+  ADOCOES
+  PROCEDIMENTOS
   OCUPACAO_BAIAS
-  ALERTAS_VACINAIS
-  DISTRIBUICAO_DOENCAS
+  OCORRENCIAS_BAIRRO
 }
-
-// ── Referências externas ───────────────────────────────
 
 Table Usuario {
   id uuid [pk, not null]
 }
 
-// ── Relatório Gerado ───────────────────────────────────
-
 Table RelatorioGerado {
-  id               uuid             [pk, not null, default: `gen_random_uuid()`]
-  gerado_por       uuid             [not null, ref: > Usuario.id]
-  tipo_relatorio   TipoRelatorio    [not null]
-  periodo_inicio   date
-  periodo_fim      date
-  parametros_jsonb jsonb
-  gerado_em        timestamp        [not null, default: `now()`]
-  status           StatusRelatorio  [not null, default: 'PENDENTE']
-  arquivo_url      varchar(500)
-  tamanho_bytes    bigint
+  id               uuid          [pk, not null, default: `gen_random_uuid()`]
+  doc_id           varchar(30)   [not null, unique, note: 'DOC-AAAA-NNNN via ProtocoloService']
+  tipo_relatorio   TipoRelatorio [not null, note: 'varchar(30) + CHECK dos 6 códigos (não é FK)']
+  periodo_inicio   date          [not null, note: 'ano/janela resolvidos para datas antes de gravar']
+  periodo_fim      date          [not null, note: 'CHECK periodo_inicio <= periodo_fim']
+  parametros_jsonb jsonb         [note: 'filtros brutos (tipo, ano, janela)']
+  gerado_por_id    uuid          [not null, ref: > Usuario.id]
+  gerado_em        timestamptz   [not null]
+  arquivo_url      text          [note: 'sempre nulo nesta versão: o arquivo não é persistido']
+  tamanho_bytes    integer
 
   indexes {
-    gerado_por
+    gerado_por_id
     tipo_relatorio
     gerado_em
-    status
   }
+
+  Note: 'POST /api/relatorios/exportar grava a linha e o evento EXPORTACAO na mesma transação (T43); GET /api/relatorios/historico lista; GET /api/relatorios/preview gera em tela.'
 }
 
 TableGroup Relatorios {

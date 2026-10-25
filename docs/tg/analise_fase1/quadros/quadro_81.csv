@@ -1,0 +1,5 @@
+﻿Quadro 81 – Dicionário de dados – tabela ProvidenciaTomada
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único da providência.
+nome;varchar(100);;Descrição da providência tomada.
+ativo;boolean;;Indica se a providência está disponível para uso.

@@ -1,0 +1,17 @@
+﻿Quadro 44 – Caso de uso de baixo nível Encerrar Processo
+Encerrar Processo
+Caso de Uso Geral;Gestão de Processos
+Ator Principal;Agente Sanitário
+Atores Secundários;
+Resumo;O Agente Sanitário encerra um processo sanitário após a conclusão da investigação.
+Pré-Condições;O processo deve possuir resultado registrado quando houver contato humano (RF-B05).
+Pós-Condições;"Processo concluído; registro torna-se imutável."
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Agente Sanitário abre o processo e seleciona encerrar.;
+;Verifica se o processo possui resultado quando o contato humano for verdadeiro (RF-B05).
+O Agente Sanitário confirma o encerramento.;
+;Atualiza o status para CONCLUIDO e registra o evento de auditoria.
+Restrições/Validações;Processos com contato humano não podem ser encerrados sem resultado (RF-B05). Registro imutável (RN06).
+Fluxo Alternativo I;Resultado ausente em processo urgente: o sistema bloqueia o encerramento e solicita o registro do resultado.
+Requisitos relacionados;RF-B05, RN06, RN12

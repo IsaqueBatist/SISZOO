@@ -1,6 +1,8 @@
 # Pedido — `endereco` em ProcessoResumoResponse / lista de valores distintos
 
-Status: **pedido do frontend, endpoint existente, campo ausente no resumo**.
+Status: **pendente** (melhoria de prioridade baixa; registrada no alinhamento com o TG como B-08 em
+`docs/tg/analise_fase3/bloqueios.md`). As sugestões de **bairro** já vêm de `GET /api/ocorrencias/estatisticas/bairro`
+(T45); o `endereco` continua sem sugestão.
 
 ## Contexto
 

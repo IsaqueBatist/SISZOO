@@ -1,0 +1,10 @@
+﻿Quadro 57 – Dicionário de dados – tabela AuditoriaEvento
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único do evento de auditoria.
+usuario_id;uuid;FK;Usuário que executou a ação (Usuario).
+acao;AcaoAuditoria;;Tipo de ação registrada (criação, login etc.).
+entidade;varchar(100);;Entidade afetada pela ação.
+payload_antes;jsonb;;Estado do registro antes da alteração.
+payload_depois;jsonb;;Estado do registro após a alteração.
+ip;varchar(45);;Endereço IP de origem da ação.
+ocorreu_em;timestamp;;Data e hora da ocorrência do evento.

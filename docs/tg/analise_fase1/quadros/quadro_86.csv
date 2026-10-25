@@ -1,0 +1,9 @@
+﻿Quadro 86 – Dicionário de dados – tabela MovimentacaoOcorrencia
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único da movimentação.
+ocorrencia_id;uuid;FK;Ocorrência associada (Ocorrencia).
+usuario_id;uuid;FK;Usuário que executou a movimentação (Usuario).
+tipo_movimentacao;TipoMovimentacaoOcorrencia;;Tipo da movimentação registrada.
+data;timestamp;;Data e hora da movimentação.
+descricao;text;;Descrição da movimentação.
+criado_em;timestamp;;Data e hora de registro.

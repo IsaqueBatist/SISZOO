@@ -1,0 +1,5 @@
+﻿Quadro 76 – Dicionário de dados – tabela TipoExame
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único do tipo de exame.
+nome;varchar(100);UQ;Nome do tipo de exame.
+ativo;boolean;;Indica se o tipo está disponível para uso.

@@ -1,6 +1,8 @@
 # Pedido — filtro `urgente` em GET /api/processos
 
-Status: **pedido do frontend, endpoint existente, filtro ainda não suportado**.
+Status: **implementado (T45, PR #113)**. `GET /api/processos?urgente=true` filtra no servidor; o card do dashboard
+passou a mostrar o total exato (`ProcessoSanitarioController`, parâmetro `urgente` opcional ao lado de `doenca` e
+`status`). O texto abaixo é o pedido original.
 
 ## Contexto
 

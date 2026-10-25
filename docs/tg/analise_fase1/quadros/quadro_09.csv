@@ -1,0 +1,9 @@
+﻿Quadro 9 – Requisitos funcionais do Módulo 4: Processos Sanitários
+ID;Nome;Descrição;Prior.
+RF-B01;Registro de Processo;Criar processo sanitário com protocolo (0000/AAAA, RN02), número do GAL, número do SINAN, urgente, data de abertura, status (RN12), doença, laboratório, resultado laboratorial, desfecho do animal, responsável e vínculo opcional a uma ocorrência, definido na abertura e imutável.;Alta
+RF-B02;Consulta e Filtragem;Consultar processos por protocolo, período, doença, responsável, bairro e status. Processos urgentes fixados no topo (RN04).;Alta
+RF-B03;Resultado Laboratorial;Registrar resultado (Negativo/Positivo/Material Inadequado/Inconclusivo/Não Realizado/Aguardando) e desfecho. Resultado Positivo ou Inconclusivo notifica por e-mail o responsável e a Vigilância Epidemiológica (RN10).;Alta
+RF-B04;Amostra Animal;Registrar os dados do animal amostrado (AmostraAnimal), vinculado a um animal do canil ou com dados próprios: espécie, sexo, coloração, pelagem, peso, raça, tipo de abrigo, material biológico, contato humano (RN04), nível de contato, agrediu humano e sintomas.;Alta
+RF-B05;Alerta de Urgência;Contato humano em qualquer amostra marca o processo como urgente, com alerta visual. O processo não pode ser concluído sem resultado.;Alta
+RF-B06;Documento PDF;Gerar PDF do processo com controle de estado em DocumentoProcesso (Pendente→Em Processamento→Concluído/Falha, RN11).;Baixa
+RF-B07;Relatório Anual;Relatório anual consolidado com distribuição por doença, espécie e bairro, gerado pela central de relatórios (RF-D02).;Média

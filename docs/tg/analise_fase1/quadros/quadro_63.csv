@@ -1,0 +1,4 @@
+﻿Quadro 63 – Dicionário de dados – tabela VacinaEspecie
+Campo;Tipo;Chave;Descrição
+vacina_id;uuid;PK,FK;Vacina associada (Vacina).
+especie;Especie;PK;Espécie à qual a vacina se aplica.

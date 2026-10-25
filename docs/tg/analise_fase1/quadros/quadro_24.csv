@@ -1,0 +1,17 @@
+﻿Quadro 24 – Caso de uso de baixo nível Editar Dados do Animal
+Editar Dados do Animal
+Caso de Uso Geral;Gestão de Animais
+Ator Principal;Veterinário
+Atores Secundários;
+Resumo;O Veterinário atualiza informações cadastrais de um animal já registrado.
+Pré-Condições;O animal deve estar cadastrado e o ator autenticado com permissão de escrita.
+Pós-Condições;"Dados do animal atualizados; alteração registrada em auditoria."
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Veterinário localiza o animal e abre seu cadastro para edição.;
+O Veterinário altera os campos desejados e confirma.;
+;Valida os dados, mantendo a unicidade do microchip, e persiste as alterações.
+;Registra o evento de auditoria com os valores anterior e posterior (RN06).
+Restrições/Validações;A alteração do microchip não pode gerar duplicidade (RN01). Histórico preservado por auditoria (RN06).
+Fluxo Alternativo I;Tentativa de microchip duplicado: o sistema rejeita a alteração e informa a duplicidade.
+Requisitos relacionados;RF-A01, RN06, RNF10

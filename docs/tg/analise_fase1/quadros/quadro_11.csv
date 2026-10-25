@@ -1,0 +1,8 @@
+﻿Quadro 11 – Relatórios previstos no SISZOO
+Relatório;Conteúdo;Requisito
+Ocorrências por Bairro;"Concentração de ocorrências por bairro, apresentada em mapa de calor tabular, sem georreferenciamento; tipos de denúncia mais frequentes; tempo médio de atendimento.";RF-D02
+Ocupação de Baias;Histórico mensal de ocupação por baia, transferências internas e taxa média de superlotação.;RF-D02
+Procedimentos;Castrações, cirurgias e atendimentos clínicos consolidados, com produtividade por veterinário.;RF-D02
+Adoções;Adoções realizadas, tempo médio de permanência, perfil dos adotantes e taxa de devolução.;RF-D02, RF-A05
+Anual de Processos;Distribuição das investigações sanitárias por doença, espécie e bairro, com taxa de positividade e tempo médio de resolução.;RF-D02, RF-B07
+Vacinação;Animais vacinados, vacinas vencidas e próximas a vencer, por espécie, baia e veterinário responsável.;RF-D02

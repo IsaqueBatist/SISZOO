@@ -1,0 +1,19 @@
+﻿Quadro 32 – Caso de uso de baixo nível Registrar Exame
+Registrar Exame
+Caso de Uso Geral;Histórico Veterinário
+Ator Principal;Veterinário
+Atores Secundários;
+Resumo;O Veterinário solicita e registra o resultado de um exame laboratorial do animal.
+Pré-Condições;O animal deve estar cadastrado e o laboratório disponível.
+Pós-Condições;Exame registrado com solicitação e, posteriormente, resultado no histórico do animal.
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Veterinário acessa o histórico do animal e seleciona registrar exame.;
+O Veterinário informa o tipo de exame, o laboratório e a data de solicitação.;
+O Veterinário confirma a solicitação.;
+;Persiste o exame com a solicitação e registra o evento de auditoria.
+Posteriormente, o Veterinário registra o resultado e a data de resultado.;
+;Atualiza o exame com o resultado informado.
+Restrições/Validações;Registros do histórico são imutáveis (RN06).
+Fluxo Alternativo I;Anexar laudo: o Veterinário pode anexar o laudo ao exame registrado.
+Requisitos relacionados;RF-A04, RN06

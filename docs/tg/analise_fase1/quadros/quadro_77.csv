@@ -1,0 +1,10 @@
+﻿Quadro 77 – Dicionário de dados – tabela Exame
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único do exame.
+animal_id;uuid;FK;Animal examinado (Animal).
+laboratorio_id;uuid;FK;Laboratório responsável (Laboratorio).
+tipo_exame_id;uuid;FK;Tipo do exame (TipoExame).
+data_solicitacao;date;;Data de solicitação do exame.
+data_resultado;date;;Data de recebimento do resultado.
+resultado;text;;Resultado do exame.
+criado_em;timestamp;;Data e hora de registro.

@@ -1,0 +1,17 @@
+﻿Quadro 31 – Caso de uso de baixo nível Registrar Procedimento Clínico
+Registrar Procedimento Clínico
+Caso de Uso Geral;Histórico Veterinário
+Ator Principal;Veterinário
+Atores Secundários;
+Resumo;O Veterinário registra um procedimento realizado no animal.
+Pré-Condições;O animal deve estar cadastrado.
+Pós-Condições;Procedimento registrado no histórico do animal.
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Veterinário acessa o histórico do animal e seleciona registrar procedimento.;
+O Veterinário informa o tipo de procedimento, a data, a descrição e o resultado.;
+O Veterinário confirma o registro.;
+;Persiste o procedimento e registra o evento de auditoria.
+Restrições/Validações;Registros do histórico são imutáveis (RN06).
+Fluxo Alternativo I;Anexar documento: o Veterinário pode anexar arquivos ao procedimento registrado.
+Requisitos relacionados;RF-A04, RN06

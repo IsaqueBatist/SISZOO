@@ -1,0 +1,17 @@
+﻿Quadro 36 – Caso de uso de baixo nível Informar Denunciado
+Informar Denunciado
+Caso de Uso Geral;Registrar Nova Ocorrência (extensão, quando há denunciado)
+Ator Principal;Agente Sanitário
+Atores Secundários;
+Resumo;O Agente Sanitário registra os dados da pessoa apontada na denúncia.
+Pré-Condições;O Agente Sanitário está registrando uma ocorrência e o denunciante identificou um denunciado.
+Pós-Condições;Denunciado vinculado à ocorrência.
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Agente Sanitário marca a opção “Há denunciado”.;
+;Exibe os campos do denunciado.
+O Agente Sanitário informa nome, CPF, telefone, endereço e observações, conforme disponíveis.;
+;Grava o denunciado junto com a ocorrência.
+Restrições/Validações;"Todos os campos são opcionais; o CPF só é registrado quando necessário (LGPD, princípio da necessidade)."
+Fluxo Alternativo I;O Agente Sanitário desmarca a opção antes de salvar: nenhum denunciado é gravado.
+Requisitos relacionados;RF-E01, RNF06

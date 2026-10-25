@@ -1,0 +1,3273 @@
+{
+ "rf": {
+  "RF-C01": {
+   "nome": "Autenticação",
+   "descricao": "Login com e-mail institucional e senha, com troca de senha obrigatória no primeiro acesso. Autenticação por token JWT com prazo de validade; no logout, o token é descartado (RNF06).",
+   "prioridade": "Alta",
+   "quadro": 6
+  },
+  "RF-C02": {
+   "nome": "Gestão de Usuários",
+   "descricao": "Administrador cadastra, edita, desativa e reativa usuários, atribuindo cargos com permissões por módulo (leitura, escrita e exclusão). Toda ação crítica gera AuditoriaEvento (RN06, RNF10).",
+   "prioridade": "Alta",
+   "quadro": 6
+  },
+  "RF-C03": {
+   "nome": "Preferências do Usuário",
+   "descricao": "O usuário ajusta o tema, densidade da interface e as notificações que deseja receber; as preferências são individuais e não afetam outros usuários.",
+   "prioridade": "Baixa",
+   "quadro": 6
+  },
+  "RF-A01": {
+   "nome": "Cadastro de Animal",
+   "descricao": "Registrar um animal com número do microchip (identificador único, RN01) e data de implantação do chip, número da medalha, espécie, nome, raça, sexo, porte, pelagem, coloração, data de nascimento aproximada, baia, foto, esterilizado, data de esterilização, observações, motivo de entrada, procedência, peso, status e data de entrada. O animal pode ser cadastrado sem microchip, que é registrado quando implantado.",
+   "prioridade": "Alta",
+   "quadro": 7
+  },
+  "RF-A02": {
+   "nome": "Consulta por Baia",
+   "descricao": "Visualizar e filtrar a listagem de animais por baia (BAIA 1–16 internas, E1–E8 externas e CORREDOR). A tela exibe a ocupação atual, calculada pela contagem de animais alojados, e a capacidade. O Administrador cadastra e edita as baias (tipo e capacidade).",
+   "prioridade": "Alta",
+   "quadro": 7
+  },
+  "RF-A03": {
+   "nome": "Alerta Vacinal",
+   "descricao": "Gerar alertas automáticos na tela inicial listando os animais com reforço vacinal nos próximos 7 dias e as vacinas vencidas, com base na data de validade de cada dose.",
+   "prioridade": "Alta",
+   "quadro": 7
+  },
+  "RF-A04": {
+   "nome": "Histórico Veterinário",
+   "descricao": "Registrar e exibir o histórico completo de vacinações, prescrições, procedimentos, exames e anexos. Registros imutáveis: a correção gera novo registro com auditoria (RN06, RNF10).",
+   "prioridade": "Alta",
+   "quadro": 7
+  },
+  "RF-A05": {
+   "nome": "Entrada, Saída e Adoção",
+   "descricao": "Registrar a procedência ao entrar e o destino e a data de saída ao sair (Adotado, Resgatado, Óbito, Eutanásia ou Transferido). No destino Eutanásia, registrar o laudo do responsável técnico que a justifica (Lei nº 14.228/2021, art. 2º, § 1º). Na adoção, registrar os dados do adotante e, quando houver, a devolução do animal. Histórico imutável (RN06).",
+   "prioridade": "Alta",
+   "quadro": 7
+  },
+  "RF-E01": {
+   "nome": "Registro de Ocorrência",
+   "descricao": "Registrar ocorrência com protocolo (0000/AAAA, RN02), tipo, bairro, descrição, urgente, sigilosa (RN03), denunciante, denunciado (opcional) e movimentações.",
+   "prioridade": "Alta",
+   "quadro": 8
+  },
+  "RF-E02": {
+   "nome": "Consulta e Filtragem",
+   "descricao": "Consultar por protocolo, período, tipo, denunciante, bairro e status. Denunciante oculto em ocorrências sigilosas para não-Administradores (RN03).",
+   "prioridade": "Alta",
+   "quadro": 8
+  },
+  "RF-E03": {
+   "nome": "Encerramento",
+   "descricao": "Encerrar com providência tomada, descrição (obrigatória quando a providência for “Outro”) e data. Somente Agente Sanitário ou Administrador. Não pode ser encerrada enquanto houver processo sanitário vinculado sem resultado (RN05). Registro imutável após encerramento (RN06).",
+   "prioridade": "Alta",
+   "quadro": 8
+  },
+  "RF-B01": {
+   "nome": "Registro de Processo",
+   "descricao": "Criar processo sanitário com protocolo (0000/AAAA, RN02), número do GAL, número do SINAN, urgente, data de abertura, status (RN12), doença, laboratório, resultado laboratorial, desfecho do animal, responsável e vínculo opcional a uma ocorrência, definido na abertura e imutável.",
+   "prioridade": "Alta",
+   "quadro": 9
+  },
+  "RF-B02": {
+   "nome": "Consulta e Filtragem",
+   "descricao": "Consultar processos por protocolo, período, doença, responsável, bairro e status. Processos urgentes fixados no topo (RN04).",
+   "prioridade": "Alta",
+   "quadro": 9
+  },
+  "RF-B03": {
+   "nome": "Resultado Laboratorial",
+   "descricao": "Registrar resultado (Negativo/Positivo/Material Inadequado/Inconclusivo/Não Realizado/Aguardando) e desfecho. Resultado Positivo ou Inconclusivo notifica por e-mail o responsável e a Vigilância Epidemiológica (RN10).",
+   "prioridade": "Alta",
+   "quadro": 9
+  },
+  "RF-B04": {
+   "nome": "Amostra Animal",
+   "descricao": "Registrar os dados do animal amostrado (AmostraAnimal), vinculado a um animal do canil ou com dados próprios: espécie, sexo, coloração, pelagem, peso, raça, tipo de abrigo, material biológico, contato humano (RN04), nível de contato, agrediu humano e sintomas.",
+   "prioridade": "Alta",
+   "quadro": 9
+  },
+  "RF-B05": {
+   "nome": "Alerta de Urgência",
+   "descricao": "Contato humano em qualquer amostra marca o processo como urgente, com alerta visual. O processo não pode ser concluído sem resultado.",
+   "prioridade": "Alta",
+   "quadro": 9
+  },
+  "RF-B06": {
+   "nome": "Documento PDF",
+   "descricao": "Gerar PDF do processo com controle de estado em DocumentoProcesso (Pendente→Em Processamento→Concluído/Falha, RN11).",
+   "prioridade": "Baixa",
+   "quadro": 9
+  },
+  "RF-B07": {
+   "nome": "Relatório Anual",
+   "descricao": "Relatório anual consolidado com distribuição por doença, espécie e bairro, gerado pela central de relatórios (RF-D02).",
+   "prioridade": "Média",
+   "quadro": 9
+  },
+  "RF-D01": {
+   "nome": "Dashboard",
+   "descricao": "Exibir em tempo real: total por StatusAnimal, ocupação de baias, alertas vacinais 7 dias (RF-A03), processos aguardando resultado, processos urgentes e resumo mensal por doença.",
+   "prioridade": "Alta",
+   "quadro": 10
+  },
+  "RF-D02": {
+   "nome": "Relatórios",
+   "descricao": "Gerar, em PDF e CSV, os relatórios de ocorrências por bairro, ocupação de baias, procedimentos, adoções, anual de processos e vacinação, por meio de RelatorioGerado com ciclo Pendente→Em Processamento→Concluído/Falha (RN11). O arquivo é armazenado fora do banco e acessado por URL com expiração.",
+   "prioridade": "Média",
+   "quadro": 10
+  }
+ },
+ "rnf": {
+  "RNF01": {
+   "categoria": "Desempenho",
+   "nome": "Tempo de Resposta",
+   "descricao": "Responder em até 3 segundos. Interface responsiva em listas com 200+ registros."
+  },
+  "RNF02": {
+   "categoria": "Desempenho",
+   "nome": "Leveza",
+   "descricao": "Carregamento progressivo. Funcionar em computadores com ~2 GB de RAM."
+  },
+  "RNF03": {
+   "categoria": "Disponibilidade",
+   "nome": "Internet Instável",
+   "descricao": "Exibir mensagem de erro na queda de rede e preservar dados de formulários não submetidos."
+  },
+  "RNF04": {
+   "categoria": "Disponibilidade",
+   "nome": "Backup Diário",
+   "descricao": "Disponível no horário do CCZ, com backup diário do banco."
+  },
+  "RNF05": {
+   "categoria": "Usabilidade",
+   "nome": "Simplicidade",
+   "descricao": "Interface intuitiva, rótulos descritivos, máximo 3 cliques nas operações frequentes."
+  },
+  "RNF06": {
+   "categoria": "Segurança",
+   "nome": "LGPD e Auth",
+   "descricao": "Senhas com bcrypt. HTTPS. Dados sigilosos restritos por perfil. LGPD (Lei nº 13.709/2018)."
+  },
+  "RNF07": {
+   "categoria": "Compatibilidade",
+   "nome": "Navegadores",
+   "descricao": "Funcionar em Chrome, Edge e Firefox sem plugins adicionais."
+  },
+  "RNF08": {
+   "categoria": "Manutenibilidade",
+   "nome": "Qualidade",
+   "descricao": "Código SOLID e Clean Code, cobertura mínima de testes nos casos de uso críticos."
+  },
+  "RNF09": {
+   "categoria": "Escalabilidade",
+   "nome": "Crescimento",
+   "descricao": "Suportar crescimento de registros sem refatoração estrutural."
+  },
+  "RNF10": {
+   "categoria": "Auditoria",
+   "nome": "Rastreabilidade",
+   "descricao": "Registrar usuário, data, hora e valores anterior/posterior em toda alteração crítica via AuditoriaEvento."
+  }
+ },
+ "rn": {
+  "RN01": {
+   "regra": "Microchip Único",
+   "descricao": "O número do microchip identifica o animal de forma única; o sistema rejeita número já cadastrado. O animal que chega sem microchip é cadastrado e recebe o chip no CCZ; o número e a data de implantação são registrados nesse momento."
+  },
+  "RN02": {
+   "regra": "Protocolo por Ano",
+   "descricao": "O protocolo (processo sanitário e ocorrência) é gerado automaticamente no formato 0000/AAAA, sequencial, reiniciando em 0001 a cada ano civil."
+  },
+  "RN03": {
+   "regra": "Sigilo do Denunciante",
+   "descricao": "Em ocorrências sigilosas, os dados do denunciante não são exibidos para nenhum perfil exceto Administrador; o acesso do Administrador é registrado em auditoria."
+  },
+  "RN04": {
+   "regra": "Contato Humano-Animal",
+   "descricao": "Processos com AmostraAnimal cujo contato humano seja verdadeiro são marcados como urgentes e fixados no topo das listagens."
+  },
+  "RN05": {
+   "regra": "Encerramento de Ocorrência",
+   "descricao": "Ocorrência com processo sanitário vinculado só pode ser encerrada depois de registrado o resultado desse processo."
+  },
+  "RN06": {
+   "regra": "Imutabilidade",
+   "descricao": "Histórico veterinário, processos e resultados não podem ser excluídos; a correção gera novo registro, com registro em AuditoriaEvento."
+  },
+  "RN07": {
+   "regra": "Campos Obrigatórios – Animal",
+   "descricao": "Obrigatórios: espécie, sexo, porte, baia, esterilizado, status, motivo de entrada e data de entrada. O microchip é obrigatório para a ficha ser considerada completa, não para o cadastro de entrada."
+  },
+  "RN08": {
+   "regra": "Campos Obrigatórios – Processo",
+   "descricao": "Obrigatórios: data de abertura, doença, laboratório, ao menos uma amostra e os dados mínimos do responsável (nome, endereço)."
+  },
+  "RN09": {
+   "regra": "Controle de Acesso",
+   "descricao": "Administrador: acesso total. Veterinário: Gestão de Animais (A) e Dashboard/Relatórios (D). Agente Sanitário: Processos (B), Ocorrências (E) e Dashboard/Relatórios (D)."
+  },
+  "RN10": {
+   "regra": "Notificação de Resultado",
+   "descricao": "Ao registrar resultado Positivo ou Inconclusivo, o sistema envia e-mail ao responsável (quando houver e-mail cadastrado) e à Vigilância Epidemiológica do município. O envio é registrado e não se repete."
+  },
+  "RN11": {
+   "regra": "Estado de Exportação",
+   "descricao": "RelatorioGerado com estados Pendente→Em Processamento→Concluído/Falha. Binário não armazenado no banco, apenas URL com política de expiração."
+  },
+  "RN12": {
+   "regra": "Ciclo do Processo",
+   "descricao": "Transições: ABERTO→EM_ANDAMENTO→AGUARDANDO_RESULTADO→CONCLUIDO. Resultado não pode ser preenchido com status=ABERTO."
+  }
+ },
+ "uc": {
+  "Realizar Login": {
+   "quadro": 16,
+   "nome": "Realizar Login",
+   "Caso de Uso Geral": "Autenticação",
+   "Ator Principal": "Veterinário, Agente Sanitário ou Administrador",
+   "Atores Secundários": "",
+   "Resumo": "O usuário autentica-se no sistema com e-mail e senha para acessar as funcionalidades de acordo com seu perfil.",
+   "Pré-Condições": "O usuário deve estar cadastrado e ativo, com um cargo atribuído pelo Administrador.",
+   "Pós-Condições": "Token JWT válido emitido; usuário redirecionado ao painel inicial conforme suas permissões.",
+   "Restrições/Validações": "O usuário precisa estar cadastrado e ativo (RNF06). Senhas trafegam apenas via HTTPS.",
+   "Fluxo Alternativo I": "Senha inválida: o sistema informa credenciais inválidas e mantém a tela de login, sem revelar qual campo falhou.",
+   "Fluxo Alternativo II": "Usuário inexistente ou inativo: o sistema informa credenciais inválidas e retorna à tela de login.",
+   "Fluxo Alternativo III": "Primeiro acesso: o sistema exige a troca da senha antes de liberar o painel inicial.",
+   "Requisitos relacionados": "RF-C01, RNF06, RNF10",
+   "rf": [
+    "RF-C01"
+   ],
+   "rn": [
+    "RN09"
+   ],
+   "rnf": [
+    "RNF06",
+    "RNF10"
+   ]
+  },
+  "Encerrar Sessão (Logout)": {
+   "quadro": 17,
+   "nome": "Encerrar Sessão (Logout)",
+   "Caso de Uso Geral": "Autenticação",
+   "Ator Principal": "Veterinário, Agente Sanitário ou Administrador",
+   "Atores Secundários": "",
+   "Resumo": "O usuário encerra o uso do sistema, descartando o token JWT em uso.",
+   "Pré-Condições": "O usuário deve estar autenticado com token válido.",
+   "Pós-Condições": "Token descartado; usuário redirecionado à tela de login.",
+   "Restrições/Validações": "O token deixa de ser usado no logout e perde a validade na expiração (RNF06).",
+   "Fluxo Alternativo I": "Token já expirado: o sistema apenas redireciona à tela de login, sem ação adicional.",
+   "Requisitos relacionados": "RF-C01, RNF10",
+   "rf": [
+    "RF-C01"
+   ],
+   "rn": [],
+   "rnf": [
+    "RNF06",
+    "RNF10"
+   ]
+  },
+  "Editar Preferências do Usuário": {
+   "quadro": 18,
+   "nome": "Editar Preferências do Usuário",
+   "Caso de Uso Geral": "Gestão de Preferências",
+   "Ator Principal": "Veterinário, Agente Sanitário ou Administrador",
+   "Atores Secundários": "",
+   "Resumo": "O usuário ajusta o tema, a densidade da interface e as notificações que deseja receber.",
+   "Pré-Condições": "O usuário deve estar autenticado.",
+   "Pós-Condições": "Preferências persistidas e aplicadas à interface do usuário.",
+   "Restrições/Validações": "As preferências são individuais e não afetam outros usuários.",
+   "Fluxo Alternativo I": "Nenhuma alteração realizada: o sistema mantém as preferências vigentes.",
+   "Requisitos relacionados": "RF-C03",
+   "rf": [
+    "RF-C03"
+   ],
+   "rn": [],
+   "rnf": []
+  },
+  "Gerenciar Usuários": {
+   "quadro": 19,
+   "nome": "Gerenciar Usuários",
+   "Caso de Uso Geral": "Controle de Acesso",
+   "Ator Principal": "Administrador",
+   "Atores Secundários": "",
+   "Resumo": "O Administrador cadastra, edita e atribui cargos e permissões aos usuários do sistema.",
+   "Pré-Condições": "O ator deve estar autenticado com cargo de Administrador.",
+   "Pós-Condições": "Usuário criado ou atualizado, com cargo e permissões definidos; evento registrado em auditoria.",
+   "Restrições/Validações": "Apenas o Administrador possui acesso total (RN09). E-mail deve ser único. Toda ação crítica gera AuditoriaEvento (RN06, RNF10).",
+   "Fluxo Alternativo I": "E-mail já cadastrado: o sistema informa a duplicidade e não conclui o cadastro.",
+   "Fluxo Alternativo II": "Desativar/Reativar usuário: ver o caso de uso Desativar/Reativar Usuário.",
+   "Requisitos relacionados": "RF-C02, RN09, RNF10",
+   "rf": [
+    "RF-C02"
+   ],
+   "rn": [
+    "RN06",
+    "RN09"
+   ],
+   "rnf": [
+    "RNF10"
+   ]
+  },
+  "Atribuir Cargo e Permissões": {
+   "quadro": 20,
+   "nome": "Atribuir Cargo e Permissões",
+   "Caso de Uso Geral": "Gerenciar Usuários (inclusão)",
+   "Ator Principal": "Administrador",
+   "Atores Secundários": "",
+   "Resumo": "O Administrador vincula ao usuário um ou mais cargos; as permissões de acesso decorrem dos cargos atribuídos.",
+   "Pré-Condições": "O Administrador está cadastrando ou editando um usuário.",
+   "Pós-Condições": "Vínculos entre usuário e cargo gravados com a data de inclusão; evento registrado na auditoria.",
+   "Restrições/Validações": "Todo usuário tem ao menos um cargo. As permissões por módulo (leitura, escrita e exclusão) são definidas no cargo (CargoPermissao), não no usuário.",
+   "Fluxo Alternativo I": "Remoção do último cargo: o sistema recusa e informa que o usuário precisa de ao menos um cargo.",
+   "Requisitos relacionados": "RF-C02, RN09, RNF10",
+   "rf": [
+    "RF-C02"
+   ],
+   "rn": [
+    "RN09"
+   ],
+   "rnf": [
+    "RNF10"
+   ]
+  },
+  "Desativar/Reativar Usuário": {
+   "quadro": 21,
+   "nome": "Desativar/Reativar Usuário",
+   "Caso de Uso Geral": "Gerenciar Usuários (extensão)",
+   "Ator Principal": "Administrador",
+   "Atores Secundários": "",
+   "Resumo": "O Administrador impede ou restabelece o acesso de um usuário ao sistema, sem excluir seu cadastro.",
+   "Pré-Condições": "O Administrador está autenticado e o usuário-alvo está cadastrado.",
+   "Pós-Condições": "Situação do usuário atualizada (ativo ou inativo) e evento registrado na auditoria.",
+   "Restrições/Validações": "Somente o Administrador executa (RN09). O cadastro não é excluído, para preservar o histórico e a autoria dos registros (RN06).",
+   "Fluxo Alternativo I": "O Administrador cancela a confirmação: a situação permanece inalterada.",
+   "Fluxo Alternativo II": "Usuário desativado tenta entrar: o sistema informa credenciais inválidas (caso de uso Realizar Login).",
+   "Requisitos relacionados": "RF-C02, RN06, RN09, RNF10",
+   "rf": [
+    "RF-C02"
+   ],
+   "rn": [
+    "RN06",
+    "RN09"
+   ],
+   "rnf": [
+    "RNF10"
+   ]
+  },
+  "Consultar Trilha de Auditoria": {
+   "quadro": 22,
+   "nome": "Consultar Trilha de Auditoria",
+   "Caso de Uso Geral": "Controle de Acesso",
+   "Ator Principal": "Administrador",
+   "Atores Secundários": "",
+   "Resumo": "O Administrador consulta o histórico de ações críticas registradas no sistema.",
+   "Pré-Condições": "O ator deve estar autenticado com cargo de Administrador.",
+   "Pós-Condições": "Eventos de auditoria exibidos conforme os filtros aplicados.",
+   "Restrições/Validações": "Os registros de auditoria são imutáveis (RN06) e acessíveis apenas ao Administrador.",
+   "Fluxo Alternativo I": "Nenhum evento encontrado: o sistema informa que não há registros para os filtros aplicados.",
+   "Requisitos relacionados": "RF-C02, RN06, RNF10",
+   "rf": [
+    "RF-C02"
+   ],
+   "rn": [
+    "RN06"
+   ],
+   "rnf": [
+    "RNF10"
+   ]
+  },
+  "Cadastrar Animal": {
+   "quadro": 23,
+   "nome": "Cadastrar Animal",
+   "Caso de Uso Geral": "Gestão de Animais",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário registra um novo animal no canil com seus dados de identificação, características e localização.",
+   "Pré-Condições": "O ator deve estar autenticado com permissão de escrita no módulo de animais.",
+   "Pós-Condições": "Animal cadastrado e vinculado a uma baia; ocupação da baia atualizada.",
+   "Restrições/Validações": "Microchip único quando informado (RN01). Campos obrigatórios: espécie, sexo, porte, baia, esterilizado, status, motivo e data de entrada (RN07).",
+   "Fluxo Alternativo I": "Microchip já cadastrado: o sistema rejeita o cadastro e informa a duplicidade.",
+   "Fluxo Alternativo II": "Baia sem vaga: o sistema alerta sobre a superlotação e solicita outra baia.",
+   "Requisitos relacionados": "RF-A01, RN01, RN07",
+   "rf": [
+    "RF-A01"
+   ],
+   "rn": [
+    "RN01",
+    "RN07"
+   ],
+   "rnf": []
+  },
+  "Editar Dados do Animal": {
+   "quadro": 24,
+   "nome": "Editar Dados do Animal",
+   "Caso de Uso Geral": "Gestão de Animais",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário atualiza informações cadastrais de um animal já registrado.",
+   "Pré-Condições": "O animal deve estar cadastrado e o ator autenticado com permissão de escrita.",
+   "Pós-Condições": "Dados do animal atualizados; alteração registrada em auditoria.",
+   "Restrições/Validações": "A alteração do microchip não pode gerar duplicidade (RN01). Histórico preservado por auditoria (RN06).",
+   "Fluxo Alternativo I": "Tentativa de microchip duplicado: o sistema rejeita a alteração e informa a duplicidade.",
+   "Requisitos relacionados": "RF-A01, RN06, RNF10",
+   "rf": [
+    "RF-A01"
+   ],
+   "rn": [
+    "RN01",
+    "RN06"
+   ],
+   "rnf": [
+    "RNF10"
+   ]
+  },
+  "Registrar Saída/Desfecho": {
+   "quadro": 25,
+   "nome": "Registrar Saída/Desfecho",
+   "Caso de Uso Geral": "Gestão de Animais",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário registra a saída do animal do canil, informando o destino.",
+   "Pré-Condições": "O animal deve estar alojado e o ator autenticado com permissão de escrita.",
+   "Pós-Condições": "Animal com status de saída registrado; vaga liberada na baia.",
+   "Restrições/Validações": "Valores de saída restritos a Adotado, Resgatado, Óbito, Eutanásia e Transferido. Histórico imutável (RN06).",
+   "Fluxo Alternativo I": "Destino não informado: o sistema impede a conclusão até que o destino seja selecionado.",
+   "Fluxo Alternativo II": "Destino Adotado: o sistema solicita os dados do adotante (caso de uso Registrar Adoção).",
+   "Requisitos relacionados": "RF-A05, RN06",
+   "rf": [
+    "RF-A05"
+   ],
+   "rn": [
+    "RN06"
+   ],
+   "rnf": []
+  },
+  "Registrar Adoção": {
+   "quadro": 26,
+   "nome": "Registrar Adoção",
+   "Caso de Uso Geral": "Registrar Saída/Desfecho (extensão, quando o destino é Adotado)",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário registra os dados do adotante e da adoção do animal.",
+   "Pré-Condições": "O Veterinário está registrando a saída de um animal com destino Adotado.",
+   "Pós-Condições": "Adoção registrada e vinculada ao animal; animal com status Adotado e data de saída; evento registrado na auditoria.",
+   "Restrições/Validações": "Os dados do adotante são dados pessoais e só são acessados pelos perfis autorizados (LGPD, RNF06).",
+   "Fluxo Alternativo I": "Devolução: o Veterinário registra a data e o motivo da devolução; o animal volta a ficar disponível para adoção e a adoção anterior permanece no histórico.",
+   "Requisitos relacionados": "RF-A05, RN06, RNF06",
+   "rf": [
+    "RF-A05"
+   ],
+   "rn": [
+    "RN06"
+   ],
+   "rnf": [
+    "RNF06"
+   ]
+  },
+  "Transferir Animal de Baia": {
+   "quadro": 27,
+   "nome": "Transferir Animal de Baia",
+   "Caso de Uso Geral": "Gestão de Animais",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário move um animal de uma baia para outra.",
+   "Pré-Condições": "O animal deve estar alojado e a baia de destino deve existir.",
+   "Pós-Condições": "Animal vinculado à nova baia; ocupação das baias de origem e destino atualizadas.",
+   "Restrições/Validações": "A baia de destino deve possuir vaga disponível.",
+   "Fluxo Alternativo I": "Baia de destino lotada: o sistema alerta e solicita outra baia.",
+   "Requisitos relacionados": "RF-A02",
+   "rf": [
+    "RF-A02"
+   ],
+   "rn": [],
+   "rnf": []
+  },
+  "Consultar Animais por Baia": {
+   "quadro": 28,
+   "nome": "Consultar Animais por Baia",
+   "Caso de Uso Geral": "Gestão de Animais",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário visualiza e filtra os animais alojados, organizados por baia.",
+   "Pré-Condições": "O ator deve estar autenticado com permissão de leitura no módulo.",
+   "Pós-Condições": "Listagem de animais exibida conforme os filtros, com ocupação por baia.",
+   "Restrições/Validações": "Baias disponíveis: BAIA 1–16 (internas), E1–E4 (externas) e CORREDOR.",
+   "Fluxo Alternativo I": "Nenhum animal para o filtro: o sistema informa que não há resultados.",
+   "Requisitos relacionados": "RF-A02",
+   "rf": [
+    "RF-A02"
+   ],
+   "rn": [],
+   "rnf": []
+  },
+  "Registrar Aplicação de Vacina": {
+   "quadro": 29,
+   "nome": "Registrar Aplicação de Vacina",
+   "Caso de Uso Geral": "Histórico Veterinário",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário registra a aplicação de uma vacina em um animal e o sistema calcula a previsão de reforço.",
+   "Pré-Condições": "O animal deve estar cadastrado e a vacina disponível.",
+   "Pós-Condições": "Vacinação registrada; previsão de retorno calculada para o alerta vacinal.",
+   "Restrições/Validações": "Registros do histórico são imutáveis (RN06, RNF10). A previsão de reforço baseia-se no intervalo da vacina.",
+   "Fluxo Alternativo I": "Anexar comprovante: o Veterinário pode anexar um documento à vacinação registrada.",
+   "Requisitos relacionados": "RF-A03, RF-A04, RN06",
+   "rf": [
+    "RF-A03",
+    "RF-A04"
+   ],
+   "rn": [
+    "RN06"
+   ],
+   "rnf": [
+    "RNF10"
+   ]
+  },
+  "Prescrever Medicamento": {
+   "quadro": 30,
+   "nome": "Prescrever Medicamento",
+   "Caso de Uso Geral": "Histórico Veterinário",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário prescreve um medicamento a um animal, definindo dose, via e frequência.",
+   "Pré-Condições": "O animal deve estar cadastrado e o medicamento disponível.",
+   "Pós-Condições": "Prescrição registrada com status ativo no histórico do animal.",
+   "Restrições/Validações": "Registros do histórico são imutáveis (RN06).",
+   "Fluxo Alternativo I": "Concluir, suspender ou cancelar: o Veterinário altera o status de uma prescrição ativa, mantendo o registro.",
+   "Requisitos relacionados": "RF-A04, RN06",
+   "rf": [
+    "RF-A04"
+   ],
+   "rn": [
+    "RN06"
+   ],
+   "rnf": []
+  },
+  "Registrar Procedimento Clínico": {
+   "quadro": 31,
+   "nome": "Registrar Procedimento Clínico",
+   "Caso de Uso Geral": "Histórico Veterinário",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário registra um procedimento realizado no animal.",
+   "Pré-Condições": "O animal deve estar cadastrado.",
+   "Pós-Condições": "Procedimento registrado no histórico do animal.",
+   "Restrições/Validações": "Registros do histórico são imutáveis (RN06).",
+   "Fluxo Alternativo I": "Anexar documento: o Veterinário pode anexar arquivos ao procedimento registrado.",
+   "Requisitos relacionados": "RF-A04, RN06",
+   "rf": [
+    "RF-A04"
+   ],
+   "rn": [
+    "RN06"
+   ],
+   "rnf": []
+  },
+  "Registrar Exame": {
+   "quadro": 32,
+   "nome": "Registrar Exame",
+   "Caso de Uso Geral": "Histórico Veterinário",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário solicita e registra o resultado de um exame laboratorial do animal.",
+   "Pré-Condições": "O animal deve estar cadastrado e o laboratório disponível.",
+   "Pós-Condições": "Exame registrado com solicitação e, posteriormente, resultado no histórico do animal.",
+   "Restrições/Validações": "Registros do histórico são imutáveis (RN06).",
+   "Fluxo Alternativo I": "Anexar laudo: o Veterinário pode anexar o laudo ao exame registrado.",
+   "Requisitos relacionados": "RF-A04, RN06",
+   "rf": [
+    "RF-A04"
+   ],
+   "rn": [
+    "RN06"
+   ],
+   "rnf": []
+  },
+  "Gerenciar Baias": {
+   "quadro": 33,
+   "nome": "Gerenciar Baias",
+   "Caso de Uso Geral": "Gestão de Animais do Canil",
+   "Ator Principal": "Administrador",
+   "Atores Secundários": "",
+   "Resumo": "O Administrador cadastra e edita as baias do canil, com tipo, capacidade e finalidade.",
+   "Pré-Condições": "O Administrador está autenticado.",
+   "Pós-Condições": "Baia criada ou atualizada; evento registrado na auditoria.",
+   "Restrições/Validações": "Capacidade maior que zero. A ocupação não é digitada: é calculada pela contagem de animais alojados (RF-A02).",
+   "Fluxo Alternativo I": "Capacidade informada menor que a ocupação atual: o sistema grava e exibe aviso de superlotação.",
+   "Requisitos relacionados": "RF-A02, RN09, RNF10",
+   "rf": [
+    "RF-A02"
+   ],
+   "rn": [
+    "RN09"
+   ],
+   "rnf": [
+    "RNF10"
+   ]
+  },
+  "Anexar Documento ao Animal": {
+   "quadro": 34,
+   "nome": "Anexar Documento ao Animal",
+   "Caso de Uso Geral": "Registrar Aplicação de Vacina, Registrar Procedimento Clínico e Registrar Exame (extensão)",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário anexa um arquivo (laudo, receita, imagem) ao registro clínico do animal.",
+   "Pré-Condições": "O Veterinário está registrando uma vacinação, um procedimento ou um exame.",
+   "Pós-Condições": "Arquivo armazenado e vinculado ao registro, com nome, endereço e tamanho.",
+   "Restrições/Validações": "O anexo não pode ser excluído depois de gravado (RN06).",
+   "Fluxo Alternativo I": "Arquivo inválido ou acima do limite: o sistema informa o motivo e não anexa.",
+   "Requisitos relacionados": "RF-A04, RN06",
+   "rf": [
+    "RF-A04"
+   ],
+   "rn": [
+    "RN06"
+   ],
+   "rnf": []
+  },
+  "Registrar Nova Ocorrência": {
+   "quadro": 35,
+   "nome": "Registrar Nova Ocorrência",
+   "Caso de Uso Geral": "Gestão de Ocorrências",
+   "Ator Principal": "Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O Agente Sanitário registra uma nova ocorrência ou denúncia, com geração automática de protocolo.",
+   "Pré-Condições": "O ator deve estar autenticado com permissão de escrita no módulo de ocorrências.",
+   "Pós-Condições": "Ocorrência persistida com protocolo anual, denunciante vinculado e movimentação inicial registrada.",
+   "Restrições/Validações": "Protocolo sequencial e anual 0000/AAAA (RN02). Em ocorrências sigilosas, o denunciante fica oculto para não-Administradores (RN03).",
+   "Fluxo Alternativo I": "Informar denunciado: ver o caso de uso Informar Denunciado.",
+   "Fluxo Alternativo II": "CEP não localizado: o sistema informa a falha e o Agente Sanitário preenche o endereço manualmente.",
+   "Fluxo Alternativo III": "Anexar documento: ver o caso de uso Anexar Documento à Ocorrência.",
+   "Requisitos relacionados": "RF-E01, RN02, RN03",
+   "rf": [
+    "RF-E01"
+   ],
+   "rn": [
+    "RN02",
+    "RN03"
+   ],
+   "rnf": []
+  },
+  "Informar Denunciado": {
+   "quadro": 36,
+   "nome": "Informar Denunciado",
+   "Caso de Uso Geral": "Registrar Nova Ocorrência (extensão, quando há denunciado)",
+   "Ator Principal": "Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O Agente Sanitário registra os dados da pessoa apontada na denúncia.",
+   "Pré-Condições": "O Agente Sanitário está registrando uma ocorrência e o denunciante identificou um denunciado.",
+   "Pós-Condições": "Denunciado vinculado à ocorrência.",
+   "Restrições/Validações": "Todos os campos são opcionais; o CPF só é registrado quando necessário (LGPD, princípio da necessidade).",
+   "Fluxo Alternativo I": "O Agente Sanitário desmarca a opção antes de salvar: nenhum denunciado é gravado.",
+   "Requisitos relacionados": "RF-E01, RNF06",
+   "rf": [
+    "RF-E01"
+   ],
+   "rn": [],
+   "rnf": [
+    "RNF06"
+   ]
+  },
+  "Anexar Documento à Ocorrência": {
+   "quadro": 37,
+   "nome": "Anexar Documento à Ocorrência",
+   "Caso de Uso Geral": "Registrar Nova Ocorrência (extensão, quando há documento)",
+   "Ator Principal": "Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O Agente Sanitário anexa fotos ou documentos que acompanham a denúncia.",
+   "Pré-Condições": "O Agente Sanitário está registrando uma ocorrência.",
+   "Pós-Condições": "Arquivo armazenado e vinculado à ocorrência.",
+   "Restrições/Validações": "O anexo não pode ser excluído depois de gravado (RN06).",
+   "Fluxo Alternativo I": "Arquivo inválido ou acima do limite: o sistema informa o motivo e não anexa.",
+   "Requisitos relacionados": "RF-E01, RN06",
+   "rf": [
+    "RF-E01"
+   ],
+   "rn": [
+    "RN06"
+   ],
+   "rnf": []
+  },
+  "Consultar e Filtrar Ocorrências": {
+   "quadro": 38,
+   "nome": "Consultar e Filtrar Ocorrências",
+   "Caso de Uso Geral": "Gestão de Ocorrências",
+   "Ator Principal": "Agente Sanitário",
+   "Atores Secundários": "Administrador",
+   "Resumo": "O Agente Sanitário consulta ocorrências aplicando filtros; dados sigilosos do denunciante são restritos.",
+   "Pré-Condições": "O ator deve estar autenticado com permissão de leitura no módulo.",
+   "Pós-Condições": "Ocorrências exibidas conforme os filtros, respeitando o sigilo do denunciante.",
+   "Restrições/Validações": "Os dados do denunciante em ocorrências sigilosas só são exibidos ao Administrador (RN03).",
+   "Fluxo Alternativo I": "Acesso como Administrador: os dados do denunciante são exibidos mesmo em ocorrências sigilosas.",
+   "Fluxo Alternativo II": "Nenhuma ocorrência encontrada: o sistema informa que não há resultados.",
+   "Requisitos relacionados": "RF-E02, RN03",
+   "rf": [
+    "RF-E02"
+   ],
+   "rn": [
+    "RN03"
+   ],
+   "rnf": []
+  },
+  "Encerrar Ocorrência": {
+   "quadro": 39,
+   "nome": "Encerrar Ocorrência",
+   "Caso de Uso Geral": "Gestão de Ocorrências",
+   "Ator Principal": "Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O Agente Sanitário encerra uma ocorrência, registrando a providência tomada.",
+   "Pré-Condições": "A ocorrência deve estar aberta ou em atendimento e o ator ter permissão para encerrá-la.",
+   "Pós-Condições": "Ocorrência encerrada com descrição e providência; registro torna-se imutável.",
+   "Restrições/Validações": "Somente Agente Sanitário ou Administrador podem encerrar. Após o encerramento, o registro é imutável (RN06). Ocorrência com processo sanitário vinculado só pode ser encerrada após o registro do resultado desse processo (RN05).",
+   "Fluxo Alternativo I": "Providência não informada: o sistema impede o encerramento até que a providência seja selecionada.",
+   "Fluxo Alternativo II": "Processo vinculado sem resultado: o sistema impede o encerramento e informa o protocolo do processo pendente (RN05).",
+   "Requisitos relacionados": "RF-E03, RN05, RN06",
+   "rf": [
+    "RF-E03"
+   ],
+   "rn": [
+    "RN05",
+    "RN06"
+   ],
+   "rnf": []
+  },
+  "Abrir Processo Sanitário": {
+   "quadro": 40,
+   "nome": "Abrir Processo Sanitário",
+   "Caso de Uso Geral": "Gestão de Processos",
+   "Ator Principal": "Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O Agente Sanitário abre um processo sanitário para investigação de zoonose, com geração de protocolo e registro do animal amostrado.",
+   "Pré-Condições": "O ator deve estar autenticado com permissão de escrita no módulo de processos.",
+   "Pós-Condições": "Processo persistido com protocolo anual, responsável e animal amostrado vinculados.",
+   "Restrições/Validações": "Protocolo sequencial e anual (RN02). Obrigatórios: data de abertura, doença, laboratório e dados mínimos do responsável (RN08).",
+   "Fluxo Alternativo I": "Contato humano-animal: o sistema torna o processo urgente e bloqueia o encerramento sem resultado (RN04, RF-B05).",
+   "Requisitos relacionados": "RF-B01, RN02, RN04, RN08",
+   "rf": [
+    "RF-B01",
+    "RF-B05"
+   ],
+   "rn": [
+    "RN02",
+    "RN04",
+    "RN08"
+   ],
+   "rnf": []
+  },
+  "Registrar Animal Amostrado": {
+   "quadro": 41,
+   "nome": "Registrar Animal Amostrado",
+   "Caso de Uso Geral": "Gestão de Processos",
+   "Ator Principal": "Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O Agente Sanitário registra os dados do animal investigado e da amostra coletada dentro de um processo.",
+   "Pré-Condições": "Deve existir um processo sanitário em aberto.",
+   "Pós-Condições": "Animal amostrado vinculado ao processo, com material biológico e indicadores de contato registrados.",
+   "Restrições/Validações": "O indicador de contato humano verdadeiro aciona a urgência do processo (RN04, RF-B05).",
+   "Fluxo Alternativo I": "Animal interno: quando o investigado for um animal do canil, o registro pode referenciar o cadastro existente.",
+   "Requisitos relacionados": "RF-B04, RN04",
+   "rf": [
+    "RF-B04",
+    "RF-B05"
+   ],
+   "rn": [
+    "RN04"
+   ],
+   "rnf": []
+  },
+  "Registrar Resultado Laboratorial": {
+   "quadro": 42,
+   "nome": "Registrar Resultado Laboratorial",
+   "Caso de Uso Geral": "Gestão de Processos",
+   "Ator Principal": "Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O Agente Sanitário registra o resultado da análise laboratorial e o desfecho do processo.",
+   "Pré-Condições": "O processo deve estar em andamento ou aguardando resultado (não pode estar com status ABERTO).",
+   "Pós-Condições": "Resultado e desfecho registrados; em caso positivo ou inconclusivo, o responsável e a Vigilância Epidemiológica são notificados por e-mail.",
+   "Restrições/Validações": "O resultado não pode ser preenchido com status ABERTO (RN12). Resultado Positivo ou Inconclusivo dispara notificação (RN10).",
+   "Fluxo Alternativo I": "Sem e-mail do responsável: o sistema registra o resultado, e notifica apenas a Vigilância Epidemiológica.",
+   "Requisitos relacionados": "RF-B03, RN10, RN12",
+   "rf": [
+    "RF-B03"
+   ],
+   "rn": [
+    "RN10",
+    "RN12"
+   ],
+   "rnf": []
+  },
+  "Consultar e Filtrar Processos": {
+   "quadro": 43,
+   "nome": "Consultar e Filtrar Processos",
+   "Caso de Uso Geral": "Gestão de Processos",
+   "Ator Principal": "Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O Agente Sanitário consulta processos sanitários aplicando filtros, com os urgentes fixados no topo.",
+   "Pré-Condições": "O ator deve estar autenticado com permissão de leitura no módulo.",
+   "Pós-Condições": "Processos exibidos conforme os filtros, com urgentes priorizados.",
+   "Restrições/Validações": "Processos urgentes são fixados no topo das listagens (RN04).",
+   "Fluxo Alternativo I": "Nenhum processo encontrado: o sistema informa que não há resultados.",
+   "Requisitos relacionados": "RF-B02, RN04",
+   "rf": [
+    "RF-B02"
+   ],
+   "rn": [
+    "RN04"
+   ],
+   "rnf": []
+  },
+  "Encerrar Processo": {
+   "quadro": 44,
+   "nome": "Encerrar Processo",
+   "Caso de Uso Geral": "Gestão de Processos",
+   "Ator Principal": "Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O Agente Sanitário encerra um processo sanitário após a conclusão da investigação.",
+   "Pré-Condições": "O processo deve possuir resultado registrado quando houver contato humano (RF-B05).",
+   "Pós-Condições": "Processo concluído; registro torna-se imutável.",
+   "Restrições/Validações": "Processos com contato humano não podem ser encerrados sem resultado (RF-B05). Registro imutável (RN06).",
+   "Fluxo Alternativo I": "Resultado ausente em processo urgente: o sistema bloqueia o encerramento e solicita o registro do resultado.",
+   "Requisitos relacionados": "RF-B05, RN06, RN12",
+   "rf": [
+    "RF-B05"
+   ],
+   "rn": [
+    "RN06",
+    "RN12"
+   ],
+   "rnf": []
+  },
+  "Gerar Documento do Processo": {
+   "quadro": 45,
+   "nome": "Gerar Documento do Processo",
+   "Caso de Uso Geral": "Gestão de Processos",
+   "Ator Principal": "Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O Agente Sanitário gera o documento em PDF de um processo sanitário.",
+   "Pré-Condições": "O processo deve estar cadastrado.",
+   "Pós-Condições": "Documento gerado e disponibilizado para download.",
+   "Restrições/Validações": "A geração segue os estados Pendente → Em Processamento → Concluído/Falha (RN11).",
+   "Fluxo Alternativo I": "Falha na geração: o sistema marca o documento como Falha e permite nova tentativa.",
+   "Requisitos relacionados": "RF-B06, RN11",
+   "rf": [
+    "RF-B06"
+   ],
+   "rn": [
+    "RN11"
+   ],
+   "rnf": []
+  },
+  "Visualizar Dashboard em Tempo Real": {
+   "quadro": 46,
+   "nome": "Visualizar Dashboard em Tempo Real",
+   "Caso de Uso Geral": "Dashboard",
+   "Ator Principal": "Veterinário ou Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O usuário visualiza indicadores operacionais consolidados em tempo real.",
+   "Pré-Condições": "O ator deve estar autenticado com permissão de acesso ao dashboard.",
+   "Pós-Condições": "Indicadores exibidos com dados atualizados do banco.",
+   "Restrições/Validações": "O dashboard é alimentado por consultas em tempo real e não gera entidade persistida.",
+   "Fluxo Alternativo I": "Consultar alertas vacinais: o usuário detalha os animais com reforço previsto para os próximos 7 dias (RF-A03), conforme o caso de uso Consultar Alertas Vacinais.",
+   "Fluxo Alternativo II": "Monitorar ocupação de baias: o usuário detalha a ocupação atual versus a capacidade de cada baia, conforme o caso de uso Monitorar Ocupação de Baias.",
+   "Requisitos relacionados": "RF-D01",
+   "rf": [
+    "RF-A03",
+    "RF-D01"
+   ],
+   "rn": [],
+   "rnf": []
+  },
+  "Consultar Alertas Vacinais": {
+   "quadro": 47,
+   "nome": "Consultar Alertas Vacinais",
+   "Caso de Uso Geral": "Visualizar Dashboard em Tempo Real (extensão)",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário consulta os animais com reforço vacinal próximo ou vencido.",
+   "Pré-Condições": "O Veterinário está no painel inicial.",
+   "Pós-Condições": "Lista de alertas exibida; nenhum dado é alterado.",
+   "Restrições/Validações": "Janela de 7 dias (RF-A03); vacinas vencidas aparecem com severidade maior.",
+   "Fluxo Alternativo I": "Nenhuma vacina a vencer: o sistema informa que não há alertas.",
+   "Requisitos relacionados": "RF-A03, RF-D01",
+   "rf": [
+    "RF-A03",
+    "RF-D01"
+   ],
+   "rn": [],
+   "rnf": []
+  },
+  "Monitorar Ocupação de Baias": {
+   "quadro": 48,
+   "nome": "Monitorar Ocupação de Baias",
+   "Caso de Uso Geral": "Visualizar Dashboard em Tempo Real (extensão)",
+   "Ator Principal": "Veterinário",
+   "Atores Secundários": "",
+   "Resumo": "O Veterinário acompanha a ocupação de cada baia em relação à capacidade.",
+   "Pré-Condições": "O Veterinário está no painel inicial.",
+   "Pós-Condições": "Ocupação exibida; nenhum dado é alterado.",
+   "Restrições/Validações": "A ocupação conta apenas animais alojados (exclui adotados, transferidos e óbitos).",
+   "Fluxo Alternativo I": "Baia sem animais: o sistema exibe ocupação zero.",
+   "Requisitos relacionados": "RF-A02, RF-D01",
+   "rf": [
+    "RF-A02",
+    "RF-D01"
+   ],
+   "rn": [],
+   "rnf": []
+  },
+  "Solicitar Geração de Relatório": {
+   "quadro": 49,
+   "nome": "Solicitar Geração de Relatório",
+   "Caso de Uso Geral": "Relatórios",
+   "Ator Principal": "Veterinário ou Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O usuário solicita a geração de um relatório, processado de forma assíncrona.",
+   "Pré-Condições": "O ator deve estar autenticado com permissão para gerar relatórios.",
+   "Pós-Condições": "Solicitação registrada com status Pendente e processada em segundo plano.",
+   "Restrições/Validações": "A geração segue os estados Pendente → Em Processamento → Concluído/Falha (RN11). O binário não é armazenado no banco.",
+   "Fluxo Alternativo I": "Falha no processamento: o sistema marca o relatório como Falha e permite nova solicitação.",
+   "Requisitos relacionados": "RF-D02, RF-B07, RN11",
+   "rf": [
+    "RF-B07",
+    "RF-D02"
+   ],
+   "rn": [
+    "RN11"
+   ],
+   "rnf": []
+  },
+  "Acompanhar Status do Relatório": {
+   "quadro": 50,
+   "nome": "Acompanhar Status do Relatório",
+   "Caso de Uso Geral": "Relatórios",
+   "Ator Principal": "Veterinário ou Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O usuário acompanha o andamento da geração de um relatório solicitado.",
+   "Pré-Condições": "Deve existir ao menos um relatório solicitado pelo usuário.",
+   "Pós-Condições": "Status atual do relatório exibido ao usuário.",
+   "Restrições/Validações": "O status reflete o ciclo de vida assíncrono do relatório (RN11).",
+   "Fluxo Alternativo I": "Relatório concluído: o sistema habilita a opção de download (Baixar Relatório Gerado).",
+   "Requisitos relacionados": "RF-D02, RN11",
+   "rf": [
+    "RF-D02"
+   ],
+   "rn": [
+    "RN11"
+   ],
+   "rnf": []
+  },
+  "Baixar Relatório Gerado": {
+   "quadro": 51,
+   "nome": "Baixar Relatório Gerado",
+   "Caso de Uso Geral": "Relatórios",
+   "Ator Principal": "Veterinário ou Agente Sanitário",
+   "Atores Secundários": "",
+   "Resumo": "O usuário baixa o arquivo de um relatório concluído.",
+   "Pré-Condições": "O relatório deve estar com status Concluído e a URL não expirada.",
+   "Pós-Condições": "Arquivo do relatório transferido ao usuário.",
+   "Restrições/Validações": "O download só é permitido com status Concluído e dentro da validade da URL (RN11).",
+   "Fluxo Alternativo I": "URL expirada: o sistema informa a expiração e orienta a solicitar uma nova geração.",
+   "Requisitos relacionados": "RF-D02, RN11",
+   "rf": [
+    "RF-D02"
+   ],
+   "rn": [
+    "RN11"
+   ],
+   "rnf": []
+  }
+ },
+ "telas": {
+  "T01": {
+   "nome": "Login",
+   "perfis": "Todos",
+   "req": "RF-C01",
+   "substitui": "—"
+  },
+  "T02": {
+   "nome": "Dashboard operacional",
+   "perfis": "Todos",
+   "req": "RF-D01, RF-A03",
+   "substitui": "Contagens manuais e gráficos montados à mão"
+  },
+  "T03": {
+   "nome": "Alertas",
+   "perfis": "Todos",
+   "req": "RF-A03",
+   "substitui": "Controle de memória do reforço vacinal"
+  },
+  "T04": {
+   "nome": "Animais do canil",
+   "perfis": "Veterinário, Administrador",
+   "req": "RF-A02",
+   "substitui": "Planilha de controle por baias"
+  },
+  "T05": {
+   "nome": "Cadastro de animal",
+   "perfis": "Veterinário, Administrador",
+   "req": "RF-A01, RN01, RN07",
+   "substitui": "Ficha manuscrita e cadastro no AnimalTag"
+  },
+  "T06": {
+   "nome": "Ficha do animal",
+   "perfis": "Veterinário, Administrador",
+   "req": "RF-A01, RF-A03, RF-A04, RF-A05",
+   "substitui": "Ficha manuscrita"
+  },
+  "T07": {
+   "nome": "Gestão de baias",
+   "perfis": "Administrador (edição); Veterinário (consulta)",
+   "req": "RF-A02",
+   "substitui": "Planilha de controle por baias"
+  },
+  "T08": {
+   "nome": "Ocorrências",
+   "perfis": "Agente Sanitário, Administrador",
+   "req": "RF-E02, RN03",
+   "substitui": "Caderno de ocorrências"
+  },
+  "T09": {
+   "nome": "Registro de ocorrência",
+   "perfis": "Agente Sanitário, Administrador",
+   "req": "RF-E01, RN02",
+   "substitui": "Caderno de ocorrências"
+  },
+  "T10": {
+   "nome": "Detalhe da ocorrência",
+   "perfis": "Agente Sanitário, Administrador",
+   "req": "RF-E03, RN05",
+   "substitui": "Caderno de ocorrências"
+  },
+  "T11": {
+   "nome": "Processos sanitários",
+   "perfis": "Agente Sanitário, Administrador",
+   "req": "RF-B02, RN04",
+   "substitui": "Planilha de processos"
+  },
+  "T12": {
+   "nome": "Abertura de processo",
+   "perfis": "Agente Sanitário, Administrador",
+   "req": "RF-B01, RF-B04, RN08",
+   "substitui": "Formulário físico e planilha"
+  },
+  "T13": {
+   "nome": "Detalhe do processo",
+   "perfis": "Agente Sanitário, Administrador",
+   "req": "RF-B03, RF-B05, RN10, RN12",
+   "substitui": "Planilha de resultados"
+  },
+  "T14": {
+   "nome": "Central de relatórios",
+   "perfis": "Todos",
+   "req": "RF-D02, RN11",
+   "substitui": "Relatórios montados à mão"
+  },
+  "T15": {
+   "nome": "Usuários",
+   "perfis": "Administrador",
+   "req": "RF-C02, RN09",
+   "substitui": "—"
+  },
+  "T16": {
+   "nome": "Configurações",
+   "perfis": "Todos",
+   "req": "RF-C03",
+   "substitui": "—"
+  },
+  "T17": {
+   "nome": "Perfil e Ajuda",
+   "perfis": "Todos",
+   "req": "RF-C01",
+   "substitui": "—"
+  }
+ },
+ "dicionario": {
+  "Usuario": {
+   "quadro": 52,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do usuário."
+    },
+    {
+     "campo": "email",
+     "tipo": "varchar(255)",
+     "chave": "UQ",
+     "descricao": "E-mail de login, único no sistema."
+    },
+    {
+     "campo": "senha",
+     "tipo": "varchar(255)",
+     "chave": "",
+     "descricao": "Hash da senha (bcrypt)."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Primeiro nome do usuário."
+    },
+    {
+     "campo": "sobrenome",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Sobrenome do usuário."
+    },
+    {
+     "campo": "crmv",
+     "tipo": "varchar(20)",
+     "chave": "",
+     "descricao": "Registro profissional do veterinário, quando aplicável."
+    },
+    {
+     "campo": "telefone",
+     "tipo": "varchar(20)",
+     "chave": "",
+     "descricao": "Telefone de contato."
+    },
+    {
+     "campo": "ativo",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Indica se a conta está ativa."
+    },
+    {
+     "campo": "ultimo_acesso",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora do último acesso."
+    },
+    {
+     "campo": "criado_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora de criação do registro."
+    },
+    {
+     "campo": "senha_alterada_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora da última alteração de senha."
+    },
+    {
+     "campo": "desativado_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora da desativação da conta."
+    },
+    {
+     "campo": "data_modificacao",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora da última modificação do registro."
+    }
+   ]
+  },
+  "Cargo": {
+   "quadro": 53,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do cargo."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Nome do cargo (ex.: Administrador, Veterinário)."
+    },
+    {
+     "campo": "descricao",
+     "tipo": "text",
+     "chave": "",
+     "descricao": "Descrição das atribuições do cargo."
+    }
+   ]
+  },
+  "UsuarioCargo": {
+   "quadro": 54,
+   "campos": [
+    {
+     "campo": "usuario_id",
+     "tipo": "uuid",
+     "chave": "PK,FK",
+     "descricao": "Usuário vinculado (Usuario)."
+    },
+    {
+     "campo": "cargo_id",
+     "tipo": "uuid",
+     "chave": "PK,FK",
+     "descricao": "Cargo atribuído (Cargo)."
+    },
+    {
+     "campo": "adicionado_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora da atribuição do cargo."
+    }
+   ]
+  },
+  "CargoPermissao": {
+   "quadro": 55,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único da permissão."
+    },
+    {
+     "campo": "cargo_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Cargo ao qual a permissão pertence (Cargo)."
+    },
+    {
+     "campo": "modulo",
+     "tipo": "Modulo",
+     "chave": "",
+     "descricao": "Módulo funcional alvo da permissão."
+    },
+    {
+     "campo": "feature",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Funcionalidade específica controlada."
+    },
+    {
+     "campo": "leitura",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Permite consultar a funcionalidade."
+    },
+    {
+     "campo": "escrita",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Permite criar ou editar registros."
+    },
+    {
+     "campo": "exclusao",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Permite excluir/desativar registros."
+    }
+   ]
+  },
+  "PreferenciaUsuario": {
+   "quadro": 56,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único das preferências."
+    },
+    {
+     "campo": "usuario_id",
+     "tipo": "uuid",
+     "chave": "FK,UQ",
+     "descricao": "Usuário dono das preferências (Usuario)."
+    },
+    {
+     "campo": "tema",
+     "tipo": "TemaUsuario",
+     "chave": "",
+     "descricao": "Tema visual da interface (claro/escuro)."
+    },
+    {
+     "campo": "densidade",
+     "tipo": "DensidadeUsuario",
+     "chave": "",
+     "descricao": "Densidade de exibição da interface."
+    },
+    {
+     "campo": "notif_alertas_criticos",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Indica se o usuário recebe, no sistema, alertas de situações que exigem ação imediata, como processo sanitário com contato humano-animal sinalizado como urgente (RF-D01)."
+    },
+    {
+     "campo": "notif_vacina_vencendo",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Indica se o usuário recebe, no sistema, avisos de reforço vacinal a vencer nos próximos 7 dias (RF-A03)."
+    },
+    {
+     "campo": "notif_superlotacao",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Indica se o usuário recebe, no sistema, avisos de baias com ocupação igual ou superior à capacidade (RF-A02)."
+    },
+    {
+     "campo": "notif_resultado_lab",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Indica se o usuário recebe, no sistema, aviso quando um resultado laboratorial é registrado em processo sanitário. É independente da notificação por e-mail ao responsável e à Vigilância Epidemiológica (RN10), que é obrigatória."
+    },
+    {
+     "campo": "notif_email_diario",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Indica se o usuário recebe por e-mail um resumo diário com os alertas pendentes: vacinas a vencer, baias superlotadas e processos urgentes."
+    }
+   ]
+  },
+  "AuditoriaEvento": {
+   "quadro": 57,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do evento de auditoria."
+    },
+    {
+     "campo": "usuario_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Usuário que executou a ação (Usuario)."
+    },
+    {
+     "campo": "acao",
+     "tipo": "AcaoAuditoria",
+     "chave": "",
+     "descricao": "Tipo de ação registrada (criação, login etc.)."
+    },
+    {
+     "campo": "entidade",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Entidade afetada pela ação."
+    },
+    {
+     "campo": "payload_antes",
+     "tipo": "jsonb",
+     "chave": "",
+     "descricao": "Estado do registro antes da alteração."
+    },
+    {
+     "campo": "payload_depois",
+     "tipo": "jsonb",
+     "chave": "",
+     "descricao": "Estado do registro após a alteração."
+    },
+    {
+     "campo": "ip",
+     "tipo": "varchar(45)",
+     "chave": "",
+     "descricao": "Endereço IP de origem da ação."
+    },
+    {
+     "campo": "ocorreu_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora da ocorrência do evento."
+    }
+   ]
+  },
+  "MotivoEntrada": {
+   "quadro": 58,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do motivo de entrada."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Descrição do motivo (resgate, denúncia etc.)."
+    },
+    {
+     "campo": "ativo",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Indica se o motivo está disponível para uso."
+    }
+   ]
+  },
+  "TipoBaia": {
+   "quadro": 59,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do tipo de baia."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Nome do tipo (interna, externa, corredor)."
+    },
+    {
+     "campo": "ativo",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Indica se o tipo está disponível para uso."
+    }
+   ]
+  },
+  "Baia": {
+   "quadro": 60,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único da baia."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Identificação da baia (BAIA 1–16, E1–E4, CORREDOR)."
+    },
+    {
+     "campo": "capacidade",
+     "tipo": "integer",
+     "chave": "",
+     "descricao": "Número máximo de animais comportados."
+    },
+    {
+     "campo": "finalidade",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Finalidade de uso da baia."
+    },
+    {
+     "campo": "ativa",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Indica se a baia está em uso."
+    },
+    {
+     "campo": "observacoes",
+     "tipo": "text",
+     "chave": "",
+     "descricao": "Observações gerais sobre a baia."
+    },
+    {
+     "campo": "tipo_baia_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Tipo da baia (TipoBaia)."
+    }
+   ]
+  },
+  "Sintoma": {
+   "quadro": 61,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do sintoma."
+    },
+    {
+     "campo": "codigo",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Código padronizado do sintoma."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Nome do sintoma clínico."
+    },
+    {
+     "campo": "ativo",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Indica se o sintoma está disponível para uso."
+    }
+   ]
+  },
+  "Vacina": {
+   "quadro": 62,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único da vacina."
+    },
+    {
+     "campo": "codigo",
+     "tipo": "varchar(100)",
+     "chave": "UQ",
+     "descricao": "Código identificador da vacina."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Nome comercial ou técnico da vacina."
+    },
+    {
+     "campo": "intervalo_meses",
+     "tipo": "integer",
+     "chave": "",
+     "descricao": "Intervalo em meses para o reforço (base do alerta RF-A03)."
+    },
+    {
+     "campo": "ativo",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Indica se a vacina está disponível para uso."
+    }
+   ]
+  },
+  "VacinaEspecie": {
+   "quadro": 63,
+   "campos": [
+    {
+     "campo": "vacina_id",
+     "tipo": "uuid",
+     "chave": "PK,FK",
+     "descricao": "Vacina associada (Vacina)."
+    },
+    {
+     "campo": "especie",
+     "tipo": "Especie",
+     "chave": "PK",
+     "descricao": "Espécie à qual a vacina se aplica."
+    }
+   ]
+  },
+  "TipoProcedimento": {
+   "quadro": 64,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do tipo de procedimento."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Nome do tipo de procedimento."
+    },
+    {
+     "campo": "ativo",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Indica se o tipo está disponível para uso."
+    }
+   ]
+  },
+  "CategoriaFarmacologica": {
+   "quadro": 65,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único da categoria."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(100)",
+     "chave": "UQ",
+     "descricao": "Nome da categoria farmacológica."
+    },
+    {
+     "campo": "ativo",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Indica se a categoria está disponível para uso."
+    }
+   ]
+  },
+  "Laboratorio": {
+   "quadro": 66,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do laboratório."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(150)",
+     "chave": "",
+     "descricao": "Nome do laboratório de destino das amostras."
+    },
+    {
+     "campo": "tipo",
+     "tipo": "varchar(50)",
+     "chave": "",
+     "descricao": "Tipo/natureza do laboratório."
+    },
+    {
+     "campo": "contato",
+     "tipo": "varchar(200)",
+     "chave": "",
+     "descricao": "Dados de contato do laboratório."
+    },
+    {
+     "campo": "ativo",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Indica se o laboratório está disponível para uso."
+    }
+   ]
+  },
+  "Animal": {
+   "quadro": 67,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do animal."
+    },
+    {
+     "campo": "numero_medalha",
+     "tipo": "varchar(50)",
+     "chave": "UQ",
+     "descricao": "Número da medalha de identificação."
+    },
+    {
+     "campo": "data_implantacao_chip",
+     "tipo": "date",
+     "chave": "",
+     "descricao": "Data de implantação do microchip."
+    },
+    {
+     "campo": "numero_microchip",
+     "tipo": "varchar(50)",
+     "chave": "UQ",
+     "descricao": "Identificador único do animal quando informado; registrado na implantação do chip (RN01)."
+    },
+    {
+     "campo": "peso_kg",
+     "tipo": "decimal(5,2)",
+     "chave": "",
+     "descricao": "Peso do animal em quilogramas."
+    },
+    {
+     "campo": "data_nascimento_aprox",
+     "tipo": "date",
+     "chave": "",
+     "descricao": "Data de nascimento aproximada."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Nome do animal."
+    },
+    {
+     "campo": "foto_url",
+     "tipo": "varchar(500)",
+     "chave": "",
+     "descricao": "URL da foto do animal."
+    },
+    {
+     "campo": "coloracao",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Coloração da pelagem."
+    },
+    {
+     "campo": "pelagem",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Tipo de pelagem do animal."
+    },
+    {
+     "campo": "esterilizado",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Indica se o animal foi esterilizado."
+    },
+    {
+     "campo": "data_esterilizacao",
+     "tipo": "date",
+     "chave": "",
+     "descricao": "Data da esterilização."
+    },
+    {
+     "campo": "idade_aprox",
+     "tipo": "varchar(50)",
+     "chave": "",
+     "descricao": "Idade aproximada registrada."
+    },
+    {
+     "campo": "raca",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Raça do animal."
+    },
+    {
+     "campo": "sexo",
+     "tipo": "Sexo",
+     "chave": "",
+     "descricao": "Sexo do animal."
+    },
+    {
+     "campo": "porte",
+     "tipo": "Porte",
+     "chave": "",
+     "descricao": "Porte do animal (P/M/G)."
+    },
+    {
+     "campo": "especie",
+     "tipo": "Especie",
+     "chave": "",
+     "descricao": "Espécie do animal (canino, felino, quiróptero ou primata não humano)."
+    },
+    {
+     "campo": "observacoes",
+     "tipo": "text",
+     "chave": "",
+     "descricao": "Observações e condições especiais."
+    },
+    {
+     "campo": "procedencia",
+     "tipo": "varchar(200)",
+     "chave": "",
+     "descricao": "Procedência/origem do animal."
+    },
+    {
+     "campo": "data_entrada",
+     "tipo": "date",
+     "chave": "",
+     "descricao": "Data de entrada no canil."
+    },
+    {
+     "campo": "data_saida",
+     "tipo": "date",
+     "chave": "",
+     "descricao": "Data de saída do canil, registrada com o destino (RF-A05)."
+    },
+    {
+     "campo": "status_animal",
+     "tipo": "StatusAnimal",
+     "chave": "",
+     "descricao": "Situação atual do animal."
+    },
+    {
+     "campo": "motivo_entrada_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Motivo da entrada (MotivoEntrada)."
+    },
+    {
+     "campo": "baia_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Baia onde está alojado (Baia)."
+    },
+    {
+     "campo": "cadastrado_por",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Usuário que cadastrou (Usuario)."
+    },
+    {
+     "campo": "criado_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora de criação do registro."
+    },
+    {
+     "campo": "atualizado_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora da última atualização."
+    }
+   ]
+  },
+  "AnimalSintoma": {
+   "quadro": 68,
+   "campos": [
+    {
+     "campo": "animal_id",
+     "tipo": "uuid",
+     "chave": "PK,FK",
+     "descricao": "Animal associado (Animal)."
+    },
+    {
+     "campo": "sintoma_id",
+     "tipo": "uuid",
+     "chave": "PK,FK",
+     "descricao": "Sintoma apresentado (Sintoma)."
+    }
+   ]
+  },
+  "AnexoAnimal": {
+   "quadro": 69,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do anexo."
+    },
+    {
+     "campo": "animal_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Animal ao qual o anexo pertence (Animal)."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(255)",
+     "chave": "",
+     "descricao": "Nome do arquivo anexado."
+    },
+    {
+     "campo": "url",
+     "tipo": "varchar(500)",
+     "chave": "",
+     "descricao": "URL de armazenamento do arquivo."
+    },
+    {
+     "campo": "tamanho_bytes",
+     "tipo": "bigint",
+     "chave": "",
+     "descricao": "Tamanho do arquivo em bytes."
+    },
+    {
+     "campo": "criado_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora do upload."
+    }
+   ]
+  },
+  "Vacinacao": {
+   "quadro": 70,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único da aplicação de vacina."
+    },
+    {
+     "campo": "animal_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Animal vacinado (Animal)."
+    },
+    {
+     "campo": "vacina_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Vacina aplicada (Vacina)."
+    },
+    {
+     "campo": "aplicado_por",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Usuário que aplicou (Usuario)."
+    },
+    {
+     "campo": "data_aplicacao",
+     "tipo": "date",
+     "chave": "",
+     "descricao": "Data da aplicação."
+    },
+    {
+     "campo": "data_validade",
+     "tipo": "date",
+     "chave": "",
+     "descricao": "Data de validade da dose; base do alerta de reforço (RF-A03)."
+    },
+    {
+     "campo": "numero_dose",
+     "tipo": "integer",
+     "chave": "",
+     "descricao": "Número da dose aplicada."
+    },
+    {
+     "campo": "dose_quantidade",
+     "tipo": "decimal(8,3)",
+     "chave": "",
+     "descricao": "Quantidade da dose."
+    },
+    {
+     "campo": "dose_unidade",
+     "tipo": "UnidadeDose",
+     "chave": "",
+     "descricao": "Unidade de medida da dose."
+    },
+    {
+     "campo": "lote",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Lote da vacina aplicada."
+    },
+    {
+     "campo": "observacoes",
+     "tipo": "text",
+     "chave": "",
+     "descricao": "Observações da aplicação."
+    },
+    {
+     "campo": "criado_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora de registro."
+    }
+   ]
+  },
+  "AnexoVacinacao": {
+   "quadro": 71,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do anexo."
+    },
+    {
+     "campo": "vacinacao_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Vacinação associada (Vacinacao)."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(255)",
+     "chave": "",
+     "descricao": "Nome do arquivo anexado."
+    },
+    {
+     "campo": "url",
+     "tipo": "varchar(500)",
+     "chave": "",
+     "descricao": "URL de armazenamento do arquivo."
+    },
+    {
+     "campo": "tamanho_bytes",
+     "tipo": "bigint",
+     "chave": "",
+     "descricao": "Tamanho do arquivo em bytes."
+    },
+    {
+     "campo": "criado_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora do upload."
+    }
+   ]
+  },
+  "Procedimento": {
+   "quadro": 72,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do procedimento."
+    },
+    {
+     "campo": "animal_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Animal submetido ao procedimento (Animal)."
+    },
+    {
+     "campo": "tipo_procedimento_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Tipo do procedimento (TipoProcedimento)."
+    },
+    {
+     "campo": "executado_por",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Usuário que executou (Usuario)."
+    },
+    {
+     "campo": "data",
+     "tipo": "date",
+     "chave": "",
+     "descricao": "Data de realização."
+    },
+    {
+     "campo": "descricao",
+     "tipo": "text",
+     "chave": "",
+     "descricao": "Descrição do procedimento."
+    },
+    {
+     "campo": "resultado",
+     "tipo": "text",
+     "chave": "",
+     "descricao": "Resultado obtido."
+    },
+    {
+     "campo": "criado_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora de registro."
+    }
+   ]
+  },
+  "AnexoProcedimento": {
+   "quadro": 73,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do anexo."
+    },
+    {
+     "campo": "procedimento_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Procedimento associado (Procedimento)."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(255)",
+     "chave": "",
+     "descricao": "Nome do arquivo anexado."
+    },
+    {
+     "campo": "url",
+     "tipo": "varchar(500)",
+     "chave": "",
+     "descricao": "URL de armazenamento do arquivo."
+    },
+    {
+     "campo": "tamanho_bytes",
+     "tipo": "bigint",
+     "chave": "",
+     "descricao": "Tamanho do arquivo em bytes."
+    },
+    {
+     "campo": "criado_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora do upload."
+    }
+   ]
+  },
+  "Medicamento": {
+   "quadro": 74,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do medicamento."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Nome do medicamento."
+    },
+    {
+     "campo": "categoria_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Categoria farmacológica (CategoriaFarmacologica)."
+    },
+    {
+     "campo": "ativo",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Indica se o medicamento está disponível para uso."
+    }
+   ]
+  },
+  "Prescricao": {
+   "quadro": 75,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único da prescrição."
+    },
+    {
+     "campo": "animal_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Animal medicado (Animal)."
+    },
+    {
+     "campo": "prescrito_por",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Usuário que prescreveu (Usuario)."
+    },
+    {
+     "campo": "medicamento_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Medicamento prescrito (Medicamento)."
+    },
+    {
+     "campo": "data_inicio",
+     "tipo": "date",
+     "chave": "",
+     "descricao": "Data de início do tratamento."
+    },
+    {
+     "campo": "data_fim_prevista",
+     "tipo": "date",
+     "chave": "",
+     "descricao": "Data prevista de término."
+    },
+    {
+     "campo": "data_fim_real",
+     "tipo": "date",
+     "chave": "",
+     "descricao": "Data real de término."
+    },
+    {
+     "campo": "frequencia_aplicada",
+     "tipo": "integer",
+     "chave": "",
+     "descricao": "Frequência de aplicação."
+    },
+    {
+     "campo": "unidade_frequencia",
+     "tipo": "UnidadeFrequencia",
+     "chave": "",
+     "descricao": "Unidade da frequência (horas/dias)."
+    },
+    {
+     "campo": "dose_quantidade",
+     "tipo": "decimal(8,3)",
+     "chave": "",
+     "descricao": "Quantidade da dose."
+    },
+    {
+     "campo": "dose_unidade",
+     "tipo": "UnidadeDose",
+     "chave": "",
+     "descricao": "Unidade de medida da dose."
+    },
+    {
+     "campo": "via_administracao",
+     "tipo": "ViaAdministracao",
+     "chave": "",
+     "descricao": "Via de administração do medicamento."
+    },
+    {
+     "campo": "status",
+     "tipo": "StatusPrescricao",
+     "chave": "",
+     "descricao": "Situação atual do tratamento."
+    },
+    {
+     "campo": "criado_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora de registro."
+    }
+   ]
+  },
+  "TipoExame": {
+   "quadro": 76,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do tipo de exame."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(100)",
+     "chave": "UQ",
+     "descricao": "Nome do tipo de exame."
+    },
+    {
+     "campo": "ativo",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Indica se o tipo está disponível para uso."
+    }
+   ]
+  },
+  "Exame": {
+   "quadro": 77,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do exame."
+    },
+    {
+     "campo": "animal_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Animal examinado (Animal)."
+    },
+    {
+     "campo": "laboratorio_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Laboratório responsável (Laboratorio)."
+    },
+    {
+     "campo": "tipo_exame_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Tipo do exame (TipoExame)."
+    },
+    {
+     "campo": "data_solicitacao",
+     "tipo": "date",
+     "chave": "",
+     "descricao": "Data de solicitação do exame."
+    },
+    {
+     "campo": "data_resultado",
+     "tipo": "date",
+     "chave": "",
+     "descricao": "Data de recebimento do resultado."
+    },
+    {
+     "campo": "resultado",
+     "tipo": "text",
+     "chave": "",
+     "descricao": "Resultado do exame."
+    },
+    {
+     "campo": "criado_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora de registro."
+    }
+   ]
+  },
+  "AnexoExame": {
+   "quadro": 78,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do anexo."
+    },
+    {
+     "campo": "exame_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Exame associado (Exame)."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(255)",
+     "chave": "",
+     "descricao": "Nome do arquivo anexado."
+    },
+    {
+     "campo": "url",
+     "tipo": "varchar(500)",
+     "chave": "",
+     "descricao": "URL de armazenamento do arquivo."
+    },
+    {
+     "campo": "tamanho_bytes",
+     "tipo": "bigint",
+     "chave": "",
+     "descricao": "Tamanho do arquivo em bytes."
+    },
+    {
+     "campo": "criado_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora do upload."
+    }
+   ]
+  },
+  "Adocao": {
+   "quadro": 79,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único da adoção."
+    },
+    {
+     "campo": "animal_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Animal adotado (Animal)."
+    },
+    {
+     "campo": "registrado_por",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Usuário que registrou a adoção (Usuario)."
+    },
+    {
+     "campo": "adotante_nome",
+     "tipo": "varchar(150)",
+     "chave": "",
+     "descricao": "Nome do adotante."
+    },
+    {
+     "campo": "adotante_cpf",
+     "tipo": "varchar(14)",
+     "chave": "",
+     "descricao": "CPF do adotante."
+    },
+    {
+     "campo": "adotante_telefone",
+     "tipo": "varchar(20)",
+     "chave": "",
+     "descricao": "Telefone do adotante."
+    },
+    {
+     "campo": "adotante_email",
+     "tipo": "varchar(150)",
+     "chave": "",
+     "descricao": "E-mail do adotante, quando houver."
+    },
+    {
+     "campo": "adotante_cep",
+     "tipo": "varchar(10)",
+     "chave": "",
+     "descricao": "CEP do adotante."
+    },
+    {
+     "campo": "adotante_endereco",
+     "tipo": "varchar(255)",
+     "chave": "",
+     "descricao": "Endereço do adotante."
+    },
+    {
+     "campo": "adotante_bairro",
+     "tipo": "varchar(80)",
+     "chave": "",
+     "descricao": "Bairro do adotante."
+    },
+    {
+     "campo": "data_adocao",
+     "tipo": "date",
+     "chave": "",
+     "descricao": "Data da adoção."
+    },
+    {
+     "campo": "data_devolucao",
+     "tipo": "date",
+     "chave": "",
+     "descricao": "Data da devolução, quando houver."
+    },
+    {
+     "campo": "motivo_devolucao",
+     "tipo": "text",
+     "chave": "",
+     "descricao": "Motivo da devolução, quando houver."
+    },
+    {
+     "campo": "observacoes",
+     "tipo": "text",
+     "chave": "",
+     "descricao": "Observações da adoção."
+    },
+    {
+     "campo": "criado_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora de registro."
+    }
+   ]
+  },
+  "TipoOcorrencia": {
+   "quadro": 80,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do tipo de ocorrência."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Nome do tipo de ocorrência."
+    },
+    {
+     "campo": "ativo",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Indica se o tipo está disponível para uso."
+    }
+   ]
+  },
+  "ProvidenciaTomada": {
+   "quadro": 81,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único da providência."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Descrição da providência tomada."
+    },
+    {
+     "campo": "ativo",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Indica se a providência está disponível para uso."
+    }
+   ]
+  },
+  "Denunciante": {
+   "quadro": 82,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do denunciante."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(200)",
+     "chave": "",
+     "descricao": "Nome do denunciante."
+    },
+    {
+     "campo": "cpf",
+     "tipo": "varchar(14)",
+     "chave": "",
+     "descricao": "CPF do denunciante."
+    },
+    {
+     "campo": "telefone",
+     "tipo": "varchar(20)",
+     "chave": "",
+     "descricao": "Telefone de contato."
+    },
+    {
+     "campo": "email",
+     "tipo": "varchar(255)",
+     "chave": "",
+     "descricao": "E-mail de contato."
+    },
+    {
+     "campo": "cep",
+     "tipo": "varchar(10)",
+     "chave": "",
+     "descricao": "CEP do endereço residencial."
+    },
+    {
+     "campo": "endereco",
+     "tipo": "varchar(300)",
+     "chave": "",
+     "descricao": "Endereço residencial."
+    },
+    {
+     "campo": "bairro_residencial",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Bairro de residência."
+    }
+   ]
+  },
+  "Denunciado": {
+   "quadro": 83,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do denunciado."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(200)",
+     "chave": "",
+     "descricao": "Nome do denunciado."
+    },
+    {
+     "campo": "cpf",
+     "tipo": "varchar(14)",
+     "chave": "",
+     "descricao": "CPF do denunciado."
+    },
+    {
+     "campo": "telefone",
+     "tipo": "varchar(20)",
+     "chave": "",
+     "descricao": "Telefone de contato."
+    },
+    {
+     "campo": "endereco",
+     "tipo": "varchar(300)",
+     "chave": "",
+     "descricao": "Endereço do denunciado."
+    },
+    {
+     "campo": "observacoes",
+     "tipo": "text",
+     "chave": "",
+     "descricao": "Observações sobre o denunciado."
+    }
+   ]
+  },
+  "Ocorrencia": {
+   "quadro": 84,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único da ocorrência."
+    },
+    {
+     "campo": "protocolo",
+     "tipo": "varchar(50)",
+     "chave": "UQ",
+     "descricao": "Protocolo sequencial anual 0000/AAAA (RN02)."
+    },
+    {
+     "campo": "registrado_por",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Usuário que registrou (Usuario)."
+    },
+    {
+     "campo": "tipo_ocorrencia_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Tipo da ocorrência (TipoOcorrencia)."
+    },
+    {
+     "campo": "status_ocorrencia",
+     "tipo": "StatusOcorrencia",
+     "chave": "",
+     "descricao": "Situação atual da ocorrência."
+    },
+    {
+     "campo": "providencia_tomada_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Providência no encerramento (ProvidenciaTomada)."
+    },
+    {
+     "campo": "denunciante_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Denunciante vinculado (Denunciante)."
+    },
+    {
+     "campo": "denunciado_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Denunciado vinculado, quando houver (Denunciado)."
+    },
+    {
+     "campo": "data_abertura",
+     "tipo": "date",
+     "chave": "",
+     "descricao": "Data de abertura da ocorrência."
+    },
+    {
+     "campo": "hora_abertura",
+     "tipo": "time",
+     "chave": "",
+     "descricao": "Hora de abertura."
+    },
+    {
+     "campo": "bairro",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Bairro da ocorrência."
+    },
+    {
+     "campo": "ponto_referencia",
+     "tipo": "varchar(200)",
+     "chave": "",
+     "descricao": "Ponto de referência do local."
+    },
+    {
+     "campo": "descricao",
+     "tipo": "text",
+     "chave": "",
+     "descricao": "Descrição da ocorrência."
+    },
+    {
+     "campo": "urgente",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Indica prioridade de atendimento."
+    },
+    {
+     "campo": "sigilosa",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Oculta dados do denunciante para não-Administradores (RN03)."
+    },
+    {
+     "campo": "descricao_encerramento",
+     "tipo": "text",
+     "chave": "",
+     "descricao": "Descrição registrada no encerramento."
+    },
+    {
+     "campo": "encerrada_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora de encerramento."
+    },
+    {
+     "campo": "criado_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora de criação do registro."
+    },
+    {
+     "campo": "atualizado_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora da última atualização."
+    }
+   ]
+  },
+  "AnexoOcorrencia": {
+   "quadro": 85,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do anexo."
+    },
+    {
+     "campo": "ocorrencia_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Ocorrência associada (Ocorrencia)."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(255)",
+     "chave": "",
+     "descricao": "Nome do arquivo anexado."
+    },
+    {
+     "campo": "url",
+     "tipo": "varchar(500)",
+     "chave": "",
+     "descricao": "URL de armazenamento do arquivo."
+    },
+    {
+     "campo": "tamanho_bytes",
+     "tipo": "bigint",
+     "chave": "",
+     "descricao": "Tamanho do arquivo em bytes."
+    },
+    {
+     "campo": "criado_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora do upload."
+    }
+   ]
+  },
+  "MovimentacaoOcorrencia": {
+   "quadro": 86,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único da movimentação."
+    },
+    {
+     "campo": "ocorrencia_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Ocorrência associada (Ocorrencia)."
+    },
+    {
+     "campo": "usuario_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Usuário que executou a movimentação (Usuario)."
+    },
+    {
+     "campo": "tipo_movimentacao",
+     "tipo": "TipoMovimentacaoOcorrencia",
+     "chave": "",
+     "descricao": "Tipo da movimentação registrada."
+    },
+    {
+     "campo": "data",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora da movimentação."
+    },
+    {
+     "campo": "descricao",
+     "tipo": "text",
+     "chave": "",
+     "descricao": "Descrição da movimentação."
+    },
+    {
+     "campo": "criado_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora de registro."
+    }
+   ]
+  },
+  "Doenca": {
+   "quadro": 87,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único da doença."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(150)",
+     "chave": "",
+     "descricao": "Nome da doença/zoonose."
+    },
+    {
+     "campo": "cid",
+     "tipo": "varchar(20)",
+     "chave": "",
+     "descricao": "Código CID associado à doença."
+    },
+    {
+     "campo": "ativo",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Indica se a doença está disponível para uso."
+    }
+   ]
+  },
+  "TipoDocumentoProcesso": {
+   "quadro": 88,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do tipo de documento."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(100)",
+     "chave": "UQ",
+     "descricao": "Nome do tipo de documento."
+    },
+    {
+     "campo": "ativo",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Indica se o tipo está disponível para uso."
+    }
+   ]
+  },
+  "ResponsavelProcesso": {
+   "quadro": 89,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do responsável."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(200)",
+     "chave": "",
+     "descricao": "Nome do munícipe responsável pelo animal."
+    },
+    {
+     "campo": "cpf",
+     "tipo": "varchar(14)",
+     "chave": "UQ",
+     "descricao": "CPF do responsável."
+    },
+    {
+     "campo": "telefone",
+     "tipo": "varchar(20)",
+     "chave": "",
+     "descricao": "Telefone de contato."
+    },
+    {
+     "campo": "email",
+     "tipo": "varchar(255)",
+     "chave": "",
+     "descricao": "E-mail para notificação de resultado (RN10)."
+    },
+    {
+     "campo": "cep",
+     "tipo": "varchar(10)",
+     "chave": "",
+     "descricao": "CEP do endereço residencial."
+    },
+    {
+     "campo": "endereco",
+     "tipo": "varchar(300)",
+     "chave": "",
+     "descricao": "Endereço residencial."
+    },
+    {
+     "campo": "bairro_residencial",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Bairro de residência."
+    },
+    {
+     "campo": "bairro_ocorrencia",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Bairro onde ocorreu a investigação."
+    }
+   ]
+  },
+  "ProcessoSanitario": {
+   "quadro": 90,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do processo sanitário."
+    },
+    {
+     "campo": "protocolo",
+     "tipo": "varchar(50)",
+     "chave": "UQ",
+     "descricao": "Protocolo sequencial anual 0000/AAAA (RN02)."
+    },
+    {
+     "campo": "criado_por",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Usuário que criou o processo (Usuario)."
+    },
+    {
+     "campo": "doenca_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Doença investigada (Doenca)."
+    },
+    {
+     "campo": "status_processo",
+     "tipo": "StatusProcesso",
+     "chave": "",
+     "descricao": "Situação no ciclo de vida (RN12)."
+    },
+    {
+     "campo": "laboratorio_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Laboratório de análise (Laboratorio)."
+    },
+    {
+     "campo": "resultado_laboratorial",
+     "tipo": "ResultadoLaboratorial",
+     "chave": "",
+     "descricao": "Resultado da análise laboratorial."
+    },
+    {
+     "campo": "desfecho_animal",
+     "tipo": "DesfechoAnimal",
+     "chave": "",
+     "descricao": "Desfecho do animal investigado."
+    },
+    {
+     "campo": "responsavel_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Responsável pelo animal (ResponsavelProcesso)."
+    },
+    {
+     "campo": "ocorrencia_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Ocorrência de origem, quando houver (Ocorrencia)."
+    },
+    {
+     "campo": "urgente",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Indica urgência epidemiológica (RN04)."
+    },
+    {
+     "campo": "gal_numero",
+     "tipo": "varchar(50)",
+     "chave": "",
+     "descricao": "Número de protocolo no sistema estadual GAL."
+    },
+    {
+     "campo": "sinan_numero",
+     "tipo": "varchar(50)",
+     "chave": "",
+     "descricao": "Número de notificação no SINAN."
+    },
+    {
+     "campo": "data_abertura",
+     "tipo": "date",
+     "chave": "",
+     "descricao": "Data de abertura do processo."
+    },
+    {
+     "campo": "data_envio_amostras",
+     "tipo": "date",
+     "chave": "",
+     "descricao": "Data de envio das amostras ao laboratório."
+    },
+    {
+     "campo": "data_resultado",
+     "tipo": "date",
+     "chave": "",
+     "descricao": "Data de recebimento do resultado."
+    },
+    {
+     "campo": "notificado_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora do envio da notificação de resultado (RN10)."
+    },
+    {
+     "campo": "previsao_retorno",
+     "tipo": "date",
+     "chave": "",
+     "descricao": "Previsão de retorno do resultado."
+    },
+    {
+     "campo": "observacoes",
+     "tipo": "text",
+     "chave": "",
+     "descricao": "Observações gerais do processo."
+    },
+    {
+     "campo": "criado_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora de criação do registro."
+    },
+    {
+     "campo": "atualizado_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora da última atualização."
+    }
+   ]
+  },
+  "DocumentoProcesso": {
+   "quadro": 91,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do documento."
+    },
+    {
+     "campo": "processo_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Processo associado (ProcessoSanitario)."
+    },
+    {
+     "campo": "criado_por",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Usuário que gerou o documento (Usuario)."
+    },
+    {
+     "campo": "nome",
+     "tipo": "varchar(255)",
+     "chave": "",
+     "descricao": "Nome do arquivo."
+    },
+    {
+     "campo": "url",
+     "tipo": "varchar(500)",
+     "chave": "",
+     "descricao": "URL de armazenamento do arquivo."
+    },
+    {
+     "campo": "tipo_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Tipo do documento (TipoDocumentoProcesso)."
+    },
+    {
+     "campo": "tamanho_bytes",
+     "tipo": "bigint",
+     "chave": "",
+     "descricao": "Tamanho do arquivo em bytes."
+    },
+    {
+     "campo": "status",
+     "tipo": "StatusDocumento",
+     "chave": "",
+     "descricao": "Situação da geração do documento (RN11)."
+    },
+    {
+     "campo": "criado_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora de geração."
+    }
+   ]
+  },
+  "AmostraAnimal": {
+   "quadro": 92,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único da amostra."
+    },
+    {
+     "campo": "processo_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Processo ao qual a amostra pertence (ProcessoSanitario)."
+    },
+    {
+     "campo": "animal_id",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Animal interno referenciado, quando houver (Animal)."
+    },
+    {
+     "campo": "especie",
+     "tipo": "Especie",
+     "chave": "",
+     "descricao": "Espécie do animal amostrado (canino, felino, quiróptero ou primata não humano)."
+    },
+    {
+     "campo": "sexo",
+     "tipo": "Sexo",
+     "chave": "",
+     "descricao": "Sexo do animal amostrado."
+    },
+    {
+     "campo": "coloracao",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Coloração da pelagem."
+    },
+    {
+     "campo": "pelagem",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Tipo de pelagem."
+    },
+    {
+     "campo": "idade_aprox",
+     "tipo": "varchar(50)",
+     "chave": "",
+     "descricao": "Idade aproximada."
+    },
+    {
+     "campo": "peso_kg",
+     "tipo": "decimal(5,2)",
+     "chave": "",
+     "descricao": "Peso em quilogramas."
+    },
+    {
+     "campo": "nome_animal",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Nome do animal amostrado."
+    },
+    {
+     "campo": "status_clinico",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Estado clínico observado."
+    },
+    {
+     "campo": "raca",
+     "tipo": "varchar(100)",
+     "chave": "",
+     "descricao": "Raça do animal."
+    },
+    {
+     "campo": "tipo_abrigo",
+     "tipo": "TipoAbrigo",
+     "chave": "",
+     "descricao": "Tipo de abrigo do animal (intradomiciliar, peridomiciliar, silvestre ou não identificado)."
+    },
+    {
+     "campo": "material_biologico",
+     "tipo": "MaterialBiologico",
+     "chave": "",
+     "descricao": "Tipo de material biológico coletado."
+    },
+    {
+     "campo": "tipo_amostra",
+     "tipo": "TipoAmostra",
+     "chave": "",
+     "descricao": "Forma de conservação da amostra."
+    },
+    {
+     "campo": "data_coleta",
+     "tipo": "date",
+     "chave": "",
+     "descricao": "Data da coleta."
+    },
+    {
+     "campo": "observacoes",
+     "tipo": "text",
+     "chave": "",
+     "descricao": "Observações da amostra."
+    },
+    {
+     "campo": "agrediu_humano",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Indica se o animal agrediu humano."
+    },
+    {
+     "campo": "contato_humano",
+     "tipo": "boolean",
+     "chave": "",
+     "descricao": "Indica contato com humano; aciona urgência (RN04/RF-B05)."
+    },
+    {
+     "campo": "alt_comportamental",
+     "tipo": "varchar(200)",
+     "chave": "",
+     "descricao": "Alterações comportamentais observadas."
+    },
+    {
+     "campo": "nivel_contato",
+     "tipo": "NivelContato",
+     "chave": "",
+     "descricao": "Nível de contato com humano."
+    },
+    {
+     "campo": "criado_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora de registro."
+    }
+   ]
+  },
+  "AmostraSintoma": {
+   "quadro": 93,
+   "campos": [
+    {
+     "campo": "amostra_id",
+     "tipo": "uuid",
+     "chave": "PK, FK",
+     "descricao": "Amostra (AmostraAnimal)."
+    },
+    {
+     "campo": "sintoma_id",
+     "tipo": "uuid",
+     "chave": "PK, FK",
+     "descricao": "Sintoma observado na coleta (Sintoma)."
+    }
+   ]
+  },
+  "RelatorioGerado": {
+   "quadro": 94,
+   "campos": [
+    {
+     "campo": "id",
+     "tipo": "uuid",
+     "chave": "PK",
+     "descricao": "Identificador único do relatório."
+    },
+    {
+     "campo": "gerado_por",
+     "tipo": "uuid",
+     "chave": "FK",
+     "descricao": "Usuário solicitante (Usuario)."
+    },
+    {
+     "campo": "tipo_relatorio",
+     "tipo": "TipoRelatorio",
+     "chave": "",
+     "descricao": "Tipo de relatório: ocorrências por bairro, ocupação de baias, procedimentos, adoções, anual de processos ou vacinação."
+    },
+    {
+     "campo": "periodo_inicio",
+     "tipo": "date",
+     "chave": "",
+     "descricao": "Início do período de referência."
+    },
+    {
+     "campo": "periodo_fim",
+     "tipo": "date",
+     "chave": "",
+     "descricao": "Fim do período de referência."
+    },
+    {
+     "campo": "parametros_jsonb",
+     "tipo": "jsonb",
+     "chave": "",
+     "descricao": "Parâmetros de geração em formato JSON."
+    },
+    {
+     "campo": "gerado_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Data e hora da solicitação."
+    },
+    {
+     "campo": "status",
+     "tipo": "StatusRelatorio",
+     "chave": "",
+     "descricao": "Situação do processamento (RN11)."
+    },
+    {
+     "campo": "arquivo_url",
+     "tipo": "varchar(500)",
+     "chave": "",
+     "descricao": "URL do arquivo gerado, com expiração."
+    },
+    {
+     "campo": "url_expira_em",
+     "tipo": "timestamp",
+     "chave": "",
+     "descricao": "Momento em que a URL do arquivo deixa de valer (RN11)."
+    },
+    {
+     "campo": "tamanho_bytes",
+     "tipo": "bigint",
+     "chave": "",
+     "descricao": "Tamanho do arquivo em bytes."
+    }
+   ]
+  }
+ }
+}

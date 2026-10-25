@@ -1,0 +1,16 @@
+﻿Quadro 27 – Caso de uso de baixo nível Transferir Animal de Baia
+Transferir Animal de Baia
+Caso de Uso Geral;Gestão de Animais
+Ator Principal;Veterinário
+Atores Secundários;
+Resumo;O Veterinário move um animal de uma baia para outra.
+Pré-Condições;O animal deve estar alojado e a baia de destino deve existir.
+Pós-Condições;"Animal vinculado à nova baia; ocupação das baias de origem e destino atualizadas."
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Veterinário seleciona o animal e a opção de transferir baia.;
+O Veterinário escolhe a baia de destino e confirma.;
+;Verifica vaga na baia de destino, atualiza o vínculo e a ocupação de ambas as baias.
+Restrições/Validações;A baia de destino deve possuir vaga disponível.
+Fluxo Alternativo I;Baia de destino lotada: o sistema alerta e solicita outra baia.
+Requisitos relacionados;RF-A02

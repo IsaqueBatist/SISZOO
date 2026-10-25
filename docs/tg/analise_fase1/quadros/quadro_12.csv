@@ -1,0 +1,12 @@
+﻿Quadro 12 – Requisitos não funcionais do SISZOO
+ID;Categoria;Nome;Descrição
+RNF01;Desempenho;Tempo de Resposta;Responder em até 3 segundos. Interface responsiva em listas com 200+ registros.
+RNF02;Desempenho;Leveza;Carregamento progressivo. Funcionar em computadores com ~2 GB de RAM.
+RNF03;Disponibilidade;Internet Instável;Exibir mensagem de erro na queda de rede e preservar dados de formulários não submetidos.
+RNF04;Disponibilidade;Backup Diário;Disponível no horário do CCZ, com backup diário do banco.
+RNF05;Usabilidade;Simplicidade;Interface intuitiva, rótulos descritivos, máximo 3 cliques nas operações frequentes.
+RNF06;Segurança;LGPD e Auth;Senhas com bcrypt. HTTPS. Dados sigilosos restritos por perfil. LGPD (Lei nº 13.709/2018).
+RNF07;Compatibilidade;Navegadores;Funcionar em Chrome, Edge e Firefox sem plugins adicionais.
+RNF08;Manutenibilidade;Qualidade;Código SOLID e Clean Code, cobertura mínima de testes nos casos de uso críticos.
+RNF09;Escalabilidade;Crescimento;Suportar crescimento de registros sem refatoração estrutural.
+RNF10;Auditoria;Rastreabilidade;Registrar usuário, data, hora e valores anterior/posterior em toda alteração crítica via AuditoriaEvento.

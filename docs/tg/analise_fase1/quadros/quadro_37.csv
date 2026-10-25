@@ -1,0 +1,16 @@
+﻿Quadro 37 – Caso de uso de baixo nível Anexar Documento à Ocorrência
+Anexar Documento à Ocorrência
+Caso de Uso Geral;Registrar Nova Ocorrência (extensão, quando há documento)
+Ator Principal;Agente Sanitário
+Atores Secundários;
+Resumo;O Agente Sanitário anexa fotos ou documentos que acompanham a denúncia.
+Pré-Condições;O Agente Sanitário está registrando uma ocorrência.
+Pós-Condições;Arquivo armazenado e vinculado à ocorrência.
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Agente Sanitário aciona “Anexar documento” e seleciona o arquivo.;
+;Valida o tipo e o tamanho do arquivo.
+;Armazena o arquivo e o vincula à ocorrência.
+Restrições/Validações;O anexo não pode ser excluído depois de gravado (RN06).
+Fluxo Alternativo I;Arquivo inválido ou acima do limite: o sistema informa o motivo e não anexa.
+Requisitos relacionados;RF-E01, RN06

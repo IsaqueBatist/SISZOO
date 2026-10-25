@@ -1,0 +1,16 @@
+﻿Quadro 51 – Caso de uso de baixo nível Baixar Relatório Gerado
+Baixar Relatório Gerado
+Caso de Uso Geral;Relatórios
+Ator Principal;Veterinário ou Agente Sanitário
+Atores Secundários;
+Resumo;O usuário baixa o arquivo de um relatório concluído.
+Pré-Condições;O relatório deve estar com status Concluído e a URL não expirada.
+Pós-Condições;Arquivo do relatório transferido ao usuário.
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O usuário seleciona um relatório concluído e aciona o download.;
+;Verifica se o relatório está concluído e se a URL não expirou.
+;Disponibiliza o arquivo para download.
+Restrições/Validações;O download só é permitido com status Concluído e dentro da validade da URL (RN11).
+Fluxo Alternativo I;URL expirada: o sistema informa a expiração e orienta a solicitar uma nova geração.
+Requisitos relacionados;RF-D02, RN11

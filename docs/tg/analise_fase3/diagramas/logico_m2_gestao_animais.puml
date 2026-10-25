@@ -1,0 +1,213 @@
+@startuml logico_m2_gestao_animais
+' Diagrama lógico — Módulo 2: Gestão de Animais do Canil (substitui a Figura 13 do TG)
+' Fonte: migrações Flyway V4, V5, V6, V7, V16, V18, V23, V24, V25, V26. Fase 3, 22/10/2026.
+' Não implementadas (mantidas só na modelagem): adocao, anexo_vacinacao, anexo_procedimento, anexo_exame, vacina_especie, animal_sintoma.
+!pragma layout smetana
+skinparam linetype ortho
+skinparam defaultFontName Arial
+hide circle
+
+entity "especie" as especie {
+  * id : uuid <<PK>>
+  --
+  * codigo : varchar(30) <<UQ>>
+  * nome : varchar(60)
+}
+entity "status_animal" as status_animal {
+  * id : uuid <<PK>>
+  --
+  * codigo : varchar(30) <<UQ>>
+  * nome : varchar(60)
+}
+entity "motivo_entrada" as motivo_entrada {
+  * id : uuid <<PK>>
+  --
+  * codigo : varchar(30) <<UQ>>
+  * nome : varchar(60)
+}
+entity "tipo_baia" as tipo_baia {
+  * id : uuid <<PK>>
+  --
+  * codigo : varchar(30) <<UQ>>
+  * nome : varchar(60)
+}
+entity "baia" as baia {
+  * id : uuid <<PK>>
+  --
+  * nome : varchar(40)
+  * tipo_baia_id : uuid <<FK>>
+  * capacidade : smallint
+  finalidade : varchar(80)
+  * ativa : boolean
+  observacoes : text
+}
+entity "animal" as animal {
+  * id : uuid <<PK>>
+  --
+  * nome : varchar(80)
+  * especie_id : uuid <<FK>>
+  * sexo : varchar(20) {macho, femea, nao_identificado}
+  raca : varchar(80)
+  coloracao : varchar(80)
+  pelagem : varchar(10) {curta, longa}
+  porte : varchar(10) {pequeno, medio, grande}
+  peso_kg : decimal(5,2)
+  idade_aprox : varchar(30)
+  data_nascimento_aprox : date
+  microchip : varchar(30) <<UQ>>
+  numero_medalha : varchar(30) <<UQ parcial>>
+  data_implantacao_chip : date
+  procedencia : varchar(200)
+  * esterilizado : boolean
+  data_esterilizacao : date
+  * status_id : uuid <<FK>>
+  * motivo_entrada_id : uuid <<FK>>
+  * data_entrada : timestamp
+  baia_id : uuid <<FK>>
+  * ficha_completa : boolean
+  laudo_eutanasia : text
+  foto_url : text
+  observacoes : text
+  * criado_por_id : uuid <<FK usuario>>
+  * criado_em : timestamp
+  * atualizado_em : timestamp
+}
+entity "vacina" as vacina {
+  * id : uuid <<PK>>
+  --
+  * codigo : varchar(30) <<UQ>>
+  * nome : varchar(100)
+  intervalo_meses : integer
+  * ativo : boolean
+}
+entity "vacinacao" as vacinacao {
+  * id : uuid <<PK>>
+  --
+  * animal_id : uuid <<FK>>
+  * vacina_id : uuid <<FK>>
+  aplicado_por_id : uuid <<FK usuario>>
+  * data_aplicacao : date
+  numero_dose : integer
+  * dose_quantidade : decimal(8,3)
+  * dose_unidade : varchar(30)
+  lote : varchar(100)
+  observacoes : text
+  retifica_id : uuid <<FK, UQ>>
+  * criado_em : timestamp
+}
+entity "tipo_procedimento" as tipo_procedimento {
+  * id : uuid <<PK>>
+  --
+  * codigo : varchar(30) <<UQ>>
+  * nome : varchar(100)
+  * ativo : boolean
+}
+entity "procedimento" as procedimento {
+  * id : uuid <<PK>>
+  --
+  * animal_id : uuid <<FK>>
+  * tipo_procedimento_id : uuid <<FK>>
+  executado_por_id : uuid <<FK usuario>>
+  * data : date
+  descricao : text
+  resultado : text
+  retifica_id : uuid <<FK, UQ>>
+  * criado_em : timestamp
+}
+entity "categoria_farmacologica" as categoria_farmacologica {
+  * id : uuid <<PK>>
+  --
+  * nome : varchar(100)
+  * ativo : boolean
+}
+entity "medicamento" as medicamento {
+  * id : uuid <<PK>>
+  --
+  * nome : varchar(100)
+  * categoria_id : uuid <<FK>>
+  * ativo : boolean
+}
+entity "prescricao" as prescricao {
+  * id : uuid <<PK>>
+  --
+  * animal_id : uuid <<FK>>
+  prescrito_por_id : uuid <<FK usuario>>
+  * medicamento_id : uuid <<FK>>
+  * data_inicio : date
+  data_fim_prevista : date
+  data_fim_real : date
+  * frequencia_aplicada : integer
+  * unidade_frequencia : varchar(10) {HORAS, DIAS}
+  * dose_quantidade : decimal(8,3)
+  * dose_unidade : varchar(30)
+  * via_administracao : varchar(20)
+  * status : varchar(20) {ATIVA, CONCLUIDA, SUSPENSA, CANCELADA}
+  retifica_id : uuid <<FK, UQ>>
+  * criado_em : timestamp
+}
+entity "tipo_exame" as tipo_exame {
+  * id : uuid <<PK>>
+  --
+  * codigo : varchar(30) <<UQ>>
+  * nome : varchar(100)
+  * ativo : boolean
+}
+entity "exame" as exame {
+  * id : uuid <<PK>>
+  --
+  * animal_id : uuid <<FK>>
+  * tipo_exame_id : uuid <<FK>>
+  laboratorio_id : uuid <<FK laboratorio (M4)>>
+  solicitado_por_id : uuid <<FK usuario>>
+  * data_solicitacao : date
+  data_resultado : date
+  resultado : text
+  observacoes : text
+  retifica_id : uuid <<FK, UQ>>
+  * criado_em : timestamp
+}
+entity "anexo_animal" as anexo_animal {
+  * id : uuid <<PK>>
+  --
+  * animal_id : uuid <<FK>>
+  * nome : varchar(255)
+  * mime_type : varchar(50) {image/jpeg, image/png, application/pdf}
+  * tamanho : integer (<= 5 MB)
+  descricao : varchar(200)
+  * criado_por_id : uuid <<FK usuario>>
+  * criado_em : timestamp
+}
+entity "anexo_animal_conteudo" as anexo_animal_conteudo {
+  * anexo_id : uuid <<PK, FK>>
+  --
+  * conteudo : bytea
+}
+
+especie ||--o{ animal
+status_animal ||--o{ animal
+motivo_entrada ||--o{ animal
+tipo_baia ||--o{ baia
+baia |o--o{ animal
+animal ||--o{ vacinacao
+vacina ||--o{ vacinacao
+vacinacao |o--o| vacinacao : retifica
+animal ||--o{ procedimento
+tipo_procedimento ||--o{ procedimento
+procedimento |o--o| procedimento : retifica
+animal ||--o{ prescricao
+medicamento ||--o{ prescricao
+categoria_farmacologica ||--o{ medicamento
+prescricao |o--o| prescricao : retifica
+animal ||--o{ exame
+tipo_exame ||--o{ exame
+exame |o--o| exame : retifica
+animal ||--o{ anexo_animal
+anexo_animal ||--|| anexo_animal_conteudo
+
+note bottom of animal
+  Registros clínicos (vacinacao, procedimento, prescricao, exame)
+  são imutáveis: gatilhos impedem DELETE/TRUNCATE; a correção
+  cria nova linha com retifica_id (RN06). Não há data_saida:
+  a saída é a mudança de status (limitação).
+end note
+@enduml

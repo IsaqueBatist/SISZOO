@@ -1,0 +1,14 @@
+﻿Quadro 70 – Dicionário de dados – tabela Vacinacao
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único da aplicação de vacina.
+animal_id;uuid;FK;Animal vacinado (Animal).
+vacina_id;uuid;FK;Vacina aplicada (Vacina).
+aplicado_por;uuid;FK;Usuário que aplicou (Usuario).
+data_aplicacao;date;;Data da aplicação.
+data_validade;date;;"Data de validade da dose; base do alerta de reforço (RF-A03)."
+numero_dose;integer;;Número da dose aplicada.
+dose_quantidade;decimal(8,3);;Quantidade da dose.
+dose_unidade;UnidadeDose;;Unidade de medida da dose.
+lote;varchar(100);;Lote da vacina aplicada.
+observacoes;text;;Observações da aplicação.
+criado_em;timestamp;;Data e hora de registro.

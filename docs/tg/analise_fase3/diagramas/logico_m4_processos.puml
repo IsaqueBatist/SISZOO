@@ -1,0 +1,146 @@
+@startuml logico_m4_processos
+' Diagrama lógico — Módulo 4: Processos Sanitários (substitui a Figura 15 do TG)
+' Fonte: migrações Flyway V10, V13, V14, V15, V21, V22. Fase 3, 22/10/2026.
+' Não implementadas (mantidas só na modelagem): documento_processo, tipo_documento_processo.
+!pragma layout smetana
+skinparam linetype ortho
+skinparam defaultFontName Arial
+hide circle
+
+entity "doenca" as doenca {
+  * id : uuid <<PK>>
+  --
+  * codigo : varchar(30) <<UQ>>
+  * nome : varchar(150)
+  cid : varchar(20)
+  * ativo : boolean
+}
+entity "laboratorio" as laboratorio {
+  * id : uuid <<PK>>
+  --
+  * codigo : varchar(30) <<UQ>>
+  * nome : varchar(100)
+  tipo : varchar(50)
+  contato : varchar(255)
+  * ativo : boolean
+}
+entity "resultado_laboratorial" as resultado_laboratorial {
+  * id : uuid <<PK>>
+  --
+  * codigo : varchar(30) <<UQ>> {aguardando, positivo, negativo,\n inconclusivo, material_inadequado, nao_realizado}
+  * nome : varchar(100)
+  * ativo : boolean
+}
+entity "desfecho_animal" as desfecho_animal {
+  * id : uuid <<PK>>
+  --
+  * codigo : varchar(30) <<UQ>> {em_acompanhamento, obito_natural,\n obito_eutanasia, obito_outro}
+  * nome : varchar(100)
+  * ativo : boolean
+}
+entity "sintoma" as sintoma {
+  * id : uuid <<PK>>
+  --
+  * codigo : varchar(30) <<UQ>>
+  * nome : varchar(100)
+  * ativo : boolean
+}
+entity "processo_sanitario" as processo_sanitario {
+  * id : uuid <<PK>>
+  --
+  * protocolo : varchar(20) <<UQ>> (NNN/AAAA)
+  * data_abertura : date
+  ocorrencia_id : uuid <<FK, UQ>> (M3)
+  * urgente : boolean
+  * status_processo : varchar(30) {ABERTO, AGUARDANDO_RESULTADO,\n COM_RESULTADO, CONCLUIDO}
+  * doenca_id : uuid <<FK>>
+  * laboratorio_id : uuid <<FK>>
+  cid : varchar(20)
+  gal_numero : varchar(40)
+  sinan_numero : varchar(40)
+  data_envio_amostras : timestamp
+  previsao_retorno : date
+  resultado_laboratorial_id : uuid <<FK>>
+  data_resultado : date
+  desfecho_animal_id : uuid <<FK>>
+  data_notificacao_municipe : timestamp
+  observacoes : text
+  * criado_por_id : uuid <<FK usuario>>
+  * criado_em : timestamp
+  * atualizado_em : timestamp
+}
+entity "responsavel_processo" as responsavel_processo {
+  * id : uuid <<PK>>
+  --
+  * processo_id : uuid <<FK, UQ>>
+  * nome : varchar(150)
+  cpf : varchar(14)
+  telefone : varchar(20)
+  email : varchar(150)
+  cep : varchar(10)
+  endereco : varchar(255)
+  bairro_residencial : varchar(80)
+  bairro_ocorrencia : varchar(80)
+}
+entity "animal_amostrado" as animal_amostrado {
+  * id : uuid <<PK>>
+  --
+  * processo_id : uuid <<FK>>
+  animal_id : uuid <<FK animal (M2)>>
+  * especie_id : uuid <<FK especie (M2)>>
+  * sexo : varchar(20)
+  raca : varchar(80)
+  coloracao : varchar(80)
+  pelagem : varchar(10)
+  idade_aprox : varchar(30)
+  peso_kg : decimal(5,2)
+  * status_clinico : varchar(20) {SINTOMATICO, ASSINTOMATICO, OBITO}
+  * tipo_abrigo : varchar(20) {INTRADOMICILIAR, PERIDOMICILIAR,\n SILVESTRE, NAO_IDENTIFICADO}
+  alteracao_comportamental : text
+  * data_coleta : date
+  * material_biologico : varchar(20) {TECIDO_ENCEFALICO, SORO,\n SANGUE, SALIVA, URINA}
+  * contato_humano : boolean
+  nivel_contato : varchar(10) {DIRETA, INDIRETA}
+  agrediu_humano : boolean
+  observacoes : text
+  * criado_em : timestamp
+}
+entity "amostra_sintoma" as amostra_sintoma {
+  * animal_amostrado_id : uuid <<PK, FK>>
+  * sintoma_id : uuid <<PK, FK>>
+}
+entity "resultado_processo" as resultado_processo {
+  * id : uuid <<PK>>
+  --
+  * processo_id : uuid <<FK>>
+  * resultado_laboratorial_id : uuid <<FK>>
+  * data_resultado : date
+  observacoes : text
+  retifica_id : uuid <<FK, UQ>>
+  * registrado_por_id : uuid <<FK usuario>>
+  * registrado_em : timestamp
+}
+
+doenca ||--o{ processo_sanitario
+laboratorio ||--o{ processo_sanitario
+resultado_laboratorial |o--o{ processo_sanitario
+desfecho_animal |o--o{ processo_sanitario
+processo_sanitario ||--|| responsavel_processo
+processo_sanitario ||--|{ animal_amostrado
+animal_amostrado ||--o{ amostra_sintoma
+sintoma ||--o{ amostra_sintoma
+processo_sanitario ||--o{ resultado_processo
+resultado_laboratorial ||--o{ resultado_processo
+resultado_processo |o--o| resultado_processo : retifica
+
+note bottom of resultado_processo
+  Histórico imutável de resultados (gatilhos impedem
+  exclusão). Correção = nova linha com retifica_id;
+  resultado positivo é definitivo (V21). RN06/RN10.
+end note
+note right of animal_amostrado
+  contato_humano = true marca o processo
+  como urgente (RN04); nivel_contato e
+  agrediu_humano existem só com contato.
+end note
+@enduml

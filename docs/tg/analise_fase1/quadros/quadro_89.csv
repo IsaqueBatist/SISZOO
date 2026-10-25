@@ -1,0 +1,11 @@
+﻿Quadro 89 – Dicionário de dados – tabela ResponsavelProcesso
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único do responsável.
+nome;varchar(200);;Nome do munícipe responsável pelo animal.
+cpf;varchar(14);UQ;CPF do responsável.
+telefone;varchar(20);;Telefone de contato.
+email;varchar(255);;E-mail para notificação de resultado (RN10).
+cep;varchar(10);;CEP do endereço residencial.
+endereco;varchar(300);;Endereço residencial.
+bairro_residencial;varchar(100);;Bairro de residência.
+bairro_ocorrencia;varchar(100);;Bairro onde ocorreu a investigação.

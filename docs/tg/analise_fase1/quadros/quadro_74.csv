@@ -1,0 +1,6 @@
+﻿Quadro 74 – Dicionário de dados – tabela Medicamento
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único do medicamento.
+nome;varchar(100);;Nome do medicamento.
+categoria_id;uuid;FK;Categoria farmacológica (CategoriaFarmacologica).
+ativo;boolean;;Indica se o medicamento está disponível para uso.

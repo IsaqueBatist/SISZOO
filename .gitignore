@@ -44,3 +44,13 @@ Thumbs.db
 # Logs
 *.log
 logs/
+
+# Documento do TG: binários ficam fora do git (ver docs/tg/README.md)
+docs/tg/**/*.docx
+docs/tg/**/*.pdf
+docs/tg/build/
+docs/tg/**/~$*
+# Cópias das imagens do .docx e recortes da análise (grandes; regeráveis pelos scripts)
+docs/tg/analise_fase1/figuras/*.png
+docs/tg/analise_fase1/figuras/*.jpeg
+docs/tg/analise_fase1/figuras/recortes/

@@ -1,6 +1,11 @@
 # Pedido — filtros de servidor em GET /api/auditoria
 
-Status: **pedido do frontend, endpoint existente, sem filtro de servidor**.
+Status: **implementado (22/10/2026, alinhamento com o TG — `docs/decisoes/alinhamento-tg.md` AT-9)**.
+`GET /api/auditoria` aceita `acao`, `entidade`, `usuarioEmail`, `modulo`, `de` e `ate` (datas ISO, dias inclusivos),
+combináveis, via `Specification` (`AuditoriaEventoService.listar`); `GET /api/auditoria/filtros` devolve as opções
+distintas (ações, entidades, usuários) para montar os seletores. O filtro por `modulo` usa o mapa
+`ENTIDADES_POR_MODULO` do serviço. A tela de Logs envia os filtros ao servidor e informa "N evento(s) encontrado(s),
+M nesta página". Teste: `AuditoriaFiltrosIT`. O texto abaixo é o pedido original.
 
 ## Contexto
 

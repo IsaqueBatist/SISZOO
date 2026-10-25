@@ -1,0 +1,29 @@
+﻿Quadro 67 – Dicionário de dados – tabela Animal
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único do animal.
+numero_medalha;varchar(50);UQ;Número da medalha de identificação.
+data_implantacao_chip;date;;Data de implantação do microchip.
+numero_microchip;varchar(50);UQ;"Identificador único do animal quando informado; registrado na implantação do chip (RN01)."
+peso_kg;decimal(5,2);;Peso do animal em quilogramas.
+data_nascimento_aprox;date;;Data de nascimento aproximada.
+nome;varchar(100);;Nome do animal.
+foto_url;varchar(500);;URL da foto do animal.
+coloracao;varchar(100);;Coloração da pelagem.
+pelagem;varchar(100);;Tipo de pelagem do animal.
+esterilizado;boolean;;Indica se o animal foi esterilizado.
+data_esterilizacao;date;;Data da esterilização.
+idade_aprox;varchar(50);;Idade aproximada registrada.
+raca;varchar(100);;Raça do animal.
+sexo;Sexo;;Sexo do animal.
+porte;Porte;;Porte do animal (P/M/G).
+especie;Especie;;Espécie do animal (canino, felino, quiróptero ou primata não humano).
+observacoes;text;;Observações e condições especiais.
+procedencia;varchar(200);;Procedência/origem do animal.
+data_entrada;date;;Data de entrada no canil.
+data_saida;date;;Data de saída do canil, registrada com o destino (RF-A05).
+status_animal;StatusAnimal;;Situação atual do animal.
+motivo_entrada_id;uuid;FK;Motivo da entrada (MotivoEntrada).
+baia_id;uuid;FK;Baia onde está alojado (Baia).
+cadastrado_por;uuid;FK;Usuário que cadastrou (Usuario).
+criado_em;timestamp;;Data e hora de criação do registro.
+atualizado_em;timestamp;;Data e hora da última atualização.

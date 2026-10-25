@@ -1,0 +1,16 @@
+﻿Quadro 34 – Caso de uso de baixo nível Anexar Documento ao Animal
+Anexar Documento ao Animal
+Caso de Uso Geral;Registrar Aplicação de Vacina, Registrar Procedimento Clínico e Registrar Exame (extensão)
+Ator Principal;Veterinário
+Atores Secundários;
+Resumo;O Veterinário anexa um arquivo (laudo, receita, imagem) ao registro clínico do animal.
+Pré-Condições;O Veterinário está registrando uma vacinação, um procedimento ou um exame.
+Pós-Condições;Arquivo armazenado e vinculado ao registro, com nome, endereço e tamanho.
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Veterinário aciona “Anexar documento” e seleciona o arquivo.;
+;Valida o tipo e o tamanho do arquivo.
+;Armazena o arquivo e o vincula ao registro clínico em andamento.
+Restrições/Validações;O anexo não pode ser excluído depois de gravado (RN06).
+Fluxo Alternativo I;Arquivo inválido ou acima do limite: o sistema informa o motivo e não anexa.
+Requisitos relacionados;RF-A04, RN06

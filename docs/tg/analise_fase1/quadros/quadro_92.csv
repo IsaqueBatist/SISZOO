@@ -1,0 +1,24 @@
+﻿Quadro 92 – Dicionário de dados – tabela AmostraAnimal
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único da amostra.
+processo_id;uuid;FK;Processo ao qual a amostra pertence (ProcessoSanitario).
+animal_id;uuid;FK;Animal interno referenciado, quando houver (Animal).
+especie;Especie;;Espécie do animal amostrado (canino, felino, quiróptero ou primata não humano).
+sexo;Sexo;;Sexo do animal amostrado.
+coloracao;varchar(100);;Coloração da pelagem.
+pelagem;varchar(100);;Tipo de pelagem.
+idade_aprox;varchar(50);;Idade aproximada.
+peso_kg;decimal(5,2);;Peso em quilogramas.
+nome_animal;varchar(100);;Nome do animal amostrado.
+status_clinico;varchar(100);;Estado clínico observado.
+raca;varchar(100);;Raça do animal.
+tipo_abrigo;TipoAbrigo;;Tipo de abrigo do animal (intradomiciliar, peridomiciliar, silvestre ou não identificado).
+material_biologico;MaterialBiologico;;Tipo de material biológico coletado.
+tipo_amostra;TipoAmostra;;Forma de conservação da amostra.
+data_coleta;date;;Data da coleta.
+observacoes;text;;Observações da amostra.
+agrediu_humano;boolean;;Indica se o animal agrediu humano.
+contato_humano;boolean;;"Indica contato com humano; aciona urgência (RN04/RF-B05)."
+alt_comportamental;varchar(200);;Alterações comportamentais observadas.
+nivel_contato;NivelContato;;Nível de contato com humano.
+criado_em;timestamp;;Data e hora de registro.

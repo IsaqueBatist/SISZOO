@@ -1,0 +1,17 @@
+﻿Quadro 26 – Caso de uso de baixo nível Registrar Adoção
+Registrar Adoção
+Caso de Uso Geral;Registrar Saída/Desfecho (extensão, quando o destino é Adotado)
+Ator Principal;Veterinário
+Atores Secundários;
+Resumo;O Veterinário registra os dados do adotante e da adoção do animal.
+Pré-Condições;O Veterinário está registrando a saída de um animal com destino Adotado.
+Pós-Condições;"Adoção registrada e vinculada ao animal; animal com status Adotado e data de saída; evento registrado na auditoria."
+Fluxo Principal
+Ações do Ator;Ações do Sistema
+O Veterinário informa nome, CPF, telefone, e-mail, CEP, endereço e bairro do adotante e a data da adoção.;
+;Valida os campos obrigatórios do adotante.
+O Veterinário confirma o registro.;
+;Grava a adoção, atualiza o status do animal para Adotado com a data de saída e registra o evento de auditoria.
+Restrições/Validações;Os dados do adotante são dados pessoais e só são acessados pelos perfis autorizados (LGPD, RNF06).
+Fluxo Alternativo I;"Devolução: o Veterinário registra a data e o motivo da devolução; o animal volta a ficar disponível para adoção e a adoção anterior permanece no histórico."
+Requisitos relacionados;RF-A05, RN06, RNF06

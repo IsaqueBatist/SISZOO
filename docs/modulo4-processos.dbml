@@ -1,76 +1,68 @@
 // ══════════════════════════════════════════════════════
 // MÓDULO 04 — PROCESSOS SANITÁRIOS
-// Tabelas: Doenca, ResponsavelProcesso,
-//          ProcessoSanitario, DocumentoProcesso,
-//          AmostraAnimal
-// Enums:   StatusProcesso, ResultadoLaboratorial,
-//          DesfechoAnimal, NivelContato
-// Dependências externas: Laboratorio (Módulo 02),
-//                        Ocorrencia (Módulo 03),
-//                        Animal (Módulo 02),
-//                        Usuario (Módulo 01),
-//                        Sexo (Módulo 02)
+// Espelha as migrations V10, V13, V14, V15, V21, V22.
+// Revisão de 25/10/2026 (docs/decisoes/alinhamento-tg.md).
+// Tabelas implementadas: Doenca, Laboratorio, Sintoma,
+//   ResultadoLaboratorial, DesfechoAnimal, ProcessoSanitario,
+//   ResponsavelProcesso, AnimalAmostrado, AmostraSintoma, ResultadoProcesso
+// Modelo-alvo (SEM tabela — trabalho futuro, AT-13): DocumentoProcesso,
+//   TipoDocumentoProcesso
+// Enums (CHECK em varchar): StatusProcesso, Sexo, Pelagem,
+//   StatusClinicoAmostra, TipoAbrigo, MaterialBiologico, NivelContato
+// Catálogos de resultado e desfecho são TABELAS (codigo/nome/ativo).
+// Dependências externas: Ocorrencia (módulo 03), Animal e Especie
+//   (módulo 02), Usuario (módulo 01)
 // ══════════════════════════════════════════════════════
 
 // ── Enums ──────────────────────────────────────────────
 
 Enum StatusProcesso {
   ABERTO
-  EM_ANDAMENTO
   AGUARDANDO_RESULTADO
+  COM_RESULTADO
   CONCLUIDO
 }
 
-Enum ResultadoLaboratorial {
-  NEGATIVO
-  POSITIVO
-  MATERIAL_INADEQUADO
-  INCONCLUSIVO
-  NAO_REALIZADO
-  AGUARDANDO
-}
-
-Enum DesfechoAnimal {
-  OBITO_NATURAL
-  EUTANASIA
-  EM_ACOMPANHAMENTO
-  OUTRO
-}
-
-Enum NivelContato {
-  DIRETO
-  INDIRETO
-  SEM_CONTATO
-}
-
 Enum Sexo {
-  MACHO
-  FÊMEA
+  macho
+  femea
+  nao_identificado
+}
+
+Enum Pelagem {
+  curta
+  longa
+}
+
+Enum StatusClinicoAmostra {
+  SINTOMATICO
+  ASSINTOMATICO
+  OBITO
+}
+
+Enum TipoAbrigo {
+  INTRADOMICILIAR
+  PERIDOMICILIAR
+  SILVESTRE
+  NAO_IDENTIFICADO
 }
 
 Enum MaterialBiologico {
+  TECIDO_ENCEFALICO
   SORO
-  SANGUE_TOTAL
-  SWAB
-  TECIDO
-  LIQUOR
-  PELO_ESCAMA
+  SANGUE
+  SALIVA
+  URINA
 }
 
-Enum TipoAmostra {
-  IN_NATURA
-  CONGELADO
-  FIXADO_FORMOL
-  GELO_RECICLAVEL
+Enum NivelContato {
+  DIRETA
+  INDIRETA
 }
 
-// ── Referências externas (definidas em outros módulos) ─
+// ── Referências externas ───────────────────────────────
 
 Table Usuario {
-  id uuid [pk, not null]
-}
-
-Table Laboratorio {
   id uuid [pk, not null]
 }
 
@@ -82,124 +74,178 @@ Table Animal {
   id uuid [pk, not null]
 }
 
-// ── Lookup tables ──────────────────────────────────────
+Table Especie {
+  id uuid [pk, not null]
+}
+
+// ── Catálogos (V13; API usa o codigo) ─────────────────
 
 Table Doenca {
-  id   uuid         [pk, not null, default: `gen_random_uuid()`]
-  nome varchar(150) [not null]
-  cid  varchar(20)
-  ativo boolean     [not null, default: true]
+  id     uuid         [pk, not null, default: `gen_random_uuid()`]
+  codigo varchar(30)  [not null, unique, note: 'raiva, esporotricose, leishmaniose_visceral, leptospirose, febre_maculosa, febre_amarela']
+  nome   varchar(150) [not null]
+  cid    varchar(20)
+  ativo  boolean      [not null, default: true]
 }
 
-Table TipoDocumentoProcesso {
-  id    uuid         [pk, not null, default: `gen_random_uuid()`]
-  nome  varchar(100) [not null, unique]
-  ativo boolean      [not null, default: true]
+Table Laboratorio {
+  id      uuid         [pk, not null, default: `gen_random_uuid()`]
+  codigo  varchar(30)  [not null, unique, note: 'pasteur_sp, ial_sorocaba, ccz_sp, itu_ll01']
+  nome    varchar(100) [not null]
+  tipo    varchar(50)
+  contato varchar(255)
+  ativo   boolean      [not null, default: true]
 }
 
-// ── Responsável (munícipe dono do animal) ──────────────
+Table Sintoma {
+  id     uuid         [pk, not null, default: `gen_random_uuid()`]
+  codigo varchar(30)  [not null, unique]
+  nome   varchar(100) [not null]
+  ativo  boolean      [not null, default: true]
+}
 
-Table ResponsavelProcesso {
-  id                 uuid         [pk, not null, default: `gen_random_uuid()`]
-  nome               varchar(200) [not null]
-  cpf                varchar(14)  [unique] 
-  telefone           varchar(20)
-  email              varchar(255)
-  cep                varchar(10)
-  endereco           varchar(300)
-  bairro_residencial varchar(100)
-  bairro_ocorrencia  varchar(100)
+Table ResultadoLaboratorial {
+  id     uuid         [pk, not null, default: `gen_random_uuid()`]
+  codigo varchar(30)  [not null, unique, note: 'aguardando (não lançável), positivo (definitivo), negativo, inconclusivo, material_inadequado, nao_realizado; codigo imutável (V22)']
+  nome   varchar(100) [not null]
+  ativo  boolean      [not null, default: true]
+}
 
-  indexes {
-    cpf 
-  }
+Table DesfechoAnimal {
+  id     uuid         [pk, not null, default: `gen_random_uuid()`]
+  codigo varchar(30)  [not null, unique, note: 'em_acompanhamento, obito_natural, obito_eutanasia, obito_outro']
+  nome   varchar(100) [not null]
+  ativo  boolean      [not null, default: true]
 }
 
 // ── Processo Sanitário (entidade central) ──────────────
 
 Table ProcessoSanitario {
-  id                     uuid                  [pk, not null, default: `gen_random_uuid()`]
-  protocolo varchar(50) [not null, unique]  // ← ausente, deve ser adicionado
-  criado_por             uuid                  [not null, ref: > Usuario.id]
-  doenca_id              uuid                  [not null, ref: > Doenca.id]
-  status_processo        StatusProcesso        [not null, default: 'ABERTO']
-  laboratorio_id         uuid                  [ref: > Laboratorio.id]
-  resultado_laboratorial ResultadoLaboratorial
-  desfecho_animal        DesfechoAnimal
-  responsavel_id         uuid                  [not null, ref: > ResponsavelProcesso.id]
-  ocorrencia_id          uuid                  [ref: > Ocorrencia.id]
-  urgente                boolean               [not null, default: false]
-  gal_numero             varchar(50)
-  sinan_numero           varchar(50)
-  data_abertura          date                  [not null]
-  data_envio_amostras    date
-  data_resultado         date
-  previsao_retorno       date
-  observacoes            text
-  criado_em              timestamp             [not null, default: `now()`]
-  atualizado_em          timestamp             [not null, default: `now()`]
+  id                        uuid           [pk, not null, default: `gen_random_uuid()`]
+  protocolo                 varchar(20)    [not null, unique, note: 'NNN/AAAA gerado no servidor (RN02)']
+  data_abertura             date           [not null, note: 'não futura']
+  ocorrencia_id             uuid           [unique, ref: - Ocorrencia.id, note: 'opcional; definido uma vez (na criação ou depois) e imutável']
+  urgente                   boolean        [not null, default: false, note: 'true se alguma amostra tem contato_humano (RN04)']
+  status_processo           StatusProcesso [not null, default: 'ABERTO']
+  doenca_id                 uuid           [not null, ref: > Doenca.id]
+  laboratorio_id            uuid           [not null, ref: > Laboratorio.id]
+  cid                       varchar(20)    [note: 'cópia do CID da doença na abertura']
+  gal_numero                varchar(40)    [note: 'opcional, registro manual (AT-10)']
+  sinan_numero              varchar(40)    [note: 'opcional, registro manual (AT-10)']
+  data_envio_amostras       timestamp
+  previsao_retorno          date
+  resultado_laboratorial_id uuid           [ref: > ResultadoLaboratorial.id, note: 'resultado vigente; histórico em ResultadoProcesso']
+  data_resultado            date
+  desfecho_animal_id        uuid           [ref: > DesfechoAnimal.id]
+  data_notificacao_municipe timestamp      [note: 'V21: aceite do SMTP da notificação (positivo ou inconclusivo, AT-1); zerada quando o vigente muda para outro notificável']
+  observacoes               text
+  criado_por_id             uuid           [not null, ref: > Usuario.id]
+  criado_em                 timestamp      [not null, default: `now()`]
+  atualizado_em             timestamp      [not null, default: `now()`]
 
   indexes {
     protocolo [unique]
-    criado_por
     doenca_id
     status_processo
     ocorrencia_id
     data_abertura
   }
+
+  Note: 'Sem DELETE (V17). Ciclo: ABERTO → AGUARDANDO_RESULTADO → COM_RESULTADO → CONCLUIDO (RN12). Listagem filtra por doenca, status e urgente (T45).'
 }
 
-// ── Documentos do processo ─────────────────────────────
+// ── Responsável (munícipe; 1:1 com FK no filho) ───────
+
+Table ResponsavelProcesso {
+  id                 uuid         [pk, not null, default: `gen_random_uuid()`]
+  processo_id        uuid         [not null, unique, ref: - ProcessoSanitario.id]
+  nome               varchar(150) [not null, note: 'único obrigatório do responsável (RN08)']
+  cpf                varchar(14)
+  telefone           varchar(20)
+  email              varchar(150) [note: 'destino da notificação de resultado (RN10)']
+  cep                varchar(10)
+  endereco           varchar(255)
+  bairro_residencial varchar(80)
+  bairro_ocorrencia  varchar(80)
+}
+
+// ── Animal amostrado (ao menos 1 por processo) ─────────
+
+Table AnimalAmostrado {
+  id                       uuid                 [pk, not null, default: `gen_random_uuid()`]
+  processo_id              uuid                 [not null, ref: > ProcessoSanitario.id]
+  animal_id                uuid                 [ref: > Animal.id, note: 'opcional: animal do canil']
+  especie_id               uuid                 [not null, ref: > Especie.id]
+  sexo                     Sexo                 [not null]
+  raca                     varchar(80)
+  coloracao                varchar(80)
+  pelagem                  Pelagem
+  idade_aprox              varchar(30)
+  peso_kg                  decimal(5,2)         [note: 'CHECK > 0']
+  status_clinico           StatusClinicoAmostra [not null]
+  tipo_abrigo              TipoAbrigo           [not null]
+  alteracao_comportamental text
+  data_coleta              date                 [not null]
+  material_biologico       MaterialBiologico    [not null]
+  contato_humano           boolean              [not null]
+  nivel_contato            NivelContato         [note: 'CHECK: presente se e só se contato_humano']
+  agrediu_humano           boolean              [note: 'CHECK: presente se e só se contato_humano']
+  observacoes              text
+  criado_em                timestamp            [not null, default: `now()`]
+
+  Note: 'Sem tipo_amostra (conservação) nem nome_animal: não implementados.'
+}
+
+Table AmostraSintoma {
+  animal_amostrado_id uuid [pk, not null, ref: > AnimalAmostrado.id]
+  sintoma_id          uuid [pk, not null, ref: > Sintoma.id]
+}
+
+// ── Histórico imutável de resultados (V14/V15/V21) ────
+
+Table ResultadoProcesso {
+  id                        uuid      [pk, not null, default: `gen_random_uuid()`]
+  processo_id               uuid      [not null, ref: > ProcessoSanitario.id]
+  resultado_laboratorial_id uuid      [not null, ref: > ResultadoLaboratorial.id]
+  data_resultado            date      [not null, note: 'não futura; sem limite inferior (T34-5)']
+  observacoes               text
+  retifica_id               uuid      [unique, ref: - ResultadoProcesso.id, note: 'correção do vigente do mesmo processo; positivo não pode ser corrigido (trigger V21)']
+  registrado_por_id         uuid      [not null, ref: > Usuario.id]
+  registrado_em             timestamp [not null, default: `now()`]
+
+  Note: 'Sem UPDATE/DELETE (triggers V17). POST /api/processos/{id}/resultados.'
+}
+
+// ── Modelo-alvo (SEM tabela; trabalho futuro — AT-13) ─
+
+Table TipoDocumentoProcesso {
+  id    uuid         [pk]
+  nome  varchar(100)
+  ativo boolean
+  Note: 'MODELO-ALVO — não implementada (RF-B06).'
+}
 
 Table DocumentoProcesso {
-  id            uuid         [pk, not null, default: `gen_random_uuid()`]
-  processo_id   uuid         [not null, ref: > ProcessoSanitario.id]
-  criado_por    uuid         [ref: > Usuario.id]
-  nome          varchar(255) [not null]
-  url           varchar(500) [not null]
-  tipo_id         uuid         [not null, ref: > TipoDocumentoProcesso.id]
-  tamanho_bytes bigint
-  criado_em     timestamp    [not null, default: `now()`]
-
-  indexes {
-    processo_id
-  }
-}
-
-// ── Animal Amostrado ───────────────────────────────────
-
-Table AmostraAnimal {
-  id                 uuid             [pk, not null, default: `gen_random_uuid()`]
-  processo_id        uuid             [not null, ref: > ProcessoSanitario.id]
-  animal_id          uuid             [ref: > Animal.id]
-  sexo               Sexo
-  coloracao          varchar(100)
-  pelagem            varchar(100)
-  idade_aprox        varchar(50)
-  peso_kg            decimal(5,2)
-  nome_animal        varchar(100)
-  status_clinico     varchar(100)
-  raca               varchar(100)
-  material_biologico MaterialBiologico
-  tipo_amostra       TipoAmostra
-  data_coleta        date
-  observacoes        text
-  agrediu_humano     boolean
-  contato_humano     boolean          [not null, default: false]
-  alt_comportamental varchar(200)
-  nivel_contato      NivelContato
-  criado_em          timestamp        [not null, default: `now()`]
-
-  indexes {
-    processo_id
-    animal_id
-  }
+  id          uuid [pk]
+  processo_id uuid [ref: > ProcessoSanitario.id]
+  tipo_id     uuid [ref: > TipoDocumentoProcesso.id]
+  Note: 'MODELO-ALVO — não implementada (RF-B06: PDF do processo com ciclo Pendente → Em processamento → Concluído/Falha).'
 }
 
 TableGroup Processos_Sanitarios {
   Doenca
-  ResponsavelProcesso
+  Laboratorio
+  Sintoma
+  ResultadoLaboratorial
+  DesfechoAnimal
   ProcessoSanitario
+  ResponsavelProcesso
+  AnimalAmostrado
+  AmostraSintoma
+  ResultadoProcesso
+}
+
+TableGroup Processos_modelo_alvo {
+  TipoDocumentoProcesso
   DocumentoProcesso
-  AmostraAnimal
 }

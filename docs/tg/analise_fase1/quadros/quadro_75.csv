@@ -1,0 +1,16 @@
+﻿Quadro 75 – Dicionário de dados – tabela Prescricao
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único da prescrição.
+animal_id;uuid;FK;Animal medicado (Animal).
+prescrito_por;uuid;FK;Usuário que prescreveu (Usuario).
+medicamento_id;uuid;FK;Medicamento prescrito (Medicamento).
+data_inicio;date;;Data de início do tratamento.
+data_fim_prevista;date;;Data prevista de término.
+data_fim_real;date;;Data real de término.
+frequencia_aplicada;integer;;Frequência de aplicação.
+unidade_frequencia;UnidadeFrequencia;;Unidade da frequência (horas/dias).
+dose_quantidade;decimal(8,3);;Quantidade da dose.
+dose_unidade;UnidadeDose;;Unidade de medida da dose.
+via_administracao;ViaAdministracao;;Via de administração do medicamento.
+status;StatusPrescricao;;Situação atual do tratamento.
+criado_em;timestamp;;Data e hora de registro.

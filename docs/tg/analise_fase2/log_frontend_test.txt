@@ -1,0 +1,3031 @@
+
+> frontend@0.0.0 test
+> vitest run
+
+
+ RUN  v4.1.11 C:/Users/isaqu/Desktop/codigo/SISZOO/frontend
+
+stderr | src/features/graficos/hooks/useGraficos.test.tsx > useGraficosQuery > usa o mock por padrão (endpoint real ainda não existe), sem chamar a API
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:8080/api/dashboard/graficos?ano=2026
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+
+ ❯ src/features/graficos/hooks/useGraficos.test.tsx (2 tests | 1 failed) 3156ms
+     × usa o mock por padrão (endpoint real ainda não existe), sem chamar a API 3069ms
+stderr | src/features/dashboard/hooks/useDashboardKpis.test.tsx > useKpisDashboardQuery > usa o mock por padrão para animais/vacinação/ocorrências/alertas, e também mocka adoções (sem fonte real)
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:8080/api/dashboard/kpis
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+
+ ❯ src/features/dashboard/hooks/useDashboardKpis.test.tsx (2 tests | 1 failed) 3457ms
+     × usa o mock por padrão para animais/vacinação/ocorrências/alertas, e também mocka adoções (sem fonte real) 3072ms
+stderr | src/features/dashboard/components/Dashboard.test.tsx > Dashboard > renderiza os KPIs com dados mockados e mostra o selo de demonstração só no card de Adoções
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:8080/api/dashboard/kpis
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+
+stderr | src/features/graficos/components/GraficosDashboard.test.tsx > GraficosDashboard > renderiza os 4 gráficos juntos (ocupação de baia real + 3 mockados com selo)
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:8080/api/dashboard/graficos?ano=2026
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+
+ ❯ src/features/graficos/components/GraficosDashboard.test.tsx (1 test | 1 failed) 3484ms
+     × renderiza os 4 gráficos juntos (ocupação de baia real + 3 mockados com selo) 3472ms
+stderr | src/features/dashboard/components/Dashboard.test.tsx > Dashboard > erro ao carregar KPIs mostra retry; depois de recuperar, só Adoções continua com o selo de demonstração
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:8080/api/dashboard/graficos?ano=2026
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+
+stderr | src/features/dashboard/components/Dashboard.test.tsx > Dashboard > renderiza os alertas críticos genéricos (DER §3.7) vindos de kpis.alertas, sem duplicar o alerta de vacina
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:8080/api/dashboard/graficos?ano=2026
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET http://localhost:8080/api/dashboard/kpis
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+
+ ❯ src/features/dashboard/components/Dashboard.test.tsx (11 tests | 3 failed) 26798ms
+     × renderiza os KPIs com dados mockados e mostra o selo de demonstração só no card de Adoções 18417ms
+     × erro ao carregar KPIs mostra retry; depois de recuperar, só Adoções continua com o selo de demonstração 3086ms
+     × renderiza os alertas críticos genéricos (DER §3.7) vindos de kpis.alertas, sem duplicar o alerta de vacina 3067ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/dashboard/hooks/useDashboardKpis.test.tsx > useKpisDashboardQuery > usa o mock por padrão para animais/vacinação/ocorrências/alertas, e também mocka adoções (sem fonte real)
+AssertionError: expected false to be true // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/features/dashboard/hooks/useDashboardKpis.test.tsx:24:58
+     22|     const { result } = renderHook(() => useKpisDashboardQuery(), { wra…
+     23|
+     24|     await waitFor(() => expect(result.current.isSuccess).toBe(true))
+       |                                                          ^
+     25|     expect(result.current.data?.animais.total).toBe(147)
+     26|     expect(result.current.data?.vacinacao.percentualVacinados).toBe(84)
+ ❯ runWithExpensiveErrorDiagnosticsDisabled node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/features/dashboard/components/Dashboard.test.tsx > Dashboard > renderiza os KPIs com dados mockados e mostra o selo de demonstração só no card de Adoções
+TestingLibraryElementError: Unable to find an element with the text: 147. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"page-header"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"title-block"[39m
+      [36m>[39m
+        [36m<h1>[39m
+          [0mDashboard Operacional[0m
+        [36m</h1>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"subtitle"[39m
+        [36m>[39m
+          [0mVisão geral do Centro de Controle de Zoonoses[0m
+        [36m</p>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"section-header"[39m
+    [36m>[39m
+      [36m<h2>[39m
+        [0mIndicadores[0m
+      [36m</h2>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"alert danger"[39m
+      [33mrole[39m=[32m"alert"[39m
+    [36m>[39m
+      [36m<span[39m
+        [33mclass[39m=[32m"bullet"[39m
+      [36m/>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"alert-content"[39m
+      [36m>[39m
+        [0mNão foi possível carregar os indicadores.[0m
+        [36m<div[39m
+          [33mclass[39m=[32m"alert-desc"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"btn btn-secondary btn-sm"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0mTentar novamente[0m
+          [36m</button>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mstyle[39m=[32m"margin-top: var(--space-4);"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"section-header"[39m
+      [36m>[39m
+        [36m<h2>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"icon"[39m
+            [33mstyle[39m=[32m"color: var(--color-danger);"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"18"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"18"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M12 3 2 21h20L12 3z"[39m
+              [36m/>[39m
+              [36m<line[39m
+                [33mx1[39m=[32m"12"[39m
+                [33mx2[39m=[32m"12"[39m
+                [33my1[39m=[32m"10"[39m
+                [33my2[39m=[32m"14"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"12"[39m
+                [33mcy[39m=[32m"17.5"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mr[39m=[32m"0.5"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [0mAlertas Críticos[0m
+        [36m</h2>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"alerts-grid"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"alert danger"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"bullet"[39m
+          [36m/>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"alert-content"[39m
+          [36m>[39m
+            [36m<a[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/alertas/vacinas"[39m
+              [33mstyle[39m=[32m"text-decoration: none; color: inherit;"[39m
+            [36m>[39m
+              [36m<strong>[39m
+                [0m2[0m
+                [0m vacina[0m
+                [0ms[0m
+              [36m</strong>[39m
+              [0m [0m
+              [0m— [0m
+              [0m1 vencida, 1 vencendo em até 7 dias[0m
+            [36m</a>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"alert-desc"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"alert-desc-item severidade-vencida"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"12"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"12"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M12 3 2 21h20L12 3z"[39m
+                  [36m/>[39m
+                  [36m<line[39m
+                    [33mx1[39m=[32m"12"[39m
+                    [33mx2[39m=[32m"12"[39m
+                    [33my1[39m=[32m"10"[39m
+                    [33my2[39m=[32m"14"[39m
+                  [36m/>[39m
+                  [36m<circle[39m
+                    [33mcx[39m=[32m"12"[39m
+                    [33mcy[39m=[32m"17.5"[39m
+                    [33mfill[39m=[32m"currentColor"[39m
+                    [33mr[39m=[32m"0.5"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [0mRex (V10) venceu há 10d[0m
+              [36m</span>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"alert-desc-item severidade-a-vencer"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"12"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"12"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M18 16v-5a6 6 0 0 0-12 0v5l-2 2h16l-2-2z"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M10 21a2 2 0 0 0 4 0"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [0mRex (Antirrábica) vence em 5d[0m
+              [36m</span>[39m
+              [0m [0m
+              [36m<a[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/alertas/vacinas"[39m
+              [36m>[39m
+                [0mver detalhes →[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"alert danger"[39m
+          [33mrole[39m=[32m"alert"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"bullet"[39m
+          [36m/>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"alert-content"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"12"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"12"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M12 3 2 21h20L12 3z"[39m
+              [36m/>[39m
+              [36m<line[39m
+                [33mx1[39m=[32m"12"[39m
+                [33mx2[39m=[32m"12"[39m
+                [33my1[39m=[32m"10"[39m
+                [33my2[39m=[32m"14"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"12"[39m
+                [33mcy[39m=[32m"17.5"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mr[39m=[32m"0.5"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [0m [0m
+            [36m<strong>[39m
+              [0m1[0m
+              [0m processo[0m
+              [0m urgente[0m
+            [36m</strong>[39m
+            [0m [0m
+            [0m— contato humano-animal[0m
+            [36m<div[39m
+              [33mclass[39m=[32m"alert-desc"[39m
+            [36m>[39m
+              [36m<span>[39m
+                [36m<a[39m
+                  [33mdata-discover[39m=[32m"true"[39m
+                  [33mhref[39m=[32m"/processos/h7000000-0000-0000-0000-000000000001"[39m
+                [36m>[39m
+                  [0m045/2026[0m
+                  [0m ([0m
+                  [0mRaiva[0m
+                  [0m)[0m
+                [36m</a>[39m
+              [36m</span>[39m
+              [0m — [0m
+              [36m<a[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/processos"[39m
+              [36m>[39m
+                [0mver todos →[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mstyle[39m=[32m"margin-top: var(--space-4);"[39m
+    [36m>[39m
+      [36m<span[39m
+        [33maria-hidden[39m=[32m"true"[39m
+        [33mclass[39m=[32m"skel"[39m
+        [33mstyle[39m=[32m"display: block; width: 100%; height: 220px;"[39m
+      [36m/>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"page-header"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"title-block"[39m
+      [36m>[39m
+        [36m<h1>[39m
+          [0mDashboard Operacional[0m
+        [36m</h1>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"subtitle"[39m
+        [36m>[39m
+          [0mVisão geral do Centro de Controle de Zoonoses[0m
+        [36m</p>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"section-header"[39m
+    [36m>[39m
+      [36m<h2>[39m
+        [0mIndicadores[0m
+      [36m</h2>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"alert danger"[39m
+      [33mrole[39m=[32m"alert"[39m
+    [36m>[39m
+      [36m<span[39m
+        [33mclass[39m=[32m"bullet"[39m
+      [36m/>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"alert-content"[39m
+      [36m>[39m
+        [0mNão foi possível carregar os indicadores.[0m
+        [36m<div[39m
+          [33mclass[39m=[32m"alert-desc"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"btn btn-secondary btn-sm"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0mTentar novamente[0m
+          [36m</button>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mstyle[39m=[32m"margin-top: var(--space-4);"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"section-header"[39m
+      [36m>[39m
+        [36m<h2>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"icon"[39m
+            [33mstyle[39m=[32m"color: var(--color-danger);"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"18"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"18"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M12 3 2 21h20L12 3z"[39m
+              [36m/>[39m
+              [36m<line[39m
+                [33mx1[39m=[32m"12"[39m
+                [33mx2[39m=[32m"12"[39m
+                [33my1[39m=[32m"10"[39m
+                [33my2[39m=[32m"14"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"12"[39m
+                [33mcy[39m=[32m"17.5"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mr[39m=[32m"0.5"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [0mAlertas Críticos[0m
+        [36m</h2>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"alerts-grid"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"alert danger"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"bullet"[39m
+          [36m/>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"alert-content"[39m
+          [36m>[39m
+            [36m<a[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/alertas/vacinas"[39m
+              [33mstyle[39m=[32m"text-decoration: none; color: inherit;"[39m
+            [36m>[39m
+              [36m<strong>[39m
+                [0m2[0m
+                [0m vacina[0m
+                [0ms[0m
+              [36m</strong>[39m
+              [0m [0m
+              [0m— [0m
+              [0m1 vencida, 1 vencendo em até 7 dias[0m
+            [36m</a>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"alert-desc"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"alert-desc-item severidade-vencida"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"12"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"12"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M12 3 2 21h20L12 3z"[39m
+                  [36m/>[39m
+                  [36m<line[39m
+                    [33mx1[39m=[32m"12"[39m
+                    [33mx2[39m=[32m"12"[39m
+                    [33my1[39m=[32m"10"[39m
+                    [33my2[39m=[32m"14"[39m
+                  [36m/>[39m
+                  [36m<circle[39m
+                    [33mcx[39m=[32m"12"[39m
+                    [33mcy[39m=[32m"17.5"[39m
+                    [33mfill[39m=[32m"currentColor"[39m
+                    [33mr[39m=[32m"0.5"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [0mRex (V10) venceu há 10d[0m
+              [36m</span>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"alert-desc-item severidade-a-vencer"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"12"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"12"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M18 16v-5a6 6 0 0 0-12 0v5l-2 2h16l-2-2z"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M10 21a2 2 0 0 0 4 0"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [0mRex (Antirrábica) vence em 5d[0m
+              [36m</span>[39m
+              [0m [0m
+              [36m<a[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/alertas/vacinas"[39m
+              [36m>[39m
+                [0mver detalhes →[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"alert danger"[39m
+          [33mrole[39m=[32m"alert"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"bullet"[39m
+          [36m/>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"alert-content"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"12"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"12"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M12 3 2 21h20L12 3z"[39m
+              [36m/>[39m
+              [36m<line[39m
+                [33mx1[39m=[32m"12"[39m
+                [33mx2[39m=[32m"12"[39m
+                [33my1[39m=[32m"10"[39m
+                [33my2[39m=[32m"14"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"12"[39m
+                [33mcy[39m=[32m"17.5"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mr[39m=[32m"0.5"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [0m [0m
+            [36m<strong>[39m
+              [0m1[0m
+              [0m processo[0m
+              [0m urgente[0m
+            [36m</strong>[39m
+            [0m [0m
+            [0m— contato humano-animal[0m
+            [36m<div[39m
+              [33mclass[39m=[32m"alert-desc"[39m
+            [36m>[39m
+              [36m<span>[39m
+                [36m<a[39m
+                  [33mdata-discover[39m=[32m"true"[39m
+                  [33mhref[39m=[32m"/processos/h7000000-0000-0000-0000-000000000001"[39m
+                [36m>[39m
+                  [0m045/2026[0m
+                  [0m ([0m
+                  [0mRaiva[0m
+                  [0m)[0m
+                [36m</a>[39m
+              [36m</span>[39m
+              [0m — [0m
+              [36m<a[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/processos"[39m
+              [36m>[39m
+                [0mver todos →[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mstyle[39m=[32m"margin-top: var(--space-4);"[39m
+    [36m>[39m
+      [36m<span[39m
+        [33maria-hidden[39m=[32m"true"[39m
+        [33mclass[39m=[32m"skel"[39m
+        [33mstyle[39m=[32m"display: block; width: 100%; height: 220px;"[39m
+      [36m/>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/features/dashboard/components/Dashboard.test.tsx:47:25
+     45|     renderDashboard()
+     46|
+     47|     expect(await screen.findByText('147')).toBeInTheDocument()
+       |                         ^
+     48|     expect(screen.getByText('84')).toBeInTheDocument()
+     49|     expect(screen.getByText('8')).toBeInTheDocument()
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  src/features/dashboard/components/Dashboard.test.tsx > Dashboard > erro ao carregar KPIs mostra retry; depois de recuperar, só Adoções continua com o selo de demonstração
+TestingLibraryElementError: Found multiple elements with the role "button" and name "Tentar novamente"
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<button[39m
+  [33mclass[39m=[32m"btn btn-secondary btn-sm"[39m
+  [33mtype[39m=[32m"button"[39m
+[36m>[39m
+  [0mTentar novamente[0m
+[36m</button>[39m
+
+Ignored nodes: comments, script, style
+[36m<button[39m
+  [33mclass[39m=[32m"btn btn-secondary btn-sm"[39m
+  [33mtype[39m=[32m"button"[39m
+[36m>[39m
+  [0mTentar novamente[0m
+[36m</button>[39m
+
+Ignored nodes: comments, script, style
+[36m<button[39m
+  [33mclass[39m=[32m"btn btn-secondary btn-sm"[39m
+  [33mtype[39m=[32m"button"[39m
+[36m>[39m
+  [0mTentar novamente[0m
+[36m</button>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"page-header"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"title-block"[39m
+      [36m>[39m
+        [36m<h1>[39m
+          [0mDashboard Operacional[0m
+        [36m</h1>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"subtitle"[39m
+        [36m>[39m
+          [0mVisão geral do Centro de Controle de Zoonoses[0m
+        [36m</p>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"section-header"[39m
+    [36m>[39m
+      [36m<h2>[39m
+        [0mIndicadores[0m
+      [36m</h2>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"alert danger"[39m
+      [33mrole[39m=[32m"alert"[39m
+    [36m>[39m
+      [36m<span[39m
+        [33mclass[39m=[32m"bullet"[39m
+      [36m/>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"alert-content"[39m
+      [36m>[39m
+        [0mNão foi possível carregar os indicadores.[0m
+        [36m<div[39m
+          [33mclass[39m=[32m"alert-desc"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"btn btn-secondary btn-sm"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0mTentar novamente[0m
+          [36m</button>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mstyle[39m=[32m"margin-top: var(--space-4);"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"section-header"[39m
+      [36m>[39m
+        [36m<h2>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"icon"[39m
+            [33mstyle[39m=[32m"color: var(--color-danger);"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"18"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"18"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M12 3 2 21h20L12 3z"[39m
+              [36m/>[39m
+              [36m<line[39m
+                [33mx1[39m=[32m"12"[39m
+                [33mx2[39m=[32m"12"[39m
+                [33my1[39m=[32m"10"[39m
+                [33my2[39m=[32m"14"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"12"[39m
+                [33mcy[39m=[32m"17.5"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mr[39m=[32m"0.5"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [0mAlertas Críticos[0m
+        [36m</h2>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"alerts-grid"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"alert danger"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"bullet"[39m
+          [36m/>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"alert-content"[39m
+          [36m>[39m
+            [36m<a[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/alertas/vacinas"[39m
+              [33mstyle[39m=[32m"text-decoration: none; color: inherit;"[39m
+            [36m>[39m
+              [36m<strong>[39m
+                [0m2[0m
+                [0m vacina[0m
+                [0ms[0m
+              [36m</strong>[39m
+              [0m [0m
+              [0m— [0m
+              [0m1 vencida, 1 vencendo em até 7 dias[0m
+            [36m</a>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"alert-desc"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"alert-desc-item severidade-vencida"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"12"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"12"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M12 3 2 21h20L12 3z"[39m
+                  [36m/>[39m
+                  [36m<line[39m
+                    [33mx1[39m=[32m"12"[39m
+                    [33mx2[39m=[32m"12"[39m
+                    [33my1[39m=[32m"10"[39m
+                    [33my2[39m=[32m"14"[39m
+                  [36m/>[39m
+                  [36m<circle[39m
+                    [33mcx[39m=[32m"12"[39m
+                    [33mcy[39m=[32m"17.5"[39m
+                    [33mfill[39m=[32m"currentColor"[39m
+                    [33mr[39m=[32m"0.5"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [0mRex (V10) venceu há 10d[0m
+              [36m</span>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"alert-desc-item severidade-a-vencer"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"12"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"12"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M18 16v-5a6 6 0 0 0-12 0v5l-2 2h16l-2-2z"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M10 21a2 2 0 0 0 4 0"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [0mRex (Antirrábica) vence em 5d[0m
+              [36m</span>[39m
+              [0m [0m
+              [36m<a[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/alertas/vacinas"[39m
+              [36m>[39m
+                [0mver detalhes →[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"alert danger"[39m
+          [33mrole[39m=[32m"alert"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"bullet"[39m
+          [36m/>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"alert-content"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"12"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"12"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M12 3 2 21h20L12 3z"[39m
+              [36m/>[39m
+              [36m<line[39m
+                [33mx1[39m=[32m"12"[39m
+                [33mx2[39m=[32m"12"[39m
+                [33my1[39m=[32m"10"[39m
+                [33my2[39m=[32m"14"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"12"[39m
+                [33mcy[39m=[32m"17.5"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mr[39m=[32m"0.5"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [0m [0m
+            [36m<strong>[39m
+              [0m1[0m
+              [0m processo[0m
+              [0m urgente[0m
+            [36m</strong>[39m
+            [0m [0m
+            [0m— contato humano-animal[0m
+            [36m<div[39m
+              [33mclass[39m=[32m"alert-desc"[39m
+            [36m>[39m
+              [36m<span>[39m
+                [36m<a[39m
+                  [33mdata-discover[39m=[32m"true"[39m
+                  [33mhref[39m=[32m"/processos/h7000000-0000-0000-0000-000000000001"[39m
+                [36m>[39m
+                  [0m045/2026[0m
+                  [0m ([0m
+                  [0mRaiva[0m
+                  [0m)[0m
+                [36m</a>[39m
+              [36m</span>[39m
+              [0m — [0m
+              [36m<a[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/processos"[39m
+              [36m>[39m
+                [0mver todos →[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mstyle[39m=[32m"margin-top: var(--space-4);"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"charts-row"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"card-header"[39m
+          [36m>[39m
+            [36m<h3>[39m
+              [0mOcupação por Baia[0m
+            [36m</h3>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"sub"[39m
+            [36m>[39m
+              [0mOrdenado por % de ocupação[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"card-body"[39m
+          [36m>[39m
+            [36m<figure[39m
+              [33maria-label[39m=[32m"Ocupação por baia — Baia 9: 2 de 2 (100%); Baia 3: 1 de 2 (50%); Baia 6: 1 de 2 (50%); Baia 7: 1 de 2 (50%); Gatil A: 1 de 4 (25%); Baia 10: 0 de 3 (0%)"[39m
+              [33mstyle[39m=[32m"margin: 0px;"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"recharts-responsive-container"[39m
+                [33mstyle[39m=[32m"width: 100%; height: 216px; min-width: 0px;"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mstyle[39m=[32m"width: 0px; overflow-x: visible;"[39m
+                [36m/>[39m
+              [36m</div>[39m
+              [36m<ul[39m
+                [33mclass[39m=[32m"chart-legend"[39m
+              [36m>[39m
+                [36m<li>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"chart-legend-dot"[39m
+                    [33mstyle[39m=[32m"background: rgb(198, 40, 40);"[39m
+                  [36m/>[39m
+                  [0mBaia 9[0m
+                  [0m: [0m
+                  [0m2[0m
+                  [0m/[0m
+                  [0m2[0m
+                  [0m ([0m
+                  [0m100[0m
+                  [0m%)[0m
+                [36m</li>[39m
+                [36m<li>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"chart-legend-dot"[39m
+                    [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                  [36m/>[39m
+                  [0mBaia 3[0m
+                  [0m: [0m
+                  [0m1[0m
+                  [0m/[0m
+                  [0m2[0m
+                  [0m ([0m
+                  [0m50[0m
+                  [0m%)[0m
+                [36m</li>[39m
+                [36m<li>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"chart-legend-dot"[39m
+                    [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                  [36m/>[39m
+                  [0mBaia 6[0m
+                  [0m: [0m
+                  [0m1[0m
+                  [0m/[0m
+                  [0m2[0m
+                  [0m ([0m
+                  [0m50[0m
+                  [0m%)[0m
+                [36m</li>[39m
+                [36m<li>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"chart-legend-dot"[39m
+                    [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                  [36m/>[39m
+                  [0mBaia 7[0m
+                  [0m: [0m
+                  [0m1[0m
+                  [0m/[0m
+                  [0m2[0m
+                  [0m ([0m
+                  [0m50[0m
+                  [0m%)[0m
+                [36m</li>[39m
+                [36m<li>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"chart-legend-dot"[39m
+                    [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                  [36m/>[39m
+                  [0mGatil A[0m
+                  [0m: [0m
+                  [0m1[0m
+                  [0m/[0m
+                  [0m4[0m
+                  [0m ([0m
+                  [0m25[0m
+                  [0m%)[0m
+                [36m</li>[39m
+                [36m<li>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"chart-legend-dot"[39m
+                    [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                  [36m/>[39m
+                  [0mBaia 10[0m
+                  [0m: [0m
+                  [0m0[0m
+                  [0m/[0m
+                  [0m3[0m
+                  [0m ([0m
+                  [0m0[0m
+                  [0m%)[0m
+                [36m</li>[39m
+              [36m</ul>[39m
+            [36m</figure>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"card-header"[39m
+          [36m>[39m
+            [36m<h3>[39m
+              [0mResultados Laboratoriais[0m
+            [36m</h3>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"card-body"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"alert danger"[39m
+              [33mrole[39m=[32m"alert"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"bullet"[39m
+              [36m/>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"alert-content"[39m
+              [36m>[39m
+                [0mNão foi possível carregar os resultados laboratoriais.[0m
+                [36m<div[39m
+                  [33mclass[39m=[32m"alert-desc"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"btn btn-secondary btn-sm"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mTentar novamente[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"card-header"[39m
+          [36m>[39m
+            [36m<h3>[39m
+              [0mCasos Suspeitos[0m
+            [36m</h3>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"card-body"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"alert danger"[39m
+              [33mrole[39m=[32m"alert"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"bullet"[39m
+              [36m/>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"alert-content"[39m
+              [36m>[39m
+                [0mNão foi possível carregar os casos suspeitos.[0m
+                [36m<div[39m
+                  [33mclass[39m=[32m"alert-desc"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"btn btn-secondary btn-sm"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mTentar novamente[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"page-header"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"title-block"[39m
+      [36m>[39m
+        [36m<h1>[39m
+          [0mDashboard Operacional[0m
+        [36m</h1>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"subtitle"[39m
+        [36m>[39m
+          [0mVisão geral do Centro de Controle de Zoonoses[0m
+        [36m</p>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"section-header"[39m
+    [36m>[39m
+      [36m<h2>[39m
+        [0mIndicadores[0m
+      [36m</h2>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"alert danger"[39m
+      [33mrole[39m=[32m"alert"[39m
+    [36m>[39m
+      [36m<span[39m
+        [33mclass[39m=[32m"bullet"[39m
+      [36m/>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"alert-content"[39m
+      [36m>[39m
+        [0mNão foi possível carregar os indicadores.[0m
+        [36m<div[39m
+          [33mclass[39m=[32m"alert-desc"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"btn btn-secondary btn-sm"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0mTentar novamente[0m
+          [36m</button>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mstyle[39m=[32m"margin-top: var(--space-4);"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"section-header"[39m
+      [36m>[39m
+        [36m<h2>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"icon"[39m
+            [33mstyle[39m=[32m"color: var(--color-danger);"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"18"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"18"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M12 3 2 21h20L12 3z"[39m
+              [36m/>[39m
+              [36m<line[39m
+                [33mx1[39m=[32m"12"[39m
+                [33mx2[39m=[32m"12"[39m
+                [33my1[39m=[32m"10"[39m
+                [33my2[39m=[32m"14"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"12"[39m
+                [33mcy[39m=[32m"17.5"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mr[39m=[32m"0.5"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [0mAlertas Críticos[0m
+        [36m</h2>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"alerts-grid"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"alert danger"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"bullet"[39m
+          [36m/>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"alert-content"[39m
+          [36m>[39m
+            [36m<a[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/alertas/vacinas"[39m
+              [33mstyle[39m=[32m"text-decoration: none; color: inherit;"[39m
+            [36m>[39m
+              [36m<strong>[39m
+                [0m2[0m
+                [0m vacina[0m
+                [0ms[0m
+              [36m</strong>[39m
+              [0m [0m
+              [0m— [0m
+              [0m1 vencida, 1 vencendo em até 7 dias[0m
+            [36m</a>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"alert-desc"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"alert-desc-item severidade-vencida"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"12"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"12"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M12 3 2 21h20L12 3z"[39m
+                  [36m/>[39m
+                  [36m<line[39m
+                    [33mx1[39m=[32m"12"[39m
+                    [33mx2[39m=[32m"12"[39m
+                    [33my1[39m=[32m"10"[39m
+                    [33my2[39m=[32m"14"[39m
+                  [36m/>[39m
+                  [36m<circle[39m
+                    [33mcx[39m=[32m"12"[39m
+                    [33mcy[39m=[32m"17.5"[39m
+                    [33mfill[39m=[32m"currentColor"[39m
+                    [33mr[39m=[32m"0.5"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [0mRex (V10) venceu há 10d[0m
+              [36m</span>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"alert-desc-item severidade-a-vencer"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"12"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"12"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M18 16v-5a6 6 0 0 0-12 0v5l-2 2h16l-2-2z"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M10 21a2 2 0 0 0 4 0"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [0mRex (Antirrábica) vence em 5d[0m
+              [36m</span>[39m
+              [0m [0m
+              [36m<a[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/alertas/vacinas"[39m
+              [36m>[39m
+                [0mver detalhes →[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"alert danger"[39m
+          [33mrole[39m=[32m"alert"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"bullet"[39m
+          [36m/>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"alert-content"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"12"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"12"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M12 3 2 21h20L12 3z"[39m
+              [36m/>[39m
+              [36m<line[39m
+                [33mx1[39m=[32m"12"[39m
+                [33mx2[39m=[32m"12"[39m
+                [33my1[39m=[32m"10"[39m
+                [33my2[39m=[32m"14"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"12"[39m
+                [33mcy[39m=[32m"17.5"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mr[39m=[32m"0.5"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [0m [0m
+            [36m<strong>[39m
+              [0m1[0m
+              [0m processo[0m
+              [0m urgente[0m
+            [36m</strong>[39m
+            [0m [0m
+            [0m— contato humano-animal[0m
+            [36m<div[39m
+              [33mclass[39m=[32m"alert-desc"[39m
+            [36m>[39m
+              [36m<span>[39m
+                [36m<a[39m
+                  [33mdata-discover[39m=[32m"true"[39m
+                  [33mhref[39m=[32m"/processos/h7000000-0000-0000-0000-000000000001"[39m
+                [36m>[39m
+                  [0m045/2026[0m
+                  [0m ([0m
+                  [0mRaiva[0m
+                  [0m)[0m
+                [36m</a>[39m
+              [36m</span>[39m
+              [0m — [0m
+              [36m<a[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/processos"[39m
+              [36m>[39m
+                [0mver todos →[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mstyle[39m=[32m"margin-top: var(--space-4);"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"charts-row"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"card-header"[39m
+          [36m>[39m
+            [36m<h3>[39m
+              [0mOcupação por Baia[0m
+            [36m</h3>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"sub"[39m
+            [36m>[39m
+              [0mOrdenado por % de ocupação[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"card-body"[39m
+          [36m>[39m
+            [36m<figure[39m
+              [33maria-label[39m=[32m"Ocupação por baia — Baia 9: 2 de 2 (100%); Baia 3: 1 de 2 (50%); Baia 6: 1 de 2 (50%); Baia 7: 1 de 2 (50%); Gatil A: 1 de 4 (25%); Baia 10: 0 de 3 (0%)"[39m
+              [33mstyle[39m=[32m"margin: 0px;"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"recharts-responsive-container"[39m
+                [33mstyle[39m=[32m"width: 100%; height: 216px; min-width: 0px;"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mstyle[39m=[32m"width: 0px; overflow-x: visible;"[39m
+                [36m/>[39m
+              [36m</div>[39m
+              [36m<ul[39m
+                [33mclass[39m=[32m"chart-legend"[39m
+              [36m>[39m
+                [36m<li>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"chart-legend-dot"[39m
+                    [33mstyle[39m=[32m"background: rgb(198, 40, 40);"[39m
+                  [36m/>[39m
+                  [0mBaia 9[0m
+                  [0m: [0m
+                  [0m2[0m
+                  [0m/[0m
+                  [0m2[0m
+                  [0m ([0m
+                  [0m100[0m
+                  [0m%)[0m
+                [36m</li>[39m
+                [36m<li>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"chart-legend-dot"[39m
+                    [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                  [36m/>[39m
+                  [0mBaia 3[0m
+                  [0m: [0m
+                  [0m1[0m
+                  [0m/[0m
+                  [0m2[0m
+                  [0m ([0m
+                  [0m50[0m
+                  [0m%)[0m
+                [36m</li>[39m
+                [36m<li>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"chart-legend-dot"[39m
+                    [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                  [36m/>[39m
+                  [0mBaia 6[0m
+                  [0m: [0m
+                  [0m1[0m
+                  [0m/[0m
+                  [0m2[0m
+                  [0m ([0m
+                  [0m50[0m
+                  [0m%)[0m
+                [36m</li>[39m
+                [36m<li>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"chart-legend-dot"[39m
+                    [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                  [36m/>[39m
+                  [0mBaia 7[0m
+                  [0m: [0m
+                  [0m1[0m
+                  [0m/[0m
+                  [0m2[0m
+                  [0m ([0m
+                  [0m50[0m
+                  [0m%)[0m
+                [36m</li>[39m
+                [36m<li>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"chart-legend-dot"[39m
+                    [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                  [36m/>[39m
+                  [0mGatil A[0m
+                  [0m: [0m
+                  [0m1[0m
+                  [0m/[0m
+                  [0m4[0m
+                  [0m ([0m
+                  [0m25[0m
+                  [0m%)[0m
+                [36m</li>[39m
+                [36m<li>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"chart-legend-dot"[39m
+                    [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                  [36m/>[39m
+                  [0mBaia 10[0m
+                  [0m: [0m
+                  [0m0[0m
+                  [0m/[0m
+                  [0m3[0m
+                  [0m ([0m
+                  [0m0[0m
+                  [0m%)[0m
+                [36m</li>[39m
+              [36m</ul>[39m
+            [36m</figure>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"card-header"[39m
+          [36m>[39m
+            [36m<h3>[39m
+              [0mResultados Laboratoriais[0m
+            [36m</h3>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"card-body"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"alert danger"[39m
+              [33mrole[39m=[32m"alert"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"bullet"[39m
+              [36m/>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"alert-content"[39m
+              [36m>[39m
+                [0mNão foi possível carregar os resultados laboratoriais.[0m
+                [36m<div[39m
+                  [33mclass[39m=[32m"alert-desc"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"btn btn-secondary btn-sm"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mTentar novamente[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"card-header"[39m
+          [36m>[39m
+            [36m<h3>[39m
+              [0mCasos Suspeitos[0m
+            [36m</h3>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"card-body"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"alert danger"[39m
+              [33mrole[39m=[32m"alert"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"bullet"[39m
+              [36m/>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"alert-content"[39m
+              [36m>[39m
+                [0mNão foi possível carregar os casos suspeitos.[0m
+                [36m<div[39m
+                  [33mclass[39m=[32m"alert-desc"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"btn btn-secondary btn-sm"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mTentar novamente[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/features/dashboard/components/Dashboard.test.tsx:87:37
+     85|     renderDashboard()
+     86|
+     87|     const botaoRetry = await screen.findByRole('button', { name: 'Tent…
+       |                                     ^
+     88|     await user.click(botaoRetry)
+     89|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  src/features/dashboard/components/Dashboard.test.tsx > Dashboard > renderiza os alertas críticos genéricos (DER §3.7) vindos de kpis.alertas, sem duplicar o alerta de vacina
+TestingLibraryElementError: Unable to find an element with the text: /baia\(s\) superlotada/. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"page-header"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"title-block"[39m
+      [36m>[39m
+        [36m<h1>[39m
+          [0mDashboard Operacional[0m
+        [36m</h1>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"subtitle"[39m
+        [36m>[39m
+          [0mVisão geral do Centro de Controle de Zoonoses[0m
+        [36m</p>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"section-header"[39m
+    [36m>[39m
+      [36m<h2>[39m
+        [0mIndicadores[0m
+      [36m</h2>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"alert danger"[39m
+      [33mrole[39m=[32m"alert"[39m
+    [36m>[39m
+      [36m<span[39m
+        [33mclass[39m=[32m"bullet"[39m
+      [36m/>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"alert-content"[39m
+      [36m>[39m
+        [0mNão foi possível carregar os indicadores.[0m
+        [36m<div[39m
+          [33mclass[39m=[32m"alert-desc"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"btn btn-secondary btn-sm"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0mTentar novamente[0m
+          [36m</button>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mstyle[39m=[32m"margin-top: var(--space-4);"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"section-header"[39m
+      [36m>[39m
+        [36m<h2>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"icon"[39m
+            [33mstyle[39m=[32m"color: var(--color-danger);"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"18"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"18"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M12 3 2 21h20L12 3z"[39m
+              [36m/>[39m
+              [36m<line[39m
+                [33mx1[39m=[32m"12"[39m
+                [33mx2[39m=[32m"12"[39m
+                [33my1[39m=[32m"10"[39m
+                [33my2[39m=[32m"14"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"12"[39m
+                [33mcy[39m=[32m"17.5"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mr[39m=[32m"0.5"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [0mAlertas Críticos[0m
+        [36m</h2>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"alerts-grid"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"alert danger"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"bullet"[39m
+          [36m/>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"alert-content"[39m
+          [36m>[39m
+            [36m<a[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/alertas/vacinas"[39m
+              [33mstyle[39m=[32m"text-decoration: none; color: inherit;"[39m
+            [36m>[39m
+              [36m<strong>[39m
+                [0m2[0m
+                [0m vacina[0m
+                [0ms[0m
+              [36m</strong>[39m
+              [0m [0m
+              [0m— [0m
+              [0m1 vencida, 1 vencendo em até 7 dias[0m
+            [36m</a>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"alert-desc"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"alert-desc-item severidade-vencida"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"12"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"12"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M12 3 2 21h20L12 3z"[39m
+                  [36m/>[39m
+                  [36m<line[39m
+                    [33mx1[39m=[32m"12"[39m
+                    [33mx2[39m=[32m"12"[39m
+                    [33my1[39m=[32m"10"[39m
+                    [33my2[39m=[32m"14"[39m
+                  [36m/>[39m
+                  [36m<circle[39m
+                    [33mcx[39m=[32m"12"[39m
+                    [33mcy[39m=[32m"17.5"[39m
+                    [33mfill[39m=[32m"currentColor"[39m
+                    [33mr[39m=[32m"0.5"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [0mRex (V10) venceu há 10d[0m
+              [36m</span>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"alert-desc-item severidade-a-vencer"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"12"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"12"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M18 16v-5a6 6 0 0 0-12 0v5l-2 2h16l-2-2z"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M10 21a2 2 0 0 0 4 0"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [0mRex (Antirrábica) vence em 5d[0m
+              [36m</span>[39m
+              [0m [0m
+              [36m<a[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/alertas/vacinas"[39m
+              [36m>[39m
+                [0mver detalhes →[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"alert danger"[39m
+          [33mrole[39m=[32m"alert"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"bullet"[39m
+          [36m/>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"alert-content"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"12"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"12"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M12 3 2 21h20L12 3z"[39m
+              [36m/>[39m
+              [36m<line[39m
+                [33mx1[39m=[32m"12"[39m
+                [33mx2[39m=[32m"12"[39m
+                [33my1[39m=[32m"10"[39m
+                [33my2[39m=[32m"14"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"12"[39m
+                [33mcy[39m=[32m"17.5"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mr[39m=[32m"0.5"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [0m [0m
+            [36m<strong>[39m
+              [0m1[0m
+              [0m processo[0m
+              [0m urgente[0m
+            [36m</strong>[39m
+            [0m [0m
+            [0m— contato humano-animal[0m
+            [36m<div[39m
+              [33mclass[39m=[32m"alert-desc"[39m
+            [36m>[39m
+              [36m<span>[39m
+                [36m<a[39m
+                  [33mdata-discover[39m=[32m"true"[39m
+                  [33mhref[39m=[32m"/processos/h7000000-0000-0000-0000-000000000001"[39m
+                [36m>[39m
+                  [0m045/2026[0m
+                  [0m ([0m
+                  [0mRaiva[0m
+                  [0m)[0m
+                [36m</a>[39m
+              [36m</span>[39m
+              [0m — [0m
+              [36m<a[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/processos"[39m
+              [36m>[39m
+                [0mver todos →[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mstyle[39m=[32m"margin-top: var(--space-4);"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"charts-row"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"card-header"[39m
+          [36m>[39m
+            [36m<h3>[39m
+              [0mOcupação por Baia[0m
+            [36m</h3>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"sub"[39m
+            [36m>[39m
+              [0mOrdenado por % de ocupação[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"card-body"[39m
+          [36m>[39m
+            [36m<figure[39m
+              [33maria-label[39m=[32m"Ocupação por baia — Baia 9: 2 de 2 (100%); Baia 3: 1 de 2 (50%); Baia 6: 1 de 2 (50%); Baia 7: 1 de 2 (50%); Gatil A: 1 de 4 (25%); Baia 10: 0 de 3 (0%)"[39m
+              [33mstyle[39m=[32m"margin: 0px;"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"recharts-responsive-container"[39m
+                [33mstyle[39m=[32m"width: 100%; height: 216px; min-width: 0px;"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mstyle[39m=[32m"width: 0px; overflow-x: visible;"[39m
+                [36m/>[39m
+              [36m</div>[39m
+              [36m<ul[39m
+                [33mclass[39m=[32m"chart-legend"[39m
+              [36m>[39m
+                [36m<li>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"chart-legend-dot"[39m
+                    [33mstyle[39m=[32m"background: rgb(198, 40, 40);"[39m
+                  [36m/>[39m
+                  [0mBaia 9[0m
+                  [0m: [0m
+                  [0m2[0m
+                  [0m/[0m
+                  [0m2[0m
+                  [0m ([0m
+                  [0m100[0m
+                  [0m%)[0m
+                [36m</li>[39m
+                [36m<li>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"chart-legend-dot"[39m
+                    [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                  [36m/>[39m
+                  [0mBaia 3[0m
+                  [0m: [0m
+                  [0m1[0m
+                  [0m/[0m
+                  [0m2[0m
+                  [0m ([0m
+                  [0m50[0m
+                  [0m%)[0m
+                [36m</li>[39m
+                [36m<li>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"chart-legend-dot"[39m
+                    [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                  [36m/>[39m
+                  [0mBaia 6[0m
+                  [0m: [0m
+                  [0m1[0m
+                  [0m/[0m
+                  [0m2[0m
+                  [0m ([0m
+                  [0m50[0m
+                  [0m%)[0m
+                [36m</li>[39m
+                [36m<li>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"chart-legend-dot"[39m
+                    [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                  [36m/>[39m
+                  [0mBaia 7[0m
+                  [0m: [0m
+                  [0m1[0m
+                  [0m/[0m
+                  [0m2[0m
+                  [0m ([0m
+                  [0m50[0m
+                  [0m%)[0m
+                [36m</li>[39m
+                [36m<li>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"chart-legend-dot"[39m
+                    [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                  [36m/>[39m
+                  [0mGatil A[0m
+                  [0m: [0m
+                  [0m1[0m
+                  [0m/[0m
+                  [0m4[0m
+                  [0m ([0m
+                  [0m25[0m
+                  [0m%)[0m
+                [36m</li>[39m
+                [36m<li>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"chart-legend-dot"[39m
+                    [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                  [36m/>[39m
+                  [0mBaia 10[0m
+                  [0m: [0m
+                  [0m0[0m
+                  [0m/[0m
+                  [0m3[0m
+                  [0m ([0m
+                  [0m0[0m
+                  [0m%)[0m
+                [36m</li>[39m
+              [36m</ul>[39m
+            [36m</figure>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"card-header"[39m
+          [36m>[39m
+            [36m<h3>[39m
+              [0mResultados Laboratoriais[0m
+            [36m</h3>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"card-body"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"alert danger"[39m
+              [33mrole[39m=[32m"alert"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"bullet"[39m
+              [36m/>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"alert-content"[39m
+              [36m>[39m
+                [0mNão foi possível carregar os resultados laboratoriais.[0m
+                [36m<div[39m
+                  [33mclass[39m=[32m"alert-desc"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"btn btn-secondary btn-sm"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mTentar novamente[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"card-header"[39m
+          [36m>[39m
+            [36m<h3>[39m
+              [0mCasos Suspeitos[0m
+            [36m</h3>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"card-body"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"alert danger"[39m
+              [33mrole[39m=[32m"alert"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"bullet"[39m
+              [36m/>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"alert-content"[39m
+              [36m>[39m
+                [0mNão foi possível carregar os casos suspeitos.[0m
+                [36m<div[39m
+                  [33mclass[39m=[32m"alert-desc"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"btn btn-secondary btn-sm"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mTentar novamente[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"page-header"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"title-block"[39m
+      [36m>[39m
+        [36m<h1>[39m
+          [0mDashboard Operacional[0m
+        [36m</h1>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"subtitle"[39m
+        [36m>[39m
+          [0mVisão geral do Centro de Controle de Zoonoses[0m
+        [36m</p>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"section-header"[39m
+    [36m>[39m
+      [36m<h2>[39m
+        [0mIndicadores[0m
+      [36m</h2>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"alert danger"[39m
+      [33mrole[39m=[32m"alert"[39m
+    [36m>[39m
+      [36m<span[39m
+        [33mclass[39m=[32m"bullet"[39m
+      [36m/>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"alert-content"[39m
+      [36m>[39m
+        [0mNão foi possível carregar os indicadores.[0m
+        [36m<div[39m
+          [33mclass[39m=[32m"alert-desc"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"btn btn-secondary btn-sm"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0mTentar novamente[0m
+          [36m</button>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mstyle[39m=[32m"margin-top: var(--space-4);"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"section-header"[39m
+      [36m>[39m
+        [36m<h2>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"icon"[39m
+            [33mstyle[39m=[32m"color: var(--color-danger);"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"18"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"18"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M12 3 2 21h20L12 3z"[39m
+              [36m/>[39m
+              [36m<line[39m
+                [33mx1[39m=[32m"12"[39m
+                [33mx2[39m=[32m"12"[39m
+                [33my1[39m=[32m"10"[39m
+                [33my2[39m=[32m"14"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"12"[39m
+                [33mcy[39m=[32m"17.5"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mr[39m=[32m"0.5"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [0mAlertas Críticos[0m
+        [36m</h2>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"alerts-grid"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"alert danger"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"bullet"[39m
+          [36m/>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"alert-content"[39m
+          [36m>[39m
+            [36m<a[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/alertas/vacinas"[39m
+              [33mstyle[39m=[32m"text-decoration: none; color: inherit;"[39m
+            [36m>[39m
+              [36m<strong>[39m
+                [0m2[0m
+                [0m vacina[0m
+                [0ms[0m
+              [36m</strong>[39m
+              [0m [0m
+              [0m— [0m
+              [0m1 vencida, 1 vencendo em até 7 dias[0m
+            [36m</a>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"alert-desc"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"alert-desc-item severidade-vencida"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"12"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"12"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M12 3 2 21h20L12 3z"[39m
+                  [36m/>[39m
+                  [36m<line[39m
+                    [33mx1[39m=[32m"12"[39m
+                    [33mx2[39m=[32m"12"[39m
+                    [33my1[39m=[32m"10"[39m
+                    [33my2[39m=[32m"14"[39m
+                  [36m/>[39m
+                  [36m<circle[39m
+                    [33mcx[39m=[32m"12"[39m
+                    [33mcy[39m=[32m"17.5"[39m
+                    [33mfill[39m=[32m"currentColor"[39m
+                    [33mr[39m=[32m"0.5"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [0mRex (V10) venceu há 10d[0m
+              [36m</span>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"alert-desc-item severidade-a-vencer"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"12"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"12"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M18 16v-5a6 6 0 0 0-12 0v5l-2 2h16l-2-2z"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M10 21a2 2 0 0 0 4 0"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [0mRex (Antirrábica) vence em 5d[0m
+              [36m</span>[39m
+              [0m [0m
+              [36m<a[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/alertas/vacinas"[39m
+              [36m>[39m
+                [0mver detalhes →[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"alert danger"[39m
+          [33mrole[39m=[32m"alert"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"bullet"[39m
+          [36m/>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"alert-content"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"12"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"12"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M12 3 2 21h20L12 3z"[39m
+              [36m/>[39m
+              [36m<line[39m
+                [33mx1[39m=[32m"12"[39m
+                [33mx2[39m=[32m"12"[39m
+                [33my1[39m=[32m"10"[39m
+                [33my2[39m=[32m"14"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"12"[39m
+                [33mcy[39m=[32m"17.5"[39m
+                [33mfill[39m=[32m"currentColor"[39m
+                [33mr[39m=[32m"0.5"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [0m [0m
+            [36m<strong>[39m
+              [0m1[0m
+              [0m processo[0m
+              [0m urgente[0m
+            [36m</strong>[39m
+            [0m [0m
+            [0m— contato humano-animal[0m
+            [36m<div[39m
+              [33mclass[39m=[32m"alert-desc"[39m
+            [36m>[39m
+              [36m<span>[39m
+                [36m<a[39m
+                  [33mdata-discover[39m=[32m"true"[39m
+                  [33mhref[39m=[32m"/processos/h7000000-0000-0000-0000-000000000001"[39m
+                [36m>[39m
+                  [0m045/2026[0m
+                  [0m ([0m
+                  [0mRaiva[0m
+                  [0m)[0m
+                [36m</a>[39m
+              [36m</span>[39m
+              [0m — [0m
+              [36m<a[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/processos"[39m
+              [36m>[39m
+                [0mver todos →[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mstyle[39m=[32m"margin-top: var(--space-4);"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"charts-row"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"card-header"[39m
+          [36m>[39m
+            [36m<h3>[39m
+              [0mOcupação por Baia[0m
+            [36m</h3>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"sub"[39m
+            [36m>[39m
+              [0mOrdenado por % de ocupação[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"card-body"[39m
+          [36m>[39m
+            [36m<figure[39m
+              [33maria-label[39m=[32m"Ocupação por baia — Baia 9: 2 de 2 (100%); Baia 3: 1 de 2 (50%); Baia 6: 1 de 2 (50%); Baia 7: 1 de 2 (50%); Gatil A: 1 de 4 (25%); Baia 10: 0 de 3 (0%)"[39m
+              [33mstyle[39m=[32m"margin: 0px;"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"recharts-responsive-container"[39m
+                [33mstyle[39m=[32m"width: 100%; height: 216px; min-width: 0px;"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mstyle[39m=[32m"width: 0px; overflow-x: visible;"[39m
+                [36m/>[39m
+              [36m</div>[39m
+              [36m<ul[39m
+                [33mclass[39m=[32m"chart-legend"[39m
+              [36m>[39m
+                [36m<li>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"chart-legend-dot"[39m
+                    [33mstyle[39m=[32m"background: rgb(198, 40, 40);"[39m
+                  [36m/>[39m
+                  [0mBaia 9[0m
+                  [0m: [0m
+                  [0m2[0m
+                  [0m/[0m
+                  [0m2[0m
+                  [0m ([0m
+                  [0m100[0m
+                  [0m%)[0m
+                [36m</li>[39m
+                [36m<li>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"chart-legend-dot"[39m
+                    [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                  [36m/>[39m
+                  [0mBaia 3[0m
+                  [0m: [0m
+                  [0m1[0m
+                  [0m/[0m
+                  [0m2[0m
+                  [0m ([0m
+                  [0m50[0m
+                  [0m%)[0m
+                [36m</li>[39m
+                [36m<li>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"chart-legend-dot"[39m
+                    [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                  [36m/>[39m
+                  [0mBaia 6[0m
+                  [0m: [0m
+                  [0m1[0m
+                  [0m/[0m
+                  [0m2[0m
+                  [0m ([0m
+                  [0m50[0m
+                  [0m%)[0m
+                [36m</li>[39m
+                [36m<li>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"chart-legend-dot"[39m
+                    [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                  [36m/>[39m
+                  [0mBaia 7[0m
+                  [0m: [0m
+                  [0m1[0m
+                  [0m/[0m
+                  [0m2[0m
+                  [0m ([0m
+                  [0m50[0m
+                  [0m%)[0m
+                [36m</li>[39m
+                [36m<li>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"chart-legend-dot"[39m
+                    [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                  [36m/>[39m
+                  [0mGatil A[0m
+                  [0m: [0m
+                  [0m1[0m
+                  [0m/[0m
+                  [0m4[0m
+                  [0m ([0m
+                  [0m25[0m
+                  [0m%)[0m
+                [36m</li>[39m
+                [36m<li>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"chart-legend-dot"[39m
+                    [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                  [36m/>[39m
+                  [0mBaia 10[0m
+                  [0m: [0m
+                  [0m0[0m
+                  [0m/[0m
+                  [0m3[0m
+                  [0m ([0m
+                  [0m0[0m
+                  [0m%)[0m
+                [36m</li>[39m
+              [36m</ul>[39m
+            [36m</figure>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"card-header"[39m
+          [36m>[39m
+            [36m<h3>[39m
+              [0mResultados Laboratoriais[0m
+            [36m</h3>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"card-body"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"alert danger"[39m
+              [33mrole[39m=[32m"alert"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"bullet"[39m
+              [36m/>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"alert-content"[39m
+              [36m>[39m
+                [0mNão foi possível carregar os resultados laboratoriais.[0m
+                [36m<div[39m
+                  [33mclass[39m=[32m"alert-desc"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"btn btn-secondary btn-sm"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mTentar novamente[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"card-header"[39m
+          [36m>[39m
+            [36m<h3>[39m
+              [0mCasos Suspeitos[0m
+            [36m</h3>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"card-body"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"alert danger"[39m
+              [33mrole[39m=[32m"alert"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"bullet"[39m
+              [36m/>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"alert-content"[39m
+              [36m>[39m
+                [0mNão foi possível carregar os casos suspeitos.[0m
+                [36m<div[39m
+                  [33mclass[39m=[32m"alert-desc"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"btn btn-secondary btn-sm"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mTentar novamente[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/features/dashboard/components/Dashboard.test.tsx:103:25
+    101|     renderDashboard()
+    102|
+    103|     expect(await screen.findByText(/baia\(s\) superlotada/)).toBeInThe…
+       |                         ^
+    104|     expect(screen.getByText(/anima(l|is).*ficha incompleta/i)).toBeInT…
+    105|     expect(screen.getByText(/não castrado/)).toBeInTheDocument()
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  src/features/graficos/hooks/useGraficos.test.tsx > useGraficosQuery > usa o mock por padrão (endpoint real ainda não existe), sem chamar a API
+AssertionError: expected false to be true // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/features/graficos/hooks/useGraficos.test.tsx:24:58
+     22|     const { result } = renderHook(() => useGraficosQuery(2026), { wrap…
+     23|
+     24|     await waitFor(() => expect(result.current.isSuccess).toBe(true))
+       |                                                          ^
+     25|     expect(result.current.data?.casosPorDoenca).toHaveLength(6)
+     26|     expect(result.current.data?.casosRaivaPorEspecie).toHaveLength(4)
+ ❯ runWithExpensiveErrorDiagnosticsDisabled node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  src/features/graficos/components/GraficosDashboard.test.tsx > GraficosDashboard > renderiza os 4 gráficos juntos (ocupação de baia real + 3 mockados com selo)
+TestingLibraryElementError: Unable to find an element with the text: Raiva por Espécie. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"charts-row"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"card"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card-header"[39m
+        [36m>[39m
+          [36m<h3>[39m
+            [0mOcupação por Baia[0m
+          [36m</h3>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"sub"[39m
+          [36m>[39m
+            [0mOrdenado por % de ocupação[0m
+          [36m</span>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card-body"[39m
+        [36m>[39m
+          [36m<figure[39m
+            [33maria-label[39m=[32m"Ocupação por baia — Baia 9: 2 de 2 (100%); Baia 3: 1 de 2 (50%); Baia 6: 1 de 2 (50%); Baia 7: 1 de 2 (50%); Gatil A: 1 de 4 (25%); Baia 10: 0 de 3 (0%)"[39m
+            [33mstyle[39m=[32m"margin: 0px;"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mstyle[39m=[32m"width: 400px; height: 300px;"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"recharts-wrapper"[39m
+                [33mstyle[39m=[32m"position: relative; cursor: default;"[39m
+              [36m/>[39m
+            [36m</div>[39m
+            [36m<ul[39m
+              [33mclass[39m=[32m"chart-legend"[39m
+            [36m>[39m
+              [36m<li>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"chart-legend-dot"[39m
+                  [33mstyle[39m=[32m"background: rgb(198, 40, 40);"[39m
+                [36m/>[39m
+                [0mBaia 9[0m
+                [0m: [0m
+                [0m2[0m
+                [0m/[0m
+                [0m2[0m
+                [0m ([0m
+                [0m100[0m
+                [0m%)[0m
+              [36m</li>[39m
+              [36m<li>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"chart-legend-dot"[39m
+                  [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                [36m/>[39m
+                [0mBaia 3[0m
+                [0m: [0m
+                [0m1[0m
+                [0m/[0m
+                [0m2[0m
+                [0m ([0m
+                [0m50[0m
+                [0m%)[0m
+              [36m</li>[39m
+              [36m<li>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"chart-legend-dot"[39m
+                  [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                [36m/>[39m
+                [0mBaia 6[0m
+                [0m: [0m
+                [0m1[0m
+                [0m/[0m
+                [0m2[0m
+                [0m ([0m
+                [0m50[0m
+                [0m%)[0m
+              [36m</li>[39m
+              [36m<li>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"chart-legend-dot"[39m
+                  [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                [36m/>[39m
+                [0mBaia 7[0m
+                [0m: [0m
+                [0m1[0m
+                [0m/[0m
+                [0m2[0m
+                [0m ([0m
+                [0m50[0m
+                [0m%)[0m
+              [36m</li>[39m
+              [36m<li>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"chart-legend-dot"[39m
+                  [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                [36m/>[39m
+                [0mGatil A[0m
+                [0m: [0m
+                [0m1[0m
+                [0m/[0m
+                [0m4[0m
+                [0m ([0m
+                [0m25[0m
+                [0m%)[0m
+              [36m</li>[39m
+              [36m<li>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"chart-legend-dot"[39m
+                  [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                [36m/>[39m
+                [0mBaia 10[0m
+                [0m: [0m
+                [0m0[0m
+                [0m/[0m
+                [0m3[0m
+                [0m ([0m
+                [0m0[0m
+                [0m%)[0m
+              [36m</li>[39m
+            [36m</ul>[39m
+          [36m</figure>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"card"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card-header"[39m
+        [36m>[39m
+          [36m<h3>[39m
+            [0mResultados Laboratoriais[0m
+          [36m</h3>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card-body"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"alert danger"[39m
+            [33mrole[39m=[32m"alert"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"bullet"[39m
+            [36m/>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"alert-content"[39m
+            [36m>[39m
+              [0mNão foi possível carregar os resultados laboratoriais.[0m
+              [36m<div[39m
+                [33mclass[39m=[32m"alert-desc"[39m
+              [36m>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"btn btn-secondary btn-sm"[39m
+                  [33mtype[39m=[32m"button"[39m
+                [36m>[39m
+                  [0mTentar novamente[0m
+                [36m</button>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"card"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card-header"[39m
+        [36m>[39m
+          [36m<h3>[39m
+            [0mCasos Suspeitos[0m
+          [36m</h3>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card-body"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"alert danger"[39m
+            [33mrole[39m=[32m"alert"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"bullet"[39m
+            [36m/>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"alert-content"[39m
+            [36m>[39m
+              [0mNão foi possível carregar os casos suspeitos.[0m
+              [36m<div[39m
+                [33mclass[39m=[32m"alert-desc"[39m
+              [36m>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"btn btn-secondary btn-sm"[39m
+                  [33mtype[39m=[32m"button"[39m
+                [36m>[39m
+                  [0mTentar novamente[0m
+                [36m</button>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"charts-row"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"card"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card-header"[39m
+        [36m>[39m
+          [36m<h3>[39m
+            [0mOcupação por Baia[0m
+          [36m</h3>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"sub"[39m
+          [36m>[39m
+            [0mOrdenado por % de ocupação[0m
+          [36m</span>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card-body"[39m
+        [36m>[39m
+          [36m<figure[39m
+            [33maria-label[39m=[32m"Ocupação por baia — Baia 9: 2 de 2 (100%); Baia 3: 1 de 2 (50%); Baia 6: 1 de 2 (50%); Baia 7: 1 de 2 (50%); Gatil A: 1 de 4 (25%); Baia 10: 0 de 3 (0%)"[39m
+            [33mstyle[39m=[32m"margin: 0px;"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mstyle[39m=[32m"width: 400px; height: 300px;"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"recharts-wrapper"[39m
+                [33mstyle[39m=[32m"position: relative; cursor: default;"[39m
+              [36m/>[39m
+            [36m</div>[39m
+            [36m<ul[39m
+              [33mclass[39m=[32m"chart-legend"[39m
+            [36m>[39m
+              [36m<li>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"chart-legend-dot"[39m
+                  [33mstyle[39m=[32m"background: rgb(198, 40, 40);"[39m
+                [36m/>[39m
+                [0mBaia 9[0m
+                [0m: [0m
+                [0m2[0m
+                [0m/[0m
+                [0m2[0m
+                [0m ([0m
+                [0m100[0m
+                [0m%)[0m
+              [36m</li>[39m
+              [36m<li>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"chart-legend-dot"[39m
+                  [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                [36m/>[39m
+                [0mBaia 3[0m
+                [0m: [0m
+                [0m1[0m
+                [0m/[0m
+                [0m2[0m
+                [0m ([0m
+                [0m50[0m
+                [0m%)[0m
+              [36m</li>[39m
+              [36m<li>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"chart-legend-dot"[39m
+                  [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                [36m/>[39m
+                [0mBaia 6[0m
+                [0m: [0m
+                [0m1[0m
+                [0m/[0m
+                [0m2[0m
+                [0m ([0m
+                [0m50[0m
+                [0m%)[0m
+              [36m</li>[39m
+              [36m<li>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"chart-legend-dot"[39m
+                  [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                [36m/>[39m
+                [0mBaia 7[0m
+                [0m: [0m
+                [0m1[0m
+                [0m/[0m
+                [0m2[0m
+                [0m ([0m
+                [0m50[0m
+                [0m%)[0m
+              [36m</li>[39m
+              [36m<li>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"chart-legend-dot"[39m
+                  [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                [36m/>[39m
+                [0mGatil A[0m
+                [0m: [0m
+                [0m1[0m
+                [0m/[0m
+                [0m4[0m
+                [0m ([0m
+                [0m25[0m
+                [0m%)[0m
+              [36m</li>[39m
+              [36m<li>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"chart-legend-dot"[39m
+                  [33mstyle[39m=[32m"background: rgb(46, 125, 50);"[39m
+                [36m/>[39m
+                [0mBaia 10[0m
+                [0m: [0m
+                [0m0[0m
+                [0m/[0m
+                [0m3[0m
+                [0m ([0m
+                [0m0[0m
+                [0m%)[0m
+              [36m</li>[39m
+            [36m</ul>[39m
+          [36m</figure>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"card"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card-header"[39m
+        [36m>[39m
+          [36m<h3>[39m
+            [0mResultados Laboratoriais[0m
+          [36m</h3>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card-body"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"alert danger"[39m
+            [33mrole[39m=[32m"alert"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"bullet"[39m
+            [36m/>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"alert-content"[39m
+            [36m>[39m
+              [0mNão foi possível carregar os resultados laboratoriais.[0m
+              [36m<div[39m
+                [33mclass[39m=[32m"alert-desc"[39m
+              [36m>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"btn btn-secondary btn-sm"[39m
+                  [33mtype[39m=[32m"button"[39m
+                [36m>[39m
+                  [0mTentar novamente[0m
+                [36m</button>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"card"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card-header"[39m
+        [36m>[39m
+          [36m<h3>[39m
+            [0mCasos Suspeitos[0m
+          [36m</h3>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card-body"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"alert danger"[39m
+            [33mrole[39m=[32m"alert"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"bullet"[39m
+            [36m/>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"alert-content"[39m
+            [36m>[39m
+              [0mNão foi possível carregar os casos suspeitos.[0m
+              [36m<div[39m
+                [33mclass[39m=[32m"alert-desc"[39m
+              [36m>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"btn btn-secondary btn-sm"[39m
+                  [33mtype[39m=[32m"button"[39m
+                [36m>[39m
+                  [0mTentar novamente[0m
+                [36m</button>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/features/graficos/components/GraficosDashboard.test.tsx:33:25
+     31|     expect(await screen.findByText('Resultados Laboratoriais')).toBeIn…
+     32|     expect(await screen.findByText('Casos Suspeitos')).toBeInTheDocume…
+     33|     expect(await screen.findByText('Raiva por Espécie')).toBeInTheDocu…
+       |                         ^
+     34|     expect(await screen.findByText('Por Patologia')).toBeInTheDocument…
+     35|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  4 failed | 79 passed (83)
+      Tests  6 failed | 492 passed (498)
+   Start at  12:15:58
+   Duration  142.43s (transform 8.90s, setup 170.37s, import 89.22s, tests 278.52s, environment 388.47s)
+
+EXIT=1

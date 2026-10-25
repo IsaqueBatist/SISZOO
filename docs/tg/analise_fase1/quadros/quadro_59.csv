@@ -1,0 +1,5 @@
+﻿Quadro 59 – Dicionário de dados – tabela TipoBaia
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único do tipo de baia.
+nome;varchar(100);;Nome do tipo (interna, externa, corredor).
+ativo;boolean;;Indica se o tipo está disponível para uso.

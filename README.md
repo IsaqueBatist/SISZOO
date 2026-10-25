@@ -35,10 +35,11 @@ O **SISZOO** digitaliza e centraliza esses processos em um sistema web leve, de 
 
 | Módulo | Descrição |
 |--------|-----------|
-| **A -  Gestão de Animais do Canil** | Cadastro de animais, gestão de baias, histórico veterinário e alertas de reforço vacinal |
-| **B -  Processos Sanitários** | Registro e acompanhamento de zoonoses: raiva, esporotricose, leishmaniose, leptospirose e febre maculosa |
-| **C -  Autenticação e Perfis de Acesso** | Login stateless via JWT e controle de acesso por perfil |
-| **D -  Dashboard de Indicadores** | Gráficos automáticos de casos, resultados e ocupação, substituindo os gráficos manuais do mural |
+| **A -  Gestão de Animais do Canil** | Cadastro de animais (microchip, medalha, procedência), gestão de baias, histórico clínico imutável (vacinações, procedimentos, prescrições, exames), anexos do animal e alertas de reforço vacinal |
+| **B -  Processos Sanitários** | Registro e acompanhamento de zoonoses (raiva, esporotricose, leishmaniose visceral, leptospirose, febre maculosa, febre amarela): amostras, resultado laboratorial imutável, notificação por e-mail |
+| **C -  Autenticação e Perfis de Acesso** | Login stateless via JWT, perfis com permissões fixas, política de senha e trilha de auditoria consultável |
+| **D -  Dashboard e Relatórios** | Indicadores e gráficos com cache de 5 min, seis relatórios em PDF/CSV com histórico de exportações |
+| **E -  Ocorrências e Denúncias** | Registro com protocolo anual, denunciante sigiloso/anônimo, anexos, movimentações e encerramento com providência |
 
 ## Stack tecnológica
 
@@ -49,9 +50,9 @@ O **SISZOO** digitaliza e centraliza esses processos em um sistema web leve, de 
 - Spring Data JPA / Hibernate
 
 **Frontend**
-- React 18
+- React 19
 - TypeScript
-- Vite
+- Vite (TanStack Query, React Router, react-hook-form + Zod, Recharts, IndexedDB para rascunhos)
 
 **Banco de dados**
 - PostgreSQL 16
@@ -61,21 +62,22 @@ O **SISZOO** digitaliza e centraliza esses processos em um sistema web leve, de 
 
 ## Regras de negócio críticas
 
-- **Microchip** é o identificador único de cada animal.
-- **Protocolo de processo** segue o formato `NNN/AAAA`, sequencial por ano.
-- **Processos sigilosos:** dados do denunciante ficam ocultos, exceto para o perfil Administrador.
-- **Contato humano-animal:** processos com essa característica exibem alerta de urgência visual.
-- **Imutabilidade:** registros críticos (histórico veterinário e processos) não são editados livremente — só são atualizados com registro de log.
+- **Microchip** (e número da medalha) é identificador único do animal quando informado; o microchip não muda depois de definido.
+- **Protocolo** de ocorrência e de processo segue o formato `NNN/AAAA`, sequencial por ano e por entidade, gerado pelo sistema.
+- **Ocorrências sigilosas:** dados do denunciante são mascarados no servidor para quem não tem a permissão `denunciante_sigiloso` (Administrador e Agente Sanitário a têm); cada acesso e cada recusa geram evento de auditoria (LGPD).
+- **Contato humano-animal:** processos com essa característica são marcados como urgentes e aparecem no topo das listagens.
+- **Imutabilidade:** vacinações, procedimentos, prescrições, exames e resultados laboratoriais nunca são editados ou excluídos — a correção é um novo registro que retifica o anterior, com auditoria; o resultado positivo é definitivo.
 - **Alerta vacinal:** reforços são sinalizados com 7 dias de antecedência.
-- **Resultado "Positivo"** em processo sanitário dispara notificação ao munícipe por e-mail.
+- **Resultado "Positivo" ou "Inconclusivo"** em processo sanitário dispara notificação ao munícipe por e-mail (uma vez por resultado; reenvio manual).
+- **Laudo de eutanásia** é obrigatório ao registrar óbito por eutanásia.
 
 ## Perfis de usuário
 
 | Perfil | Função |
 |--------|--------|
-| Administrador | Acesso total, incluindo dados sigilosos de denunciantes |
-| Veterinário | Gestão de animais, histórico veterinário e procedimentos |
-| Agente Sanitário | Processos de zoonoses |
+| Administrador | Acesso total: usuários, trilha de auditoria, animais, ocorrências (inclusive denunciante sigiloso), processos e relatórios |
+| Veterinário | Animais, baias e histórico clínico (leitura e escrita), processos sanitários (leitura e escrita), relatórios; sem acesso a ocorrências |
+| Agente Sanitário | Ocorrências e denúncias (leitura e escrita, inclusive denunciante sigiloso), processos sanitários (leitura e escrita), consulta de animais, relatórios |
 
 ## Restrições de infraestrutura
 
@@ -139,8 +141,10 @@ que aquela versão gravava errado (`ficha_corrigida_do_seed_anterior` na saída;
 ```
 siszoo/
 ├── backend/            # API Spring Boot (Java 21 + Maven)
-├── frontend/           # Aplicação React 18 + TypeScript + Vite
-├── docs/               # Documentação: diagramas, DER, casos de uso, entrevistas
+├── frontend/           # Aplicação React 19 + TypeScript + Vite
+├── docs/               # Documentação: DER, DBML, decisões, contratos, protótipo (índice em docs/README.md)
+├── docs/tg/            # TG: análises de alinhamento, capturas, diagramas e scripts (o .docx fica fora do git)
+├── scripts/            # Seed de dados fictícios (npm run db:seed)
 ├── .gitignore
 ├── LICENSE
 └── README.md

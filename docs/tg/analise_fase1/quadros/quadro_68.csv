@@ -1,0 +1,4 @@
+﻿Quadro 68 – Dicionário de dados – tabela AnimalSintoma
+Campo;Tipo;Chave;Descrição
+animal_id;uuid;PK,FK;Animal associado (Animal).
+sintoma_id;uuid;PK,FK;Sintoma apresentado (Sintoma).

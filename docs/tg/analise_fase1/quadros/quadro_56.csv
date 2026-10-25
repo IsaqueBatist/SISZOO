@@ -1,0 +1,11 @@
+﻿Quadro 56 – Dicionário de dados – tabela PreferenciaUsuario
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único das preferências.
+usuario_id;uuid;FK,UQ;Usuário dono das preferências (Usuario).
+tema;TemaUsuario;;Tema visual da interface (claro/escuro).
+densidade;DensidadeUsuario;;Densidade de exibição da interface.
+notif_alertas_criticos;boolean;;Indica se o usuário recebe, no sistema, alertas de situações que exigem ação imediata, como processo sanitário com contato humano-animal sinalizado como urgente (RF-D01).
+notif_vacina_vencendo;boolean;;Indica se o usuário recebe, no sistema, avisos de reforço vacinal a vencer nos próximos 7 dias (RF-A03).
+notif_superlotacao;boolean;;Indica se o usuário recebe, no sistema, avisos de baias com ocupação igual ou superior à capacidade (RF-A02).
+notif_resultado_lab;boolean;;Indica se o usuário recebe, no sistema, aviso quando um resultado laboratorial é registrado em processo sanitário. É independente da notificação por e-mail ao responsável e à Vigilância Epidemiológica (RN10), que é obrigatória.
+notif_email_diario;boolean;;Indica se o usuário recebe por e-mail um resumo diário com os alertas pendentes: vacinas a vencer, baias superlotadas e processos urgentes.

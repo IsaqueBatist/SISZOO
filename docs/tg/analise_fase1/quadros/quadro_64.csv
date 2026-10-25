@@ -1,0 +1,5 @@
+﻿Quadro 64 – Dicionário de dados – tabela TipoProcedimento
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único do tipo de procedimento.
+nome;varchar(100);;Nome do tipo de procedimento.
+ativo;boolean;;Indica se o tipo está disponível para uso.

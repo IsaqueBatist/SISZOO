@@ -1,0 +1,6594 @@
+[
+ {
+  "num": 1,
+  "titulo": "Características das zoonoses atendidas pelo CCZ de Itu",
+  "bloco_legenda": 284,
+  "blocos_tabela": [
+   285
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base em Brasil (2016; 2023; 2025b; 2026c; 2026d) e São Paulo (2026).",
+  "secao": "1.1 ZOONOSES E VIGILÂNCIA EM SAÚDE",
+  "linhas": [
+   [
+    "Doença",
+    "Agente etiológico",
+    "Animais envolvidos",
+    "Transmissão ao ser humano",
+    "Notificação compulsória (casos humanos)"
+   ],
+   [
+    "Raiva",
+    "Vírus do gênero Lyssavirus (família Rhabdoviridae)",
+    "Mamíferos; no ciclo urbano, cães e gatos; no silvestre, morcegos, primatas não humanos, canídeos silvestres e outros mamíferos silvestres; no rural, herbívoros domésticos",
+    "Saliva do animal infectado, por mordedura, arranhadura ou lambedura de mucosa ou pele lesionada",
+    "Raiva humana: imediata. Acidente por animal potencialmente transmissor da raiva: imediata (município)"
+   ],
+   [
+    "Esporotricose",
+    "Fungos do gênero Sporothrix",
+    "Principalmente gatos domésticos",
+    "Arranhadura, mordedura ou contato com secreção de lesões de gatos infectados; também inoculação de material vegetal ou solo contaminado",
+    "Semanal (incluída em 2025); a notificação animal não é compulsória em âmbito nacional"
+   ],
+   [
+    "Leishmaniose visceral",
+    "Protozoário Leishmania infantum",
+    "Cão doméstico, principal reservatório urbano",
+    "Picada da fêmea de flebotomíneo infectada (principalmente Lutzomyia longipalpis, mosquito-palha); não há transmissão direta do cão ao ser humano",
+    "Semanal"
+   ],
+   [
+    "Leptospirose",
+    "Bactérias do gênero Leptospira",
+    "Roedores sinantrópicos, principais reservatórios; também cães, bovinos e suínos",
+    "Contato da pele ou de mucosas com água, lama ou solo contaminados pela urina de animais infectados",
+    "Imediata (município)"
+   ],
+   [
+    "Febre maculosa",
+    "Bactérias do gênero Rickettsia",
+    "Carrapatos do gênero Amblyomma (vetores); capivaras e equinos como hospedeiros",
+    "Picada de carrapato infectado",
+    "Imediata"
+   ],
+   [
+    "Febre amarela",
+    "Vírus da febre amarela (família Flaviviridae)",
+    "Primatas não humanos, hospedeiros do ciclo silvestre e sentinelas da circulação viral; mosquitos Haemagogus e Sabethes (vetores)",
+    "Picada de mosquito infectado",
+    "Imediata"
+   ]
+  ],
+  "n_colunas": 5
+ },
+ {
+  "num": 2,
+  "titulo": "Comparativo entre sistemas similares e o SISZOO",
+  "bloco_legenda": 308,
+  "blocos_tabela": [
+   309
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "1.9 SISTEMAS SIMILARES",
+  "linhas": [
+   [
+    "Sistema",
+    "Finalidade principal",
+    "Público",
+    "Limitação frente ao SISZOO"
+   ],
+   [
+    "Site do CCZ de São José dos Campos (2022)",
+    "Divulgação institucional e serviços ao cidadão.",
+    "Externo",
+    "Não realiza gestão interna dos animais alojados no canil."
+   ],
+   [
+    "“Eu Adoto no CCZ” - São Paulo (desde 2008)",
+    "Plataforma de adoção de animais.",
+    "Externo",
+    "Focada na adoção pública, não no controle operacional interno."
+   ],
+   [
+    "Sistema de agendamento - Campo Grande (2025)",
+    "Agendamento online de castração de felinos.",
+    "Externo",
+    "Restrito a um serviço específico; não integra a gestão do canil."
+   ],
+   [
+    "SISZOO (este trabalho)",
+    "Gestão interna integrada de animais e processos sanitários.",
+    "Interno",
+    "Ocupa a lacuna: rastreabilidade por microchip e integração dos processos."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 3,
+  "titulo": "Sistemas em uso no CCZ de Itu",
+  "bloco_legenda": 312,
+  "blocos_tabela": [
+   313
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base em entrevista com a equipe do CCZ de Itu (2026).",
+  "secao": "1.9 SISTEMAS SIMILARES",
+  "linhas": [
+   [
+    "Sistema",
+    "Uso no CCZ de Itu",
+    "Limitação relatada",
+    "Relação com o SISZOO"
+   ],
+   [
+    "AnimalTag",
+    "Cadastro dos animais, microchip e vacinas aplicadas",
+    "Sem baia, sem alerta automático de reforço, sem indicadores, sem ocorrências",
+    "O SISZOO cobre essas lacunas; integração fica como trabalho futuro"
+   ],
+   [
+    "SISSAÚDE",
+    "Consultas clínicas veterinárias",
+    "Não trata da gestão do canil nem dos processos",
+    "Fora do escopo do SISZOO (Seção 3.4)"
+   ],
+   [
+    "VivoPet",
+    "Pedidos de vacina antirrábica",
+    "Não trata da gestão do canil nem dos processos",
+    "Fora do escopo do SISZOO (Seção 3.4)"
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 4,
+  "titulo": "Perfis de acesso do SISZOO",
+  "bloco_legenda": 333,
+  "blocos_tabela": [
+   334
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "2.2 PERFIS DE USUÁRIO",
+  "linhas": [
+   [
+    "Perfil",
+    "Atribuição no CCZ",
+    "Módulos com Acesso (RN09)"
+   ],
+   [
+    "Administrador",
+    "Direção",
+    "Todos, inclusive usuários, baias e trilha de auditoria"
+   ],
+   [
+    "Veterinário",
+    "Veterinária do canil",
+    "Gestão de animais do canil; dashboard; baias e relatórios"
+   ],
+   [
+    "Agente Sanitário",
+    "Processos de zoonoses e ocorrências",
+    "Processos sanitários; ocorrências; dashboard e relatórios"
+   ]
+  ],
+  "n_colunas": 3
+ },
+ {
+  "num": 5,
+  "titulo": "Planejamento das sprints do projeto SISZOO",
+  "bloco_legenda": 352,
+  "blocos_tabela": [
+   353
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no planejamento de sprints do projeto (2026).",
+  "secao": "2.4 GESTÃO E PLANEJAMENTO DO PROJETO",
+  "linhas": [
+   [
+    "Sprint",
+    "Tema",
+    "Prazo",
+    "Issues",
+    "Principais entregas"
+   ],
+   [
+    "S0",
+    "Fundação",
+    "23/08/2026",
+    "13",
+    "Configuração do ambiente, estrutura do projeto e modelo de dados inicial."
+   ],
+   [
+    "S1",
+    "Autenticação",
+    "30/08/2026",
+    "7",
+    "Autenticação via JWT, perfis de acesso e controle de permissões."
+   ],
+   [
+    "S2",
+    "Animais e baias",
+    "06/09/2026",
+    "6",
+    "Cadastro de animais por microchip e gestão de baias do canil."
+   ],
+   [
+    "S3",
+    "Histórico e alertas",
+    "13/09/2026",
+    "5",
+    "Histórico veterinário e alertas automáticos de reforço vacinal."
+   ],
+   [
+    "S4",
+    "Ocorrências",
+    "20/09/2026",
+    "4",
+    "Registro e acompanhamento de ocorrências e denúncias."
+   ],
+   [
+    "S5",
+    "Processos e protocolo",
+    "27/09/2026",
+    "5",
+    "Processos sanitários e geração sequencial de protocolo por ano."
+   ],
+   [
+    "S6",
+    "Resultado e e-mail",
+    "04/10/2026",
+    "4",
+    "Registro de resultados laboratoriais e notificação por e-mail."
+   ],
+   [
+    "S7",
+    "Dashboard",
+    "11/10/2026",
+    "4",
+    "Dashboard operacional com indicadores visuais."
+   ],
+   [
+    "S8",
+    "Resiliência e E2E",
+    "18/10/2026",
+    "4",
+    "Robustez a falhas de rede e testes ponta a ponta (end-to-end)."
+   ],
+   [
+    "S9",
+    "Apresentação",
+    "25/10/2026",
+    "2",
+    "Ajustes finais e preparação da entrega."
+   ]
+  ],
+  "n_colunas": 5
+ },
+ {
+  "num": 6,
+  "titulo": "Requisitos funcionais do Módulo 1: Autenticação e Controle de Acesso",
+  "bloco_legenda": 361,
+  "blocos_tabela": [
+   362
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base na entrevista (2026).",
+  "secao": "3.1.1 Módulo 1 – Autenticação e Controle de Acesso",
+  "linhas": [
+   [
+    "ID",
+    "Nome",
+    "Descrição",
+    "Prior."
+   ],
+   [
+    "RF-C01",
+    "Autenticação",
+    "Login com e-mail institucional e senha, com troca de senha obrigatória no primeiro acesso. Autenticação por token JWT com prazo de validade; no logout, o token é descartado (RNF06).",
+    "Alta"
+   ],
+   [
+    "RF-C02",
+    "Gestão de Usuários",
+    "Administrador cadastra, edita, desativa e reativa usuários, atribuindo cargos com permissões por módulo (leitura, escrita e exclusão). Toda ação crítica gera AuditoriaEvento (RN06, RNF10).",
+    "Alta"
+   ],
+   [
+    "RF-C03",
+    "Preferências do Usuário",
+    "O usuário ajusta o tema, densidade da interface e as notificações que deseja receber; as preferências são individuais e não afetam outros usuários.",
+    "Baixa"
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 7,
+  "titulo": "Requisitos funcionais do Módulo 2: Gestão de Animais do Canil",
+  "bloco_legenda": 365,
+  "blocos_tabela": [
+   366
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base na entrevista e na planilha ANIMAIS_DO_CANIL.xlsx (2026).",
+  "secao": "3.1.2 Módulo 2 – Gestão de Animais do Canil",
+  "linhas": [
+   [
+    "ID",
+    "Nome",
+    "Descrição",
+    "Prior."
+   ],
+   [
+    "RF-A01",
+    "Cadastro de Animal",
+    "Registrar um animal com número do microchip (identificador único, RN01) e data de implantação do chip, número da medalha, espécie, nome, raça, sexo, porte, pelagem, coloração, data de nascimento aproximada, baia, foto, esterilizado, data de esterilização, observações, motivo de entrada, procedência, peso, status e data de entrada. O animal pode ser cadastrado sem microchip, que é registrado quando implantado.",
+    "Alta"
+   ],
+   [
+    "RF-A02",
+    "Consulta por Baia",
+    "Visualizar e filtrar a listagem de animais por baia (BAIA 1–16 internas, E1–E8 externas e CORREDOR). A tela exibe a ocupação atual, calculada pela contagem de animais alojados, e a capacidade. O Administrador cadastra e edita as baias (tipo e capacidade).",
+    "Alta"
+   ],
+   [
+    "RF-A03",
+    "Alerta Vacinal",
+    "Gerar alertas automáticos na tela inicial listando os animais com reforço vacinal nos próximos 7 dias e as vacinas vencidas, com base na data de validade de cada dose.",
+    "Alta"
+   ],
+   [
+    "RF-A04",
+    "Histórico Veterinário",
+    "Registrar e exibir o histórico completo de vacinações, prescrições, procedimentos, exames e anexos. Registros imutáveis: a correção gera novo registro com auditoria (RN06, RNF10).",
+    "Alta"
+   ],
+   [
+    "RF-A05",
+    "Entrada, Saída e Adoção",
+    "Registrar a procedência ao entrar e o destino e a data de saída ao sair (Adotado, Resgatado, Óbito, Eutanásia ou Transferido). No destino Eutanásia, registrar o laudo do responsável técnico que a justifica (Lei nº 14.228/2021, art. 2º, § 1º). Na adoção, registrar os dados do adotante e, quando houver, a devolução do animal. Histórico imutável (RN06).",
+    "Alta"
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 8,
+  "titulo": "Requisitos funcionais do Módulo 3: Ocorrências e Denúncias",
+  "bloco_legenda": 369,
+  "blocos_tabela": [
+   370
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base na entrevista (2026).",
+  "secao": "3.1.3 Módulo 3 – Ocorrências e Denúncias",
+  "linhas": [
+   [
+    "ID",
+    "Nome",
+    "Descrição",
+    "Prior."
+   ],
+   [
+    "RF-E01",
+    "Registro de Ocorrência",
+    "Registrar ocorrência com protocolo (0000/AAAA, RN02), tipo, bairro, descrição, urgente, sigilosa (RN03), denunciante, denunciado (opcional) e movimentações.",
+    "Alta"
+   ],
+   [
+    "RF-E02",
+    "Consulta e Filtragem",
+    "Consultar por protocolo, período, tipo, denunciante, bairro e status. Denunciante oculto em ocorrências sigilosas para não-Administradores (RN03).",
+    "Alta"
+   ],
+   [
+    "RF-E03",
+    "Encerramento",
+    "Encerrar com providência tomada, descrição (obrigatória quando a providência for “Outro”) e data. Somente Agente Sanitário ou Administrador. Não pode ser encerrada enquanto houver processo sanitário vinculado sem resultado (RN05). Registro imutável após encerramento (RN06).",
+    "Alta"
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 9,
+  "titulo": "Requisitos funcionais do Módulo 4: Processos Sanitários",
+  "bloco_legenda": 373,
+  "blocos_tabela": [
+   374
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base na entrevista, na planilha CONTROLE-PROCESSOS_ZOONOSES.xlsx e nos formulários físicos (2026).",
+  "secao": "3.1.4 Módulo 4 – Processos Sanitários",
+  "linhas": [
+   [
+    "ID",
+    "Nome",
+    "Descrição",
+    "Prior."
+   ],
+   [
+    "RF-B01",
+    "Registro de Processo",
+    "Criar processo sanitário com protocolo (0000/AAAA, RN02), número do GAL, número do SINAN, urgente, data de abertura, status (RN12), doença, laboratório, resultado laboratorial, desfecho do animal, responsável e vínculo opcional a uma ocorrência, definido na abertura e imutável.",
+    "Alta"
+   ],
+   [
+    "RF-B02",
+    "Consulta e Filtragem",
+    "Consultar processos por protocolo, período, doença, responsável, bairro e status. Processos urgentes fixados no topo (RN04).",
+    "Alta"
+   ],
+   [
+    "RF-B03",
+    "Resultado Laboratorial",
+    "Registrar resultado (Negativo/Positivo/Material Inadequado/Inconclusivo/Não Realizado/Aguardando) e desfecho. Resultado Positivo ou Inconclusivo notifica por e-mail o responsável e a Vigilância Epidemiológica (RN10).",
+    "Alta"
+   ],
+   [
+    "RF-B04",
+    "Amostra Animal",
+    "Registrar os dados do animal amostrado (AmostraAnimal), vinculado a um animal do canil ou com dados próprios: espécie, sexo, coloração, pelagem, peso, raça, tipo de abrigo, material biológico, contato humano (RN04), nível de contato, agrediu humano e sintomas.",
+    "Alta"
+   ],
+   [
+    "RF-B05",
+    "Alerta de Urgência",
+    "Contato humano em qualquer amostra marca o processo como urgente, com alerta visual. O processo não pode ser concluído sem resultado.",
+    "Alta"
+   ],
+   [
+    "RF-B06",
+    "Documento PDF",
+    "Gerar PDF do processo com controle de estado em DocumentoProcesso (Pendente→Em Processamento→Concluído/Falha, RN11).",
+    "Baixa"
+   ],
+   [
+    "RF-B07",
+    "Relatório Anual",
+    "Relatório anual consolidado com distribuição por doença, espécie e bairro, gerado pela central de relatórios (RF-D02).",
+    "Média"
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 10,
+  "titulo": "Requisitos funcionais do Módulo 5: Dashboard e Relatórios",
+  "bloco_legenda": 377,
+  "blocos_tabela": [
+   378
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base na entrevista (2026).",
+  "secao": "3.1.5 Módulo 5 – Dashboard e Relatórios",
+  "linhas": [
+   [
+    "ID",
+    "Nome",
+    "Descrição",
+    "Prior."
+   ],
+   [
+    "RF-D01",
+    "Dashboard",
+    "Exibir em tempo real: total por StatusAnimal, ocupação de baias, alertas vacinais 7 dias (RF-A03), processos aguardando resultado, processos urgentes e resumo mensal por doença.",
+    "Alta"
+   ],
+   [
+    "RF-D02",
+    "Relatórios",
+    "Gerar, em PDF e CSV, os relatórios de ocorrências por bairro, ocupação de baias, procedimentos, adoções, anual de processos e vacinação, por meio de RelatorioGerado com ciclo Pendente→Em Processamento→Concluído/Falha (RN11). O arquivo é armazenado fora do banco e acessado por URL com expiração.",
+    "Média"
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 11,
+  "titulo": "Relatórios previstos no SISZOO",
+  "bloco_legenda": 381,
+  "blocos_tabela": [
+   382
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "3.1.5 Módulo 5 – Dashboard e Relatórios",
+  "linhas": [
+   [
+    "Relatório",
+    "Conteúdo",
+    "Requisito"
+   ],
+   [
+    "Ocorrências por Bairro",
+    "Concentração de ocorrências por bairro, apresentada em mapa de calor tabular, sem georreferenciamento; tipos de denúncia mais frequentes; tempo médio de atendimento.",
+    "RF-D02"
+   ],
+   [
+    "Ocupação de Baias",
+    "Histórico mensal de ocupação por baia, transferências internas e taxa média de superlotação.",
+    "RF-D02"
+   ],
+   [
+    "Procedimentos",
+    "Castrações, cirurgias e atendimentos clínicos consolidados, com produtividade por veterinário.",
+    "RF-D02"
+   ],
+   [
+    "Adoções",
+    "Adoções realizadas, tempo médio de permanência, perfil dos adotantes e taxa de devolução.",
+    "RF-D02, RF-A05"
+   ],
+   [
+    "Anual de Processos",
+    "Distribuição das investigações sanitárias por doença, espécie e bairro, com taxa de positividade e tempo médio de resolução.",
+    "RF-D02, RF-B07"
+   ],
+   [
+    "Vacinação",
+    "Animais vacinados, vacinas vencidas e próximas a vencer, por espécie, baia e veterinário responsável.",
+    "RF-D02"
+   ]
+  ],
+  "n_colunas": 3
+ },
+ {
+  "num": 12,
+  "titulo": "Requisitos não funcionais do SISZOO",
+  "bloco_legenda": 385,
+  "blocos_tabela": [
+   386
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base na entrevista e na análise de infraestrutura do CCZ de Itu (2026).",
+  "secao": "3.2 REQUISITOS NÃO FUNCIONAIS",
+  "linhas": [
+   [
+    "ID",
+    "Categoria",
+    "Nome",
+    "Descrição"
+   ],
+   [
+    "RNF01",
+    "Desempenho",
+    "Tempo de Resposta",
+    "Responder em até 3 segundos. Interface responsiva em listas com 200+ registros."
+   ],
+   [
+    "RNF02",
+    "Desempenho",
+    "Leveza",
+    "Carregamento progressivo. Funcionar em computadores com ~2 GB de RAM."
+   ],
+   [
+    "RNF03",
+    "Disponibilidade",
+    "Internet Instável",
+    "Exibir mensagem de erro na queda de rede e preservar dados de formulários não submetidos."
+   ],
+   [
+    "RNF04",
+    "Disponibilidade",
+    "Backup Diário",
+    "Disponível no horário do CCZ, com backup diário do banco."
+   ],
+   [
+    "RNF05",
+    "Usabilidade",
+    "Simplicidade",
+    "Interface intuitiva, rótulos descritivos, máximo 3 cliques nas operações frequentes."
+   ],
+   [
+    "RNF06",
+    "Segurança",
+    "LGPD e Auth",
+    "Senhas com bcrypt. HTTPS. Dados sigilosos restritos por perfil. LGPD (Lei nº 13.709/2018)."
+   ],
+   [
+    "RNF07",
+    "Compatibilidade",
+    "Navegadores",
+    "Funcionar em Chrome, Edge e Firefox sem plugins adicionais."
+   ],
+   [
+    "RNF08",
+    "Manutenibilidade",
+    "Qualidade",
+    "Código SOLID e Clean Code, cobertura mínima de testes nos casos de uso críticos."
+   ],
+   [
+    "RNF09",
+    "Escalabilidade",
+    "Crescimento",
+    "Suportar crescimento de registros sem refatoração estrutural."
+   ],
+   [
+    "RNF10",
+    "Auditoria",
+    "Rastreabilidade",
+    "Registrar usuário, data, hora e valores anterior/posterior em toda alteração crítica via AuditoriaEvento."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 13,
+  "titulo": "Regras de negócio do SISZOO",
+  "bloco_legenda": 389,
+  "blocos_tabela": [
+   390
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base na entrevista, nas planilhas e nos formulários físicos (2026).",
+  "secao": "3.3 REGRAS DE NEGÓCIO",
+  "linhas": [
+   [
+    "ID",
+    "Regra",
+    "Descrição"
+   ],
+   [
+    "RN01",
+    "Microchip Único",
+    "O número do microchip identifica o animal de forma única; o sistema rejeita número já cadastrado. O animal que chega sem microchip é cadastrado e recebe o chip no CCZ; o número e a data de implantação são registrados nesse momento."
+   ],
+   [
+    "RN02",
+    "Protocolo por Ano",
+    "O protocolo (processo sanitário e ocorrência) é gerado automaticamente no formato 0000/AAAA, sequencial, reiniciando em 0001 a cada ano civil."
+   ],
+   [
+    "RN03",
+    "Sigilo do Denunciante",
+    "Em ocorrências sigilosas, os dados do denunciante não são exibidos para nenhum perfil exceto Administrador; o acesso do Administrador é registrado em auditoria."
+   ],
+   [
+    "RN04",
+    "Contato Humano-Animal",
+    "Processos com AmostraAnimal cujo contato humano seja verdadeiro são marcados como urgentes e fixados no topo das listagens."
+   ],
+   [
+    "RN05",
+    "Encerramento de Ocorrência",
+    "Ocorrência com processo sanitário vinculado só pode ser encerrada depois de registrado o resultado desse processo."
+   ],
+   [
+    "RN06",
+    "Imutabilidade",
+    "Histórico veterinário, processos e resultados não podem ser excluídos; a correção gera novo registro, com registro em AuditoriaEvento."
+   ],
+   [
+    "RN07",
+    "Campos Obrigatórios – Animal",
+    "Obrigatórios: espécie, sexo, porte, baia, esterilizado, status, motivo de entrada e data de entrada. O microchip é obrigatório para a ficha ser considerada completa, não para o cadastro de entrada."
+   ],
+   [
+    "RN08",
+    "Campos Obrigatórios – Processo",
+    "Obrigatórios: data de abertura, doença, laboratório, ao menos uma amostra e os dados mínimos do responsável (nome, endereço)."
+   ],
+   [
+    "RN09",
+    "Controle de Acesso",
+    "Administrador: acesso total. Veterinário: Gestão de Animais (A) e Dashboard/Relatórios (D). Agente Sanitário: Processos (B), Ocorrências (E) e Dashboard/Relatórios (D)."
+   ],
+   [
+    "RN10",
+    "Notificação de Resultado",
+    "Ao registrar resultado Positivo ou Inconclusivo, o sistema envia e-mail ao responsável (quando houver e-mail cadastrado) e à Vigilância Epidemiológica do município. O envio é registrado e não se repete."
+   ],
+   [
+    "RN11",
+    "Estado de Exportação",
+    "RelatorioGerado com estados Pendente→Em Processamento→Concluído/Falha. Binário não armazenado no banco, apenas URL com política de expiração."
+   ],
+   [
+    "RN12",
+    "Ciclo do Processo",
+    "Transições: ABERTO→EM_ANDAMENTO→AGUARDANDO_RESULTADO→CONCLUIDO. Resultado não pode ser preenchido com status=ABERTO."
+   ]
+  ],
+  "n_colunas": 3
+ },
+ {
+  "num": 14,
+  "titulo": "Bibliotecas utilizadas no SISZOO",
+  "bloco_legenda": 522,
+  "blocos_tabela": [
+   523
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "5.1 ORGANIZAÇÃO DO CÓDIGO E BIBLIOTECAS",
+  "linhas": [
+   [
+    "Biblioteca",
+    "Camada",
+    "Uso no SISZOO",
+    "Requisito ou regra"
+   ],
+   [
+    "Spring Security",
+    "Backend",
+    "Autenticação e autorização por perfil",
+    "RF-C01, RN09"
+   ],
+   [
+    "jjwt",
+    "Backend",
+    "Emissão e validação do token JWT",
+    "RF-C01"
+   ],
+   [
+    "Bean Validation (Spring Validation)",
+    "Backend",
+    "Validação de campos obrigatórios e formatos",
+    "RN07, RN08"
+   ],
+   [
+    "Spring Data JPA e Hibernate",
+    "Backend",
+    "Mapeamento das entidades para as tabelas",
+    "RNF09"
+   ],
+   [
+    "Flyway",
+    "Backend",
+    "Criação e versionamento do esquema do banco",
+    "RNF09"
+   ],
+   [
+    "Spring Boot Mail e Thymeleaf",
+    "Backend",
+    "E-mail de resultado laboratorial com modelo HTML",
+    "RN10"
+   ],
+   [
+    "OpenPDF",
+    "Backend",
+    "Geração dos relatórios em PDF",
+    "RF-D02"
+   ],
+   [
+    "Lombok",
+    "Backend",
+    "Redução de código repetitivo nas classes",
+    "RNF08"
+   ],
+   [
+    "React Router",
+    "Frontend",
+    "Navegação e bloqueio de telas sem autenticação",
+    "RF-C01, RN09"
+   ],
+   [
+    "TanStack Query e Axios",
+    "Frontend",
+    "Comunicação com a API, cache das consultas e envio do token",
+    "RNF01"
+   ],
+   [
+    "Zod",
+    "Frontend",
+    "Validação dos formulários no navegador",
+    "RN07, RN08"
+   ],
+   [
+    "idb",
+    "Frontend",
+    "Rascunho local de formulários no IndexedDB",
+    "RNF03"
+   ],
+   [
+    "Recharts",
+    "Frontend",
+    "Gráficos do painel de indicadores",
+    "RF-D01"
+   ],
+   [
+    "JUnit 5, Testcontainers e Rest Assured",
+    "Testes",
+    "Testes de integração da API com PostgreSQL em contêiner",
+    "RNF08"
+   ],
+   [
+    "GreenMail",
+    "Testes",
+    "Servidor de e-mail simulado nos testes",
+    "RN10"
+   ],
+   [
+    "Vitest, Testing Library e MSW",
+    "Testes",
+    "Testes de componentes com API simulada",
+    "RNF08"
+   ],
+   [
+    "Playwright",
+    "Testes",
+    "Testes ponta a ponta no navegador",
+    "RNF08"
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 15,
+  "titulo": "Telas do SISZOO",
+  "bloco_legenda": 527,
+  "blocos_tabela": [
+   528
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "5.2 TELAS DO SISTEMA",
+  "linhas": [
+   [
+    "Cód.",
+    "Tela",
+    "Perfis",
+    "Requisitos e regras",
+    "Substitui no CCZ"
+   ],
+   [
+    "T01",
+    "Login",
+    "Todos",
+    "RF-C01",
+    "—"
+   ],
+   [
+    "T02",
+    "Dashboard operacional",
+    "Todos",
+    "RF-D01, RF-A03",
+    "Contagens manuais e gráficos montados à mão"
+   ],
+   [
+    "T03",
+    "Alertas",
+    "Todos",
+    "RF-A03",
+    "Controle de memória do reforço vacinal"
+   ],
+   [
+    "T04",
+    "Animais do canil",
+    "Veterinário, Administrador",
+    "RF-A02",
+    "Planilha de controle por baias"
+   ],
+   [
+    "T05",
+    "Cadastro de animal",
+    "Veterinário, Administrador",
+    "RF-A01, RN01, RN07",
+    "Ficha manuscrita e cadastro no AnimalTag"
+   ],
+   [
+    "T06",
+    "Ficha do animal",
+    "Veterinário, Administrador",
+    "RF-A01, RF-A03, RF-A04, RF-A05",
+    "Ficha manuscrita"
+   ],
+   [
+    "T07",
+    "Gestão de baias",
+    "Administrador (edição); Veterinário (consulta)",
+    "RF-A02",
+    "Planilha de controle por baias"
+   ],
+   [
+    "T08",
+    "Ocorrências",
+    "Agente Sanitário, Administrador",
+    "RF-E02, RN03",
+    "Caderno de ocorrências"
+   ],
+   [
+    "T09",
+    "Registro de ocorrência",
+    "Agente Sanitário, Administrador",
+    "RF-E01, RN02",
+    "Caderno de ocorrências"
+   ],
+   [
+    "T10",
+    "Detalhe da ocorrência",
+    "Agente Sanitário, Administrador",
+    "RF-E03, RN05",
+    "Caderno de ocorrências"
+   ],
+   [
+    "T11",
+    "Processos sanitários",
+    "Agente Sanitário, Administrador",
+    "RF-B02, RN04",
+    "Planilha de processos"
+   ],
+   [
+    "T12",
+    "Abertura de processo",
+    "Agente Sanitário, Administrador",
+    "RF-B01, RF-B04, RN08",
+    "Formulário físico e planilha"
+   ],
+   [
+    "T13",
+    "Detalhe do processo",
+    "Agente Sanitário, Administrador",
+    "RF-B03, RF-B05, RN10, RN12",
+    "Planilha de resultados"
+   ],
+   [
+    "T14",
+    "Central de relatórios",
+    "Todos",
+    "RF-D02, RN11",
+    "Relatórios montados à mão"
+   ],
+   [
+    "T15",
+    "Usuários",
+    "Administrador",
+    "RF-C02, RN09",
+    "—"
+   ],
+   [
+    "T16",
+    "Configurações",
+    "Todos",
+    "RF-C03",
+    "—"
+   ],
+   [
+    "T17",
+    "Perfil e Ajuda",
+    "Todos",
+    "RF-C01",
+    "—"
+   ]
+  ],
+  "n_colunas": 5
+ },
+ {
+  "num": 16,
+  "titulo": "Caso de uso de baixo nível Realizar Login",
+  "bloco_legenda": 705,
+  "blocos_tabela": [
+   706
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.1 MÓDULO 1 – AUTENTICAÇÃO E CONTROLE DE ACESSO",
+  "linhas": [
+   [
+    "Realizar Login"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Autenticação"
+   ],
+   [
+    "Ator Principal",
+    "Veterinário, Agente Sanitário ou Administrador"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O usuário autentica-se no sistema com e-mail e senha para acessar as funcionalidades de acordo com seu perfil."
+   ],
+   [
+    "Pré-Condições",
+    "O usuário deve estar cadastrado e ativo, com um cargo atribuído pelo Administrador."
+   ],
+   [
+    "Pós-Condições",
+    "Token JWT válido emitido; usuário redirecionado ao painel inicial conforme suas permissões."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O usuário acessa a página de login e informa e-mail e senha.",
+    ""
+   ],
+   [
+    "O usuário confirma o envio das credenciais.",
+    ""
+   ],
+   [
+    "",
+    "Valida o formato do e-mail e a presença da senha."
+   ],
+   [
+    "",
+    "Verifica se o usuário existe e está ativo e compara o hash da senha (bcrypt)."
+   ],
+   [
+    "",
+    "Gera o token JWT e registra o evento de auditoria de LOGIN."
+   ],
+   [
+    "",
+    "Redireciona o usuário ao painel inicial conforme seu cargo (RN09)."
+   ],
+   [
+    "Restrições/Validações",
+    "O usuário precisa estar cadastrado e ativo (RNF06). Senhas trafegam apenas via HTTPS."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Senha inválida: o sistema informa credenciais inválidas e mantém a tela de login, sem revelar qual campo falhou."
+   ],
+   [
+    "Fluxo Alternativo II",
+    "Usuário inexistente ou inativo: o sistema informa credenciais inválidas e retorna à tela de login."
+   ],
+   [
+    "Fluxo Alternativo III",
+    "Primeiro acesso: o sistema exige a troca da senha antes de liberar o painel inicial."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-C01, RNF06, RNF10"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 17,
+  "titulo": "Caso de uso de baixo nível Encerrar Sessão (Logout)",
+  "bloco_legenda": 708,
+  "blocos_tabela": [
+   709
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.1 MÓDULO 1 – AUTENTICAÇÃO E CONTROLE DE ACESSO",
+  "linhas": [
+   [
+    "Encerrar Sessão (Logout)"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Autenticação"
+   ],
+   [
+    "Ator Principal",
+    "Veterinário, Agente Sanitário ou Administrador"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O usuário encerra o uso do sistema, descartando o token JWT em uso."
+   ],
+   [
+    "Pré-Condições",
+    "O usuário deve estar autenticado com token válido."
+   ],
+   [
+    "Pós-Condições",
+    "Token descartado; usuário redirecionado à tela de login."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O usuário aciona a opção de sair do sistema.",
+    ""
+   ],
+   [
+    "",
+    "Descarta o token JWT armazenado no navegador."
+   ],
+   [
+    "",
+    "Registra o evento de auditoria de LOGOUT e redireciona à tela de login."
+   ],
+   [
+    "Restrições/Validações",
+    "O token deixa de ser usado no logout e perde a validade na expiração (RNF06)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Token já expirado: o sistema apenas redireciona à tela de login, sem ação adicional."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-C01, RNF10"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 18,
+  "titulo": "Caso de uso de baixo nível Editar Preferências do Usuário",
+  "bloco_legenda": 711,
+  "blocos_tabela": [
+   712
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.1 MÓDULO 1 – AUTENTICAÇÃO E CONTROLE DE ACESSO",
+  "linhas": [
+   [
+    "Editar Preferências do Usuário"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Gestão de Preferências"
+   ],
+   [
+    "Ator Principal",
+    "Veterinário, Agente Sanitário ou Administrador"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O usuário ajusta o tema, a densidade da interface e as notificações que deseja receber."
+   ],
+   [
+    "Pré-Condições",
+    "O usuário deve estar autenticado."
+   ],
+   [
+    "Pós-Condições",
+    "Preferências persistidas e aplicadas à interface do usuário."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O usuário acessa a tela de preferências.",
+    ""
+   ],
+   [
+    "",
+    "Carrega as preferências atuais do usuário."
+   ],
+   [
+    "O usuário altera o tema,  a densidade e/ou as notificações que deseja receber e confirma.",
+    ""
+   ],
+   [
+    "",
+    "Valida e persiste as preferências e aplica imediatamente à interface."
+   ],
+   [
+    "Restrições/Validações",
+    "As preferências são individuais e não afetam outros usuários."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Nenhuma alteração realizada: o sistema mantém as preferências vigentes."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-C03"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 19,
+  "titulo": "Caso de uso de baixo nível Gerenciar Usuários",
+  "bloco_legenda": 714,
+  "blocos_tabela": [
+   715
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.1 MÓDULO 1 – AUTENTICAÇÃO E CONTROLE DE ACESSO",
+  "linhas": [
+   [
+    "Gerenciar Usuários"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Controle de Acesso"
+   ],
+   [
+    "Ator Principal",
+    "Administrador"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Administrador cadastra, edita e atribui cargos e permissões aos usuários do sistema."
+   ],
+   [
+    "Pré-Condições",
+    "O ator deve estar autenticado com cargo de Administrador."
+   ],
+   [
+    "Pós-Condições",
+    "Usuário criado ou atualizado, com cargo e permissões definidos; evento registrado em auditoria."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Administrador acessa a gestão de usuários e seleciona criar ou editar um usuário.",
+    ""
+   ],
+   [
+    "O Administrador informa os dados do usuário (nome, e-mail, telefone, CRMV quando aplicável).",
+    ""
+   ],
+   [
+    "O Administrador atribui um ou mais cargos ao usuário (Atribuir Cargo e Permissões).",
+    ""
+   ],
+   [
+    "O Administrador confirma a operação.",
+    ""
+   ],
+   [
+    "",
+    "Valida os dados, verifica a unicidade do e-mail e persiste o usuário e seus vínculos de cargo."
+   ],
+   [
+    "",
+    "Registra o evento de auditoria (CRIACAO ou ATUALIZACAO) com os valores anterior e posterior."
+   ],
+   [
+    "Restrições/Validações",
+    "Apenas o Administrador possui acesso total (RN09). E-mail deve ser único. Toda ação crítica gera AuditoriaEvento (RN06, RNF10)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "E-mail já cadastrado: o sistema informa a duplicidade e não conclui o cadastro."
+   ],
+   [
+    "Fluxo Alternativo II",
+    "Desativar/Reativar usuário: ver o caso de uso Desativar/Reativar Usuário."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-C02, RN09, RNF10"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 20,
+  "titulo": "Caso de uso de baixo nível Atribuir Cargo e Permissões",
+  "bloco_legenda": 717,
+  "blocos_tabela": [
+   718
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.1 MÓDULO 1 – AUTENTICAÇÃO E CONTROLE DE ACESSO",
+  "linhas": [
+   [
+    "Atribuir Cargo e Permissões"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Gerenciar Usuários (inclusão)"
+   ],
+   [
+    "Ator Principal",
+    "Administrador"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Administrador vincula ao usuário um ou mais cargos; as permissões de acesso decorrem dos cargos atribuídos."
+   ],
+   [
+    "Pré-Condições",
+    "O Administrador está cadastrando ou editando um usuário."
+   ],
+   [
+    "Pós-Condições",
+    "Vínculos entre usuário e cargo gravados com a data de inclusão; evento registrado na auditoria."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "",
+    "Exibe os cargos disponíveis (Administrador, Veterinário e Agente Sanitário) e as permissões de cada um por módulo."
+   ],
+   [
+    "O Administrador seleciona o cargo ou os cargos do usuário.",
+    ""
+   ],
+   [
+    "",
+    "Grava os vínculos (UsuarioCargo) e registra o evento ATUALIZACAO com os valores anterior e posterior."
+   ],
+   [
+    "Restrições/Validações",
+    "Todo usuário tem ao menos um cargo. As permissões por módulo (leitura, escrita e exclusão) são definidas no cargo (CargoPermissao), não no usuário."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Remoção do último cargo: o sistema recusa e informa que o usuário precisa de ao menos um cargo."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-C02, RN09, RNF10"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 21,
+  "titulo": "Caso de uso de baixo nível Desativar/Reativar Usuário",
+  "bloco_legenda": 720,
+  "blocos_tabela": [
+   721
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.1 MÓDULO 1 – AUTENTICAÇÃO E CONTROLE DE ACESSO",
+  "linhas": [
+   [
+    "Desativar/Reativar Usuário"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Gerenciar Usuários (extensão)"
+   ],
+   [
+    "Ator Principal",
+    "Administrador"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Administrador impede ou restabelece o acesso de um usuário ao sistema, sem excluir seu cadastro."
+   ],
+   [
+    "Pré-Condições",
+    "O Administrador está autenticado e o usuário-alvo está cadastrado."
+   ],
+   [
+    "Pós-Condições",
+    "Situação do usuário atualizada (ativo ou inativo) e evento registrado na auditoria."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Administrador seleciona um usuário na gestão de usuários.",
+    ""
+   ],
+   [
+    "",
+    "Exibe os dados e a situação atual do usuário."
+   ],
+   [
+    "O Administrador aciona “Desativar” (ou “Reativar”) e confirma.",
+    ""
+   ],
+   [
+    "",
+    "Atualiza a situação e a data de desativação (ou a limpa, na reativação)."
+   ],
+   [
+    "",
+    "Registra o evento DESATIVACAO ou REATIVACAO na trilha de auditoria."
+   ],
+   [
+    "Restrições/Validações",
+    "Somente o Administrador executa (RN09). O cadastro não é excluído, para preservar o histórico e a autoria dos registros (RN06)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "O Administrador cancela a confirmação: a situação permanece inalterada."
+   ],
+   [
+    "Fluxo Alternativo II",
+    "Usuário desativado tenta entrar: o sistema informa credenciais inválidas (caso de uso Realizar Login)."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-C02, RN06, RN09, RNF10"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 22,
+  "titulo": "Caso de uso de baixo nível Consultar Trilha de Auditoria",
+  "bloco_legenda": 723,
+  "blocos_tabela": [
+   724
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.1 MÓDULO 1 – AUTENTICAÇÃO E CONTROLE DE ACESSO",
+  "linhas": [
+   [
+    "Consultar Trilha de Auditoria"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Controle de Acesso"
+   ],
+   [
+    "Ator Principal",
+    "Administrador"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Administrador consulta o histórico de ações críticas registradas no sistema."
+   ],
+   [
+    "Pré-Condições",
+    "O ator deve estar autenticado com cargo de Administrador."
+   ],
+   [
+    "Pós-Condições",
+    "Eventos de auditoria exibidos conforme os filtros aplicados."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Administrador acessa a trilha de auditoria e define filtros (usuário, entidade, período).",
+    ""
+   ],
+   [
+    "",
+    "Consulta os eventos de auditoria que satisfazem os filtros."
+   ],
+   [
+    "",
+    "Exibe a lista com usuário, ação, entidade, data/hora e os valores anterior e posterior."
+   ],
+   [
+    "Restrições/Validações",
+    "Os registros de auditoria são imutáveis (RN06) e acessíveis apenas ao Administrador."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Nenhum evento encontrado: o sistema informa que não há registros para os filtros aplicados."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-C02, RN06, RNF10"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 23,
+  "titulo": "Caso de uso de baixo nível Cadastrar Animal",
+  "bloco_legenda": 727,
+  "blocos_tabela": [
+   728
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Cadastrar Animal"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Gestão de Animais"
+   ],
+   [
+    "Ator Principal",
+    "Veterinário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Veterinário registra um novo animal no canil com seus dados de identificação, características e localização."
+   ],
+   [
+    "Pré-Condições",
+    "O ator deve estar autenticado com permissão de escrita no módulo de animais."
+   ],
+   [
+    "Pós-Condições",
+    "Animal cadastrado e vinculado a uma baia; ocupação da baia atualizada."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Veterinário aciona a opção de cadastrar animal.",
+    ""
+   ],
+   [
+    "O Veterinário informa o número do microchip (quando o animal já o possuir), espécie, sexo, porte, baia e demais dados (nome, raça, pelagem, coloração, peso, foto, motivo de entrada).",
+    ""
+   ],
+   [
+    "O Veterinário confirma o cadastro.",
+    ""
+   ],
+   [
+    "",
+    "Valida os campos obrigatórios (RN07) e verifica a unicidade do microchip, quando informado (RN01)."
+   ],
+   [
+    "",
+    "Verifica a disponibilidade de vaga na baia selecionada."
+   ],
+   [
+    "",
+    "Persiste o animal, atualiza a ocupação da baia e registra o evento de auditoria."
+   ],
+   [
+    "Restrições/Validações",
+    "Microchip único quando informado (RN01). Campos obrigatórios: espécie, sexo, porte, baia, esterilizado, status, motivo e data de entrada (RN07)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Microchip já cadastrado: o sistema rejeita o cadastro e informa a duplicidade."
+   ],
+   [
+    "Fluxo Alternativo II",
+    "Baia sem vaga: o sistema alerta sobre a superlotação e solicita outra baia."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-A01, RN01, RN07"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 24,
+  "titulo": "Caso de uso de baixo nível Editar Dados do Animal",
+  "bloco_legenda": 730,
+  "blocos_tabela": [
+   731
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Editar Dados do Animal"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Gestão de Animais"
+   ],
+   [
+    "Ator Principal",
+    "Veterinário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Veterinário atualiza informações cadastrais de um animal já registrado."
+   ],
+   [
+    "Pré-Condições",
+    "O animal deve estar cadastrado e o ator autenticado com permissão de escrita."
+   ],
+   [
+    "Pós-Condições",
+    "Dados do animal atualizados; alteração registrada em auditoria."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Veterinário localiza o animal e abre seu cadastro para edição.",
+    ""
+   ],
+   [
+    "O Veterinário altera os campos desejados e confirma.",
+    ""
+   ],
+   [
+    "",
+    "Valida os dados, mantendo a unicidade do microchip, e persiste as alterações."
+   ],
+   [
+    "",
+    "Registra o evento de auditoria com os valores anterior e posterior (RN06)."
+   ],
+   [
+    "Restrições/Validações",
+    "A alteração do microchip não pode gerar duplicidade (RN01). Histórico preservado por auditoria (RN06)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Tentativa de microchip duplicado: o sistema rejeita a alteração e informa a duplicidade."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-A01, RN06, RNF10"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 25,
+  "titulo": "Caso de uso de baixo nível Registrar Saída/Desfecho",
+  "bloco_legenda": 733,
+  "blocos_tabela": [
+   734
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Registrar Saída/Desfecho"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Gestão de Animais"
+   ],
+   [
+    "Ator Principal",
+    "Veterinário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Veterinário registra a saída do animal do canil, informando o destino."
+   ],
+   [
+    "Pré-Condições",
+    "O animal deve estar alojado e o ator autenticado com permissão de escrita."
+   ],
+   [
+    "Pós-Condições",
+    "Animal com status de saída registrado; vaga liberada na baia."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Veterinário acessa o cadastro do animal e seleciona registrar saída.",
+    ""
+   ],
+   [
+    "O Veterinário informa o destino (Adotado, Resgatado, Óbito, Eutanásia ou Transferido) e a data.",
+    ""
+   ],
+   [
+    "O Veterinário confirma o registro.",
+    ""
+   ],
+   [
+    "",
+    "Atualiza o status do animal, libera a vaga na baia e registra o evento de auditoria."
+   ],
+   [
+    "Restrições/Validações",
+    "Valores de saída restritos a Adotado, Resgatado, Óbito, Eutanásia e Transferido. Histórico imutável (RN06)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Destino não informado: o sistema impede a conclusão até que o destino seja selecionado."
+   ],
+   [
+    "Fluxo Alternativo II",
+    "Destino Adotado: o sistema solicita os dados do adotante (caso de uso Registrar Adoção)."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-A05, RN06"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 26,
+  "titulo": "Caso de uso de baixo nível Registrar Adoção",
+  "bloco_legenda": 736,
+  "blocos_tabela": [
+   737
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Registrar Adoção"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Registrar Saída/Desfecho (extensão, quando o destino é Adotado)"
+   ],
+   [
+    "Ator Principal",
+    "Veterinário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Veterinário registra os dados do adotante e da adoção do animal."
+   ],
+   [
+    "Pré-Condições",
+    "O Veterinário está registrando a saída de um animal com destino Adotado."
+   ],
+   [
+    "Pós-Condições",
+    "Adoção registrada e vinculada ao animal; animal com status Adotado e data de saída; evento registrado na auditoria."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Veterinário informa nome, CPF, telefone, e-mail, CEP, endereço e bairro do adotante e a data da adoção.",
+    ""
+   ],
+   [
+    "",
+    "Valida os campos obrigatórios do adotante."
+   ],
+   [
+    "O Veterinário confirma o registro.",
+    ""
+   ],
+   [
+    "",
+    "Grava a adoção, atualiza o status do animal para Adotado com a data de saída e registra o evento de auditoria."
+   ],
+   [
+    "Restrições/Validações",
+    "Os dados do adotante são dados pessoais e só são acessados pelos perfis autorizados (LGPD, RNF06)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Devolução: o Veterinário registra a data e o motivo da devolução; o animal volta a ficar disponível para adoção e a adoção anterior permanece no histórico."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-A05, RN06, RNF06"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 27,
+  "titulo": "Caso de uso de baixo nível Transferir Animal de Baia",
+  "bloco_legenda": 739,
+  "blocos_tabela": [
+   740
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Transferir Animal de Baia"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Gestão de Animais"
+   ],
+   [
+    "Ator Principal",
+    "Veterinário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Veterinário move um animal de uma baia para outra."
+   ],
+   [
+    "Pré-Condições",
+    "O animal deve estar alojado e a baia de destino deve existir."
+   ],
+   [
+    "Pós-Condições",
+    "Animal vinculado à nova baia; ocupação das baias de origem e destino atualizadas."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Veterinário seleciona o animal e a opção de transferir baia.",
+    ""
+   ],
+   [
+    "O Veterinário escolhe a baia de destino e confirma.",
+    ""
+   ],
+   [
+    "",
+    "Verifica vaga na baia de destino, atualiza o vínculo e a ocupação de ambas as baias."
+   ],
+   [
+    "Restrições/Validações",
+    "A baia de destino deve possuir vaga disponível."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Baia de destino lotada: o sistema alerta e solicita outra baia."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-A02"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 28,
+  "titulo": "Caso de uso de baixo nível Consultar Animais por Baia",
+  "bloco_legenda": 742,
+  "blocos_tabela": [
+   743
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Consultar Animais por Baia"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Gestão de Animais"
+   ],
+   [
+    "Ator Principal",
+    "Veterinário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Veterinário visualiza e filtra os animais alojados, organizados por baia."
+   ],
+   [
+    "Pré-Condições",
+    "O ator deve estar autenticado com permissão de leitura no módulo."
+   ],
+   [
+    "Pós-Condições",
+    "Listagem de animais exibida conforme os filtros, com ocupação por baia."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Veterinário acessa a consulta por baia e define filtros (baia, espécie, status).",
+    ""
+   ],
+   [
+    "",
+    "Consulta os animais conforme os filtros e calcula a ocupação atual versus a capacidade."
+   ],
+   [
+    "",
+    "Exibe a listagem com indicação visual de status e a ocupação de cada baia (RF-A02)."
+   ],
+   [
+    "Restrições/Validações",
+    "Baias disponíveis: BAIA 1–16 (internas), E1–E4 (externas) e CORREDOR."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Nenhum animal para o filtro: o sistema informa que não há resultados."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-A02"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 29,
+  "titulo": "Caso de uso de baixo nível Registrar Aplicação de Vacina",
+  "bloco_legenda": 745,
+  "blocos_tabela": [
+   746
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Registrar Aplicação de Vacina"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Histórico Veterinário"
+   ],
+   [
+    "Ator Principal",
+    "Veterinário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Veterinário registra a aplicação de uma vacina em um animal e o sistema calcula a previsão de reforço."
+   ],
+   [
+    "Pré-Condições",
+    "O animal deve estar cadastrado e a vacina disponível."
+   ],
+   [
+    "Pós-Condições",
+    "Vacinação registrada; previsão de retorno calculada para o alerta vacinal."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Veterinário acessa o histórico do animal e seleciona registrar vacina.",
+    ""
+   ],
+   [
+    "O Veterinário informa a vacina, a data de aplicação, a dose, o lote e o número da dose.",
+    ""
+   ],
+   [
+    "O Veterinário confirma o registro.",
+    ""
+   ],
+   [
+    "",
+    "Persiste a vacinação e calcula a previsão de retorno (data de aplicação + intervalo em meses)."
+   ],
+   [
+    "",
+    "Inclui o animal na lista de alertas vacinais quando o reforço estiver dentro de 7 dias (RF-A03)."
+   ],
+   [
+    "Restrições/Validações",
+    "Registros do histórico são imutáveis (RN06, RNF10). A previsão de reforço baseia-se no intervalo da vacina."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Anexar comprovante: o Veterinário pode anexar um documento à vacinação registrada."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-A03, RF-A04, RN06"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 30,
+  "titulo": "Caso de uso de baixo nível Prescrever Medicamento",
+  "bloco_legenda": 748,
+  "blocos_tabela": [
+   749
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Prescrever Medicamento"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Histórico Veterinário"
+   ],
+   [
+    "Ator Principal",
+    "Veterinário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Veterinário prescreve um medicamento a um animal, definindo dose, via e frequência."
+   ],
+   [
+    "Pré-Condições",
+    "O animal deve estar cadastrado e o medicamento disponível."
+   ],
+   [
+    "Pós-Condições",
+    "Prescrição registrada com status ativo no histórico do animal."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Veterinário acessa o histórico do animal e seleciona prescrever medicamento.",
+    ""
+   ],
+   [
+    "O Veterinário informa o medicamento, a dose, a via de administração, a frequência e as datas de início e fim previstas.",
+    ""
+   ],
+   [
+    "O Veterinário confirma a prescrição.",
+    ""
+   ],
+   [
+    "",
+    "Persiste a prescrição com status ativo e registra o evento de auditoria."
+   ],
+   [
+    "Restrições/Validações",
+    "Registros do histórico são imutáveis (RN06)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Concluir, suspender ou cancelar: o Veterinário altera o status de uma prescrição ativa, mantendo o registro."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-A04, RN06"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 31,
+  "titulo": "Caso de uso de baixo nível Registrar Procedimento Clínico",
+  "bloco_legenda": 751,
+  "blocos_tabela": [
+   752
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Registrar Procedimento Clínico"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Histórico Veterinário"
+   ],
+   [
+    "Ator Principal",
+    "Veterinário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Veterinário registra um procedimento realizado no animal."
+   ],
+   [
+    "Pré-Condições",
+    "O animal deve estar cadastrado."
+   ],
+   [
+    "Pós-Condições",
+    "Procedimento registrado no histórico do animal."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Veterinário acessa o histórico do animal e seleciona registrar procedimento.",
+    ""
+   ],
+   [
+    "O Veterinário informa o tipo de procedimento, a data, a descrição e o resultado.",
+    ""
+   ],
+   [
+    "O Veterinário confirma o registro.",
+    ""
+   ],
+   [
+    "",
+    "Persiste o procedimento e registra o evento de auditoria."
+   ],
+   [
+    "Restrições/Validações",
+    "Registros do histórico são imutáveis (RN06)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Anexar documento: o Veterinário pode anexar arquivos ao procedimento registrado."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-A04, RN06"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 32,
+  "titulo": "Caso de uso de baixo nível Registrar Exame",
+  "bloco_legenda": 754,
+  "blocos_tabela": [
+   755
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Registrar Exame"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Histórico Veterinário"
+   ],
+   [
+    "Ator Principal",
+    "Veterinário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Veterinário solicita e registra o resultado de um exame laboratorial do animal."
+   ],
+   [
+    "Pré-Condições",
+    "O animal deve estar cadastrado e o laboratório disponível."
+   ],
+   [
+    "Pós-Condições",
+    "Exame registrado com solicitação e, posteriormente, resultado no histórico do animal."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Veterinário acessa o histórico do animal e seleciona registrar exame.",
+    ""
+   ],
+   [
+    "O Veterinário informa o tipo de exame, o laboratório e a data de solicitação.",
+    ""
+   ],
+   [
+    "O Veterinário confirma a solicitação.",
+    ""
+   ],
+   [
+    "",
+    "Persiste o exame com a solicitação e registra o evento de auditoria."
+   ],
+   [
+    "Posteriormente, o Veterinário registra o resultado e a data de resultado.",
+    ""
+   ],
+   [
+    "",
+    "Atualiza o exame com o resultado informado."
+   ],
+   [
+    "Restrições/Validações",
+    "Registros do histórico são imutáveis (RN06)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Anexar laudo: o Veterinário pode anexar o laudo ao exame registrado."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-A04, RN06"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 33,
+  "titulo": "Caso de uso de baixo nível Gerenciar Baias",
+  "bloco_legenda": 757,
+  "blocos_tabela": [
+   758
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Gerenciar Baias"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Gestão de Animais do Canil"
+   ],
+   [
+    "Ator Principal",
+    "Administrador"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Administrador cadastra e edita as baias do canil, com tipo, capacidade e finalidade."
+   ],
+   [
+    "Pré-Condições",
+    "O Administrador está autenticado."
+   ],
+   [
+    "Pós-Condições",
+    "Baia criada ou atualizada; evento registrado na auditoria."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Administrador acessa a gestão de baias.",
+    ""
+   ],
+   [
+    "",
+    "Lista as baias com tipo, capacidade, ocupação atual e indicação de superlotação."
+   ],
+   [
+    "O Administrador seleciona criar ou editar e informa nome, tipo, capacidade, finalidade e situação (ativa ou inativa).",
+    ""
+   ],
+   [
+    "",
+    "Valida os dados, grava a baia e registra o evento de auditoria."
+   ],
+   [
+    "Restrições/Validações",
+    "Capacidade maior que zero. A ocupação não é digitada: é calculada pela contagem de animais alojados (RF-A02)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Capacidade informada menor que a ocupação atual: o sistema grava e exibe aviso de superlotação."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-A02, RN09, RNF10"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 34,
+  "titulo": "Caso de uso de baixo nível Anexar Documento ao Animal",
+  "bloco_legenda": 760,
+  "blocos_tabela": [
+   761
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Anexar Documento ao Animal"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Registrar Aplicação de Vacina, Registrar Procedimento Clínico e Registrar Exame (extensão)"
+   ],
+   [
+    "Ator Principal",
+    "Veterinário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Veterinário anexa um arquivo (laudo, receita, imagem) ao registro clínico do animal."
+   ],
+   [
+    "Pré-Condições",
+    "O Veterinário está registrando uma vacinação, um procedimento ou um exame."
+   ],
+   [
+    "Pós-Condições",
+    "Arquivo armazenado e vinculado ao registro, com nome, endereço e tamanho."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Veterinário aciona “Anexar documento” e seleciona o arquivo.",
+    ""
+   ],
+   [
+    "",
+    "Valida o tipo e o tamanho do arquivo."
+   ],
+   [
+    "",
+    "Armazena o arquivo e o vincula ao registro clínico em andamento."
+   ],
+   [
+    "Restrições/Validações",
+    "O anexo não pode ser excluído depois de gravado (RN06)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Arquivo inválido ou acima do limite: o sistema informa o motivo e não anexa."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-A04, RN06"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 35,
+  "titulo": "Caso de uso de baixo nível Registrar Nova Ocorrência",
+  "bloco_legenda": 764,
+  "blocos_tabela": [
+   765
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.3 MÓDULO 3 – OCORRÊNCIAS E DENÚNCIAS",
+  "linhas": [
+   [
+    "Registrar Nova Ocorrência"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Gestão de Ocorrências"
+   ],
+   [
+    "Ator Principal",
+    "Agente Sanitário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Agente Sanitário registra uma nova ocorrência ou denúncia, com geração automática de protocolo."
+   ],
+   [
+    "Pré-Condições",
+    "O ator deve estar autenticado com permissão de escrita no módulo de ocorrências."
+   ],
+   [
+    "Pós-Condições",
+    "Ocorrência persistida com protocolo anual, denunciante vinculado e movimentação inicial registrada."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Agente Sanitário aciona a opção de criar ocorrência.",
+    ""
+   ],
+   [
+    "",
+    "Gera o protocolo no formato 0000/AAAA e preenche a data de abertura com a data corrente (RN02)."
+   ],
+   [
+    "O Agente Sanitário informa os dados do denunciante (nome, telefone, e-mail, CEP).",
+    ""
+   ],
+   [
+    "",
+    "Busca o endereço pelo CEP em serviço externo e preenche os campos de endereço."
+   ],
+   [
+    "O Agente Sanitário informa o tipo, o bairro, a descrição e, se necessário, marca a ocorrência como sigilosa.",
+    ""
+   ],
+   [
+    "O Agente Sanitário confirma o registro.",
+    ""
+   ],
+   [
+    "",
+    "Valida os dados, persiste a ocorrência com o denunciante e cria a movimentação inicial de ABERTURA."
+   ],
+   [
+    "Restrições/Validações",
+    "Protocolo sequencial e anual 0000/AAAA (RN02). Em ocorrências sigilosas, o denunciante fica oculto para não-Administradores (RN03)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Informar denunciado: ver o caso de uso Informar Denunciado."
+   ],
+   [
+    "Fluxo Alternativo II",
+    "CEP não localizado: o sistema informa a falha e o Agente Sanitário preenche o endereço manualmente."
+   ],
+   [
+    "Fluxo Alternativo III",
+    "Anexar documento: ver o caso de uso Anexar Documento à Ocorrência."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-E01, RN02, RN03"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 36,
+  "titulo": "Caso de uso de baixo nível Informar Denunciado",
+  "bloco_legenda": 767,
+  "blocos_tabela": [
+   768
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.3 MÓDULO 3 – OCORRÊNCIAS E DENÚNCIAS",
+  "linhas": [
+   [
+    "Informar Denunciado"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Registrar Nova Ocorrência (extensão, quando há denunciado)"
+   ],
+   [
+    "Ator Principal",
+    "Agente Sanitário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Agente Sanitário registra os dados da pessoa apontada na denúncia."
+   ],
+   [
+    "Pré-Condições",
+    "O Agente Sanitário está registrando uma ocorrência e o denunciante identificou um denunciado."
+   ],
+   [
+    "Pós-Condições",
+    "Denunciado vinculado à ocorrência."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Agente Sanitário marca a opção “Há denunciado”.",
+    ""
+   ],
+   [
+    "",
+    "Exibe os campos do denunciado."
+   ],
+   [
+    "O Agente Sanitário informa nome, CPF, telefone, endereço e observações, conforme disponíveis.",
+    ""
+   ],
+   [
+    "",
+    "Grava o denunciado junto com a ocorrência."
+   ],
+   [
+    "Restrições/Validações",
+    "Todos os campos são opcionais; o CPF só é registrado quando necessário (LGPD, princípio da necessidade)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "O Agente Sanitário desmarca a opção antes de salvar: nenhum denunciado é gravado."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-E01, RNF06"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 37,
+  "titulo": "Caso de uso de baixo nível Anexar Documento à Ocorrência",
+  "bloco_legenda": 770,
+  "blocos_tabela": [
+   771
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.3 MÓDULO 3 – OCORRÊNCIAS E DENÚNCIAS",
+  "linhas": [
+   [
+    "Anexar Documento à Ocorrência"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Registrar Nova Ocorrência (extensão, quando há documento)"
+   ],
+   [
+    "Ator Principal",
+    "Agente Sanitário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Agente Sanitário anexa fotos ou documentos que acompanham a denúncia."
+   ],
+   [
+    "Pré-Condições",
+    "O Agente Sanitário está registrando uma ocorrência."
+   ],
+   [
+    "Pós-Condições",
+    "Arquivo armazenado e vinculado à ocorrência."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Agente Sanitário aciona “Anexar documento” e seleciona o arquivo.",
+    ""
+   ],
+   [
+    "",
+    "Valida o tipo e o tamanho do arquivo."
+   ],
+   [
+    "",
+    "Armazena o arquivo e o vincula à ocorrência."
+   ],
+   [
+    "Restrições/Validações",
+    "O anexo não pode ser excluído depois de gravado (RN06)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Arquivo inválido ou acima do limite: o sistema informa o motivo e não anexa."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-E01, RN06"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 38,
+  "titulo": "Caso de uso de baixo nível Consultar e Filtrar Ocorrências",
+  "bloco_legenda": 773,
+  "blocos_tabela": [
+   774
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.3 MÓDULO 3 – OCORRÊNCIAS E DENÚNCIAS",
+  "linhas": [
+   [
+    "Consultar e Filtrar Ocorrências"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Gestão de Ocorrências"
+   ],
+   [
+    "Ator Principal",
+    "Agente Sanitário"
+   ],
+   [
+    "Atores Secundários",
+    "Administrador"
+   ],
+   [
+    "Resumo",
+    "O Agente Sanitário consulta ocorrências aplicando filtros; dados sigilosos do denunciante são restritos."
+   ],
+   [
+    "Pré-Condições",
+    "O ator deve estar autenticado com permissão de leitura no módulo."
+   ],
+   [
+    "Pós-Condições",
+    "Ocorrências exibidas conforme os filtros, respeitando o sigilo do denunciante."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Agente Sanitário acessa a consulta de ocorrências e define filtros (protocolo, período, tipo, bairro, status).",
+    ""
+   ],
+   [
+    "",
+    "Consulta as ocorrências conforme os filtros."
+   ],
+   [
+    "",
+    "Exibe a listagem; em ocorrências sigilosas, oculta os dados do denunciante para perfis que não sejam Administrador (RN03)."
+   ],
+   [
+    "Restrições/Validações",
+    "Os dados do denunciante em ocorrências sigilosas só são exibidos ao Administrador (RN03)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Acesso como Administrador: os dados do denunciante são exibidos mesmo em ocorrências sigilosas."
+   ],
+   [
+    "Fluxo Alternativo II",
+    "Nenhuma ocorrência encontrada: o sistema informa que não há resultados."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-E02, RN03"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 39,
+  "titulo": "Caso de uso de baixo nível Encerrar Ocorrência",
+  "bloco_legenda": 776,
+  "blocos_tabela": [
+   777
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.3 MÓDULO 3 – OCORRÊNCIAS E DENÚNCIAS",
+  "linhas": [
+   [
+    "Encerrar Ocorrência"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Gestão de Ocorrências"
+   ],
+   [
+    "Ator Principal",
+    "Agente Sanitário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Agente Sanitário encerra uma ocorrência, registrando a providência tomada."
+   ],
+   [
+    "Pré-Condições",
+    "A ocorrência deve estar aberta ou em atendimento e o ator ter permissão para encerrá-la."
+   ],
+   [
+    "Pós-Condições",
+    "Ocorrência encerrada com descrição e providência; registro torna-se imutável."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Agente Sanitário abre a ocorrência e seleciona encerrar.",
+    ""
+   ],
+   [
+    "O Agente Sanitário informa a descrição de encerramento e a providência tomada.",
+    ""
+   ],
+   [
+    "O Agente Sanitário confirma o encerramento.",
+    ""
+   ],
+   [
+    "",
+    "Atualiza o status para encerrada, registra a data de encerramento e a movimentação de ENCERRAMENTO."
+   ],
+   [
+    "Restrições/Validações",
+    "Somente Agente Sanitário ou Administrador podem encerrar. Após o encerramento, o registro é imutável (RN06). Ocorrência com processo sanitário vinculado só pode ser encerrada após o registro do resultado desse processo (RN05)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Providência não informada: o sistema impede o encerramento até que a providência seja selecionada."
+   ],
+   [
+    "Fluxo Alternativo II",
+    "Processo vinculado sem resultado: o sistema impede o encerramento e informa o protocolo do processo pendente (RN05)."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-E03, RN05, RN06"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 40,
+  "titulo": "Caso de uso de baixo nível Abrir Processo Sanitário",
+  "bloco_legenda": 780,
+  "blocos_tabela": [
+   781
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.4 MÓDULO 4 – PROCESSOS SANITÁRIOS",
+  "linhas": [
+   [
+    "Abrir Processo Sanitário"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Gestão de Processos"
+   ],
+   [
+    "Ator Principal",
+    "Agente Sanitário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Agente Sanitário abre um processo sanitário para investigação de zoonose, com geração de protocolo e registro do animal amostrado."
+   ],
+   [
+    "Pré-Condições",
+    "O ator deve estar autenticado com permissão de escrita no módulo de processos."
+   ],
+   [
+    "Pós-Condições",
+    "Processo persistido com protocolo anual, responsável e animal amostrado vinculados."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Agente Sanitário aciona a opção de abrir processo sanitário.",
+    ""
+   ],
+   [
+    "",
+    "Gera o protocolo no formato 0000/AAAA e preenche a data de abertura (RN02)."
+   ],
+   [
+    "O Agente Sanitário informa a doença, o laboratório, o responsável e os números GAL (Gerenciador de Ambiente Laboratorial) e SINAN (Sistema de Informação de Agravos de Notificação), quando houver, e, opcionalmente, a ocorrência de origem, que não poderá ser alterada depois.",
+    ""
+   ],
+   [
+    "O Agente Sanitário registra os dados do animal amostrado (Registrar Animal Amostrado).",
+    ""
+   ],
+   [
+    "O Agente Sanitário confirma a abertura.",
+    ""
+   ],
+   [
+    "",
+    "Valida os campos obrigatórios (RN08), persiste o processo com status ABERTO e o animal amostrado."
+   ],
+   [
+    "",
+    "Caso o contato humano seja verdadeiro, marca o processo como urgente e o fixa no topo das listagens (RN04, RF-B05)."
+   ],
+   [
+    "Restrições/Validações",
+    "Protocolo sequencial e anual (RN02). Obrigatórios: data de abertura, doença, laboratório e dados mínimos do responsável (RN08)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Contato humano-animal: o sistema torna o processo urgente e bloqueia o encerramento sem resultado (RN04, RF-B05)."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-B01, RN02, RN04, RN08"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 41,
+  "titulo": "Caso de uso de baixo nível Registrar Animal Amostrado",
+  "bloco_legenda": 783,
+  "blocos_tabela": [
+   784
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.4 MÓDULO 4 – PROCESSOS SANITÁRIOS",
+  "linhas": [
+   [
+    "Registrar Animal Amostrado"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Gestão de Processos"
+   ],
+   [
+    "Ator Principal",
+    "Agente Sanitário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Agente Sanitário registra os dados do animal investigado e da amostra coletada dentro de um processo."
+   ],
+   [
+    "Pré-Condições",
+    "Deve existir um processo sanitário em aberto."
+   ],
+   [
+    "Pós-Condições",
+    "Animal amostrado vinculado ao processo, com material biológico e indicadores de contato registrados."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Agente Sanitário informa as características do animal (espécie, sexo, raça, coloração, pelagem, peso, estado clínico, tipo de abrigo e sintomas).",
+    ""
+   ],
+   [
+    "O Agente Sanitário informa o material biológico, o tipo de amostra e a data de coleta.",
+    ""
+   ],
+   [
+    "O Agente Sanitário informa o contato com humano, o nível de contato e se houve agressão.",
+    ""
+   ],
+   [
+    "O Agente Sanitário confirma o registro.",
+    ""
+   ],
+   [
+    "",
+    "Persiste o animal amostrado vinculado ao processo."
+   ],
+   [
+    "",
+    "Avalia o indicador de contato humano e, se verdadeiro, sinaliza a urgência do processo (RN04)."
+   ],
+   [
+    "Restrições/Validações",
+    "O indicador de contato humano verdadeiro aciona a urgência do processo (RN04, RF-B05)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Animal interno: quando o investigado for um animal do canil, o registro pode referenciar o cadastro existente."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-B04, RN04"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 42,
+  "titulo": "Caso de uso de baixo nível Registrar Resultado Laboratorial",
+  "bloco_legenda": 786,
+  "blocos_tabela": [
+   787
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.4 MÓDULO 4 – PROCESSOS SANITÁRIOS",
+  "linhas": [
+   [
+    "Registrar Resultado Laboratorial"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Gestão de Processos"
+   ],
+   [
+    "Ator Principal",
+    "Agente Sanitário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Agente Sanitário registra o resultado da análise laboratorial e o desfecho do processo."
+   ],
+   [
+    "Pré-Condições",
+    "O processo deve estar em andamento ou aguardando resultado (não pode estar com status ABERTO)."
+   ],
+   [
+    "Pós-Condições",
+    "Resultado e desfecho registrados; em caso positivo ou inconclusivo, o responsável e a Vigilância Epidemiológica são notificados por e-mail."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Agente Sanitário abre o processo e seleciona registrar resultado.",
+    ""
+   ],
+   [
+    "O Agente Sanitário informa o resultado (Negativo, Positivo, Material Inadequado, Inconclusivo, Não Realizado ou Aguardando) e a data.",
+    ""
+   ],
+   [
+    "O Agente Sanitário confirma o registro.",
+    ""
+   ],
+   [
+    "",
+    "Valida que o status permite o resultado (RN12) e persiste o resultado e o desfecho."
+   ],
+   [
+    "",
+    "Caso o resultado seja Positivo ou Inconclusivo, envia e-mail ao responsável, quando houver e-mail cadastrado, e à Vigilância Epidemiológica, e registra o envio (RN10)."
+   ],
+   [
+    "Restrições/Validações",
+    "O resultado não pode ser preenchido com status ABERTO (RN12). Resultado Positivo ou Inconclusivo dispara notificação (RN10)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Sem e-mail do responsável: o sistema registra o resultado, e notifica apenas a Vigilância Epidemiológica."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-B03, RN10, RN12"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 43,
+  "titulo": "Caso de uso de baixo nível Consultar e Filtrar Processos",
+  "bloco_legenda": 789,
+  "blocos_tabela": [
+   790
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.4 MÓDULO 4 – PROCESSOS SANITÁRIOS",
+  "linhas": [
+   [
+    "Consultar e Filtrar Processos"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Gestão de Processos"
+   ],
+   [
+    "Ator Principal",
+    "Agente Sanitário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Agente Sanitário consulta processos sanitários aplicando filtros, com os urgentes fixados no topo."
+   ],
+   [
+    "Pré-Condições",
+    "O ator deve estar autenticado com permissão de leitura no módulo."
+   ],
+   [
+    "Pós-Condições",
+    "Processos exibidos conforme os filtros, com urgentes priorizados."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Agente Sanitário acessa a consulta e define filtros (protocolo, período, doença, responsável, bairro, status).",
+    ""
+   ],
+   [
+    "",
+    "Consulta os processos conforme os filtros."
+   ],
+   [
+    "",
+    "Exibe a listagem com os processos urgentes fixados no topo (RN04)."
+   ],
+   [
+    "Restrições/Validações",
+    "Processos urgentes são fixados no topo das listagens (RN04)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Nenhum processo encontrado: o sistema informa que não há resultados."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-B02, RN04"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 44,
+  "titulo": "Caso de uso de baixo nível Encerrar Processo",
+  "bloco_legenda": 792,
+  "blocos_tabela": [
+   793
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.4 MÓDULO 4 – PROCESSOS SANITÁRIOS",
+  "linhas": [
+   [
+    "Encerrar Processo"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Gestão de Processos"
+   ],
+   [
+    "Ator Principal",
+    "Agente Sanitário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Agente Sanitário encerra um processo sanitário após a conclusão da investigação."
+   ],
+   [
+    "Pré-Condições",
+    "O processo deve possuir resultado registrado quando houver contato humano (RF-B05)."
+   ],
+   [
+    "Pós-Condições",
+    "Processo concluído; registro torna-se imutável."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Agente Sanitário abre o processo e seleciona encerrar.",
+    ""
+   ],
+   [
+    "",
+    "Verifica se o processo possui resultado quando o contato humano for verdadeiro (RF-B05)."
+   ],
+   [
+    "O Agente Sanitário confirma o encerramento.",
+    ""
+   ],
+   [
+    "",
+    "Atualiza o status para CONCLUIDO e registra o evento de auditoria."
+   ],
+   [
+    "Restrições/Validações",
+    "Processos com contato humano não podem ser encerrados sem resultado (RF-B05). Registro imutável (RN06)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Resultado ausente em processo urgente: o sistema bloqueia o encerramento e solicita o registro do resultado."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-B05, RN06, RN12"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 45,
+  "titulo": "Caso de uso de baixo nível Gerar Documento do Processo",
+  "bloco_legenda": 795,
+  "blocos_tabela": [
+   796
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.4 MÓDULO 4 – PROCESSOS SANITÁRIOS",
+  "linhas": [
+   [
+    "Gerar Documento do Processo"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Gestão de Processos"
+   ],
+   [
+    "Ator Principal",
+    "Agente Sanitário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Agente Sanitário gera o documento em PDF de um processo sanitário."
+   ],
+   [
+    "Pré-Condições",
+    "O processo deve estar cadastrado."
+   ],
+   [
+    "Pós-Condições",
+    "Documento gerado e disponibilizado para download."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Agente Sanitário abre o processo e solicita a geração do documento.",
+    ""
+   ],
+   [
+    "",
+    "Cria o documento com estado Pendente e processa a geração de forma assíncrona (RN11)."
+   ],
+   [
+    "",
+    "Ao concluir, disponibiliza o documento por URL para download."
+   ],
+   [
+    "Restrições/Validações",
+    "A geração segue os estados Pendente → Em Processamento → Concluído/Falha (RN11)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Falha na geração: o sistema marca o documento como Falha e permite nova tentativa."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-B06, RN11"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 46,
+  "titulo": "Caso de uso de baixo nível Visualizar Dashboard em Tempo Real",
+  "bloco_legenda": 799,
+  "blocos_tabela": [
+   800
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.5 MÓDULO 5 – DASHBOARD E RELATÓRIOS",
+  "linhas": [
+   [
+    "Visualizar Dashboard em Tempo Real"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Dashboard"
+   ],
+   [
+    "Ator Principal",
+    "Veterinário ou Agente Sanitário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O usuário visualiza indicadores operacionais consolidados em tempo real."
+   ],
+   [
+    "Pré-Condições",
+    "O ator deve estar autenticado com permissão de acesso ao dashboard."
+   ],
+   [
+    "Pós-Condições",
+    "Indicadores exibidos com dados atualizados do banco."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O usuário acessa o dashboard.",
+    ""
+   ],
+   [
+    "",
+    "Consulta em tempo real os totais por status de animal, a ocupação das baias e os alertas vacinais de 7 dias."
+   ],
+   [
+    "",
+    "Consulta os processos aguardando resultado, os processos urgentes e o resumo mensal por doença."
+   ],
+   [
+    "",
+    "Exibe os indicadores e gráficos consolidados (RF-D01)."
+   ],
+   [
+    "Restrições/Validações",
+    "O dashboard é alimentado por consultas em tempo real e não gera entidade persistida."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Consultar alertas vacinais: o usuário detalha os animais com reforço previsto para os próximos 7 dias (RF-A03), conforme o caso de uso Consultar Alertas Vacinais."
+   ],
+   [
+    "Fluxo Alternativo II",
+    "Monitorar ocupação de baias: o usuário detalha a ocupação atual versus a capacidade de cada baia, conforme o caso de uso Monitorar Ocupação de Baias."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-D01"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 47,
+  "titulo": "Caso de uso de baixo nível Consultar Alertas Vacinais",
+  "bloco_legenda": 802,
+  "blocos_tabela": [
+   803
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.5 MÓDULO 5 – DASHBOARD E RELATÓRIOS",
+  "linhas": [
+   [
+    "Consultar Alertas Vacinais"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Visualizar Dashboard em Tempo Real (extensão)"
+   ],
+   [
+    "Ator Principal",
+    "Veterinário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Veterinário consulta os animais com reforço vacinal próximo ou vencido."
+   ],
+   [
+    "Pré-Condições",
+    "O Veterinário está no painel inicial."
+   ],
+   [
+    "Pós-Condições",
+    "Lista de alertas exibida; nenhum dado é alterado."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Veterinário aciona o alerta de vacinas no painel.",
+    ""
+   ],
+   [
+    "",
+    "Lista as vacinações com validade nos próximos 7 dias e as já vencidas, com animal, vacina, dias restantes e severidade."
+   ],
+   [
+    "O Veterinário seleciona um animal da lista.",
+    ""
+   ],
+   [
+    "",
+    "Abre a ficha do animal na aba de vacinas."
+   ],
+   [
+    "Restrições/Validações",
+    "Janela de 7 dias (RF-A03); vacinas vencidas aparecem com severidade maior."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Nenhuma vacina a vencer: o sistema informa que não há alertas."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-A03, RF-D01"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 48,
+  "titulo": "Caso de uso de baixo nível Monitorar Ocupação de Baias",
+  "bloco_legenda": 805,
+  "blocos_tabela": [
+   806
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.5 MÓDULO 5 – DASHBOARD E RELATÓRIOS",
+  "linhas": [
+   [
+    "Monitorar Ocupação de Baias"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Visualizar Dashboard em Tempo Real (extensão)"
+   ],
+   [
+    "Ator Principal",
+    "Veterinário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O Veterinário acompanha a ocupação de cada baia em relação à capacidade."
+   ],
+   [
+    "Pré-Condições",
+    "O Veterinário está no painel inicial."
+   ],
+   [
+    "Pós-Condições",
+    "Ocupação exibida; nenhum dado é alterado."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O Veterinário aciona o indicador de ocupação no painel.",
+    ""
+   ],
+   [
+    "",
+    "Exibe, por baia, a ocupação calculada, a capacidade e a situação (normal, próxima do limite ou superlotada)."
+   ],
+   [
+    "O Veterinário seleciona uma baia.",
+    ""
+   ],
+   [
+    "",
+    "Lista os animais alojados nela."
+   ],
+   [
+    "Restrições/Validações",
+    "A ocupação conta apenas animais alojados (exclui adotados, transferidos e óbitos)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Baia sem animais: o sistema exibe ocupação zero."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-A02, RF-D01"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 49,
+  "titulo": "Caso de uso de baixo nível Solicitar Geração de Relatório",
+  "bloco_legenda": 808,
+  "blocos_tabela": [
+   809
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.5 MÓDULO 5 – DASHBOARD E RELATÓRIOS",
+  "linhas": [
+   [
+    "Solicitar Geração de Relatório"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Relatórios"
+   ],
+   [
+    "Ator Principal",
+    "Veterinário ou Agente Sanitário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O usuário solicita a geração de um relatório, processado de forma assíncrona."
+   ],
+   [
+    "Pré-Condições",
+    "O ator deve estar autenticado com permissão para gerar relatórios."
+   ],
+   [
+    "Pós-Condições",
+    "Solicitação registrada com status Pendente e processada em segundo plano."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O usuário seleciona o tipo de relatório (ocorrências por bairro, ocupação de baias, procedimentos, adoções, anual de processos ou vacinação) e informa o período e os parâmetros.",
+    ""
+   ],
+   [
+    "O usuário confirma a solicitação.",
+    ""
+   ],
+   [
+    "",
+    "Cria o registro do relatório com status Pendente e inicia o processamento assíncrono (RN11)."
+   ],
+   [
+    "",
+    "Ao concluir, atualiza o status para Concluído e disponibiliza o arquivo por URL com expiração."
+   ],
+   [
+    "Restrições/Validações",
+    "A geração segue os estados Pendente → Em Processamento → Concluído/Falha (RN11). O binário não é armazenado no banco."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Falha no processamento: o sistema marca o relatório como Falha e permite nova solicitação."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-D02, RF-B07, RN11"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 50,
+  "titulo": "Caso de uso de baixo nível Acompanhar Status do Relatório",
+  "bloco_legenda": 811,
+  "blocos_tabela": [
+   812
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.5 MÓDULO 5 – DASHBOARD E RELATÓRIOS",
+  "linhas": [
+   [
+    "Acompanhar Status do Relatório"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Relatórios"
+   ],
+   [
+    "Ator Principal",
+    "Veterinário ou Agente Sanitário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O usuário acompanha o andamento da geração de um relatório solicitado."
+   ],
+   [
+    "Pré-Condições",
+    "Deve existir ao menos um relatório solicitado pelo usuário."
+   ],
+   [
+    "Pós-Condições",
+    "Status atual do relatório exibido ao usuário."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O usuário acessa a lista de relatórios solicitados.",
+    ""
+   ],
+   [
+    "",
+    "Exibe cada relatório com seu status atual (Pendente, Em Processamento, Concluído ou Falha)."
+   ],
+   [
+    "Restrições/Validações",
+    "O status reflete o ciclo de vida assíncrono do relatório (RN11)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "Relatório concluído: o sistema habilita a opção de download (Baixar Relatório Gerado)."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-D02, RN11"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 51,
+  "titulo": "Caso de uso de baixo nível Baixar Relatório Gerado",
+  "bloco_legenda": 814,
+  "blocos_tabela": [
+   815
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores (2026).",
+  "secao": "A.5 MÓDULO 5 – DASHBOARD E RELATÓRIOS",
+  "linhas": [
+   [
+    "Baixar Relatório Gerado"
+   ],
+   [
+    "Caso de Uso Geral",
+    "Relatórios"
+   ],
+   [
+    "Ator Principal",
+    "Veterinário ou Agente Sanitário"
+   ],
+   [
+    "Atores Secundários",
+    ""
+   ],
+   [
+    "Resumo",
+    "O usuário baixa o arquivo de um relatório concluído."
+   ],
+   [
+    "Pré-Condições",
+    "O relatório deve estar com status Concluído e a URL não expirada."
+   ],
+   [
+    "Pós-Condições",
+    "Arquivo do relatório transferido ao usuário."
+   ],
+   [
+    "Fluxo Principal"
+   ],
+   [
+    "Ações do Ator",
+    "Ações do Sistema"
+   ],
+   [
+    "O usuário seleciona um relatório concluído e aciona o download.",
+    ""
+   ],
+   [
+    "",
+    "Verifica se o relatório está concluído e se a URL não expirou."
+   ],
+   [
+    "",
+    "Disponibiliza o arquivo para download."
+   ],
+   [
+    "Restrições/Validações",
+    "O download só é permitido com status Concluído e dentro da validade da URL (RN11)."
+   ],
+   [
+    "Fluxo Alternativo I",
+    "URL expirada: o sistema informa a expiração e orienta a solicitar uma nova geração."
+   ],
+   [
+    "Requisitos relacionados",
+    "RF-D02, RN11"
+   ]
+  ],
+  "n_colunas": 2
+ },
+ {
+  "num": 52,
+  "titulo": "Dicionário de dados – tabela Usuario",
+  "bloco_legenda": 821,
+  "blocos_tabela": [
+   822
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.1 MÓDULO 1 – USUÁRIOS E ACESSO",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do usuário."
+   ],
+   [
+    "email",
+    "varchar(255)",
+    "UQ",
+    "E-mail de login, único no sistema."
+   ],
+   [
+    "senha",
+    "varchar(255)",
+    "",
+    "Hash da senha (bcrypt)."
+   ],
+   [
+    "nome",
+    "varchar(100)",
+    "",
+    "Primeiro nome do usuário."
+   ],
+   [
+    "sobrenome",
+    "varchar(100)",
+    "",
+    "Sobrenome do usuário."
+   ],
+   [
+    "crmv",
+    "varchar(20)",
+    "",
+    "Registro profissional do veterinário, quando aplicável."
+   ],
+   [
+    "telefone",
+    "varchar(20)",
+    "",
+    "Telefone de contato."
+   ],
+   [
+    "ativo",
+    "boolean",
+    "",
+    "Indica se a conta está ativa."
+   ],
+   [
+    "ultimo_acesso",
+    "timestamp",
+    "",
+    "Data e hora do último acesso."
+   ],
+   [
+    "criado_em",
+    "timestamp",
+    "",
+    "Data e hora de criação do registro."
+   ],
+   [
+    "senha_alterada_em",
+    "timestamp",
+    "",
+    "Data e hora da última alteração de senha."
+   ],
+   [
+    "desativado_em",
+    "timestamp",
+    "",
+    "Data e hora da desativação da conta."
+   ],
+   [
+    "data_modificacao",
+    "timestamp",
+    "",
+    "Data e hora da última modificação do registro."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 53,
+  "titulo": "Dicionário de dados – tabela Cargo",
+  "bloco_legenda": 824,
+  "blocos_tabela": [
+   825
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.1 MÓDULO 1 – USUÁRIOS E ACESSO",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do cargo."
+   ],
+   [
+    "nome",
+    "varchar(100)",
+    "",
+    "Nome do cargo (ex.: Administrador, Veterinário)."
+   ],
+   [
+    "descricao",
+    "text",
+    "",
+    "Descrição das atribuições do cargo."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 54,
+  "titulo": "Dicionário de dados – tabela UsuarioCargo",
+  "bloco_legenda": 827,
+  "blocos_tabela": [
+   828
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.1 MÓDULO 1 – USUÁRIOS E ACESSO",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "usuario_id",
+    "uuid",
+    "PK,FK",
+    "Usuário vinculado (Usuario)."
+   ],
+   [
+    "cargo_id",
+    "uuid",
+    "PK,FK",
+    "Cargo atribuído (Cargo)."
+   ],
+   [
+    "adicionado_em",
+    "timestamp",
+    "",
+    "Data e hora da atribuição do cargo."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 55,
+  "titulo": "Dicionário de dados – tabela CargoPermissao",
+  "bloco_legenda": 830,
+  "blocos_tabela": [
+   831
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.1 MÓDULO 1 – USUÁRIOS E ACESSO",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único da permissão."
+   ],
+   [
+    "cargo_id",
+    "uuid",
+    "FK",
+    "Cargo ao qual a permissão pertence (Cargo)."
+   ],
+   [
+    "modulo",
+    "Modulo",
+    "",
+    "Módulo funcional alvo da permissão."
+   ],
+   [
+    "feature",
+    "varchar(100)",
+    "",
+    "Funcionalidade específica controlada."
+   ],
+   [
+    "leitura",
+    "boolean",
+    "",
+    "Permite consultar a funcionalidade."
+   ],
+   [
+    "escrita",
+    "boolean",
+    "",
+    "Permite criar ou editar registros."
+   ],
+   [
+    "exclusao",
+    "boolean",
+    "",
+    "Permite excluir/desativar registros."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 56,
+  "titulo": "Dicionário de dados – tabela PreferenciaUsuario",
+  "bloco_legenda": 833,
+  "blocos_tabela": [
+   834
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.1 MÓDULO 1 – USUÁRIOS E ACESSO",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único das preferências."
+   ],
+   [
+    "usuario_id",
+    "uuid",
+    "FK,UQ",
+    "Usuário dono das preferências (Usuario)."
+   ],
+   [
+    "tema",
+    "TemaUsuario",
+    "",
+    "Tema visual da interface (claro/escuro)."
+   ],
+   [
+    "densidade",
+    "DensidadeUsuario",
+    "",
+    "Densidade de exibição da interface."
+   ],
+   [
+    "notif_alertas_criticos",
+    "boolean",
+    "",
+    "Indica se o usuário recebe, no sistema, alertas de situações que exigem ação imediata, como processo sanitário com contato humano-animal sinalizado como urgente (RF-D01)."
+   ],
+   [
+    "notif_vacina_vencendo",
+    "boolean",
+    "",
+    "Indica se o usuário recebe, no sistema, avisos de reforço vacinal a vencer nos próximos 7 dias (RF-A03)."
+   ],
+   [
+    "notif_superlotacao",
+    "boolean",
+    "",
+    "Indica se o usuário recebe, no sistema, avisos de baias com ocupação igual ou superior à capacidade (RF-A02)."
+   ],
+   [
+    "notif_resultado_lab",
+    "boolean",
+    "",
+    "Indica se o usuário recebe, no sistema, aviso quando um resultado laboratorial é registrado em processo sanitário. É independente da notificação por e-mail ao responsável e à Vigilância Epidemiológica (RN10), que é obrigatória."
+   ],
+   [
+    "notif_email_diario",
+    "boolean",
+    "",
+    "Indica se o usuário recebe por e-mail um resumo diário com os alertas pendentes: vacinas a vencer, baias superlotadas e processos urgentes."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 57,
+  "titulo": "Dicionário de dados – tabela AuditoriaEvento",
+  "bloco_legenda": 836,
+  "blocos_tabela": [
+   837
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.1 MÓDULO 1 – USUÁRIOS E ACESSO",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do evento de auditoria."
+   ],
+   [
+    "usuario_id",
+    "uuid",
+    "FK",
+    "Usuário que executou a ação (Usuario)."
+   ],
+   [
+    "acao",
+    "AcaoAuditoria",
+    "",
+    "Tipo de ação registrada (criação, login etc.)."
+   ],
+   [
+    "entidade",
+    "varchar(100)",
+    "",
+    "Entidade afetada pela ação."
+   ],
+   [
+    "payload_antes",
+    "jsonb",
+    "",
+    "Estado do registro antes da alteração."
+   ],
+   [
+    "payload_depois",
+    "jsonb",
+    "",
+    "Estado do registro após a alteração."
+   ],
+   [
+    "ip",
+    "varchar(45)",
+    "",
+    "Endereço IP de origem da ação."
+   ],
+   [
+    "ocorreu_em",
+    "timestamp",
+    "",
+    "Data e hora da ocorrência do evento."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 58,
+  "titulo": "Dicionário de dados – tabela MotivoEntrada",
+  "bloco_legenda": 840,
+  "blocos_tabela": [
+   841
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do motivo de entrada."
+   ],
+   [
+    "nome",
+    "varchar(100)",
+    "",
+    "Descrição do motivo (resgate, denúncia etc.)."
+   ],
+   [
+    "ativo",
+    "boolean",
+    "",
+    "Indica se o motivo está disponível para uso."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 59,
+  "titulo": "Dicionário de dados – tabela TipoBaia",
+  "bloco_legenda": 843,
+  "blocos_tabela": [
+   844
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do tipo de baia."
+   ],
+   [
+    "nome",
+    "varchar(100)",
+    "",
+    "Nome do tipo (interna, externa, corredor)."
+   ],
+   [
+    "ativo",
+    "boolean",
+    "",
+    "Indica se o tipo está disponível para uso."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 60,
+  "titulo": "Dicionário de dados – tabela Baia",
+  "bloco_legenda": 846,
+  "blocos_tabela": [
+   847
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único da baia."
+   ],
+   [
+    "nome",
+    "varchar(100)",
+    "",
+    "Identificação da baia (BAIA 1–16, E1–E4, CORREDOR)."
+   ],
+   [
+    "capacidade",
+    "integer",
+    "",
+    "Número máximo de animais comportados."
+   ],
+   [
+    "finalidade",
+    "varchar(100)",
+    "",
+    "Finalidade de uso da baia."
+   ],
+   [
+    "ativa",
+    "boolean",
+    "",
+    "Indica se a baia está em uso."
+   ],
+   [
+    "observacoes",
+    "text",
+    "",
+    "Observações gerais sobre a baia."
+   ],
+   [
+    "tipo_baia_id",
+    "uuid",
+    "FK",
+    "Tipo da baia (TipoBaia)."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 61,
+  "titulo": "Dicionário de dados – tabela Sintoma",
+  "bloco_legenda": 849,
+  "blocos_tabela": [
+   850
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do sintoma."
+   ],
+   [
+    "codigo",
+    "varchar(100)",
+    "",
+    "Código padronizado do sintoma."
+   ],
+   [
+    "nome",
+    "varchar(100)",
+    "",
+    "Nome do sintoma clínico."
+   ],
+   [
+    "ativo",
+    "boolean",
+    "",
+    "Indica se o sintoma está disponível para uso."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 62,
+  "titulo": "Dicionário de dados – tabela Vacina",
+  "bloco_legenda": 852,
+  "blocos_tabela": [
+   853
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único da vacina."
+   ],
+   [
+    "codigo",
+    "varchar(100)",
+    "UQ",
+    "Código identificador da vacina."
+   ],
+   [
+    "nome",
+    "varchar(100)",
+    "",
+    "Nome comercial ou técnico da vacina."
+   ],
+   [
+    "intervalo_meses",
+    "integer",
+    "",
+    "Intervalo em meses para o reforço (base do alerta RF-A03)."
+   ],
+   [
+    "ativo",
+    "boolean",
+    "",
+    "Indica se a vacina está disponível para uso."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 63,
+  "titulo": "Dicionário de dados – tabela VacinaEspecie",
+  "bloco_legenda": 855,
+  "blocos_tabela": [
+   856
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "vacina_id",
+    "uuid",
+    "PK,FK",
+    "Vacina associada (Vacina)."
+   ],
+   [
+    "especie",
+    "Especie",
+    "PK",
+    "Espécie à qual a vacina se aplica."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 64,
+  "titulo": "Dicionário de dados – tabela TipoProcedimento",
+  "bloco_legenda": 858,
+  "blocos_tabela": [
+   859
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do tipo de procedimento."
+   ],
+   [
+    "nome",
+    "varchar(100)",
+    "",
+    "Nome do tipo de procedimento."
+   ],
+   [
+    "ativo",
+    "boolean",
+    "",
+    "Indica se o tipo está disponível para uso."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 65,
+  "titulo": "Dicionário de dados – tabela CategoriaFarmacologica",
+  "bloco_legenda": 861,
+  "blocos_tabela": [
+   862
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único da categoria."
+   ],
+   [
+    "nome",
+    "varchar(100)",
+    "UQ",
+    "Nome da categoria farmacológica."
+   ],
+   [
+    "ativo",
+    "boolean",
+    "",
+    "Indica se a categoria está disponível para uso."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 66,
+  "titulo": "Dicionário de dados – tabela Laboratorio",
+  "bloco_legenda": 864,
+  "blocos_tabela": [
+   865
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do laboratório."
+   ],
+   [
+    "nome",
+    "varchar(150)",
+    "",
+    "Nome do laboratório de destino das amostras."
+   ],
+   [
+    "tipo",
+    "varchar(50)",
+    "",
+    "Tipo/natureza do laboratório."
+   ],
+   [
+    "contato",
+    "varchar(200)",
+    "",
+    "Dados de contato do laboratório."
+   ],
+   [
+    "ativo",
+    "boolean",
+    "",
+    "Indica se o laboratório está disponível para uso."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 67,
+  "titulo": "Dicionário de dados – tabela Animal",
+  "bloco_legenda": 867,
+  "blocos_tabela": [
+   868
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do animal."
+   ],
+   [
+    "numero_medalha",
+    "varchar(50)",
+    "UQ",
+    "Número da medalha de identificação."
+   ],
+   [
+    "data_implantacao_chip",
+    "date",
+    "",
+    "Data de implantação do microchip."
+   ],
+   [
+    "numero_microchip",
+    "varchar(50)",
+    "UQ",
+    "Identificador único do animal quando informado; registrado na implantação do chip (RN01)."
+   ],
+   [
+    "peso_kg",
+    "decimal(5,2)",
+    "",
+    "Peso do animal em quilogramas."
+   ],
+   [
+    "data_nascimento_aprox",
+    "date",
+    "",
+    "Data de nascimento aproximada."
+   ],
+   [
+    "nome",
+    "varchar(100)",
+    "",
+    "Nome do animal."
+   ],
+   [
+    "foto_url",
+    "varchar(500)",
+    "",
+    "URL da foto do animal."
+   ],
+   [
+    "coloracao",
+    "varchar(100)",
+    "",
+    "Coloração da pelagem."
+   ],
+   [
+    "pelagem",
+    "varchar(100)",
+    "",
+    "Tipo de pelagem do animal."
+   ],
+   [
+    "esterilizado",
+    "boolean",
+    "",
+    "Indica se o animal foi esterilizado."
+   ],
+   [
+    "data_esterilizacao",
+    "date",
+    "",
+    "Data da esterilização."
+   ],
+   [
+    "idade_aprox",
+    "varchar(50)",
+    "",
+    "Idade aproximada registrada."
+   ],
+   [
+    "raca",
+    "varchar(100)",
+    "",
+    "Raça do animal."
+   ],
+   [
+    "sexo",
+    "Sexo",
+    "",
+    "Sexo do animal."
+   ],
+   [
+    "porte",
+    "Porte",
+    "",
+    "Porte do animal (P/M/G)."
+   ],
+   [
+    "especie",
+    "Especie",
+    "",
+    "Espécie do animal (canino, felino, quiróptero ou primata não humano)."
+   ],
+   [
+    "observacoes",
+    "text",
+    "",
+    "Observações e condições especiais."
+   ],
+   [
+    "procedencia",
+    "varchar(200)",
+    "",
+    "Procedência/origem do animal."
+   ],
+   [
+    "data_entrada",
+    "date",
+    "",
+    "Data de entrada no canil."
+   ],
+   [
+    "data_saida",
+    "date",
+    "",
+    "Data de saída do canil, registrada com o destino (RF-A05)."
+   ],
+   [
+    "status_animal",
+    "StatusAnimal",
+    "",
+    "Situação atual do animal."
+   ],
+   [
+    "motivo_entrada_id",
+    "uuid",
+    "FK",
+    "Motivo da entrada (MotivoEntrada)."
+   ],
+   [
+    "baia_id",
+    "uuid",
+    "FK",
+    "Baia onde está alojado (Baia)."
+   ],
+   [
+    "cadastrado_por",
+    "uuid",
+    "FK",
+    "Usuário que cadastrou (Usuario)."
+   ],
+   [
+    "criado_em",
+    "timestamp",
+    "",
+    "Data e hora de criação do registro."
+   ],
+   [
+    "atualizado_em",
+    "timestamp",
+    "",
+    "Data e hora da última atualização."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 68,
+  "titulo": "Dicionário de dados – tabela AnimalSintoma",
+  "bloco_legenda": 870,
+  "blocos_tabela": [
+   871
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "animal_id",
+    "uuid",
+    "PK,FK",
+    "Animal associado (Animal)."
+   ],
+   [
+    "sintoma_id",
+    "uuid",
+    "PK,FK",
+    "Sintoma apresentado (Sintoma)."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 69,
+  "titulo": "Dicionário de dados – tabela AnexoAnimal",
+  "bloco_legenda": 873,
+  "blocos_tabela": [
+   874
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do anexo."
+   ],
+   [
+    "animal_id",
+    "uuid",
+    "FK",
+    "Animal ao qual o anexo pertence (Animal)."
+   ],
+   [
+    "nome",
+    "varchar(255)",
+    "",
+    "Nome do arquivo anexado."
+   ],
+   [
+    "url",
+    "varchar(500)",
+    "",
+    "URL de armazenamento do arquivo."
+   ],
+   [
+    "tamanho_bytes",
+    "bigint",
+    "",
+    "Tamanho do arquivo em bytes."
+   ],
+   [
+    "criado_em",
+    "timestamp",
+    "",
+    "Data e hora do upload."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 70,
+  "titulo": "Dicionário de dados – tabela Vacinacao",
+  "bloco_legenda": 876,
+  "blocos_tabela": [
+   877
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único da aplicação de vacina."
+   ],
+   [
+    "animal_id",
+    "uuid",
+    "FK",
+    "Animal vacinado (Animal)."
+   ],
+   [
+    "vacina_id",
+    "uuid",
+    "FK",
+    "Vacina aplicada (Vacina)."
+   ],
+   [
+    "aplicado_por",
+    "uuid",
+    "FK",
+    "Usuário que aplicou (Usuario)."
+   ],
+   [
+    "data_aplicacao",
+    "date",
+    "",
+    "Data da aplicação."
+   ],
+   [
+    "data_validade",
+    "date",
+    "",
+    "Data de validade da dose; base do alerta de reforço (RF-A03)."
+   ],
+   [
+    "numero_dose",
+    "integer",
+    "",
+    "Número da dose aplicada."
+   ],
+   [
+    "dose_quantidade",
+    "decimal(8,3)",
+    "",
+    "Quantidade da dose."
+   ],
+   [
+    "dose_unidade",
+    "UnidadeDose",
+    "",
+    "Unidade de medida da dose."
+   ],
+   [
+    "lote",
+    "varchar(100)",
+    "",
+    "Lote da vacina aplicada."
+   ],
+   [
+    "observacoes",
+    "text",
+    "",
+    "Observações da aplicação."
+   ],
+   [
+    "criado_em",
+    "timestamp",
+    "",
+    "Data e hora de registro."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 71,
+  "titulo": "Dicionário de dados – tabela AnexoVacinacao",
+  "bloco_legenda": 879,
+  "blocos_tabela": [
+   880
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do anexo."
+   ],
+   [
+    "vacinacao_id",
+    "uuid",
+    "FK",
+    "Vacinação associada (Vacinacao)."
+   ],
+   [
+    "nome",
+    "varchar(255)",
+    "",
+    "Nome do arquivo anexado."
+   ],
+   [
+    "url",
+    "varchar(500)",
+    "",
+    "URL de armazenamento do arquivo."
+   ],
+   [
+    "tamanho_bytes",
+    "bigint",
+    "",
+    "Tamanho do arquivo em bytes."
+   ],
+   [
+    "criado_em",
+    "timestamp",
+    "",
+    "Data e hora do upload."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 72,
+  "titulo": "Dicionário de dados – tabela Procedimento",
+  "bloco_legenda": 882,
+  "blocos_tabela": [
+   883
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do procedimento."
+   ],
+   [
+    "animal_id",
+    "uuid",
+    "FK",
+    "Animal submetido ao procedimento (Animal)."
+   ],
+   [
+    "tipo_procedimento_id",
+    "uuid",
+    "FK",
+    "Tipo do procedimento (TipoProcedimento)."
+   ],
+   [
+    "executado_por",
+    "uuid",
+    "FK",
+    "Usuário que executou (Usuario)."
+   ],
+   [
+    "data",
+    "date",
+    "",
+    "Data de realização."
+   ],
+   [
+    "descricao",
+    "text",
+    "",
+    "Descrição do procedimento."
+   ],
+   [
+    "resultado",
+    "text",
+    "",
+    "Resultado obtido."
+   ],
+   [
+    "criado_em",
+    "timestamp",
+    "",
+    "Data e hora de registro."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 73,
+  "titulo": "Dicionário de dados – tabela AnexoProcedimento",
+  "bloco_legenda": 885,
+  "blocos_tabela": [
+   886
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do anexo."
+   ],
+   [
+    "procedimento_id",
+    "uuid",
+    "FK",
+    "Procedimento associado (Procedimento)."
+   ],
+   [
+    "nome",
+    "varchar(255)",
+    "",
+    "Nome do arquivo anexado."
+   ],
+   [
+    "url",
+    "varchar(500)",
+    "",
+    "URL de armazenamento do arquivo."
+   ],
+   [
+    "tamanho_bytes",
+    "bigint",
+    "",
+    "Tamanho do arquivo em bytes."
+   ],
+   [
+    "criado_em",
+    "timestamp",
+    "",
+    "Data e hora do upload."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 74,
+  "titulo": "Dicionário de dados – tabela Medicamento",
+  "bloco_legenda": 888,
+  "blocos_tabela": [
+   889
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do medicamento."
+   ],
+   [
+    "nome",
+    "varchar(100)",
+    "",
+    "Nome do medicamento."
+   ],
+   [
+    "categoria_id",
+    "uuid",
+    "FK",
+    "Categoria farmacológica (CategoriaFarmacologica)."
+   ],
+   [
+    "ativo",
+    "boolean",
+    "",
+    "Indica se o medicamento está disponível para uso."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 75,
+  "titulo": "Dicionário de dados – tabela Prescricao",
+  "bloco_legenda": 891,
+  "blocos_tabela": [
+   892
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único da prescrição."
+   ],
+   [
+    "animal_id",
+    "uuid",
+    "FK",
+    "Animal medicado (Animal)."
+   ],
+   [
+    "prescrito_por",
+    "uuid",
+    "FK",
+    "Usuário que prescreveu (Usuario)."
+   ],
+   [
+    "medicamento_id",
+    "uuid",
+    "FK",
+    "Medicamento prescrito (Medicamento)."
+   ],
+   [
+    "data_inicio",
+    "date",
+    "",
+    "Data de início do tratamento."
+   ],
+   [
+    "data_fim_prevista",
+    "date",
+    "",
+    "Data prevista de término."
+   ],
+   [
+    "data_fim_real",
+    "date",
+    "",
+    "Data real de término."
+   ],
+   [
+    "frequencia_aplicada",
+    "integer",
+    "",
+    "Frequência de aplicação."
+   ],
+   [
+    "unidade_frequencia",
+    "UnidadeFrequencia",
+    "",
+    "Unidade da frequência (horas/dias)."
+   ],
+   [
+    "dose_quantidade",
+    "decimal(8,3)",
+    "",
+    "Quantidade da dose."
+   ],
+   [
+    "dose_unidade",
+    "UnidadeDose",
+    "",
+    "Unidade de medida da dose."
+   ],
+   [
+    "via_administracao",
+    "ViaAdministracao",
+    "",
+    "Via de administração do medicamento."
+   ],
+   [
+    "status",
+    "StatusPrescricao",
+    "",
+    "Situação atual do tratamento."
+   ],
+   [
+    "criado_em",
+    "timestamp",
+    "",
+    "Data e hora de registro."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 76,
+  "titulo": "Dicionário de dados – tabela TipoExame",
+  "bloco_legenda": 894,
+  "blocos_tabela": [
+   895
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do tipo de exame."
+   ],
+   [
+    "nome",
+    "varchar(100)",
+    "UQ",
+    "Nome do tipo de exame."
+   ],
+   [
+    "ativo",
+    "boolean",
+    "",
+    "Indica se o tipo está disponível para uso."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 77,
+  "titulo": "Dicionário de dados – tabela Exame",
+  "bloco_legenda": 897,
+  "blocos_tabela": [
+   898
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do exame."
+   ],
+   [
+    "animal_id",
+    "uuid",
+    "FK",
+    "Animal examinado (Animal)."
+   ],
+   [
+    "laboratorio_id",
+    "uuid",
+    "FK",
+    "Laboratório responsável (Laboratorio)."
+   ],
+   [
+    "tipo_exame_id",
+    "uuid",
+    "FK",
+    "Tipo do exame (TipoExame)."
+   ],
+   [
+    "data_solicitacao",
+    "date",
+    "",
+    "Data de solicitação do exame."
+   ],
+   [
+    "data_resultado",
+    "date",
+    "",
+    "Data de recebimento do resultado."
+   ],
+   [
+    "resultado",
+    "text",
+    "",
+    "Resultado do exame."
+   ],
+   [
+    "criado_em",
+    "timestamp",
+    "",
+    "Data e hora de registro."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 78,
+  "titulo": "Dicionário de dados – tabela AnexoExame",
+  "bloco_legenda": 900,
+  "blocos_tabela": [
+   901
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do anexo."
+   ],
+   [
+    "exame_id",
+    "uuid",
+    "FK",
+    "Exame associado (Exame)."
+   ],
+   [
+    "nome",
+    "varchar(255)",
+    "",
+    "Nome do arquivo anexado."
+   ],
+   [
+    "url",
+    "varchar(500)",
+    "",
+    "URL de armazenamento do arquivo."
+   ],
+   [
+    "tamanho_bytes",
+    "bigint",
+    "",
+    "Tamanho do arquivo em bytes."
+   ],
+   [
+    "criado_em",
+    "timestamp",
+    "",
+    "Data e hora do upload."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 79,
+  "titulo": "Dicionário de dados – tabela Adocao",
+  "bloco_legenda": 903,
+  "blocos_tabela": [
+   904
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.2 MÓDULO 2 – GESTÃO DE ANIMAIS DO CANIL",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único da adoção."
+   ],
+   [
+    "animal_id",
+    "uuid",
+    "FK",
+    "Animal adotado (Animal)."
+   ],
+   [
+    "registrado_por",
+    "uuid",
+    "FK",
+    "Usuário que registrou a adoção (Usuario)."
+   ],
+   [
+    "adotante_nome",
+    "varchar(150)",
+    "",
+    "Nome do adotante."
+   ],
+   [
+    "adotante_cpf",
+    "varchar(14)",
+    "",
+    "CPF do adotante."
+   ],
+   [
+    "adotante_telefone",
+    "varchar(20)",
+    "",
+    "Telefone do adotante."
+   ],
+   [
+    "adotante_email",
+    "varchar(150)",
+    "",
+    "E-mail do adotante, quando houver."
+   ],
+   [
+    "adotante_cep",
+    "varchar(10)",
+    "",
+    "CEP do adotante."
+   ],
+   [
+    "adotante_endereco",
+    "varchar(255)",
+    "",
+    "Endereço do adotante."
+   ],
+   [
+    "adotante_bairro",
+    "varchar(80)",
+    "",
+    "Bairro do adotante."
+   ],
+   [
+    "data_adocao",
+    "date",
+    "",
+    "Data da adoção."
+   ],
+   [
+    "data_devolucao",
+    "date",
+    "",
+    "Data da devolução, quando houver."
+   ],
+   [
+    "motivo_devolucao",
+    "text",
+    "",
+    "Motivo da devolução, quando houver."
+   ],
+   [
+    "observacoes",
+    "text",
+    "",
+    "Observações da adoção."
+   ],
+   [
+    "criado_em",
+    "timestamp",
+    "",
+    "Data e hora de registro."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 80,
+  "titulo": "Dicionário de dados – tabela TipoOcorrencia",
+  "bloco_legenda": 907,
+  "blocos_tabela": [
+   908
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.3 MÓDULO 3 – OCORRÊNCIAS E DENÚNCIAS",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do tipo de ocorrência."
+   ],
+   [
+    "nome",
+    "varchar(100)",
+    "",
+    "Nome do tipo de ocorrência."
+   ],
+   [
+    "ativo",
+    "boolean",
+    "",
+    "Indica se o tipo está disponível para uso."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 81,
+  "titulo": "Dicionário de dados – tabela ProvidenciaTomada",
+  "bloco_legenda": 910,
+  "blocos_tabela": [
+   911
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.3 MÓDULO 3 – OCORRÊNCIAS E DENÚNCIAS",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único da providência."
+   ],
+   [
+    "nome",
+    "varchar(100)",
+    "",
+    "Descrição da providência tomada."
+   ],
+   [
+    "ativo",
+    "boolean",
+    "",
+    "Indica se a providência está disponível para uso."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 82,
+  "titulo": "Dicionário de dados – tabela Denunciante",
+  "bloco_legenda": 913,
+  "blocos_tabela": [
+   914
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.3 MÓDULO 3 – OCORRÊNCIAS E DENÚNCIAS",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do denunciante."
+   ],
+   [
+    "nome",
+    "varchar(200)",
+    "",
+    "Nome do denunciante."
+   ],
+   [
+    "cpf",
+    "varchar(14)",
+    "",
+    "CPF do denunciante."
+   ],
+   [
+    "telefone",
+    "varchar(20)",
+    "",
+    "Telefone de contato."
+   ],
+   [
+    "email",
+    "varchar(255)",
+    "",
+    "E-mail de contato."
+   ],
+   [
+    "cep",
+    "varchar(10)",
+    "",
+    "CEP do endereço residencial."
+   ],
+   [
+    "endereco",
+    "varchar(300)",
+    "",
+    "Endereço residencial."
+   ],
+   [
+    "bairro_residencial",
+    "varchar(100)",
+    "",
+    "Bairro de residência."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 83,
+  "titulo": "Dicionário de dados – tabela Denunciado",
+  "bloco_legenda": 916,
+  "blocos_tabela": [
+   917
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.3 MÓDULO 3 – OCORRÊNCIAS E DENÚNCIAS",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do denunciado."
+   ],
+   [
+    "nome",
+    "varchar(200)",
+    "",
+    "Nome do denunciado."
+   ],
+   [
+    "cpf",
+    "varchar(14)",
+    "",
+    "CPF do denunciado."
+   ],
+   [
+    "telefone",
+    "varchar(20)",
+    "",
+    "Telefone de contato."
+   ],
+   [
+    "endereco",
+    "varchar(300)",
+    "",
+    "Endereço do denunciado."
+   ],
+   [
+    "observacoes",
+    "text",
+    "",
+    "Observações sobre o denunciado."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 84,
+  "titulo": "Dicionário de dados – tabela Ocorrencia",
+  "bloco_legenda": 919,
+  "blocos_tabela": [
+   920
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.3 MÓDULO 3 – OCORRÊNCIAS E DENÚNCIAS",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único da ocorrência."
+   ],
+   [
+    "protocolo",
+    "varchar(50)",
+    "UQ",
+    "Protocolo sequencial anual 0000/AAAA (RN02)."
+   ],
+   [
+    "registrado_por",
+    "uuid",
+    "FK",
+    "Usuário que registrou (Usuario)."
+   ],
+   [
+    "tipo_ocorrencia_id",
+    "uuid",
+    "FK",
+    "Tipo da ocorrência (TipoOcorrencia)."
+   ],
+   [
+    "status_ocorrencia",
+    "StatusOcorrencia",
+    "",
+    "Situação atual da ocorrência."
+   ],
+   [
+    "providencia_tomada_id",
+    "uuid",
+    "FK",
+    "Providência no encerramento (ProvidenciaTomada)."
+   ],
+   [
+    "denunciante_id",
+    "uuid",
+    "FK",
+    "Denunciante vinculado (Denunciante)."
+   ],
+   [
+    "denunciado_id",
+    "uuid",
+    "FK",
+    "Denunciado vinculado, quando houver (Denunciado)."
+   ],
+   [
+    "data_abertura",
+    "date",
+    "",
+    "Data de abertura da ocorrência."
+   ],
+   [
+    "hora_abertura",
+    "time",
+    "",
+    "Hora de abertura."
+   ],
+   [
+    "bairro",
+    "varchar(100)",
+    "",
+    "Bairro da ocorrência."
+   ],
+   [
+    "ponto_referencia",
+    "varchar(200)",
+    "",
+    "Ponto de referência do local."
+   ],
+   [
+    "descricao",
+    "text",
+    "",
+    "Descrição da ocorrência."
+   ],
+   [
+    "urgente",
+    "boolean",
+    "",
+    "Indica prioridade de atendimento."
+   ],
+   [
+    "sigilosa",
+    "boolean",
+    "",
+    "Oculta dados do denunciante para não-Administradores (RN03)."
+   ],
+   [
+    "descricao_encerramento",
+    "text",
+    "",
+    "Descrição registrada no encerramento."
+   ],
+   [
+    "encerrada_em",
+    "timestamp",
+    "",
+    "Data e hora de encerramento."
+   ],
+   [
+    "criado_em",
+    "timestamp",
+    "",
+    "Data e hora de criação do registro."
+   ],
+   [
+    "atualizado_em",
+    "timestamp",
+    "",
+    "Data e hora da última atualização."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 85,
+  "titulo": "Dicionário de dados – tabela AnexoOcorrencia",
+  "bloco_legenda": 922,
+  "blocos_tabela": [
+   923
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.3 MÓDULO 3 – OCORRÊNCIAS E DENÚNCIAS",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do anexo."
+   ],
+   [
+    "ocorrencia_id",
+    "uuid",
+    "FK",
+    "Ocorrência associada (Ocorrencia)."
+   ],
+   [
+    "nome",
+    "varchar(255)",
+    "",
+    "Nome do arquivo anexado."
+   ],
+   [
+    "url",
+    "varchar(500)",
+    "",
+    "URL de armazenamento do arquivo."
+   ],
+   [
+    "tamanho_bytes",
+    "bigint",
+    "",
+    "Tamanho do arquivo em bytes."
+   ],
+   [
+    "criado_em",
+    "timestamp",
+    "",
+    "Data e hora do upload."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 86,
+  "titulo": "Dicionário de dados – tabela MovimentacaoOcorrencia",
+  "bloco_legenda": 925,
+  "blocos_tabela": [
+   926
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.3 MÓDULO 3 – OCORRÊNCIAS E DENÚNCIAS",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único da movimentação."
+   ],
+   [
+    "ocorrencia_id",
+    "uuid",
+    "FK",
+    "Ocorrência associada (Ocorrencia)."
+   ],
+   [
+    "usuario_id",
+    "uuid",
+    "FK",
+    "Usuário que executou a movimentação (Usuario)."
+   ],
+   [
+    "tipo_movimentacao",
+    "TipoMovimentacaoOcorrencia",
+    "",
+    "Tipo da movimentação registrada."
+   ],
+   [
+    "data",
+    "timestamp",
+    "",
+    "Data e hora da movimentação."
+   ],
+   [
+    "descricao",
+    "text",
+    "",
+    "Descrição da movimentação."
+   ],
+   [
+    "criado_em",
+    "timestamp",
+    "",
+    "Data e hora de registro."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 87,
+  "titulo": "Dicionário de dados – tabela Doenca",
+  "bloco_legenda": 929,
+  "blocos_tabela": [
+   930
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.4 MÓDULO 4 – PROCESSOS SANITÁRIOS",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único da doença."
+   ],
+   [
+    "nome",
+    "varchar(150)",
+    "",
+    "Nome da doença/zoonose."
+   ],
+   [
+    "cid",
+    "varchar(20)",
+    "",
+    "Código CID associado à doença."
+   ],
+   [
+    "ativo",
+    "boolean",
+    "",
+    "Indica se a doença está disponível para uso."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 88,
+  "titulo": "Dicionário de dados – tabela TipoDocumentoProcesso",
+  "bloco_legenda": 932,
+  "blocos_tabela": [
+   933
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.4 MÓDULO 4 – PROCESSOS SANITÁRIOS",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do tipo de documento."
+   ],
+   [
+    "nome",
+    "varchar(100)",
+    "UQ",
+    "Nome do tipo de documento."
+   ],
+   [
+    "ativo",
+    "boolean",
+    "",
+    "Indica se o tipo está disponível para uso."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 89,
+  "titulo": "Dicionário de dados – tabela ResponsavelProcesso",
+  "bloco_legenda": 935,
+  "blocos_tabela": [
+   936
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.4 MÓDULO 4 – PROCESSOS SANITÁRIOS",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do responsável."
+   ],
+   [
+    "nome",
+    "varchar(200)",
+    "",
+    "Nome do munícipe responsável pelo animal."
+   ],
+   [
+    "cpf",
+    "varchar(14)",
+    "UQ",
+    "CPF do responsável."
+   ],
+   [
+    "telefone",
+    "varchar(20)",
+    "",
+    "Telefone de contato."
+   ],
+   [
+    "email",
+    "varchar(255)",
+    "",
+    "E-mail para notificação de resultado (RN10)."
+   ],
+   [
+    "cep",
+    "varchar(10)",
+    "",
+    "CEP do endereço residencial."
+   ],
+   [
+    "endereco",
+    "varchar(300)",
+    "",
+    "Endereço residencial."
+   ],
+   [
+    "bairro_residencial",
+    "varchar(100)",
+    "",
+    "Bairro de residência."
+   ],
+   [
+    "bairro_ocorrencia",
+    "varchar(100)",
+    "",
+    "Bairro onde ocorreu a investigação."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 90,
+  "titulo": "Dicionário de dados – tabela ProcessoSanitario",
+  "bloco_legenda": 938,
+  "blocos_tabela": [
+   939
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.4 MÓDULO 4 – PROCESSOS SANITÁRIOS",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do processo sanitário."
+   ],
+   [
+    "protocolo",
+    "varchar(50)",
+    "UQ",
+    "Protocolo sequencial anual 0000/AAAA (RN02)."
+   ],
+   [
+    "criado_por",
+    "uuid",
+    "FK",
+    "Usuário que criou o processo (Usuario)."
+   ],
+   [
+    "doenca_id",
+    "uuid",
+    "FK",
+    "Doença investigada (Doenca)."
+   ],
+   [
+    "status_processo",
+    "StatusProcesso",
+    "",
+    "Situação no ciclo de vida (RN12)."
+   ],
+   [
+    "laboratorio_id",
+    "uuid",
+    "FK",
+    "Laboratório de análise (Laboratorio)."
+   ],
+   [
+    "resultado_laboratorial",
+    "ResultadoLaboratorial",
+    "",
+    "Resultado da análise laboratorial."
+   ],
+   [
+    "desfecho_animal",
+    "DesfechoAnimal",
+    "",
+    "Desfecho do animal investigado."
+   ],
+   [
+    "responsavel_id",
+    "uuid",
+    "FK",
+    "Responsável pelo animal (ResponsavelProcesso)."
+   ],
+   [
+    "ocorrencia_id",
+    "uuid",
+    "FK",
+    "Ocorrência de origem, quando houver (Ocorrencia)."
+   ],
+   [
+    "urgente",
+    "boolean",
+    "",
+    "Indica urgência epidemiológica (RN04)."
+   ],
+   [
+    "gal_numero",
+    "varchar(50)",
+    "",
+    "Número de protocolo no sistema estadual GAL."
+   ],
+   [
+    "sinan_numero",
+    "varchar(50)",
+    "",
+    "Número de notificação no SINAN."
+   ],
+   [
+    "data_abertura",
+    "date",
+    "",
+    "Data de abertura do processo."
+   ],
+   [
+    "data_envio_amostras",
+    "date",
+    "",
+    "Data de envio das amostras ao laboratório."
+   ],
+   [
+    "data_resultado",
+    "date",
+    "",
+    "Data de recebimento do resultado."
+   ],
+   [
+    "notificado_em",
+    "timestamp",
+    "",
+    "Data e hora do envio da notificação de resultado (RN10)."
+   ],
+   [
+    "previsao_retorno",
+    "date",
+    "",
+    "Previsão de retorno do resultado."
+   ],
+   [
+    "observacoes",
+    "text",
+    "",
+    "Observações gerais do processo."
+   ],
+   [
+    "criado_em",
+    "timestamp",
+    "",
+    "Data e hora de criação do registro."
+   ],
+   [
+    "atualizado_em",
+    "timestamp",
+    "",
+    "Data e hora da última atualização."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 91,
+  "titulo": "Dicionário de dados – tabela DocumentoProcesso",
+  "bloco_legenda": 941,
+  "blocos_tabela": [
+   942
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.4 MÓDULO 4 – PROCESSOS SANITÁRIOS",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do documento."
+   ],
+   [
+    "processo_id",
+    "uuid",
+    "FK",
+    "Processo associado (ProcessoSanitario)."
+   ],
+   [
+    "criado_por",
+    "uuid",
+    "FK",
+    "Usuário que gerou o documento (Usuario)."
+   ],
+   [
+    "nome",
+    "varchar(255)",
+    "",
+    "Nome do arquivo."
+   ],
+   [
+    "url",
+    "varchar(500)",
+    "",
+    "URL de armazenamento do arquivo."
+   ],
+   [
+    "tipo_id",
+    "uuid",
+    "FK",
+    "Tipo do documento (TipoDocumentoProcesso)."
+   ],
+   [
+    "tamanho_bytes",
+    "bigint",
+    "",
+    "Tamanho do arquivo em bytes."
+   ],
+   [
+    "status",
+    "StatusDocumento",
+    "",
+    "Situação da geração do documento (RN11)."
+   ],
+   [
+    "criado_em",
+    "timestamp",
+    "",
+    "Data e hora de geração."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 92,
+  "titulo": "Dicionário de dados – tabela AmostraAnimal",
+  "bloco_legenda": 944,
+  "blocos_tabela": [
+   945
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.4 MÓDULO 4 – PROCESSOS SANITÁRIOS",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único da amostra."
+   ],
+   [
+    "processo_id",
+    "uuid",
+    "FK",
+    "Processo ao qual a amostra pertence (ProcessoSanitario)."
+   ],
+   [
+    "animal_id",
+    "uuid",
+    "FK",
+    "Animal interno referenciado, quando houver (Animal)."
+   ],
+   [
+    "especie",
+    "Especie",
+    "",
+    "Espécie do animal amostrado (canino, felino, quiróptero ou primata não humano)."
+   ],
+   [
+    "sexo",
+    "Sexo",
+    "",
+    "Sexo do animal amostrado."
+   ],
+   [
+    "coloracao",
+    "varchar(100)",
+    "",
+    "Coloração da pelagem."
+   ],
+   [
+    "pelagem",
+    "varchar(100)",
+    "",
+    "Tipo de pelagem."
+   ],
+   [
+    "idade_aprox",
+    "varchar(50)",
+    "",
+    "Idade aproximada."
+   ],
+   [
+    "peso_kg",
+    "decimal(5,2)",
+    "",
+    "Peso em quilogramas."
+   ],
+   [
+    "nome_animal",
+    "varchar(100)",
+    "",
+    "Nome do animal amostrado."
+   ],
+   [
+    "status_clinico",
+    "varchar(100)",
+    "",
+    "Estado clínico observado."
+   ],
+   [
+    "raca",
+    "varchar(100)",
+    "",
+    "Raça do animal."
+   ],
+   [
+    "tipo_abrigo",
+    "TipoAbrigo",
+    "",
+    "Tipo de abrigo do animal (intradomiciliar, peridomiciliar, silvestre ou não identificado)."
+   ],
+   [
+    "material_biologico",
+    "MaterialBiologico",
+    "",
+    "Tipo de material biológico coletado."
+   ],
+   [
+    "tipo_amostra",
+    "TipoAmostra",
+    "",
+    "Forma de conservação da amostra."
+   ],
+   [
+    "data_coleta",
+    "date",
+    "",
+    "Data da coleta."
+   ],
+   [
+    "observacoes",
+    "text",
+    "",
+    "Observações da amostra."
+   ],
+   [
+    "agrediu_humano",
+    "boolean",
+    "",
+    "Indica se o animal agrediu humano."
+   ],
+   [
+    "contato_humano",
+    "boolean",
+    "",
+    "Indica contato com humano; aciona urgência (RN04/RF-B05)."
+   ],
+   [
+    "alt_comportamental",
+    "varchar(200)",
+    "",
+    "Alterações comportamentais observadas."
+   ],
+   [
+    "nivel_contato",
+    "NivelContato",
+    "",
+    "Nível de contato com humano."
+   ],
+   [
+    "criado_em",
+    "timestamp",
+    "",
+    "Data e hora de registro."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 93,
+  "titulo": "Dicionário de dados – tabela AmostraSintoma",
+  "bloco_legenda": 947,
+  "blocos_tabela": [
+   948
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.4 MÓDULO 4 – PROCESSOS SANITÁRIOS",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "amostra_id",
+    "uuid",
+    "PK, FK",
+    "Amostra (AmostraAnimal)."
+   ],
+   [
+    "sintoma_id",
+    "uuid",
+    "PK, FK",
+    "Sintoma observado na coleta (Sintoma)."
+   ]
+  ],
+  "n_colunas": 4
+ },
+ {
+  "num": 94,
+  "titulo": "Dicionário de dados – tabela RelatorioGerado",
+  "bloco_legenda": 951,
+  "blocos_tabela": [
+   952
+  ],
+  "n_tabelas": 1,
+  "fonte": "Fonte: Elaborado pelos autores com base no diagrama lógico (2026).",
+  "secao": "B.5 MÓDULO 5 – RELATÓRIOS",
+  "linhas": [
+   [
+    "Campo",
+    "Tipo",
+    "Chave",
+    "Descrição"
+   ],
+   [
+    "id",
+    "uuid",
+    "PK",
+    "Identificador único do relatório."
+   ],
+   [
+    "gerado_por",
+    "uuid",
+    "FK",
+    "Usuário solicitante (Usuario)."
+   ],
+   [
+    "tipo_relatorio",
+    "TipoRelatorio",
+    "",
+    "Tipo de relatório: ocorrências por bairro, ocupação de baias, procedimentos, adoções, anual de processos ou vacinação."
+   ],
+   [
+    "periodo_inicio",
+    "date",
+    "",
+    "Início do período de referência."
+   ],
+   [
+    "periodo_fim",
+    "date",
+    "",
+    "Fim do período de referência."
+   ],
+   [
+    "parametros_jsonb",
+    "jsonb",
+    "",
+    "Parâmetros de geração em formato JSON."
+   ],
+   [
+    "gerado_em",
+    "timestamp",
+    "",
+    "Data e hora da solicitação."
+   ],
+   [
+    "status",
+    "StatusRelatorio",
+    "",
+    "Situação do processamento (RN11)."
+   ],
+   [
+    "arquivo_url",
+    "varchar(500)",
+    "",
+    "URL do arquivo gerado, com expiração."
+   ],
+   [
+    "url_expira_em",
+    "timestamp",
+    "",
+    "Momento em que a URL do arquivo deixa de valer (RN11)."
+   ],
+   [
+    "tamanho_bytes",
+    "bigint",
+    "",
+    "Tamanho do arquivo em bytes."
+   ]
+  ],
+  "n_colunas": 4
+ }
+]

@@ -1,0 +1,5 @@
+﻿Quadro 3 – Sistemas em uso no CCZ de Itu
+Sistema;Uso no CCZ de Itu;Limitação relatada;Relação com o SISZOO
+AnimalTag;Cadastro dos animais, microchip e vacinas aplicadas;Sem baia, sem alerta automático de reforço, sem indicadores, sem ocorrências;"O SISZOO cobre essas lacunas; integração fica como trabalho futuro"
+SISSAÚDE;Consultas clínicas veterinárias;Não trata da gestão do canil nem dos processos;Fora do escopo do SISZOO (Seção 3.4)
+VivoPet;Pedidos de vacina antirrábica;Não trata da gestão do canil nem dos processos;Fora do escopo do SISZOO (Seção 3.4)

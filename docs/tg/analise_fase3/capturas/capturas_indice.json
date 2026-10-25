@@ -1,0 +1,89 @@
+{
+  "geradoEm": "2026-10-23T22:39:16.174Z",
+  "front": "http://localhost:5173",
+  "viewport": "1366x768",
+  "ids": {
+    "animal": "40000000-0000-4000-8000-000000000003",
+    "ocorrencia": "90000000-0000-4000-8000-000000000002",
+    "processo": "a0000000-0000-4000-8000-000000000001"
+  },
+  "telas": [
+    {
+      "codigo": "T14",
+      "nome": "central_relatorios",
+      "arquivo": "T14_central_relatorios.png",
+      "rota": "/relatorios",
+      "perfil": "Administrador (admin do sistema)",
+      "fullPage": false,
+      "titulo": "Relatórios",
+      "detalhe": "",
+      "erros": []
+    },
+    {
+      "codigo": "T18",
+      "nome": "relatorio_anual_processos",
+      "arquivo": "T18_relatorio_anual_processos.png",
+      "rota": "/relatorios",
+      "perfil": "Administrador (admin do sistema)",
+      "fullPage": false,
+      "titulo": "Relatórios",
+      "detalhe": "viewport rolada até o painel do relatório \"Anual de Processos\", gerado pelo botão \"Gerar Relatório\"",
+      "erros": []
+    },
+    {
+      "codigo": "T19",
+      "nome": "relatorio_vacinacao",
+      "arquivo": "T19_relatorio_vacinacao.png",
+      "rota": "/relatorios",
+      "perfil": "Administrador (admin do sistema)",
+      "fullPage": false,
+      "titulo": "Relatórios",
+      "detalhe": "viewport rolada até o painel do relatório \"Vacinação\", gerado pelo botão \"Gerar Relatório\"",
+      "erros": []
+    },
+    {
+      "codigo": "T20",
+      "nome": "relatorio_adocoes",
+      "arquivo": "T20_relatorio_adocoes.png",
+      "rota": "/relatorios",
+      "perfil": "Administrador (admin do sistema)",
+      "fullPage": false,
+      "titulo": "Relatórios",
+      "detalhe": "viewport rolada até o painel do relatório \"Adoções\", gerado pelo botão \"Gerar Relatório\"",
+      "erros": []
+    },
+    {
+      "codigo": "T21",
+      "nome": "relatorio_procedimentos",
+      "arquivo": "T21_relatorio_procedimentos.png",
+      "rota": "/relatorios",
+      "perfil": "Administrador (admin do sistema)",
+      "fullPage": false,
+      "titulo": "Relatórios",
+      "detalhe": "viewport rolada até o painel do relatório \"Procedimentos\", gerado pelo botão \"Gerar Relatório\"",
+      "erros": []
+    },
+    {
+      "codigo": "T22",
+      "nome": "relatorio_ocupacao_baias",
+      "arquivo": "T22_relatorio_ocupacao_baias.png",
+      "rota": "/relatorios",
+      "perfil": "Administrador (admin do sistema)",
+      "fullPage": false,
+      "titulo": "Relatórios",
+      "detalhe": "viewport rolada até o painel do relatório \"Ocupação de Baias\", gerado pelo botão \"Gerar Relatório\"",
+      "erros": []
+    },
+    {
+      "codigo": "T23",
+      "nome": "relatorio_ocorrencias_bairro",
+      "arquivo": "T23_relatorio_ocorrencias_bairro.png",
+      "rota": "/relatorios",
+      "perfil": "Administrador (admin do sistema)",
+      "fullPage": false,
+      "titulo": "Relatórios",
+      "detalhe": "viewport rolada até o painel do relatório \"Ocorrências por Bairro\", gerado pelo botão \"Gerar Relatório\"",
+      "erros": []
+    }
+  ]
+}

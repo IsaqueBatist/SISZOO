@@ -1,0 +1,5 @@
+﻿Quadro 54 – Dicionário de dados – tabela UsuarioCargo
+Campo;Tipo;Chave;Descrição
+usuario_id;uuid;PK,FK;Usuário vinculado (Usuario).
+cargo_id;uuid;PK,FK;Cargo atribuído (Cargo).
+adicionado_em;timestamp;;Data e hora da atribuição do cargo.

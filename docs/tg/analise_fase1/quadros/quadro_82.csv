@@ -1,0 +1,10 @@
+﻿Quadro 82 – Dicionário de dados – tabela Denunciante
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único do denunciante.
+nome;varchar(200);;Nome do denunciante.
+cpf;varchar(14);;CPF do denunciante.
+telefone;varchar(20);;Telefone de contato.
+email;varchar(255);;E-mail de contato.
+cep;varchar(10);;CEP do endereço residencial.
+endereco;varchar(300);;Endereço residencial.
+bairro_residencial;varchar(100);;Bairro de residência.

@@ -1,0 +1,12 @@
+﻿Quadro 5 – Planejamento das sprints do projeto SISZOO
+Sprint;Tema;Prazo;Issues;Principais entregas
+S0;Fundação;23/08/2026;13;Configuração do ambiente, estrutura do projeto e modelo de dados inicial.
+S1;Autenticação;30/08/2026;7;Autenticação via JWT, perfis de acesso e controle de permissões.
+S2;Animais e baias;06/09/2026;6;Cadastro de animais por microchip e gestão de baias do canil.
+S3;Histórico e alertas;13/09/2026;5;Histórico veterinário e alertas automáticos de reforço vacinal.
+S4;Ocorrências;20/09/2026;4;Registro e acompanhamento de ocorrências e denúncias.
+S5;Processos e protocolo;27/09/2026;5;Processos sanitários e geração sequencial de protocolo por ano.
+S6;Resultado e e-mail;04/10/2026;4;Registro de resultados laboratoriais e notificação por e-mail.
+S7;Dashboard;11/10/2026;4;Dashboard operacional com indicadores visuais.
+S8;Resiliência e E2E;18/10/2026;4;Robustez a falhas de rede e testes ponta a ponta (end-to-end).
+S9;Apresentação;25/10/2026;2;Ajustes finais e preparação da entrega.

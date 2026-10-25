@@ -1,0 +1,5 @@
+﻿Quadro 4 – Perfis de acesso do SISZOO
+Perfil;Atribuição no CCZ;Módulos com Acesso (RN09)
+Administrador;Direção;Todos, inclusive usuários, baias e trilha de auditoria
+Veterinário;Veterinária do canil;"Gestão de animais do canil; dashboard; baias e relatórios"
+Agente Sanitário;Processos de zoonoses e ocorrências;"Processos sanitários; ocorrências; dashboard e relatórios"

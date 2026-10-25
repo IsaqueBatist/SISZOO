@@ -1,0 +1,6 @@
+﻿Quadro 61 – Dicionário de dados – tabela Sintoma
+Campo;Tipo;Chave;Descrição
+id;uuid;PK;Identificador único do sintoma.
+codigo;varchar(100);;Código padronizado do sintoma.
+nome;varchar(100);;Nome do sintoma clínico.
+ativo;boolean;;Indica se o sintoma está disponível para uso.
