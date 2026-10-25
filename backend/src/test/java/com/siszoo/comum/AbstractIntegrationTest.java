@@ -1,6 +1,7 @@
 package com.siszoo.comum;
 
 import com.siszoo.TestcontainersConfiguration;
+import com.siszoo.comum.exception.ScaffoldExcecoesController;
 import com.siszoo.comum.exception.ScaffoldViolacaoIntegridadeController;
 import com.siszoo.comum.security.TesteProtegidoController;
 import com.siszoo.comum.security.rbac.ScaffoldCriarUsuarioController;
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.BeforeEach;
         SenhaRapidaTesteConfig.class,
         TesteProtegidoController.class,
         ScaffoldViolacaoIntegridadeController.class,
+        ScaffoldExcecoesController.class,
         ScaffoldCriarUsuarioController.class,
         ScaffoldListarUsuariosController.class
 })
