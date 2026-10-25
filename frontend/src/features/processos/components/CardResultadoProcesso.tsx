@@ -1,11 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { useQueryClient } from '@tanstack/react-query'
 import { formatarData, formatarDataHora } from '@/features/ocorrencias/utils/datas'
 import { hojeEmItu } from '@/lib/datas'
 import { mensagemDeRegraDaApi, statusHttpDoErro } from '@/lib/erroApi'
-import { buscarProcessoPorId } from '../api/processosApi'
 import {
   registrarResultadoFormSchema,
   type RegistrarResultadoFormValues,
@@ -14,6 +12,7 @@ import type { Processo, ResultadoProcessoItem } from '../types/processos.types'
 import { badgeDeResultado } from '../utils/statusBadge'
 import {
   useCatalogosProcessoQuery,
+  useReconsultarProcesso,
   useReenviarNotificacaoMutation,
   useRegistrarResultadoMutation,
 } from '../hooks/useProcessos'
@@ -147,7 +146,7 @@ export function CardResultadoProcesso({
   const [cienteDefinitivo, setCienteDefinitivo] = useState(false)
   const mutation = useRegistrarResultadoMutation(processo.id)
   const reenvioMutation = useReenviarNotificacaoMutation(processo.id)
-  const queryClient = useQueryClient()
+  const reconsultar = useReconsultarProcesso(processo.id)
   const { data: catalogos } = useCatalogosProcessoQuery()
 
   const notifica = RESULTADOS_QUE_NOTIFICAM.includes(processo.resultado?.codigo ?? '')
@@ -166,12 +165,10 @@ export function CardResultadoProcesso({
         setAcompanhandoEnvio(false)
         return
       }
-      buscarProcessoPorId(processo.id)
-        .then((atualizado) => queryClient.setQueryData(['processos', 'detalhe', processo.id], atualizado))
-        .catch(() => undefined)
+      reconsultar().catch(() => undefined)
     }, intervaloMs)
     return () => clearInterval(timer)
-  }, [aguardandoEnvio, intervaloMs, duracaoMs, processo.id, queryClient])
+  }, [aguardandoEnvio, intervaloMs, duracaoMs, reconsultar])
 
   const {
     register,
@@ -203,8 +200,7 @@ export function CardResultadoProcesso({
         // mostrar erro — se o resultado já existir, a tela vira somente
         // leitura no próximo render (sem precisar de mensagem de erro).
         try {
-          const atualizado = await buscarProcessoPorId(processo.id)
-          queryClient.setQueryData(['processos', 'detalhe', processo.id], atualizado)
+          const atualizado = await reconsultar()
           if (atualizado.resultado) return
         } catch {
           // Mantém o fluxo de erro abaixo se nem o refetch funcionar.

@@ -1,3 +1,4 @@
+import { useCallback } from 'react'
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import {
   avancarStatusProcesso,
@@ -35,6 +36,18 @@ export function useProcessoQuery(id: string | undefined) {
     queryFn: () => buscarProcessoPorId(id as string),
     enabled: Boolean(id),
   })
+}
+
+// Relê o detalhe direto do servidor e grava no cache, sem invalidar nada. Para
+// o acompanhamento do envio da notificação e para conferir, depois de um 422,
+// se a escrita anterior chegou. Estável (useCallback): entra em deps de efeito.
+export function useReconsultarProcesso(id: string) {
+  const queryClient = useQueryClient()
+  return useCallback(async () => {
+    const atualizado = await buscarProcessoPorId(id)
+    queryClient.setQueryData(chaveDetalhe(id), atualizado)
+    return atualizado
+  }, [id, queryClient])
 }
 
 export function useCatalogosProcessoQuery() {
