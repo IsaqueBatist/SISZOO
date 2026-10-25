@@ -1,8 +1,8 @@
 import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { AuthProvider, SESSION_STORAGE_KEY } from './AuthContext'
 import { useAuth } from './useAuth'
 import { CREDENCIAIS_VALIDAS } from '@/mocks/handlers'
@@ -97,5 +97,42 @@ describe('AuthContext', () => {
 
     expect(await screen.findByText('Tela de login')).toBeInTheDocument()
     expect(sessionStorage.getItem(SESSION_STORAGE_KEY)).toBeNull()
+  })
+
+  // T45: o AuthProvider re-renderiza a cada navegação (useNavigate); com o
+  // value memoizado, quem só lê o contexto não re-renderiza junto.
+  it('não re-renderiza quem lê o contexto quando só a rota muda', async () => {
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario: USUARIO_EXEMPLO }))
+    const aoRenderizar = vi.fn()
+    function LeitorDoContexto() {
+      const { user } = useAuth()
+      aoRenderizar()
+      return <span>{user?.email}</span>
+    }
+    function Navegar() {
+      const navigate = useNavigate()
+      return <button onClick={() => navigate('/outra')}>navegar</button>
+    }
+
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <MemoryRouter initialEntries={['/inicio']}>
+          <AuthProvider>
+            <LeitorDoContexto />
+            <Navegar />
+            <Routes>
+              <Route path="/inicio" element={<div>Início</div>} />
+              <Route path="/outra" element={<div>Outra</div>} />
+            </Routes>
+          </AuthProvider>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+    const rendersAntes = aoRenderizar.mock.calls.length
+
+    await userEvent.setup().click(screen.getByRole('button', { name: 'navegar' }))
+
+    expect(await screen.findByText('Outra')).toBeInTheDocument()
+    expect(aoRenderizar).toHaveBeenCalledTimes(rendersAntes)
   })
 })

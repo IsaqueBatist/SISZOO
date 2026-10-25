@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import {
   avancarStatusProcesso,
   buscarCatalogosProcesso,
@@ -46,14 +46,20 @@ export function useCatalogosProcessoQuery() {
 }
 
 // O detalhe recebe a resposta gravada pelo servidor; listagens de processos e
-// ocorrências são invalidadas (a ocorrência vinculada ganha o processo e pode
-// passar a urgente, D31).
+// listagem e detalhes de ocorrências são invalidados (a ocorrência vinculada
+// ganha o processo e pode passar a urgente, D31). Catálogos (staleTime
+// Infinity) e a contagem por bairro não mudam com processo e ficam de fora (T45).
+function invalidarOcorrenciasAfetadas(queryClient: QueryClient) {
+  void queryClient.invalidateQueries({ queryKey: ['ocorrencias', 'lista'] })
+  void queryClient.invalidateQueries({ queryKey: ['ocorrencias', 'detalhe'] })
+}
+
 function useAtualizarCacheDoProcesso() {
   const queryClient = useQueryClient()
   return (processo: Processo) => {
     queryClient.setQueryData(chaveDetalhe(processo.id), processo)
     void queryClient.invalidateQueries({ queryKey: ['processos', 'lista'] })
-    void queryClient.invalidateQueries({ queryKey: ['ocorrencias'] })
+    invalidarOcorrenciasAfetadas(queryClient)
   }
 }
 
@@ -101,8 +107,9 @@ export function useVincularOcorrenciaMutation(processoId: string) {
   return useMutation({
     mutationFn: (ocorrenciaId: string) => vincularOcorrencia(processoId, ocorrenciaId),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['processos'] })
-      void queryClient.invalidateQueries({ queryKey: ['ocorrencias'] })
+      void queryClient.invalidateQueries({ queryKey: ['processos', 'lista'] })
+      void queryClient.invalidateQueries({ queryKey: ['processos', 'detalhe'] })
+      invalidarOcorrenciasAfetadas(queryClient)
     },
   })
 }

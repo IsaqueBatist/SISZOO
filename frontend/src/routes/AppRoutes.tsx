@@ -1,7 +1,6 @@
 import { Suspense, lazy } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from '../components/layout/Layout'
-import { Login } from '@/features/auth/components/Login'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { EmConstrucao } from '../pages/EmConstrucao'
 import { RotaAdmin } from './RotaAdmin'
@@ -13,10 +12,12 @@ import { RotaLeituraOcorrencias } from './RotaLeituraOcorrencias'
 import { RotaProtegida } from './RotaProtegida'
 import { RouteErrorBoundary } from './RouteErrorBoundary'
 
-// Code-splitting por rota (máquinas do CCZ têm ~2GB RAM):
-// só as telas atrás de login, carregadas sob demanda. Login fica fora porque
-// é a primeira tela de toda sessão — lazy nela só adicionaria uma
-// ida à rede sem reduzir o que precisa carregar de qualquer forma.
+// Code-splitting por rota (máquinas do CCZ têm ~2GB RAM): todas as telas,
+// carregadas sob demanda. T45: o Login também — eager, ele levava zod,
+// react-hook-form e o resolver (~48 KB gzip, cerca de 1/3 do carregamento
+// inicial) para toda recarga de tela já autenticada, que nunca o mostra. Na
+// primeira visita custa só mais um arquivo, baixado junto com o resto.
+const Login = lazy(() => import('@/features/auth/components/Login').then((m) => ({ default: m.Login })))
 const TrocarSenha = lazy(() =>
   import('@/features/auth/components/TrocarSenha').then((m) => ({ default: m.TrocarSenha })),
 )

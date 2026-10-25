@@ -25,7 +25,8 @@ describe('roteamento entre login e dashboard', () => {
     const user = userEvent.setup()
     renderApp()
 
-    expect(screen.getByLabelText(/e-mail institucional/i)).toBeInTheDocument()
+    // Login é lazy (T45): o formulário aparece quando o chunk carrega.
+    expect(await screen.findByLabelText(/e-mail institucional/i)).toBeInTheDocument()
 
     await user.type(screen.getByLabelText(/e-mail institucional/i), CREDENCIAIS_VALIDAS.email)
     await user.type(screen.getByLabelText(/^senha/i), CREDENCIAIS_VALIDAS.senha)
@@ -41,7 +42,7 @@ describe('roteamento entre login e dashboard', () => {
     const user = userEvent.setup()
     renderApp()
 
-    await user.type(screen.getByLabelText(/e-mail institucional/i), CREDENCIAIS_VALIDAS.email)
+    await user.type(await screen.findByLabelText(/e-mail institucional/i), CREDENCIAIS_VALIDAS.email)
     await user.type(screen.getByLabelText(/^senha/i), 'senha-errada')
     await user.click(screen.getByRole('button', { name: /^entrar$/i }))
 
