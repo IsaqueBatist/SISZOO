@@ -116,6 +116,15 @@ spring:
   config:
     activate:
       on-profile: test
+  # Os *IT compartilham um PostgreSQL (um database por contexto em cache,
+  # TestcontainersConfiguration). O maximo do pool continua o padrao (10,
+  # usado pelos testes de concorrencia); so as conexoes ociosas dos contextos
+  # fora de uso sao devolvidas, para o servidor nao carregar ~120 backends
+  # parados enquanto os testes de migracao rodam DDL.
+  datasource:
+    hikari:
+      minimum-idle: 0
+      idle-timeout: 10000 # ms (minimo aceito pelo Hikari)
   jpa:
     hibernate:
       ddl-auto: validate

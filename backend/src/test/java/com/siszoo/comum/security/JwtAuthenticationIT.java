@@ -7,7 +7,6 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.siszoo.comum.AbstractIntegrationTest;
@@ -21,7 +20,6 @@ import com.siszoo.usuarios.repository.UsuarioRepository;
 
 import io.restassured.http.ContentType;
 
-@Import(TesteProtegidoController.class)
 class JwtAuthenticationIT extends AbstractIntegrationTest {
 
     private static final UUID CARGO_ADMINISTRADOR_ID = UUID.fromString("00000000-0000-4000-8000-000000000001");

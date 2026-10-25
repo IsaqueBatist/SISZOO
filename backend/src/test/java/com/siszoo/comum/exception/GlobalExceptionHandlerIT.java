@@ -12,14 +12,12 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
 
 import com.siszoo.comum.AbstractIntegrationTest;
 import com.siszoo.comum.ApiTesteFixture;
 
 import io.restassured.response.Response;
 
-@Import(ScaffoldViolacaoIntegridadeController.class)
 class GlobalExceptionHandlerIT extends AbstractIntegrationTest {
 
     private static final String EMAIL_ADMIN = "teste.admin.erros@itu.sp.gov.br";
