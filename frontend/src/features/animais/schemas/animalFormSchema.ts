@@ -99,3 +99,25 @@ export const animalFormSchema = z.object({
 })
 
 export type AnimalFormValues = z.infer<typeof animalFormSchema>
+
+// Schema de UI: troca `esterilizado: boolean` (campo real do DTO) por
+// `castracaoOpcao` (os 3 cartões do protótipo) — a conversão para o DTO
+// acontece só no submit, via castracaoParaEsterilizado. Mantém o
+// animalFormSchema original intacto (é o contrato espelhado do backend,
+// usado/citado em outros lugares).
+export const animalFormUiSchema = animalFormSchema
+  .omit({ esterilizado: true })
+  .extend({
+    castracaoOpcao: z.enum(['nao_castrado', 'orquiectomia', 'osh']),
+  })
+  // Mesma regra do AnimalService: o animal não nasce depois de entrar no CCZ.
+  .superRefine((dados, ctx) => {
+    if (dados.dataNascimentoAprox && dados.dataEntrada && dados.dataNascimentoAprox > dados.dataEntrada) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['dataNascimentoAprox'],
+        message: 'A data de nascimento não pode ser posterior à data de entrada.',
+      })
+    }
+  })
+export type AnimalFormUiValues = z.infer<typeof animalFormUiSchema>
