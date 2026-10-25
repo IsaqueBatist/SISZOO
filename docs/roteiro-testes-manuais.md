@@ -16,42 +16,53 @@ Legenda: **[UI]** navegador · **[API]** PowerShell · **[DB]** psql · ☐ marq
 
 ## 0. Preparação
 
-Suba o ambiente e semeie os dados de teste. O seed precisa do **backend no ar**: as vacinações vão pela API, e é o backend que calcula a ficha completa.
+Suba o banco e o backend com o **seed de dados fictícios** (`com.siszoo.seed`, README "Dados fictícios"). O seed roda no backend local com os perfis `dev,seed` — no `docker` ele recusa a subida — e chama os services reais: regras, protocolos, ficha completa e auditoria são os da aplicação. Ele só aceita um banco **vazio** (ou já semeado por ele): use um database próprio para não misturar com dados seus.
 
 ```powershell
-docker compose up -d --build   # banco, backend (aplica as migrations) e frontend
-npm install
-npm run db:seed                 # idempotente: rodar de novo não insere nada
-npm run test:seed               # confere a ficha completa de todos os animais
+docker compose up -d db                                  # só o Postgres (o backend do compose usa o perfil docker)
+docker exec siszoo-db-1 createdb -U postgres siszoo_seed  # database novo e vazio para o seed
+cd backend
+$env:DB_URL = "jdbc:postgresql://localhost:5432/siszoo_seed"; $env:DB_USER = "postgres"; $env:DB_PASSWORD = "postgres"
+$env:JWT_SECRET = "<chave de 32+ bytes: openssl rand -base64 48>"
+$env:ADMIN_SEED_EMAIL = "admin.sistema@itu.sp.gov.br"; $env:ADMIN_SEED_PASSWORD = "Ccz-Dev-Itu-2026"
+$env:SISZOO_SEED_HABILITADO = "true"
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=dev,seed"   # aplica as migrations e semeia na subida
+# em outro terminal: cd frontend; npm run dev  (http://localhost:5173)
 ```
 
-Um banco semeado por uma versão anterior do seed (que gravava `ficha_completa` = "tem microchip") tinha animais "completos" sem vacina. Rodar `npm run db:seed` de novo corrige esses animais pela API (`ficha_corrigida_do_seed_anterior` na saída; na execução seguinte, 0). Detalhes em `docs/decisoes/ficha-completa-seed-fuso.md`.
+☐ No log do backend: *"Seed de dados ficticios concluido (criados/existentes por entidade: ...)"*. Reiniciar o backend roda o seed de novo e ele não cria nada (`=0/N` em todas as entidades).
 
-☐ Conferir migrations: `docker exec siszoo-db-1 psql -U postgres -d siszoo -c "select version, success from flyway_schema_history order by installed_rank desc limit 5;"` → 18, 17, 16, 15, 14 todos `t`.
+☐ Conferir migrations: `Sql "select version, success from flyway_schema_history order by installed_rank desc limit 5;"` → as 5 últimas versões, todas `t`.
 
-**Usuários** (senha `Teste@123`), front em http://localhost:5173:
+**Usuários** (senha única **`Ficticio#2026`**, todos fictícios):
 
-| Perfil | E-mail |
-|---|---|
-| Admin | `ana.admin.teste@itu.sp.gov.br` |
-| Veterinário | `bruno.veterinario.teste@itu.sp.gov.br` |
-| Agente | `diego.agente.teste@itu.sp.gov.br` |
+| Perfil | E-mail | Observação |
+|---|---|---|
+| Admin | `marta.siqueira.seed@itu.sp.gov.br` | |
+| Veterinário | `renato.albuquerque.seed@itu.sp.gov.br`, `camila.prado.seed@itu.sp.gov.br` | |
+| Veterinário | `helena.duarte.seed@itu.sp.gov.br` | primeiro acesso: o login pede a troca de senha |
+| Agente | `paulo.teixeira.seed@itu.sp.gov.br`, `juliana.moreira.seed@itu.sp.gov.br`, `rafael.campos.seed@itu.sp.gov.br` | |
+| Agente | `sergio.lacerda.seed@itu.sp.gov.br` | desativado: o login responde 401 |
 
 **Atalhos de API** (cole uma vez no PowerShell):
 
 ```powershell
-$API = "http://localhost:8080/api"
-function Login($email) { (Invoke-RestMethod -Method Post "$API/auth/login" -ContentType "application/json" -Body (@{email=$email; senha="Teste@123"} | ConvertTo-Json)).token }
+$API = "http://localhost:8080/api"; $DB = "siszoo_seed"
+function Login($email) { (Invoke-RestMethod -Method Post "$API/auth/login" -ContentType "application/json" -Body (@{email=$email; senha="Ficticio#2026"} | ConvertTo-Json)).token }
 function Api($metodo, $caminho, $corpo = $null, $tok = $ADM) {
   $p = @{ Method = $metodo; Uri = "$API$caminho"; Headers = @{ Authorization = "Bearer $tok" } }
   if ($corpo) { $p.ContentType = "application/json; charset=utf-8"; $p.Body = [Text.Encoding]::UTF8.GetBytes(($corpo | ConvertTo-Json -Depth 6)) }
   try { Invoke-RestMethod @p | ConvertTo-Json -Depth 6 } catch { "HTTP $($_.Exception.Response.StatusCode.value__): $($_.ErrorDetails.Message)" }
 }
-function Sql($q) { docker exec siszoo-db-1 psql -U postgres -d siszoo -c $q }
-$ADM = Login "ana.admin.teste@itu.sp.gov.br"; $VET = Login "bruno.veterinario.teste@itu.sp.gov.br"; $AGE = Login "diego.agente.teste@itu.sp.gov.br"
+function Sql($q) { docker exec siszoo-db-1 psql -U postgres -d $DB -c $q }
+# Id de um registro do seed pela chave estável (ex.: Seed "baia:03", Seed "animal:020").
+function Seed($chave) { (docker exec siszoo-db-1 psql -U postgres -d $DB -tAc "select entidade_id from seed_controle where chave = '$chave'").Trim() }
+$ADM = Login "marta.siqueira.seed@itu.sp.gov.br"; $VET = Login "renato.albuquerque.seed@itu.sp.gov.br"; $AGE = Login "paulo.teixeira.seed@itu.sp.gov.br"
 ```
 
-> **Dados do seed que os testes abaixo usam:** a Baia 01 tem capacidade 2 e 3 animais (o seed grava direto no banco, sem a regra de vaga); as Baias 07 e 08 estão cheias; a Baia 04 está vazia (cap. 2). Apolo, Rocky, Bolt, Frajola e Chico têm microchip e nenhuma vacina, então a ficha deles é **incompleta**.
+> **Dados do seed que os testes abaixo usam:** Canil Externo B1 (`baia:03`) está **cheio** (2/2, alerta de superlotação); Canil A2 (`baia:02`) tem 3/4; Quarentena Q1 (`baia:05`) tem 1 vaga (2/3); Canil C9 (`baia:06`) está vazio e **inativo**. **Pandora** (`animal:020`) tem microchip e nenhuma vacina, então a ficha dela é **incompleta**; **Amora** (`animal:015`) não tem microchip. As datas são relativas ao dia em que o seed rodou pela primeira vez (ver "Datas" no README).
+>
+> Limitação conhecida: o "Tempo médio (h)" do relatório Ocorrências por Bairro fica ≈0 h para as ocorrências encerradas pelo seed (o registro e o encerramento são gravados com o horário real, no mesmo momento); ele só fica realista para ocorrências encerradas pela tela em dias posteriores.
 
 ---
 
@@ -115,13 +126,13 @@ Todos os comandos vão dentro de `begin; … rollback;`: se algum trigger falhar
 
 ### 2.1 Autor da auditoria de usuário (AR-1) [UI + DB]
 1. ☐ Como Admin, Usuários → criar um usuário novo (e-mail só letras/ponto `@itu.sp.gov.br`), depois desativar e reativar.
-2. ☐ `Sql "select acao, usuario_id, entidade_id, criado_em from auditoria_evento order by criado_em desc limit 3;"` → `usuario_id` é o **id da Ana** (`10000000-0000-4000-8000-000000000001`), `entidade_id` é o usuário criado.
+2. ☐ `Sql "select acao, usuario_id, entidade_id, ocorreu_em from auditoria_evento order by ocorreu_em desc limit 3;"` → `usuario_id` é o **id da Marta** (`Seed "usuario:admin"`), `entidade_id` é o usuário criado.
 
 ### 2.2 Token de usuário desativado (AR-4) [UI]
-1. ☐ Em uma janela anônima, logar como **Diego (agente)** e deixar aberto.
-2. ☐ Na janela normal, como Admin, **desativar** o Diego.
-3. ☐ Na janela do Diego, navegar/recarregar → volta ao login (401). Pela API: `Api GET "/usuarios/me" $null $AGE` → **401**.
-4. ☐ **Reativar o Diego** e gerar o token de novo (`$AGE = Login "diego.agente.teste@itu.sp.gov.br"`).
+1. ☐ Em uma janela anônima, logar como **Paulo (agente)** e deixar aberto.
+2. ☐ Na janela normal, como Admin, **desativar** o Paulo.
+3. ☐ Na janela do Paulo, navegar/recarregar → volta ao login (401). Pela API: `Api GET "/usuarios/me" $null $AGE` → **401**.
+4. ☐ **Reativar o Paulo** e gerar o token de novo (`$AGE = Login "paulo.teixeira.seed@itu.sp.gov.br"`).
 
 ### 2.3 Sigilo do denunciante nas mutações (AR-2/AR-3) [UI + DevTools]
 1. ☐ Como Admin, criar uma **ocorrência sigilosa** com denunciante preenchido.
@@ -171,24 +182,25 @@ Api POST "/animais" @{nome="Teste"; especie="canino"; sexo="macho"; status="em_q
 ☐ Permissão vem antes da validação: `Api POST "/animais" @{} $AGE` (Agente só lê animais) → **403** "Acesso negado"; o mesmo corpo vazio com `$ADM` → **422** "Dados invalidos"; sem token → **401**. Antes, o Agente recebia 422.
 
 ### 3.2 Baia ativa e com vaga (RN-AN02/AN03) [UI + API]
-- ☐ Cadastro: Baias 07 e 08 (cheias) e Baia 01 (3/2) aparecem como **"(superlotada)"** e desabilitadas.
-- ☐ API: `Api POST "/animais" @{...mesmo corpo válido...; baiaId="30000000-0000-4000-8000-000000000007"}` → **409** *"Baia informada ja atingiu a capacidade"*.
-- ☐ **Quem já está na baia não é barrado**: editar um animal da Baia 01 (que está 3/2) mudando só o peso/observação → salva normalmente.
-- ☐ Gestão de Baias: desativar a Baia 04 → cadastro de animal na Baia 04 pela API → **409** *"Baia informada esta inativa"*. Reativar depois.
-- ☐ Volta à custódia: um animal da Baia 07 → mudar status para **adotado** (salva) → baia 07 fica com vaga → ocupe a vaga com outro animal → volte o primeiro para **em_quarentena** na mesma baia → **409**.
+- ☐ Cadastro: Canil Externo B1 (2/2) aparece como **"(superlotada)"** e desabilitado; Canil C9 (inativo) não aparece.
+- ☐ API: `Api POST "/animais" @{...mesmo corpo válido...; baiaId=(Seed "baia:03")}` → **409** *"Baia informada ja atingiu a capacidade"*.
+- ☐ **Quem já está na baia não é barrado**: editar o Trovão (`animal:019`, Canil Externo B1, que está cheio) mudando só o peso/observação → salva normalmente.
+- ☐ Gestão de Baias: com o Canil C9 inativo, cadastro de animal nele pela API (`baiaId=(Seed "baia:06")`) → **409** *"Baia informada esta inativa"*.
+- ☐ Volta à custódia: o Trovão (Canil Externo B1) → mudar status para **adotado** (salva) → o B1 fica com vaga → ocupe a vaga com outro animal → volte o Trovão para **em_quarentena** no B1 → **409**.
 - ☐ Animal com status fora da custódia (adotado/óbito/transferido) cadastrado numa baia cheia → **aceito** (não ocupa vaga).
-- ☐ (Opcional, concorrência) 4 cadastros simultâneos na Baia 04 com 1 vaga só:
+- ☐ (Opcional, concorrência) 4 cadastros simultâneos na Quarentena Q1, que tem 1 vaga:
   ```powershell
-  1..4 | ForEach-Object { Start-Job -ArgumentList $ADM,$_ -ScriptBlock { param($t,$i)
-    $b = @{nome="Corrida$i"; especie="canino"; sexo="macho"; status="em_quarentena"; motivoEntrada="resgate"; dataEntrada="2026-10-19T10:00:00"; esterilizado=$false; baiaId="30000000-0000-4000-8000-000000000004"} | ConvertTo-Json
+  $Q1 = Seed "baia:05"
+  1..4 | ForEach-Object { Start-Job -ArgumentList $ADM,$_,$Q1 -ScriptBlock { param($t,$i,$baia)
+    $b = @{nome="Corrida$i"; especie="canino"; sexo="macho"; status="em_quarentena"; motivoEntrada="resgate"; dataEntrada="2026-10-19T10:00:00"; esterilizado=$false; baiaId=$baia} | ConvertTo-Json
     try { Invoke-RestMethod -Method Post "http://localhost:8080/api/animais" -Headers @{Authorization="Bearer $t"} -ContentType "application/json" -Body $b | Out-Null; "ok" } catch { $_.Exception.Response.StatusCode.value__ } } } | Wait-Job | Receive-Job
   ```
-  (deixe a Baia 04 com 1 vaga antes) → exatamente **1 ok** e o resto **409**.
+  → exatamente **1 ok** e o resto **409**.
 
 ### 3.3 Ficha completa (RN-AN04/V18) [UI + API]
 O subtítulo da ficha do animal mostra **"Ficha completa"** ou **"Ficha incompleta"** (em destaque) conforme `fichaCompleta` da API. Para conferir o valor cru: `Api GET "/animais/<id>"`.
-- ☐ **Apolo** (microchip, sem vacina) → subtítulo **"Ficha incompleta"**.
-- ☐ Registrar uma vacina no Apolo e recarregar → **"Ficha completa"**.
+- ☐ **Pandora** (`animal:020`, microchip, sem vacina) → subtítulo **"Ficha incompleta"**.
+- ☐ Registrar uma vacina na Pandora e recarregar → **"Ficha completa"**.
 - ☐ Cadastrar animal novo **com** microchip e sem vacina → **"Ficha incompleta"**.
 - ☐ Animal **sem** microchip com vacina → **"Ficha incompleta"**.
 

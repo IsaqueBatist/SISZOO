@@ -153,6 +153,7 @@ class AnimaisSeed {
                     .status("em_tratamento").em(BaiasSeed.CANIL_A2).obs("Chegou com ferida no membro anterior."),
             canino(19, "Trovão", "macho").cor("Cinza").porte("grande").idade("5 anos").entrada(380).chip()
                     .castrado(360).em(BaiasSeed.CANIL_EXTERNO_B1).medalha(),
+            // Microchip sem vacina: ficha incompleta ate a primeira vacina (roteiro 3.3).
             canino(20, "Pandora", "femea").cor("Preta").longa().porte("grande").idade("3 anos").entrada(140).chip()
                     .motivo("abandono").em(BaiasSeed.CANIL_EXTERNO_B1),
             felino(21, "Salem", "macho").cor("Preta").idade("4 anos").entrada(210).chip().castrado(190)
@@ -236,7 +237,6 @@ class AnimaisSeed {
             new Vacina(17, 1, "v10", 100, null, "V10-2026-005"),
             new Vacina(18, 1, "v10", 45, null, "V10-2026-021"),
             new Vacina(19, 1, "v8", 0, 6, "V8-2025-011"), new Vacina(19, 2, "antirrabica", 360, null, "ARB-2025-090"),
-            new Vacina(20, 1, "v10", 130, null, "V10-2026-002"),
             new Vacina(21, 1, "v4_felinos", 200, null, "L2026-004"), new Vacina(21, 2, "antirrabica", 200, null, "ARB-2025-129"),
             new Vacina(22, 1, "v4_felinos", 150, null, "V4F-2026-001"), new Vacina(22, 2, "felv", 150, null, "FLV-2026-001"),
             new Vacina(23, 1, "v4_felinos", 60, null, "V4F-2026-009"),

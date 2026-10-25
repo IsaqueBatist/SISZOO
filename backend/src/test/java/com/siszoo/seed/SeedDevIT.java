@@ -106,6 +106,7 @@ class SeedDevIT extends AbstractIntegrationTest {
         assertThat(fichaCompleta(12)).isTrue();
         assertThat(fichaCompleta(15)).isFalse();
         assertThat(fichaCompleta(18)).isTrue();
+        assertThat(fichaCompleta(20)).isFalse();
 
         // Senha trocada pela AuthService (sem primeiro acesso), exceto o usuario
         // de primeiro acesso; o agente inativo continua inativo.

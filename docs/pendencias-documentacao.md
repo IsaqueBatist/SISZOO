@@ -9,8 +9,6 @@ Notas de divergências entre o código real e os documentos de modelagem, regist
   Os autores decidem a substituição no `.docx`.
 - **Folha de aprovação** do TG não inserida (NBR 14724) — decisão dos autores em 23/10/2026.
 - **Quadros e figuras não citados** no texto do TG antes de aparecerem (achados F1-053/F1-054).
-- **Seed oficial** (`scripts/seed-test-data.mjs`) cria ocorrências encerradas antes da abertura: o relatório
-  "Ocorrências por Bairro" mostra tempo médio negativo (`docs/tg/analise_fase3/relatorio_fase4.md` P4-06).
 - **V28 (`animal.foto_miniatura`, T45)** consta no cabeçalho de estado do `DER.md` e no DBML do módulo 2, mas a regra de
   geração da miniatura ainda não está descrita em §3.2.
 - **`usuario.dois_fatores_ativo`** existe no schema e não é usado pela aplicação (reservado); decidir remover em
@@ -21,6 +19,11 @@ Notas de divergências entre o código real e os documentos de modelagem, regist
   deve ser registrada aqui ou em `decisoes/` quando os autores a identificarem.
 
 ## Resolvidas
+
+- **Seed oficial criava ocorrências encerradas antes da abertura** (tempo médio negativo no relatório "Ocorrências por
+  Bairro", `docs/tg/analise_fase3/relatorio_fase4.md` P4-06) — o `scripts/seed-test-data.mjs` foi substituído em
+  25/10/2026 pelo seed Java (`com.siszoo.seed`), que encerra pelo `OcorrenciaService` com o Clock: o encerramento nunca é
+  anterior ao registro (`docs/decisoes/seed-dev.md`).
 
 - **`AcaoAuditoria` sem `VISUALIZACAO` no DBML** — resolvida na T43 (`VISUALIZACAO`, `ACESSO_NEGADO`, `entidade_id`).
 - **DBML dos módulos 2–5 desatualizados** (enums `EM_ANDAMENTO`, `StatusRelatorio`, `Sexo FÊMEA`, `numero_microchip`,
