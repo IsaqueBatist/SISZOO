@@ -36,7 +36,6 @@ import com.siszoo.ocorrencias.entity.Ocorrencia;
 import com.siszoo.ocorrencias.entity.TipoOcorrencia;
 import com.siszoo.ocorrencias.exception.NomeDenuncianteObrigatorioException;
 import com.siszoo.ocorrencias.mapper.OcorrenciaMapper;
-import com.siszoo.ocorrencias.repository.AnexoOcorrenciaConteudoRepository;
 import com.siszoo.ocorrencias.repository.AnexoOcorrenciaRepository;
 import com.siszoo.ocorrencias.repository.DenunciadoRepository;
 import com.siszoo.ocorrencias.repository.DenuncianteRepository;
@@ -65,7 +64,6 @@ class OcorrenciaServiceTest {
     @Mock private DenunciadoRepository denunciadoRepository;
     @Mock private MovimentacaoOcorrenciaRepository movimentacaoRepository;
     @Mock private AnexoOcorrenciaRepository anexoRepository;
-    @Mock private AnexoOcorrenciaConteudoRepository anexoConteudoRepository;
     @Mock private ProcessoSanitarioRepository processoRepository;
     @Mock private UsuarioRepository usuarioRepository;
     @Mock private ProtocoloService protocoloService;
@@ -83,10 +81,11 @@ class OcorrenciaServiceTest {
     @BeforeEach
     void criarService() {
         Clock clock = Clock.fixed(Instant.parse("2026-09-10T15:00:00Z"), ZoneId.of("America/Sao_Paulo"));
+        MontadorRespostaOcorrencia montador = new MontadorRespostaOcorrencia(mapper, denuncianteRepository,
+                denunciadoRepository, processoRepository, movimentacaoRepository, anexoRepository);
         service = new OcorrenciaService(ocorrenciaRepository, tipoOcorrenciaRepository, providenciaTomadaRepository,
-                denuncianteRepository, denunciadoRepository, movimentacaoRepository, anexoRepository,
-                anexoConteudoRepository, processoRepository, usuarioRepository, protocoloService, mapper,
-                auditoriaEventoService, clock);
+                denuncianteRepository, denunciadoRepository, movimentacaoRepository, processoRepository,
+                usuarioRepository, protocoloService, mapper, montador, auditoriaEventoService, clock);
 
         TipoOcorrencia tipo = new TipoOcorrencia();
         tipo.setCodigo("zoonose");

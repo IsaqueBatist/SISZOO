@@ -37,21 +37,29 @@ import com.siszoo.ocorrencias.dto.OcorrenciaResumoResponse;
 import com.siszoo.ocorrencias.dto.QuantidadePorBairroResponse;
 import com.siszoo.ocorrencias.dto.VincularProcessoRequest;
 import com.siszoo.ocorrencias.entity.StatusOcorrencia;
+import com.siszoo.ocorrencias.service.AnexoOcorrenciaService;
+import com.siszoo.ocorrencias.service.OcorrenciaConsultaService;
 import com.siszoo.ocorrencias.service.OcorrenciaService;
 import com.siszoo.ocorrencias.service.PermissoesOcorrencia;
 
 import jakarta.validation.Valid;
 
 // Sem @DeleteMapping de proposito: nao ha exclusao de ocorrencia (D8); o
-// Spring MVC responde 405 para DELETE nesta rota.
+// Spring MVC responde 405 para DELETE nesta rota. Sem @Transactional: cada
+// service abre a transacao mais externa (T43-6, baixarAnexo).
 @RestController
 @RequestMapping("/api/ocorrencias")
 public class OcorrenciaController {
 
     private final OcorrenciaService ocorrenciaService;
+    private final OcorrenciaConsultaService consultaService;
+    private final AnexoOcorrenciaService anexoService;
 
-    public OcorrenciaController(OcorrenciaService ocorrenciaService) {
+    public OcorrenciaController(OcorrenciaService ocorrenciaService, OcorrenciaConsultaService consultaService,
+            AnexoOcorrenciaService anexoService) {
         this.ocorrenciaService = ocorrenciaService;
+        this.consultaService = consultaService;
+        this.anexoService = anexoService;
     }
 
     @GetMapping
@@ -67,13 +75,13 @@ public class OcorrenciaController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate ate,
             @RequestParam(defaultValue = "0") int pagina,
             @RequestParam(defaultValue = "20") int tamanho) {
-        return ocorrenciaService.listar(tipo, status, q, de, ate, pagina, tamanho, PermissoesOcorrencia.de(authentication));
+        return consultaService.listar(tipo, status, q, de, ate, pagina, tamanho, PermissoesOcorrencia.de(authentication));
     }
 
     @GetMapping("/catalogos")
     @PreAuthorize("hasAuthority('OCORRENCIAS_DENUNCIAS:leitura')")
     public CatalogosOcorrenciaResponse catalogos() {
-        return ocorrenciaService.catalogos();
+        return consultaService.catalogos();
     }
 
     // T45: mesma autorizacao da listagem, que ja mostra o bairro de toda
@@ -81,13 +89,13 @@ public class OcorrenciaController {
     @GetMapping("/estatisticas/bairro")
     @PreAuthorize("hasAuthority('OCORRENCIAS_DENUNCIAS:leitura')")
     public List<QuantidadePorBairroResponse> contarPorBairro() {
-        return ocorrenciaService.contarPorBairro();
+        return consultaService.contarPorBairro();
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('OCORRENCIAS_DENUNCIAS:leitura')")
     public OcorrenciaResponse buscarPorId(Authentication authentication, @PathVariable UUID id) {
-        return ocorrenciaService.buscarPorId(id, PermissoesOcorrencia.de(authentication));
+        return consultaService.buscarPorId(id, PermissoesOcorrencia.de(authentication));
     }
 
     @PostMapping
@@ -135,13 +143,13 @@ public class OcorrenciaController {
     @PreAuthorize("hasAuthority('OCORRENCIAS_DENUNCIAS:escrita')")
     public AnexoOcorrenciaResponse adicionarAnexo(
             Authentication authentication, @PathVariable UUID id, @RequestParam("arquivo") MultipartFile arquivo) {
-        return ocorrenciaService.adicionarAnexo(id, arquivo, PermissoesOcorrencia.de(authentication));
+        return anexoService.adicionarAnexo(id, arquivo, PermissoesOcorrencia.de(authentication));
     }
 
     @GetMapping("/{id}/anexos/{anexoId}")
     @PreAuthorize("hasAuthority('OCORRENCIAS_DENUNCIAS:leitura')")
     public ResponseEntity<byte[]> baixarAnexo(Authentication authentication, @PathVariable UUID id, @PathVariable UUID anexoId) {
-        ArquivoAnexo arquivo = ocorrenciaService.baixarAnexo(id, anexoId, PermissoesOcorrencia.de(authentication));
+        ArquivoAnexo arquivo = anexoService.baixarAnexo(id, anexoId, PermissoesOcorrencia.de(authentication));
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(arquivo.mimeType()))
                 .header(HttpHeaders.CONTENT_DISPOSITION,
