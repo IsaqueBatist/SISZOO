@@ -15,6 +15,10 @@ Notas de divergências entre o código real e os documentos de modelagem, regist
   geração da miniatura ainda não está descrita em §3.2.
 - **`usuario.dois_fatores_ativo`** existe no schema e não é usado pela aplicação (reservado); decidir remover em
   migration futura ou implementar.
+- **`V11__remove_acesso_vet_ocorrencias.sql`** traz no comentário da linha 1 o placeholder `[fonte: ______]` (a origem da
+  decisão de tirar o Veterinário de ocorrências nunca foi preenchida). A migration já foi aplicada e não pode ser editada:
+  qualquer mudança, até em comentário, altera o checksum do Flyway e quebra a validação nos bancos existentes. A fonte
+  deve ser registrada aqui ou em `decisoes/` quando os autores a identificarem.
 
 ## Resolvidas
 
