@@ -1,4 +1,12 @@
 package com.siszoo.usuarios.exception;
 
-public class CredencialInvalidaException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+import com.siszoo.comum.exception.ErroNegocioException;
+
+public class CredencialInvalidaException extends ErroNegocioException {
+
+    public CredencialInvalidaException() {
+        super(HttpStatus.UNAUTHORIZED, "Credenciais invalidas");
+    }
 }

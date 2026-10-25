@@ -1,5 +1,6 @@
 package com.siszoo.animais.mapper;
 
+import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -25,6 +26,14 @@ public interface AnimalMapper {
     @Mapping(target = "criadoPorNome", source = "criadoPor", qualifiedByName = "nomeCompleto")
     AnimalResponse toResponse(Animal animal);
 
+    // Listagens (T45): o mesmo DTO, com a miniatura no lugar da foto inteira
+    // em fotoUrl — so avatar na tela. @Named para nunca ser escolhido sozinho
+    // no lugar de toResponse (detalhe, criacao, edicao, auditoria).
+    @Named("listagem")
+    @InheritConfiguration(name = "toResponse")
+    @Mapping(target = "fotoUrl", source = "fotoMiniatura")
+    AnimalResponse toResponseListagem(Animal animal);
+
     @Named("tipoBaiaNome")
     default String tipoBaiaNome(Baia baia) {
         return baia == null ? null : baia.getTipoBaia().getNome();
@@ -32,6 +41,6 @@ public interface AnimalMapper {
 
     @Named("nomeCompleto")
     default String nomeCompleto(Usuario usuario) {
-        return usuario.getNome() + " " + usuario.getSobrenome();
+        return usuario.nomeCompleto();
     }
 }

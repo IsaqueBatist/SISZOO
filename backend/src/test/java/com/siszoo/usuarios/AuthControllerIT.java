@@ -279,6 +279,52 @@ class AuthControllerIT extends AbstractIntegrationTest {
         assertThat(atual.getSenhaAlteradaEm(), nullValue());
     }
 
+    // O BCrypt recusa mais de 72 bytes (antes: IllegalArgumentException no
+    // encode, resposta 500). O teto e em bytes UTF-8: 40 "é" sao 40
+    // caracteres, mas 80 bytes. Exatamente 72 bytes continua aceito.
+    @Test
+    void deveRetornar422QuandoNovaSenhaPassaDe72BytesEAceitar72() {
+        String email = "teste.trocasenha.bytes@itu.sp.gov.br";
+        String senhaAtual = "SenhaAntiga123";
+        Usuario usuario = new Usuario();
+        usuario.setEmail(email);
+        usuario.setSenha(passwordEncoder.encode(senhaAtual));
+        usuario.setNome("Teste");
+        usuario.setSobrenome("TrocaSenhaBytes");
+        usuarioRepository.save(usuario);
+
+        String token = fixture.login(email, senhaAtual);
+
+        String setentaETres = "Ab1" + "x".repeat(70);
+        String acentuadaDe80Bytes = "Ab1" + "é".repeat(38) + "x";
+        for (String senha : List.of(setentaETres, acentuadaDe80Bytes)) {
+            given()
+                    .contentType(ContentType.JSON)
+                    .header("Authorization", "Bearer " + token)
+                    .body(new TrocarSenhaRequest(senha, senha))
+                    .when()
+                    .post("/api/auth/senha")
+                    .then()
+                    .statusCode(422)
+                    .body("campos[0].campo", equalTo("novaSenha"))
+                    .body("campos[0].mensagem", equalTo("Nova senha deve ter no maximo 72 bytes (acentos contam 2)"));
+        }
+        assertThat(passwordEncoder.matches(senhaAtual, usuarioRepository.findByEmail(email).orElseThrow().getSenha()),
+                equalTo(true));
+
+        String setentaEDois = "Ab1" + "x".repeat(69);
+        given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + token)
+                .body(new TrocarSenhaRequest(setentaEDois, setentaEDois))
+                .when()
+                .post("/api/auth/senha")
+                .then()
+                .statusCode(204);
+        assertThat(passwordEncoder.matches(setentaEDois, usuarioRepository.findByEmail(email).orElseThrow().getSenha()),
+                equalTo(true));
+    }
+
     @Test
     void deveRetornar401AoTrocarSenhaSemToken() {
         given()

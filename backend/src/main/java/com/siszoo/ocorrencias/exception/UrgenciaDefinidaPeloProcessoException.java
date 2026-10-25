@@ -1,4 +1,12 @@
 package com.siszoo.ocorrencias.exception;
 
-public class UrgenciaDefinidaPeloProcessoException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+import com.siszoo.comum.exception.ErroNegocioException;
+
+public class UrgenciaDefinidaPeloProcessoException extends ErroNegocioException {
+
+    public UrgenciaDefinidaPeloProcessoException() {
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "Urgencia definida pelo processo vinculado nao pode ser desmarcada");
+    }
 }

@@ -16,7 +16,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.siszoo.animais.clinico.entity.Vacinacao;
-import com.siszoo.processos.repository.ContagemCatalogoProjection;
+import com.siszoo.comum.repository.ContagemCatalogoProjection;
 
 // Sem metodo de update/delete: registro clinico imutavel (regra de negocio). Ver
 // com.siszoo.animais.clinico.service.VacinacaoService para o mecanismo de
@@ -87,7 +87,7 @@ public interface VacinacaoRepository extends JpaRepository<Vacinacao, UUID>, Jpa
     // dias, e "vacinado" aqui so precisa da vigente mais recente de cada par
     // (animal, vacina), sem relacao com o alerta. dataValidade e calculada em
     // Java pelo service (soma de meses nao e portavel em JPQL), igual
-    // AlertaVacinalService#calcularDataValidade.
+    // Vacinacao#calcularDataValidade.
     @EntityGraph(attributePaths = {"animal", "vacina"})
     @Query("""
             SELECT v FROM Vacinacao v

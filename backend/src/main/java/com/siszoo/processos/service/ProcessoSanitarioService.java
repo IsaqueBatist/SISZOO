@@ -15,7 +15,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -25,14 +24,15 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.siszoo.animais.clinico.exception.RegistroJaRetificadoException;
-import com.siszoo.animais.dto.CatalogoItemResponse;
 import com.siszoo.animais.entity.Animal;
 import com.siszoo.animais.exception.AnimalNaoEncontradoException;
 import com.siszoo.animais.exception.EspecieInvalidaException;
 import com.siszoo.animais.repository.AnimalRepository;
 import com.siszoo.animais.repository.EspecieRepository;
+import com.siszoo.comum.dto.CatalogoItemResponse;
 import com.siszoo.comum.dto.PaginaResponse;
 import com.siszoo.comum.service.ProtocoloService;
+import com.siszoo.comum.util.Paginacao;
 import com.siszoo.ocorrencias.entity.Ocorrencia;
 import com.siszoo.ocorrencias.exception.DataAberturaFuturaException;
 import com.siszoo.ocorrencias.service.OcorrenciaService;
@@ -364,10 +364,13 @@ public class ProcessoSanitarioService {
 
     // ── Consulta, listagem e catalogos ───────────────────
 
-    // Filtros por codigo de doenca e status, urgentes primeiro (ORDEM_LISTAGEM).
-    // Sem filtro por bairro ou texto livre (T32).
+    // Filtros por codigo de doenca, status e urgencia, urgentes primeiro
+    // (ORDEM_LISTAGEM). Sem filtro por bairro ou texto livre (T32). `urgente`
+    // (T45, docs/contratos/processos-filtro-urgente.md) e opcional: ausente,
+    // a listagem e a de sempre; presente, so os processos com aquele valor.
     @Transactional(readOnly = true)
-    public PaginaResponse<ProcessoResumoResponse> listar(String doenca, StatusProcesso status, int pagina, int tamanho) {
+    public PaginaResponse<ProcessoResumoResponse> listar(String doenca, StatusProcesso status, Boolean urgente,
+            int pagina, int tamanho) {
         Specification<ProcessoSanitario> filtro = (root, query, cb) -> {
             List<Predicate> predicados = new ArrayList<>();
             if (StringUtils.hasText(doenca)) {
@@ -376,9 +379,12 @@ public class ProcessoSanitarioService {
             if (status != null) {
                 predicados.add(cb.equal(root.get("statusProcesso"), status));
             }
+            if (urgente != null) {
+                predicados.add(cb.equal(root.get("urgente"), urgente));
+            }
             return cb.and(predicados.toArray(Predicate[]::new));
         };
-        return PaginaResponse.de(processoRepository.findAll(filtro, PageRequest.of(pagina, tamanho, ORDEM_LISTAGEM))
+        return PaginaResponse.de(processoRepository.findAll(filtro, Paginacao.pagina(pagina, tamanho, ORDEM_LISTAGEM))
                 .map(ProcessoSanitarioService::toResumo));
     }
 
@@ -628,7 +634,7 @@ public class ProcessoSanitarioService {
                 registro.getObservacoes(),
                 registro.getRetifica() == null ? null : registro.getRetifica().getId(),
                 autor.getId(),
-                autor.getNome() + " " + autor.getSobrenome(),
+                autor.nomeCompleto(),
                 registro.getRegistradoEm());
     }
 

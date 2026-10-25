@@ -1,4 +1,12 @@
 package com.siszoo.processos.exception;
 
-public class SintomaInvalidoException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+import com.siszoo.comum.exception.ErroNegocioException;
+
+public class SintomaInvalidoException extends ErroNegocioException {
+
+    public SintomaInvalidoException() {
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "Sintoma invalido");
+    }
 }

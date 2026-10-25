@@ -215,3 +215,10 @@ export interface ProcessoSanitario {
   statusProcesso: StatusProcesso
   criadoEm: string
 }
+
+// GET /ocorrencias/estatisticas/bairro (T45): contagem por grafia de bairro
+// gravada, de todo o histórico, agregada no backend.
+export interface QuantidadePorBairro {
+  bairro: string
+  quantidade: number
+}

@@ -15,8 +15,8 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.siszoo.comum.repository.ContagemCatalogoProjection;
 import com.siszoo.ocorrencias.entity.Ocorrencia;
-import com.siszoo.processos.repository.ContagemCatalogoProjection;
 
 import jakarta.persistence.LockModeType;
 
@@ -69,6 +69,16 @@ public interface OcorrenciaRepository extends JpaRepository<Ocorrencia, UUID>, J
             + "AND (o.providenciaTomada IS NULL OR o.providenciaTomada.codigo <> 'registro_indevido') "
             + "GROUP BY o.bairro ORDER BY COUNT(o) DESC")
     List<ContagemPorBairroProjection> contarPorBairro(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
+
+    // Grafico de distribuicao e sugestoes de bairro da tela de ocorrencias
+    // (T45, docs/contratos/distribuicao-ocorrencias-bairro.md): todo o
+    // historico, sem o recorte do relatorio (periodo, registro_indevido) —
+    // o mesmo universo que a tela contava ao baixar a listagem. Agrupa pela
+    // grafia gravada; a juncao de grafias ("Centro"/"centro") segue no cliente.
+    @Query("SELECT o.bairro AS bairro, COUNT(o) AS quantidade FROM Ocorrencia o "
+            + "WHERE o.bairro IS NOT NULL AND TRIM(o.bairro) <> '' "
+            + "GROUP BY o.bairro ORDER BY COUNT(o) DESC, o.bairro")
+    List<ContagemPorBairroProjection> contarTodasPorBairro();
 
     @Query("SELECT o.bairro AS bairro, o.tipoOcorrencia.nome AS tipo, COUNT(o) AS quantidade FROM Ocorrencia o "
             + "WHERE o.dataAbertura BETWEEN :inicio AND :fim "

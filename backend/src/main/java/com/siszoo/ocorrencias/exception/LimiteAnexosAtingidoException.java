@@ -1,4 +1,12 @@
 package com.siszoo.ocorrencias.exception;
 
-public class LimiteAnexosAtingidoException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+import com.siszoo.comum.exception.ErroNegocioException;
+
+public class LimiteAnexosAtingidoException extends ErroNegocioException {
+
+    public LimiteAnexosAtingidoException() {
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "Limite de 5 anexos por ocorrencia atingido");
+    }
 }

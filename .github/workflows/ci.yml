@@ -32,9 +32,12 @@ jobs:
           java-version: "21"
           cache: maven
 
-      - name: mvn verify
+      # Wrapper (Maven 3.9.16, o mesmo do Dockerfile) em vez do mvn do runner;
+      # sem --update-snapshots, ja que nao ha dependencia SNAPSHOT. `sh` porque
+      # o mvnw e versionado sem bit de execucao.
+      - name: mvnw verify
         if: steps.check.outputs.exists == 'true'
-        run: mvn --batch-mode --update-snapshots verify
+        run: sh mvnw --batch-mode verify
 
   frontend:
     runs-on: ubuntu-latest

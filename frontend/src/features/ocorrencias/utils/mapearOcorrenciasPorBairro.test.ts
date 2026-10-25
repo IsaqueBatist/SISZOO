@@ -62,6 +62,31 @@ describe('mapearOcorrenciasPorBairro', () => {
   })
 })
 
+// T45: o backend devolve uma linha por grafia já contada.
+describe('mapearOcorrenciasPorBairro com contagens do backend', () => {
+  it('soma as quantidades das grafias do mesmo bairro e rotula pela de maior quantidade', () => {
+    const resultado = mapearOcorrenciasPorBairro([
+      { bairro: 'São Luiz', quantidade: 2 },
+      { bairro: 'Sao Luiz', quantidade: 5 },
+      { bairro: 'Centro', quantidade: 6 },
+    ])
+
+    expect(resultado).toEqual([
+      { bairro: 'Sao Luiz', quantidade: 7 },
+      { bairro: 'Centro', quantidade: 6 },
+    ])
+  })
+
+  it('agrupa em "Outros" somando as quantidades a partir do 16º bairro', () => {
+    const linhas = Array.from({ length: 17 }, (_, indice) => ({ bairro: `Bairro ${indice}`, quantidade: 100 - indice }))
+
+    const resultado = mapearOcorrenciasPorBairro(linhas)
+
+    expect(resultado).toHaveLength(16)
+    expect(resultado[15]).toEqual({ bairro: 'Outros', quantidade: 85 + 84 })
+  })
+})
+
 describe('extrairBairrosDistintos', () => {
   it('devolve uma grafia por bairro, em ordem alfabética, sem corte de Top N', () => {
     const ocorrencias = Array.from({ length: 20 }, (_, indice) => ocorrencia(`Bairro ${indice}`))

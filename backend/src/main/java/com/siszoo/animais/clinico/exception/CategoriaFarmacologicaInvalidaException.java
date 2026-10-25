@@ -1,4 +1,12 @@
 package com.siszoo.animais.clinico.exception;
 
-public class CategoriaFarmacologicaInvalidaException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+import com.siszoo.comum.exception.ErroNegocioException;
+
+public class CategoriaFarmacologicaInvalidaException extends ErroNegocioException {
+
+    public CategoriaFarmacologicaInvalidaException() {
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "Categoria farmacologica informada nao existe");
+    }
 }

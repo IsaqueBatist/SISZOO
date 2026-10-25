@@ -2,6 +2,8 @@ package com.siszoo.animais.dto;
 
 import java.util.List;
 
+import com.siszoo.comum.dto.CatalogoItemResponse;
+
 public record CatalogosAnimalResponse(
         List<CatalogoItemResponse> especies,
         List<CatalogoItemResponse> status,

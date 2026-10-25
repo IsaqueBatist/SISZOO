@@ -79,12 +79,14 @@ class AnimalServiceTest {
 
     private AnimalService animalService;
 
-    // Construido a mao (nao @InjectMocks): Clock e valor, nao mock.
+    // Construido a mao (nao @InjectMocks): Clock e valor, nao mock; MiniaturaFoto
+    // e uma funcao pura (sem estado nem I/O externo), usada de verdade.
     @BeforeEach
     void criarService() {
         Clock clock = Clock.fixed(Instant.parse("2026-09-10T15:00:00Z"), ZoneId.of("America/Sao_Paulo"));
         animalService = new AnimalService(animalRepository, baiaRepository, especieRepository, statusAnimalRepository,
-                motivoEntradaRepository, usuarioRepository, animalMapper, fichaCompletaService, auditoriaEventoService, clock);
+                motivoEntradaRepository, usuarioRepository, animalMapper, fichaCompletaService, auditoriaEventoService,
+                new MiniaturaFoto(), clock);
         // RNF10 (F2-078): atualizar() resolve o autor da auditoria; nos testes de
         // regra de baia o usuario e irrelevante, entao o stub e lenient.
         lenient().when(usuarioRepository.findById(usuarioComId().getId())).thenReturn(Optional.of(usuarioComId()));

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Controller, type Control, type Path, type UseFormRegister, type UseFormSetValue, type UseFormWatch } from 'react-hook-form'
 import { Icon } from '@/components/layout/Icon'
 import { PELAGEM_OPCOES, SEXO_OPCOES } from '@/features/animais/schemas/animalFormSchema'
@@ -67,7 +67,17 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
 
   const { data: catalogosAnimais } = useCatalogosAnimaisQuery()
   const { data: catalogosProcesso } = useCatalogosProcessoQuery()
-  const { data: resultadoBusca } = useAnimaisQuery({ q: buscaAnimal || undefined, pagina: 0, tamanho: TAMANHO_BUSCA_ANIMAL })
+  // T45: busca com o mesmo debounce de 300 ms da tela de Animais (antes, uma
+  // requisição por tecla) e só no modo canil, o único em que o campo existe.
+  const [buscaDebounced, setBuscaDebounced] = useState('')
+  useEffect(() => {
+    const timeout = setTimeout(() => setBuscaDebounced(buscaAnimal.trim()), 300)
+    return () => clearTimeout(timeout)
+  }, [buscaAnimal])
+  const { data: resultadoBusca } = useAnimaisQuery(
+    { q: buscaDebounced || undefined, pagina: 0, tamanho: TAMANHO_BUSCA_ANIMAL },
+    origem === 'canil',
+  )
 
   function selecionarOrigem(novaOrigem: 'canil' | 'externo') {
     if (novaOrigem === origem) return

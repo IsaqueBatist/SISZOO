@@ -1,4 +1,12 @@
 package com.siszoo.ocorrencias.exception;
 
-public class AnexoNaoEncontradoException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+import com.siszoo.comum.exception.ErroNegocioException;
+
+public class AnexoNaoEncontradoException extends ErroNegocioException {
+
+    public AnexoNaoEncontradoException() {
+        super(HttpStatus.NOT_FOUND, "Anexo nao encontrado");
+    }
 }

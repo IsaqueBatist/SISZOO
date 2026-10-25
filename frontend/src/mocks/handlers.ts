@@ -1205,6 +1205,15 @@ export const handlers = [
     return HttpResponse.json({ itens, pagina, tamanho, totalItens, totalPaginas })
   }),
 
+  // T45: residentes (sob custódia) de todas as baias, como o backend — por nome.
+  http.get(`${API_BASE_URL}/baias/residentes`, () => {
+    const residentes = animaisMock
+      .filter((animal) => animal.baiaId && !STATUS_FORA_DA_CUSTODIA.includes(animal.statusCodigo))
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+      .map((animal) => ({ baiaId: animal.baiaId, id: animal.id, nome: animal.nome, fotoUrl: animal.fotoUrl }))
+    return HttpResponse.json(residentes)
+  }),
+
   http.post(`${API_BASE_URL}/baias`, async ({ request }) => {
     const body = (await request.json()) as BaiaRequest
     const tipo = CATALOGOS_ANIMAIS_MOCK.tiposBaia.find((item) => item.codigo === body.tipoBaia)

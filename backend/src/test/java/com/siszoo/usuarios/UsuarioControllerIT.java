@@ -138,6 +138,38 @@ class UsuarioControllerIT extends AbstractIntegrationTest {
         assertThat(usuarioRepository.findByEmail(email).isPresent(), equalTo(false));
     }
 
+    // Teto do BCrypt: mais de 72 bytes UTF-8 (antes, 500 no encode) => 422 em
+    // senhaInicial e nada e criado. 72 bytes exatos continuam aceitos.
+    @Test
+    @DisplayName("[senha] senha inicial acima de 72 bytes: 422 em senhaInicial; 72 bytes: criado")
+    void deveRetornar422QuandoSenhaInicialPassaDe72Bytes() {
+        String email = "teto.bytes@itu.sp.gov.br";
+        for (String senha : List.of("Ab1" + "x".repeat(70), "Ab1" + "é".repeat(38) + "x")) {
+            given()
+                    .contentType(ContentType.JSON)
+                    .header("Authorization", "Bearer " + tokenAdmin)
+                    .body(new CriarUsuarioRequest("Clarice", "Lispector", email, "Agente Sanitário", null, null, senha))
+                    .when()
+                    .post("/api/usuarios")
+                    .then()
+                    .statusCode(422)
+                    .body("campos[0].campo", equalTo("senhaInicial"))
+                    .body("campos[0].mensagem", equalTo("Senha inicial deve ter no maximo 72 bytes (acentos contam 2)"));
+        }
+        assertThat(usuarioRepository.findByEmail(email).isPresent(), equalTo(false));
+
+        given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .body(new CriarUsuarioRequest("Clarice", "Lispector", email, "Agente Sanitário", null, null,
+                        "Ab1" + "x".repeat(69)))
+                .when()
+                .post("/api/usuarios")
+                .then()
+                .statusCode(200);
+        assertThat(usuarioRepository.findByEmail(email).isPresent(), equalTo(true));
+    }
+
     @Test
     void deveRetornar409QuandoEmailJaCadastrado() {
         CriarUsuarioRequest request = new CriarUsuarioRequest(

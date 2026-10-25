@@ -14,10 +14,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.siszoo.comum.repository.ContagemCatalogoProjection;
 import com.siszoo.comum.util.BlocoCsv;
 import com.siszoo.processos.repository.AnimalAmostradoRepository;
 import com.siszoo.processos.repository.BairroProcessoProjection;
-import com.siszoo.processos.repository.ContagemCatalogoProjection;
 import com.siszoo.processos.repository.ProcessoSanitarioRepository;
 import com.siszoo.processos.repository.ResultadosLaboratoriaisProjection;
 import com.siszoo.processos.repository.TempoResolucaoPorLaboratorioProjection;

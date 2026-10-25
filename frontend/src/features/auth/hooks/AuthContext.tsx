@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { setAuthToken } from '@/lib/http'
 import { roleKeyFromCargos } from '@/lib/nav'
@@ -34,18 +34,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   })
 
   const mutation = useMutation({ mutationFn: loginRequest })
+  const { mutateAsync } = mutation
 
-  async function login(credenciais: LoginRequest) {
-    const resposta = await mutation.mutateAsync(credenciais)
-    const novaSessao: SessaoArmazenada = { token: resposta.token, usuario: resposta.usuario }
-    setSessao(novaSessao)
-    setAuthToken(novaSessao.token)
-    try {
-      sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(novaSessao))
-    } catch {
-      /* sessionStorage indisponível */
-    }
-  }
+  const login = useCallback(
+    async (credenciais: LoginRequest) => {
+      const resposta = await mutateAsync(credenciais)
+      const novaSessao: SessaoArmazenada = { token: resposta.token, usuario: resposta.usuario }
+      setSessao(novaSessao)
+      setAuthToken(novaSessao.token)
+      try {
+        sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(novaSessao))
+      } catch {
+        /* sessionStorage indisponível */
+      }
+    },
+    [mutateAsync],
+  )
 
   // O cache do React Query some nos dois casos (o próximo usuário não pode
   // ver dados do anterior). Rascunhos e anexos pendentes só no logout manual:
@@ -69,11 +73,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [queryClient],
   )
 
-  function logout() {
+  const logout = useCallback(() => {
     encerrarSessao({ apagarRascunhos: true })
-  }
+  }, [encerrarSessao])
 
-  function marcarSenhaAlterada(senhaAlteradaEm: string) {
+  const marcarSenhaAlterada = useCallback((senhaAlteradaEm: string) => {
     setSessao((atual) => {
       if (!atual) return atual
       const novaSessao: SessaoArmazenada = {
@@ -87,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return novaSessao
     })
-  }
+  }, [])
 
   useEffect(() => {
     function handleUnauthorized() {
@@ -99,16 +103,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('auth:unauthorized', handleUnauthorized)
   }, [navigate, encerrarSessao])
 
-  const value: AuthContextValue = {
-    user: sessao?.usuario ?? null,
-    token: sessao?.token ?? null,
-    roleKey: roleKeyFromCargos(sessao?.usuario.cargos ?? []),
-    login,
-    logout,
-    marcarSenhaAlterada,
-    isLoading: mutation.isPending,
-    error: mutation.error,
-  }
+  // T45: o AuthProvider re-renderiza a cada navegação (useNavigate); com o
+  // value recriado a cada render, toda a árvore que lê o contexto (Sidebar,
+  // Topbar, guardas de rota, página) re-renderizava junto. Memoizado, só
+  // muda quando a sessão ou o estado do login mudam.
+  const { isPending, error } = mutation
+  const value: AuthContextValue = useMemo(
+    () => ({
+      user: sessao?.usuario ?? null,
+      token: sessao?.token ?? null,
+      roleKey: roleKeyFromCargos(sessao?.usuario.cargos ?? []),
+      login,
+      logout,
+      marcarSenhaAlterada,
+      isLoading: isPending,
+      error,
+    }),
+    [sessao, login, logout, marcarSenhaAlterada, isPending, error],
+  )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

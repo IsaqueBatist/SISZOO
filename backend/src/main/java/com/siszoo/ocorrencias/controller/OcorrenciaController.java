@@ -1,6 +1,7 @@
 package com.siszoo.ocorrencias.controller;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.ContentDisposition;
@@ -22,10 +23,10 @@ import java.time.LocalDate;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.siszoo.comum.dto.ArquivoAnexo;
 import com.siszoo.comum.dto.PaginaResponse;
 import com.siszoo.ocorrencias.dto.AlterarStatusOcorrenciaRequest;
 import com.siszoo.ocorrencias.dto.AnexoOcorrenciaResponse;
-import com.siszoo.ocorrencias.dto.ArquivoAnexo;
 import com.siszoo.ocorrencias.dto.AtualizarOcorrenciaRequest;
 import com.siszoo.ocorrencias.dto.CatalogosOcorrenciaResponse;
 import com.siszoo.ocorrencias.dto.CriarNotaRequest;
@@ -33,6 +34,7 @@ import com.siszoo.ocorrencias.dto.CriarOcorrenciaRequest;
 import com.siszoo.ocorrencias.dto.EncerrarOcorrenciaRequest;
 import com.siszoo.ocorrencias.dto.OcorrenciaResponse;
 import com.siszoo.ocorrencias.dto.OcorrenciaResumoResponse;
+import com.siszoo.ocorrencias.dto.QuantidadePorBairroResponse;
 import com.siszoo.ocorrencias.dto.VincularProcessoRequest;
 import com.siszoo.ocorrencias.entity.StatusOcorrencia;
 import com.siszoo.ocorrencias.service.OcorrenciaService;
@@ -72,6 +74,14 @@ public class OcorrenciaController {
     @PreAuthorize("hasAuthority('OCORRENCIAS_DENUNCIAS:leitura')")
     public CatalogosOcorrenciaResponse catalogos() {
         return ocorrenciaService.catalogos();
+    }
+
+    // T45: mesma autorizacao da listagem, que ja mostra o bairro de toda
+    // ocorrencia (inclusive sigilosa) a quem tem leitura do modulo.
+    @GetMapping("/estatisticas/bairro")
+    @PreAuthorize("hasAuthority('OCORRENCIAS_DENUNCIAS:leitura')")
+    public List<QuantidadePorBairroResponse> contarPorBairro() {
+        return ocorrenciaService.contarPorBairro();
     }
 
     @GetMapping("/{id}")

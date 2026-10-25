@@ -8,7 +8,6 @@ import java.util.UUID;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -18,6 +17,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.siszoo.comum.dto.PaginaResponse;
+import com.siszoo.comum.util.Paginacao;
 import com.siszoo.usuarios.dto.AuditoriaEventoResponse;
 import com.siszoo.usuarios.dto.OpcoesFiltroAuditoriaResponse;
 import com.siszoo.usuarios.entity.AcaoAuditoria;
@@ -138,7 +138,7 @@ public class AuditoriaEventoService {
             return cb.and(p.toArray(Predicate[]::new));
         };
         Page<AuditoriaEvento> page = auditoriaEventoRepository.findAll(spec,
-                PageRequest.of(pagina, tamanho, Sort.by(Sort.Direction.DESC, "ocorreuEm")));
+                Paginacao.pagina(pagina, tamanho, Sort.by(Sort.Direction.DESC, "ocorreuEm")));
         return PaginaResponse.de(page.map(auditoriaEventoMapper::toResponse));
     }
 

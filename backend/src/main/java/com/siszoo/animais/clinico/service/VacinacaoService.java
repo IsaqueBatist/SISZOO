@@ -9,7 +9,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -32,6 +31,7 @@ import com.siszoo.animais.exception.AnimalNaoEncontradoException;
 import com.siszoo.animais.repository.AnimalRepository;
 import com.siszoo.animais.service.FichaCompletaService;
 import com.siszoo.comum.dto.PaginaResponse;
+import com.siszoo.comum.util.Paginacao;
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.exception.UsuarioNaoEncontradoException;
@@ -132,7 +132,7 @@ public class VacinacaoService {
     public PaginaResponse<VacinacaoResponse> listar(UUID animalId, int pagina, int tamanho) {
         Specification<Vacinacao> filtro = construirFiltro(animalId);
         Page<Vacinacao> paginaVacinacoes = vacinacaoRepository.findAll(
-                filtro, PageRequest.of(pagina, tamanho, Sort.by("dataAplicacao").descending()));
+                filtro, Paginacao.pagina(pagina, tamanho, Sort.by("dataAplicacao").descending()));
 
         List<UUID> ids = paginaVacinacoes.getContent().stream().map(Vacinacao::getId).toList();
         Map<UUID, UUID> retificadoPorPorId = ids.isEmpty()
@@ -140,16 +140,7 @@ public class VacinacaoService {
                 : vacinacaoRepository.findByRetificaIdIn(ids).stream()
                         .collect(Collectors.toMap(v -> v.getRetifica().getId(), Vacinacao::getId));
 
-        List<VacinacaoResponse> itens = paginaVacinacoes.getContent().stream()
-                .map(v -> vacinacaoMapper.toResponse(v, retificadoPorPorId.get(v.getId())))
-                .toList();
-
-        return new PaginaResponse<>(
-                itens,
-                paginaVacinacoes.getNumber(),
-                paginaVacinacoes.getSize(),
-                paginaVacinacoes.getTotalElements(),
-                paginaVacinacoes.getTotalPages());
+        return PaginaResponse.de(paginaVacinacoes.map(v -> vacinacaoMapper.toResponse(v, retificadoPorPorId.get(v.getId()))));
     }
 
     private Vacinacao validarRetificacao(UUID retificaId, UUID animalId) {

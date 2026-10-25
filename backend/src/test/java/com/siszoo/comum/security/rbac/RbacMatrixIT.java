@@ -14,7 +14,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
 
 import com.siszoo.animais.dto.CriarAnimalRequest;
 import com.siszoo.comum.AbstractIntegrationTest;
@@ -27,10 +26,6 @@ import io.restassured.response.Response;
 // manualmente) que cada perfil só acessa os endpoints permitidos pela matriz de cargos
 // semeada em V3__seed_cargos.sql. Cada caso-âncora afirma tanto o 200 do perfil
 // autorizado quanto o 403 dos demais.
-@Import({
-        ScaffoldCriarUsuarioController.class,
-        ScaffoldListarUsuariosController.class
-})
 class RbacMatrixIT extends AbstractIntegrationTest {
 
     private static final String ROTA_USUARIOS = "/api/teste/rbac/usuarios";

@@ -1,5 +1,7 @@
 package com.siszoo.usuarios.dto;
 
+import com.siszoo.comum.validacao.TamanhoMaximoBytes;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -24,5 +26,6 @@ public record CriarUsuarioRequest(
 
         @NotBlank
         @Size(min = 8, message = "Senha inicial deve ter no minimo 8 caracteres")
+        @TamanhoMaximoBytes(value = 72, message = "Senha inicial deve ter no maximo 72 bytes (acentos contam 2)")
         String senhaInicial) {
 }

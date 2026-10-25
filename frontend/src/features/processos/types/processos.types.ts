@@ -192,6 +192,8 @@ export interface ProcessoResumo {
 export interface ProcessosFiltro {
   doenca?: string
   status?: StatusProcesso
+  // T45 (docs/contratos/processos-filtro-urgente.md): ausente = sem filtro.
+  urgente?: boolean
   pagina: number
   tamanho: number
 }

@@ -1,6 +1,5 @@
 package com.siszoo.animais.clinico.mapper;
 
-import java.time.LocalDate;
 import java.util.UUID;
 
 import org.mapstruct.Mapper;
@@ -19,7 +18,7 @@ public interface VacinacaoMapper {
     @Mapping(target = "vacinaNome", source = "vacinacao.vacina.nome")
     @Mapping(target = "aplicadoPorId", source = "vacinacao.aplicadoPor.id")
     @Mapping(target = "aplicadoPorNome", source = "vacinacao.aplicadoPor", qualifiedByName = "nomeCompleto")
-    @Mapping(target = "dataValidade", expression = "java(calcularDataValidade(vacinacao))")
+    @Mapping(target = "dataValidade", expression = "java(vacinacao.calcularDataValidade())")
     @Mapping(target = "retificaId", source = "vacinacao.retifica.id")
     @Mapping(target = "retificadoPorId", source = "retificadoPorId")
     @Mapping(target = "statusRegistro", expression = "java(retificadoPorId != null ? \"RETIFICADO\" : \"ATIVO\")")
@@ -27,18 +26,6 @@ public interface VacinacaoMapper {
 
     @Named("nomeCompleto")
     default String nomeCompleto(Usuario usuario) {
-        return usuario == null ? null : usuario.getNome() + " " + usuario.getSobrenome();
-    }
-
-    // DER.md: data_validade = data_aplicacao + intervalo da vacina. Nao e
-    // coluna persistida (evita campo derivado que fica desatualizado); fica
-    // null se a vacina do catalogo ainda nao tiver intervalo_meses definido.
-    default LocalDate calcularDataValidade(Vacinacao vacinacao) {
-        if (vacinacao.getVacina() == null
-                || vacinacao.getVacina().getIntervaloMeses() == null
-                || vacinacao.getDataAplicacao() == null) {
-            return null;
-        }
-        return vacinacao.getDataAplicacao().plusMonths(vacinacao.getVacina().getIntervaloMeses());
+        return usuario == null ? null : usuario.nomeCompleto();
     }
 }

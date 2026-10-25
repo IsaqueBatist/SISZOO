@@ -1,6 +1,15 @@
 import { http } from '@/lib/http'
 import type { PaginaResponse } from '@/features/usuarios/types/usuarios.types'
-import type { Animal, AnimaisFiltro, AnimalRequest, AnexoAnimal, Baia, BaiaRequest, CatalogosAnimal } from '../types/animais.types'
+import type {
+  Animal,
+  AnimaisFiltro,
+  AnimalRequest,
+  AnexoAnimal,
+  Baia,
+  BaiaRequest,
+  CatalogosAnimal,
+  ResidenteBaia,
+} from '../types/animais.types'
 
 // A tela de Animais só usa a lista de baias para popular o filtro (sem
 // paginação própria) — pedimos uma página grande o bastante para cobrir as
@@ -60,6 +69,12 @@ export function listarBaias(): Promise<Baia[]> {
   return http
     .get<PaginaResponse<Baia>>('/baias', { params: { pagina: 0, tamanho: TAMANHO_PAGINA_SEM_UI_DE_PAGINACAO } })
     .then((response) => response.data.itens)
+}
+
+// T45: residentes (sob custódia) de todas as baias, só nome e miniatura —
+// antes a Gestão de Baias baixava GET /animais?tamanho=500 com as fotos.
+export function listarResidentesDeBaias(): Promise<ResidenteBaia[]> {
+  return http.get<ResidenteBaia[]>('/baias/residentes').then((response) => response.data)
 }
 
 export function criarBaia(payload: BaiaRequest): Promise<Baia> {

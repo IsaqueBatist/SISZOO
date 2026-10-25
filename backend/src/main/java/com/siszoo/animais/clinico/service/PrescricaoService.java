@@ -8,7 +8,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -31,6 +30,7 @@ import com.siszoo.animais.exception.AnimalNaoEncontradoException;
 import com.siszoo.animais.repository.AnimalRepository;
 import com.siszoo.comum.dto.PaginaResponse;
 import com.siszoo.comum.exception.CampoInvalidoException;
+import com.siszoo.comum.util.Paginacao;
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.exception.UsuarioNaoEncontradoException;
@@ -121,7 +121,7 @@ public class PrescricaoService {
     public PaginaResponse<PrescricaoResponse> listar(UUID animalId, int pagina, int tamanho) {
         Specification<Prescricao> filtro = construirFiltro(animalId);
         Page<Prescricao> paginaPrescricoes = prescricaoRepository.findAll(
-                filtro, PageRequest.of(pagina, tamanho, Sort.by("dataInicio").descending()));
+                filtro, Paginacao.pagina(pagina, tamanho, Sort.by("dataInicio").descending()));
 
         List<UUID> ids = paginaPrescricoes.getContent().stream().map(Prescricao::getId).toList();
         Map<UUID, UUID> retificadoPorPorId = ids.isEmpty()
@@ -129,16 +129,7 @@ public class PrescricaoService {
                 : prescricaoRepository.findByRetificaIdIn(ids).stream()
                         .collect(Collectors.toMap(p -> p.getRetifica().getId(), Prescricao::getId));
 
-        List<PrescricaoResponse> itens = paginaPrescricoes.getContent().stream()
-                .map(p -> prescricaoMapper.toResponse(p, retificadoPorPorId.get(p.getId())))
-                .toList();
-
-        return new PaginaResponse<>(
-                itens,
-                paginaPrescricoes.getNumber(),
-                paginaPrescricoes.getSize(),
-                paginaPrescricoes.getTotalElements(),
-                paginaPrescricoes.getTotalPages());
+        return PaginaResponse.de(paginaPrescricoes.map(p -> prescricaoMapper.toResponse(p, retificadoPorPorId.get(p.getId()))));
     }
 
     private Prescricao validarRetificacao(UUID retificaId, UUID animalId) {

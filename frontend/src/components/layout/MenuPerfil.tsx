@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ROLES } from '@/lib/nav'
 import { useAuth } from '@/features/auth/hooks/useAuth'
@@ -16,10 +16,12 @@ export function MenuPerfil() {
   const botaoRef = useRef<HTMLButtonElement>(null)
   const primeiroItemRef = useRef<HTMLAnchorElement>(null)
 
-  function fechar() {
+  // Estável entre renders: useClickOutside refaz a inscrição nos listeners do
+  // documento sempre que o handler muda (T45).
+  const fechar = useCallback(() => {
     setAberto(false)
     botaoRef.current?.focus()
-  }
+  }, [])
 
   useClickOutside(containerRef, fechar, aberto)
 

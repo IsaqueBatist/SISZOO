@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useOcorrenciasQuery } from '@/features/ocorrencias/hooks/useOcorrencias'
 import { badgeDeStatus } from '@/features/ocorrencias/utils/statusBadge'
 import { formatarProtocoloOcorrencia } from '@/features/ocorrencias/utils/protocolo'
@@ -80,8 +80,15 @@ function ListaOcorrencias({
   textoBotaoPular = 'Pular esta etapa',
 }: SeletorOcorrenciaProps) {
   const [busca, setBusca] = useState('')
+  // T45: debounce de 300 ms, como na tela de Ocorrências (antes, uma
+  // requisição por tecla).
+  const [buscaDebounced, setBuscaDebounced] = useState('')
+  useEffect(() => {
+    const timeout = setTimeout(() => setBuscaDebounced(busca.trim()), 300)
+    return () => clearTimeout(timeout)
+  }, [busca])
   const { data, isLoading, isError } = useOcorrenciasQuery({
-    q: busca.trim() || undefined,
+    q: buscaDebounced || undefined,
     pagina: 0,
     tamanho: TAMANHO_PAGINA,
   })

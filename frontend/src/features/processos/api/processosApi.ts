@@ -17,7 +17,13 @@ import type {
 
 export async function listarProcessos(filtro: ProcessosFiltro): Promise<PaginaResponse<ProcessoResumo>> {
   const { data } = await http.get<PaginaResponse<ProcessoResumo>>('/processos', {
-    params: { doenca: filtro.doenca, status: filtro.status, pagina: filtro.pagina, tamanho: filtro.tamanho },
+    params: {
+      doenca: filtro.doenca,
+      status: filtro.status,
+      urgente: filtro.urgente,
+      pagina: filtro.pagina,
+      tamanho: filtro.tamanho,
+    },
   })
   return data
 }

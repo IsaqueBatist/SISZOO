@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.siszoo.comum.repository.ContagemCatalogoProjection;
 import com.siszoo.processos.entity.AnimalAmostrado;
 
 public interface AnimalAmostradoRepository extends JpaRepository<AnimalAmostrado, UUID> {
@@ -24,12 +25,17 @@ public interface AnimalAmostradoRepository extends JpaRepository<AnimalAmostrado
     // conta uma vez EM CADA especie (a soma pode exceder o total de
     // processos de raiva no ano). COUNT(DISTINCT processo) evita contar o
     // mesmo processo duas vezes quando ele tem 2+ amostras da MESMA especie.
+    // Ano como intervalo de datas, como em contarPorDoenca (indice de data_abertura).
+    default List<ContagemCatalogoProjection> contarRaivaPorEspecie(int ano) {
+        return contarRaivaPorEspecieEntre(LocalDate.of(ano, 1, 1), LocalDate.of(ano, 12, 31));
+    }
+
     @Query("SELECT a.especie.codigo AS codigo, a.especie.nome AS nome, "
             + "COUNT(DISTINCT a.processo) AS quantidade "
             + "FROM AnimalAmostrado a WHERE a.processo.doenca.codigo = 'raiva' "
-            + "AND YEAR(a.processo.dataAbertura) = :ano "
+            + "AND a.processo.dataAbertura BETWEEN :inicio AND :fim "
             + "GROUP BY a.especie.codigo, a.especie.nome")
-    List<ContagemCatalogoProjection> contarRaivaPorEspecie(@Param("ano") int ano);
+    List<ContagemCatalogoProjection> contarRaivaPorEspecieEntre(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
     // ── Relatorio Anual de Processos (T41) ──────────────────────────────
 

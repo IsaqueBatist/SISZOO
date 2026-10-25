@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-import com.siszoo.animais.dto.CatalogoItemResponse;
+import com.siszoo.comum.dto.CatalogoItemResponse;
 import com.siszoo.processos.entity.MaterialBiologico;
 import com.siszoo.processos.entity.NivelContato;
 import com.siszoo.processos.entity.StatusClinicoAmostra;

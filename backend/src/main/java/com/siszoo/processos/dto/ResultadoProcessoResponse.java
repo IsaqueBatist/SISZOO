@@ -4,7 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import com.siszoo.animais.dto.CatalogoItemResponse;
+import com.siszoo.comum.dto.CatalogoItemResponse;
 
 // Um registro do historico de resultados; autor no padrao dos registros
 // clinicos (VacinacaoResponse).

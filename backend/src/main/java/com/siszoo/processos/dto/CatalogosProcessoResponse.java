@@ -2,7 +2,7 @@ package com.siszoo.processos.dto;
 
 import java.util.List;
 
-import com.siszoo.animais.dto.CatalogoItemResponse;
+import com.siszoo.comum.dto.CatalogoItemResponse;
 
 public record CatalogosProcessoResponse(
         List<CatalogoItemResponse> doencas,

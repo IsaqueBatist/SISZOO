@@ -1,0 +1,1344 @@
+{
+  "casos" : [ {
+    "id" : "dominio CredencialInvalidaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.usuarios.exception.CredencialInvalidaException",
+      "corpo" : null
+    },
+    "status" : 401,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Credenciais invalidas"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio SenhasDivergentesException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.usuarios.exception.SenhasDivergentesException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Nova senha e confirmacao nao conferem"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio EmailJaCadastradoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.usuarios.exception.EmailJaCadastradoException",
+      "corpo" : null
+    },
+    "status" : 409,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "E-mail ja cadastrado"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio CrmvObrigatorioException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.usuarios.exception.CrmvObrigatorioException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "CRMV e obrigatorio para o cargo Veterinario"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio CargoInvalidoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.usuarios.exception.CargoInvalidoException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Cargo informado nao existe"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio UsuarioNaoEncontradoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.usuarios.exception.UsuarioNaoEncontradoException",
+      "corpo" : null
+    },
+    "status" : 404,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Usuario nao encontrado"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio NotificacaoCriticaObrigatoriaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.usuarios.exception.NotificacaoCriticaObrigatoriaException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Notificacao de alertas criticos nao pode ser desativada"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio MicrochipJaCadastradoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.exception.MicrochipJaCadastradoException",
+      "corpo" : null
+    },
+    "status" : 409,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Microchip ja cadastrado"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio MicrochipImutavelException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.exception.MicrochipImutavelException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Microchip nao pode ser alterado apos definido"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio AnimalNaoEncontradoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.exception.AnimalNaoEncontradoException",
+      "corpo" : null
+    },
+    "status" : 404,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Animal nao encontrado"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio EspecieInvalidaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.exception.EspecieInvalidaException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Especie informada nao existe"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio StatusAnimalInvalidoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.exception.StatusAnimalInvalidoException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Status informado nao existe"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio MotivoEntradaInvalidoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.exception.MotivoEntradaInvalidoException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Motivo de entrada informado nao existe"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio BaiaInvalidaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.exception.BaiaInvalidaException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Baia informada nao existe"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio BaiaNaoEncontradaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.exception.BaiaNaoEncontradaException",
+      "corpo" : null
+    },
+    "status" : 404,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Baia nao encontrada"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio TipoBaiaInvalidoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.exception.TipoBaiaInvalidoException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Tipo de baia informado nao existe"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio UsuarioNaoPodeDesativarASiMesmoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.usuarios.exception.UsuarioNaoPodeDesativarASiMesmoException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Nao e permitido desativar o proprio usuario"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio VacinacaoNaoEncontradaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.clinico.exception.VacinacaoNaoEncontradaException",
+      "corpo" : null
+    },
+    "status" : 404,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Vacinacao nao encontrada"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio ProcedimentoNaoEncontradoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.clinico.exception.ProcedimentoNaoEncontradoException",
+      "corpo" : null
+    },
+    "status" : 404,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Procedimento nao encontrado"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio PrescricaoNaoEncontradaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.clinico.exception.PrescricaoNaoEncontradaException",
+      "corpo" : null
+    },
+    "status" : 404,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Prescricao nao encontrada"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio VacinaInvalidaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.clinico.exception.VacinaInvalidaException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Vacina informada nao existe"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio TipoProcedimentoInvalidoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.clinico.exception.TipoProcedimentoInvalidoException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Tipo de procedimento informado nao existe"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio ExameNaoEncontradoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.clinico.exception.ExameNaoEncontradoException",
+      "corpo" : null
+    },
+    "status" : 404,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Exame nao encontrado"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio TipoExameInvalidoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.clinico.exception.TipoExameInvalidoException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Tipo de exame informado nao existe"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio AnexoAnimalInvalidoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.exception.AnexoAnimalInvalidoException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Anexo deve ser JPG, PNG ou PDF com ate 5 MB"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio AnexoAnimalNaoEncontradoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.exception.AnexoAnimalNaoEncontradoException",
+      "corpo" : null
+    },
+    "status" : 404,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Anexo nao encontrado"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio LimiteAnexosAnimalAtingidoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.exception.LimiteAnexosAnimalAtingidoException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Limite de 10 anexos por animal atingido"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio MedicamentoInvalidoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.clinico.exception.MedicamentoInvalidoException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Medicamento informado nao existe"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio RetificacaoAnimalDivergenteException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.clinico.exception.RetificacaoAnimalDivergenteException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Registro retificado pertence a outro animal"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio DataAplicacaoFuturaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.clinico.exception.DataAplicacaoFuturaException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Data de aplicacao nao pode ser futura"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio RegistroJaRetificadoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.clinico.exception.RegistroJaRetificadoException",
+      "corpo" : null
+    },
+    "status" : 409,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Registro ja foi retificado por outro"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio MedicamentoNaoEncontradoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.clinico.exception.MedicamentoNaoEncontradoException",
+      "corpo" : null
+    },
+    "status" : 404,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Medicamento nao encontrado"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio CategoriaFarmacologicaJaCadastradaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.clinico.exception.CategoriaFarmacologicaJaCadastradaException",
+      "corpo" : null
+    },
+    "status" : 409,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Categoria farmacologica ja cadastrada"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio CategoriaFarmacologicaInvalidaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.animais.clinico.exception.CategoriaFarmacologicaInvalidaException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Categoria farmacologica informada nao existe"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio OcorrenciaNaoEncontradaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.ocorrencias.exception.OcorrenciaNaoEncontradaException",
+      "corpo" : null
+    },
+    "status" : 404,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Ocorrencia nao encontrada"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio AnexoNaoEncontradoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.ocorrencias.exception.AnexoNaoEncontradoException",
+      "corpo" : null
+    },
+    "status" : 404,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Anexo nao encontrado"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio ProcessoNaoEncontradoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.processos.exception.ProcessoNaoEncontradoException",
+      "corpo" : null
+    },
+    "status" : 404,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Processo sanitario nao encontrado"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio TipoOcorrenciaInvalidoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.ocorrencias.exception.TipoOcorrenciaInvalidoException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Tipo de ocorrencia informado nao existe"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio ProvidenciaInvalidaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.ocorrencias.exception.ProvidenciaInvalidaException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Providencia informada nao existe"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio ProvidenciaObrigatoriaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.ocorrencias.exception.ProvidenciaObrigatoriaException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Providencia tomada e obrigatoria no encerramento"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio DescricaoEncerramentoObrigatoriaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.ocorrencias.exception.DescricaoEncerramentoObrigatoriaException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Descricao do encerramento e obrigatoria quando a providencia e Outro"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio TransicaoStatusInvalidaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.ocorrencias.exception.TransicaoStatusInvalidaException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Transicao de status nao permitida para a ocorrencia"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio TransicaoStatusProcessoInvalidaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.processos.exception.TransicaoStatusProcessoInvalidaException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Transicao de status nao permitida para o processo"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio DoencaInvalidaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.processos.exception.DoencaInvalidaException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Doenca invalida"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio LaboratorioInvalidoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.processos.exception.LaboratorioInvalidoException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Laboratorio invalido"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio SintomaInvalidoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.processos.exception.SintomaInvalidoException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Sintoma invalido"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio DataColetaFuturaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.processos.exception.DataColetaFuturaException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Data de coleta nao pode ser futura"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio DataResultadoFuturaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.processos.exception.DataResultadoFuturaException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Data do resultado nao pode ser futura"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio ResultadoInvalidoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.processos.exception.ResultadoInvalidoException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Resultado laboratorial invalido: use positivo, negativo, inconclusivo, material_inadequado ou nao_realizado"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio ResultadoJaRegistradoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.processos.exception.ResultadoJaRegistradoException",
+      "corpo" : null
+    },
+    "status" : 409,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Processo ja tem resultado registrado; para corrigir, informe retificaId do resultado vigente"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio ResultadoObrigatorioException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.processos.exception.ResultadoObrigatorioException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "O status COM_RESULTADO so e alcancado pelo registro do resultado laboratorial"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio ConclusaoSemResultadoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.processos.exception.ConclusaoSemResultadoException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Processo so pode ser concluido com resultado laboratorial registrado"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio ResultadoRetificadoInvalidoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.processos.exception.ResultadoRetificadoInvalidoException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Resultado a corrigir nao existe neste processo"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio CorrecaoResultadoNaoPermitidaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.processos.exception.CorrecaoResultadoNaoPermitidaException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Resultado so pode ser corrigido com o processo em COM_RESULTADO"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio ResultadoPositivoDefinitivoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.processos.exception.ResultadoPositivoDefinitivoException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Resultado positivo e definitivo e nao pode ser corrigido"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio ReenvioNotificacaoNaoPermitidoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.processos.exception.ReenvioNotificacaoNaoPermitidoException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "So ha notificacao ao municipe para reenviar com resultado positivo vigente"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio NotificacaoJaConfirmadaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.processos.exception.NotificacaoJaConfirmadaException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Municipe ja foi notificado: o SMTP ja aceitou o envio"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio IdentificacaoComAnimalDoCanilException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.processos.exception.IdentificacaoComAnimalDoCanilException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Amostra de animal do canil nao aceita dados de identificacao: eles vem da ficha"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio IdentificacaoObrigatoriaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.processos.exception.IdentificacaoObrigatoriaException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Amostra de animal de campo exige especie e sexo"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio ContatoHumanoInconsistenteException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.processos.exception.ContatoHumanoInconsistenteException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Nivel de contato e agressao sao obrigatorios com contato humano e proibidos sem ele"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio SintomaSemStatusSintomaticoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.processos.exception.SintomaSemStatusSintomaticoException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Sintomas so podem ser informados em amostra com status clinico sintomatico"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio OcorrenciaEncerradaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.ocorrencias.exception.OcorrenciaEncerradaException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Ocorrencia encerrada nao pode ser alterada"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio EncerramentoComProcessoPendenteException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.ocorrencias.exception.EncerramentoComProcessoPendenteException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Ocorrencia com processo sanitario vinculado nao concluido nao pode ser encerrada"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio NomeDenuncianteObrigatorioException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.ocorrencias.exception.NomeDenuncianteObrigatorioException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Nome do denunciante e obrigatorio quando a denuncia nao e anonima nem sigilosa"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio DataAberturaFuturaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.ocorrencias.exception.DataAberturaFuturaException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Data de abertura nao pode ser futura"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio DenuncianteEmDenunciaAnonimaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.ocorrencias.exception.DenuncianteEmDenunciaAnonimaException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Denuncia anonima nao aceita dados do denunciante"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio AnonimaESigilosaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.ocorrencias.exception.AnonimaESigilosaException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Denuncia nao pode ser anonima e sigilosa ao mesmo tempo"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio AnonimatoIrreversivelException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.ocorrencias.exception.AnonimatoIrreversivelException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Denuncia identificada nao pode passar a anonima"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio UrgenciaDefinidaPeloProcessoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.ocorrencias.exception.UrgenciaDefinidaPeloProcessoException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Urgencia definida pelo processo vinculado nao pode ser desmarcada"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio AnexoInvalidoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.ocorrencias.exception.AnexoInvalidoException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Anexo deve ser JPG, PNG ou PDF com ate 5 MB"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio LimiteAnexosAtingidoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.ocorrencias.exception.LimiteAnexosAtingidoException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Limite de 5 anexos por ocorrencia atingido"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio VinculoJaExistenteException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.ocorrencias.exception.VinculoJaExistenteException",
+      "corpo" : null
+    },
+    "status" : 409,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Ocorrencia ou processo ja possui vinculo"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio DesfechoInvalidoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/dominio?classe=com.siszoo.processos.exception.DesfechoInvalidoException",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Desfecho do animal informado nao existe"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio CampoInvalidoException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/campo-invalido",
+      "corpo" : null
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Mensagem do campo de teste",
+      "campos" : [ {
+        "campo" : "campoDeTeste",
+        "mensagem" : "Mensagem do campo de teste"
+      } ]
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio BaiaIndisponivelException.inativa",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/baia-inativa",
+      "corpo" : null
+    },
+    "status" : 409,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Baia informada esta inativa"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio BaiaIndisponivelException.superlotada",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/baia-superlotada",
+      "corpo" : null
+    },
+    "status" : 409,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Baia informada ja atingiu a capacidade"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "dominio FalhaAuditoriaException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/falha-auditoria",
+      "corpo" : null
+    },
+    "status" : 500,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Nao foi possivel concluir a operacao"
+    },
+    "logs" : [ {
+      "nivel" : "ERROR",
+      "mensagem" : "Evento de auditoria obrigatorio nao foi gravado",
+      "excecao" : "com.siszoo.usuarios.exception.FalhaAuditoriaException: Falha ao registrar evento de auditoria"
+    } ]
+  }, {
+    "id" : "framework DataIntegrityViolationException constraint=uq_vacinacao_retifica_id",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/integridade/uq_vacinacao_retifica_id",
+      "corpo" : null
+    },
+    "status" : 409,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Registro ja foi retificado por outro"
+    },
+    "logs" : [ {
+      "nivel" : "WARN",
+      "mensagem" : "Violacao de integridade de dados barrada pelo banco (constraint=uq_vacinacao_retifica_id, sqlState=23505)",
+      "excecao" : null
+    }, {
+      "nivel" : "DEBUG",
+      "mensagem" : "Detalhe da violacao de integridade (pode conter valores da linha)",
+      "excecao" : "org.springframework.dao.DataIntegrityViolationException: could not execute statement"
+    } ]
+  }, {
+    "id" : "framework DataIntegrityViolationException constraint=uq_procedimento_retifica_id",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/integridade/uq_procedimento_retifica_id",
+      "corpo" : null
+    },
+    "status" : 409,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Registro ja foi retificado por outro"
+    },
+    "logs" : [ {
+      "nivel" : "WARN",
+      "mensagem" : "Violacao de integridade de dados barrada pelo banco (constraint=uq_procedimento_retifica_id, sqlState=23505)",
+      "excecao" : null
+    }, {
+      "nivel" : "DEBUG",
+      "mensagem" : "Detalhe da violacao de integridade (pode conter valores da linha)",
+      "excecao" : "org.springframework.dao.DataIntegrityViolationException: could not execute statement"
+    } ]
+  }, {
+    "id" : "framework DataIntegrityViolationException constraint=uq_prescricao_retifica_id",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/integridade/uq_prescricao_retifica_id",
+      "corpo" : null
+    },
+    "status" : 409,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Registro ja foi retificado por outro"
+    },
+    "logs" : [ {
+      "nivel" : "WARN",
+      "mensagem" : "Violacao de integridade de dados barrada pelo banco (constraint=uq_prescricao_retifica_id, sqlState=23505)",
+      "excecao" : null
+    }, {
+      "nivel" : "DEBUG",
+      "mensagem" : "Detalhe da violacao de integridade (pode conter valores da linha)",
+      "excecao" : "org.springframework.dao.DataIntegrityViolationException: could not execute statement"
+    } ]
+  }, {
+    "id" : "framework DataIntegrityViolationException constraint=uq_resultado_processo_retifica_id",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/integridade/uq_resultado_processo_retifica_id",
+      "corpo" : null
+    },
+    "status" : 409,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Registro ja foi retificado por outro"
+    },
+    "logs" : [ {
+      "nivel" : "WARN",
+      "mensagem" : "Violacao de integridade de dados barrada pelo banco (constraint=uq_resultado_processo_retifica_id, sqlState=23505)",
+      "excecao" : null
+    }, {
+      "nivel" : "DEBUG",
+      "mensagem" : "Detalhe da violacao de integridade (pode conter valores da linha)",
+      "excecao" : "org.springframework.dao.DataIntegrityViolationException: could not execute statement"
+    } ]
+  }, {
+    "id" : "framework DataIntegrityViolationException constraint=uq_resultado_processo_original",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/integridade/uq_resultado_processo_original",
+      "corpo" : null
+    },
+    "status" : 409,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Processo ja tem resultado registrado; para corrigir, informe retificaId do resultado vigente"
+    },
+    "logs" : [ {
+      "nivel" : "WARN",
+      "mensagem" : "Violacao de integridade de dados barrada pelo banco (constraint=uq_resultado_processo_original, sqlState=23505)",
+      "excecao" : null
+    }, {
+      "nivel" : "DEBUG",
+      "mensagem" : "Detalhe da violacao de integridade (pode conter valores da linha)",
+      "excecao" : "org.springframework.dao.DataIntegrityViolationException: could not execute statement"
+    } ]
+  }, {
+    "id" : "framework DataIntegrityViolationException constraint=UQ_VACINACAO_RETIFICA_ID",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/integridade/UQ_VACINACAO_RETIFICA_ID",
+      "corpo" : null
+    },
+    "status" : 409,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Registro ja foi retificado por outro"
+    },
+    "logs" : [ {
+      "nivel" : "WARN",
+      "mensagem" : "Violacao de integridade de dados barrada pelo banco (constraint=uq_vacinacao_retifica_id, sqlState=23505)",
+      "excecao" : null
+    }, {
+      "nivel" : "DEBUG",
+      "mensagem" : "Detalhe da violacao de integridade (pode conter valores da linha)",
+      "excecao" : "org.springframework.dao.DataIntegrityViolationException: could not execute statement"
+    } ]
+  }, {
+    "id" : "framework DataIntegrityViolationException constraint=uq_outra_constraint",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/integridade/uq_outra_constraint",
+      "corpo" : null
+    },
+    "status" : 409,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Operacao viola uma regra de integridade dos dados"
+    },
+    "logs" : [ {
+      "nivel" : "WARN",
+      "mensagem" : "Violacao de integridade de dados barrada pelo banco (constraint=uq_outra_constraint, sqlState=23505)",
+      "excecao" : null
+    }, {
+      "nivel" : "DEBUG",
+      "mensagem" : "Detalhe da violacao de integridade (pode conter valores da linha)",
+      "excecao" : "org.springframework.dao.DataIntegrityViolationException: could not execute statement"
+    } ]
+  }, {
+    "id" : "framework DataIntegrityViolationException sem constraint",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/integridade-sem-constraint",
+      "corpo" : null
+    },
+    "status" : 409,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Operacao viola uma regra de integridade dos dados"
+    },
+    "logs" : [ {
+      "nivel" : "WARN",
+      "mensagem" : "Violacao de integridade de dados barrada pelo banco (constraint=null, sqlState=null)",
+      "excecao" : null
+    }, {
+      "nivel" : "DEBUG",
+      "mensagem" : "Detalhe da violacao de integridade (pode conter valores da linha)",
+      "excecao" : "org.springframework.dao.DataIntegrityViolationException: violacao sem causa"
+    } ]
+  }, {
+    "id" : "framework DuplicateKeyException (subclasse)",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/chave-duplicada",
+      "corpo" : null
+    },
+    "status" : 409,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Operacao viola uma regra de integridade dos dados"
+    },
+    "logs" : [ {
+      "nivel" : "WARN",
+      "mensagem" : "Violacao de integridade de dados barrada pelo banco (constraint=null, sqlState=23505)",
+      "excecao" : null
+    }, {
+      "nivel" : "DEBUG",
+      "mensagem" : "Detalhe da violacao de integridade (pode conter valores da linha)",
+      "excecao" : "org.springframework.dao.DuplicateKeyException: duplicate key"
+    } ]
+  }, {
+    "id" : "framework DataIntegrityViolationException real (banco)",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/integridade/violacao",
+      "corpo" : null
+    },
+    "status" : 409,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Operacao viola uma regra de integridade dos dados"
+    },
+    "logs" : [ {
+      "nivel" : "WARN",
+      "mensagem" : "Violacao de integridade de dados barrada pelo banco (constraint=null, sqlState=23505)",
+      "excecao" : null
+    }, {
+      "nivel" : "DEBUG",
+      "mensagem" : "Detalhe da violacao de integridade (pode conter valores da linha)",
+      "excecao" : "org.springframework.dao.DuplicateKeyException: StatementCallback; SQL [INSERT INTO status_animal (codigo, nome) VALUES ('adotado', 'Duplicado')]; ERROR: duplicate key value violates unique constraint \"uq_status_animal_codigo\"\n  Detalhe: Key (codigo)=(adotado) already exists."
+    } ]
+  }, {
+    "id" : "framework MethodArgumentNotValidException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/validacao",
+      "corpo" : "{}"
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Dados invalidos",
+      "campos" : [ {
+        "campo" : "primeiro",
+        "mensagem" : "não deve estar em branco"
+      }, {
+        "campo" : "segundo",
+        "mensagem" : "não deve estar em branco"
+      } ]
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "framework MethodArgumentNotValidException um campo",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/validacao",
+      "corpo" : "{\"primeiro\":\"a\"}"
+    },
+    "status" : 422,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Dados invalidos",
+      "campos" : [ {
+        "campo" : "segundo",
+        "mensagem" : "não deve estar em branco"
+      } ]
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "framework MaxUploadSizeExceededException",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/upload-grande",
+      "corpo" : null
+    },
+    "status" : 413,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Arquivo excede o tamanho maximo de 5 MB"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "sucesso corpo valido",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/validacao",
+      "corpo" : "{\"primeiro\":\"a\",\"segundo\":\"b\"}"
+    },
+    "status" : 200,
+    "contentType" : "",
+    "corpo" : null,
+    "logs" : [ ]
+  }, {
+    "id" : "nao tratada corpo ilegivel",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/validacao",
+      "corpo" : "{nao e json"
+    },
+    "status" : 400,
+    "contentType" : "application/json",
+    "corpo" : {
+      "timestamp" : "<varia a cada execucao>",
+      "status" : 400,
+      "error" : "Bad Request",
+      "path" : "/api/teste/excecoes/validacao"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "nao tratada metodo nao suportado",
+    "requisicao" : {
+      "metodo" : "GET",
+      "caminho" : "/api/teste/excecoes/validacao",
+      "corpo" : null
+    },
+    "status" : 405,
+    "contentType" : "application/json",
+    "corpo" : {
+      "timestamp" : "<varia a cada execucao>",
+      "status" : 405,
+      "error" : "Method Not Allowed",
+      "path" : "/api/teste/excecoes/validacao"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "nao tratada acesso negado",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/acesso-negado",
+      "corpo" : null
+    },
+    "status" : 403,
+    "contentType" : "application/json",
+    "corpo" : {
+      "mensagem" : "Acesso negado"
+    },
+    "logs" : [ ]
+  }, {
+    "id" : "nao tratada erro inesperado",
+    "requisicao" : {
+      "metodo" : "POST",
+      "caminho" : "/api/teste/excecoes/inesperada",
+      "corpo" : null
+    },
+    "status" : 500,
+    "contentType" : "application/json",
+    "corpo" : {
+      "timestamp" : "<varia a cada execucao>",
+      "status" : 500,
+      "error" : "Internal Server Error",
+      "path" : "/api/teste/excecoes/inesperada"
+    },
+    "logs" : [ ]
+  } ]
+}

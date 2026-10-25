@@ -1,4 +1,12 @@
 package com.siszoo.processos.exception;
 
-public class SintomaSemStatusSintomaticoException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+import com.siszoo.comum.exception.ErroNegocioException;
+
+public class SintomaSemStatusSintomaticoException extends ErroNegocioException {
+
+    public SintomaSemStatusSintomaticoException() {
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "Sintomas so podem ser informados em amostra com status clinico sintomatico");
+    }
 }

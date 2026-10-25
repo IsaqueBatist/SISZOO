@@ -1,4 +1,12 @@
 package com.siszoo.ocorrencias.exception;
 
-public class VinculoJaExistenteException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+import com.siszoo.comum.exception.ErroNegocioException;
+
+public class VinculoJaExistenteException extends ErroNegocioException {
+
+    public VinculoJaExistenteException() {
+        super(HttpStatus.CONFLICT, "Ocorrencia ou processo ja possui vinculo");
+    }
 }

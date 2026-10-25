@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '@/components/layout/Icon'
 import { ErroComRetry } from '@/components/layout/ErroComRetry'
+import { MontarQuandoVisivel } from '@/components/layout/MontarQuandoVisivel'
 import { Skeleton } from '@/components/layout/Skeleton'
 import { SeloDadosMock } from '@/components/layout/SeloDadosMock'
 import type { SeveridadeAlerta } from '@/features/alertas/types/alertas.types'
@@ -281,9 +282,13 @@ export function Dashboard() {
       </div>
 
       <div style={{ marginTop: 'var(--space-4)' }}>
-        <Suspense fallback={<Skeleton width="100%" height={220} />}>
-          <GraficosDashboard />
-        </Suspense>
+        {/* T45: os gráficos ficam abaixo de KPIs e alertas; o chunk do recharts
+            só é baixado quando o usuário chega perto deles. */}
+        <MontarQuandoVisivel alturaReservada={220}>
+          <Suspense fallback={<Skeleton width="100%" height={220} />}>
+            <GraficosDashboard />
+          </Suspense>
+        </MontarQuandoVisivel>
       </div>
     </>
   )

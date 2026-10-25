@@ -17,6 +17,8 @@ vi.mock('recharts', async (importOriginal) => {
   }
 })
 
+const ROTA_CONTAGEM = `${API_BASE_URL}/ocorrencias/estatisticas/bairro`
+
 function renderGrafico() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
@@ -26,15 +28,14 @@ function renderGrafico() {
   )
 }
 
-function paginaDe(itens: { bairro: string }[], totalItens = itens.length) {
-  return { itens, pagina: 0, tamanho: 500, totalItens, totalPaginas: 1 }
-}
-
 describe('GraficoOcorrenciasPorBairro', () => {
   it('renderiza a distribuição por bairro com valores', async () => {
     server.use(
-      http.get(`${API_BASE_URL}/ocorrencias`, () =>
-        HttpResponse.json(paginaDe([{ bairro: 'Centro' }, { bairro: 'Centro' }, { bairro: 'Vila Nova' }])),
+      http.get(ROTA_CONTAGEM, () =>
+        HttpResponse.json([
+          { bairro: 'Centro', quantidade: 2 },
+          { bairro: 'Vila Nova', quantidade: 1 },
+        ]),
       ),
     )
     renderGrafico()
@@ -43,34 +44,48 @@ describe('GraficoOcorrenciasPorBairro', () => {
     expect(screen.getByText('Vila Nova: 1')).toBeInTheDocument()
   })
 
-  it('mostra o aviso de amostra quando o total é maior do que o carregado', async () => {
+  it('junta as grafias do mesmo bairro somando as contagens do backend', async () => {
     server.use(
-      http.get(`${API_BASE_URL}/ocorrencias`, () => HttpResponse.json(paginaDe([{ bairro: 'Centro' }], 800))),
+      http.get(ROTA_CONTAGEM, () =>
+        HttpResponse.json([
+          { bairro: 'Sao Luiz', quantidade: 5 },
+          { bairro: 'São Luiz', quantidade: 2 },
+        ]),
+      ),
     )
     renderGrafico()
 
-    expect(await screen.findByText(/Baseado nas 1 ocorrências mais recentes \(de 800 no total\)/)).toBeInTheDocument()
+    expect(await screen.findByText('Sao Luiz: 7')).toBeInTheDocument()
   })
 
-  it('não mostra o aviso de amostra quando já carregou tudo', async () => {
+  // T45: a contagem vem agregada de todo o histórico — o gráfico não baixa
+  // mais a listagem de ocorrências (nem mostra o antigo aviso de "amostra
+  // das 500 mais recentes", que deixou de existir).
+  it('usa a contagem agregada e não baixa a listagem de ocorrências', async () => {
+    const listagem = vi.fn()
     server.use(
-      http.get(`${API_BASE_URL}/ocorrencias`, () => HttpResponse.json(paginaDe([{ bairro: 'Centro' }], 1))),
+      http.get(ROTA_CONTAGEM, () => HttpResponse.json([{ bairro: 'Centro', quantidade: 800 }])),
+      http.get(`${API_BASE_URL}/ocorrencias`, () => {
+        listagem()
+        return HttpResponse.json({ itens: [], pagina: 0, tamanho: 20, totalItens: 0, totalPaginas: 0 })
+      }),
     )
     renderGrafico()
 
-    await screen.findByText('Centro: 1')
+    expect(await screen.findByText('Centro: 800')).toBeInTheDocument()
     expect(screen.queryByText(/Baseado nas/)).not.toBeInTheDocument()
+    expect(listagem).not.toHaveBeenCalled()
   })
 
   it('mostra estado vazio quando não há ocorrências com bairro', async () => {
-    server.use(http.get(`${API_BASE_URL}/ocorrencias`, () => HttpResponse.json(paginaDe([]))))
+    server.use(http.get(ROTA_CONTAGEM, () => HttpResponse.json([])))
     renderGrafico()
 
     expect(await screen.findByText('Sem dados no período.')).toBeInTheDocument()
   })
 
   it('mostra erro com retry quando a API falha', async () => {
-    server.use(http.get(`${API_BASE_URL}/ocorrencias`, () => HttpResponse.json({ mensagem: 'Erro' }, { status: 500 })))
+    server.use(http.get(ROTA_CONTAGEM, () => HttpResponse.json({ mensagem: 'Erro' }, { status: 500 })))
     renderGrafico()
 
     expect(await screen.findByRole('button', { name: 'Tentar novamente' })).toBeInTheDocument()

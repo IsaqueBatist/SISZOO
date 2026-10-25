@@ -59,7 +59,7 @@ public class AlertaVacinalService {
         vigentes.stream()
                 .sorted(Comparator.comparing(Vacinacao::getDataAplicacao))
                 .forEach(vacinacao -> {
-                    LocalDate dataValidade = calcularDataValidade(vacinacao);
+                    LocalDate dataValidade = vacinacao.calcularDataValidade();
                     // Limite inclusivo por dia civil: dataValidade == hoje+7
                     // ainda entra no alerta (7 dias de antecedencia).
                     if (dataValidade.isAfter(limite)) {
@@ -76,12 +76,5 @@ public class AlertaVacinalService {
         return itensPorAnimal.entrySet().stream()
                 .map(entry -> alertaVacinalMapper.toAnimalResponse(entry.getKey(), entry.getValue()))
                 .toList();
-    }
-
-    // Mesma formula de com.siszoo.animais.clinico.mapper.VacinacaoMapper.calcularDataValidade.
-    // Seguro sem checagem de nulo aqui: a query ja filtra vacina.intervaloMeses
-    // != null, e dataAplicacao e coluna NOT NULL na entidade.
-    private LocalDate calcularDataValidade(Vacinacao vacinacao) {
-        return vacinacao.getDataAplicacao().plusMonths(vacinacao.getVacina().getIntervaloMeses());
     }
 }

@@ -57,6 +57,19 @@ spring:
     caffeine:
       spec: expireAfterWrite=5m,maximumSize=10
 
+# T45: o navegador chama a API direto (VITE_API_BASE_URL, sem o nginx no
+# meio), e as respostas JSON trafegavam sem compressao. So JSON e so a partir
+# de 1 KB (respostas pequenas nao compensam). BREACH (compressao + TLS) exige
+# segredo e texto escolhido pelo atacante na mesma resposta: o unico segredo
+# no corpo e o token do login, cuja resposta (token + usuario) fica abaixo de
+# 1 KB e, com e-mail/senha forjados pelo atacante, e 401 sem token; a API nao
+# usa cookie. Reavaliar se algum desses pontos mudar.
+server:
+  compression:
+    enabled: true
+    mime-types: application/json
+    min-response-size: 1KB
+
 siszoo:
   cors:
     allowed-origin: ${SISZOO_CORS_ORIGIN:http://localhost:5173}
@@ -116,6 +129,15 @@ spring:
   config:
     activate:
       on-profile: test
+  # Os *IT compartilham um PostgreSQL (um database por contexto em cache,
+  # TestcontainersConfiguration). O maximo do pool continua o padrao (10,
+  # usado pelos testes de concorrencia); so as conexoes ociosas dos contextos
+  # fora de uso sao devolvidas, para o servidor nao carregar ~120 backends
+  # parados enquanto os testes de migracao rodam DDL.
+  datasource:
+    hikari:
+      minimum-idle: 0
+      idle-timeout: 10000 # ms (minimo aceito pelo Hikari)
   jpa:
     hibernate:
       ddl-auto: validate

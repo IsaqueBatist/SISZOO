@@ -10,7 +10,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,6 +19,7 @@ import org.springframework.util.StringUtils;
 
 import com.siszoo.comum.dto.PaginaResponse;
 import com.siszoo.comum.exception.CampoInvalidoException;
+import com.siszoo.comum.util.Paginacao;
 import com.siszoo.usuarios.dto.AtualizarPerfilRequest;
 import com.siszoo.usuarios.dto.AtualizarStatusUsuarioRequest;
 import com.siszoo.usuarios.dto.CriarUsuarioRequest;
@@ -125,7 +125,7 @@ public class UsuarioService {
     public PaginaResponse<UsuarioResponse> listar(String nome, String cargo, Boolean ativo, int pagina, int tamanho) {
         Specification<Usuario> filtro = construirFiltro(nome, cargo, ativo);
         Page<Usuario> paginaUsuarios = usuarioRepository.findAll(
-                filtro, PageRequest.of(pagina, tamanho, Sort.by("nome").ascending()));
+                filtro, Paginacao.pagina(pagina, tamanho, Sort.by("nome").ascending()));
 
         List<UUID> ids = paginaUsuarios.getContent().stream().map(Usuario::getId).toList();
         Map<UUID, List<String>> cargosPorUsuario = usuarioCargoRepository.findByUsuario_IdIn(ids).stream()
@@ -133,8 +133,7 @@ public class UsuarioService {
                         uc -> uc.getUsuario().getId(),
                         Collectors.mapping(uc -> uc.getCargo().getNome(), Collectors.toList())));
 
-        List<UsuarioResponse> itens = paginaUsuarios.getContent().stream()
-                .map(usuario -> new UsuarioResponse(
+        return PaginaResponse.de(paginaUsuarios.map(usuario -> new UsuarioResponse(
                         usuario.getId(),
                         usuario.getEmail(),
                         usuario.getNome(),
@@ -144,15 +143,7 @@ public class UsuarioService {
                         usuario.isAtivo(),
                         usuario.getUltimoAcesso(),
                         usuario.getCriadoEm(),
-                        usuario.getSenhaAlteradaEm()))
-                .toList();
-
-        return new PaginaResponse<>(
-                itens,
-                paginaUsuarios.getNumber(),
-                paginaUsuarios.getSize(),
-                paginaUsuarios.getTotalElements(),
-                paginaUsuarios.getTotalPages());
+                        usuario.getSenhaAlteradaEm())));
     }
 
     @Transactional

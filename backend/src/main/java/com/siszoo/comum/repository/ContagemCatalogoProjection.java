@@ -1,4 +1,4 @@
-package com.siszoo.processos.repository;
+package com.siszoo.comum.repository;
 
 // Projecao generica codigo/nome/quantidade para graficos agregados do
 // dashboard (com.siszoo.relatorios, T38): usada tanto por

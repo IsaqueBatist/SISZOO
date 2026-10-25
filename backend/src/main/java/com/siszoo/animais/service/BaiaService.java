@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -22,6 +21,7 @@ import com.siszoo.animais.dto.AtualizarBaiaRequest;
 import com.siszoo.animais.dto.AtualizarStatusBaiaRequest;
 import com.siszoo.animais.dto.BaiaResponse;
 import com.siszoo.animais.dto.CriarBaiaRequest;
+import com.siszoo.animais.dto.ResidenteBaiaResponse;
 import com.siszoo.animais.entity.Baia;
 import com.siszoo.animais.entity.StatusAnimal;
 import com.siszoo.animais.entity.TipoBaia;
@@ -33,6 +33,7 @@ import com.siszoo.animais.repository.BaiaRepository;
 import com.siszoo.animais.repository.OcupacaoBaiaProjection;
 import com.siszoo.animais.repository.TipoBaiaRepository;
 import com.siszoo.comum.dto.PaginaResponse;
+import com.siszoo.comum.util.Paginacao;
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.exception.UsuarioNaoEncontradoException;
@@ -150,7 +151,7 @@ public class BaiaService {
     public PaginaResponse<BaiaResponse> listar(Boolean ativa, int pagina, int tamanho) {
         Specification<Baia> filtro = construirFiltro(ativa);
         Page<Baia> paginaBaias = baiaRepository.findAll(
-                filtro, PageRequest.of(pagina, tamanho, Sort.by("nome").ascending()));
+                filtro, Paginacao.pagina(pagina, tamanho, Sort.by("nome").ascending()));
 
         List<UUID> ids = paginaBaias.getContent().stream().map(Baia::getId).toList();
         Map<UUID, Long> ocupacaoPorBaia = ids.isEmpty()
@@ -159,19 +160,19 @@ public class BaiaService {
                         .collect(Collectors.toMap(
                                 OcupacaoBaiaProjection::getBaiaId, OcupacaoBaiaProjection::getTotal));
 
-        List<BaiaResponse> itens = paginaBaias.getContent().stream()
-                .map(baia -> {
+        return PaginaResponse.de(paginaBaias.map(baia -> {
                     long ocupacaoAtual = ocupacaoPorBaia.getOrDefault(baia.getId(), 0L);
                     return baiaMapper.toResponse(baia, ocupacaoAtual, ocupacaoAtual >= baia.getCapacidade());
-                })
-                .toList();
+                }));
+    }
 
-        return new PaginaResponse<>(
-                itens,
-                paginaBaias.getNumber(),
-                paginaBaias.getSize(),
-                paginaBaias.getTotalElements(),
-                paginaBaias.getTotalPages());
+    // T45: residentes (sob custodia, mesmo criterio da ocupacao) de todas as
+    // baias, por nome, numa consulta so de colunas leves.
+    @Transactional(readOnly = true)
+    public List<ResidenteBaiaResponse> listarResidentes() {
+        return animalRepository.listarResidentesDeBaias(STATUS_FORA_DA_OCUPACAO).stream()
+                .map(r -> new ResidenteBaiaResponse(r.getBaiaId(), r.getId(), r.getNome(), r.getFotoMiniatura()))
+                .toList();
     }
 
     private BaiaResponse mapearComOcupacao(Baia baia, boolean avisarSeSuperlotada) {

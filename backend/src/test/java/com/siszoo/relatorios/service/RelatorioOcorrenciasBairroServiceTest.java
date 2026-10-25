@@ -3,6 +3,8 @@ package com.siszoo.relatorios.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -59,6 +61,8 @@ class RelatorioOcorrenciasBairroServiceTest {
         assertThat(resposta.bairros()).hasSize(1);
         assertThat(resposta.bairros().get(0).tipoPredominante()).isEqualTo("Infestação de Morcegos");
         assertThat(resposta.bairros().get(0).tempoMedioHoras()).isEqualTo(2.8);
+        // T45: KPIs e linhas por bairro usam a mesma consulta de tempos.
+        verify(ocorrenciaRepository, times(1)).listarTemposDeAtendimento(any(), any());
     }
 
     @Test

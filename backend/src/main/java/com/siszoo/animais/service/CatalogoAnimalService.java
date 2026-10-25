@@ -7,7 +7,8 @@ import java.util.function.Function;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.siszoo.animais.dto.CatalogoItemResponse;
+import com.siszoo.animais.clinico.entity.TipoExame;
+import com.siszoo.animais.clinico.repository.TipoExameRepository;
 import com.siszoo.animais.dto.CatalogosAnimalResponse;
 import com.siszoo.animais.entity.Especie;
 import com.siszoo.animais.entity.MotivoEntrada;
@@ -17,8 +18,7 @@ import com.siszoo.animais.repository.EspecieRepository;
 import com.siszoo.animais.repository.MotivoEntradaRepository;
 import com.siszoo.animais.repository.StatusAnimalRepository;
 import com.siszoo.animais.repository.TipoBaiaRepository;
-import com.siszoo.animais.clinico.entity.TipoExame;
-import com.siszoo.animais.clinico.repository.TipoExameRepository;
+import com.siszoo.comum.dto.CatalogoItemResponse;
 import com.siszoo.processos.entity.Laboratorio;
 import com.siszoo.processos.repository.LaboratorioRepository;
 

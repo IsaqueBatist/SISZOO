@@ -16,9 +16,9 @@ import com.siszoo.animais.clinico.repository.PrescricaoRepository;
 import com.siszoo.animais.clinico.repository.ProcedimentoRepository;
 import com.siszoo.animais.clinico.repository.ProdutividadeProcedimentoProjection;
 import com.siszoo.animais.clinico.repository.VacinacaoRepository;
+import com.siszoo.comum.repository.ContagemCatalogoProjection;
 import com.siszoo.comum.util.BlocoCsv;
 import com.siszoo.comum.util.Formatadores;
-import com.siszoo.processos.repository.ContagemCatalogoProjection;
 import com.siszoo.relatorios.dto.CirurgiaRealizadaResponse;
 import com.siszoo.relatorios.dto.KpisProcedimentosResponse;
 import com.siszoo.relatorios.dto.PeriodoRelatorio;
@@ -67,8 +67,9 @@ public class RelatorioProcedimentosService implements GeradorRelatorio<Relatorio
         LocalDate inicio = periodo.inicio();
         LocalDate fim = periodo.fim();
 
-        KpisProcedimentosResponse kpis = calcularKpis(inicio, fim);
-        List<ProcedimentoPorTipoResponse> porTipo = montarPorTipo(inicio, fim);
+        ContagensDoPeriodo contagens = contar(inicio, fim);
+        KpisProcedimentosResponse kpis = calcularKpis(inicio, fim, contagens);
+        List<ProcedimentoPorTipoResponse> porTipo = montarPorTipo(contagens);
         List<ProdutividadeVeterinarioResponse> porVeterinario = montarPorVeterinario(inicio, fim);
         ProdutividadeVeterinarioResponse totalVeterinarios = somarVeterinarios(porVeterinario);
 
@@ -86,7 +87,7 @@ public class RelatorioProcedimentosService implements GeradorRelatorio<Relatorio
         LocalDate inicio = periodo.inicio();
         LocalDate fim = periodo.fim();
 
-        List<List<String>> linhasPorTipo = montarPorTipo(inicio, fim).stream()
+        List<List<String>> linhasPorTipo = montarPorTipo(contar(inicio, fim)).stream()
                 .map(l -> List.of(l.tipo(), String.valueOf(l.quantidade())))
                 .toList();
 
@@ -115,53 +116,45 @@ public class RelatorioProcedimentosService implements GeradorRelatorio<Relatorio
                         List.of("Data", "Animal", "Procedimento", "Vet. responsável", "Resultado"), linhasCirurgias));
     }
 
-    private KpisProcedimentosResponse calcularKpis(LocalDate inicio, LocalDate fim) {
-        long castracoes = procedimentoRepository.countByTipoProcedimento_CodigoAndDataBetweenAndAnimal_Sexo(
-                        CASTRACAO, inicio, fim, "macho")
-                + procedimentoRepository.countByTipoProcedimento_CodigoAndDataBetweenAndAnimal_Sexo(
-                        CASTRACAO, inicio, fim, "femea");
-        long castracoesMachos = procedimentoRepository.countByTipoProcedimento_CodigoAndDataBetweenAndAnimal_Sexo(
-                CASTRACAO, inicio, fim, "macho");
-        long castracoesFemeas = procedimentoRepository.countByTipoProcedimento_CodigoAndDataBetweenAndAnimal_Sexo(
-                CASTRACAO, inicio, fim, "femea");
-
-        Map<String, Long> porTipo = contarPorTipoFiltrado(inicio, fim);
-        long atendimentosClinicos = porTipo.getOrDefault(ATENDIMENTO_CLINICO, 0L);
-        long cirurgiasMaiores = porTipo.getOrDefault(CIRURGIA_MAIOR, 0L);
-
-        long vacinacoes = vacinacaoRepository.countByDataAplicacaoBetween(inicio, fim);
-        long medicacoes = prescricaoRepository.countByDataInicioBetween(inicio, fim);
-
-        long total = castracoes + atendimentosClinicos + cirurgiasMaiores + vacinacoes + medicacoes;
-
-        return new KpisProcedimentosResponse(total, castracoes, castracoesMachos, castracoesFemeas, atendimentosClinicos, cirurgiasMaiores);
+    // Contagens do periodo usadas tanto pelos KPIs quanto pelo grafico por
+    // tipo: consultadas uma vez por requisicao (antes contarPorTipo rodava 3x
+    // e as contagens de vacinacao/medicacao 2x no mesmo preview).
+    private record ContagensDoPeriodo(List<ContagemCatalogoProjection> porTipo, long vacinacoes, long medicacoes) {
     }
 
     // Exclui 'vacinacao' do catalogo tipo_procedimento (nunca usado pelo fluxo
     // real de criacao) — Vacinações entra no relatorio via Vacinacao, nao Procedimento.
-    private Map<String, Long> contarPorTipoFiltrado(LocalDate inicio, LocalDate fim) {
-        Map<String, Long> porTipo = new LinkedHashMap<>();
-        for (ContagemCatalogoProjection linha : procedimentoRepository.contarPorTipo(inicio, fim)) {
-            if (!VACINACAO_CODIGO_NAO_USADO_EM_PROCEDIMENTO.equals(linha.getCodigo())) {
-                porTipo.put(linha.getCodigo(), linha.getQuantidade());
-            }
-        }
-        return porTipo;
+    private ContagensDoPeriodo contar(LocalDate inicio, LocalDate fim) {
+        List<ContagemCatalogoProjection> porTipo = procedimentoRepository.contarPorTipo(inicio, fim).stream()
+                .filter(linha -> !VACINACAO_CODIGO_NAO_USADO_EM_PROCEDIMENTO.equals(linha.getCodigo()))
+                .toList();
+        return new ContagensDoPeriodo(porTipo,
+                vacinacaoRepository.countByDataAplicacaoBetween(inicio, fim),
+                prescricaoRepository.countByDataInicioBetween(inicio, fim));
     }
 
-    private List<ProcedimentoPorTipoResponse> montarPorTipo(LocalDate inicio, LocalDate fim) {
-        Map<String, String> nomePorCodigo = new LinkedHashMap<>();
-        for (ContagemCatalogoProjection linha : procedimentoRepository.contarPorTipo(inicio, fim)) {
-            if (!VACINACAO_CODIGO_NAO_USADO_EM_PROCEDIMENTO.equals(linha.getCodigo())) {
-                nomePorCodigo.put(linha.getCodigo(), linha.getNome());
-            }
-        }
-        Map<String, Long> quantidadePorCodigo = contarPorTipoFiltrado(inicio, fim);
+    private KpisProcedimentosResponse calcularKpis(LocalDate inicio, LocalDate fim, ContagensDoPeriodo contagens) {
+        long castracoesMachos = procedimentoRepository.countByTipoProcedimento_CodigoAndDataBetweenAndAnimal_Sexo(
+                CASTRACAO, inicio, fim, "macho");
+        long castracoesFemeas = procedimentoRepository.countByTipoProcedimento_CodigoAndDataBetweenAndAnimal_Sexo(
+                CASTRACAO, inicio, fim, "femea");
+        long castracoes = castracoesMachos + castracoesFemeas;
 
+        Map<String, Long> porTipo = new LinkedHashMap<>();
+        contagens.porTipo().forEach(linha -> porTipo.put(linha.getCodigo(), linha.getQuantidade()));
+        long atendimentosClinicos = porTipo.getOrDefault(ATENDIMENTO_CLINICO, 0L);
+        long cirurgiasMaiores = porTipo.getOrDefault(CIRURGIA_MAIOR, 0L);
+
+        long total = castracoes + atendimentosClinicos + cirurgiasMaiores + contagens.vacinacoes() + contagens.medicacoes();
+
+        return new KpisProcedimentosResponse(total, castracoes, castracoesMachos, castracoesFemeas, atendimentosClinicos, cirurgiasMaiores);
+    }
+
+    private List<ProcedimentoPorTipoResponse> montarPorTipo(ContagensDoPeriodo contagens) {
         List<ProcedimentoPorTipoResponse> linhas = new ArrayList<>();
-        linhas.add(new ProcedimentoPorTipoResponse("Vacinações", vacinacaoRepository.countByDataAplicacaoBetween(inicio, fim)));
-        nomePorCodigo.forEach((codigo, nome) -> linhas.add(new ProcedimentoPorTipoResponse(nome, quantidadePorCodigo.getOrDefault(codigo, 0L))));
-        linhas.add(new ProcedimentoPorTipoResponse("Medicações", prescricaoRepository.countByDataInicioBetween(inicio, fim)));
+        linhas.add(new ProcedimentoPorTipoResponse("Vacinações", contagens.vacinacoes()));
+        contagens.porTipo().forEach(linha -> linhas.add(new ProcedimentoPorTipoResponse(linha.getNome(), linha.getQuantidade())));
+        linhas.add(new ProcedimentoPorTipoResponse("Medicações", contagens.medicacoes()));
 
         return linhas.stream().sorted(Comparator.comparingLong(ProcedimentoPorTipoResponse::quantidade).reversed()).toList();
     }
@@ -214,7 +207,7 @@ public class RelatorioProcedimentosService implements GeradorRelatorio<Relatorio
                 ? procedimento.getDescricao()
                 : procedimento.getTipoProcedimento().getNome();
         String veterinario = procedimento.getExecutadoPor() != null
-                ? procedimento.getExecutadoPor().getNome() + " " + procedimento.getExecutadoPor().getSobrenome()
+                ? procedimento.getExecutadoPor().nomeCompleto()
                 : "—";
         return new CirurgiaRealizadaResponse(
                 procedimento.getData(), procedimento.getAnimal().getNome(), nomeProcedimento, veterinario,

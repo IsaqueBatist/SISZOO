@@ -1,4 +1,12 @@
 package com.siszoo.processos.exception;
 
-public class DataColetaFuturaException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+import com.siszoo.comum.exception.ErroNegocioException;
+
+public class DataColetaFuturaException extends ErroNegocioException {
+
+    public DataColetaFuturaException() {
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "Data de coleta nao pode ser futura");
+    }
 }

@@ -5,6 +5,7 @@ import {
   avancarStatusProcesso,
   buscarCatalogosOcorrencia,
   buscarOcorrenciaPorId,
+  contarOcorrenciasPorBairro,
   criarOcorrencia,
   encerrarOcorrencia,
   enviarAnexo,
@@ -17,11 +18,27 @@ import type {
   EncerrarOcorrenciaRequest,
   Ocorrencia,
   OcorrenciasFiltro,
+  QuantidadePorBairro,
   StatusProcesso,
 } from '../types/ocorrencias.types'
 
 function chaveDetalhe(id: string) {
   return ['ocorrencias', 'detalhe', id]
+}
+
+const CHAVE_ESTATISTICAS = ['ocorrencias', 'estatisticas']
+
+// T45: gráfico de distribuição e sugestões de bairro leem a mesma contagem
+// (mesma chave, uma requisição só, cada um com o próprio `select`). Criar ou
+// editar ocorrência invalida a contagem (useAtualizarCacheDaOcorrencia e
+// useRecarregarOcorrencia); o staleTime só segura o refetch a cada montagem.
+export function useContagemPorBairroQuery<T>(select: (linhas: QuantidadePorBairro[]) => T) {
+  return useQuery({
+    queryKey: [...CHAVE_ESTATISTICAS, 'bairro'],
+    queryFn: contarOcorrenciasPorBairro,
+    staleTime: 60 * 1000,
+    select,
+  })
 }
 
 export function useOcorrenciasQuery(filtro: OcorrenciasFiltro) {
@@ -49,12 +66,13 @@ export function useCatalogosOcorrenciaQuery() {
 }
 
 // O cadastro grava a resposta no cache do detalhe (é o estado que o backend
-// acabou de gravar) e invalida só as listagens.
+// acabou de gravar) e invalida só as listagens e a contagem por bairro.
 function useAtualizarCacheDaOcorrencia() {
   const queryClient = useQueryClient()
   return (ocorrencia: Ocorrencia) => {
     queryClient.setQueryData(chaveDetalhe(ocorrencia.id), ocorrencia)
     void queryClient.invalidateQueries({ queryKey: ['ocorrencias', 'lista'] })
+    void queryClient.invalidateQueries({ queryKey: CHAVE_ESTATISTICAS })
   }
 }
 
@@ -66,6 +84,7 @@ function useRecarregarOcorrencia(id: string) {
   const queryClient = useQueryClient()
   return () => {
     void queryClient.invalidateQueries({ queryKey: ['ocorrencias', 'lista'] })
+    void queryClient.invalidateQueries({ queryKey: CHAVE_ESTATISTICAS })
     return queryClient.invalidateQueries({ queryKey: chaveDetalhe(id) })
   }
 }

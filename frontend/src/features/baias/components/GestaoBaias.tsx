@@ -4,23 +4,16 @@ import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import {
   useAlterarStatusBaiaMutation,
-  useAnimaisQuery,
   useBaiasQuery,
   useCatalogosAnimaisQuery,
   useExcluirBaiaMutation,
+  useResidentesDeBaiasQuery,
 } from '@/features/animais/hooks/useAnimais'
-import type { Animal, Baia } from '@/features/animais/types/animais.types'
-import { animalSobCustodia } from '@/features/animais/utils/statusCustodia'
+import type { Baia, ResidenteBaia } from '@/features/animais/types/animais.types'
 import { BaiaFormModal } from './BaiaFormModal'
 import { ResidentesBaia } from './ResidentesBaia'
 import { calcularPercentual, estadoLotacao, type EstadoLotacao } from '../utils/estadoLotacao'
 import './GestaoBaias.css'
-
-// Baia/BaiaResponse só tem a contagem (ocupacaoAtual), não a lista de
-// residentes — não há endpoint de "animais da baia X" (pedido registrado em
-// docs/contratos/). Paliativo: busca os animais (tamanho grande o bastante
-// para cobrir o CCZ hoje) e agrupa por baiaId no cliente.
-const LIMITE_ANIMAIS_RESIDENTES = 500
 
 type FiltroLotacao = '' | EstadoLotacao
 type FiltroStatus = 'ativas' | 'inativas' | 'todas'
@@ -57,20 +50,21 @@ export function GestaoBaias() {
 
   const { data: baias, isLoading, isError } = useBaiasQuery()
   const { data: catalogos } = useCatalogosAnimaisQuery()
-  const { data: paginaAnimais } = useAnimaisQuery({ pagina: 0, tamanho: LIMITE_ANIMAIS_RESIDENTES })
+  // T45: o backend já devolve só quem está sob custódia (mesma regra da
+  // ocupação), com nome e miniatura; aqui só se agrupa por baia.
+  const { data: residentes } = useResidentesDeBaiasQuery()
   const excluirMutation = useExcluirBaiaMutation()
   const alterarStatusMutation = useAlterarStatusBaiaMutation()
 
   const residentesPorBaia = useMemo(() => {
-    const mapa = new Map<string, Animal[]>()
-    for (const animal of paginaAnimais?.itens ?? []) {
-      if (!animal.baiaId || !animalSobCustodia(animal)) continue
-      const lista = mapa.get(animal.baiaId) ?? []
-      lista.push(animal)
-      mapa.set(animal.baiaId, lista)
+    const mapa = new Map<string, ResidenteBaia[]>()
+    for (const residente of residentes ?? []) {
+      const lista = mapa.get(residente.baiaId) ?? []
+      lista.push(residente)
+      mapa.set(residente.baiaId, lista)
     }
     return mapa
-  }, [paginaAnimais])
+  }, [residentes])
 
   const [busca, setBusca] = useState('')
   const [tipoFiltro, setTipoFiltro] = useState('')

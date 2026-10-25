@@ -1,0 +1,12 @@
+-- T45: miniatura da foto do animal para as listagens (avatar).
+--
+-- foto_url guarda a foto que o frontend grava (JPEG de ate 800 px em data URI,
+-- ~60-120 KB) e continua sendo a devolvida no detalhe do animal. As listagens
+-- (GET /api/animais, residentes por baia) passam a devolver esta miniatura
+-- (JPEG de ate 96 px, poucos KB), gerada pelo backend ao gravar a foto.
+--
+-- Nula quando o animal nao tem foto, quando a foto nao pode ser lida como
+-- imagem, ou enquanto o backfill da aplicacao (FotoMiniaturaBackfill, ao
+-- subir) ainda nao gerou a miniatura das fotos gravadas antes desta versao.
+-- Coluna aditiva e nullable: nenhuma linha existente muda nesta migration.
+ALTER TABLE animal ADD COLUMN foto_miniatura text;

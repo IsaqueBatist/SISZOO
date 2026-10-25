@@ -2,8 +2,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
+import { http, HttpResponse } from 'msw'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
+import { API_BASE_URL } from '@/lib/env'
+import { server } from '@/mocks/server'
 import type { Usuario } from '@/features/auth/types/auth.types'
 import { GestaoBaias } from './GestaoBaias'
 
@@ -207,6 +210,35 @@ describe('GestaoBaias', () => {
     const cardBaia3 = (await screen.findByText('Baia 3')).closest('.baia-card') as HTMLElement
     const linkResidente = within(cardBaia3).getByRole('link', { name: 'Rex' })
     expect(linkResidente).toHaveAttribute('href', '/animais/b2c3d4e5-0000-0000-0000-000000000001')
+  })
+
+  // T45: residentes vêm de GET /baias/residentes (nome e miniatura), não da
+  // listagem de 500 animais com foto.
+  it('carrega os residentes pelo endpoint dedicado, sem baixar a listagem de animais', async () => {
+    const listagemDeAnimais = vi.fn()
+    server.use(
+      http.get(`${API_BASE_URL}/animais`, () => {
+        listagemDeAnimais()
+        return HttpResponse.json({ itens: [], pagina: 0, tamanho: 20, totalItens: 0, totalPaginas: 0 })
+      }),
+      http.get(`${API_BASE_URL}/baias/residentes`, () =>
+        HttpResponse.json([
+          {
+            baiaId: 'c3d4e5f6-0000-0000-0000-000000000001',
+            id: 'residente-1',
+            nome: 'Pipoca',
+            fotoUrl: 'data:image/jpeg;base64,AAAA',
+          },
+        ]),
+      ),
+    )
+    renderGestaoBaias()
+
+    const cardBaia3 = (await screen.findByText('Baia 3')).closest('.baia-card') as HTMLElement
+    const link = await within(cardBaia3).findByRole('link', { name: 'Pipoca' })
+    expect(link).toHaveAttribute('href', '/animais/residente-1')
+    expect(link.querySelector('img')).toHaveAttribute('src', 'data:image/jpeg;base64,AAAA')
+    expect(listagemDeAnimais).not.toHaveBeenCalled()
   })
 
   it('baia sem nenhum animal sob custódia mostra "Vazia"', async () => {

@@ -29,7 +29,11 @@ export const processosHandlers = [
     const url = new URL(request.url)
     const pagina = Number(url.searchParams.get('pagina') ?? '0')
     const tamanho = Number(url.searchParams.get('tamanho') ?? '20')
-    const itens = processosFixture().map(paraResumoProcesso)
+    // T45: `urgente` opcional, como o backend (ausente, sem filtro).
+    const urgente = url.searchParams.get('urgente')
+    const itens = processosFixture()
+      .map(paraResumoProcesso)
+      .filter((processo) => urgente === null || processo.urgente === (urgente === 'true'))
     return HttpResponse.json({ itens, pagina, tamanho, totalItens: itens.length, totalPaginas: 1 })
   }),
 

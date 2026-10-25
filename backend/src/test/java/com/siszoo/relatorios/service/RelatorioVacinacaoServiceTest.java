@@ -19,15 +19,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.siszoo.animais.clinico.repository.AplicacaoPorVeterinarioProjection;
-import com.siszoo.animais.clinico.repository.VacinacaoRepository;
 import com.siszoo.animais.clinico.entity.Vacina;
 import com.siszoo.animais.clinico.entity.Vacinacao;
+import com.siszoo.animais.clinico.repository.AplicacaoPorVeterinarioProjection;
+import com.siszoo.animais.clinico.repository.VacinacaoRepository;
 import com.siszoo.animais.entity.Animal;
 import com.siszoo.animais.entity.Baia;
 import com.siszoo.animais.repository.AnimalRepository;
+import com.siszoo.comum.repository.ContagemCatalogoProjection;
 import com.siszoo.comum.util.BlocoCsv;
-import com.siszoo.processos.repository.ContagemCatalogoProjection;
 import com.siszoo.relatorios.dto.PeriodoRelatorio;
 import com.siszoo.relatorios.dto.RelatorioVacinacaoResponse;
 
