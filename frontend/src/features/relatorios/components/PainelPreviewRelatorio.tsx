@@ -69,25 +69,30 @@ export function PainelPreviewRelatorio({ nomeExibicao, filtro }: PainelPreviewRe
         </div>
       </div>
 
-      {preview.isLoading && <Skeleton width="100%" height={240} />}
+      {/* `.card` não tem padding por design — o conteúdo precisa do `.card-body`
+          (padrão `.card > .card-header + .card-body` do resto do projeto), senão
+          encosta na borda. */}
+      <div className="card-body">
+        {preview.isLoading && <Skeleton width="100%" height={240} />}
 
-      {preview.isError && (
-        <ErroComRetry
-          mensagem={mensagemDeRegraDaApi(preview.error) ?? 'Não foi possível gerar o relatório. Tente novamente.'}
-          onTentarNovamente={preview.refetch}
-        />
-      )}
+        {preview.isError && (
+          <ErroComRetry
+            mensagem={mensagemDeRegraDaApi(preview.error) ?? 'Não foi possível gerar o relatório. Tente novamente.'}
+            onTentarNovamente={preview.refetch}
+          />
+        )}
 
-      {exportar.isError && (
-        <div className="alert danger" role="alert">
-          <span className="bullet" />
-          <div className="alert-content">
-            {mensagemDeRegraDaApi(exportar.error) ?? 'Não foi possível baixar o arquivo. Tente novamente.'}
+        {exportar.isError && (
+          <div className="alert danger" role="alert">
+            <span className="bullet" />
+            <div className="alert-content">
+              {mensagemDeRegraDaApi(exportar.error) ?? 'Não foi possível baixar o arquivo. Tente novamente.'}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {preview.data != null && renderizarPreview(filtro.tipo, preview.data)}
+        {preview.data != null && renderizarPreview(filtro.tipo, preview.data)}
+      </div>
     </div>
   )
 }
