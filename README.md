@@ -286,7 +286,7 @@ O modelo completo, com valores fictícios, está em [.env.example](.env.example)
 | `JWT_SECRET` | Chave de assinatura dos tokens, com 32 bytes ou mais | Sim |
 | `ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD` | Administrador criado na primeira inicialização. O e-mail precisa ser institucional: letras minúsculas e pontos antes de `@itu.sp.gov.br` | Para o primeiro acesso |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_AUTH`, `SMTP_STARTTLS`, `SMTP_STARTTLS_REQUIRED`, `SMTP_SSL`, `SISZOO_MAIL_FROM` | Envio de e-mail ao munícipe. Sem SMTP, a falha de envio só é registrada no log. Em desenvolvimento, use um SMTP sandbox, nunca uma caixa real. Detalhes em [docs/email.md](docs/email.md) | Não |
-| `SISZOO_CORS_ORIGIN` | Origem do frontend aceita pela API | Não (padrão `http://localhost:5173`) |
+| `SISZOO_CORS_ORIGIN` | Única origem do frontend aceita pela API (CORS). Ajuste se o frontend for servido em outro endereço | Não (padrão `http://localhost:5173`) |
 | `VITE_API_BASE_URL` | Endereço da API usado pelo frontend, definido no build | Não (padrão `http://localhost:8080`) |
 | `VITE_USE_MOCK_KPIS`, `VITE_USE_MOCK_GRAFICOS` | Indicadores e gráficos de exemplo, para trabalhar no frontend sem backend | Ver abaixo |
 | `SEED_DB_HOST`, `SEED_DB_PORT` | Host e porta do banco usados pelo seed | Não (padrão `localhost`/`5432`) |

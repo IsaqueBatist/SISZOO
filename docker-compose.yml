@@ -28,6 +28,8 @@ services:
       ADMIN_SEED_EMAIL: ${ADMIN_SEED_EMAIL:-}
       ADMIN_SEED_PASSWORD: ${ADMIN_SEED_PASSWORD:-}
       JWT_SECRET: ${JWT_SECRET:-}
+      # Mesmo padrao do application.yml (origem do frontend publicado em 5173).
+      SISZOO_CORS_ORIGIN: ${SISZOO_CORS_ORIGIN:-http://localhost:5173}
       # SMTP do EmailService (T35). Mesmos padroes do application.yml: uma
       # variavel vazia aqui chegaria como "" e anularia o padrao do Spring.
       SMTP_HOST: ${SMTP_HOST:-localhost}
