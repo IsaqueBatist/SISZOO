@@ -180,15 +180,27 @@ export function cancelarSalvamentoAgendado(store: StoreRascunho, chave: string):
   salvamentosAgendados.delete(id)
 }
 
+// Cancela todos os salvamentos pendentes. Usado pelo logout e pelo teardown
+// dos testes: um salvamento agendado que sobrevive ao fim de um teste dispara
+// durante a limpeza do ambiente e tenta abrir um banco que já está sendo
+// descartado, o que aborta a transação e vira erro não tratado na suíte.
+export function cancelarTodosOsSalvamentosAgendados(): void {
+  for (const agendado of salvamentosAgendados.values()) clearTimeout(agendado)
+  salvamentosAgendados.clear()
+}
+
 // Logout manual: apaga rascunhos, arquivos e anexos pendentes de TODOS os
 // usuários deste navegador (inclusive chaves antigas sem escopo) e cancela os
 // salvamentos ainda agendados, que recriariam o rascunho logo depois.
 export async function limparRascunhos(): Promise<void> {
-  for (const agendado of salvamentosAgendados.values()) clearTimeout(agendado)
-  salvamentosAgendados.clear()
+  cancelarTodosOsSalvamentosAgendados()
   await comBanco(async (banco) => {
     const transacao = banco.transaction([...STORES_RASCUNHO], 'readwrite')
-    await Promise.all([...STORES_RASCUNHO.map((store) => transacao.objectStore(store).clear()), transacao.done])
+    // allSettled e o catch no `done`, não Promise.all: com o all, a primeira
+    // rejeição abandona as outras promessas, que rejeitam depois sem ninguém
+    // escutando — e uma transação abortada viraria erro não tratado.
+    await Promise.allSettled(STORES_RASCUNHO.map((store) => transacao.objectStore(store).clear()))
+    await transacao.done.catch(() => undefined)
   }, undefined)
 }
 
