@@ -14,7 +14,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
@@ -26,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.siszoo.animais.dto.CatalogoItemResponse;
 import com.siszoo.comum.dto.PaginaResponse;
 import com.siszoo.comum.service.ProtocoloService;
+import com.siszoo.comum.util.Paginacao;
 import com.siszoo.ocorrencias.dto.AlterarStatusOcorrenciaRequest;
 import com.siszoo.ocorrencias.dto.AnexoOcorrenciaResponse;
 import com.siszoo.ocorrencias.dto.ArquivoAnexo;
@@ -562,7 +562,7 @@ public class OcorrenciaService {
             LocalDate de, LocalDate ate, int pagina, int tamanho, PermissoesOcorrencia permissoes) {
         Page<Ocorrencia> paginaOcorrencias = ocorrenciaRepository.findAll(
                 construirFiltro(tipo, status, q, de, ate),
-                PageRequest.of(pagina, tamanho, ORDEM_LISTAGEM));
+                Paginacao.pagina(pagina, tamanho, ORDEM_LISTAGEM));
 
         List<UUID> ids = paginaOcorrencias.getContent().stream().map(Ocorrencia::getId).toList();
         Map<UUID, Denunciante> denunciantes = ids.isEmpty() ? Map.of()

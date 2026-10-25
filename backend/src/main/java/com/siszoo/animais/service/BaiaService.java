@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -33,6 +32,7 @@ import com.siszoo.animais.repository.BaiaRepository;
 import com.siszoo.animais.repository.OcupacaoBaiaProjection;
 import com.siszoo.animais.repository.TipoBaiaRepository;
 import com.siszoo.comum.dto.PaginaResponse;
+import com.siszoo.comum.util.Paginacao;
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.exception.UsuarioNaoEncontradoException;
@@ -150,7 +150,7 @@ public class BaiaService {
     public PaginaResponse<BaiaResponse> listar(Boolean ativa, int pagina, int tamanho) {
         Specification<Baia> filtro = construirFiltro(ativa);
         Page<Baia> paginaBaias = baiaRepository.findAll(
-                filtro, PageRequest.of(pagina, tamanho, Sort.by("nome").ascending()));
+                filtro, Paginacao.pagina(pagina, tamanho, Sort.by("nome").ascending()));
 
         List<UUID> ids = paginaBaias.getContent().stream().map(Baia::getId).toList();
         Map<UUID, Long> ocupacaoPorBaia = ids.isEmpty()

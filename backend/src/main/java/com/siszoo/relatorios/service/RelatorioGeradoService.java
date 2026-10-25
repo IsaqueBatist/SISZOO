@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +19,7 @@ import com.siszoo.comum.dto.PaginaResponse;
 import com.siszoo.comum.exception.CampoInvalidoException;
 import com.siszoo.comum.service.ProtocoloService;
 import com.siszoo.comum.util.Formatadores;
+import com.siszoo.comum.util.Paginacao;
 import com.siszoo.relatorios.dto.ArquivoRelatorio;
 import com.siszoo.relatorios.dto.FiltroRelatorioBruto;
 import com.siszoo.relatorios.dto.MetadadosDocumento;
@@ -161,7 +161,7 @@ public class RelatorioGeradoService {
     @Transactional(readOnly = true)
     public PaginaResponse<RelatorioGeradoResponse> historico(int pagina, int tamanho) {
         var page = relatorioGeradoRepository
-                .findAll(PageRequest.of(pagina, tamanho, Sort.by("geradoEm").descending()))
+                .findAll(Paginacao.pagina(pagina, tamanho, Sort.by("geradoEm").descending()))
                 .map(this::toResponse);
         return PaginaResponse.de(page);
     }

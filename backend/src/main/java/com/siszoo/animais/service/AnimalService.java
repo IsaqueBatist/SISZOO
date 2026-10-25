@@ -9,7 +9,6 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -40,6 +39,7 @@ import com.siszoo.animais.repository.MotivoEntradaRepository;
 import com.siszoo.animais.repository.StatusAnimalRepository;
 import com.siszoo.comum.dto.PaginaResponse;
 import com.siszoo.comum.exception.CampoInvalidoException;
+import com.siszoo.comum.util.Paginacao;
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.exception.UsuarioNaoEncontradoException;
@@ -217,7 +217,7 @@ public class AnimalService {
             String status, String especie, UUID baiaId, String q, int pagina, int tamanho) {
         Specification<Animal> filtro = construirFiltro(status, especie, baiaId, q);
         Page<Animal> paginaAnimais = animalRepository.findAll(
-                filtro, PageRequest.of(pagina, tamanho, Sort.by("nome").ascending()));
+                filtro, Paginacao.pagina(pagina, tamanho, Sort.by("nome").ascending()));
         return PaginaResponse.de(paginaAnimais.map(animalMapper::toResponse));
     }
 

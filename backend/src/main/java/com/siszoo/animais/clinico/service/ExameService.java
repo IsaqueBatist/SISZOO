@@ -9,7 +9,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -32,6 +31,7 @@ import com.siszoo.animais.exception.AnimalNaoEncontradoException;
 import com.siszoo.animais.repository.AnimalRepository;
 import com.siszoo.comum.dto.PaginaResponse;
 import com.siszoo.comum.exception.CampoInvalidoException;
+import com.siszoo.comum.util.Paginacao;
 import com.siszoo.processos.entity.Laboratorio;
 import com.siszoo.processos.repository.LaboratorioRepository;
 import com.siszoo.usuarios.entity.AcaoAuditoria;
@@ -126,7 +126,7 @@ public class ExameService {
     @Transactional(readOnly = true)
     public PaginaResponse<ExameResponse> listar(UUID animalId, int pagina, int tamanho) {
         Page<Exame> paginaExames = exameRepository.findAll(
-                construirFiltro(animalId), PageRequest.of(pagina, tamanho, Sort.by("dataSolicitacao").descending()));
+                construirFiltro(animalId), Paginacao.pagina(pagina, tamanho, Sort.by("dataSolicitacao").descending()));
         List<UUID> ids = paginaExames.getContent().stream().map(Exame::getId).toList();
         Map<UUID, UUID> retificadoPorPorId = ids.isEmpty()
                 ? Map.of()

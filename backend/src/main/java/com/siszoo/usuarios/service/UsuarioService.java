@@ -10,7 +10,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,6 +19,7 @@ import org.springframework.util.StringUtils;
 
 import com.siszoo.comum.dto.PaginaResponse;
 import com.siszoo.comum.exception.CampoInvalidoException;
+import com.siszoo.comum.util.Paginacao;
 import com.siszoo.usuarios.dto.AtualizarPerfilRequest;
 import com.siszoo.usuarios.dto.AtualizarStatusUsuarioRequest;
 import com.siszoo.usuarios.dto.CriarUsuarioRequest;
@@ -125,7 +125,7 @@ public class UsuarioService {
     public PaginaResponse<UsuarioResponse> listar(String nome, String cargo, Boolean ativo, int pagina, int tamanho) {
         Specification<Usuario> filtro = construirFiltro(nome, cargo, ativo);
         Page<Usuario> paginaUsuarios = usuarioRepository.findAll(
-                filtro, PageRequest.of(pagina, tamanho, Sort.by("nome").ascending()));
+                filtro, Paginacao.pagina(pagina, tamanho, Sort.by("nome").ascending()));
 
         List<UUID> ids = paginaUsuarios.getContent().stream().map(Usuario::getId).toList();
         Map<UUID, List<String>> cargosPorUsuario = usuarioCargoRepository.findByUsuario_IdIn(ids).stream()

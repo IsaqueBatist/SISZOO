@@ -15,7 +15,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -33,6 +32,7 @@ import com.siszoo.animais.repository.AnimalRepository;
 import com.siszoo.animais.repository.EspecieRepository;
 import com.siszoo.comum.dto.PaginaResponse;
 import com.siszoo.comum.service.ProtocoloService;
+import com.siszoo.comum.util.Paginacao;
 import com.siszoo.ocorrencias.entity.Ocorrencia;
 import com.siszoo.ocorrencias.exception.DataAberturaFuturaException;
 import com.siszoo.ocorrencias.service.OcorrenciaService;
@@ -378,7 +378,7 @@ public class ProcessoSanitarioService {
             }
             return cb.and(predicados.toArray(Predicate[]::new));
         };
-        return PaginaResponse.de(processoRepository.findAll(filtro, PageRequest.of(pagina, tamanho, ORDEM_LISTAGEM))
+        return PaginaResponse.de(processoRepository.findAll(filtro, Paginacao.pagina(pagina, tamanho, ORDEM_LISTAGEM))
                 .map(ProcessoSanitarioService::toResumo));
     }
 

@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -22,6 +21,7 @@ import com.siszoo.animais.clinico.mapper.MedicamentoMapper;
 import com.siszoo.animais.clinico.repository.CategoriaFarmacologicaRepository;
 import com.siszoo.animais.clinico.repository.MedicamentoRepository;
 import com.siszoo.comum.dto.PaginaResponse;
+import com.siszoo.comum.util.Paginacao;
 
 import jakarta.persistence.criteria.Predicate;
 
@@ -88,7 +88,7 @@ public class MedicamentoService {
     public PaginaResponse<MedicamentoResponse> listar(Boolean ativo, UUID categoriaId, int pagina, int tamanho) {
         Specification<Medicamento> filtro = construirFiltro(ativo, categoriaId);
         Page<Medicamento> paginaMedicamentos = medicamentoRepository.findAll(
-                filtro, PageRequest.of(pagina, tamanho, Sort.by("nome").ascending()));
+                filtro, Paginacao.pagina(pagina, tamanho, Sort.by("nome").ascending()));
 
         return PaginaResponse.de(paginaMedicamentos.map(medicamentoMapper::toResponse));
     }

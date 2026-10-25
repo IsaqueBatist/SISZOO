@@ -1,5 +1,6 @@
 package com.siszoo.comum.exception;
 
+import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -167,16 +168,20 @@ public class GlobalExceptionHandler {
 
     // Ultima barreira: uma constraint do banco (NOT NULL, UNIQUE, FK, CHECK)
     // barrou a escrita. O corpo e generico de proposito — a mensagem da
-    // excecao traz SQL, nomes de tabela/constraint e valores da linha, que
-    // ficam so no log do servidor. Excecao: a unicidade de retifica_id so
-    // dispara quando duas retificacoes do mesmo registro passam juntas pela
-    // pre-checagem do service (RN-C02); a resposta e a mesma desse caminho.
-    // O mesmo vale para o resultado original unico do processo (V14): a
-    // resposta e a do segundo lancamento barrado pelo service.
+    // excecao traz SQL, nomes de tabela/constraint e valores da linha. Por
+    // isso o WARN leva so constraint e SQLState: o "Failing row contains (...)"
+    // e o "Key (...)=(...)" do PostgreSQL podem trazer CPF, telefone, e-mail ou
+    // hash de senha (LGPD), e ficam so no DEBUG. Excecao: a unicidade de
+    // retifica_id so dispara quando duas retificacoes do mesmo registro passam
+    // juntas pela pre-checagem do service (RN-C02); a resposta e a mesma desse
+    // caminho. O mesmo vale para o resultado original unico do processo (V14):
+    // a resposta e a do segundo lancamento barrado pelo service.
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErroResponse> handleViolacaoIntegridade(DataIntegrityViolationException ex) {
-        log.warn("Violacao de integridade de dados barrada pelo banco", ex);
         String constraint = nomeDaConstraint(ex);
+        log.warn("Violacao de integridade de dados barrada pelo banco (constraint={}, sqlState={})",
+                constraint, sqlStateDe(ex));
+        log.debug("Detalhe da violacao de integridade (pode conter valores da linha)", ex);
         // Set.of rejeita contains(null): sem nome de constraint, segue o generico.
         if (constraint != null && CONSTRAINTS_RETIFICACAO_UNICA.contains(constraint)) {
             return handleRegistroJaRetificado();
@@ -192,6 +197,15 @@ public class GlobalExceptionHandler {
         for (Throwable causa = ex; causa != null; causa = causa.getCause()) {
             if (causa instanceof ConstraintViolationException violacao && violacao.getConstraintName() != null) {
                 return violacao.getConstraintName().toLowerCase(Locale.ROOT);
+            }
+        }
+        return null;
+    }
+
+    private static String sqlStateDe(Throwable ex) {
+        for (Throwable causa = ex; causa != null; causa = causa.getCause()) {
+            if (causa instanceof SQLException sql && sql.getSQLState() != null) {
+                return sql.getSQLState();
             }
         }
         return null;
