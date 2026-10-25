@@ -56,6 +56,42 @@ class RelatorioControllerIT extends AbstractIntegrationTest {
         given().header("Authorization", "Bearer " + tokenSemAcesso).when().get(ROTA + "/tipos").then().statusCode(403);
     }
 
+    // Regressao: as contagens do relatorio usavam o caminho implicito
+    // o.providenciaTomada.codigo (INNER JOIN) e ignoravam toda ocorrencia
+    // ainda nao encerrada. Dia isolado, sem outras ocorrencias de teste.
+    @Test
+    @DisplayName("ocorrencias_bairro conta ocorrencias abertas e ignora registro_indevido")
+    void ocorrenciasBairroContaAbertasEIgnoraRegistroIndevido() {
+        String dia = "2025-03-17";
+        String preview = ROTA + "/preview?tipo=ocorrencias_bairro&periodoInicio=" + dia + "&periodoFim=" + dia;
+        long antes = given().header("Authorization", "Bearer " + tokenAdmin).when().get(preview)
+                .then().statusCode(200).extract().jsonPath().getLong("kpis.ocorrenciasRegistradas");
+
+        criarOcorrencia(dia, "Bairro Regressao Relatorio");
+        String indevida = criarOcorrencia(dia, "Bairro Regressao Relatorio");
+        Map<String, Object> encerramento = new HashMap<>();
+        encerramento.put("providenciaTomada", "registro_indevido");
+        given().contentType(ContentType.JSON).header("Authorization", "Bearer " + tokenAdmin).body(encerramento)
+                .when().post("/api/ocorrencias/" + indevida + "/encerramento").then().statusCode(200);
+
+        var json = given().header("Authorization", "Bearer " + tokenAdmin).when().get(preview)
+                .then().statusCode(200).extract().jsonPath();
+        assertThat(json.getLong("kpis.ocorrenciasRegistradas"), equalTo(antes + 1));
+        assertThat(json.getList("bairros.bairro"), org.hamcrest.Matchers.hasItem("Bairro Regressao Relatorio"));
+    }
+
+    private String criarOcorrencia(String dataAbertura, String bairro) {
+        Map<String, Object> corpo = new HashMap<>();
+        corpo.put("tipoOcorrencia", "outros");
+        corpo.put("dataAbertura", dataAbertura);
+        corpo.put("endereco", "Rua de Teste, 1");
+        corpo.put("bairro", bairro);
+        corpo.put("descricao", "Ocorrencia de teste do relatorio por bairro");
+        corpo.put("anonima", true);
+        return given().contentType(ContentType.JSON).header("Authorization", "Bearer " + tokenAdmin).body(corpo)
+                .when().post("/api/ocorrencias").then().statusCode(200).extract().path("id");
+    }
+
     @Test
     @DisplayName("GET /tipos sempre lista os 6 tipos do catalogo do DER")
     void tiposDeveListarOsSeisTipos() {

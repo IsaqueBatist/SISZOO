@@ -161,6 +161,48 @@ class DashboardControllerIT extends AbstractIntegrationTest {
         assertThat(depois.get("caninos"), equalTo(antes.get("caninos") + 1));
     }
 
+    // ---- Cenarios: KPI "ocorrencias" ----
+
+    // Regressao: o caminho implicito o.providenciaTomada.codigo virava INNER
+    // JOIN e so ocorrencias ja encerradas entravam na contagem do dia.
+    @Test
+    @DisplayName("kpis.ocorrencias conta a ocorrencia ABERTA de hoje e ignora a encerrada como registro_indevido")
+    void kpiOcorrenciasContaAbertaEIgnoraRegistroIndevido() {
+        long antes = registradasHoje();
+
+        criarOcorrenciaHoje();
+        assertThat(registradasHoje(), equalTo(antes + 1));
+
+        String indevida = criarOcorrenciaHoje();
+        Map<String, Object> encerramento = new HashMap<>();
+        encerramento.put("providenciaTomada", "registro_indevido");
+        given().contentType(ContentType.JSON).header("Authorization", "Bearer " + tokenAdmin)
+                .body(encerramento)
+                .when().post("/api/ocorrencias/" + indevida + "/encerramento")
+                .then().statusCode(200);
+        assertThat(registradasHoje(), equalTo(antes + 1));
+    }
+
+    private long registradasHoje() {
+        return given().header("Authorization", "Bearer " + tokenAdmin).when().get(ROTA_KPIS)
+                .then().statusCode(200).extract().jsonPath().getLong("ocorrencias.registradasHoje");
+    }
+
+    private String criarOcorrenciaHoje() {
+        Map<String, Object> corpo = new HashMap<>();
+        corpo.put("tipoOcorrencia", "outros");
+        corpo.put("dataAbertura", HOJE.toString());
+        corpo.put("endereco", "Rua de Teste, 1");
+        corpo.put("bairro", "Centro");
+        corpo.put("descricao", "Ocorrencia de teste do KPI");
+        corpo.put("anonima", true);
+        return given().contentType(ContentType.JSON).header("Authorization", "Bearer " + tokenAdmin)
+                .body(corpo)
+                .when().post("/api/ocorrencias")
+                .then().statusCode(200)
+                .extract().path("id");
+    }
+
     // ---- Cenarios: KPI "adocoes" (snapshot pelo status do animal) ----
 
     @Test
