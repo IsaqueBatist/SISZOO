@@ -114,9 +114,7 @@ public class AnexoAnimalService {
 
     private static String nomeDoArquivo(String original) {
         String nome = StringUtils.hasText(original) ? StringUtils.getFilename(original.replace('\\', '/')) : null;
-        if (!StringUtils.hasText(nome)) {
-            nome = "anexo";
-        }
+        nome = StringUtils.hasText(nome) ? nome.trim() : "anexo";
         return nome.length() > TAMANHO_MAXIMO_NOME ? nome.substring(0, TAMANHO_MAXIMO_NOME) : nome;
     }
 }

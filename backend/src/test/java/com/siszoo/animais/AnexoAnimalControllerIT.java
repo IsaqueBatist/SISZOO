@@ -93,6 +93,15 @@ class AnexoAnimalControllerIT extends AbstractIntegrationTest {
                 .when().get("/api/animais/" + animalId + "/anexos").then().statusCode(200);
     }
 
+    @Test
+    @DisplayName("[F2-007] nome do arquivo com espacos nas pontas e gravado sem eles, como no anexo de ocorrencia")
+    void nomeSemEspacosNasPontas() throws IOException {
+        given().header("Authorization", "Bearer " + tokenAdmin)
+                .multiPart("arquivo", "  foto-thor.png  ", png(), "image/png")
+                .when().post("/api/animais/" + animalId + "/anexos")
+                .then().statusCode(200).body("nome", equalTo("foto-thor.png"));
+    }
+
     private static byte[] png() throws IOException {
         BufferedImage imagem = new BufferedImage(4, 4, BufferedImage.TYPE_INT_RGB);
         ByteArrayOutputStream saida = new ByteArrayOutputStream();
