@@ -192,16 +192,14 @@ describe('Dashboard', () => {
   })
 
   it('card de processos urgentes some (estado vazio) quando não há nenhum urgente', async () => {
+    // Como o backend: com ?urgente=true (T45), o único processo, não urgente,
+    // fica de fora.
     server.use(
-      http.get(`${API_BASE_URL}/processos`, () =>
-        HttpResponse.json({
-          itens: [processoResumo({ id: '1', protocolo: '001/2026', urgente: false })],
-          pagina: 0,
-          tamanho: 50,
-          totalItens: 1,
-          totalPaginas: 1,
-        }),
-      ),
+      http.get(`${API_BASE_URL}/processos`, ({ request }) => {
+        const pedeUrgentes = new URL(request.url).searchParams.get('urgente') === 'true'
+        const itens = pedeUrgentes ? [] : [processoResumo({ id: '1', protocolo: '001/2026', urgente: false })]
+        return HttpResponse.json({ itens, pagina: 0, tamanho: 50, totalItens: itens.length, totalPaginas: 1 })
+      }),
     )
     renderDashboard()
 

@@ -2,14 +2,12 @@ import { useQuery } from '@tanstack/react-query'
 import { listarProcessos } from '@/features/processos/api/processosApi'
 import type { ProcessoResumo } from '@/features/processos/types/processos.types'
 
-// O backend ordena urgente desc, dataAbertura desc e NÃO tem filtro
-// ?urgente=true na URL (pedido registrado em docs/contratos/
-// processos-filtro-urgente.md). Como "urgente" vem sempre antes de "não
-// urgente" na ordenação, uma única página de 50 captura os urgentes mais
-// recentes sem round-trip extra — mas se o CCZ tiver mais de 50 processos
-// urgentes simultâneos, o card perde itens silenciosamente (risco
-// documentado no plano, mitigação de longo prazo é o filtro de servidor).
-const TAMANHO_PAGINA_URGENTES = 50
+// T45: o backend filtra ?urgente=true (docs/contratos/
+// processos-filtro-urgente.md) e o total vem de `totalItens` — exato mesmo
+// com mais urgentes do que cabem na página (antes, uma página de 50 sem filtro
+// era filtrada aqui e acima de 50 urgentes o card perdia itens sem aviso). O
+// card só mostra os primeiros, então uma página pequena basta.
+const TAMANHO_PAGINA_URGENTES = 10
 
 export interface ProcessosUrgentes {
   itens: ProcessoResumo[]
@@ -19,10 +17,7 @@ export interface ProcessosUrgentes {
 export function useProcessosUrgentesQuery() {
   return useQuery({
     queryKey: ['dashboard', 'processos-urgentes'],
-    queryFn: () => listarProcessos({ pagina: 0, tamanho: TAMANHO_PAGINA_URGENTES }),
-    select: (pagina): ProcessosUrgentes => {
-      const itens = pagina.itens.filter((item) => item.urgente)
-      return { itens, totalUrgentes: itens.length }
-    },
+    queryFn: () => listarProcessos({ urgente: true, pagina: 0, tamanho: TAMANHO_PAGINA_URGENTES }),
+    select: (pagina): ProcessosUrgentes => ({ itens: pagina.itens, totalUrgentes: pagina.totalItens }),
   })
 }
