@@ -38,6 +38,7 @@ import com.siszoo.ocorrencias.dto.DenuncianteRequest;
 import com.siszoo.ocorrencias.dto.EncerrarOcorrenciaRequest;
 import com.siszoo.ocorrencias.dto.OcorrenciaResponse;
 import com.siszoo.ocorrencias.dto.OcorrenciaResumoResponse;
+import com.siszoo.ocorrencias.dto.QuantidadePorBairroResponse;
 import com.siszoo.ocorrencias.entity.AnexoOcorrencia;
 import com.siszoo.ocorrencias.entity.AnexoOcorrenciaConteudo;
 import com.siszoo.ocorrencias.entity.Denunciado;
@@ -576,6 +577,15 @@ public class OcorrenciaService {
         // de ocorrencia sigilosa a ninguem (o mapper devolve o nome null).
         return PaginaResponse.de(paginaOcorrencias.map(o -> ocorrenciaMapper.toResumo(
                 o, denunciantes.get(o.getId()), processos.get(o.getId()), permissoes.podeVerSigilo())));
+    }
+
+    // T45: contagem agregada no banco para o grafico e as sugestoes de bairro,
+    // em vez de a tela baixar ate 500 ocorrencias (duas vezes) so para contar.
+    @Transactional(readOnly = true)
+    public List<QuantidadePorBairroResponse> contarPorBairro() {
+        return ocorrenciaRepository.contarTodasPorBairro().stream()
+                .map(linha -> new QuantidadePorBairroResponse(linha.getBairro(), linha.getQuantidade()))
+                .toList();
     }
 
     @Transactional(readOnly = true)

@@ -10,6 +10,7 @@ import type {
   OcorrenciaResumo,
   OcorrenciasFiltro,
   ProcessoSanitario,
+  QuantidadePorBairro,
   StatusProcesso,
 } from '../types/ocorrencias.types'
 
@@ -29,6 +30,13 @@ export async function listarOcorrencias(filtro: OcorrenciasFiltro): Promise<Pagi
       tamanho: filtro.tamanho,
     },
   })
+  return data
+}
+
+// T45: contagem por bairro de todo o histórico, para o gráfico e as sugestões
+// de bairro (antes, 500 ocorrências baixadas só para contar no cliente).
+export async function contarOcorrenciasPorBairro(): Promise<QuantidadePorBairro[]> {
+  const { data } = await http.get<QuantidadePorBairro[]>('/ocorrencias/estatisticas/bairro')
   return data
 }
 

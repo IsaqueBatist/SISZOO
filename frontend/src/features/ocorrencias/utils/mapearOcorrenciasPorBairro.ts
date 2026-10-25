@@ -7,6 +7,13 @@ export interface BairroDatum {
   quantidade: number
 }
 
+// Uma ocorrência (sem `quantidade`, conta 1) ou uma linha já contada pelo
+// backend (GET /ocorrencias/estatisticas/bairro, uma por grafia gravada).
+interface EntradaBairro {
+  bairro: string
+  quantidade?: number
+}
+
 // `bairro` é texto livre (sem catálogo) — grafias diferentes da mesma
 // região (ex. "São Luiz" vs. "Sao Luiz", ou maiúsculas/espaços) são
 // agrupadas pela CHAVE normalizada (trim + minúsculo + sem acento); o
@@ -22,19 +29,20 @@ function normalizarChave(bairro: string): string {
 
 // Núcleo compartilhado entre o gráfico (com corte Top N) e a lista de
 // sugestões do formulário (sem corte, precisa de todo mundo).
-function agruparBairros(ocorrencias: { bairro: string }[]): BairroDatum[] {
+function agruparBairros(entradas: EntradaBairro[]): BairroDatum[] {
   const quantidadePorChave = new Map<string, number>()
   const rotulosPorChave = new Map<string, Map<string, number>>()
 
-  for (const ocorrencia of ocorrencias) {
-    const bairro = ocorrencia.bairro?.trim()
+  for (const entrada of entradas) {
+    const bairro = entrada.bairro?.trim()
     if (!bairro) continue
+    const quantidade = entrada.quantidade ?? 1
 
     const chave = normalizarChave(bairro)
-    quantidadePorChave.set(chave, (quantidadePorChave.get(chave) ?? 0) + 1)
+    quantidadePorChave.set(chave, (quantidadePorChave.get(chave) ?? 0) + quantidade)
 
     const rotulos = rotulosPorChave.get(chave) ?? new Map<string, number>()
-    rotulos.set(bairro, (rotulos.get(bairro) ?? 0) + 1)
+    rotulos.set(bairro, (rotulos.get(bairro) ?? 0) + quantidade)
     rotulosPorChave.set(chave, rotulos)
   }
 
@@ -45,8 +53,8 @@ function agruparBairros(ocorrencias: { bairro: string }[]): BairroDatum[] {
   })
 }
 
-export function mapearOcorrenciasPorBairro(ocorrencias: { bairro: string }[]): BairroDatum[] {
-  const agrupado = agruparBairros(ocorrencias)
+export function mapearOcorrenciasPorBairro(entradas: EntradaBairro[]): BairroDatum[] {
+  const agrupado = agruparBairros(entradas)
   agrupado.sort((a, b) => b.quantidade - a.quantidade)
 
   if (agrupado.length <= TOP_N_BAIRROS) return agrupado
@@ -60,8 +68,8 @@ export function mapearOcorrenciasPorBairro(ocorrencias: { bairro: string }[]): B
 // todas as grafias distintas (sem corte Top N — aqui não é gráfico, é lista
 // de opções), uma por grupo (a grafia mais frequente, mesma regra acima),
 // em ordem alfabética.
-export function extrairBairrosDistintos(ocorrencias: { bairro: string }[]): string[] {
-  return agruparBairros(ocorrencias)
+export function extrairBairrosDistintos(entradas: EntradaBairro[]): string[] {
+  return agruparBairros(entradas)
     .map((item) => item.bairro)
     .sort((a, b) => a.localeCompare(b, 'pt-BR'))
 }

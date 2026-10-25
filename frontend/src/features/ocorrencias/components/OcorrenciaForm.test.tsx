@@ -382,14 +382,11 @@ describe('OcorrenciaForm', () => {
 describe('sugestão de bairro (datalist)', () => {
   it('popula a datalist do campo Bairro com os bairros já usados em ocorrências existentes', async () => {
     server.use(
-      http.get(`${API_BASE_URL}/ocorrencias`, () =>
-        HttpResponse.json({
-          itens: [{ bairro: 'Centro' }, { bairro: 'Centro' }, { bairro: 'Vila Nova' }],
-          pagina: 0,
-          tamanho: 500,
-          totalItens: 3,
-          totalPaginas: 1,
-        }),
+      http.get(`${API_BASE_URL}/ocorrencias/estatisticas/bairro`, () =>
+        HttpResponse.json([
+          { bairro: 'Centro', quantidade: 2 },
+          { bairro: 'Vila Nova', quantidade: 1 },
+        ]),
       ),
     )
     renderForm()

@@ -26,6 +26,17 @@ export const ocorrenciasHandlers = [
   // Antes de `/ocorrencias/:id` para "catalogos" não virar um id.
   http.get(`${API_BASE_URL}/ocorrencias/catalogos`, () => HttpResponse.json(CATALOGOS_OCORRENCIA_FIXTURE)),
 
+  // T45: contagem por grafia de bairro, como o backend (mais frequente primeiro).
+  http.get(`${API_BASE_URL}/ocorrencias/estatisticas/bairro`, () => {
+    const contagem = new Map<string, number>()
+    for (const { bairro } of resumosFixture()) {
+      if (bairro?.trim()) contagem.set(bairro, (contagem.get(bairro) ?? 0) + 1)
+    }
+    return HttpResponse.json(
+      [...contagem].map(([bairro, quantidade]) => ({ bairro, quantidade })).sort((a, b) => b.quantidade - a.quantidade),
+    )
+  }),
+
   http.get(`${API_BASE_URL}/ocorrencias`, ({ request }) => {
     const url = new URL(request.url)
     const pagina = Number(url.searchParams.get('pagina') ?? '0')
