@@ -1,4 +1,4 @@
-import type { DashboardKpisApi, KpiAdocoes } from '../types/dashboard.types'
+import type { DashboardKpisApi } from '../types/dashboard.types'
 
 // Latência simulada para o skeleton ser visível e o estado de loading ser
 // testável — mesmo valor usado em features/graficos/api/graficosApi.mock.ts.
@@ -12,6 +12,7 @@ const KPIS_REAIS_MOCK: DashboardKpisApi = {
   animais: { total: 147, caninos: 123, felinos: 24 },
   vacinacao: { percentualVacinados: 84, vacinados: 123, total: 147 },
   ocorrencias: { registradasHoje: 4, mediaPorHora: 1 },
+  adocoes: { adotados: 8, disponiveis: 12 },
   alertas: [
     {
       tipo: 'vacina_vencendo',
@@ -65,14 +66,6 @@ const KPIS_REAIS_MOCK: DashboardKpisApi = {
   ],
 }
 
-// Meta mensal de adoções: parâmetro institucional sem fonte no DER — ver
-// dashboard.types.ts::KpiAdocoes.
-const ADOCOES_MOCK: KpiAdocoes = { noMes: 8, metaMensal: 12 }
-
 export function buscarKpisReaisMock(): Promise<DashboardKpisApi> {
   return new Promise((resolve) => setTimeout(() => resolve(KPIS_REAIS_MOCK), LATENCIA_MOCK_MS))
-}
-
-export function buscarAdocoesMock(): Promise<KpiAdocoes> {
-  return new Promise((resolve) => setTimeout(() => resolve(ADOCOES_MOCK), LATENCIA_MOCK_MS))
 }

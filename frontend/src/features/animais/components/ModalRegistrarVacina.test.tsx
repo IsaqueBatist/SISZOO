@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { http, HttpResponse } from 'msw'
+import { delay, http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
@@ -9,10 +9,21 @@ import type { Usuario } from '@/features/auth/types/auth.types'
 import { API_BASE_URL } from '@/lib/env'
 import { server } from '@/mocks/server'
 import { adicionarDiasIso } from '@/test/datas'
+import type { CatalogosAnimal } from '../types/animais.types'
 import { AbaVacinas } from './AbaVacinas'
 import { hojeEmItu } from '../utils/regrasVacina'
 
 const REX_ID = 'b2c3d4e5-0000-0000-0000-000000000001'
+
+// Catálogo mínimo para os cenários que sobrescrevem GET /animais/catalogos.
+const CATALOGO_BASE: CatalogosAnimal = {
+  especies: [],
+  status: [],
+  motivosEntrada: [],
+  tiposBaia: [],
+  vacinas: [{ codigo: 'antirrabica', nome: 'Antirrábica' }],
+  tiposProcedimento: [],
+}
 
 function renderAba() {
   const usuario: Usuario = {
@@ -25,7 +36,8 @@ function renderAba() {
   }
   sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario }))
 
-  const queryClient = new QueryClient()
+  // Sem retry: o teste de erro do catálogo mostra a falha na primeira resposta.
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter>
@@ -56,6 +68,8 @@ async function abrirModalDeRegistro(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole('button', { name: /registrar vacina/i }))
   const modal = screen.getByRole('heading', { name: 'Registrar vacina' }).closest<HTMLElement>('.modal')
   if (!modal) throw new Error('modal não encontrado')
+  // O select do catálogo só aparece depois de GET /animais/catalogos.
+  await within(modal).findByRole('option', { name: 'Antirrábica' })
   return modal
 }
 
@@ -136,7 +150,12 @@ describe('ModalRegistrarVacina — retifica', () => {
 
     const modal = screen.getByRole('heading', { name: 'Corrigir vacinação' }).closest<HTMLElement>('.modal')
     if (!modal) throw new Error('modal não encontrado')
+    // O select do catálogo só aparece depois de GET /animais/catalogos.
+    await within(modal).findByRole('option', { name: 'Antirrábica' })
     expect(within(modal).getByText(/o registro original não será alterado/i)).toBeInTheDocument()
+    // O código gravado no registro original continua selecionado com o
+    // catálogo vindo da API (mesmos códigos da V5 que os rascunhos guardam).
+    expect(within(modal).getByLabelText(/^vacina/i)).toHaveValue('v10')
     expect(within(modal).getByLabelText(/número da dose/i)).toHaveValue(1)
 
     // Número da dose é opcional: apagar o valor não pode travar o submit.
@@ -156,5 +175,66 @@ describe('ModalRegistrarVacina — retifica', () => {
       (linha): linha is HTMLTableRowElement => linha !== null && within(linha).queryByText('Retificado') !== null,
     )
     expect(comBadgeRetificado).toHaveLength(1)
+  })
+})
+
+describe('ModalRegistrarVacina — catálogo de vacinas da API', () => {
+  async function abrirSemEsperarCatalogo(user: ReturnType<typeof userEvent.setup>) {
+    renderAba()
+    await screen.findByText('V10')
+    await user.click(screen.getByRole('button', { name: /registrar vacina/i }))
+    const modal = screen.getByRole('heading', { name: 'Registrar vacina' }).closest<HTMLElement>('.modal')
+    if (!modal) throw new Error('modal não encontrado')
+    return modal
+  }
+
+  it('enquanto o catálogo carrega, o select fica desabilitado e o envio bloqueado', async () => {
+    server.use(
+      http.get(`${API_BASE_URL}/animais/catalogos`, async () => {
+        await delay(300)
+        return HttpResponse.json({ ...CATALOGO_BASE, vacinas: [{ codigo: 'antirrabica', nome: 'Antirrábica' }] })
+      }),
+    )
+    const user = userEvent.setup()
+    const modal = await abrirSemEsperarCatalogo(user)
+
+    expect(within(modal).getByLabelText(/^vacina/i)).toBeDisabled()
+    expect(within(modal).getByRole('option', { name: 'Carregando…' })).toBeInTheDocument()
+    expect(within(modal).getByRole('button', { name: /^registrar vacina$/i })).toBeDisabled()
+
+    expect(await within(modal).findByRole('option', { name: 'Antirrábica' })).toBeInTheDocument()
+    expect(within(modal).getByLabelText(/^vacina/i)).toBeEnabled()
+    expect(within(modal).getByRole('button', { name: /^registrar vacina$/i })).toBeEnabled()
+  })
+
+  it('falha ao carregar mostra o erro com "Tentar novamente" e bloqueia o envio até recuperar', async () => {
+    let chamadas = 0
+    server.use(
+      http.get(`${API_BASE_URL}/animais/catalogos`, () => {
+        chamadas += 1
+        if (chamadas === 1) return HttpResponse.json({ mensagem: 'Erro interno' }, { status: 500 })
+        return HttpResponse.json(CATALOGO_BASE)
+      }),
+    )
+    const user = userEvent.setup()
+    const modal = await abrirSemEsperarCatalogo(user)
+
+    expect(await within(modal).findByText('Não foi possível carregar as opções.')).toBeInTheDocument()
+    expect(within(modal).getByRole('button', { name: /^registrar vacina$/i })).toBeDisabled()
+
+    await user.click(within(modal).getByRole('button', { name: 'Tentar novamente' }))
+
+    expect(await within(modal).findByRole('option', { name: 'Antirrábica' })).toBeInTheDocument()
+    expect(within(modal).queryByText('Não foi possível carregar as opções.')).not.toBeInTheDocument()
+    expect(within(modal).getByRole('button', { name: /^registrar vacina$/i })).toBeEnabled()
+  })
+
+  it('catálogo vazio informa que não há opção cadastrada e não permite enviar', async () => {
+    server.use(http.get(`${API_BASE_URL}/animais/catalogos`, () => HttpResponse.json({ ...CATALOGO_BASE, vacinas: [] })))
+    const user = userEvent.setup()
+    const modal = await abrirSemEsperarCatalogo(user)
+
+    expect(await within(modal).findByText('Nenhuma opção cadastrada.')).toBeInTheDocument()
+    expect(within(modal).getByRole('button', { name: /^registrar vacina$/i })).toBeDisabled()
   })
 })

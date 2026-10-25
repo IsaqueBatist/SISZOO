@@ -44,7 +44,11 @@ export const ocorrenciasHandlers = [
     // F2-010: período da data de abertura (dias inclusivos), como no backend.
     const de = url.searchParams.get('de')
     const ate = url.searchParams.get('ate')
-    const itens = resumosFixture().filter((o) => (!de || o.dataAbertura >= de) && (!ate || o.dataAbertura <= ate))
+    const status = url.searchParams.get('status')
+    const itens = resumosFixture().filter(
+      (o) =>
+        (!de || o.dataAbertura >= de) && (!ate || o.dataAbertura <= ate) && (!status || o.statusOcorrencia === status),
+    )
     return HttpResponse.json({ itens, pagina, tamanho, totalItens: itens.length, totalPaginas: 1 })
   }),
 

@@ -1,7 +1,8 @@
 import { NavLink } from 'react-router-dom'
-import { ROLES, getNavForRole, isNavGroup } from '../../lib/nav'
+import { ROLES, getNavForRole, isNavGroup, podeAcessar } from '../../lib/nav'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useSair } from '@/features/auth/hooks/useSair'
+import { useOcorrenciasAbertasCount } from '@/features/ocorrencias/hooks/useOcorrencias'
 import { Icon } from './Icon'
 
 interface SidebarProps {
@@ -14,6 +15,11 @@ export function Sidebar({ collapsed, onToggleCollapsed }: SidebarProps) {
   const sair = useSair()
   const role = ROLES[roleKey]
   const nav = getNavForRole(roleKey)
+  // Carregando, com erro ou zerado: sem número (nunca um valor inventado).
+  const { data: ocorrenciasAbertas } = useOcorrenciasAbertasCount(podeAcessar(roleKey, 'ocorrencias'))
+  const contadores: Record<string, { total: number | undefined; rotulo: string }> = {
+    ocorrencias: { total: ocorrenciasAbertas, rotulo: 'ocorrências abertas' },
+  }
   const nomeCompleto = user ? `${user.nome} ${user.sobrenome}` : ''
   const iniciais = user ? `${user.nome[0] ?? ''}${user.sobrenome[0] ?? ''}`.toUpperCase() : ''
   const classeOculta = collapsed ? ' visually-hidden' : ''
@@ -61,7 +67,14 @@ export function Sidebar({ collapsed, onToggleCollapsed }: SidebarProps) {
                 <Icon name={entry.icon} />
               </span>
               <span className={`label${classeOculta}`}>{entry.label}</span>
-              {entry.badge ? <span className={`badge-count${classeOculta}`}>{entry.badge}</span> : null}
+              {contadores[entry.id]?.total ? (
+                <span
+                  className={`badge-count${classeOculta}`}
+                  title={`${contadores[entry.id].total} ${contadores[entry.id].rotulo}`}
+                >
+                  {contadores[entry.id].total}
+                </span>
+              ) : null}
             </NavLink>
           ),
         )}

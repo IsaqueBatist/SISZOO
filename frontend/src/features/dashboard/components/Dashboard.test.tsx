@@ -41,18 +41,19 @@ afterEach(() => {
 })
 
 describe('Dashboard', () => {
-  it('renderiza os KPIs com dados mockados e mostra o selo de demonstração só no card de Adoções', async () => {
+  it('com o mock de desenvolvimento ligado (setup) mostra o selo de demonstração em todos os cards e nos alertas', async () => {
     renderDashboard()
 
     expect(await screen.findByText('147')).toBeInTheDocument()
     expect(screen.getByText('84')).toBeInTheDocument()
     expect(screen.getByText('8')).toBeInTheDocument()
 
-    const cardAdocoes = screen.getByText('Adoções no Mês').closest('.kpi') as HTMLElement
-    expect(within(cardAdocoes).getByText('Dados de demonstração')).toBeInTheDocument()
-
-    const cardAnimais = screen.getByText('Total de Animais').closest('.kpi') as HTMLElement
-    expect(within(cardAnimais).queryByText('Dados de demonstração')).not.toBeInTheDocument()
+    for (const rotulo of ['Total de Animais', 'Vacinados', 'Animais Adotados', 'Ocorrências']) {
+      const card = screen.getByText(rotulo).closest('.kpi') as HTMLElement
+      expect(within(card).getByText('Dados de demonstração')).toBeInTheDocument()
+    }
+    const cabecalhoAlertas = screen.getByRole('heading', { name: /Alertas Críticos/ }).parentElement as HTMLElement
+    expect(within(cabecalhoAlertas).getByText('Dados de demonstração')).toBeInTheDocument()
   })
 
   it('mostra skeleton enquanto os dados carregam e some depois', async () => {
@@ -62,7 +63,7 @@ describe('Dashboard', () => {
     await waitFor(() => expect(container.querySelectorAll('.skel').length).toBe(0))
   })
 
-  it('erro ao carregar KPIs mostra retry; depois de recuperar, só Adoções continua com o selo de demonstração', async () => {
+  it('erro ao carregar KPIs mostra retry; depois de recuperar, mostra os dados reais sem nenhum selo de demonstração', async () => {
     vi.stubEnv('VITE_USE_MOCK_KPIS', 'false')
 
     let chamadas = 0
@@ -75,7 +76,8 @@ describe('Dashboard', () => {
         return HttpResponse.json({
           animais: { total: 10, caninos: 7, felinos: 3 },
           vacinacao: { percentualVacinados: 50, vacinados: 5, total: 10 },
-          ocorrencias: { registradasHoje: 0 },
+          ocorrencias: { registradasHoje: 0, mediaPorHora: null },
+          adocoes: { adotados: 3, disponiveis: 1 },
           alertas: [],
         })
       }),
@@ -90,11 +92,15 @@ describe('Dashboard', () => {
     expect(await screen.findByText('10')).toBeInTheDocument()
     expect(chamadas).toBe(2)
 
-    const cardAnimais = screen.getByText('Total de Animais').closest('.kpi') as HTMLElement
-    expect(within(cardAnimais).queryByText('Dados de demonstração')).not.toBeInTheDocument()
-    // Adoções não depende do endpoint real: continua mockado mesmo com o resto real.
-    const cardAdocoes = screen.getByText('Adoções no Mês').closest('.kpi') as HTMLElement
-    expect(within(cardAdocoes).getByText('Dados de demonstração')).toBeInTheDocument()
+    const cardAdocoes = screen.getByText('Animais Adotados').closest('.kpi') as HTMLElement
+    expect(within(cardAdocoes).getByText('3')).toBeInTheDocument()
+    expect(within(cardAdocoes).getByText('1 disponível para adoção')).toBeInTheDocument()
+    // Os gráficos têm flag própria (VITE_USE_MOCK_GRAFICOS, ligada no setup):
+    // aqui só os KPIs e o cabeçalho dos alertas importam.
+    const gradeKpis = cardAdocoes.closest('.kpi-grid') as HTMLElement
+    expect(within(gradeKpis).queryByText('Dados de demonstração')).not.toBeInTheDocument()
+    const cabecalhoAlertas = screen.getByRole('heading', { name: /Alertas Críticos/ }).parentElement as HTMLElement
+    expect(within(cabecalhoAlertas).queryByText('Dados de demonstração')).not.toBeInTheDocument()
   })
 
   it('renderiza os alertas críticos genéricos (DER §3.7) vindos de kpis.alertas, sem duplicar o alerta de vacina', async () => {
@@ -113,6 +119,7 @@ describe('Dashboard', () => {
           animais: { total: 10, caninos: 7, felinos: 3 },
           vacinacao: { percentualVacinados: 50, vacinados: 5, total: 10 },
           ocorrencias: { registradasHoje: 0 },
+          adocoes: { adotados: 0, disponiveis: 0 },
           alertas: [
             {
               tipo: 'baia_superlotada',

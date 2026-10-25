@@ -18,8 +18,12 @@ import type {
 // são decididos pelo backend, que devolve `podeVerDenunciante` e responde
 // 403/422 quando a ação não é permitida.
 
-export async function listarOcorrencias(filtro: OcorrenciasFiltro): Promise<PaginaResponse<OcorrenciaResumo>> {
+export async function listarOcorrencias(
+  filtro: OcorrenciasFiltro,
+  signal?: AbortSignal,
+): Promise<PaginaResponse<OcorrenciaResumo>> {
   const { data } = await http.get<PaginaResponse<OcorrenciaResumo>>('/ocorrencias', {
+    signal,
     params: {
       tipo: filtro.tipo,
       status: filtro.status,

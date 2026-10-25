@@ -33,7 +33,9 @@ const INFO_VISUAL: Record<string, InfoVisualCard> = {
     icone: 'heart',
     cor: '#6A1B9A',
     corFundo: '#F3E5F5',
-    descricao: 'Adoções realizadas, tempo médio de permanência, perfil dos adotantes e taxas de devolução.',
+    // O backend só tem o status atual do animal (sem tabela `adocao`): nada
+    // de tempo de permanência, adotantes ou devoluções.
+    descricao: 'Animais adotados e perfil por espécie e porte, pela situação atual do cadastro.',
   },
   procedimentos: {
     icone: 'scissors',

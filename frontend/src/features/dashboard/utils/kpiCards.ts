@@ -8,16 +8,14 @@ export interface KpiCardData {
   value: string
   unit?: string
   foot: string
-  // Só o card de Adoções usa isto hoje: é o único bloco sem fonte real no
-  // backend (ver dashboard.types.ts::KpiAdocoes). Mostra o selo "Dados de
-  // demonstração" no card individual, no mesmo padrão já usado pelos cards
-  // de gráfico (GraficosDashboard.tsx), em vez de um selo único pra seção
-  // inteira — os outros 3 cards são reais.
+  // Só com VITE_USE_MOCK_KPIS=true (opt-in de desenvolvimento): mostra o selo
+  // "Dados de demonstração" em cada card, no mesmo padrão dos cards de
+  // gráfico (GraficosDashboard.tsx). Com dados reais, nunca aparece.
   isMock?: boolean
 }
 
-export function mapearKpisParaCards(kpis: DashboardKpis): KpiCardData[] {
-  return [
+export function mapearKpisParaCards(kpis: DashboardKpis, usaMock = false): KpiCardData[] {
+  const cards: KpiCardData[] = [
     {
       tone: 'kpi-info',
       icon: 'paw',
@@ -36,10 +34,9 @@ export function mapearKpisParaCards(kpis: DashboardKpis): KpiCardData[] {
     {
       tone: 'kpi-alert',
       icon: 'heart',
-      label: 'Adoções no Mês',
-      value: String(kpis.adocoes.noMes),
-      foot: `Meta mensal: ${kpis.adocoes.metaMensal}`,
-      isMock: true,
+      label: 'Animais Adotados',
+      value: String(kpis.adocoes.adotados),
+      foot: `${kpis.adocoes.disponiveis} ${kpis.adocoes.disponiveis === 1 ? 'disponível' : 'disponíveis'} para adoção`,
     },
     {
       tone: 'kpi-danger',
@@ -47,9 +44,10 @@ export function mapearKpisParaCards(kpis: DashboardKpis): KpiCardData[] {
       label: 'Ocorrências',
       value: String(kpis.ocorrencias.registradasHoje),
       foot:
-        kpis.ocorrencias.mediaPorHora !== undefined
+        kpis.ocorrencias.mediaPorHora != null
           ? `Registradas hoje · média ${kpis.ocorrencias.mediaPorHora} a cada hora`
           : 'Registradas hoje',
     },
   ]
+  return usaMock ? cards.map((card) => ({ ...card, isMock: true })) : cards
 }

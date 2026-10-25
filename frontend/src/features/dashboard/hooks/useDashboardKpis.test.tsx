@@ -18,23 +18,24 @@ afterEach(() => {
 })
 
 describe('useKpisDashboardQuery', () => {
-  it('usa o mock quando VITE_USE_MOCK_KPIS=true (setup) para animais/vacinação/ocorrências/alertas, e também mocka adoções (sem fonte real)', async () => {
+  it('usa o mock quando VITE_USE_MOCK_KPIS=true (setup), sem chamar a API', async () => {
     const { result } = renderHook(() => useKpisDashboardQuery(), { wrapper: Wrapper })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data?.animais.total).toBe(147)
     expect(result.current.data?.vacinacao.percentualVacinados).toBe(84)
-    expect(result.current.data?.adocoes.noMes).toBe(8)
+    expect(result.current.data?.adocoes).toEqual({ adotados: 8, disponiveis: 12 })
     expect(result.current.data?.alertas.length).toBeGreaterThan(0)
   })
 
-  it('chama a API real quando VITE_USE_MOCK_KPIS=false, mas ainda mocka adoções', async () => {
+  it('chama a API real quando VITE_USE_MOCK_KPIS=false, inclusive para adoções', async () => {
     vi.stubEnv('VITE_USE_MOCK_KPIS', 'false')
 
     const kpisReais: DashboardKpisApi = {
       animais: { total: 10, caninos: 7, felinos: 3 },
       vacinacao: { percentualVacinados: 50, vacinados: 5, total: 10 },
-      ocorrencias: { registradasHoje: 0 },
+      ocorrencias: { registradasHoje: 0, mediaPorHora: null },
+      adocoes: { adotados: 2, disponiveis: 4 },
       alertas: [
         {
           tipo: 'baia_superlotada',
@@ -54,8 +55,7 @@ describe('useKpisDashboardQuery', () => {
     expect(result.current.data?.vacinacao).toEqual(kpisReais.vacinacao)
     expect(result.current.data?.ocorrencias).toEqual(kpisReais.ocorrencias)
     expect(result.current.data?.alertas).toEqual(kpisReais.alertas)
-    // adocoes continua vindo do mock, mesmo com o resto real.
-    expect(result.current.data?.adocoes.noMes).toBe(8)
+    expect(result.current.data?.adocoes).toEqual({ adotados: 2, disponiveis: 4 })
   })
 
   it('chama a API real quando VITE_USE_MOCK_KPIS está ausente', async () => {
@@ -65,6 +65,7 @@ describe('useKpisDashboardQuery', () => {
       animais: { total: 3, caninos: 2, felinos: 1 },
       vacinacao: { percentualVacinados: 100, vacinados: 3, total: 3 },
       ocorrencias: { registradasHoje: 1 },
+      adocoes: { adotados: 0, disponiveis: 0 },
       alertas: [],
     }
     server.use(http.get(`${API_BASE_URL}/dashboard/kpis`, () => HttpResponse.json(kpisReais)))
