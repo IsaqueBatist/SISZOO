@@ -26,4 +26,12 @@ public record ProcessoAuditoriaSnapshot(
         String resultado,
         LocalDate dataResultado,
         String desfechoAnimal) {
+
+    // O estado anterior e capturado antes da mutacao, mas as amostras sao
+    // lidas uma vez so, depois da gravacao, e entram aqui. So vale para
+    // operacoes que nao gravam amostra.
+    public ProcessoAuditoriaSnapshot comAmostras(List<AmostraAnimalResponse> lidas) {
+        return new ProcessoAuditoriaSnapshot(id, protocolo, dataAbertura, ocorrenciaId, urgente, statusProcesso,
+                doenca, cid, laboratorio, observacoes, lidas, resultado, dataResultado, desfechoAnimal);
+    }
 }
