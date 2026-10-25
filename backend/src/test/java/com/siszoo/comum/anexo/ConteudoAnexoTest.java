@@ -69,4 +69,18 @@ class ConteudoAnexoTest {
 
         assertThatThrownBy(() -> ConteudoAnexo.validar(ilegivel, AnexoRecusado::new)).isInstanceOf(AnexoRecusado.class);
     }
+
+    @Test
+    void nomeDoArquivoSemCaminhoSemEspacosNasPontasECortadoNaColuna() {
+        assertThat(ConteudoAnexo.nomeDoArquivo("laudo.pdf")).isEqualTo("laudo.pdf");
+        assertThat(ConteudoAnexo.nomeDoArquivo("  foto.png  ")).isEqualTo("foto.png");
+        assertThat(ConteudoAnexo.nomeDoArquivo("C:\\Users\\ana\\foto.png")).isEqualTo("foto.png");
+        assertThat(ConteudoAnexo.nomeDoArquivo("/tmp/envio/foto.png")).isEqualTo("foto.png");
+        assertThat(ConteudoAnexo.nomeDoArquivo(null)).isEqualTo("anexo");
+        assertThat(ConteudoAnexo.nomeDoArquivo("   ")).isEqualTo("anexo");
+        assertThat(ConteudoAnexo.nomeDoArquivo("pasta/")).isEqualTo("anexo");
+
+        String longo = "a".repeat(ConteudoAnexo.TAMANHO_MAXIMO_NOME + 10) + ".png";
+        assertThat(ConteudoAnexo.nomeDoArquivo(longo)).hasSize(ConteudoAnexo.TAMANHO_MAXIMO_NOME);
+    }
 }

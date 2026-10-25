@@ -3,6 +3,7 @@ package com.siszoo.comum.anexo;
 import java.io.IOException;
 import java.util.function.Supplier;
 
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 // Regra de anexo comum a ocorrencias (T25) e animais (F2-007): JPG, PNG ou
@@ -13,6 +14,8 @@ import org.springframework.web.multipart.MultipartFile;
 public final class ConteudoAnexo {
 
     public static final int TAMANHO_MAXIMO = 5 * 1024 * 1024;
+    // nome varchar(255) em anexo_ocorrencia (V10) e anexo_animal (V26).
+    public static final int TAMANHO_MAXIMO_NOME = 255;
 
     private ConteudoAnexo() {
     }
@@ -26,6 +29,15 @@ public final class ConteudoAnexo {
             throw invalido.get();
         }
         return new Validado(conteudo, detectarTipo(conteudo, invalido));
+    }
+
+    // Nome gravado: so o nome do arquivo (sem o caminho que alguns navegadores
+    // mandam, inclusive com barra invertida), sem espacos nas pontas e cortado
+    // no tamanho da coluna. Sem nome utilizavel, "anexo".
+    public static String nomeDoArquivo(String original) {
+        String nome = StringUtils.hasText(original) ? StringUtils.getFilename(original.replace('\\', '/')) : null;
+        nome = StringUtils.hasText(nome) ? nome.trim() : "anexo";
+        return nome.length() > TAMANHO_MAXIMO_NOME ? nome.substring(0, TAMANHO_MAXIMO_NOME) : nome;
     }
 
     private static byte[] ler(MultipartFile arquivo, Supplier<? extends RuntimeException> invalido) {

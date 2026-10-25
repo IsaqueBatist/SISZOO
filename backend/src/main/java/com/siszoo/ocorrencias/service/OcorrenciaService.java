@@ -110,7 +110,6 @@ public class OcorrenciaService {
     private static final String ENTIDADE_DENUNCIANTE = "denunciante";
     private static final String ENTIDADE_MOVIMENTACAO = "movimentacao_ocorrencia";
     private static final int MAXIMO_ANEXOS = 5;
-    private static final int TAMANHO_MAXIMO_NOME_ANEXO = 255;
 
     // D36: a busca aceita o protocolo com o prefixo de exibicao "OC" (com ou
     // sem espaco), desde que seguido de numero — "Ocara" continua sendo bairro.
@@ -481,7 +480,7 @@ public class OcorrenciaService {
 
         AnexoOcorrencia anexo = new AnexoOcorrencia();
         anexo.setOcorrencia(ocorrencia);
-        anexo.setNome(nomeDoArquivo(arquivo.getOriginalFilename()));
+        anexo.setNome(ConteudoAnexo.nomeDoArquivo(arquivo.getOriginalFilename()));
         anexo.setMimeType(mimeType);
         anexo.setTamanho(conteudo.length);
         anexo.setCriadoPor(autor);
@@ -752,11 +751,5 @@ public class OcorrenciaService {
             }
             return cb.and(predicados.toArray(new Predicate[0]));
         };
-    }
-
-    private static String nomeDoArquivo(String original) {
-        String nome = StringUtils.hasText(original) ? StringUtils.getFilename(original.replace('\\', '/')) : null;
-        nome = StringUtils.hasText(nome) ? nome.trim() : "anexo";
-        return nome.length() > TAMANHO_MAXIMO_NOME_ANEXO ? nome.substring(0, TAMANHO_MAXIMO_NOME_ANEXO) : nome;
     }
 }
