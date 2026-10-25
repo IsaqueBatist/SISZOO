@@ -19,8 +19,8 @@ imutabilidade de microchip, RBAC por cargo, validações de e-mail/senha etc.).
      localmente (`ADMIN_SEED_EMAIL`/`ADMIN_SEED_PASSWORD` do seu `.env`).
    - `base_url`: já vem `http://localhost:8080`; ajuste se rodar em outra
      porta/host.
-3. Suba o backend (`cd backend && mvn spring-boot:run`, com o banco via
-   `docker compose up`).
+3. Suba o backend (`cd backend && ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev`,
+   com o banco via `docker compose up -d db` e as variáveis descritas no README da raiz).
 
 ## Uso manual (explorar/testar endpoints à mão)
 
@@ -92,6 +92,8 @@ espera 409 (RN-AN02, `docs/regras-negocio-clinico.md`).
 
 ## O que não está aqui
 
-Os módulos `ocorrencias`, `processos` e `relatorios` ainda não têm código no
-backend (só scaffolding de pastas) — por isso não têm requisições nem testes
-nesta coleção. Adicionar aqui conforme os endpoints forem implementados.
+Os módulos `ocorrencias` (`/api/ocorrencias`), `processos` (`/api/processos`) e
+`relatorios` (`/api/dashboard`, `/api/relatorios`) já estão implementados no
+backend, mas ainda não têm requisições nem testes nesta coleção. Os endpoints
+estão nos controllers de cada pacote em `backend/src/main/java/com/siszoo/`;
+adicioná-los aqui é trabalho pendente.

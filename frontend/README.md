@@ -1,6 +1,6 @@
 # SISZOO — Frontend
 
-Aplicação web do CCZ de Itu. React 18 + TypeScript + Vite.
+Aplicação web do CCZ de Itu. React 19 + TypeScript + Vite.
 
 ## Rodando localmente
 

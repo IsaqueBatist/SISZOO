@@ -3,8 +3,7 @@
 Documentação de análise, modelagem e decisões do sistema, derivada do protótipo navegável, da entrevista com a equipe
 do CCZ-Itu (09/01/2026) e do que foi implementado. **Fonte de verdade, nesta ordem:** código em `main` (migrations
 `backend/src/main/resources/db/migration`, V1–V28) → `DER.md` → decisões → documento do TG. Se algo divergir, o código
-manda e a documentação é corrigida no mesmo PR (checklist em `CLAUDE.md` desta pasta, para quem usa o assistente, e
-abaixo em "Como manter").
+manda e a documentação é corrigida no mesmo PR (checklist abaixo, em "Como manter").
 
 ## Conteúdo
 

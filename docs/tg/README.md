@@ -45,4 +45,4 @@ máquina dos autores — quem precisar deles pede a um dos autores.
   limitação (`data_saida`, e-mail à Vigilância Epidemiológica, testes E2E).
 - Decisões de produto tomadas durante o alinhamento estão em `docs/decisoes/alinhamento-tg.md`; o que ficou em aberto,
   em `analise_fase3/bloqueios.md`, `analise_fase3/pendencias_novas.md` e `analise_fase3/relatorio_fase4.md`.
-- Toda mudança de código que altera RF, RN, tela ou schema gera pendência para o documento (ver `docs/CLAUDE.md`).
+- Toda mudança de código que altera RF, RN, tela ou schema gera pendência para o documento (ver "Como manter" em `docs/README.md`).
