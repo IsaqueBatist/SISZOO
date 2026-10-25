@@ -41,9 +41,9 @@ import tools.jackson.databind.ObjectMapper;
 // GeradorRelatorio do tipo pedido, gera CSV/PDF e, so em caso de sucesso,
 // grava relatorio_gerado na mesma transacao (doc_id consumido via
 // ProtocoloService ANTES da geracao do conteudo, para o PDF poder exibi-lo no
-// cabecalho). Para os 4 tipos ainda nao implementados (PR2), gerador(tipo)
-// recusa com 422 generico — nao ha estado "nao implementado" permanente, so
-// enquanto a T41 nao estiver completa.
+// cabecalho). Os 6 tipos de TipoRelatorio tem gerador; a recusa com 422 em
+// gerador(tipo) so dispara se um tipo novo entrar no enum sem o seu
+// GeradorRelatorio.
 @Service
 public class RelatorioGeradoService {
 
