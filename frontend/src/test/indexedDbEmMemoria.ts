@@ -12,7 +12,7 @@ import {
   IDBVersionChangeEvent,
 } from 'fake-indexeddb'
 import { vi } from 'vitest'
-import { abrirBancoRascunhos, STORE_ARQUIVOS, type StoreRascunho } from '@/lib/rascunhoDb'
+import { abrirBancoRascunhos, esquecerBancoRascunhos, STORE_ARQUIVOS, type StoreRascunho } from '@/lib/rascunhoDb'
 
 // O jsdom não tem IndexedDB. Aqui entra a fake-indexeddb, que implementa a
 // especificação de verdade (chaves, transações, versionamento) — ao contrário
@@ -97,6 +97,10 @@ export function instalarIndexedDbEmMemoria() {
     return recolocarArquivos(cloneNativo(extrairArquivos(valor, arquivos)), arquivos)
   })
 
+  // O módulo guarda a conexão aberta; sem isto ela apontaria para o banco do
+  // teste anterior, de uma fábrica que acabou de ser descartada.
+  esquecerBancoRascunhos()
+
   // Leitura direta, para as asserções. Devolve o CONTEÚDO de cada rascunho
   // (sem o envelope `{ dados, salvoEm }` da T42), que é o que os testes
   // afirmam; use `registros` quando a data do salvamento importar.
@@ -114,15 +118,11 @@ export function instalarIndexedDbEmMemoria() {
 
   async function registros(store: string): Promise<Record<string, unknown>> {
     const banco = await abrirBancoRascunhos()
-    try {
-      const nome = store as StoreRascunho | typeof STORE_ARQUIVOS
-      const pares = await Promise.all(
-        (await banco.getAllKeys(nome)).map(async (chave) => [String(chave), await banco.get(nome, chave)] as const),
-      )
-      return Object.fromEntries(pares)
-    } finally {
-      banco.close()
-    }
+    const nome = store as StoreRascunho | typeof STORE_ARQUIVOS
+    const pares = await Promise.all(
+      (await banco.getAllKeys(nome)).map(async (chave) => [String(chave), await banco.get(nome, chave)] as const),
+    )
+    return Object.fromEntries(pares)
   }
 
   return { conteudo, registros }

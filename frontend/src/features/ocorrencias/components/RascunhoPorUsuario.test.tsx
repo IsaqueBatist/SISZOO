@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
 import { salvarRascunho } from '@/lib/rascunhoDb'
@@ -52,21 +53,26 @@ function renderCadastroComo(usuarioId: string) {
 }
 
 describe('rascunho e anexos pendentes têm escopo por usuário', () => {
-  // Contador de aberturas do banco: é como os testes esperam pelas leituras do
-  // IndexedDB antes de afirmar que o aviso NÃO apareceu. Duas aberturas da
-  // preparação (os dois salvamentos) mais duas do componente (rascunho e
-  // pendência de anexos).
-  let aberturas: MockInstance
+  let conteudo: (store: string) => Promise<Record<string, unknown>>
 
   beforeEach(() => {
-    instalarIndexedDbEmMemoria()
-    aberturas = vi.spyOn(indexedDB, 'open')
+    conteudo = instalarIndexedDbEmMemoria().conteudo
   })
 
   afterEach(() => {
     vi.restoreAllMocks()
     vi.unstubAllGlobals()
   })
+
+  // Afirmar que um aviso NÃO apareceu exige esperar as leituras do IndexedDB
+  // terminarem, senão o teste passa antes de elas resolverem. O sinal usado é
+  // comportamental: o formulário só começa a salvar o rascunho depois que a
+  // checagem inicial termina, então a presença da chave no banco prova que a
+  // leitura acabou.
+  async function esperarChecagemInicial(user: ReturnType<typeof userEvent.setup>, usuarioId: string) {
+    await user.type(await screen.findByLabelText(/^Bairro/i), 'Bairro qualquer')
+    await waitFor(async () => expect(await conteudo('ocorrencias')).toHaveProperty(`${usuarioId}:novo`))
+  }
 
   it('o dono vê o próprio rascunho e a própria pendência', async () => {
     await salvarRascunhoOcorrencia(RASCUNHO, chaveRascunhoOcorrencia(USUARIO_A, undefined))
@@ -83,26 +89,29 @@ describe('rascunho e anexos pendentes têm escopo por usuário', () => {
     await salvarRascunhoOcorrencia(RASCUNHO, chaveRascunhoOcorrencia(USUARIO_A, undefined))
     await salvarAnexosPendentes(USUARIO_A, PENDENCIA)
 
+    const user = userEvent.setup()
     renderCadastroComo(USUARIO_B)
 
     const registrar = await screen.findByRole('button', { name: 'Registrar Ocorrência' })
-    // Dá tempo para as leituras do IndexedDB terminarem antes de afirmar ausência.
-    await waitFor(() => expect(aberturas).toHaveBeenCalledTimes(4))
+    await esperarChecagemInicial(user, USUARIO_B)
+
     expect(screen.queryByText(/Encontramos um rascunho salvo/)).not.toBeInTheDocument()
     expect(screen.queryByText(/Há anexos pendentes/)).not.toBeInTheDocument()
     expect(registrar).toBeEnabled()
-  })
+  }, 15000)
 
   it('rascunho e pendência antigos, sem escopo, são ignorados (sem migração)', async () => {
     await salvarRascunho('ocorrencias', 'novo', RASCUNHO)
     await salvarRascunho('ocorrencias', 'anexos-pendentes', PENDENCIA)
 
+    const user = userEvent.setup()
     renderCadastroComo(USUARIO_A)
 
     const registrar = await screen.findByRole('button', { name: 'Registrar Ocorrência' })
-    await waitFor(() => expect(aberturas).toHaveBeenCalledTimes(4))
+    await esperarChecagemInicial(user, USUARIO_A)
+
     expect(screen.queryByText(/Encontramos um rascunho salvo/)).not.toBeInTheDocument()
     expect(screen.queryByText(/Há anexos pendentes/)).not.toBeInTheDocument()
     expect(registrar).toBeEnabled()
-  })
+  }, 15000)
 })

@@ -5,6 +5,7 @@ import {
   abrirBancoRascunhos,
   carregarArquivoRascunho,
   carregarRascunho,
+  esquecerBancoRascunhos,
   limparRascunhosExpirados,
   removerArquivosDoRascunho,
   salvarArquivoRascunho,
@@ -31,10 +32,10 @@ async function bancoAntigo(versao: number, stores: string[], semear?: (banco: Aw
 }
 
 // Grava direto, sem passar por salvarRascunho, para datar o registro no passado.
+// Não fecha a conexão: ela é compartilhada pelo módulo (ver abrirBancoRascunhos).
 async function gravarComData(store: string, chave: string, dados: unknown, salvoEm: number) {
   const banco = await abrirBancoRascunhos()
   await banco.put(store as 'animais', { dados, salvoEm } as never, chave)
-  banco.close()
 }
 
 describe('banco de rascunhos compartilhado', () => {
@@ -51,7 +52,6 @@ describe('banco de rascunhos compartilhado', () => {
 
     expect([...banco.objectStoreNames].sort()).toEqual([...STORES_RASCUNHO].sort())
     expect(banco.version).toBe(4)
-    banco.close()
   })
 
   it('da versão 1 com uma store só, cria as que faltam e preserva o que havia', async () => {
@@ -61,7 +61,6 @@ describe('banco de rascunhos compartilhado', () => {
 
     expect([...banco.objectStoreNames].sort()).toEqual([...STORES_RASCUNHO].sort())
     expect(await banco.get('animais', `${USUARIO}:novo`)).toEqual({ nome: 'Rex' })
-    banco.close()
   })
 
   it('da versão 3 para a 4 só cria a store arquivos e não apaga as existentes', async () => {
@@ -74,7 +73,6 @@ describe('banco de rascunhos compartilhado', () => {
     expect(banco.objectStoreNames.contains(STORE_ARQUIVOS)).toBe(true)
     expect([...banco.objectStoreNames].sort()).toEqual([...STORES_RASCUNHO].sort())
     expect(await banco.get('processos', `${USUARIO}:novo`)).toEqual({ etapaAtual: 2 })
-    banco.close()
   })
 })
 
@@ -100,7 +98,6 @@ describe('registro de rascunho com data de salvamento', () => {
   it('rascunho gravado antes da T42 (sem envelope) continua restaurável, sem data', async () => {
     const banco = await abrirBancoRascunhos()
     await banco.put('animais', { nome: 'Legado' } as never, `${USUARIO}:novo`)
-    banco.close()
 
     const registro = await carregarRascunho<{ nome: string }>('animais', `${USUARIO}:novo`)
 
@@ -115,7 +112,6 @@ describe('registro de rascunho com data de salvamento', () => {
 
     const banco = await abrirBancoRascunhos()
     expect(await banco.get('animais', chave)).toBeUndefined()
-    banco.close()
   })
 
   it('rascunho dentro do prazo é mantido', async () => {
@@ -176,8 +172,11 @@ describe('arquivos do rascunho', () => {
   })
 
   it('falha de gravação (cota) devolve null sem lançar', async () => {
-    const bancoReal = await abrirBancoRascunhos()
-    bancoReal.close()
+    // A conexão fica em cache no módulo: descartá-la obriga a próxima operação
+    // a abrir o banco de novo, que é onde a falha é simulada. Depois do
+    // mockRestore o cache já está limpo, porque abrirBancoRascunhos não guarda
+    // uma abertura que falhou.
+    esquecerBancoRascunhos()
     vi.spyOn(indexedDB, 'open').mockImplementation(() => {
       throw new DOMException('cota', 'QuotaExceededError')
     })

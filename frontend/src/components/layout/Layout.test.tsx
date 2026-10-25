@@ -106,7 +106,6 @@ describe('Layout — conexão e manutenção dos rascunhos', () => {
       { dados: { nome: 'Vencido' }, salvoEm: Date.now() - VALIDADE_RASCUNHO_MS - 1000 } as never,
       'u1:novo',
     )
-    banco.close()
     await salvarRascunho('ocorrencias', 'u1:novo', { bairro: 'Recente' })
 
     renderLayout()

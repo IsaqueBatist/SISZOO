@@ -174,7 +174,6 @@ describe('AnimalForm — foto no rascunho (T42)', () => {
       { dados: { nome: 'Antigo', dataEntrada: '2026-01-01' }, salvoEm: Date.now() - VALIDADE_RASCUNHO_MS - 1000 } as never,
       CHAVE_RASCUNHO,
     )
-    banco.close()
 
     renderCadastrar()
 

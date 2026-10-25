@@ -82,8 +82,20 @@ export function chaveComEscopo(usuarioId: string, chave: string): string {
   return `${usuarioId}:${chave}`
 }
 
+// Uma conexão só, reaproveitada por todas as operações.
+//
+// Por que não abrir e fechar a cada operação, como a versão anterior fazia: a
+// idb cria a promessa `done` de TODA transação que embrulha, inclusive as de
+// leitura (cacheDonePromiseForTransaction), e essa promessa rejeita se a
+// transação abortar. Numa leitura, o `await` do get resolve quando a
+// REQUISIÇÃO termina, não quando a transação fecha — então um close() logo
+// depois abortava uma transação ainda em curso, e a rejeição do `done`, que
+// ninguém espera em leitura, virava erro não tratado. Só aparecia sob disputa
+// de CPU, que é o caso do CI: a suíte passava inteira e o processo saía com 1.
+let bancoAberto: Promise<IDBPDatabase<SchemaRascunhos>> | null = null
+
 export function abrirBancoRascunhos(): Promise<IDBPDatabase<SchemaRascunhos>> {
-  return openDB<SchemaRascunhos>(NOME_BANCO, VERSAO_BANCO, {
+  bancoAberto ??= openDB<SchemaRascunhos>(NOME_BANCO, VERSAO_BANCO, {
     upgrade(banco) {
       for (const store of STORES_RASCUNHO) {
         if (!banco.objectStoreNames.contains(store)) {
@@ -91,7 +103,30 @@ export function abrirBancoRascunhos(): Promise<IDBPDatabase<SchemaRascunhos>> {
         }
       }
     },
+    // Outra aba quer subir a versão do banco: esta conexão sai da frente.
+    blocking(_atual, _nova, evento) {
+      ;(evento.target as IDBDatabase | null)?.close()
+      bancoAberto = null
+    },
+    // O navegador encerrou a conexão por conta própria.
+    terminated() {
+      bancoAberto = null
+    },
+  }).catch((erro: unknown) => {
+    // Sem isto, uma falha de abertura (modo privado, por exemplo) ficaria em
+    // cache e nenhuma tentativa posterior funcionaria.
+    bancoAberto = null
+    throw erro
   })
+  return bancoAberto
+}
+
+// Descarta a conexão em cache sem fechá-la. Existe para os testes, em que cada
+// um instala uma fábrica de IndexedDB nova e a conexão guardada apontaria para
+// o banco do teste anterior. Não fecha de propósito: fechar é exatamente o que
+// abortava transação em curso.
+export function esquecerBancoRascunhos(): void {
+  bancoAberto = null
 }
 
 // Rascunho é melhor esforço: falha de IndexedDB (modo privado, quota,
@@ -101,12 +136,7 @@ export function abrirBancoRascunhos(): Promise<IDBPDatabase<SchemaRascunhos>> {
 async function comBanco<T>(operacao: (banco: IDBPDatabase<SchemaRascunhos>) => Promise<T>, aoFalhar: T): Promise<T> {
   if (!indexedDbDisponivel()) return aoFalhar
   try {
-    const banco = await abrirBancoRascunhos()
-    try {
-      return await operacao(banco)
-    } finally {
-      banco.close()
-    }
+    return await operacao(await abrirBancoRascunhos())
   } catch {
     return aoFalhar
   }
@@ -226,11 +256,7 @@ export async function salvarArquivoRascunho(
   const id = crypto.randomUUID()
   try {
     const banco = await abrirBancoRascunhos()
-    try {
-      await banco.put(STORE_ARQUIVOS, { dados: arquivo, salvoEm: Date.now(), dono }, chaveArquivo(usuarioId, id))
-    } finally {
-      banco.close()
-    }
+    await banco.put(STORE_ARQUIVOS, { dados: arquivo, salvoEm: Date.now(), dono }, chaveArquivo(usuarioId, id))
   } catch {
     return null
   }
