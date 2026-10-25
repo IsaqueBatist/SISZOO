@@ -316,27 +316,9 @@ export function AnimalForm({ animal }: AnimalFormProps) {
     resolver: zodResolver(animalFormUiSchema),
     mode: 'onSubmit',
     reValidateMode: 'onSubmit',
-    defaultValues: {
-      nome: iniciais.nome,
-      especie: iniciais.especie,
-      sexo: iniciais.sexo as AnimalFormUiValues['sexo'],
-      raca: iniciais.raca || undefined,
-      coloracao: iniciais.coloracao || undefined,
-      pelagem: (iniciais.pelagem || undefined) as AnimalFormUiValues['pelagem'],
-      porte: (iniciais.porte || undefined) as AnimalFormUiValues['porte'],
-      pesoKg: iniciais.pesoKg.trim() ? Number(iniciais.pesoKg) : undefined,
-      idadeAprox: iniciais.idadeAprox || undefined,
-      dataNascimentoAprox: iniciais.dataNascimentoAprox || undefined,
-      microchip: iniciais.microchip || undefined,
-      castracaoOpcao: iniciais.castracaoOpcao,
-      dataEsterilizacao: iniciais.dataEsterilizacao || undefined,
-      status: iniciais.status,
-      motivoEntrada: iniciais.motivoEntrada,
-      dataEntrada: iniciais.dataEntrada,
-      baiaId: iniciais.baiaId || undefined,
-      fotoUrl: iniciais.fotoUrl || undefined,
-      observacoes: iniciais.observacoes || undefined,
-    },
+    // Mesma conversão do rascunho: cobre todos os campos, inclusive os
+    // F2-004/F2-008 — sem eles o PUT da edição apagava o que estava salvo.
+    defaultValues: rascunhoParaValores(iniciais, iniciais.fotoUrl),
   })
 
   // Todos os campos são lidos ao vivo pela etapa 3 (revisão) — assinar tudo
