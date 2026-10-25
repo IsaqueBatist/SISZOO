@@ -211,9 +211,22 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+			<!-- Testes sempre em pt-BR: mensagens padrao do Bean Validation e
+			     rotulos do driver do PostgreSQL seguem o locale da JVM, e o
+			     runner do CI (en_US) dava texto diferente das maquinas locais. -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>-Duser.language=pt -Duser.country=BR</argLine>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
+				<configuration>
+					<argLine>-Duser.language=pt -Duser.country=BR</argLine>
+				</configuration>
 				<executions>
 					<execution>
 						<goals>
