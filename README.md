@@ -242,11 +242,11 @@ export DB_PASSWORD=postgres
 export JWT_SECRET="<chave gerada acima>"
 export ADMIN_SEED_EMAIL=admin.sistema@itu.sp.gov.br
 export ADMIN_SEED_PASSWORD="<senha do primeiro administrador>"
-sh mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-No PowerShell, defina as variáveis com `$env:NOME = "valor"` e rode
-`.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=dev"`.
+Se o shell recusar `./mvnw` por falta de permissão de execução, `sh mvnw` funciona igual. No PowerShell, defina as
+variáveis com `$env:NOME = "valor"` e rode `.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=dev"`.
 
 **3. Frontend.**
 
@@ -300,8 +300,8 @@ construída com `false` por padrão.
 **Backend** (em `backend/`):
 
 ```bash
-sh mvnw test     # testes unitários
-sh mvnw verify   # unitários + integração (*IT), com PostgreSQL via Testcontainers (exige Docker)
+./mvnw test     # testes unitários
+./mvnw verify   # unitários + integração (*IT), com PostgreSQL via Testcontainers (exige Docker)
 ```
 
 **Frontend** (em `frontend/`):
