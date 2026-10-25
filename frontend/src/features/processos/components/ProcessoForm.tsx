@@ -1,18 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { isAxiosError } from 'axios'
-import { Fragment, useEffect, useState, type FormEvent } from 'react'
-import { useFieldArray, useForm } from 'react-hook-form'
+import { useEffect, useState, type FormEvent } from 'react'
+import { FormProvider, useFieldArray, useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
 import { BannerRascunho } from '@/components/BannerRascunho'
+import { Stepper } from '@/components/Stepper'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { mensagemDeRegraDaApi, statusHttpDoErro } from '@/lib/erroApi'
-import { aplicarMascaraAoDigitar, formatarCep, formatarCpf, formatarTelefone } from '@/lib/mascaras'
-import { buscarEnderecoPorCep } from '@/lib/viaCep'
+import { camposDoErro, mensagemDeRegraDaApi, statusHttpDoErro } from '@/lib/erroApi'
 import { AmostraAnimalCard, type AmostraErros } from './AmostraAnimalCard'
 import './ProcessoForm.css'
-import { hojeEmItu } from '@/lib/datas'
 import { CAMPOS_STEP, processoFormSchema, type ProcessoFormValues } from '../schemas/processoFormSchema'
-import type { AmostraAnimalRequest, CriarProcessoRequest } from '../types/processos.types'
+import { amostraVazia, paraRequisicao, valoresVazios } from '../utils/processoFormMapeamento'
 import {
   agendarSalvarRascunhoProcesso,
   carregarRascunhoProcesso,
@@ -21,112 +18,11 @@ import {
   salvarRascunhoProcesso,
   type RascunhoProcesso,
 } from '../storage/rascunhoProcessoStorage'
+import { CamposDadosProcesso } from './CamposDadosProcesso'
+import { CamposResponsavel } from './CamposResponsavel'
 import { RevisaoProcesso } from './RevisaoProcesso'
 import { SeletorOcorrencia, type OcorrenciaParaVinculo } from './SeletorOcorrencia'
 import { useCatalogosProcessoQuery, useCriarProcessoMutation } from '../hooks/useProcessos'
-
-function amostraVazia(): ProcessoFormValues['amostras'][number] {
-  return {
-    origem: 'canil',
-    animalId: '',
-    animalDescricao: '',
-    statusClinico: '' as never,
-    tipoAbrigo: '' as never,
-    alteracaoComportamental: '',
-    dataColeta: hojeEmItu(),
-    materialBiologico: '' as never,
-    contatoHumano: false,
-    nivelContato: undefined,
-    agrediuHumano: undefined,
-    observacoes: '',
-    sintomas: [],
-  }
-}
-
-function valoresVazios(): ProcessoFormValues {
-  return {
-    vinculoDecisao: '' as never,
-    ocorrenciaId: null,
-    ocorrenciaResumo: null,
-    dataAbertura: hojeEmItu(),
-    doenca: '',
-    laboratorio: '',
-    galNumero: '',
-    sinanNumero: '',
-    responsavel: {
-      nome: '',
-      cpf: '',
-      telefone: '',
-      email: '',
-      cep: '',
-      endereco: '',
-      bairroResidencial: '',
-      bairroOcorrencia: '',
-    },
-    amostras: [amostraVazia()],
-    observacoes: '',
-  }
-}
-
-function textoOuIndefinido(valor: string | undefined): string | undefined {
-  const limpo = valor?.trim()
-  return limpo ? limpo : undefined
-}
-
-// Payload de POST /api/processos. Whitelist por modalidade: a amostra do
-// canil leva só o animalId (o servidor copia a identificação da ficha e
-// recusa com 422 se ela vier junto, DH-5); a de campo leva a identificação.
-// Nível de contato e agressão só com contato; sintomas só em SINTOMATICO.
-function paraAmostraRequisicao(amostra: ProcessoFormValues['amostras'][number]): AmostraAnimalRequest {
-  const clinico = {
-    statusClinico: amostra.statusClinico,
-    tipoAbrigo: amostra.tipoAbrigo,
-    alteracaoComportamental: textoOuIndefinido(amostra.alteracaoComportamental),
-    dataColeta: amostra.dataColeta,
-    materialBiologico: amostra.materialBiologico,
-    contatoHumano: amostra.contatoHumano,
-    nivelContato: amostra.contatoHumano ? amostra.nivelContato : undefined,
-    agrediuHumano: amostra.contatoHumano ? amostra.agrediuHumano : undefined,
-    observacoes: textoOuIndefinido(amostra.observacoes),
-    sintomas: amostra.statusClinico === 'SINTOMATICO' ? amostra.sintomas : [],
-  }
-  if (amostra.origem === 'canil') {
-    return { animalId: amostra.animalId, ...clinico }
-  }
-  return {
-    especie: amostra.especie,
-    sexo: amostra.sexo,
-    raca: textoOuIndefinido(amostra.raca),
-    coloracao: textoOuIndefinido(amostra.coloracao),
-    pelagem: amostra.pelagem || undefined,
-    idadeAprox: textoOuIndefinido(amostra.idadeAprox),
-    pesoKg: amostra.pesoKg,
-    ...clinico,
-  }
-}
-
-function paraRequisicao(valores: ProcessoFormValues): CriarProcessoRequest {
-  return {
-    dataAbertura: valores.dataAbertura,
-    doenca: valores.doenca,
-    laboratorio: valores.laboratorio,
-    galNumero: textoOuIndefinido(valores.galNumero),
-    sinanNumero: textoOuIndefinido(valores.sinanNumero),
-    ocorrenciaId: valores.vinculoDecisao === 'vinculado' ? valores.ocorrenciaId : null,
-    responsavel: {
-      nome: valores.responsavel.nome.trim(),
-      cpf: textoOuIndefinido(valores.responsavel.cpf),
-      telefone: textoOuIndefinido(valores.responsavel.telefone),
-      email: textoOuIndefinido(valores.responsavel.email),
-      cep: textoOuIndefinido(valores.responsavel.cep),
-      endereco: textoOuIndefinido(valores.responsavel.endereco),
-      bairroResidencial: textoOuIndefinido(valores.responsavel.bairroResidencial),
-      bairroOcorrencia: textoOuIndefinido(valores.responsavel.bairroOcorrencia),
-    },
-    amostras: valores.amostras.map(paraAmostraRequisicao),
-    observacoes: textoOuIndefinido(valores.observacoes),
-  }
-}
 
 // Mensagem do servidor (409/422) com os campos recusados, quando vierem.
 function mensagemDoErro(erro: unknown): string {
@@ -135,10 +31,8 @@ function mensagemDoErro(erro: unknown): string {
   }
   const mensagem = mensagemDeRegraDaApi(erro)
   if (!mensagem) return 'Não foi possível registrar o processo. Tente novamente.'
-  const campos = isAxiosError(erro)
-    ? (erro.response?.data as { campos?: { campo: string; mensagem: string }[] } | undefined)?.campos
-    : undefined
-  return campos?.length ? `${mensagem}: ${campos.map((c) => `${c.campo} — ${c.mensagem}`).join('; ')}` : mensagem
+  const campos = camposDoErro(erro)
+  return campos.length ? `${mensagem}: ${campos.map((c) => `${c.campo} — ${c.mensagem}`).join('; ')}` : mensagem
 }
 
 interface ProcessoFormProps {
@@ -165,6 +59,12 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular }: ProcessoFormProp
   const [prontoParaAutoSalvar, setProntoParaAutoSalvar] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
+  const formulario = useForm<ProcessoFormValues>({
+    resolver: zodResolver(processoFormSchema),
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
+    defaultValues: valoresVazios(),
+  })
   const {
     control,
     register,
@@ -175,34 +75,11 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular }: ProcessoFormProp
     setValue,
     trigger,
     formState: { errors },
-  } = useForm<ProcessoFormValues>({
-    resolver: zodResolver(processoFormSchema),
-    mode: 'onSubmit',
-    reValidateMode: 'onSubmit',
-    defaultValues: valoresVazios(),
-  })
+  } = formulario
 
   const { fields, append, remove } = useFieldArray({ control, name: 'amostras' })
 
   const valores = watch()
-
-  const [buscandoCepResponsavel, setBuscandoCepResponsavel] = useState(false)
-
-  // Diferente do denunciante de ocorrência sigilosa, o responsável de
-  // processo não tem esse conceito de sigilo — sempre pode disparar o
-  // ViaCEP. Só preenche endereço/bairro se ainda estiverem vazios.
-  async function aoMudarCepResponsavel(valorDigitado: string) {
-    const digitos = valorDigitado.replace(/\D/g, '')
-    if (digitos.length !== 8) return
-
-    setBuscandoCepResponsavel(true)
-    const endereco = await buscarEnderecoPorCep(valorDigitado)
-    setBuscandoCepResponsavel(false)
-    if (!endereco) return
-
-    if (!getValues('responsavel.endereco')) setValue('responsavel.endereco', endereco.logradouro)
-    if (!getValues('responsavel.bairroResidencial')) setValue('responsavel.bairroResidencial', endereco.bairro)
-  }
 
   function aplicarVinculoDaUrl() {
     if (!ocorrenciaDaUrl) return
@@ -325,20 +202,7 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular }: ProcessoFormProp
         </div>
       </div>
 
-      <div className="stepper">
-        {(['Vínculo', 'Responsável', 'Amostras', 'Revisão'] as const).map((label, indice) => {
-          const numero = (indice + 1) as 1 | 2 | 3 | 4
-          return (
-            <Fragment key={numero}>
-              {indice > 0 && <div className={`arrow${step > numero ? ' done' : ''}`} />}
-              <div className={`step${step === numero ? ' active' : step > numero ? ' done' : ''}`}>
-                <span className="num">{numero}</span>
-                <span>{label}</span>
-              </div>
-            </Fragment>
-          )
-        })}
-      </div>
+      <Stepper etapas={['Vínculo', 'Responsável', 'Amostras', 'Revisão']} atual={step} />
 
       {erroCatalogos && (
         <div className="alert danger" role="alert">
@@ -379,267 +243,114 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular }: ProcessoFormProp
         </div>
       )}
 
-      <form onSubmit={aoEnviar} noValidate>
-        <div className={`card step-pane${step === 1 ? ' active' : ''}`}>
-          <div className="card-header">
-            <h3>1. Dados e vínculo com ocorrência</h3>
-          </div>
-          <div className="card-body col gap-4">
-            {podeVincular || vinculoTravado ? (
-              <SeletorOcorrencia
-                vinculoDecisao={valores.vinculoDecisao}
-                ocorrenciaId={valores.ocorrenciaId}
-                travado={vinculoTravado}
-                ocorrenciaVinculada={valores.ocorrenciaResumo}
-                erro={errors.vinculoDecisao?.message}
-                onSelecionar={handleSelecionarOcorrencia}
-                onPular={handlePularVinculo}
-              />
-            ) : (
-              <div>
-                <p className="hint" style={{ marginBottom: 12 }}>
-                  Vincular o processo a uma ocorrência exige permissão de escrita em ocorrências e denúncias. Este processo
-                  será registrado sem vínculo; quem tem a permissão pode vinculá-lo depois, pelo detalhe.
-                </p>
-                <button type="button" className="btn btn-outline" onClick={handlePularVinculo}>
-                  Continuar sem vínculo
+      <FormProvider {...formulario}>
+        <form onSubmit={aoEnviar} noValidate>
+          <div className={`card step-pane${step === 1 ? ' active' : ''}`}>
+            <div className="card-header">
+              <h3>1. Dados e vínculo com ocorrência</h3>
+            </div>
+            <div className="card-body col gap-4">
+              {podeVincular || vinculoTravado ? (
+                <SeletorOcorrencia
+                  vinculoDecisao={valores.vinculoDecisao}
+                  ocorrenciaId={valores.ocorrenciaId}
+                  travado={vinculoTravado}
+                  ocorrenciaVinculada={valores.ocorrenciaResumo}
+                  erro={errors.vinculoDecisao?.message}
+                  onSelecionar={handleSelecionarOcorrencia}
+                  onPular={handlePularVinculo}
+                />
+              ) : (
+                <div>
+                  <p className="hint" style={{ marginBottom: 12 }}>
+                    Vincular o processo a uma ocorrência exige permissão de escrita em ocorrências e denúncias. Este processo
+                    será registrado sem vínculo; quem tem a permissão pode vinculá-lo depois, pelo detalhe.
+                  </p>
+                  <button type="button" className="btn btn-outline" onClick={handlePularVinculo}>
+                    Continuar sem vínculo
+                  </button>
+                  {valores.vinculoDecisao === 'sem_vinculo' && <span className="hint"> Sem vínculo.</span>}
+                  {errors.vinculoDecisao && <span className="err">{errors.vinculoDecisao.message}</span>}
+                </div>
+              )}
+              <CamposDadosProcesso />
+              <div className="flex gap-2" style={{ marginLeft: 'auto' }}>
+                <button type="button" className="btn btn-primary" onClick={avancar}>
+                  Continuar →
                 </button>
-                {valores.vinculoDecisao === 'sem_vinculo' && <span className="hint"> Sem vínculo.</span>}
-                {errors.vinculoDecisao && <span className="err">{errors.vinculoDecisao.message}</span>}
               </div>
-            )}
-            <div className="form-grid">
-              <div className="field">
-                <label htmlFor="proc-data-abertura">
-                  Data de abertura <span className="req">*</span>
-                </label>
-                <input
-                  id="proc-data-abertura"
-                  className={`input${errors.dataAbertura ? ' error' : ''}`}
-                  type="date"
-                  {...register('dataAbertura')}
-                />
-                {errors.dataAbertura && <span className="err">{errors.dataAbertura.message}</span>}
-              </div>
-              <div className="field">
-                <label htmlFor="proc-doenca">
-                  Tipo de doença investigada <span className="req">*</span>
-                </label>
-                <select id="proc-doenca" className={`select${errors.doenca ? ' error' : ''}`} {...register('doenca')}>
-                  <option value="" disabled>
-                    Selecione
-                  </option>
-                  {catalogos?.doencas.map((opcao) => (
-                    <option key={opcao.codigo} value={opcao.codigo}>
-                      {opcao.nome}
-                    </option>
-                  ))}
-                </select>
-                {errors.doenca && <span className="err">{errors.doenca.message}</span>}
-              </div>
-              <div className="field">
-                <label htmlFor="proc-laboratorio">
-                  Laboratório de destino <span className="req">*</span>
-                </label>
-                <select id="proc-laboratorio" className={`select${errors.laboratorio ? ' error' : ''}`} {...register('laboratorio')}>
-                  <option value="" disabled>
-                    Selecione
-                  </option>
-                  {catalogos?.laboratorios.map((opcao) => (
-                    <option key={opcao.codigo} value={opcao.codigo}>
-                      {opcao.nome}
-                    </option>
-                  ))}
-                </select>
-                {errors.laboratorio && <span className="err">{errors.laboratorio.message}</span>}
-              </div>
-              <div className="field">
-                <label htmlFor="proc-gal">Nº GAL</label>
-                <input
-                  id="proc-gal"
-                  className={`input mono${errors.galNumero ? ' error' : ''}`}
-                  type="text"
-                  maxLength={40}
-                  placeholder="Protocolo no GAL (opcional)"
-                  {...register('galNumero')}
-                />
-                {errors.galNumero ? (
-                  <span className="err">{errors.galNumero.message}</span>
-                ) : (
-                  <span className="hint">Registro manual; sem integração com o sistema estadual.</span>
-                )}
-              </div>
-              <div className="field">
-                <label htmlFor="proc-sinan">Nº SINAN</label>
-                <input
-                  id="proc-sinan"
-                  className={`input mono${errors.sinanNumero ? ' error' : ''}`}
-                  type="text"
-                  maxLength={40}
-                  placeholder="Notificação no SINAN (opcional)"
-                  {...register('sinanNumero')}
-                />
-                {errors.sinanNumero && <span className="err">{errors.sinanNumero.message}</span>}
-              </div>
-              <div className="field full">
-                <label htmlFor="proc-observacoes">Observações</label>
-                <textarea id="proc-observacoes" className="textarea" {...register('observacoes')} />
-              </div>
-            </div>
-            <div className="flex gap-2" style={{ marginLeft: 'auto' }}>
-              <button type="button" className="btn btn-primary" onClick={avancar}>
-                Continuar →
-              </button>
             </div>
           </div>
-        </div>
 
-        <div className={`card step-pane${step === 2 ? ' active' : ''}`}>
-          <div className="card-header">
-            <h3>2. Responsável / munícipe</h3>
-          </div>
-          <div className="card-body col gap-4">
-            <div className="form-grid">
-              <div className="field">
-                <label htmlFor="resp-nome">
-                  Nome <span className="req">*</span>
-                </label>
-                <input
-                  id="resp-nome"
-                  className={`input${errors.responsavel?.nome ? ' error' : ''}`}
-                  type="text"
-                  {...register('responsavel.nome')}
-                />
-                {errors.responsavel?.nome && <span className="err">{errors.responsavel.nome.message}</span>}
-              </div>
-              <div className="field">
-                <label htmlFor="resp-cpf">CPF</label>
-                <input
-                  id="resp-cpf"
-                  className="input mono"
-                  type="text"
-                  placeholder="000.000.000-00"
-                  {...register('responsavel.cpf', { onChange: aplicarMascaraAoDigitar(formatarCpf) })}
-                />
-                {errors.responsavel?.cpf && <span className="err">{errors.responsavel.cpf.message}</span>}
-              </div>
-              <div className="field">
-                <label htmlFor="resp-telefone">Telefone</label>
-                <input
-                  id="resp-telefone"
-                  className="input mono"
-                  type="text"
-                  placeholder="(11) 90000-0000"
-                  {...register('responsavel.telefone', { onChange: aplicarMascaraAoDigitar(formatarTelefone) })}
-                />
-                {errors.responsavel?.telefone && <span className="err">{errors.responsavel.telefone.message}</span>}
-              </div>
-              <div className="field">
-                <label htmlFor="resp-email">E-mail</label>
-                <input id="resp-email" className="input" type="email" {...register('responsavel.email')} />
-                {errors.responsavel?.email && <span className="err">{errors.responsavel.email.message}</span>}
-              </div>
-              <div className="field">
-                <label htmlFor="resp-cep">CEP</label>
-                <input
-                  id="resp-cep"
-                  className="input mono"
-                  type="text"
-                  placeholder="00000-000"
-                  {...register('responsavel.cep', {
-                    onChange: (evento) => {
-                      aplicarMascaraAoDigitar(formatarCep)(evento)
-                      void aoMudarCepResponsavel(evento.target.value)
-                    },
-                  })}
-                />
-                {errors.responsavel?.cep && <span className="err">{errors.responsavel.cep.message}</span>}
-                {buscandoCepResponsavel && <span className="subtitle">Buscando CEP…</span>}
-              </div>
-              <div className="field full">
-                <label htmlFor="resp-endereco">Endereço</label>
-                <input id="resp-endereco" className="input" type="text" {...register('responsavel.endereco')} />
-                {errors.responsavel?.endereco && <span className="err">{errors.responsavel.endereco.message}</span>}
-              </div>
-              <div className="field">
-                <label htmlFor="resp-bairro-res">Bairro residencial</label>
-                <input id="resp-bairro-res" className="input" type="text" {...register('responsavel.bairroResidencial')} />
-                {errors.responsavel?.bairroResidencial && <span className="err">{errors.responsavel.bairroResidencial.message}</span>}
-              </div>
-              <div className="field">
-                <label htmlFor="resp-bairro-oco">Bairro da ocorrência</label>
-                <input
-                  id="resp-bairro-oco"
-                  className="input"
-                  type="text"
-                  placeholder="Local onde o animal estava"
-                  {...register('responsavel.bairroOcorrencia')}
-                />
-                {errors.responsavel?.bairroOcorrencia && <span className="err">{errors.responsavel.bairroOcorrencia.message}</span>}
+          <div className={`card step-pane${step === 2 ? ' active' : ''}`}>
+            <div className="card-header">
+              <h3>2. Responsável / munícipe</h3>
+            </div>
+            <div className="card-body col gap-4">
+              <CamposResponsavel />
+              <div className="flex gap-2" style={{ marginLeft: 'auto' }}>
+                <button type="button" className="btn btn-ghost" onClick={() => voltar()}>
+                  ← Voltar
+                </button>
+                <button type="button" className="btn btn-primary" onClick={avancar}>
+                  Continuar →
+                </button>
               </div>
             </div>
-            <div className="flex gap-2" style={{ marginLeft: 'auto' }}>
-              <button type="button" className="btn btn-ghost" onClick={() => voltar()}>
-                ← Voltar
-              </button>
-              <button type="button" className="btn btn-primary" onClick={avancar}>
-                Continuar →
-              </button>
-            </div>
           </div>
-        </div>
 
-        <div className={`card step-pane${step === 3 ? ' active' : ''}`}>
-          <div className="card-header">
-            <h3>3. Amostras, sintomas e contato humano ({fields.length})</h3>
-          </div>
-          <div className="card-body col gap-4">
-            {fields.map((field, indice) => (
-              <AmostraAnimalCard
-                key={field.id}
-                index={indice}
-                numero={indice + 1}
-                control={control}
-                register={register}
-                setValue={setValue}
-                watch={watch}
-                erros={amostrasErros?.[indice] as AmostraErros | undefined}
-                podeRemover={fields.length > 1}
-                onRemover={() => remove(indice)}
-              />
-            ))}
-            {typeof errors.amostras?.message === 'string' && <span className="err">{errors.amostras.message}</span>}
-            <button type="button" className="btn btn-outline" style={{ width: 'fit-content' }} onClick={() => append(amostraVazia())}>
-              + Adicionar animal
-            </button>
-            <div className="flex gap-2" style={{ marginLeft: 'auto' }}>
-              <button type="button" className="btn btn-ghost" onClick={() => voltar()}>
-                ← Voltar
+          <div className={`card step-pane${step === 3 ? ' active' : ''}`}>
+            <div className="card-header">
+              <h3>3. Amostras, sintomas e contato humano ({fields.length})</h3>
+            </div>
+            <div className="card-body col gap-4">
+              {fields.map((field, indice) => (
+                <AmostraAnimalCard
+                  key={field.id}
+                  index={indice}
+                  numero={indice + 1}
+                  control={control}
+                  register={register}
+                  setValue={setValue}
+                  watch={watch}
+                  erros={amostrasErros?.[indice] as AmostraErros | undefined}
+                  podeRemover={fields.length > 1}
+                  onRemover={() => remove(indice)}
+                />
+              ))}
+              {typeof errors.amostras?.message === 'string' && <span className="err">{errors.amostras.message}</span>}
+              <button type="button" className="btn btn-outline" style={{ width: 'fit-content' }} onClick={() => append(amostraVazia())}>
+                + Adicionar animal
               </button>
-              <button type="button" className="btn btn-primary" onClick={avancar}>
-                Continuar →
-              </button>
+              <div className="flex gap-2" style={{ marginLeft: 'auto' }}>
+                <button type="button" className="btn btn-ghost" onClick={() => voltar()}>
+                  ← Voltar
+                </button>
+                <button type="button" className="btn btn-primary" onClick={avancar}>
+                  Continuar →
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className={`card step-pane${step === 4 ? ' active' : ''}`}>
-          <div className="card-header">
-            <h3>4. Revisão</h3>
-          </div>
-          <div className="card-body col gap-4">
-            <RevisaoProcesso valores={valores} catalogos={catalogos} onEditar={voltar} />
-            <div className="flex gap-2" style={{ marginLeft: 'auto' }}>
-              <button type="button" className="btn btn-ghost" onClick={() => voltar(3)}>
-                ← Voltar
-              </button>
-              <button type="submit" className="btn btn-primary" disabled={mutation.isPending}>
-                {mutation.isPending ? 'Registrando…' : 'Registrar Processo Sanitário'}
-              </button>
+          <div className={`card step-pane${step === 4 ? ' active' : ''}`}>
+            <div className="card-header">
+              <h3>4. Revisão</h3>
+            </div>
+            <div className="card-body col gap-4">
+              <RevisaoProcesso valores={valores} catalogos={catalogos} onEditar={voltar} />
+              <div className="flex gap-2" style={{ marginLeft: 'auto' }}>
+                <button type="button" className="btn btn-ghost" onClick={() => voltar(3)}>
+                  ← Voltar
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={mutation.isPending}>
+                  {mutation.isPending ? 'Registrando…' : 'Registrar Processo Sanitário'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      </form>
+        </form>
+      </FormProvider>
       <p className="hint">Registrado por {user?.nome} {user?.sobrenome}.</p>
     </div>
   )
