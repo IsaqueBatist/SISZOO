@@ -50,6 +50,10 @@ public class MontadorRespostaOcorrencia {
         return montar(ocorrencia, denunciante, permissoes, true);
     }
 
+    // Criacao: devolve o denunciante como o detalhe (sem mascara para quem tem
+    // a feature) e sem VISUALIZACAO — e o que o proprio autor acabou de
+    // enviar, e era assim antes desta classe existir. Nao esta na lista da
+    // A04 abaixo; se deve passar a mascarar e decisao em aberto do time.
     public OcorrenciaResponse paraCriacao(Ocorrencia ocorrencia, PermissoesOcorrencia permissoes) {
         return montar(ocorrencia, denuncianteDe(ocorrencia), permissoes, true);
     }
