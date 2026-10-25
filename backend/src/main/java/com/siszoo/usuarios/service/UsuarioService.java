@@ -3,9 +3,9 @@ package com.siszoo.usuarios.service;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.siszoo.comum.dto.PaginaResponse;
+import com.siszoo.comum.exception.CampoInvalidoException;
 import com.siszoo.usuarios.dto.AtualizarPerfilRequest;
 import com.siszoo.usuarios.dto.AtualizarStatusUsuarioRequest;
 import com.siszoo.usuarios.dto.CriarUsuarioRequest;
@@ -86,6 +87,11 @@ public class UsuarioService {
         if (CARGO_VETERINARIO.equals(cargo.getNome()) && !StringUtils.hasText(request.crmv())) {
             throw new CrmvObrigatorioException();
         }
+
+        PoliticaSenha.violacao(request.senhaInicial(), request.email(), request.nome(), request.sobrenome())
+                .ifPresent(mensagem -> {
+                    throw new CampoInvalidoException("senhaInicial", mensagem);
+                });
 
         Usuario usuario = new Usuario();
         usuario.setNome(request.nome());
@@ -159,13 +165,16 @@ public class UsuarioService {
             throw new UsuarioNaoPodeDesativarASiMesmoException();
         }
 
+        boolean ativoAntes = usuario.isAtivo();
         boolean ativar = Boolean.TRUE.equals(request.ativo());
         usuario.setAtivo(ativar);
         usuario.setDesativadoEm(ativar ? null : LocalDateTime.now(clock));
         usuarioRepository.save(usuario);
 
+        // T43: so o estado alterado (ativo), sem os dados pessoais do usuario.
         AcaoAuditoria acao = ativar ? AcaoAuditoria.REATIVACAO : AcaoAuditoria.DESATIVACAO;
-        auditoriaEventoService.registrar(buscarAutor(usuarioAutenticadoId), acao, "usuario", usuario.getId(), null, null);
+        auditoriaEventoService.registrar(buscarAutor(usuarioAutenticadoId), acao, "usuario", usuario.getId(),
+                Map.of("ativo", ativoAntes), Map.of("ativo", ativar));
 
         return usuarioMapper.toResponse(usuario);
     }
@@ -191,11 +200,12 @@ public class UsuarioService {
         usuario.setTelefone(telefoneNovo);
         usuarioRepository.save(usuario);
 
-        Map<String, String> antes = new HashMap<>();
-        antes.put("telefone", telefoneAnterior);
-        Map<String, String> depois = new HashMap<>();
-        depois.put("telefone", telefoneNovo);
-        auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "usuario", usuario.getId(), antes, depois);
+        // T43/LGPD: auditoria_evento e imutavel e sem expurgo, entao o telefone
+        // nao entra no evento — so se mudou, no padrao do denuncianteAlterado
+        // da ocorrencia (D23).
+        boolean telefoneAlterado = !Objects.equals(telefoneAnterior, telefoneNovo);
+        auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "usuario", usuario.getId(),
+                Map.of("telefoneAlterado", false), Map.of("telefoneAlterado", telefoneAlterado));
 
         return usuarioMapper.toResponse(usuario);
     }

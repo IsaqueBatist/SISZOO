@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -13,6 +14,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.siszoo.comum.dto.PaginaResponse;
 import com.siszoo.usuarios.dto.AuditoriaEventoResponse;
@@ -21,6 +24,7 @@ import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.AuditoriaEvento;
 import com.siszoo.usuarios.entity.Modulo;
 import com.siszoo.usuarios.entity.Usuario;
+import com.siszoo.usuarios.exception.FalhaAuditoriaException;
 
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
@@ -48,6 +52,29 @@ public class AuditoriaEventoService {
     @Transactional
     public void registrar(Usuario usuario, AcaoAuditoria acao, String entidade, UUID entidadeId,
             Object payloadAntes, Object payloadDepois) {
+        auditoriaEventoRepository.save(novoEvento(usuario, acao, entidade, entidadeId, payloadAntes, payloadDepois));
+    }
+
+    // T43: grava o evento ja (flush), para quem lanca uma excecao logo depois
+    // com noRollbackFor (ACESSO_NEGADO antes do 403). No registrar(), o INSERT
+    // so sai no commit; se falhasse ali, a excecao do commit substituiria a do
+    // chamador e uma violacao de integridade viraria 409. Aqui a falha sai
+    // antes, como FalhaAuditoriaException (500), e desfaz a transacao. So para
+    // transacoes sem outra escrita pendente: o flush levaria junto as escritas
+    // do chamador e a traducao as atribuiria a auditoria.
+    @Transactional
+    public void registrarImediato(Usuario usuario, AcaoAuditoria acao, String entidade, UUID entidadeId,
+            Object payloadAntes, Object payloadDepois) {
+        AuditoriaEvento evento = novoEvento(usuario, acao, entidade, entidadeId, payloadAntes, payloadDepois);
+        try {
+            auditoriaEventoRepository.saveAndFlush(evento);
+        } catch (DataAccessException e) {
+            throw new FalhaAuditoriaException(e);
+        }
+    }
+
+    private AuditoriaEvento novoEvento(Usuario usuario, AcaoAuditoria acao, String entidade, UUID entidadeId,
+            Object payloadAntes, Object payloadDepois) {
         AuditoriaEvento evento = new AuditoriaEvento();
         evento.setUsuario(usuario);
         evento.setAcao(acao);
@@ -55,7 +82,27 @@ public class AuditoriaEventoService {
         evento.setEntidadeId(entidadeId);
         evento.setPayloadAntes(serializar(payloadAntes));
         evento.setPayloadDepois(serializar(payloadDepois));
-        auditoriaEventoRepository.save(evento);
+        evento.setIp(ipDaRequisicao());
+        return evento;
+    }
+
+    // T43: endereco do socket da requisicao HTTP em curso. O navegador fala
+    // direto com o backend (porta 8080 publicada; o nginx do front so serve o
+    // SPA) e nao ha server.forward-headers-strategy: X-Forwarded-For e
+    // definido pelo cliente e nao e lido, para o IP nao poder ser forjado.
+    // Fora de requisicao (envio assincrono da notificacao, DataSeeder), nulo.
+    // A zona de um IPv6 link-local ("fe80::1%eth0") e so o indice da
+    // interface local, nao parte do endereco, e poderia estourar ip varchar(45).
+    private static String ipDaRequisicao() {
+        if (!(RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes atributos)) {
+            return null;
+        }
+        String ip = atributos.getRequest().getRemoteAddr();
+        if (ip == null) {
+            return null;
+        }
+        int zona = ip.indexOf('%');
+        return zona < 0 ? ip : ip.substring(0, zona);
     }
 
     @Transactional(readOnly = true)
@@ -116,7 +163,8 @@ public class AuditoriaEventoService {
             Modulo.USUARIOS_ACESSO, List.of("usuario", "preferencia_usuario"),
             Modulo.GESTAO_ANIMAIS, List.of("animal", "baia", "vacinacao", "procedimento", "prescricao", "medicamento",
                     "exame", "anexo_animal"),
-            Modulo.OCORRENCIAS_DENUNCIAS, List.of("ocorrencia", "denunciante", "anexo_ocorrencia"),
+            Modulo.OCORRENCIAS_DENUNCIAS, List.of("ocorrencia", "denunciante", "anexo_ocorrencia",
+                    "movimentacao_ocorrencia"),
             Modulo.PROCESSOS_SANITARIOS, List.of("processo_sanitario"),
             Modulo.RELATORIOS, List.of("relatorio_gerado"));
 

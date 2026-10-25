@@ -107,6 +107,7 @@ public class OcorrenciaService {
     private static final String ENTIDADE_AUDITORIA = "ocorrencia";
     private static final String ENTIDADE_ANEXO = "anexo_ocorrencia";
     private static final String ENTIDADE_DENUNCIANTE = "denunciante";
+    private static final String ENTIDADE_MOVIMENTACAO = "movimentacao_ocorrencia";
     private static final int MAXIMO_ANEXOS = 5;
     private static final int TAMANHO_MAXIMO_ANEXO = 5 * 1024 * 1024;
     private static final int TAMANHO_MAXIMO_NOME_ANEXO = 255;
@@ -387,7 +388,9 @@ public class OcorrenciaService {
         return montarRespostaDeMutacao(ocorrencia, permissoes);
     }
 
-    // D37: nota interna na timeline, sem mudanca de status.
+    // D37: nota interna na timeline, sem mudanca de status. T43: a nota gera
+    // CRIACAO da movimentacao; o texto nao entra no payload (texto livre, que
+    // pode citar dado pessoal, e ja fica imutavel na propria movimentacao).
     @Transactional
     public OcorrenciaResponse adicionarNota(UUID id, CriarNotaRequest request, PermissoesOcorrencia permissoes) {
         Ocorrencia ocorrencia = travar(id);
@@ -395,8 +398,10 @@ public class OcorrenciaService {
             throw new OcorrenciaEncerradaException();
         }
         Usuario autor = buscarUsuario(permissoes.usuarioId());
-        registrarMovimentacao(ocorrencia, autor, TipoMovimentacaoOcorrencia.NOTA_INTERNA,
+        MovimentacaoOcorrencia nota = registrarMovimentacao(ocorrencia, autor, TipoMovimentacaoOcorrencia.NOTA_INTERNA,
                 null, null, request.descricao().trim());
+        auditoriaEventoService.registrar(autor, AcaoAuditoria.CRIACAO, ENTIDADE_MOVIMENTACAO, nota.getId(), null,
+                Map.of("ocorrenciaId", id, "tipoMovimentacao", nota.getTipoMovimentacao()));
         return montarRespostaDeMutacao(ocorrencia, permissoes);
     }
 
@@ -500,12 +505,20 @@ public class OcorrenciaService {
     // auditoria (REQUIRED, participa desta) seria descartado sem erro
     // (FlushMode.MANUAL) ou recusado pelo PostgreSQL (25006). Na mesma
     // transacao, falha da auditoria desfaz tudo e o arquivo nao sai.
-    @Transactional
+    //
+    // T43: a recusa pelo sigilo grava ACESSO_NEGADO e so entao lanca o 403;
+    // noRollbackFor mantem o evento (ate ali a transacao so leu). Vale porque
+    // esta e a transacao mais externa (so o controller chama, sem
+    // @Transactional, open-in-view desligado): dentro de outra transacao, o
+    // rollback seria decidido pelas regras dela. Falha ao gravar o evento:
+    // FalhaAuditoriaException (500), que nao esta no noRollbackFor.
+    @Transactional(noRollbackFor = AccessDeniedException.class)
     public ArquivoAnexo baixarAnexo(UUID id, UUID anexoId, PermissoesOcorrencia permissoes) {
         Ocorrencia ocorrencia = ocorrenciaRepository.findById(id).orElseThrow(OcorrenciaNaoEncontradaException::new);
         AnexoOcorrencia anexo = anexoRepository.findByIdAndOcorrenciaId(anexoId, id)
                 .orElseThrow(AnexoNaoEncontradoException::new);
         if (ocorrencia.isSigilosa() && !permissoes.podeVerSigilo()) {
+            registrarAcessoNegado(permissoes, ENTIDADE_ANEXO, anexo.getId(), id);
             throw new AccessDeniedException("Anexo de ocorrencia sigilosa exige denunciante_sigiloso");
         }
         AnexoOcorrenciaConteudo conteudo = anexoConteudoRepository.findById(anexo.getId())
@@ -520,15 +533,22 @@ public class OcorrenciaService {
 
     // Ponto unico de leitura do detalhe. Quem recebe o denunciante completo
     // de ocorrencia sigilosa gera VISUALIZACAO (T26), uma por requisicao, sem
-    // deduplicacao. Sem readOnly pelo mesmo motivo de baixarAnexo.
+    // deduplicacao. Sem readOnly pelo mesmo motivo de baixarAnexo. T43: quem
+    // le o modulo sem denunciante_sigiloso recebe o denunciante mascarado e
+    // gera ACESSO_NEGADO (so quando ha denunciante cadastrado, como a
+    // VISUALIZACAO).
     @Transactional
     public OcorrenciaResponse buscarPorId(UUID id, PermissoesOcorrencia permissoes) {
         Ocorrencia ocorrencia = ocorrenciaRepository.findDetalheById(id)
                 .orElseThrow(OcorrenciaNaoEncontradaException::new);
         Denunciante denunciante = denuncianteRepository.findByOcorrenciaId(id).orElse(null);
         OcorrenciaResponse resposta = montarResposta(ocorrencia, denunciante, permissoes);
-        if (ocorrencia.isSigilosa() && permissoes.podeVerSigilo() && denunciante != null) {
-            registrarVisualizacao(permissoes, ENTIDADE_DENUNCIANTE, denunciante.getId(), id);
+        if (ocorrencia.isSigilosa() && denunciante != null) {
+            if (permissoes.podeVerSigilo()) {
+                registrarVisualizacao(permissoes, ENTIDADE_DENUNCIANTE, denunciante.getId(), id);
+            } else {
+                registrarAcessoNegado(permissoes, ENTIDADE_DENUNCIANTE, denunciante.getId(), id);
+            }
         }
         return resposta;
     }
@@ -604,8 +624,8 @@ public class OcorrenciaService {
                 entregaDenunciante);
     }
 
-    private void registrarMovimentacao(Ocorrencia ocorrencia, Usuario autor, TipoMovimentacaoOcorrencia tipo,
-            StatusOcorrencia anterior, StatusOcorrencia novo, String descricao) {
+    private MovimentacaoOcorrencia registrarMovimentacao(Ocorrencia ocorrencia, Usuario autor,
+            TipoMovimentacaoOcorrencia tipo, StatusOcorrencia anterior, StatusOcorrencia novo, String descricao) {
         MovimentacaoOcorrencia movimentacao = new MovimentacaoOcorrencia();
         movimentacao.setOcorrencia(ocorrencia);
         movimentacao.setUsuario(autor);
@@ -614,7 +634,7 @@ public class OcorrenciaService {
         movimentacao.setStatusNovo(novo);
         movimentacao.setData(LocalDateTime.now(clock));
         movimentacao.setDescricao(descricao);
-        movimentacaoRepository.save(movimentacao);
+        return movimentacaoRepository.save(movimentacao);
     }
 
     // T26: acesso autorizado a dado de denunciante sigiloso. O payload so leva
@@ -622,6 +642,15 @@ public class OcorrenciaService {
     private void registrarVisualizacao(PermissoesOcorrencia permissoes, String entidade, UUID entidadeId,
             UUID ocorrenciaId) {
         auditoriaEventoService.registrar(buscarUsuario(permissoes.usuarioId()), AcaoAuditoria.VISUALIZACAO,
+                entidade, entidadeId, null, Map.of("ocorrenciaId", ocorrenciaId));
+    }
+
+    // T43: acesso ao dado de denunciante sigiloso recusado pela regra de
+    // sigilo. Mesmo payload da VISUALIZACAO (so o id da ocorrencia). Gravado
+    // com flush antes da resposta: falha vira 500, nunca 409 nem entrega.
+    private void registrarAcessoNegado(PermissoesOcorrencia permissoes, String entidade, UUID entidadeId,
+            UUID ocorrenciaId) {
+        auditoriaEventoService.registrarImediato(buscarUsuario(permissoes.usuarioId()), AcaoAuditoria.ACESSO_NEGADO,
                 entidade, entidadeId, null, Map.of("ocorrenciaId", ocorrenciaId));
     }
 

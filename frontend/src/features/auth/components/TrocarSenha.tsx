@@ -1,27 +1,38 @@
-import { useState, type FormEvent } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { useAuth } from '../hooks/useAuth'
 import { trocarSenha } from '../api/authApi'
-import { trocarSenhaSchema, type TrocarSenhaFormValues } from '../schemas/trocarSenhaSchema'
+import { criarTrocarSenhaSchema, type TrocarSenhaFormValues } from '../schemas/trocarSenhaSchema'
 import { Icon } from '@/components/layout/Icon'
 import './Login.css'
 
 export function TrocarSenha() {
   const navigate = useNavigate()
-  const { marcarSenhaAlterada } = useAuth()
+  const { user, marcarSenhaAlterada } = useAuth()
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const mutation = useMutation({ mutationFn: trocarSenha })
+
+  // A rota é protegida (sempre há usuário); a política usa o nome da conta e
+  // o nome de exibição de quem troca. O backend aplica a mesma regra.
+  const schema = useMemo(
+    () =>
+      criarTrocarSenhaSchema({
+        email: user?.email ?? '',
+        nomeExibicao: user ? `${user.nome} ${user.sobrenome}` : '',
+      }),
+    [user],
+  )
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<TrocarSenhaFormValues>({
-    resolver: zodResolver(trocarSenhaSchema),
+    resolver: zodResolver(schema),
     mode: 'onSubmit',
     reValidateMode: 'onSubmit',
   })

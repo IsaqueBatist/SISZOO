@@ -1,8 +1,6 @@
-// Espelha com.siszoo.usuarios.entity.AcaoAuditoria do backend. O DER
-// (docs/modulo1-usuarios-acesso.dbml) lista só 8 valores — falta
-// VISUALIZACAO (T26/V12, acesso a denunciante de ocorrência sigilosa),
-// presente no enum Java real. Não corrigido aqui (fora do escopo deste PR,
-// que é só frontend) — ver docs/pendencias-documentacao.md.
+// Espelha com.siszoo.usuarios.entity.AcaoAuditoria do backend (e o CHECK
+// ck_auditoria_evento_acao, V27). Valor novo no enum Java exige entrada aqui
+// e em DESCRICOES (descricaoAcao.ts), senão a tela de Logs quebra.
 export type AcaoAuditoria =
   | 'CRIACAO'
   | 'ATUALIZACAO'
@@ -13,6 +11,7 @@ export type AcaoAuditoria =
   | 'EXPORTACAO'
   | 'ENCERRAMENTO'
   | 'VISUALIZACAO'
+  | 'ACESSO_NEGADO'
 
 // Espelha com.siszoo.usuarios.dto.AuditoriaEventoResponse.
 export interface EventoAuditoria {

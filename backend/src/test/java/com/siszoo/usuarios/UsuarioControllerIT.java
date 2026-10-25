@@ -117,6 +117,27 @@ class UsuarioControllerIT extends AbstractIntegrationTest {
                 .body("senhaAlteradaEm", nullValue());
     }
 
+    // Politica de senha: menos de 3 tipos de caractere, nome da conta (parte do
+    // e-mail antes do @) ou parte do nome com 3+ caracteres na senha inicial
+    // => 422 no campo senhaInicial, e o usuario nao e criado.
+    @Test
+    @DisplayName("[senha] senha inicial fora da politica de complexidade: 422 em senhaInicial e nada e criado")
+    void deveRetornar422QuandoSenhaInicialForaDaPolitica() {
+        String email = "politica.senha@itu.sp.gov.br";
+        for (String senha : List.of("senhainicial", "SenhaInicial", "Politica.Senha-1", "Senha-Clarice-1")) {
+            given()
+                    .contentType(ContentType.JSON)
+                    .header("Authorization", "Bearer " + tokenAdmin)
+                    .body(new CriarUsuarioRequest("Clarice", "Lispector", email, "Agente Sanitário", null, null, senha))
+                    .when()
+                    .post("/api/usuarios")
+                    .then()
+                    .statusCode(422)
+                    .body("campos[0].campo", equalTo("senhaInicial"));
+        }
+        assertThat(usuarioRepository.findByEmail(email).isPresent(), equalTo(false));
+    }
+
     @Test
     void deveRetornar409QuandoEmailJaCadastrado() {
         CriarUsuarioRequest request = new CriarUsuarioRequest(

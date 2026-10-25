@@ -10,9 +10,10 @@ export interface DescricaoAcao {
 }
 
 // Ícone + cor + verbo em português — para quem olha a tela entender a ação
-// sem precisar saber o nome do enum. VISUALIZACAO em tom "danger": é a
-// única ação hoje ligada a dado sensível (acesso de Admin a denunciante de
-// ocorrência sigilosa, T26/LGPD) — vale se destacar mais que as demais.
+// sem precisar saber o nome do enum. VISUALIZACAO e ACESSO_NEGADO em tom
+// "danger": são as ações ligadas a dado sensível (acesso, autorizado ou
+// recusado, a denunciante de ocorrência sigilosa, T26/T43/LGPD) — valem se
+// destacar mais que as demais.
 const DESCRICOES: Record<AcaoAuditoria, DescricaoAcao> = {
   CRIACAO: { verbo: 'criou', icone: 'plus', tom: 'success' },
   ATUALIZACAO: { verbo: 'atualizou', icone: 'edit', tom: 'info' },
@@ -23,6 +24,7 @@ const DESCRICOES: Record<AcaoAuditoria, DescricaoAcao> = {
   EXPORTACAO: { verbo: 'exportou dados', icone: 'chart', tom: 'info' },
   ENCERRAMENTO: { verbo: 'encerrou', icone: 'check', tom: 'warning' },
   VISUALIZACAO: { verbo: 'visualizou', icone: 'eye', tom: 'danger' },
+  ACESSO_NEGADO: { verbo: 'teve acesso negado a', icone: 'lock', tom: 'danger' },
 }
 
 export function descricaoAcao(acao: AcaoAuditoria): DescricaoAcao {

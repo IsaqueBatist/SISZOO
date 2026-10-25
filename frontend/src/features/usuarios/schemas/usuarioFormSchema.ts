@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { EMAIL_INSTITUCIONAL } from '@/features/auth/schemas/loginSchema'
+import { violacaoPoliticaSenha } from '@/features/auth/utils/politicaSenha'
 import { PERFIS_USUARIO } from '../types/usuarios.types'
 
 export const usuarioFormSchema = z
@@ -25,6 +26,15 @@ export const usuarioFormSchema = z
         path: ['crmv'],
         message: 'CRMV é obrigatório para o perfil Veterinário.',
       })
+    }
+    // Mesma política do backend (senha inicial): nome da conta = e-mail antes
+    // do @; nome de exibição = nome completo.
+    const violacao =
+      dados.senhaInicial.length >= 8
+        ? violacaoPoliticaSenha(dados.senhaInicial, { email: dados.email, nomeExibicao: dados.nomeCompleto })
+        : null
+    if (violacao) {
+      ctx.addIssue({ code: 'custom', path: ['senhaInicial'], message: violacao })
     }
   })
 
