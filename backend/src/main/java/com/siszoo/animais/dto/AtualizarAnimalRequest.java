@@ -77,7 +77,7 @@ public record AtualizarAnimalRequest(
 
         // F2-008: exigido pelo AnimalService na transição para obito_eutanasia.
         @Size(max = 4000)
-        String laudoEutanasia) {
+        String laudoEutanasia) implements DadosDescritivosAnimal {
 
     // Compatibilidade com chamadas anteriores à F2-004/F2-008 (testes e fixtures).
     public AtualizarAnimalRequest(String nome, String especie, String sexo, String raca, String coloracao, String pelagem,

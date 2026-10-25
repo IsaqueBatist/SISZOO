@@ -19,6 +19,7 @@ import org.springframework.util.StringUtils;
 import com.siszoo.animais.dto.AnimalResponse;
 import com.siszoo.animais.dto.AtualizarAnimalRequest;
 import com.siszoo.animais.dto.CriarAnimalRequest;
+import com.siszoo.animais.dto.DadosDescritivosAnimal;
 import com.siszoo.animais.entity.Animal;
 import com.siszoo.animais.entity.Baia;
 import com.siszoo.animais.entity.Especie;
@@ -115,26 +116,10 @@ public class AnimalService {
         animal.setDataImplantacaoChip(request.dataImplantacaoChip());
         animal.setProcedencia(normalizarTexto(request.procedencia()));
         animal.setLaudoEutanasia(laudoEutanasia);
-        animal.setNome(request.nome());
-        animal.setEspecie(resolverEspecie(request.especie()));
-        animal.setSexo(request.sexo());
-        animal.setRaca(request.raca());
-        animal.setColoracao(request.coloracao());
-        animal.setPelagem(request.pelagem());
-        animal.setPorte(request.porte());
-        animal.setPesoKg(request.pesoKg());
-        animal.setIdadeAprox(request.idadeAprox());
-        animal.setDataNascimentoAprox(request.dataNascimentoAprox());
         animal.setMicrochip(microchip);
-        animal.setEsterilizado(request.esterilizado());
-        animal.setDataEsterilizacao(request.dataEsterilizacao());
-        animal.setStatus(status);
-        animal.setMotivoEntrada(resolverMotivoEntrada(request.motivoEntrada()));
-        animal.setDataEntrada(request.dataEntrada());
-        animal.setBaia(baia);
+        aplicarDadosDescritivos(animal, request, status, baia);
         animal.setFotoUrl(request.fotoUrl());
         animal.setFotoMiniatura(miniaturaFoto.gerar(request.fotoUrl()));
-        animal.setObservacoes(request.observacoes());
 
         Usuario criadoPor = usuarioRepository.findById(usuarioAutenticadoId)
                 .orElseThrow(UsuarioNaoEncontradoException::new);
@@ -183,29 +168,13 @@ public class AnimalService {
             animal.setLaudoEutanasia(laudoEutanasia);
         }
 
-        animal.setNome(request.nome());
-        animal.setEspecie(resolverEspecie(request.especie()));
-        animal.setSexo(request.sexo());
-        animal.setRaca(request.raca());
-        animal.setColoracao(request.coloracao());
-        animal.setPelagem(request.pelagem());
-        animal.setPorte(request.porte());
-        animal.setPesoKg(request.pesoKg());
-        animal.setIdadeAprox(request.idadeAprox());
-        animal.setDataNascimentoAprox(request.dataNascimentoAprox());
-        animal.setEsterilizado(request.esterilizado());
-        animal.setDataEsterilizacao(request.dataEsterilizacao());
-        animal.setStatus(status);
-        animal.setMotivoEntrada(resolverMotivoEntrada(request.motivoEntrada()));
-        animal.setDataEntrada(request.dataEntrada());
-        animal.setBaia(baia);
+        aplicarDadosDescritivos(animal, request, status, baia);
         // A miniatura so e refeita quando a foto muda (o PUT reenvia a foto
         // inteira a cada edicao da ficha).
         if (!Objects.equals(animal.getFotoUrl(), request.fotoUrl())) {
             animal.setFotoUrl(request.fotoUrl());
             animal.setFotoMiniatura(miniaturaFoto.gerar(request.fotoUrl()));
         }
-        animal.setObservacoes(request.observacoes());
 
         animal.setFichaCompleta(fichaCompletaService.calcular(animal));
 
@@ -230,6 +199,28 @@ public class AnimalService {
                 filtro, Paginacao.pagina(pagina, tamanho, Sort.by("nome").ascending()));
         // T45: na listagem, fotoUrl e a miniatura (avatar); a foto inteira fica no detalhe.
         return PaginaResponse.de(paginaAnimais.map(animalMapper::toResponseListagem));
+    }
+
+    // Campos que o cadastro e a edicao gravam do mesmo jeito. Status e baia
+    // chegam resolvidos: a baia antes de qualquer setter (ver atualizar).
+    private void aplicarDadosDescritivos(Animal animal, DadosDescritivosAnimal dados, StatusAnimal status, Baia baia) {
+        animal.setNome(dados.nome());
+        animal.setEspecie(resolverEspecie(dados.especie()));
+        animal.setSexo(dados.sexo());
+        animal.setRaca(dados.raca());
+        animal.setColoracao(dados.coloracao());
+        animal.setPelagem(dados.pelagem());
+        animal.setPorte(dados.porte());
+        animal.setPesoKg(dados.pesoKg());
+        animal.setIdadeAprox(dados.idadeAprox());
+        animal.setDataNascimentoAprox(dados.dataNascimentoAprox());
+        animal.setEsterilizado(dados.esterilizado());
+        animal.setDataEsterilizacao(dados.dataEsterilizacao());
+        animal.setStatus(status);
+        animal.setMotivoEntrada(resolverMotivoEntrada(dados.motivoEntrada()));
+        animal.setDataEntrada(dados.dataEntrada());
+        animal.setBaia(baia);
+        animal.setObservacoes(dados.observacoes());
     }
 
     // Microchip e o identificador fisico implantado no animal: uma vez definido, e
