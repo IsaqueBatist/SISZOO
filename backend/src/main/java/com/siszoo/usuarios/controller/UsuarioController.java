@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.siszoo.comum.dto.PaginaResponse;
+import com.siszoo.comum.security.UsuarioAutenticado;
 import com.siszoo.usuarios.dto.AtualizarPerfilRequest;
 import com.siszoo.usuarios.dto.AtualizarStatusUsuarioRequest;
 import com.siszoo.usuarios.dto.CriarUsuarioRequest;
@@ -46,24 +47,24 @@ public class UsuarioController {
     @PostMapping
     @PreAuthorize("hasAuthority('USUARIOS_ACESSO:escrita')")
     public UsuarioResponse criar(Authentication authentication, @Valid @RequestBody CriarUsuarioRequest request) {
-        return usuarioService.criar(request, UUID.fromString(authentication.getName()));
+        return usuarioService.criar(request, UsuarioAutenticado.id(authentication));
     }
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAuthority('USUARIOS_ACESSO:escrita')")
     public UsuarioResponse alterarStatus(
             Authentication authentication, @PathVariable UUID id, @Valid @RequestBody AtualizarStatusUsuarioRequest request) {
-        return usuarioService.alterarStatus(id, request, UUID.fromString(authentication.getName()));
+        return usuarioService.alterarStatus(id, request, UsuarioAutenticado.id(authentication));
     }
 
     @GetMapping("/me")
     public UsuarioResponse buscarPerfilProprio(Authentication authentication) {
-        return usuarioService.buscarPorId(UUID.fromString(authentication.getName()));
+        return usuarioService.buscarPorId(UsuarioAutenticado.id(authentication));
     }
 
     @PatchMapping("/me")
     public UsuarioResponse atualizarPerfilProprio(
             Authentication authentication, @Valid @RequestBody AtualizarPerfilRequest request) {
-        return usuarioService.atualizarPerfil(UUID.fromString(authentication.getName()), request);
+        return usuarioService.atualizarPerfil(UsuarioAutenticado.id(authentication), request);
     }
 }

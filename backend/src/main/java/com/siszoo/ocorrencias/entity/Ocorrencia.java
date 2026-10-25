@@ -9,6 +9,7 @@ import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.siszoo.ocorrencias.exception.OcorrenciaEncerradaException;
 import com.siszoo.ocorrencias.exception.TransicaoStatusInvalidaException;
 import com.siszoo.usuarios.entity.Usuario;
 
@@ -124,6 +125,14 @@ public class Ocorrencia {
 
     public boolean isEncerrada() {
         return statusOcorrencia == StatusOcorrencia.ENCERRADA;
+    }
+
+    // D10: edicao, notas, anexos e vinculo so ate o encerramento. O proprio
+    // encerramento recusa com TransicaoStatusInvalidaException (matriz D5).
+    public void exigirAberta() {
+        if (isEncerrada()) {
+            throw new OcorrenciaEncerradaException();
+        }
     }
 
     // D5: ABERTA -> EM_ATENDIMENTO e a unica transicao fora do encerramento.

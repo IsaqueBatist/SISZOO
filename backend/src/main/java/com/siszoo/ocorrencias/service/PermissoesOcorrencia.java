@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 
+import com.siszoo.comum.security.UsuarioAutenticado;
+
 // Usuario autenticado e as autoridades que mudam o comportamento do service
 // (nao so o acesso ao endpoint, que fica nas @PreAuthorize). As regras de
 // sigilo dependem da permissao, nunca do nome do cargo (D6/D14).
@@ -20,7 +22,7 @@ public record PermissoesOcorrencia(UUID usuarioId, boolean podeVerSigilo, boolea
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toSet());
         return new PermissoesOcorrencia(
-                UUID.fromString(authentication.getName()),
+                UsuarioAutenticado.id(authentication),
                 autoridades.contains(SIGILO),
                 autoridades.contains(ESCRITA));
     }

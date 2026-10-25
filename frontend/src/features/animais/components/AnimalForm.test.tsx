@@ -222,4 +222,104 @@ describe('AnimalForm — edição', () => {
 
     expect(await screen.findByText('Lista de animais')).toBeInTheDocument()
   })
+
+  // O PUT substitui a ficha (AnimalService.atualizar grava o que recebe):
+  // campo que não chega ao formulário na edição volta vazio e apaga o dado.
+  describe('campos F2-004/F2-008 vindos do GET', () => {
+    const ID_COMPLETO = 'b2c3d4e5-0000-0000-0000-0000000000f2'
+
+    // Formato real de AnimalResponse serializado pelo Jackson: BigDecimal como
+    // número, LocalDate como AAAA-MM-DD, LocalDateTime sem fuso.
+    function animalDoGet(sobrescrever: Record<string, unknown>) {
+      return {
+        id: ID_COMPLETO,
+        nome: 'Pipoca',
+        especieCodigo: 'canino',
+        especieNome: 'Canino',
+        sexo: 'macho',
+        raca: null,
+        coloracao: 'Caramelo',
+        pelagem: null,
+        porte: null,
+        pesoKg: 12.5,
+        idadeAprox: null,
+        dataNascimentoAprox: null,
+        microchip: '985121234567891',
+        esterilizado: false,
+        dataEsterilizacao: null,
+        statusCodigo: 'disponivel_adocao',
+        statusNome: 'Disponível para adoção',
+        motivoEntradaCodigo: 'resgate',
+        motivoEntradaNome: 'Resgate',
+        dataEntrada: '2026-03-10T14:30:00',
+        baiaId: null,
+        baiaNome: null,
+        tipoBaiaNome: null,
+        fichaCompleta: false,
+        fotoUrl: null,
+        observacoes: null,
+        criadoPorId: USUARIO_ID,
+        criadoPorNome: 'Stéphanie Lima',
+        criadoEm: '2026-03-10T14:30:00',
+        atualizadoEm: '2026-03-10T14:30:00',
+        numeroMedalha: 'M-0042',
+        dataImplantacaoChip: '2026-03-11',
+        procedencia: 'Bairro Brasil',
+        laudoEutanasia: null,
+        ...sobrescrever,
+      }
+    }
+
+    async function salvarSemAlterar(user: ReturnType<typeof userEvent.setup>) {
+      await user.click(screen.getByRole('button', { name: /próximo: saúde/i }))
+      await user.click(screen.getByRole('button', { name: /próximo: foto/i }))
+      await user.click(screen.getByRole('button', { name: /salvar alterações/i }))
+    }
+
+    function capturarPut(animal: ReturnType<typeof animalDoGet>) {
+      const capturado: { corpo: AnimalRequest | null } = { corpo: null }
+      server.use(
+        http.get(`${API_BASE_URL}/animais/${ID_COMPLETO}`, () => HttpResponse.json(animal)),
+        http.put(`${API_BASE_URL}/animais/${ID_COMPLETO}`, async ({ request }) => {
+          capturado.corpo = (await request.json()) as AnimalRequest
+          return HttpResponse.json(animal, { status: 200 })
+        }),
+      )
+      return capturado
+    }
+
+    it('reenvia medalha, data de implantação do chip e procedência sem o usuário tocar neles', async () => {
+      const user = userEvent.setup()
+      const put = capturarPut(animalDoGet({}))
+
+      renderEditar(ID_COMPLETO)
+      expect(await screen.findByDisplayValue('Pipoca')).toBeInTheDocument()
+      await salvarSemAlterar(user)
+
+      await waitFor(() => expect(put.corpo).not.toBeNull())
+      expect(put.corpo).toMatchObject({
+        numeroMedalha: 'M-0042',
+        dataImplantacaoChip: '2026-03-11',
+        procedencia: 'Bairro Brasil',
+        pesoKg: 12.5,
+        // Dia não mudou: a hora original volta inteira.
+        dataEntrada: '2026-03-10T14:30:00',
+      })
+    })
+
+    it('reenvia o laudo de eutanásia de um animal já em óbito por eutanásia', async () => {
+      const user = userEvent.setup()
+      const laudo = 'Laudo 12/2026: eutanásia indicada por doença incurável.'
+      const put = capturarPut(
+        animalDoGet({ statusCodigo: 'obito_eutanasia', statusNome: 'Óbito (eutanásia)', laudoEutanasia: laudo }),
+      )
+
+      renderEditar(ID_COMPLETO)
+      expect(await screen.findByDisplayValue('Pipoca')).toBeInTheDocument()
+      await salvarSemAlterar(user)
+
+      await waitFor(() => expect(put.corpo).not.toBeNull())
+      expect(put.corpo).toMatchObject({ status: 'obito_eutanasia', laudoEutanasia: laudo })
+    })
+  })
 })

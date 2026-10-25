@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.siszoo.comum.dto.PaginaResponse;
+import com.siszoo.comum.security.UsuarioAutenticado;
 import com.siszoo.relatorios.dto.ArquivoRelatorio;
 import com.siszoo.relatorios.dto.ExportarRelatorioRequest;
 import com.siszoo.relatorios.dto.FiltroRelatorioBruto;
@@ -69,7 +70,7 @@ public class RelatorioController {
         FiltroRelatorioBruto filtro = new FiltroRelatorioBruto(
                 filtroResolver.tipoPorCodigo(request.tipo()),
                 request.periodoInicio(), request.periodoFim(), request.ano(), request.janela());
-        UUID usuarioId = UUID.fromString(authentication.getName());
+        UUID usuarioId = UsuarioAutenticado.id(authentication);
 
         ArquivoRelatorio arquivo = relatorioGeradoService.exportar(filtro, request.formato(), usuarioId);
 

@@ -16,6 +16,7 @@ import com.siszoo.animais.clinico.dto.CriarExameRequest;
 import com.siszoo.animais.clinico.dto.ExameResponse;
 import com.siszoo.animais.clinico.service.ExameService;
 import com.siszoo.comum.dto.PaginaResponse;
+import com.siszoo.comum.security.UsuarioAutenticado;
 
 import jakarta.validation.Valid;
 
@@ -50,6 +51,6 @@ public class ExameController {
     @PostMapping
     @PreAuthorize("hasAuthority('GESTAO_ANIMAIS:escrita')")
     public ExameResponse criar(Authentication authentication, @Valid @RequestBody CriarExameRequest request) {
-        return exameService.criar(request, UUID.fromString(authentication.getName()));
+        return exameService.criar(request, UsuarioAutenticado.id(authentication));
     }
 }

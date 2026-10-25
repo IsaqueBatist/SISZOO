@@ -28,7 +28,8 @@ import com.siszoo.usuarios.repository.UsuarioRepository;
 import com.siszoo.usuarios.service.AuditoriaEventoService;
 
 // F2-007 / RF-A04 (Fase 3 do TG): documentos e fotos anexados ao animal
-// (Quadro 69). Mesmas regras dos anexos de ocorrencia (OcorrenciaService):
+// (Quadro 69). Mesmas regras dos anexos de ocorrencia (AnexoOcorrenciaService,
+// conteudo e nome em ConteudoAnexo):
 // JPG/PNG/PDF detectados pelos bytes, ate 5 MB, ate 10 por animal, conteudo em
 // tabela propria (D9) e auditoria CRIACAO. Anexo nao se altera nem se exclui
 // (RN06: faz parte do historico do animal).
@@ -36,7 +37,6 @@ import com.siszoo.usuarios.service.AuditoriaEventoService;
 public class AnexoAnimalService {
 
     static final int MAXIMO_ANEXOS = 10;
-    private static final int TAMANHO_MAXIMO_NOME = 255;
     private static final String ENTIDADE_AUDITORIA = "anexo_animal";
 
     private final AnimalRepository animalRepository;
@@ -79,7 +79,7 @@ public class AnexoAnimalService {
 
         AnexoAnimal anexo = new AnexoAnimal();
         anexo.setAnimal(animal);
-        anexo.setNome(nomeDoArquivo(arquivo.getOriginalFilename()));
+        anexo.setNome(ConteudoAnexo.nomeDoArquivo(arquivo.getOriginalFilename()));
         anexo.setMimeType(mimeType);
         anexo.setTamanho(conteudo.length);
         anexo.setDescricao(StringUtils.hasText(descricao) ? descricao.trim() : null);
@@ -110,13 +110,5 @@ public class AnexoAnimalService {
         return new AnexoAnimalResponse(anexo.getId(), anexo.getAnimal().getId(), anexo.getNome(), anexo.getMimeType(),
                 anexo.getTamanho(), anexo.getDescricao(), autor == null ? null : autor.getId(),
                 autor == null ? null : autor.nomeCompleto(), anexo.getCriadoEm());
-    }
-
-    private static String nomeDoArquivo(String original) {
-        String nome = StringUtils.hasText(original) ? StringUtils.getFilename(original.replace('\\', '/')) : null;
-        if (!StringUtils.hasText(nome)) {
-            nome = "anexo";
-        }
-        return nome.length() > TAMANHO_MAXIMO_NOME ? nome.substring(0, TAMANHO_MAXIMO_NOME) : nome;
     }
 }

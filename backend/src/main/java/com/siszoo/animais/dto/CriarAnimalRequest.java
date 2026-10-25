@@ -77,7 +77,7 @@ public record CriarAnimalRequest(
 
         // F2-008: exigido pelo AnimalService quando status = obito_eutanasia.
         @Size(max = 4000)
-        String laudoEutanasia) {
+        String laudoEutanasia) implements DadosDescritivosAnimal {
 
     // Compatibilidade com chamadas anteriores à F2-004/F2-008 (testes e fixtures).
     public CriarAnimalRequest(String nome, String especie, String sexo, String raca, String coloracao, String pelagem,

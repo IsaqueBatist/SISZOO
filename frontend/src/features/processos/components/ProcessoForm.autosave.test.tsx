@@ -103,6 +103,28 @@ describe('ProcessoForm — autosave do rascunho', () => {
     )
   })
 
+  // O autosave com debounce roda a cada tecla depois da troca de etapa: se ele
+  // gravasse a etapa de quando a assinatura nasceu, o próximo campo digitado
+  // desfaria o salvamento da troca e o rascunho reabriria na etapa 1.
+  it('o autosave depois de trocar de etapa grava a etapa atual, não a de quando começou', async () => {
+    vi.mocked(carregarRascunhoProcesso).mockResolvedValue(null)
+    const user = userEvent.setup()
+    renderCadastrar()
+
+    const pane1 = paneDoStep(/^1\. Dados/)
+    await user.click(await pane1.findByRole('button', { name: 'Pular esta etapa' }))
+    await user.selectOptions(screen.getByLabelText(/Tipo de doença investigada/i), await screen.findByRole('option', { name: 'Raiva' }))
+    await user.selectOptions(screen.getByLabelText(/Laboratório de destino/i), screen.getByRole('option', { name: 'Pasteur — SP' }))
+    await user.click(pane1.getByRole('button', { name: 'Continuar →' }))
+    await waitFor(() => expect(screen.getByText('Responsável').closest('.step')).toHaveClass('active'))
+
+    vi.mocked(agendarSalvarRascunhoProcesso).mockClear()
+    await user.type(screen.getByLabelText(/^Nome/i), 'Maria')
+
+    await waitFor(() => expect(agendarSalvarRascunhoProcesso).toHaveBeenCalled())
+    expect(vi.mocked(agendarSalvarRascunhoProcesso).mock.calls.at(-1)?.[1]).toMatchObject({ etapaAtual: 2 })
+  })
+
   function rascunhoComVinculo() {
     return {
       // T42: o instante do salvamento acompanha o rascunho, para o aviso dizer

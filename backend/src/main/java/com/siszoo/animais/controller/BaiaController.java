@@ -23,6 +23,7 @@ import com.siszoo.animais.dto.CriarBaiaRequest;
 import com.siszoo.animais.dto.ResidenteBaiaResponse;
 import com.siszoo.animais.service.BaiaService;
 import com.siszoo.comum.dto.PaginaResponse;
+import com.siszoo.comum.security.UsuarioAutenticado;
 
 import jakarta.validation.Valid;
 
@@ -63,21 +64,21 @@ public class BaiaController {
     @PostMapping
     @PreAuthorize("hasAuthority('GESTAO_ANIMAIS:escrita')")
     public BaiaResponse criar(Authentication authentication, @Valid @RequestBody CriarBaiaRequest request) {
-        return baiaService.criar(request, usuarioId(authentication));
+        return baiaService.criar(request, UsuarioAutenticado.id(authentication));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('GESTAO_ANIMAIS:escrita')")
     public BaiaResponse atualizar(Authentication authentication, @PathVariable UUID id,
             @Valid @RequestBody AtualizarBaiaRequest request) {
-        return baiaService.atualizar(id, request, usuarioId(authentication));
+        return baiaService.atualizar(id, request, UsuarioAutenticado.id(authentication));
     }
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAuthority('GESTAO_ANIMAIS:escrita')")
     public BaiaResponse alterarStatus(Authentication authentication, @PathVariable UUID id,
             @Valid @RequestBody AtualizarStatusBaiaRequest request) {
-        return baiaService.alterarStatus(id, request, usuarioId(authentication));
+        return baiaService.alterarStatus(id, request, UsuarioAutenticado.id(authentication));
     }
 
     /**
@@ -88,10 +89,6 @@ public class BaiaController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('GESTAO_ANIMAIS:exclusao')")
     public BaiaResponse desativar(Authentication authentication, @PathVariable UUID id) {
-        return baiaService.desativar(id, usuarioId(authentication));
-    }
-
-    private static UUID usuarioId(Authentication authentication) {
-        return UUID.fromString(authentication.getName());
+        return baiaService.desativar(id, UsuarioAutenticado.id(authentication));
     }
 }

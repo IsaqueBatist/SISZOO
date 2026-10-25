@@ -27,19 +27,27 @@ export function aplicarErrosDeCampo<T extends FieldValues>(
   mapa?: Readonly<Record<string, Path<T>>>,
 ): Path<T>[] {
   if (!isAxiosError(erro) || erro.response?.status !== 422) return []
-  const campos = (erro.response.data as { campos?: unknown } | undefined)?.campos
-  if (!Array.isArray(campos)) return []
 
   const aplicados: Path<T>[] = []
-  for (const item of campos) {
-    const { campo, mensagem } = (item ?? {}) as { campo?: unknown; mensagem?: unknown }
-    if (typeof campo !== 'string' || typeof mensagem !== 'string') continue
+  for (const { campo, mensagem } of camposDoErro(erro)) {
     const destino = mapa ? mapa[campo] : (campo as Path<T>)
     if (!destino || aplicados.includes(destino)) continue
     setError(destino, { type: 'server', message: mensagem })
     aplicados.push(destino)
   }
   return aplicados
+}
+
+// `ErroResponse.campos` de qualquer resposta de erro, só os itens bem
+// formados. Quem chama decide para quais status eles valem.
+export function camposDoErro(erro: unknown): { campo: string; mensagem: string }[] {
+  if (!isAxiosError(erro)) return []
+  const campos = (erro.response?.data as { campos?: unknown } | undefined)?.campos
+  if (!Array.isArray(campos)) return []
+  return campos.flatMap((item) => {
+    const { campo, mensagem } = (item ?? {}) as { campo?: unknown; mensagem?: unknown }
+    return typeof campo === 'string' && typeof mensagem === 'string' ? [{ campo, mensagem }] : []
+  })
 }
 
 // Mapa identidade (campo do DTO = campo do formulário) para os nomes dados.

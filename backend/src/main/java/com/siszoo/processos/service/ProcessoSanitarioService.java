@@ -5,14 +5,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort;
@@ -24,11 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.siszoo.animais.clinico.exception.RegistroJaRetificadoException;
-import com.siszoo.animais.entity.Animal;
-import com.siszoo.animais.exception.AnimalNaoEncontradoException;
-import com.siszoo.animais.exception.EspecieInvalidaException;
-import com.siszoo.animais.repository.AnimalRepository;
-import com.siszoo.animais.repository.EspecieRepository;
 import com.siszoo.comum.dto.CatalogoItemResponse;
 import com.siszoo.comum.dto.PaginaResponse;
 import com.siszoo.comum.service.ProtocoloService;
@@ -47,9 +37,6 @@ import com.siszoo.processos.dto.ProcessoResumoResponse;
 import com.siszoo.processos.dto.ProcessoSanitarioResponse;
 import com.siszoo.processos.dto.RegistrarResultadoRequest;
 import com.siszoo.processos.dto.ResponsavelProcessoRequest;
-import com.siszoo.processos.dto.ResponsavelProcessoResponse;
-import com.siszoo.processos.dto.ResultadoProcessoResponse;
-import com.siszoo.processos.entity.AnimalAmostrado;
 import com.siszoo.processos.entity.DesfechoAnimal;
 import com.siszoo.processos.entity.Doenca;
 import com.siszoo.processos.entity.Laboratorio;
@@ -58,18 +45,13 @@ import com.siszoo.processos.entity.ResponsavelProcesso;
 import com.siszoo.processos.entity.ResultadoLaboratorial;
 import com.siszoo.processos.entity.ResultadoProcesso;
 import com.siszoo.processos.entity.Sintoma;
-import com.siszoo.processos.entity.StatusClinicoAmostra;
 import com.siszoo.processos.entity.StatusProcesso;
 import com.siszoo.processos.event.ResultadoLancadoEvent;
 import com.siszoo.processos.exception.ConclusaoSemResultadoException;
-import com.siszoo.processos.exception.ContatoHumanoInconsistenteException;
 import com.siszoo.processos.exception.CorrecaoResultadoNaoPermitidaException;
-import com.siszoo.processos.exception.DataColetaFuturaException;
 import com.siszoo.processos.exception.DataResultadoFuturaException;
 import com.siszoo.processos.exception.DesfechoInvalidoException;
 import com.siszoo.processos.exception.DoencaInvalidaException;
-import com.siszoo.processos.exception.IdentificacaoComAnimalDoCanilException;
-import com.siszoo.processos.exception.IdentificacaoObrigatoriaException;
 import com.siszoo.processos.exception.LaboratorioInvalidoException;
 import com.siszoo.processos.exception.ProcessoNaoEncontradoException;
 import com.siszoo.processos.exception.ResultadoInvalidoException;
@@ -77,9 +59,8 @@ import com.siszoo.processos.exception.ResultadoJaRegistradoException;
 import com.siszoo.processos.exception.ResultadoObrigatorioException;
 import com.siszoo.processos.exception.ResultadoPositivoDefinitivoException;
 import com.siszoo.processos.exception.ResultadoRetificadoInvalidoException;
-import com.siszoo.processos.exception.SintomaInvalidoException;
-import com.siszoo.processos.exception.SintomaSemStatusSintomaticoException;
 import com.siszoo.processos.exception.TransicaoStatusProcessoInvalidaException;
+import com.siszoo.processos.mapper.ProcessoSanitarioMapper;
 import com.siszoo.processos.repository.AnimalAmostradoRepository;
 import com.siszoo.processos.repository.DesfechoAnimalRepository;
 import com.siszoo.processos.repository.DoencaRepository;
@@ -101,12 +82,12 @@ import jakarta.persistence.criteria.Predicate;
  * Processo sanitario (T29, DER §3.5): criacao completa — processo, responsavel
  * e pelo menos uma amostra numa unica transacao —, consulta, listagem (T32),
  * catalogos, o avanco de status e o registro do resultado laboratorial com
- * desfecho e notificacao (T34 + T37).
+ * desfecho e notificacao (T34 + T37). As regras de cada amostra ficam em
+ * {@link AmostraProcessoFactory}; o mapeamento, em {@link ProcessoSanitarioMapper}.
  *
- * <p>Amostras: com {@code animalId}, a identificacao e copiada da ficha do
- * animal neste momento (snapshot) e nunca mais relida; sem ele, vem do
- * request. Os campos clinicos vem sempre do request. Nao ha sincronizacao com
- * a ficha (DER regra 17).
+ * <p>Amostras na resposta e na auditoria: lidas uma vez por requisicao, depois
+ * da ultima escrita. Status e resultado nao gravam amostra, entao o snapshot
+ * anterior recebe a mesma lista ({@link ProcessoAuditoriaSnapshot#comAmostras}).
  *
  * <p>Ordem de locks: com {@code ocorrenciaId}, a ocorrencia e travada antes de
  * o processo existir (ver {@code OcorrenciaService}).
@@ -143,14 +124,14 @@ public class ProcessoSanitarioService {
     private final ResultadoLaboratorialRepository resultadoRepository;
     private final ResultadoProcessoRepository resultadoProcessoRepository;
     private final DesfechoAnimalRepository desfechoRepository;
-    private final EspecieRepository especieRepository;
-    private final AnimalRepository animalRepository;
     private final UsuarioRepository usuarioRepository;
     private final OcorrenciaService ocorrenciaService;
     private final ProtocoloService protocoloService;
     private final AuditoriaEventoService auditoriaEventoService;
     private final ApplicationEventPublisher eventPublisher;
     private final JdbcTemplate jdbcTemplate;
+    private final ProcessoSanitarioMapper processoMapper;
+    private final AmostraProcessoFactory amostraFactory;
     private final Clock clock;
 
     public ProcessoSanitarioService(
@@ -163,14 +144,14 @@ public class ProcessoSanitarioService {
             ResultadoLaboratorialRepository resultadoRepository,
             ResultadoProcessoRepository resultadoProcessoRepository,
             DesfechoAnimalRepository desfechoRepository,
-            EspecieRepository especieRepository,
-            AnimalRepository animalRepository,
             UsuarioRepository usuarioRepository,
             OcorrenciaService ocorrenciaService,
             ProtocoloService protocoloService,
             AuditoriaEventoService auditoriaEventoService,
             ApplicationEventPublisher eventPublisher,
             JdbcTemplate jdbcTemplate,
+            ProcessoSanitarioMapper processoMapper,
+            AmostraProcessoFactory amostraFactory,
             Clock clock) {
         this.processoRepository = processoRepository;
         this.responsavelRepository = responsavelRepository;
@@ -181,14 +162,14 @@ public class ProcessoSanitarioService {
         this.resultadoRepository = resultadoRepository;
         this.resultadoProcessoRepository = resultadoProcessoRepository;
         this.desfechoRepository = desfechoRepository;
-        this.especieRepository = especieRepository;
-        this.animalRepository = animalRepository;
         this.usuarioRepository = usuarioRepository;
         this.ocorrenciaService = ocorrenciaService;
         this.protocoloService = protocoloService;
         this.auditoriaEventoService = auditoriaEventoService;
         this.eventPublisher = eventPublisher;
         this.jdbcTemplate = jdbcTemplate;
+        this.processoMapper = processoMapper;
+        this.amostraFactory = amostraFactory;
         this.clock = clock;
     }
 
@@ -203,17 +184,16 @@ public class ProcessoSanitarioService {
         if (request.dataAbertura().isAfter(hoje)) {
             throw new DataAberturaFuturaException();
         }
-        request.amostras().forEach(amostra -> validarAmostra(amostra, hoje));
+        request.amostras().forEach(amostra -> amostraFactory.validar(amostra, hoje));
 
-        Usuario autor = usuarioRepository.findById(permissoes.usuarioId())
-                .orElseThrow(UsuarioNaoEncontradoException::new);
+        Usuario autor = buscarUsuario(permissoes.usuarioId());
         Doenca doenca = doencaRepository.findByCodigo(request.doenca())
                 .filter(Doenca::isAtivo)
                 .orElseThrow(DoencaInvalidaException::new);
         Laboratorio laboratorio = laboratorioRepository.findByCodigo(request.laboratorio())
                 .filter(Laboratorio::isAtivo)
                 .orElseThrow(LaboratorioInvalidoException::new);
-        Map<String, Sintoma> sintomas = resolverSintomas(request.amostras());
+        Map<String, Sintoma> sintomas = amostraFactory.resolverSintomas(request.amostras());
 
         // D33: com ocorrenciaId, a escrita em ocorrencias e checada ANTES de
         // inserir o processo — sem ela, nada e criado. A ocorrencia e travada
@@ -241,7 +221,7 @@ public class ProcessoSanitarioService {
 
         responsavelRepository.save(novoResponsavel(processo, request.responsavel()));
         amostraRepository.saveAll(request.amostras().stream()
-                .map(amostra -> novaAmostra(processo, amostra, sintomas))
+                .map(amostra -> amostraFactory.nova(processo, amostra, sintomas))
                 .toList());
         verificarConstraintsAdiadas();
 
@@ -249,9 +229,10 @@ public class ProcessoSanitarioService {
             ocorrenciaService.vincular(ocorrencia, processo, autor);
         }
 
+        List<AmostraAnimalResponse> amostras = amostrasDe(processo);
         auditoriaEventoService.registrar(autor, AcaoAuditoria.CRIACAO, ENTIDADE_AUDITORIA, processo.getId(),
-                null, toSnapshot(processo));
-        return toResponse(processo);
+                null, processoMapper.toSnapshot(processo, amostras));
+        return resposta(processo, amostras);
     }
 
     // As constraint triggers da V13 (1 responsavel e >= 1 amostra) sao
@@ -263,43 +244,6 @@ public class ProcessoSanitarioService {
     private void verificarConstraintsAdiadas() {
         processoRepository.flush();
         jdbcTemplate.execute("SET CONSTRAINTS ALL IMMEDIATE");
-    }
-
-    private static void validarAmostra(AmostraAnimalRequest amostra, LocalDate hoje) {
-        if (amostra.animalId() != null) {
-            if (amostra.temIdentificacao()) {
-                throw new IdentificacaoComAnimalDoCanilException();
-            }
-        } else if (amostra.especie() == null || amostra.especie().isBlank() || amostra.sexo() == null) {
-            throw new IdentificacaoObrigatoriaException();
-        }
-        if (amostra.dataColeta().isAfter(hoje)) {
-            throw new DataColetaFuturaException();
-        }
-        boolean comDadosDeContato = amostra.nivelContato() != null || amostra.agrediuHumano() != null;
-        boolean contatoCompleto = amostra.nivelContato() != null && amostra.agrediuHumano() != null;
-        if (amostra.contatoHumano() ? !contatoCompleto : comDadosDeContato) {
-            throw new ContatoHumanoInconsistenteException();
-        }
-        if (!amostra.sintomasOuVazio().isEmpty() && amostra.statusClinico() != StatusClinicoAmostra.SINTOMATICO) {
-            throw new SintomaSemStatusSintomaticoException();
-        }
-    }
-
-    private Map<String, Sintoma> resolverSintomas(List<AmostraAnimalRequest> amostras) {
-        Set<String> codigos = amostras.stream()
-                .flatMap(amostra -> amostra.sintomasOuVazio().stream())
-                .collect(Collectors.toSet());
-        if (codigos.isEmpty()) {
-            return Map.of();
-        }
-        Map<String, Sintoma> encontrados = sintomaRepository.findByCodigoIn(codigos).stream()
-                .filter(Sintoma::isAtivo)
-                .collect(Collectors.toMap(Sintoma::getCodigo, Function.identity()));
-        if (!encontrados.keySet().containsAll(codigos)) {
-            throw new SintomaInvalidoException();
-        }
-        return encontrados;
     }
 
     private static ResponsavelProcesso novoResponsavel(ProcessoSanitario processo, ResponsavelProcessoRequest request) {
@@ -314,52 +258,6 @@ public class ProcessoSanitarioService {
         responsavel.setBairroResidencial(request.bairroResidencial());
         responsavel.setBairroOcorrencia(request.bairroOcorrencia());
         return responsavel;
-    }
-
-    private AnimalAmostrado novaAmostra(
-            ProcessoSanitario processo, AmostraAnimalRequest request, Map<String, Sintoma> sintomas) {
-        AnimalAmostrado amostra = new AnimalAmostrado();
-        amostra.setProcesso(processo);
-        if (request.animalId() != null) {
-            // Qualquer status do animal pode ser amostrado na T29 (ponto a
-            // confirmar com o CCZ, docs/decisoes/T29.md).
-            Animal animal = animalRepository.findById(request.animalId())
-                    .orElseThrow(AnimalNaoEncontradoException::new);
-            amostra.setAnimal(animal);
-            copiarIdentificacaoDaFicha(amostra, animal);
-        } else {
-            amostra.setEspecie(especieRepository.findByCodigo(request.especie())
-                    .orElseThrow(EspecieInvalidaException::new));
-            amostra.setSexo(request.sexo());
-            amostra.setRaca(request.raca());
-            amostra.setColoracao(request.coloracao());
-            amostra.setPelagem(request.pelagem());
-            amostra.setIdadeAprox(request.idadeAprox());
-            amostra.setPesoKg(request.pesoKg());
-        }
-        amostra.setStatusClinico(request.statusClinico());
-        amostra.setTipoAbrigo(request.tipoAbrigo());
-        amostra.setAlteracaoComportamental(request.alteracaoComportamental());
-        amostra.setDataColeta(request.dataColeta());
-        amostra.setMaterialBiologico(request.materialBiologico());
-        amostra.setContatoHumano(request.contatoHumano());
-        amostra.setNivelContato(request.nivelContato());
-        amostra.setAgrediuHumano(request.agrediuHumano());
-        amostra.setObservacoes(request.observacoes());
-        amostra.setSintomas(new HashSet<>(request.sintomasOuVazio().stream().map(sintomas::get).toList()));
-        return amostra;
-    }
-
-    // Snapshot da identificacao (DER §3.5, DH-5): copiada uma vez, aqui.
-    // Mudancas posteriores na ficha nao alteram a amostra.
-    private static void copiarIdentificacaoDaFicha(AnimalAmostrado amostra, Animal animal) {
-        amostra.setEspecie(animal.getEspecie());
-        amostra.setSexo(animal.getSexo());
-        amostra.setRaca(animal.getRaca());
-        amostra.setColoracao(animal.getColoracao());
-        amostra.setPelagem(animal.getPelagem());
-        amostra.setIdadeAprox(animal.getIdadeAprox());
-        amostra.setPesoKg(animal.getPesoKg());
     }
 
     // ── Consulta, listagem e catalogos ───────────────────
@@ -385,12 +283,13 @@ public class ProcessoSanitarioService {
             return cb.and(predicados.toArray(Predicate[]::new));
         };
         return PaginaResponse.de(processoRepository.findAll(filtro, Paginacao.pagina(pagina, tamanho, ORDEM_LISTAGEM))
-                .map(ProcessoSanitarioService::toResumo));
+                .map(processoMapper::toResumo));
     }
 
     @Transactional(readOnly = true)
     public ProcessoSanitarioResponse buscarPorId(UUID id) {
-        return toResponse(processoRepository.findById(id).orElseThrow(ProcessoNaoEncontradoException::new));
+        ProcessoSanitario processo = processoRepository.findById(id).orElseThrow(ProcessoNaoEncontradoException::new);
+        return resposta(processo, amostrasDe(processo));
     }
 
     @Transactional(readOnly = true)
@@ -415,8 +314,7 @@ public class ProcessoSanitarioService {
     // resultado (registrarResultado), que substitui o placeholder da D18.
     @Transactional
     public ProcessoSanitarioResponse alterarStatus(UUID id, AlterarStatusProcessoRequest request, UUID usuarioId) {
-        ProcessoSanitario processo = processoRepository.findByIdForUpdate(id)
-                .orElseThrow(ProcessoNaoEncontradoException::new);
+        ProcessoSanitario processo = travar(id);
         StatusProcesso destino = request.status();
         if (!processo.getStatusProcesso().podeTransicionarPara(destino)) {
             throw new TransicaoStatusProcessoInvalidaException();
@@ -429,15 +327,16 @@ public class ProcessoSanitarioService {
         if (destino == StatusProcesso.CONCLUIDO && processo.getResultadoLaboratorial() == null) {
             throw new ConclusaoSemResultadoException();
         }
-        Usuario autor = usuarioRepository.findById(usuarioId).orElseThrow(UsuarioNaoEncontradoException::new);
-        ProcessoAuditoriaSnapshot antes = toSnapshot(processo);
+        Usuario autor = buscarUsuario(usuarioId);
+        ProcessoAuditoriaSnapshot antes = processoMapper.toSnapshot(processo, List.of());
 
         processo.setStatusProcesso(destino);
         processoRepository.saveAndFlush(processo);
 
-        auditoriaEventoService.registrar(autor, AcaoAuditoria.ATUALIZACAO, ENTIDADE_AUDITORIA, id, antes,
-                toSnapshot(processo));
-        return toResponse(processo);
+        List<AmostraAnimalResponse> amostras = amostrasDe(processo);
+        auditoriaEventoService.registrar(autor, AcaoAuditoria.ATUALIZACAO, ENTIDADE_AUDITORIA, id,
+                antes.comAmostras(amostras), processoMapper.toSnapshot(processo, amostras));
+        return resposta(processo, amostras);
     }
 
     // Resultado laboratorial: registro critico imutavel (V14). Sem retificaId,
@@ -456,8 +355,7 @@ public class ProcessoSanitarioService {
         }
         // Sem limite inferior (docs/decisoes/T34.md): a coleta e o laudo podem
         // anteceder a abertura, que e imutavel depois de gravada.
-        ProcessoSanitario processo = processoRepository.findByIdForUpdate(id)
-                .orElseThrow(ProcessoNaoEncontradoException::new);
+        ProcessoSanitario processo = travar(id);
         ResultadoLaboratorial resultado = resultadoRepository.findByCodigo(request.resultado())
                 .filter(ResultadoLaboratorial::isAtivo)
                 .filter(r -> !RESULTADO_SEM_RESULTADO.equals(r.getCodigo()))
@@ -468,7 +366,7 @@ public class ProcessoSanitarioService {
                     .filter(DesfechoAnimal::isAtivo)
                     .orElseThrow(DesfechoInvalidoException::new);
         }
-        Usuario autor = usuarioRepository.findById(usuarioId).orElseThrow(UsuarioNaoEncontradoException::new);
+        Usuario autor = buscarUsuario(usuarioId);
 
         ResultadoProcesso registro;
         if (request.retificaId() == null) {
@@ -480,7 +378,7 @@ public class ProcessoSanitarioService {
             registro = ResultadoProcesso.retificar(anterior, resultado, request.dataResultado(),
                     request.observacoes(), autor);
         }
-        ProcessoAuditoriaSnapshot antes = toSnapshot(processo);
+        ProcessoAuditoriaSnapshot antes = processoMapper.toSnapshot(processo, List.of());
 
         // O registro vai antes do processo: uma violacao das garantias da V14
         // (original unico, correcao unica) desfaz tudo sem tocar no status.
@@ -500,8 +398,9 @@ public class ProcessoSanitarioService {
         }
         processoRepository.saveAndFlush(processo);
 
-        auditoriaEventoService.registrar(autor, AcaoAuditoria.ATUALIZACAO, ENTIDADE_AUDITORIA, id, antes,
-                toSnapshot(processo));
+        List<AmostraAnimalResponse> amostras = amostrasDe(processo);
+        auditoriaEventoService.registrar(autor, AcaoAuditoria.ATUALIZACAO, ENTIDADE_AUDITORIA, id,
+                antes.comAmostras(amostras), processoMapper.toSnapshot(processo, amostras));
         // Ponto unico de gravacao do resultado. O envio roda fora desta
         // transacao, depois do commit (NotificacaoResultadoListener). O envio
         // de um mesmo lancamento nao se repete (#37); a Vigilancia
@@ -509,7 +408,7 @@ public class ProcessoSanitarioService {
         if (notifica) {
             eventPublisher.publishEvent(new ResultadoLancadoEvent(id));
         }
-        return toResponse(processo);
+        return resposta(processo, amostras);
     }
 
     private static void exigirPrimeiroResultado(ProcessoSanitario processo) {
@@ -551,8 +450,7 @@ public class ProcessoSanitarioService {
     // Idempotente: uma data ja gravada fica, sem novo evento.
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void registrarNotificacaoMunicipe(UUID id, LocalDateTime aceitoEm) {
-        ProcessoSanitario processo = processoRepository.findByIdForUpdate(id)
-                .orElseThrow(ProcessoNaoEncontradoException::new);
+        ProcessoSanitario processo = travar(id);
         if (!processo.registrarNotificacaoMunicipe(aceitoEm)) {
             return;
         }
@@ -564,10 +462,26 @@ public class ProcessoSanitarioService {
 
     // ── Apoio ────────────────────────────────────────────
 
+    private ProcessoSanitario travar(UUID id) {
+        return processoRepository.findByIdForUpdate(id).orElseThrow(ProcessoNaoEncontradoException::new);
+    }
+
+    private Usuario buscarUsuario(UUID usuarioId) {
+        return usuarioRepository.findById(usuarioId).orElseThrow(UsuarioNaoEncontradoException::new);
+    }
+
     private List<AmostraAnimalResponse> amostrasDe(ProcessoSanitario processo) {
         return amostraRepository.findByProcessoIdOrderByCriadoEmAscIdAsc(processo.getId()).stream()
-                .map(ProcessoSanitarioService::toAmostraResponse)
+                .map(processoMapper::toAmostraResponse)
                 .toList();
+    }
+
+    private ProcessoSanitarioResponse resposta(ProcessoSanitario processo, List<AmostraAnimalResponse> amostras) {
+        return processoMapper.toResponse(
+                processo,
+                responsavelRepository.findByProcessoId(processo.getId()).orElse(null),
+                amostras,
+                resultadoProcessoRepository.findByProcessoId(processo.getId()));
     }
 
     // F2-012: GAL/SINAN sao texto livre opcional (sem espacos nas pontas; vazio = null).
@@ -577,147 +491,5 @@ public class ProcessoSanitarioService {
         }
         String limpo = valor.trim();
         return limpo.isEmpty() ? null : limpo;
-    }
-
-    private ProcessoSanitarioResponse toResponse(ProcessoSanitario processo) {
-        ResponsavelProcessoResponse responsavel = responsavelRepository.findByProcessoId(processo.getId())
-                .map(ProcessoSanitarioService::toResponsavelResponse)
-                .orElse(null);
-        return new ProcessoSanitarioResponse(
-                processo.getId(),
-                processo.getProtocolo(),
-                processo.getDataAbertura(),
-                ocorrenciaIdDe(processo),
-                ocorrenciaProtocoloDe(processo),
-                processo.isUrgente(),
-                processo.getStatusProcesso(),
-                new CatalogoItemResponse(processo.getDoenca().getCodigo(), processo.getDoenca().getNome()),
-                processo.getCid(),
-                new CatalogoItemResponse(processo.getLaboratorio().getCodigo(), processo.getLaboratorio().getNome()),
-                processo.getObservacoes(),
-                responsavel,
-                amostrasDe(processo),
-                processo.getCriadoEm(),
-                processo.getResultadoLaboratorial() == null ? null : new CatalogoItemResponse(
-                        processo.getResultadoLaboratorial().getCodigo(), processo.getResultadoLaboratorial().getNome()),
-                processo.getDataResultado(),
-                catalogoDeDesfecho(processo),
-                resultadosDe(processo),
-                processo.getDataNotificacaoMunicipe(),
-                processo.getGalNumero(),
-                processo.getSinanNumero());
-    }
-
-    // Historico em ordem de cadeia: o original e, a seguir, cada correcao da
-    // anterior (V14 garante um original e no maximo uma correcao por linha).
-    private List<ResultadoProcessoResponse> resultadosDe(ProcessoSanitario processo) {
-        List<ResultadoProcesso> registros = resultadoProcessoRepository.findByProcessoId(processo.getId());
-        Map<UUID, ResultadoProcesso> correcaoDe = registros.stream()
-                .filter(r -> r.getRetifica() != null)
-                .collect(Collectors.toMap(r -> r.getRetifica().getId(), Function.identity()));
-        List<ResultadoProcessoResponse> cadeia = new ArrayList<>();
-        ResultadoProcesso atual = registros.stream().filter(r -> r.getRetifica() == null).findFirst().orElse(null);
-        while (atual != null) {
-            cadeia.add(toResultadoResponse(atual));
-            atual = correcaoDe.get(atual.getId());
-        }
-        return cadeia;
-    }
-
-    private static ResultadoProcessoResponse toResultadoResponse(ResultadoProcesso registro) {
-        Usuario autor = registro.getRegistradoPor();
-        return new ResultadoProcessoResponse(
-                registro.getId(),
-                new CatalogoItemResponse(registro.getResultadoLaboratorial().getCodigo(),
-                        registro.getResultadoLaboratorial().getNome()),
-                registro.getDataResultado(),
-                registro.getObservacoes(),
-                registro.getRetifica() == null ? null : registro.getRetifica().getId(),
-                autor.getId(),
-                autor.nomeCompleto(),
-                registro.getRegistradoEm());
-    }
-
-    // Sem o responsavel: nenhum dado pessoal no evento (como a D23).
-    private ProcessoAuditoriaSnapshot toSnapshot(ProcessoSanitario processo) {
-        return new ProcessoAuditoriaSnapshot(
-                processo.getId(),
-                processo.getProtocolo(),
-                processo.getDataAbertura(),
-                ocorrenciaIdDe(processo),
-                processo.isUrgente(),
-                processo.getStatusProcesso(),
-                processo.getDoenca().getCodigo(),
-                processo.getCid(),
-                processo.getLaboratorio().getCodigo(),
-                processo.getObservacoes(),
-                amostrasDe(processo),
-                processo.getResultadoLaboratorial() == null ? null : processo.getResultadoLaboratorial().getCodigo(),
-                processo.getDataResultado(),
-                processo.getDesfechoAnimal() == null ? null : processo.getDesfechoAnimal().getCodigo());
-    }
-
-    private static UUID ocorrenciaIdDe(ProcessoSanitario processo) {
-        return processo.getOcorrencia() == null ? null : processo.getOcorrencia().getId();
-    }
-
-    private static String ocorrenciaProtocoloDe(ProcessoSanitario processo) {
-        return processo.getOcorrencia() == null ? null : processo.getOcorrencia().getProtocolo();
-    }
-
-    private static CatalogoItemResponse catalogoDeDesfecho(ProcessoSanitario processo) {
-        DesfechoAnimal desfecho = processo.getDesfechoAnimal();
-        return desfecho == null ? null : new CatalogoItemResponse(desfecho.getCodigo(), desfecho.getNome());
-    }
-
-    private static ProcessoResumoResponse toResumo(ProcessoSanitario processo) {
-        return new ProcessoResumoResponse(
-                processo.getId(),
-                processo.getProtocolo(),
-                processo.getDataAbertura(),
-                new CatalogoItemResponse(processo.getDoenca().getCodigo(), processo.getDoenca().getNome()),
-                processo.getStatusProcesso(),
-                processo.isUrgente(),
-                ocorrenciaIdDe(processo),
-                ocorrenciaProtocoloDe(processo));
-    }
-
-    private static ResponsavelProcessoResponse toResponsavelResponse(ResponsavelProcesso responsavel) {
-        return new ResponsavelProcessoResponse(
-                responsavel.getId(),
-                responsavel.getNome(),
-                responsavel.getCpf(),
-                responsavel.getTelefone(),
-                responsavel.getEmail(),
-                responsavel.getCep(),
-                responsavel.getEndereco(),
-                responsavel.getBairroResidencial(),
-                responsavel.getBairroOcorrencia());
-    }
-
-    private static AmostraAnimalResponse toAmostraResponse(AnimalAmostrado amostra) {
-        return new AmostraAnimalResponse(
-                amostra.getId(),
-                amostra.getAnimal() == null ? null : amostra.getAnimal().getId(),
-                new CatalogoItemResponse(amostra.getEspecie().getCodigo(), amostra.getEspecie().getNome()),
-                amostra.getSexo(),
-                amostra.getRaca(),
-                amostra.getColoracao(),
-                amostra.getPelagem(),
-                amostra.getIdadeAprox(),
-                amostra.getPesoKg(),
-                amostra.getStatusClinico(),
-                amostra.getTipoAbrigo(),
-                amostra.getAlteracaoComportamental(),
-                amostra.getDataColeta(),
-                amostra.getMaterialBiologico(),
-                amostra.isContatoHumano(),
-                amostra.getNivelContato(),
-                amostra.getAgrediuHumano(),
-                amostra.getObservacoes(),
-                amostra.getSintomas().stream()
-                        .sorted(Comparator.comparing(Sintoma::getNome))
-                        .map(s -> new CatalogoItemResponse(s.getCodigo(), s.getNome()))
-                        .toList());
     }
 }

@@ -3,6 +3,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { ModalRegistrarExame } from './ModalRegistrarExame'
 import { useExamesQuery } from '../hooks/useHistoricoAnimal'
 import type { Exame } from '../types/historico.types'
+import { formatarDataBR } from '@/lib/datas'
 
 // F2-007 / RF-A04 (Fase 3 do TG): aba de exames real (antes placeholder), no
 // mesmo padrão de AbaProcedimentos — listagem paginada, registro e correção
@@ -13,11 +14,6 @@ interface AbaExamesProps {
 }
 
 const LINHAS_SKELETON = [0, 1, 2, 3]
-
-function formatarData(iso: string): string {
-  const [ano, mes, dia] = iso.split('-')
-  return `${dia}/${mes}/${ano}`
-}
 
 export function AbaExames({ animalId, onRegistroCriado }: AbaExamesProps) {
   const { roleKey } = useAuth()
@@ -103,7 +99,7 @@ export function AbaExames({ animalId, onRegistroCriado }: AbaExamesProps) {
               <tbody>
                 {data.itens.map((exame) => (
                   <tr key={exame.id}>
-                    <td className="mono">{formatarData(exame.dataSolicitacao)}</td>
+                    <td className="mono">{formatarDataBR(exame.dataSolicitacao)}</td>
                     <td>
                       {exame.tipoExameNome}
                       {exame.statusRegistro === 'RETIFICADO' && (
@@ -121,7 +117,7 @@ export function AbaExames({ animalId, onRegistroCriado }: AbaExamesProps) {
                         <>
                           <div>{exame.resultado ?? '—'}</div>
                           <div className="mono" style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-                            {formatarData(exame.dataResultado)}
+                            {formatarDataBR(exame.dataResultado)}
                           </div>
                         </>
                       ) : (

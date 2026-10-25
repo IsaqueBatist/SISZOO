@@ -1,6 +1,6 @@
 import { AxiosError, AxiosHeaders, type AxiosResponse } from 'axios'
 import { describe, expect, it, vi } from 'vitest'
-import { aplicarErrosDeCampo, mapaDeCampos } from './erroApi'
+import { aplicarErrosDeCampo, camposDoErro, mapaDeCampos } from './erroApi'
 
 function erroHttp(status: number, data: unknown): AxiosError {
   const response = { status, data, statusText: '', headers: {}, config: { headers: new AxiosHeaders() } } as AxiosResponse
@@ -43,5 +43,18 @@ describe('aplicarErrosDeCampo', () => {
     expect(aplicarErrosDeCampo(erroHttp(422, { mensagem: 'Data de aplicacao nao pode ser futura' }), setError)).toEqual([])
     expect(aplicarErrosDeCampo(new Error('rede'), setError)).toEqual([])
     expect(setError).not.toHaveBeenCalled()
+  })
+})
+
+describe('camposDoErro', () => {
+  it('lê os campos de qualquer status e descarta item mal formado', () => {
+    const corpo = { mensagem: 'Conflito', campos: [{ campo: 'ocorrenciaId', mensagem: 'ja vinculada' }, { campo: 1 }, null] }
+
+    expect(camposDoErro(erroHttp(409, corpo))).toEqual([{ campo: 'ocorrenciaId', mensagem: 'ja vinculada' }])
+  })
+
+  it('vazio sem `campos` ou fora do axios', () => {
+    expect(camposDoErro(erroHttp(422, { mensagem: 'x' }))).toEqual([])
+    expect(camposDoErro(new Error('rede'))).toEqual([])
   })
 })

@@ -34,6 +34,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -80,6 +81,7 @@ import com.siszoo.processos.exception.ResultadoPositivoDefinitivoException;
 import com.siszoo.processos.exception.ResultadoRetificadoInvalidoException;
 import com.siszoo.processos.exception.SintomaSemStatusSintomaticoException;
 import com.siszoo.processos.exception.TransicaoStatusProcessoInvalidaException;
+import com.siszoo.processos.mapper.ProcessoSanitarioMapper;
 import com.siszoo.processos.repository.AnimalAmostradoRepository;
 import com.siszoo.processos.repository.DesfechoAnimalRepository;
 import com.siszoo.processos.repository.DoencaRepository;
@@ -126,11 +128,13 @@ class ProcessoSanitarioServiceTest {
     @BeforeEach
     void criarService() {
         Clock clock = Clock.fixed(Instant.parse("2026-09-10T15:00:00Z"), ZoneId.of("America/Sao_Paulo"));
+        AmostraProcessoFactory amostraFactory = new AmostraProcessoFactory(animalRepository, especieRepository,
+                sintomaRepository);
         processoService = new ProcessoSanitarioService(processoRepository, responsavelRepository, amostraRepository,
                 doencaRepository, laboratorioRepository, sintomaRepository, resultadoRepository,
-                resultadoProcessoRepository, desfechoRepository,
-                especieRepository, animalRepository, usuarioRepository, ocorrenciaService, protocoloService,
-                auditoriaEventoService, eventPublisher, jdbcTemplate, clock);
+                resultadoProcessoRepository, desfechoRepository, usuarioRepository, ocorrenciaService,
+                protocoloService, auditoriaEventoService, eventPublisher, jdbcTemplate,
+                Mappers.getMapper(ProcessoSanitarioMapper.class), amostraFactory, clock);
         lenient().when(usuarioRepository.findById(usuarioId)).thenReturn(Optional.of(new Usuario()));
     }
 

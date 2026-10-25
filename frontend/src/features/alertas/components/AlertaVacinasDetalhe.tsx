@@ -4,16 +4,11 @@ import './AlertaVacinasDetalhe.css'
 import { useAlertasVacinaisQuery } from '../hooks/useAlertas'
 import type { AlertaVacinalAnimal, AlertaVacinalItem } from '../types/alertas.types'
 import { formatarDataBR } from '@/lib/datas'
+import { formatarSexo } from '@/features/animais/utils/rotulosAnimal'
 
 // dataValidade é LocalDate: `new Date('AAAA-MM-DD')` mostraria o dia
 // anterior em São Paulo (ver lib/datas.ts).
 const formatarData = formatarDataBR
-
-function formatarSexo(sexo: string): string {
-  if (sexo === 'macho') return 'Macho'
-  if (sexo === 'femea') return 'Fêmea'
-  return 'Não identificado'
-}
 
 function formatarPrazo(diasRestantes: number): string {
   if (diasRestantes < 0) return `vencida há ${Math.abs(diasRestantes)}d`

@@ -1,14 +1,13 @@
-import { useEffect, useState } from 'react'
 import { Controller, type Control, type Path, type UseFormRegister, type UseFormSetValue, type UseFormWatch } from 'react-hook-form'
+import { Switch } from '@/components/Switch'
 import { Icon } from '@/components/layout/Icon'
 import { PELAGEM_OPCOES, SEXO_OPCOES } from '@/features/animais/schemas/animalFormSchema'
-import { useAnimaisQuery, useCatalogosAnimaisQuery } from '@/features/animais/hooks/useAnimais'
+import { useCatalogosAnimaisQuery } from '@/features/animais/hooks/useAnimais'
 import type { Animal } from '@/features/animais/types/animais.types'
 import type { ProcessoFormValues } from '../schemas/processoFormSchema'
 import { useCatalogosProcessoQuery } from '../hooks/useProcessos'
 import { MATERIAL_BIOLOGICO_OPCOES, NIVEL_CONTATO_OPCOES, STATUS_CLINICO_OPCOES, TIPO_ABRIGO_OPCOES } from '../utils/processosCatalogos'
-
-const TAMANHO_BUSCA_ANIMAL = 8
+import { BuscaAnimalCanil } from './BuscaAnimalCanil'
 
 // Tipo mínimo do erro de uma amostra — o RHF não distribui bem FieldErrors
 // sobre a união discriminada em arrays.
@@ -52,9 +51,6 @@ interface AmostraAnimalCardProps {
 }
 
 export function AmostraAnimalCard({ index, numero, control, register, setValue, watch, erros, podeRemover, onRemover }: AmostraAnimalCardProps) {
-  const [buscaAnimal, setBuscaAnimal] = useState('')
-  const [mostrarSugestoes, setMostrarSugestoes] = useState(false)
-
   // Os campos de cada modalidade só existem numa das variantes da união; o
   // caminho é montado aqui e o tipo é afrouxado de propósito.
   const campo = (nome: string) => `amostras.${index}.${nome}` as Path<ProcessoFormValues>
@@ -67,17 +63,6 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
 
   const { data: catalogosAnimais } = useCatalogosAnimaisQuery()
   const { data: catalogosProcesso } = useCatalogosProcessoQuery()
-  // T45: busca com o mesmo debounce de 300 ms da tela de Animais (antes, uma
-  // requisição por tecla) e só no modo canil, o único em que o campo existe.
-  const [buscaDebounced, setBuscaDebounced] = useState('')
-  useEffect(() => {
-    const timeout = setTimeout(() => setBuscaDebounced(buscaAnimal.trim()), 300)
-    return () => clearTimeout(timeout)
-  }, [buscaAnimal])
-  const { data: resultadoBusca } = useAnimaisQuery(
-    { q: buscaDebounced || undefined, pagina: 0, tamanho: TAMANHO_BUSCA_ANIMAL },
-    origem === 'canil',
-  )
 
   function selecionarOrigem(novaOrigem: 'canil' | 'externo') {
     if (novaOrigem === origem) return
@@ -91,14 +76,11 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
       for (const nome of ['especie', 'sexo', 'raca', 'coloracao', 'pelagem', 'idadeAprox']) definir(nome, '')
       definir('pesoKg', undefined)
     }
-    setBuscaAnimal('')
   }
 
   function selecionarAnimal(animal: Animal) {
     definir('animalId', animal.id, true)
     definir('animalDescricao', descricaoDoAnimal(animal))
-    setMostrarSugestoes(false)
-    setBuscaAnimal('')
   }
 
   function trocarAnimal() {
@@ -146,34 +128,7 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
               </button>
             </div>
           ) : (
-            <div className="animal-search-wrap">
-              <input
-                className={`input${erros?.animalId ? ' error' : ''}`}
-                type="search"
-                placeholder="Buscar por nome ou microchip..."
-                value={buscaAnimal}
-                onChange={(event) => {
-                  setBuscaAnimal(event.target.value)
-                  setMostrarSugestoes(true)
-                }}
-                onFocus={() => setMostrarSugestoes(true)}
-                aria-label={`Buscar animal do canil para o animal amostrado ${numero}`}
-              />
-              {mostrarSugestoes && (resultadoBusca?.itens.length ?? 0) > 0 && (
-                <div className="animal-suggestions show">
-                  {resultadoBusca!.itens.map((animal) => (
-                    <div key={animal.id} className="sug" onClick={() => selecionarAnimal(animal)}>
-                      <span className="name">{animal.nome}</span>
-                      <span className="chip">{animal.microchip ?? 'sem microchip'}</span>
-                      <span className="meta">
-                        {animal.especieNome} · {animal.sexo}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {erros?.animalId && <span className="err">{erros.animalId.message}</span>}
-            </div>
+            <BuscaAnimalCanil numero={numero} erro={erros?.animalId?.message} onSelecionar={selecionarAnimal} />
           )}
         </div>
       ) : (
@@ -383,21 +338,17 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
             name={campo('contatoHumano')}
             control={control}
             render={({ field }) => (
-              <label className="switch">
-                <input
-                  type="checkbox"
-                  checked={Boolean(field.value)}
-                  onChange={(event) => {
-                    field.onChange(event.target.checked)
-                    if (!event.target.checked) {
-                      definir('nivelContato', undefined)
-                      definir('agrediuHumano', undefined)
-                    }
-                  }}
-                  aria-label="Contato humano-animal"
-                />
-                <span className="slider" />
-              </label>
+              <Switch
+                checked={Boolean(field.value)}
+                onChange={(marcado) => {
+                  field.onChange(marcado)
+                  if (!marcado) {
+                    definir('nivelContato', undefined)
+                    definir('agrediuHumano', undefined)
+                  }
+                }}
+                aria-label="Contato humano-animal"
+              />
             )}
           />
         </div>
