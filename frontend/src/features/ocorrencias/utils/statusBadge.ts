@@ -19,6 +19,17 @@ export function badgeDeStatus(status: string): Badge {
   return STATUS_BADGE_MAP[status.toUpperCase()] ?? { classe: 'badge-neutral', label: status }
 }
 
+const STATUS_PROCESSO_LABEL: Record<string, string> = {
+  ABERTO: 'Aberto',
+  AGUARDANDO_RESULTADO: 'Aguardando resultado',
+  COM_RESULTADO: 'Com resultado',
+  CONCLUIDO: 'Concluído',
+}
+
+export function labelDeStatusProcesso(status: string): string {
+  return STATUS_PROCESSO_LABEL[status] ?? status
+}
+
 // O backend só aceita o status seguinte (ProcessoSanitarioService); null no
 // último.
 const PROXIMO_STATUS_PROCESSO: Record<StatusProcesso, StatusProcesso | null> = {
