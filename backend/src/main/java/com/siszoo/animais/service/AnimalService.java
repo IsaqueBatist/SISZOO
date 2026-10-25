@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -62,6 +63,7 @@ public class AnimalService {
     private final AnimalMapper animalMapper;
     private final FichaCompletaService fichaCompletaService;
     private final AuditoriaEventoService auditoriaEventoService;
+    private final MiniaturaFoto miniaturaFoto;
     private final Clock clock;
 
     // RNF10 (F2-078/F2-029): o cadastro do animal e alteracao critica — cada
@@ -78,6 +80,7 @@ public class AnimalService {
             AnimalMapper animalMapper,
             FichaCompletaService fichaCompletaService,
             AuditoriaEventoService auditoriaEventoService,
+            MiniaturaFoto miniaturaFoto,
             Clock clock) {
         this.animalRepository = animalRepository;
         this.baiaRepository = baiaRepository;
@@ -88,6 +91,7 @@ public class AnimalService {
         this.animalMapper = animalMapper;
         this.fichaCompletaService = fichaCompletaService;
         this.auditoriaEventoService = auditoriaEventoService;
+        this.miniaturaFoto = miniaturaFoto;
         this.clock = clock;
     }
 
@@ -129,6 +133,7 @@ public class AnimalService {
         animal.setDataEntrada(request.dataEntrada());
         animal.setBaia(baia);
         animal.setFotoUrl(request.fotoUrl());
+        animal.setFotoMiniatura(miniaturaFoto.gerar(request.fotoUrl()));
         animal.setObservacoes(request.observacoes());
 
         Usuario criadoPor = usuarioRepository.findById(usuarioAutenticadoId)
@@ -194,7 +199,12 @@ public class AnimalService {
         animal.setMotivoEntrada(resolverMotivoEntrada(request.motivoEntrada()));
         animal.setDataEntrada(request.dataEntrada());
         animal.setBaia(baia);
-        animal.setFotoUrl(request.fotoUrl());
+        // A miniatura so e refeita quando a foto muda (o PUT reenvia a foto
+        // inteira a cada edicao da ficha).
+        if (!Objects.equals(animal.getFotoUrl(), request.fotoUrl())) {
+            animal.setFotoUrl(request.fotoUrl());
+            animal.setFotoMiniatura(miniaturaFoto.gerar(request.fotoUrl()));
+        }
         animal.setObservacoes(request.observacoes());
 
         animal.setFichaCompleta(fichaCompletaService.calcular(animal));
@@ -218,7 +228,8 @@ public class AnimalService {
         Specification<Animal> filtro = construirFiltro(status, especie, baiaId, q);
         Page<Animal> paginaAnimais = animalRepository.findAll(
                 filtro, Paginacao.pagina(pagina, tamanho, Sort.by("nome").ascending()));
-        return PaginaResponse.de(paginaAnimais.map(animalMapper::toResponse));
+        // T45: na listagem, fotoUrl e a miniatura (avatar); a foto inteira fica no detalhe.
+        return PaginaResponse.de(paginaAnimais.map(animalMapper::toResponseListagem));
     }
 
     // Microchip e o identificador fisico implantado no animal: uma vez definido, e

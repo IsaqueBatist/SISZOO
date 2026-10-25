@@ -21,6 +21,7 @@ import com.siszoo.animais.dto.AtualizarBaiaRequest;
 import com.siszoo.animais.dto.AtualizarStatusBaiaRequest;
 import com.siszoo.animais.dto.BaiaResponse;
 import com.siszoo.animais.dto.CriarBaiaRequest;
+import com.siszoo.animais.dto.ResidenteBaiaResponse;
 import com.siszoo.animais.entity.Baia;
 import com.siszoo.animais.entity.StatusAnimal;
 import com.siszoo.animais.entity.TipoBaia;
@@ -172,6 +173,15 @@ public class BaiaService {
                 paginaBaias.getSize(),
                 paginaBaias.getTotalElements(),
                 paginaBaias.getTotalPages());
+    }
+
+    // T45: residentes (sob custodia, mesmo criterio da ocupacao) de todas as
+    // baias, por nome, numa consulta so de colunas leves.
+    @Transactional(readOnly = true)
+    public List<ResidenteBaiaResponse> listarResidentes() {
+        return animalRepository.listarResidentesDeBaias(STATUS_FORA_DA_OCUPACAO).stream()
+                .map(r -> new ResidenteBaiaResponse(r.getBaiaId(), r.getId(), r.getNome(), r.getFotoMiniatura()))
+                .toList();
     }
 
     private BaiaResponse mapearComOcupacao(Baia baia, boolean avisarSeSuperlotada) {

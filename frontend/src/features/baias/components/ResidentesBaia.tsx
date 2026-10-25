@@ -3,13 +3,17 @@ import { Link } from 'react-router-dom'
 import { Icon } from '@/components/layout/Icon'
 import type { Animal } from '@/features/animais/types/animais.types'
 
+// Só o que o avatar usa: serve tanto para Animal quanto para ResidenteBaia
+// (GET /baias/residentes, T45).
+type Residente = Pick<Animal, 'id' | 'nome' | 'fotoUrl'>
+
 interface ResidentesBaiaProps {
-  animais: Animal[]
+  animais: Residente[]
 }
 
 const MAX_AVATARES = 5
 
-function AvatarResidente({ animal }: { animal: Animal }) {
+function AvatarResidente({ animal }: { animal: Residente }) {
   const [falhouCarregar, setFalhouCarregar] = useState(false)
   const mostrarFoto = animal.fotoUrl && !falhouCarregar
 

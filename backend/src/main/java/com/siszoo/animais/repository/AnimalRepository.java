@@ -26,6 +26,15 @@ public interface AnimalRepository extends JpaRepository<Animal, UUID>, JpaSpecif
     @EntityGraph(attributePaths = {"especie", "status", "motivoEntrada", "baia", "baia.tipoBaia", "criadoPor"})
     Page<Animal> findAll(Specification<Animal> spec, Pageable pageable);
 
+    // Residentes de cada baia na Gestao de Baias (T45): so o que o card mostra
+    // (nome e avatar), sem carregar a foto inteira nem as demais colunas — a
+    // tela baixava GET /api/animais?tamanho=500 com fotos so para agrupar.
+    // Mesmo criterio de ocupacao de contarOcupacaoPorBaia (sob custodia).
+    @Query("SELECT a.baia.id AS baiaId, a.id AS id, a.nome AS nome, a.fotoMiniatura AS fotoMiniatura FROM Animal a "
+            + "WHERE a.baia IS NOT NULL AND a.status.codigo NOT IN :codigosForaDaCustodia ORDER BY a.nome, a.id")
+    List<ResidenteBaiaProjection> listarResidentesDeBaias(
+            @Param("codigosForaDaCustodia") Collection<String> codigosForaDaCustodia);
+
     Optional<Animal> findByMicrochip(String microchip);
 
     // F2-004: medalha única quando informada (uq_animal_numero_medalha, V23).

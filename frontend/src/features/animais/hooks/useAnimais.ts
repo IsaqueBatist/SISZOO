@@ -13,6 +13,7 @@ import {
   listarBaias,
   listarBaiasAtivas,
   listarCatalogosAnimais,
+  listarResidentesDeBaias,
 } from '../api/animaisApi'
 import type { AnimaisFiltro, AnimalRequest, BaiaRequest } from '../types/animais.types'
 
@@ -103,6 +104,15 @@ export function useBaiasQuery() {
   return useQuery({
     queryKey: BAIAS_QUERY_KEY,
     queryFn: listarBaias,
+  })
+}
+
+// T45: sob o prefixo `['baias']`, então é recarregada junto com as baias e
+// sempre que um animal muda (invalidarAnimaisEBaias).
+export function useResidentesDeBaiasQuery() {
+  return useQuery({
+    queryKey: [...BAIAS_QUERY_KEY, 'residentes'],
+    queryFn: listarResidentesDeBaias,
   })
 }
 

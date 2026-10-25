@@ -133,3 +133,12 @@ export interface AnimalRequest {
   procedencia?: string
   laudoEutanasia?: string
 }
+
+// GET /baias/residentes (T45): o mínimo do card de residentes da Gestão de
+// Baias. `fotoUrl` é a miniatura (avatar), como na listagem de animais.
+export interface ResidenteBaia {
+  baiaId: string
+  id: string
+  nome: string
+  fotoUrl: string | null
+}

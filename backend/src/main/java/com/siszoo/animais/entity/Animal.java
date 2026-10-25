@@ -118,6 +118,10 @@ public class Animal {
     @Column(name = "foto_url", columnDefinition = "text")
     private String fotoUrl;
 
+    // T45 (V28): avatar das listagens, derivado de fotoUrl por MiniaturaFoto.
+    @Column(name = "foto_miniatura", columnDefinition = "text")
+    private String fotoMiniatura;
+
     @Column(columnDefinition = "text")
     private String observacoes;
 

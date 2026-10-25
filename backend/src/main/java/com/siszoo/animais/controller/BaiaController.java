@@ -1,5 +1,6 @@
 package com.siszoo.animais.controller;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,6 +20,7 @@ import com.siszoo.animais.dto.AtualizarBaiaRequest;
 import com.siszoo.animais.dto.AtualizarStatusBaiaRequest;
 import com.siszoo.animais.dto.BaiaResponse;
 import com.siszoo.animais.dto.CriarBaiaRequest;
+import com.siszoo.animais.dto.ResidenteBaiaResponse;
 import com.siszoo.animais.service.BaiaService;
 import com.siszoo.comum.dto.PaginaResponse;
 
@@ -41,6 +43,15 @@ public class BaiaController {
             @RequestParam(defaultValue = "0") int pagina,
             @RequestParam(defaultValue = "20") int tamanho) {
         return baiaService.listar(ativa, pagina, tamanho);
+    }
+
+    // T45: residentes de todas as baias de uma vez para a Gestao de Baias,
+    // em vez de GET /api/animais?tamanho=500 com fotos. Mesma autorizacao das
+    // listagens de baias e de animais.
+    @GetMapping("/residentes")
+    @PreAuthorize("hasAuthority('GESTAO_ANIMAIS:leitura')")
+    public List<ResidenteBaiaResponse> listarResidentes() {
+        return baiaService.listarResidentes();
     }
 
     @GetMapping("/{id}")
