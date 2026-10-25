@@ -105,6 +105,9 @@ describe('ProcessoForm — autosave do rascunho', () => {
 
   function rascunhoComVinculo() {
     return {
+      // T42: o instante do salvamento acompanha o rascunho, para o aviso dizer
+      // de quando ele é.
+      salvoEm: Date.now(),
       etapaAtual: 3 as const,
       valores: {
         vinculoDecisao: 'vinculado' as const,

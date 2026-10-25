@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 import { configure } from '@testing-library/react'
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest'
+import { cancelarTodosOsSalvamentosAgendados } from '../lib/rascunhoDb'
 import { server } from '../mocks/server'
 
 // Default de 1000ms para getBy/findBy fica apertado quando a suíte inteira
@@ -36,6 +37,11 @@ beforeEach(() => {
 afterEach(() => {
   server.resetHandlers()
   sessionStorage.clear()
+  // T42: o rascunho é salvo com debounce de 800 ms, mais que a duração de
+  // muitos testes. Um salvamento que sobrevive ao fim do teste dispara durante
+  // a limpeza do ambiente e aborta uma transação do IndexedDB, o que a suíte
+  // reporta como erro não tratado mesmo com todos os testes passando.
+  cancelarTodosOsSalvamentosAgendados()
   resetUsuariosMock()
   resetPreferenciasMock()
   resetAnimaisMock()

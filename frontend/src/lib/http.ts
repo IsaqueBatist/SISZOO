@@ -1,5 +1,13 @@
-import axios from 'axios'
+import axios, { isCancel } from 'axios'
 import { API_BASE_URL } from './env'
+
+// T42: o MDN avisa que `navigator.onLine === true` não garante acesso real à
+// internet, então o aviso de conexão não pode depender só dele. Uma requisição
+// que morre sem resposta (erro de rede ou timeout) é o sinal mais confiável de
+// que a rede caiu, e uma resposta qualquer é prova de que voltou. Mesma
+// convenção de evento em `window` já usada para 'auth:unauthorized'.
+export const EVENTO_REDE_FALHA = 'rede:falha'
+export const EVENTO_REDE_OK = 'rede:ok'
 
 export const http = axios.create({ baseURL: API_BASE_URL })
 
@@ -23,13 +31,25 @@ http.interceptors.request.use((config) => {
 const ENDPOINTS_AINDA_SO_MOCKADOS: string[] = []
 
 http.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    window.dispatchEvent(new Event(EVENTO_REDE_OK))
+    return response
+  },
   (error) => {
     const url: string = error.config?.url ?? ''
     const isLoginRequest = url === '/auth/login'
     const isEndpointAindaSoMockado = ENDPOINTS_AINDA_SO_MOCKADOS.some((endpoint) => url.startsWith(endpoint))
     if (error.response?.status === 401 && !isLoginRequest && !isEndpointAindaSoMockado) {
       window.dispatchEvent(new Event('auth:unauthorized'))
+    }
+    // Resposta recebida = rede funcionando, mesmo que o status seja de erro.
+    // Sem resposta = rede caiu ou estourou o tempo. Cancelamento não conta: o
+    // TanStack Query cancela requisição ao desmontar a tela, e isso não é
+    // falha de rede.
+    if (error.response) {
+      window.dispatchEvent(new Event(EVENTO_REDE_OK))
+    } else if (!isCancel(error)) {
+      window.dispatchEvent(new Event(EVENTO_REDE_FALHA))
     }
     return Promise.reject(error)
   },

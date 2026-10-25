@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
+import { BannerOffline } from '@/components/BannerOffline'
+import { limparRascunhosExpirados } from '@/lib/rascunhoDb'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 
@@ -26,6 +28,13 @@ function salvarCollapsed(valor: boolean) {
 export function Layout() {
   const [collapsed, setCollapsed] = useState(lerCollapsedInicial)
 
+  // Manutenção do IndexedDB uma vez por carga da aplicação: rascunho vencido
+  // (7 dias) e arquivo órfão saem do disco da máquina compartilhada. É
+  // sincronização com um sistema externo, o caso legítimo de useEffect.
+  useEffect(() => {
+    void limparRascunhosExpirados()
+  }, [])
+
   function alternarCollapsed() {
     setCollapsed((valorAnterior) => {
       const novoValor = !valorAnterior
@@ -40,6 +49,7 @@ export function Layout() {
       <div className="main">
         <Topbar />
         <main className="page">
+          <BannerOffline />
           <Outlet />
         </main>
       </div>

@@ -25,6 +25,7 @@ vi.mock('../storage/rascunhoAnimalStorage', async () => {
   }
 })
 
+import type { RegistroRascunho } from '@/lib/rascunhoDb'
 import { agendarSalvarRascunhoAnimal, carregarRascunhoAnimal } from '../storage/rascunhoAnimalStorage'
 
 const USUARIO_ID = 'a1b2c3d4-0000-0000-0000-000000000001'
@@ -65,7 +66,7 @@ describe('AnimalForm — autosave do rascunho', () => {
   })
 
   it('não agenda salvar o rascunho antes da checagem inicial terminar', async () => {
-    let resolverCarregamento: (valor: unknown) => void = () => {}
+    let resolverCarregamento: (valor: RegistroRascunho<unknown> | null) => void = () => {}
     vi.mocked(carregarRascunhoAnimal).mockImplementation(
       () => new Promise((resolve) => { resolverCarregamento = resolve }),
     )
@@ -87,8 +88,10 @@ describe('AnimalForm — autosave do rascunho', () => {
     await waitFor(() => expect(agendarSalvarRascunhoAnimal).toHaveBeenCalled())
   })
 
-  // F2-004/F2-008 (Fase 3 do TG): 23 chaves — as 19 originais mais numeroMedalha,
-  // dataImplantacaoChip, procedencia e laudoEutanasia (opcionais em rascunhos antigos).
+  // F2-004/F2-008 (Fase 3 do TG): as 19 chaves originais mais numeroMedalha,
+  // dataImplantacaoChip, procedencia e laudoEutanasia. T42: `fotoUrl` saiu da
+  // lista e entrou `fotoArquivoId` — a imagem passou a ser gravada como Blob na
+  // store 'arquivos', e o rascunho de texto guarda só o id.
   it('agenda salvar com exatamente as 23 chaves de RascunhoAnimalValores', async () => {
     vi.mocked(carregarRascunhoAnimal).mockResolvedValue(null)
 
@@ -119,7 +122,7 @@ describe('AnimalForm — autosave do rascunho', () => {
         'motivoEntrada',
         'dataEntrada',
         'baiaId',
-        'fotoUrl',
+        'fotoArquivoId',
         'observacoes',
         'numeroMedalha',
         'dataImplantacaoChip',
@@ -129,27 +132,47 @@ describe('AnimalForm — autosave do rascunho', () => {
     )
   })
 
+  it('o rascunho não guarda o conteúdo da foto, só a referência ao arquivo', async () => {
+    vi.mocked(carregarRascunhoAnimal).mockResolvedValue(null)
+
+    const user = userEvent.setup()
+    renderCadastrar()
+
+    await user.type(screen.getByLabelText(/nome do animal/i), 'Rex')
+
+    await waitFor(() => expect(agendarSalvarRascunhoAnimal).toHaveBeenCalled())
+    const [, valoresSalvos] = vi.mocked(agendarSalvarRascunhoAnimal).mock.calls.at(-1)!
+    expect(JSON.stringify(valoresSalvos)).not.toContain('data:image')
+    expect(valoresSalvos).not.toHaveProperty('fotoUrl')
+  })
+
   it('restaura um rascunho salvo no formato anterior à migração, sem lançar erro', async () => {
     vi.mocked(carregarRascunhoAnimal).mockResolvedValue({
-      nome: 'Rascunho Antigo',
-      especie: 'felino',
-      sexo: 'femea',
-      raca: '',
-      coloracao: '',
-      pelagem: '',
-      porte: '',
-      pesoKg: '4.2',
-      idadeAprox: '',
-      dataNascimentoAprox: '',
-      microchip: '',
-      castracaoOpcao: 'nao_castrado',
-      dataEsterilizacao: '',
-      status: '',
-      motivoEntrada: '',
-      dataEntrada: '2026-01-01',
-      baiaId: '',
-      fotoUrl: '',
-      observacoes: '',
+      // Rascunho gravado antes da T42: sem envelope no disco, o módulo de
+      // armazenamento o devolve com salvoEm null e o `fotoUrl` legado, que a
+      // restauração ignora.
+      salvoEm: null,
+      dados: {
+        nome: 'Rascunho Antigo',
+        especie: 'felino',
+        sexo: 'femea',
+        raca: '',
+        coloracao: '',
+        pelagem: '',
+        porte: '',
+        pesoKg: '4.2',
+        idadeAprox: '',
+        dataNascimentoAprox: '',
+        microchip: '',
+        castracaoOpcao: 'nao_castrado',
+        dataEsterilizacao: '',
+        status: '',
+        motivoEntrada: '',
+        dataEntrada: '2026-01-01',
+        baiaId: '',
+        fotoUrl: '',
+        observacoes: '',
+      },
     })
 
     const user = userEvent.setup()
@@ -160,5 +183,16 @@ describe('AnimalForm — autosave do rascunho', () => {
     expect(screen.getByLabelText(/nome do animal/i)).toHaveValue('Rascunho Antigo')
     expect(await screen.findByRole('radio', { name: 'Felino' })).toHaveAttribute('aria-checked', 'true')
     expect(screen.getByRole('radio', { name: 'Fêmea' })).toHaveAttribute('aria-checked', 'true')
+  })
+
+  it('o aviso mostra quando o rascunho foi salvo', async () => {
+    vi.mocked(carregarRascunhoAnimal).mockResolvedValue({
+      salvoEm: new Date('2026-10-24T22:42:00Z').getTime(),
+      dados: { nome: 'Com data', dataEntrada: '2026-10-24' },
+    })
+
+    renderCadastrar()
+
+    expect(await screen.findByText('Salvo em 24/10/2026, 19:42.')).toBeInTheDocument()
   })
 })

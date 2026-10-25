@@ -11,6 +11,7 @@ import {
   chaveComEscopo,
   removerRascunho,
   salvarRascunho,
+  type RegistroRascunho,
 } from '@/lib/rascunhoDb'
 
 const STORE = 'ocorrencias'
@@ -24,7 +25,8 @@ export function salvarRascunhoOcorrencia<T>(valores: T, chave: string): Promise<
   return salvarRascunho(STORE, chave, valores)
 }
 
-export function carregarRascunhoOcorrencia<T>(chave: string): Promise<T | null> {
+// Registro completo: valores mais o instante do salvamento (T42).
+export function carregarRascunhoOcorrencia<T>(chave: string): Promise<RegistroRascunho<T> | null> {
   return carregarRascunho<T>(STORE, chave)
 }
 
@@ -63,8 +65,12 @@ export function salvarAnexosPendentes(usuarioId: string, pendencia: AnexosPenden
   return salvarRascunho(STORE, chaveAnexosPendentes(usuarioId), pendencia)
 }
 
-export function carregarAnexosPendentes(usuarioId: string): Promise<AnexosPendentesOcorrencia | null> {
-  return carregarRascunho<AnexosPendentesOcorrencia>(STORE, chaveAnexosPendentes(usuarioId))
+// Comportamento da D15 inalterado: só desembrulha o envelope da T42 antes de
+// devolver. Uma consequência desejada da expiração: pendência esquecida há
+// mais de 7 dias deixa de bloquear o botão "Registrar".
+export async function carregarAnexosPendentes(usuarioId: string): Promise<AnexosPendentesOcorrencia | null> {
+  const registro = await carregarRascunho<AnexosPendentesOcorrencia>(STORE, chaveAnexosPendentes(usuarioId))
+  return registro?.dados ?? null
 }
 
 export function removerAnexosPendentes(usuarioId: string): Promise<void> {

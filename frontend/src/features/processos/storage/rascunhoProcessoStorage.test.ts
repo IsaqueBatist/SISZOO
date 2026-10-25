@@ -20,7 +20,9 @@ describe('rascunho de processo por usuário', () => {
     await salvarRascunhoProcesso(chaveRascunhoProcesso(USUARIO_A), rascunho)
 
     expect(chaveRascunhoProcesso(USUARIO_A)).toBe(`${USUARIO_A}:novo`)
-    expect(await carregarRascunhoProcesso(chaveRascunhoProcesso(USUARIO_A))).toEqual(rascunho)
+    // T42: a leitura acrescenta o instante do salvamento ao rascunho.
+    expect(await carregarRascunhoProcesso(chaveRascunhoProcesso(USUARIO_A))).toMatchObject(rascunho)
+    expect(await carregarRascunhoProcesso(chaveRascunhoProcesso(USUARIO_A))).toHaveProperty('salvoEm', expect.any(Number))
     expect(await carregarRascunhoProcesso(chaveRascunhoProcesso(USUARIO_B))).toBeNull()
   })
 

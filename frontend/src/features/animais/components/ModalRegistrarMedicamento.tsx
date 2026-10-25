@@ -129,7 +129,7 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
           <div className="modal-body">
             <div className="form-grid cols-1">
               {rascunho.rascunhoDisponivel && (
-                <BannerRascunho onRestaurar={rascunho.restaurar} onDescartar={() => void rascunho.descartar()} />
+                <BannerRascunho onRestaurar={rascunho.restaurar} onDescartar={() => void rascunho.descartar()} salvoEm={rascunho.rascunhoSalvoEm} />
               )}
               {submitError && (
                 <div className="alert danger" role="alert">
