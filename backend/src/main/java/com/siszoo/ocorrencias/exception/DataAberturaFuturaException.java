@@ -1,4 +1,12 @@
 package com.siszoo.ocorrencias.exception;
 
-public class DataAberturaFuturaException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+import com.siszoo.comum.exception.ErroNegocioException;
+
+public class DataAberturaFuturaException extends ErroNegocioException {
+
+    public DataAberturaFuturaException() {
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "Data de abertura nao pode ser futura");
+    }
 }

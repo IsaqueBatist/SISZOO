@@ -1,4 +1,12 @@
 package com.siszoo.animais.exception;
 
-public class BaiaInvalidaException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+import com.siszoo.comum.exception.ErroNegocioException;
+
+public class BaiaInvalidaException extends ErroNegocioException {
+
+    public BaiaInvalidaException() {
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "Baia informada nao existe");
+    }
 }

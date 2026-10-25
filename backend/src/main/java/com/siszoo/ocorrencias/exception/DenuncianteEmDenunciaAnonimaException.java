@@ -1,4 +1,12 @@
 package com.siszoo.ocorrencias.exception;
 
-public class DenuncianteEmDenunciaAnonimaException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+import com.siszoo.comum.exception.ErroNegocioException;
+
+public class DenuncianteEmDenunciaAnonimaException extends ErroNegocioException {
+
+    public DenuncianteEmDenunciaAnonimaException() {
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "Denuncia anonima nao aceita dados do denunciante");
+    }
 }

@@ -1,4 +1,12 @@
 package com.siszoo.animais.clinico.exception;
 
-public class RegistroJaRetificadoException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+import com.siszoo.comum.exception.ErroNegocioException;
+
+public class RegistroJaRetificadoException extends ErroNegocioException {
+
+    public RegistroJaRetificadoException() {
+        super(HttpStatus.CONFLICT, "Registro ja foi retificado por outro");
+    }
 }

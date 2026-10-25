@@ -1,4 +1,12 @@
 package com.siszoo.animais.exception;
 
-public class TipoBaiaInvalidoException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+import com.siszoo.comum.exception.ErroNegocioException;
+
+public class TipoBaiaInvalidoException extends ErroNegocioException {
+
+    public TipoBaiaInvalidoException() {
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "Tipo de baia informado nao existe");
+    }
 }
