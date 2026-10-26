@@ -127,8 +127,20 @@ O backend tem um **seed de dados fictícios** (`com.siszoo.seed`) para testar o 
 na aplicação. Ele chama os mesmos services da API: as regras de negócio, os protocolos, a ficha completa, o sigilo e a
 auditoria são os de verdade. Decisões e detalhes: [docs/decisoes/seed-dev.md](docs/decisoes/seed-dev.md).
 
-**Pré-requisitos:** PostgreSQL com um database **vazio** (ou já semeado por este seed), `JWT_SECRET` e o admin
-inicial (`ADMIN_SEED_EMAIL`/`ADMIN_SEED_PASSWORD`), que é quem cria os usuários fictícios.
+**Com Docker (mais simples):** um comando sobe banco, backend e frontend com os dados fictícios, em containers e
+volume próprios (projeto `siszoo-seed`, separado do `docker compose up` normal; pare um antes de subir o outro, porque as
+portas são as mesmas):
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.seed.yml up --build
+# front em http://localhost:5173; para recomeçar do zero: ... down -v
+```
+
+O `docker-compose.seed.yml` troca o perfil do backend para `dev,seed` e traz chave JWT e admin inicial de
+desenvolvimento. **Nunca use esse arquivo num servidor.**
+
+**Sem Docker para o backend:** pré-requisitos são PostgreSQL com um database **vazio** (ou já semeado por este seed),
+`JWT_SECRET` e o admin inicial (`ADMIN_SEED_EMAIL`/`ADMIN_SEED_PASSWORD`), que é quem cria os usuários fictícios.
 
 ```bash
 docker compose up -d db                                   # só o Postgres
@@ -174,7 +186,7 @@ auditoria não podem ser apagados (triggers das migrations), então o seed nunca
 - o seed só existe com o perfil `seed` **e** `SISZOO_SEED_HABILITADO=true`;
 - o perfil `seed` exige `dev` ou `test` e derruba a subida se `docker` ou `prod` estiver ativo;
 - num banco que já tem dados que não vieram dele, o seed recusa antes de gravar qualquer coisa;
-- o `docker-compose.yml` e o `Dockerfile` não ligam o seed.
+- o `docker-compose.yml` e o `Dockerfile` não ligam o seed; só o `docker-compose.seed.yml`, de uso local, liga.
 
 **Datas:** as datas de negócio (entrada, vacinação, abertura, resultado) são relativas ao dia da primeira execução e
 congelam ali. Depois de alguns dias, vacinas "vencendo" viram "vencidas" e "registradas hoje" vai a 0; recrie o database
@@ -220,6 +232,7 @@ siszoo/
 ├── docs/               # Documentação: DER, DBML, decisões, contratos, protótipo (índice em docs/README.md)
 ├── docs/tg/            # TG: análises de alinhamento, capturas, diagramas e scripts (o .docx fica fora do git)
 ├── docker-compose.yml  # Postgres, backend (perfil docker) e frontend
+├── docker-compose.seed.yml # Override local: o mesmo stack com dados fictícios (perfis dev,seed)
 ├── .env.example        # Variáveis do docker-compose
 ├── .gitignore
 ├── LICENSE

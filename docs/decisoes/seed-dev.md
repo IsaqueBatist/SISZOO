@@ -65,6 +65,13 @@ fictícios (25/10/2026). Substitui o `scripts/seed-test-data.mjs` (SQL direto) e
   - Roda depois do `DataSeeder`, que cria o admin inicial e é o autor dos usuários do seed.
   - `siszoo.seed.executar-na-subida=false` mantém o bean sem rodar; os testes usam essa opção.
   - Os caches do dashboard são limpos ao final.
+- **SD-8 Override do compose para desenvolvimento** (`docker-compose.seed.yml`, pedido em 25/10/2026).
+  - Sobe o mesmo stack com o backend em `dev,seed` e `SISZOO_SEED_HABILITADO=true`.
+  - Usa o projeto `siszoo-seed`, com containers e volume próprios; o banco do stack normal não é tocado.
+  - Traz chave JWT e admin inicial de desenvolvimento como padrão; o `.env` tem precedência.
+  - Troca aceita: dentro desse container a guarda de perfil passa, porque o perfil é `dev`. A proteção contra uso
+    indevido fica nas outras camadas: o arquivo é separado e opt-in, e a guarda de banco recusa qualquer banco com dados
+    reais. O arquivo e o README dizem para nunca usá-lo num servidor.
 
 ## Massa
 
