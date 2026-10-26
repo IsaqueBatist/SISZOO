@@ -14,8 +14,9 @@ import com.siszoo.animais.entity.Animal;
 // A V18 (backfill) tem esta regra em SQL, mas e uma copia congelada: ja foi
 // aplicada, nao roda de novo e nao pode ser editada (checksum do Flyway).
 // Mudar a regra aqui exige uma migration nova que recalcule os dados
-// existentes. Espelhos que precisam acompanhar: fichaCompletaMock
-// (frontend/src/mocks/handlers.ts) e scripts/seed-test-data.test.mjs.
+// existentes. Espelho que precisa acompanhar: fichaCompletaMock
+// (frontend/src/mocks/handlers.ts). O seed de dados ficticios (com.siszoo.seed)
+// passa por este service; SeedDevIT confere a ficha de animais semeados.
 @Service
 public class FichaCompletaService {
 

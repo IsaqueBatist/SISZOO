@@ -5,7 +5,10 @@ import type { IconName } from '../components/layout/Icon'
 // Divergência deliberada: o Veterinário não acessa 'ocorrencias' (correção de
 // regra de acesso, V11 no backend); o protótipo ainda lista o item para ele.
 
-export type RoleKey = 'admin' | 'vet' | 'agente'
+// 'sem_perfil': cargo que não corresponde a nenhum perfil conhecido (ou
+// sessão sem cargos). Não vê nenhum módulo — antes caía em 'agente' e o menu
+// mostrava telas que o backend recusaria com 403.
+export type RoleKey = 'admin' | 'vet' | 'agente' | 'sem_perfil'
 
 export interface Role {
   label: string
@@ -35,6 +38,12 @@ export const ROLES: Record<RoleKey, Role> = {
     badgeCls: 'badge-role-agent',
     access: ['dashboard', 'animais', 'ocorrencias', 'processos', 'relatorios', 'medicamentos', 'config'],
   },
+  sem_perfil: {
+    label: 'Sem perfil reconhecido',
+    short: 'SEM PERFIL',
+    badgeCls: 'badge-neutral',
+    access: [],
+  },
 }
 
 interface NavGroup {
@@ -46,7 +55,6 @@ interface NavItem {
   label: string
   to: string
   icon: IconName
-  badge?: number
 }
 
 export type NavEntry = NavGroup | NavItem
@@ -59,7 +67,7 @@ export const NAV_ALL: NavEntry[] = [
   { group: 'PRINCIPAL' },
   { id: 'dashboard', label: 'Dashboard', to: '/dashboard', icon: 'home' },
   { id: 'animais', label: 'Animais', to: '/animais', icon: 'paw' },
-  { id: 'ocorrencias', label: 'Ocorrências', to: '/ocorrencias', icon: 'alert', badge: 4 },
+  { id: 'ocorrencias', label: 'Ocorrências', to: '/ocorrencias', icon: 'alert' },
   { id: 'processos', label: 'Processos Sanitários', to: '/processos', icon: 'clipboard' },
   { id: 'relatorios', label: 'Relatórios', to: '/relatorios', icon: 'chart' },
   { group: 'ADMINISTRAÇÃO' },
@@ -99,7 +107,11 @@ export function roleKeyFromCargos(cargos: string[]): RoleKey {
     if (normalizados.some((cargo) => cargo.includes(correspondeA))) return chave
   }
 
-  return 'agente'
+  return 'sem_perfil'
+}
+
+export function podeAcessar(roleKey: RoleKey, modulo: string): boolean {
+  return ROLES[roleKey].access.includes(modulo)
 }
 
 export function getNavForRole(roleKey: RoleKey): NavEntry[] {

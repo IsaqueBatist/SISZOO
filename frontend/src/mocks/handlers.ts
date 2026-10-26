@@ -2,7 +2,6 @@ import { http, HttpResponse } from 'msw'
 import type { AlertaVacinalAnimal, AlertaVacinalItem } from '@/features/alertas/types/alertas.types'
 import type { Animal, AnimalRequest, AnexoAnimal, Baia, BaiaRequest, CatalogosAnimal } from '@/features/animais/types/animais.types'
 import type { CriarExameRequest, Exame } from '@/features/animais/types/historico.types'
-import { VACINAS, TIPOS_PROCEDIMENTO } from '@/features/animais/utils/catalogoClinico'
 import { DIAS_ANTECEDENCIA_ALERTA_VACINA, diasAteVencimento, hojeEmItu } from '@/features/animais/utils/regrasVacina'
 import { adicionarDiasIso, agoraEmItu } from '@/lib/datas'
 import type {
@@ -579,6 +578,23 @@ const CATALOGOS_ANIMAIS_MOCK: CatalogosAnimal = {
   tiposBaia: [
     { codigo: 'canil', nome: 'Canil' },
     { codigo: 'gatil', nome: 'Gatil' },
+  ],
+  // Mesmos códigos do seed da V5 (o backend devolve todos em /animais/catalogos).
+  vacinas: [
+    { codigo: 'antirrabica', nome: 'Antirrábica' },
+    { codigo: 'v10', nome: 'V10' },
+    { codigo: 'v8', nome: 'V8' },
+    { codigo: 'v4_felinos', nome: 'V4 (felinos)' },
+    { codigo: 'giardia', nome: 'Giárdia' },
+    { codigo: 'gripe_canina', nome: 'Gripe canina' },
+    { codigo: 'felv', nome: 'FeLV' },
+    { codigo: 'leishmaniose', nome: 'Leishmaniose' },
+  ],
+  tiposProcedimento: [
+    { codigo: 'atendimento_clinico', nome: 'Atendimento clínico' },
+    { codigo: 'castracao', nome: 'Castração' },
+    { codigo: 'cirurgia_maior', nome: 'Cirurgia maior' },
+    { codigo: 'vacinacao', nome: 'Vacinação' },
   ],
 }
 
@@ -1359,7 +1375,7 @@ export const handlers = [
       id: crypto.randomUUID(),
       animalId: body.animalId,
       vacinaCodigo: body.vacina,
-      vacinaNome: VACINAS.find((item) => item.codigo === body.vacina)?.nome ?? body.vacina,
+      vacinaNome: CATALOGOS_ANIMAIS_MOCK.vacinas.find((item) => item.codigo === body.vacina)?.nome ?? body.vacina,
       aplicadoPorId: usuariosMock[0].id,
       aplicadoPorNome: `${usuariosMock[0].nome} ${usuariosMock[0].sobrenome}`,
       dataAplicacao: body.dataAplicacao,
@@ -1512,7 +1528,9 @@ export const handlers = [
       id: crypto.randomUUID(),
       animalId: body.animalId,
       tipoProcedimentoCodigo: body.tipoProcedimento,
-      tipoProcedimentoNome: TIPOS_PROCEDIMENTO.find((item) => item.codigo === body.tipoProcedimento)?.nome ?? body.tipoProcedimento,
+      tipoProcedimentoNome:
+        CATALOGOS_ANIMAIS_MOCK.tiposProcedimento.find((item) => item.codigo === body.tipoProcedimento)?.nome ??
+        body.tipoProcedimento,
       executadoPorId: usuariosMock[0].id,
       executadoPorNome: `${usuariosMock[0].nome} ${usuariosMock[0].sobrenome}`,
       data: body.data,

@@ -26,13 +26,13 @@ import {
 // aviso — toda rota da API usada nos testes precisa de handler em
 // mocks/handlers.ts (ou de um server.use() no próprio teste).
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-// Fase 3 (N-02): o `.env` local pode definir VITE_USE_MOCK_KPIS/GRAFICOS=false
-// para desenvolvimento contra o backend real, mas os testes assumem o padrão do
-// código (mock quando a variável não é "false"). Neutraliza o .env antes de
-// cada teste; quem precisa do modo real faz vi.stubEnv(..., 'false') no teste.
+// Fase 3 (N-02): o `.env` local pode definir VITE_USE_MOCK_KPIS/GRAFICOS, mas os
+// testes do dashboard partem dos dados mockados. Liga o mock explicitamente antes
+// de cada teste (no código, ausente = dados reais); quem precisa do modo real faz
+// vi.stubEnv(..., 'false') ou vi.stubEnv(..., undefined) no teste.
 beforeEach(() => {
-  vi.stubEnv('VITE_USE_MOCK_KPIS', '')
-  vi.stubEnv('VITE_USE_MOCK_GRAFICOS', '')
+  vi.stubEnv('VITE_USE_MOCK_KPIS', 'true')
+  vi.stubEnv('VITE_USE_MOCK_GRAFICOS', 'true')
 })
 afterEach(() => {
   server.resetHandlers()

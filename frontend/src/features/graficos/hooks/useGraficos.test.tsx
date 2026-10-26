@@ -18,7 +18,7 @@ afterEach(() => {
 })
 
 describe('useGraficosQuery', () => {
-  it('usa o mock por padrão (endpoint real ainda não existe), sem chamar a API', async () => {
+  it('usa o mock quando VITE_USE_MOCK_GRAFICOS=true (setup), sem chamar a API', async () => {
     const { result } = renderHook(() => useGraficosQuery(2026), { wrapper: Wrapper })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
@@ -41,6 +41,22 @@ describe('useGraficosQuery', () => {
         return HttpResponse.json(graficosReais)
       }),
     )
+
+    const { result } = renderHook(() => useGraficosQuery(2026), { wrapper: Wrapper })
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(result.current.data).toEqual(graficosReais)
+  })
+
+  it('chama a API real quando VITE_USE_MOCK_GRAFICOS está ausente', async () => {
+    vi.stubEnv('VITE_USE_MOCK_GRAFICOS', undefined)
+
+    const graficosReais: DashboardGraficos = {
+      casosPorDoenca: [],
+      casosRaivaPorEspecie: [],
+      resultadosPorDoenca: [],
+    }
+    server.use(http.get(`${API_BASE_URL}/dashboard/graficos`, () => HttpResponse.json(graficosReais)))
 
     const { result } = renderHook(() => useGraficosQuery(2026), { wrapper: Wrapper })
 

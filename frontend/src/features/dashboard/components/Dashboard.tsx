@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/layout/Skeleton'
 import { SeloDadosMock } from '@/components/layout/SeloDadosMock'
 import type { SeveridadeAlerta } from '@/features/alertas/types/alertas.types'
 import { useAlertasVacinaisQuery } from '@/features/alertas/hooks/useAlertas'
+import { kpisUsamMock } from '../api/dashboardApi'
 import { useKpisDashboardQuery } from '../hooks/useDashboardKpis'
 import { useProcessosUrgentesQuery } from '../hooks/useAlertaProcessosUrgentes'
 import { mapearKpisParaCards } from '../utils/kpiCards'
@@ -216,7 +217,8 @@ function AlertaCriticoGenerico({ alerta }: { alerta: AlertaCritico }) {
 
 export function Dashboard() {
   const { data: kpis, isLoading: kpisCarregando, isError: kpisComErro, refetch: refazerKpis } = useKpisDashboardQuery()
-  const cards = kpis ? mapearKpisParaCards(kpis) : []
+  const kpisMockados = kpisUsamMock()
+  const cards = kpis ? mapearKpisParaCards(kpis, kpisMockados) : []
   // Só os com total > 0: a seção é "Alertas Críticos", não um inventário —
   // mostrar "0 baia(s) superlotada(s)" não ajuda ninguém a agir.
   const alertasGenericos = (kpis?.alertas ?? []).filter(
@@ -271,6 +273,8 @@ export function Dashboard() {
             </span>
             Alertas Críticos
           </h2>
+          {/* Os alertas genéricos vêm do mesmo GET /dashboard/kpis. */}
+          {kpisMockados && <SeloDadosMock />}
         </div>
         <div className="alerts-grid">
           <AlertaCriticoVacinas />

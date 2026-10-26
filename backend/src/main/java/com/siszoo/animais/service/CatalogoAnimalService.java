@@ -8,7 +8,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.siszoo.animais.clinico.entity.TipoExame;
+import com.siszoo.animais.clinico.entity.TipoProcedimento;
+import com.siszoo.animais.clinico.entity.Vacina;
 import com.siszoo.animais.clinico.repository.TipoExameRepository;
+import com.siszoo.animais.clinico.repository.TipoProcedimentoRepository;
+import com.siszoo.animais.clinico.repository.VacinaRepository;
 import com.siszoo.animais.dto.CatalogosAnimalResponse;
 import com.siszoo.animais.entity.Especie;
 import com.siszoo.animais.entity.MotivoEntrada;
@@ -36,18 +40,25 @@ public class CatalogoAnimalService {
             MotivoEntradaRepository motivoEntradaRepository,
             TipoBaiaRepository tipoBaiaRepository,
             TipoExameRepository tipoExameRepository,
-            LaboratorioRepository laboratorioRepository) {
+            LaboratorioRepository laboratorioRepository,
+            VacinaRepository vacinaRepository,
+            TipoProcedimentoRepository tipoProcedimentoRepository) {
         this.especieRepository = especieRepository;
         this.statusAnimalRepository = statusAnimalRepository;
         this.motivoEntradaRepository = motivoEntradaRepository;
         this.tipoBaiaRepository = tipoBaiaRepository;
         this.tipoExameRepository = tipoExameRepository;
         this.laboratorioRepository = laboratorioRepository;
+        this.vacinaRepository = vacinaRepository;
+        this.tipoProcedimentoRepository = tipoProcedimentoRepository;
     }
 
     // F2-007 / RF-A04: catalogos do registro de exame.
     private final TipoExameRepository tipoExameRepository;
     private final LaboratorioRepository laboratorioRepository;
+    // Registro de vacinacao e de procedimento (seed da V5).
+    private final VacinaRepository vacinaRepository;
+    private final TipoProcedimentoRepository tipoProcedimentoRepository;
 
     @Transactional(readOnly = true)
     public CatalogosAnimalResponse listar() {
@@ -57,7 +68,10 @@ public class CatalogoAnimalService {
                 mapear(motivoEntradaRepository.findAll(), MotivoEntrada::getCodigo, MotivoEntrada::getNome),
                 mapear(tipoBaiaRepository.findAll(), TipoBaia::getCodigo, TipoBaia::getNome),
                 mapear(tipoExameRepository.findByAtivoTrueOrderByNomeAsc(), TipoExame::getCodigo, TipoExame::getNome),
-                mapear(laboratorioRepository.findByAtivoTrueOrderByNomeAsc(), Laboratorio::getCodigo, Laboratorio::getNome));
+                mapear(laboratorioRepository.findByAtivoTrueOrderByNomeAsc(), Laboratorio::getCodigo, Laboratorio::getNome),
+                mapear(vacinaRepository.findByAtivoTrueOrderByNomeAsc(), Vacina::getCodigo, Vacina::getNome),
+                mapear(tipoProcedimentoRepository.findByAtivoTrueOrderByNomeAsc(),
+                        TipoProcedimento::getCodigo, TipoProcedimento::getNome));
     }
 
     private <T> List<CatalogoItemResponse> mapear(List<T> entidades, Function<T, String> codigo, Function<T, String> nome) {

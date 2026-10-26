@@ -3,8 +3,7 @@
 Documentação de análise, modelagem e decisões do sistema, derivada do protótipo navegável, da entrevista com a equipe
 do CCZ-Itu (09/01/2026) e do que foi implementado. **Fonte de verdade, nesta ordem:** código em `main` (migrations
 `backend/src/main/resources/db/migration`, V1–V28) → `DER.md` → decisões → documento do TG. Se algo divergir, o código
-manda e a documentação é corrigida no mesmo PR (checklist em `CLAUDE.md` desta pasta, para quem usa o assistente, e
-abaixo em "Como manter").
+manda e a documentação é corrigida no mesmo PR (checklist abaixo, em "Como manter").
 
 ## Conteúdo
 
@@ -12,7 +11,8 @@ abaixo em "Como manter").
 |---|---|
 | `DER.md` | Diagrama Entidade-Relacionamento completo: entidades, atributos, relacionamentos, catálogos, estado do schema por migration e as regras de negócio numeradas (§5). Referência central do modelo de dados. |
 | `modulo1-usuarios-acesso.dbml` … `modulo5-relatorios.dbml` | Diagramas lógicos por módulo, em DBML (espelham as migrations; tabelas só modeladas trazem `Note: 'modelo-alvo…'`). |
-| `decisoes/` | Uma linha por decisão, por task: `T25-T26.md` (ocorrências, sigilo), `T29.md` (processos), `T34.md` (resultado laboratorial), `T35.md` (e-mail), `T37.md` (notificação), `T42.md` (rascunho offline), `T43.md` (auditoria), `animais-clinico-correcoes.md`, `auditoria-rn.md`, `pendencias-auditoria-rn.md`, `ficha-completa-seed-fuso.md`, `politica-senha.md`, **`alinhamento-tg.md`** (decisões AT-1…AT-21 do alinhamento com o TG, 22–24/10/2026). |
+| `decisoes/` | Uma linha por decisão, por task: `T25-T26.md` (ocorrências, sigilo), `T29.md` (processos), `T34.md` (resultado laboratorial), `T35.md` (e-mail), `T37.md` (notificação), `T42.md` (rascunho offline), `T43.md` (auditoria), `animais-clinico-correcoes.md`, `auditoria-rn.md`, `pendencias-auditoria-rn.md`, `ficha-completa-seed-fuso.md`, `politica-senha.md`, **`alinhamento-tg.md`** (decisões AT-1…AT-21 do alinhamento com o TG, 22–24/10/2026), `seed-dev.md` (seed de dados fictícios: guardas, idempotência, massa). |
+| `integracao-frontend-api.md` | Inventário de mocks (teste, seed, estáticos legítimos, indevidos) e matriz de rastreabilidade tela → serviço → endpoint → tabela. |
 | `contratos/` | Pedidos do frontend ao backend e contratos de endpoints, cada um com `Status:` na primeira linha (implementado/pendente). |
 | `regras-negocio-clinico.md` | Regras de vacinação, procedimento, prescrição, exame, anexos do animal, datas e ficha completa; alerta vacinal. |
 | `email.md` | Serviço de e-mail (T35): variáveis SMTP, sandbox, GreenMail, templates, notificação de resultado e reenvio. |

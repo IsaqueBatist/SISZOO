@@ -8,7 +8,8 @@ import { hojeEmItu } from '@/lib/datas'
 import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
 import { useRascunho } from '@/lib/useRascunho'
 import { armazenamentoRascunhoClinico, chaveRascunhoClinico } from '../storage/rascunhoClinicoStorage'
-import { TIPOS_PROCEDIMENTO } from '../utils/catalogoClinico'
+import { useCatalogosAnimaisQuery } from '../hooks/useAnimais'
+import { SelectCatalogoClinico } from './SelectCatalogoClinico'
 import { procedimentoFormSchema, type ProcedimentoFormValues } from '../schemas/historicoFormSchemas'
 import { useCriarProcedimentoMutation } from '../hooks/useHistoricoAnimal'
 import type { Procedimento } from '../types/historico.types'
@@ -36,6 +37,7 @@ export function ModalRegistrarProcedimento({ animalId, retifica, onFechar, onSuc
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const mutation = useCriarProcedimentoMutation(animalId)
+  const catalogos = useCatalogosAnimaisQuery()
 
   const { user } = useAuth()
 
@@ -130,16 +132,15 @@ export function ModalRegistrarProcedimento({ animalId, retifica, onFechar, onSuc
                   <label htmlFor="proc-tipo">
                     Tipo de procedimento <span className="req">*</span>
                   </label>
-                  <select id="proc-tipo" className={`select${errors.tipoProcedimento ? ' error' : ''}`} {...register('tipoProcedimento')}>
-                    <option value="" disabled>
-                      Selecione…
-                    </option>
-                    {TIPOS_PROCEDIMENTO.map((item) => (
-                      <option key={item.codigo} value={item.codigo}>
-                        {item.nome}
-                      </option>
-                    ))}
-                  </select>
+                  <SelectCatalogoClinico
+                    id="proc-tipo"
+                    itens={catalogos.data?.tiposProcedimento}
+                    carregando={catalogos.isLoading}
+                    comErro={catalogos.isError}
+                    onTentarNovamente={() => void catalogos.refetch()}
+                    registro={register('tipoProcedimento')}
+                    temErro={Boolean(errors.tipoProcedimento)}
+                  />
                   {errors.tipoProcedimento && <span className="err">{errors.tipoProcedimento.message}</span>}
                 </div>
 
@@ -168,7 +169,11 @@ export function ModalRegistrarProcedimento({ animalId, retifica, onFechar, onSuc
             <button type="button" className="btn btn-ghost" onClick={onFechar}>
               Cancelar
             </button>
-            <button type="submit" className="btn btn-primary" disabled={mutation.isPending}>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={mutation.isPending || !catalogos.data?.tiposProcedimento.length}
+            >
               {mutation.isPending ? 'Salvando…' : retifica ? 'Salvar correção' : 'Registrar procedimento'}
             </button>
           </div>

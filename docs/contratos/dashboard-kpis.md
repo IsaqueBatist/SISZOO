@@ -39,6 +39,10 @@ Sem parâmetros. "Hoje"/"mês corrente" são calculados no fuso
     "registradasHoje": 4,
     "mediaPorHora": 0.5
   },
+  "adocoes": {
+    "adotados": 6,
+    "disponiveis": 12
+  },
   "alertas": [
     { "tipo": "vacina_vencendo", "severidade": "atencao", "titulo": "3 vacina(s) vencendo em até 7 dias", "descricao": "...", "total": 3 },
     { "tipo": "vacina_vencida", "severidade": "critico", "titulo": "1 vacina(s) vencida(s)", "descricao": "...", "total": 1 },
@@ -51,15 +55,21 @@ Sem parâmetros. "Hoje"/"mês corrente" são calculados no fuso
 }
 ```
 
-### Sem bloco `adocoes` (divergência DER vs. código, decisão registrada)
+### `adocoes` — snapshot pelo status atual (divergência DER vs. código, decisão registrada)
 
 O DER documenta uma tabela `adocao` (com `data_adocao`), mas ela **nunca foi
-implementada** — sem migration, sem entidade, sem rastro em auditoria
-(`AnimalService` não grava quando o status muda para `adotado`). Não existe
-hoje nenhuma fonte de dados confiável para "adoções no mês" nem para a meta
-mensal. Decisão (consultada com o time): o bloco fica **fora da resposta**
-até uma tarefa futura criar essa tabela — o frontend continua usando o mock
-local (`VITE_USE_MOCK_KPIS`) só para esse card.
+implementada**: não há migration nem entidade, e o schema não guarda a data
+em que o status de um animal mudou. Por isso não existe fonte confiável para
+"adoções no mês" nem para meta mensal.
+
+Decisão (2026-10-25): o bloco traz um **snapshot** pelo status atual do animal.
+É a mesma fonte do Relatório de Adoções (`RelatorioAdocoesService`).
+- `adotados`: animais com status `adotado`.
+- `disponiveis`: animais com status `disponivel_adocao`.
+
+O card do dashboard mostra esses dois números reais. Antes, ele exibia um
+mock fixo (`{noMes: 8, metaMensal: 12}`), sempre ligado. "No mês" e meta
+mensal ficam para a tarefa que criar a tabela `adocao`.
 
 ### `alertas` — os 6 alertas críticos do DER §3.7
 
@@ -95,7 +105,9 @@ custódia" — regra literal do DER).
 | `vacinacao.vacinados` | Animais sob custódia com **ao menos uma** vacinação vigente não vencida (decisão de produto: não existe conceito de "protocolo vacinal completo" no modelo — `Vacina` é um catálogo sem vínculo de espécie ou obrigatoriedade) |
 | `vacinacao.total` | Mesmo valor de `animais.total` |
 | `ocorrencias.registradasHoje` | Ocorrências com `dataAbertura` = hoje, qualquer status, **excluindo** `providenciaTomada = registro_indevido` (decisão registrada em `V10__schema_ocorrencias.sql`) |
-| `ocorrencias.mediaPorHora` | `registradasHoje / hora atual (0-23) em America/Sao_Paulo` — omitido (`null`) na virada do dia (hora 0) |
+| `ocorrencias.mediaPorHora` | `registradasHoje / hora atual (0-23) em America/Sao_Paulo` — `null` na virada do dia (hora 0) |
+| `adocoes.adotados` | Animais com status `adotado` (snapshot, sem filtro de período) |
+| `adocoes.disponiveis` | Animais com status `disponivel_adocao` (snapshot) |
 
 ### Sem campos de variação semanal
 

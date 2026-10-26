@@ -2,6 +2,13 @@
 
 Uma linha por decisão, no formato de `T29.md`. Origem: roteiro de testes manuais (`docs/roteiro-testes-manuais.md`) e as revisões que se seguiram. Regras de referência: DER §3.2 (`ficha_completa`, `esterilizado`, baia), regras 4 e 25 do DER §5, RN-AN02 e RN-AN04 (`docs/regras-negocio-clinico.md`), AC-1 a AC-5 (`docs/decisoes/animais-clinico-correcoes.md`).
 
+> **Substituído em 25/10/2026 — FS-1, FS-14 e a seção "Bancos semeados pela versão anterior do seed":** o
+> `scripts/seed-test-data.mjs` (e o `seed-test-data.test.mjs`) foi removido. O seed de dados fictícios passou a ser Java
+> (`com.siszoo.seed`, `docs/decisoes/seed-dev.md`) e cria animais e vacinações pelo `AnimalService` e pelo
+> `VacinacaoService`, então a ficha completa sempre vem do `FichaCompletaService` (FS-2 continua valendo; o espelho que
+> acompanha a regra é o `fichaCompletaMock`). O invariante sobre os animais semeados agora é do `SeedDevIT`. O texto
+> abaixo fica como histórico da decisão.
+
 ## Decisões
 
 - **FS-1** O seed (`scripts/seed-test-data.mjs`) não tem cópia da regra de ficha completa: não grava `ficha_completa` (fica o `DEFAULT false` da V4) e cria as vacinações por `POST /api/vacinacoes`, para o `VacinacaoService` recalcular a ficha. Consequências aceitas: o seed exige o backend no ar (`SEED_API_URL`) e as vacinações dele geram eventos de auditoria. Teste: `scripts/seed-test-data.test.mjs` (`npm run test:seed`), invariante sobre todos os animais do banco.

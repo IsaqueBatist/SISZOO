@@ -17,11 +17,20 @@ export interface KpiVacinacao {
   total: number
 }
 
-// mediaPorHora ausente (não 0) na virada do dia — o card esconde a média
+// mediaPorHora null (não 0) na virada do dia — o card esconde a média
 // nesse caso, em vez de mostrar uma conta falsa de "X/0".
 export interface KpiOcorrencias {
   registradasHoje: number
-  mediaPorHora?: number
+  mediaPorHora?: number | null
+}
+
+// Snapshot pelo status atual do animal (mesma fonte do Relatório de Adoções):
+// o DER documenta uma tabela `adocao` (com `data_adocao`) que nunca foi
+// implementada, então não há "adoções no mês" nem meta mensal — ver
+// docs/contratos/dashboard-kpis.md.
+export interface KpiAdocoes {
+  adotados: number
+  disponiveis: number
 }
 
 export type SeveridadeAlertaCritico = 'info' | 'atencao' | 'critico'
@@ -42,20 +51,9 @@ export interface DashboardKpisApi {
   animais: KpiAnimais
   vacinacao: KpiVacinacao
   ocorrencias: KpiOcorrencias
+  adocoes: KpiAdocoes
   alertas: AlertaCritico[]
 }
 
-// Único bloco sem fonte real: o DER documenta uma tabela `adocao` (com
-// `data_adocao`) que nunca foi implementada — sem migration, sem entidade,
-// sem rastro em auditoria (ver docs/contratos/dashboard-kpis.md). Continua
-// mockado localmente até uma tarefa futura criar essa tabela.
-export interface KpiAdocoes {
-  noMes: number
-  metaMensal: number
-}
-
-// O que a UI consome: a resposta real do endpoint + o bloco de adoções
-// (sempre mock, ver dashboardApi.ts::buscarAdocoesMock).
-export interface DashboardKpis extends DashboardKpisApi {
-  adocoes: KpiAdocoes
-}
+// O que a UI consome: exatamente a resposta do endpoint.
+export type DashboardKpis = DashboardKpisApi

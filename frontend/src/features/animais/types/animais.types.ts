@@ -55,6 +55,9 @@ export interface CatalogosAnimal {
   // F2-007 / RF-A04: catálogos do registro de exame (aditivos; opcionais para fixtures antigas)
   tiposExame?: CatalogoItem[]
   laboratorios?: CatalogoItem[]
+  // Registro de vacinação e de procedimento (seed da V5).
+  vacinas: CatalogoItem[]
+  tiposProcedimento: CatalogoItem[]
 }
 
 // F2-007 / RF-A04 — espelha com.siszoo.animais.dto.AnexoAnimalResponse.

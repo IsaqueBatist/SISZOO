@@ -7,7 +7,8 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
 import { useRascunho } from '@/lib/useRascunho'
 import { armazenamentoRascunhoClinico, chaveRascunhoClinico } from '../storage/rascunhoClinicoStorage'
-import { VACINAS } from '../utils/catalogoClinico'
+import { useCatalogosAnimaisQuery } from '../hooks/useAnimais'
+import { SelectCatalogoClinico } from './SelectCatalogoClinico'
 import { vacinacaoFormSchema, type VacinacaoFormValues } from '../schemas/historicoFormSchemas'
 import { LABELS_UNIDADE_DOSE } from '../utils/historicoLabels'
 import { hojeEmItu } from '../utils/regrasVacina'
@@ -35,6 +36,7 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const mutation = useCriarVacinacaoMutation(animalId)
+  const catalogos = useCatalogosAnimaisQuery()
 
   const { user } = useAuth()
 
@@ -136,16 +138,15 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
                   <label htmlFor="vac-vacina">
                     Vacina <span className="req">*</span>
                   </label>
-                  <select id="vac-vacina" className={`select${errors.vacina ? ' error' : ''}`} {...register('vacina')}>
-                    <option value="" disabled>
-                      Selecione…
-                    </option>
-                    {VACINAS.map((item) => (
-                      <option key={item.codigo} value={item.codigo}>
-                        {item.nome}
-                      </option>
-                    ))}
-                  </select>
+                  <SelectCatalogoClinico
+                    id="vac-vacina"
+                    itens={catalogos.data?.vacinas}
+                    carregando={catalogos.isLoading}
+                    comErro={catalogos.isError}
+                    onTentarNovamente={() => void catalogos.refetch()}
+                    registro={register('vacina')}
+                    temErro={Boolean(errors.vacina)}
+                  />
                   {errors.vacina && <span className="err">{errors.vacina.message}</span>}
                 </div>
 
@@ -236,7 +237,11 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
             <button type="button" className="btn btn-ghost" onClick={onFechar}>
               Cancelar
             </button>
-            <button type="submit" className="btn btn-primary" disabled={mutation.isPending}>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={mutation.isPending || !catalogos.data?.vacinas.length}
+            >
               {mutation.isPending ? 'Salvando…' : retifica ? 'Salvar correção' : 'Registrar vacina'}
             </button>
           </div>

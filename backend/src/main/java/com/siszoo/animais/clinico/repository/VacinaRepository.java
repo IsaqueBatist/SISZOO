@@ -1,5 +1,6 @@
 package com.siszoo.animais.clinico.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -10,4 +11,6 @@ import com.siszoo.animais.clinico.entity.Vacina;
 public interface VacinaRepository extends JpaRepository<Vacina, UUID> {
 
     Optional<Vacina> findByCodigo(String codigo);
+
+    List<Vacina> findByAtivoTrueOrderByNomeAsc();
 }

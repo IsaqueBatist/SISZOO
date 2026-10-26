@@ -44,29 +44,35 @@ public interface OcorrenciaRepository extends JpaRepository<Ocorrencia, UUID>, J
     // V10__schema_ocorrencias.sql ("O dashboard deve exclui-la das
     // contagens") — vale pra qualquer contagem de ocorrencias do dashboard,
     // nao so esta.
-    @Query("SELECT COUNT(o) FROM Ocorrencia o WHERE o.dataAbertura = :hoje "
-            + "AND (o.providenciaTomada IS NULL OR o.providenciaTomada.codigo <> 'registro_indevido')")
+    // LEFT JOIN explicito em todas estas consultas: o caminho implicito
+    // o.providenciaTomada.codigo vira INNER JOIN e descartava toda ocorrencia
+    // sem providencia (ABERTA e EM_ATENDIMENTO), deixando o "IS NULL" morto.
+    @Query("SELECT COUNT(o) FROM Ocorrencia o LEFT JOIN o.providenciaTomada pt WHERE o.dataAbertura = :hoje "
+            + "AND (pt IS NULL OR pt.codigo <> 'registro_indevido')")
     long contarRegistradasEm(@Param("hoje") LocalDate hoje);
 
     // Relatorio "Ocorrências por Bairro" (T41) — mesma exclusao de
     // 'registro_indevido' de contarRegistradasEm, aplicada a qualquer
     // contagem de ocorrencias (comentario de V10__schema_ocorrencias.sql).
-    @Query("SELECT COUNT(o) FROM Ocorrencia o WHERE o.dataAbertura BETWEEN :inicio AND :fim "
-            + "AND (o.providenciaTomada IS NULL OR o.providenciaTomada.codigo <> 'registro_indevido')")
+    @Query("SELECT COUNT(o) FROM Ocorrencia o LEFT JOIN o.providenciaTomada pt "
+            + "WHERE o.dataAbertura BETWEEN :inicio AND :fim "
+            + "AND (pt IS NULL OR pt.codigo <> 'registro_indevido')")
     long contarRegistradasNoPeriodo(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
-    @Query("SELECT COUNT(o) FROM Ocorrencia o WHERE o.dataAbertura BETWEEN :inicio AND :fim "
+    @Query("SELECT COUNT(o) FROM Ocorrencia o LEFT JOIN o.providenciaTomada pt "
+            + "WHERE o.dataAbertura BETWEEN :inicio AND :fim "
             + "AND o.statusOcorrencia = 'ENCERRADA' "
-            + "AND (o.providenciaTomada IS NULL OR o.providenciaTomada.codigo <> 'registro_indevido')")
+            + "AND (pt IS NULL OR pt.codigo <> 'registro_indevido')")
     long contarEncerradasNoPeriodo(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
-    @Query("SELECT COUNT(DISTINCT o.bairro) FROM Ocorrencia o WHERE o.dataAbertura BETWEEN :inicio AND :fim "
-            + "AND (o.providenciaTomada IS NULL OR o.providenciaTomada.codigo <> 'registro_indevido')")
+    @Query("SELECT COUNT(DISTINCT o.bairro) FROM Ocorrencia o LEFT JOIN o.providenciaTomada pt "
+            + "WHERE o.dataAbertura BETWEEN :inicio AND :fim "
+            + "AND (pt IS NULL OR pt.codigo <> 'registro_indevido')")
     long contarBairrosAtingidos(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
-    @Query("SELECT o.bairro AS bairro, COUNT(o) AS quantidade FROM Ocorrencia o "
+    @Query("SELECT o.bairro AS bairro, COUNT(o) AS quantidade FROM Ocorrencia o LEFT JOIN o.providenciaTomada pt "
             + "WHERE o.dataAbertura BETWEEN :inicio AND :fim "
-            + "AND (o.providenciaTomada IS NULL OR o.providenciaTomada.codigo <> 'registro_indevido') "
+            + "AND (pt IS NULL OR pt.codigo <> 'registro_indevido') "
             + "GROUP BY o.bairro ORDER BY COUNT(o) DESC")
     List<ContagemPorBairroProjection> contarPorBairro(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
@@ -81,14 +87,14 @@ public interface OcorrenciaRepository extends JpaRepository<Ocorrencia, UUID>, J
     List<ContagemPorBairroProjection> contarTodasPorBairro();
 
     @Query("SELECT o.bairro AS bairro, o.tipoOcorrencia.nome AS tipo, COUNT(o) AS quantidade FROM Ocorrencia o "
-            + "WHERE o.dataAbertura BETWEEN :inicio AND :fim "
-            + "AND (o.providenciaTomada IS NULL OR o.providenciaTomada.codigo <> 'registro_indevido') "
+            + "LEFT JOIN o.providenciaTomada pt WHERE o.dataAbertura BETWEEN :inicio AND :fim "
+            + "AND (pt IS NULL OR pt.codigo <> 'registro_indevido') "
             + "GROUP BY o.bairro, o.tipoOcorrencia.nome")
     List<BairroTipoProjection> contarPorBairroETipo(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
     @Query("SELECT o.tipoOcorrencia.codigo AS codigo, o.tipoOcorrencia.nome AS nome, COUNT(o) AS quantidade FROM Ocorrencia o "
-            + "WHERE o.dataAbertura BETWEEN :inicio AND :fim "
-            + "AND (o.providenciaTomada IS NULL OR o.providenciaTomada.codigo <> 'registro_indevido') "
+            + "LEFT JOIN o.providenciaTomada pt WHERE o.dataAbertura BETWEEN :inicio AND :fim "
+            + "AND (pt IS NULL OR pt.codigo <> 'registro_indevido') "
             + "GROUP BY o.tipoOcorrencia.codigo, o.tipoOcorrencia.nome ORDER BY COUNT(o) DESC")
     List<ContagemCatalogoProjection> contarPorTipo(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
@@ -98,8 +104,8 @@ public interface OcorrenciaRepository extends JpaRepository<Ocorrencia, UUID>, J
     // service agrupa/calcula a media em Java (JPQL nao tem diferenca de
     // datas em horas de forma portavel).
     @Query("SELECT o.bairro AS bairro, o.criadoEm AS criadoEm, o.encerradaEm AS encerradaEm FROM Ocorrencia o "
-            + "WHERE o.dataAbertura BETWEEN :inicio AND :fim "
+            + "LEFT JOIN o.providenciaTomada pt WHERE o.dataAbertura BETWEEN :inicio AND :fim "
             + "AND o.statusOcorrencia = 'ENCERRADA' "
-            + "AND (o.providenciaTomada IS NULL OR o.providenciaTomada.codigo <> 'registro_indevido')")
+            + "AND (pt IS NULL OR pt.codigo <> 'registro_indevido')")
     List<TempoAtendimentoProjection> listarTemposDeAtendimento(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 }

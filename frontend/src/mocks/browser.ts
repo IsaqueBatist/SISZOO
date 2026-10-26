@@ -6,7 +6,7 @@ import { setupWorker } from 'msw/browser'
 // handlers completos continuam em mocks/handlers.ts, usados só pelos testes
 // automatizados (mocks/server.ts, ligado em test/setup.ts), que não sobem um
 // backend Spring/Postgres de verdade.
-// `ocorrencias` usa a API real desde a T25 e `processos` desde a T29.
-// Mantido como ponto de extensão para mocks temporários de módulos futuros
-// (relatórios) enquanto não tiverem backend.
+// Todos os módulos (inclusive relatórios, KPIs e gráficos) usam a API real;
+// o worker fica sem handlers e só sobe em `vite dev` (main.tsx). Dados de
+// teste manual vêm do seed do backend (perfil `seed`, ver README).
 export const worker = setupWorker()

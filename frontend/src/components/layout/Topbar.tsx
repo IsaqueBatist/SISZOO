@@ -1,7 +1,6 @@
 import { useLocation } from 'react-router-dom'
 import { NAV_ALL, ROLES, isNavGroup } from '../../lib/nav'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { Icon } from './Icon'
 import { MenuPerfil } from './MenuPerfil'
 
 function currentCrumbLabel(pathname: string): string {
@@ -18,13 +17,6 @@ export function Topbar() {
     <header className="topbar">
       <div className="breadcrumb">
         <span className="crumb current">{currentCrumbLabel(location.pathname)}</span>
-      </div>
-
-      <div className="global-search">
-        <span className="search-icon">
-          <Icon name="search" size={16} />
-        </span>
-        <input type="text" placeholder="Buscar animal, protocolo, ocorrência..." />
       </div>
 
       <div className="topbar-actions">

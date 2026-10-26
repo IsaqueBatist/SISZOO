@@ -300,28 +300,40 @@ export function removerArquivosDoRascunho(dono: DonoArquivoRascunho): Promise<vo
 // gravação do arquivo e a do rascunho de texto.
 export async function limparRascunhosExpirados(): Promise<void> {
   await comBanco(async (banco) => {
+    // Uma transação explícita com o `done` escutado desde a criação (mesmo
+    // motivo de limparRascunhos): os atalhos banco.get/delete abriam uma
+    // transação por chamada, e a de uma varredura interrompida (aba fechada,
+    // ambiente de teste desmontado no meio) rejeitava sem ninguém escutando.
+    const transacao = banco.transaction([...STORES_RASCUNHO], 'readwrite')
+    const concluida = transacao.done.catch(() => undefined)
     const chavesVivas = new Map<StoreRascunho, Set<IDBValidKey>>()
 
-    for (const store of STORES_TEXTO) {
-      const vivas = new Set<IDBValidKey>()
-      for (const chave of await banco.getAllKeys(store)) {
-        const registro = desembrulhar<unknown>(await banco.get(store, chave))
-        if (registro && expirou(registro.salvoEm)) {
-          await banco.delete(store, chave)
-        } else if (registro) {
-          vivas.add(chave)
+    try {
+      for (const store of STORES_TEXTO) {
+        const vivas = new Set<IDBValidKey>()
+        const objetos = transacao.objectStore(store)
+        for (const chave of await objetos.getAllKeys()) {
+          const registro = desembrulhar<unknown>(await objetos.get(chave))
+          if (registro && expirou(registro.salvoEm)) {
+            await objetos.delete(chave)
+          } else if (registro) {
+            vivas.add(chave)
+          }
+        }
+        chavesVivas.set(store, vivas)
+      }
+
+      const arquivos = transacao.objectStore(STORE_ARQUIVOS)
+      for (const chave of await arquivos.getAllKeys()) {
+        const registro = await arquivos.get(chave)
+        if (!registro) continue
+        const orfao = !chavesVivas.get(registro.dono.store)?.has(registro.dono.chave)
+        if (orfao || expirou(registro.salvoEm)) {
+          await arquivos.delete(chave)
         }
       }
-      chavesVivas.set(store, vivas)
-    }
-
-    for (const chave of await banco.getAllKeys(STORE_ARQUIVOS)) {
-      const registro = await banco.get(STORE_ARQUIVOS, chave)
-      if (!registro) continue
-      const orfao = !chavesVivas.get(registro.dono.store)?.has(registro.dono.chave)
-      if (orfao || expirou(registro.salvoEm)) {
-        await banco.delete(STORE_ARQUIVOS, chave)
-      }
+    } finally {
+      await concluida
     }
   }, undefined)
 }

@@ -13,14 +13,14 @@ export async function buscarGraficosDashboard(ano: number): Promise<DashboardGra
 // features/dashboard/api/dashboardApi.ts::kpisUsamMock: `vi.stubEnv` nos
 // testes troca o comportamento sem precisar de `vi.resetModules()`.
 export function graficosUsamMock(): boolean {
-  return import.meta.env.VITE_USE_MOCK_GRAFICOS !== 'false'
+  return import.meta.env.VITE_USE_MOCK_GRAFICOS === 'true'
 }
 
 export async function getGraficos(ano: number): Promise<DashboardGraficos> {
   // Condição literal e INLINE (não uma constante/função importada): é o que
   // permite ao Rollup podar o chunk de graficosApi.mock.ts do bundle de
-  // produção quando a flag é 'false' em build time.
-  if (import.meta.env.VITE_USE_MOCK_GRAFICOS !== 'false') {
+  // produção quando a flag não é 'true' em build time. Ausente = dados reais.
+  if (import.meta.env.VITE_USE_MOCK_GRAFICOS === 'true') {
     const { getGraficosMock } = await import('./graficosApi.mock')
     return getGraficosMock()
   }

@@ -4,7 +4,7 @@
 
 Sistema web interno para o **Centro de Controle de Zoonoses (CCZ) de Itu/SP**, desenvolvido para substituir os controles manuais em papel e planilhas Excel utilizados atualmente na rotina do canil e no acompanhamento de processos sanitários.
 
-> **TCC - Análise e Desenvolvimento de Sistemas (ADS) | FATEC Itu | 2026**
+> **TG (Trabalho de Graduação) - Análise e Desenvolvimento de Sistemas (ADS) | FATEC Itu | 2026**
 > Orientador: Prof. Me. Francisco Bianchi
 > Autores: Beatriz Silva de Camargo e Isaque Batista Barbosa
 
@@ -19,6 +19,9 @@ Sistema web interno para o **Centro de Controle de Zoonoses (CCZ) de Itu/SP**, d
 - [Perfis de usuário](#perfis-de-usuário)
 - [Restrições de infraestrutura](#restrições-de-infraestrutura)
 - [Como executar](#como-executar)
+- [Dados fictícios](#dados-fictícios)
+- [Variáveis de ambiente](#variáveis-de-ambiente)
+- [Limitações conhecidas](#limitações-conhecidas)
 - [Estrutura do repositório](#estrutura-do-repositório)
 - [Licença](#licença)
 - [Autores](#autores)
@@ -118,23 +121,95 @@ npm run dev
 
 O frontend sobe por padrão em `http://localhost:5173` e consome a API em `http://localhost:8080`.
 
-### Dados de teste (opcional)
+## Dados fictícios
 
-Com o Postgres **e o backend no ar** (o backend aplica as migrations e cria as
-vacinações, recalculando a ficha completa dos animais):
+O backend tem um **seed de dados fictícios** (`com.siszoo.seed`) para testar o sistema com dados no banco, sem mocks
+na aplicação. Ele chama os mesmos services da API: as regras de negócio, os protocolos, a ficha completa, o sigilo e a
+auditoria são os de verdade. Decisões e detalhes: [docs/decisoes/seed-dev.md](docs/decisoes/seed-dev.md).
+
+**Pré-requisitos:** PostgreSQL com um database **vazio** (ou já semeado por este seed), `JWT_SECRET` e o admin
+inicial (`ADMIN_SEED_EMAIL`/`ADMIN_SEED_PASSWORD`), que é quem cria os usuários fictícios.
 
 ```bash
-npm install
-npm run db:seed     # usuários, baias, animais e histórico clínico fictícios
-npm run test:seed   # confere a ficha completa dos animais semeados
+docker compose up -d db                                   # só o Postgres
+docker exec siszoo-db-1 createdb -U postgres siszoo_seed   # database novo para o seed
+cd backend
+export DB_URL=jdbc:postgresql://localhost:5432/siszoo_seed DB_USER=postgres DB_PASSWORD=postgres
+export JWT_SECRET="$(openssl rand -base64 48)"
+export ADMIN_SEED_EMAIL=admin.sistema@itu.sp.gov.br ADMIN_SEED_PASSWORD=Ccz-Dev-Itu-2026
+SISZOO_SEED_HABILITADO=true ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev,seed
 ```
 
-O seed é idempotente. A API usada é `SEED_API_URL` (padrão `http://localhost:8080`, ver `.env.example`).
-Num banco semeado por uma versão anterior do seed, a primeira execução corrige pela API a ficha completa
-que aquela versão gravava errado (`ficha_corrigida_do_seed_anterior` na saída; ver
-`docs/decisoes/ficha-completa-seed-fuso.md`).
+No PowerShell: `$env:SISZOO_SEED_HABILITADO = "true"` (e as demais com `$env:`), depois
+`.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=dev,seed"`. O seed roda na subida, depois das migrations, e
+registra no log quantos registros criou.
 
-> **Importante (LGPD):** nunca versione dados reais de munícipes, denunciantes ou animais. Utilize apenas dados fictícios em seeds e fixtures.
+**Usuários** (todos fictícios, senha única **`Ficticio#2026`**):
+
+| Perfil | E-mail |
+|---|---|
+| Administrador | `marta.siqueira.seed@itu.sp.gov.br` |
+| Veterinário | `renato.albuquerque.seed@itu.sp.gov.br`, `camila.prado.seed@itu.sp.gov.br` |
+| Veterinário (primeiro acesso: o login pede a troca de senha) | `helena.duarte.seed@itu.sp.gov.br` |
+| Agente Sanitário | `paulo.teixeira.seed@itu.sp.gov.br`, `juliana.moreira.seed@itu.sp.gov.br`, `rafael.campos.seed@itu.sp.gov.br` |
+| Agente Sanitário (desativado) | `sergio.lacerda.seed@itu.sp.gov.br` |
+
+**O que é criado:**
+- 6 baias;
+- 32 animais com histórico clínico: vacinas vencendo e vencidas, procedimentos, prescrições, exames, anexos e
+  retificações;
+- 26 ocorrências (sigilosas, anônimas, em todos os status);
+- 24 processos sanitários (todos os status e doenças, resultados positivos e retificados);
+- categorias e medicamentos;
+- uma exportação de cada relatório.
+
+O suficiente para paginação, filtros, os 7 alertas e os gráficos do dashboard.
+
+**Executar de novo:** basta subir o backend com o mesmo perfil. O seed é idempotente: cada passo tem uma chave em
+`seed_controle`, e o que já existe é pulado, sem duplicar nem alterar nada. Para recomeçar do zero, recrie o database
+(`docker exec siszoo-db-1 dropdb -U postgres siszoo_seed` e `createdb` de novo). Registros clínicos, processos e
+auditoria não podem ser apagados (triggers das migrations), então o seed nunca limpa tabelas.
+
+**Por que não roda em produção:**
+- o seed só existe com o perfil `seed` **e** `SISZOO_SEED_HABILITADO=true`;
+- o perfil `seed` exige `dev` ou `test` e derruba a subida se `docker` ou `prod` estiver ativo;
+- num banco que já tem dados que não vieram dele, o seed recusa antes de gravar qualquer coisa;
+- o `docker-compose.yml` e o `Dockerfile` não ligam o seed.
+
+**Datas:** as datas de negócio (entrada, vacinação, abertura, resultado) são relativas ao dia da primeira execução e
+congelam ali. Depois de alguns dias, vacinas "vencendo" viram "vencidas" e "registradas hoje" vai a 0; recrie o database
+para renovar.
+
+> **Importante (LGPD):** nunca versione dados reais de munícipes, denunciantes ou animais. O seed usa só dados fictícios:
+> CPF vazio, telefones inválidos de propósito e e-mails no domínio reservado `exemplo.test`.
+
+## Variáveis de ambiente
+
+Exemplos em [`.env.example`](.env.example) (raiz, usado pelo `docker-compose.yml`) e em `frontend/.env.example`.
+
+| Variável | Onde | Uso |
+|---|---|---|
+| `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | docker-compose | Banco do container `db` |
+| `DB_URL`, `DB_USER`, `DB_PASSWORD` | backend (`dev`, `docker`, `prod`) | Conexão JDBC |
+| `JWT_SECRET` | backend | Chave do JWT, 32 bytes ou mais (sem ela o backend não sobe) |
+| `ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD` | backend | Admin inicial criado na primeira subida (`DataSeeder`); vazio = não cria |
+| `SISZOO_SEED_HABILITADO` | backend (perfil `seed`) | `true` liga o seed de dados fictícios (só com `dev`) |
+| `SISZOO_CORS_ORIGIN` | backend | Única origem do frontend aceita pela API |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_AUTH`, `SMTP_STARTTLS*`, `SMTP_SSL` | backend | E-mail ao munícipe ([docs/email.md](docs/email.md)) |
+| `SISZOO_MAIL_FROM` | backend | Remetente dos e-mails |
+| `VITE_API_BASE_URL` | frontend (build) | URL da API |
+| `VITE_USE_MOCK_KPIS`, `VITE_USE_MOCK_GRAFICOS` | frontend (build) | Só `"true"` liga dados de demonstração no dashboard (com selo); ausente = dados reais |
+
+## Limitações conhecidas
+
+- **Adoções:** o dashboard e o relatório mostram o retrato atual (animais adotados e disponíveis). Não há "adoções no
+  mês" nem meta mensal, porque a tabela `adocao` do DER não foi implementada.
+- **Busca global:** não há busca global no topo das telas; cada listagem tem os próprios filtros.
+- **Catálogos:** vacinas, tipos de procedimento e de exame, doenças, laboratórios e demais catálogos vêm das migrations;
+  não há tela de cadastro deles.
+- **Medicamentos:** não há edição ou desativação de medicamento na interface (só cadastro e listagem).
+- **Seed:** o "Tempo médio (h)" do relatório Ocorrências por Bairro fica ≈0 h para as ocorrências encerradas pelo seed,
+  porque o registro e o encerramento são gravados no mesmo momento, com o horário real.
 
 ## Estrutura do repositório
 
@@ -144,7 +219,8 @@ siszoo/
 ├── frontend/           # Aplicação React 19 + TypeScript + Vite
 ├── docs/               # Documentação: DER, DBML, decisões, contratos, protótipo (índice em docs/README.md)
 ├── docs/tg/            # TG: análises de alinhamento, capturas, diagramas e scripts (o .docx fica fora do git)
-├── scripts/            # Seed de dados fictícios (npm run db:seed)
+├── docker-compose.yml  # Postgres, backend (perfil docker) e frontend
+├── .env.example        # Variáveis do docker-compose
 ├── .gitignore
 ├── LICENSE
 └── README.md
@@ -159,4 +235,4 @@ Distribuído sob a licença **MIT**. Consulte o arquivo [LICENSE](LICENSE) para 
 - **Beatriz Silva de Camargo**
 - **Isaque Batista Barbosa**
 
-Trabalho de Conclusão de Curso apresentado ao curso de Análise e Desenvolvimento de Sistemas da FATEC Itu, sob orientação do Prof. Me. Francisco Bianchi (2026).
+Trabalho de Graduação (TG) apresentado ao curso de Análise e Desenvolvimento de Sistemas da FATEC Itu, sob orientação do Prof. Me. Francisco Bianchi (2026).
