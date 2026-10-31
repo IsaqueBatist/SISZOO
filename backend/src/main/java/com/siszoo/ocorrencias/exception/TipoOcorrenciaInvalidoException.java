@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class TipoOcorrenciaInvalidoException extends ErroNegocioException {
 
     public TipoOcorrenciaInvalidoException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Tipo de ocorrencia informado nao existe");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "O tipo de ocorrência informado não existe. Selecione um da lista.");
     }
 }

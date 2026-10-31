@@ -903,7 +903,7 @@ consideram só quem está sob custódia (`StatusAnimal.CODIGOS_SOB_CUSTODIA`), e
 - Não geram `VISUALIZACAO`: ocorrência não sigilosa; sigilosa sem denunciante cadastrado; quem lê o módulo sem a permissão (recebe a máscara ou 403 no download — gera `ACESSO_NEGADO`, abaixo); o Veterinário (403, sem acesso ao módulo); 404.
 - **Recusa pela regra de sigilo (T43, `ACESSO_NEGADO`).** Quem lê o módulo **sem** `denunciante_sigiloso` e pede o dado do denunciante de ocorrência sigilosa gera um evento por requisição, com as mesmas `entidade`/`entidade_id`/payload da `VISUALIZACAO` (`{"ocorrenciaId"}`, nenhum dado pessoal):
   - detalhe com denunciante cadastrado (a resposta continua mascarada) → `entidade = 'denunciante'`;
-  - download de anexo (a resposta continua `403 {"mensagem":"Acesso negado"}`) → `entidade = 'anexo_ocorrencia'`.
+  - download de anexo (a resposta continua `403 {"mensagem":"Você não tem permissão para realizar esta ação."}`) → `entidade = 'anexo_ocorrencia'`.
   - O evento é gravado com flush antes da resposta e o download usa `noRollbackFor = AccessDeniedException`: o 403 não desfaz o evento. Se o INSERT falhar, a resposta é **500** (`FalhaAuditoriaException`, mensagem genérica), mesmo que a causa seja uma violação de integridade, e nenhum dado sai.
   - Não geram `ACESSO_NEGADO`: o 403 de módulo do Veterinário (vem da permissão do módulo, não da regra de sigilo; decisão T43-4); sigilosa sem denunciante cadastrado; 404.
 - A listagem não gera evento porque não entrega o nome do denunciante de sigilosa a ninguém (§3.4).

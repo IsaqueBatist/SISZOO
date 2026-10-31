@@ -1201,7 +1201,7 @@ export const handlers = [
 
     if (body.notifAlertasCriticos === false) {
       return HttpResponse.json(
-        { mensagem: 'Notificacao de alertas criticos nao pode ser desativada' },
+        { mensagem: 'A notificação de alertas críticos não pode ser desativada.' },
         { status: 422 },
       )
     }
@@ -1269,7 +1269,7 @@ export const handlers = [
     const body = (await request.json()) as BaiaRequest
     const tipo = CATALOGOS_ANIMAIS_MOCK.tiposBaia.find((item) => item.codigo === body.tipoBaia)
     if (!tipo) {
-      return HttpResponse.json({ mensagem: 'Tipo de baia informado nao existe' }, { status: 422 })
+      return HttpResponse.json({ mensagem: 'O tipo de baia informado não existe. Selecione um da lista.' }, { status: 422 })
     }
 
     const novaBaia: Baia = {
@@ -1292,13 +1292,13 @@ export const handlers = [
   http.put(`${API_BASE_URL}/baias/:id`, async ({ params, request }) => {
     const baia = baiasMock.find((item) => item.id === params.id)
     if (!baia) {
-      return HttpResponse.json({ mensagem: 'Baia nao encontrada' }, { status: 404 })
+      return HttpResponse.json({ mensagem: 'Baia não encontrada.' }, { status: 404 })
     }
 
     const body = (await request.json()) as BaiaRequest
     const tipo = CATALOGOS_ANIMAIS_MOCK.tiposBaia.find((item) => item.codigo === body.tipoBaia)
     if (!tipo) {
-      return HttpResponse.json({ mensagem: 'Tipo de baia informado nao existe' }, { status: 422 })
+      return HttpResponse.json({ mensagem: 'O tipo de baia informado não existe. Selecione um da lista.' }, { status: 422 })
     }
 
     const baiaAtualizada: Baia = {
@@ -1318,7 +1318,7 @@ export const handlers = [
   http.delete(`${API_BASE_URL}/baias/:id`, ({ params }) => {
     const baia = baiasMock.find((item) => item.id === params.id)
     if (!baia) {
-      return HttpResponse.json({ mensagem: 'Baia nao encontrada' }, { status: 404 })
+      return HttpResponse.json({ mensagem: 'Baia não encontrada.' }, { status: 404 })
     }
 
     // Espelha o backend real: soft-delete, sempre sucede mesmo com animais
@@ -1331,7 +1331,7 @@ export const handlers = [
   http.patch(`${API_BASE_URL}/baias/:id/status`, async ({ params, request }) => {
     const baia = baiasMock.find((item) => item.id === params.id)
     if (!baia) {
-      return HttpResponse.json({ mensagem: 'Baia nao encontrada' }, { status: 404 })
+      return HttpResponse.json({ mensagem: 'Baia não encontrada.' }, { status: 404 })
     }
 
     const { ativa } = (await request.json()) as { ativa: boolean }
@@ -1343,7 +1343,7 @@ export const handlers = [
   http.get(`${API_BASE_URL}/animais/:id`, ({ params }) => {
     const animal = animaisMock.find((item) => item.id === params.id)
     if (!animal) {
-      return HttpResponse.json({ mensagem: 'Animal nao encontrado' }, { status: 404 })
+      return HttpResponse.json({ mensagem: 'Animal não encontrado.' }, { status: 404 })
     }
     return HttpResponse.json(animal)
   }),
@@ -1352,7 +1352,7 @@ export const handlers = [
     const body = (await request.json()) as AnimalRequest
 
     if (body.microchip && animaisMock.some((item) => item.microchip === body.microchip)) {
-      return HttpResponse.json({ mensagem: 'Microchip ja cadastrado' }, { status: 409 })
+      return HttpResponse.json({ mensagem: 'Este microchip já está cadastrado em outro animal.' }, { status: 409 })
     }
 
     const novoAnimal = construirAnimalMock(crypto.randomUUID(), body, null)
@@ -1363,17 +1363,17 @@ export const handlers = [
   http.put(`${API_BASE_URL}/animais/:id`, async ({ params, request }) => {
     const animal = animaisMock.find((item) => item.id === params.id)
     if (!animal) {
-      return HttpResponse.json({ mensagem: 'Animal nao encontrado' }, { status: 404 })
+      return HttpResponse.json({ mensagem: 'Animal não encontrado.' }, { status: 404 })
     }
 
     const body = (await request.json()) as AnimalRequest
 
     if (animal.microchip && body.microchip && body.microchip !== animal.microchip) {
-      return HttpResponse.json({ mensagem: 'Microchip nao pode ser alterado apos definido' }, { status: 422 })
+      return HttpResponse.json({ mensagem: 'O microchip não pode ser alterado depois de definido.' }, { status: 422 })
     }
 
     if (body.microchip && animaisMock.some((item) => item.id !== animal.id && item.microchip === body.microchip)) {
-      return HttpResponse.json({ mensagem: 'Microchip ja cadastrado' }, { status: 409 })
+      return HttpResponse.json({ mensagem: 'Este microchip já está cadastrado em outro animal.' }, { status: 409 })
     }
 
     const animalAtualizado = construirAnimalMock(animal.id, body, animal)
@@ -1399,12 +1399,12 @@ export const handlers = [
     // Mesmos 422 do backend: Bean Validation (RN-C05) e VacinacaoService (RN-C06).
     if (!body.doseUnidade) {
       return HttpResponse.json(
-        { mensagem: 'Dados invalidos', campos: [{ campo: 'doseUnidade', mensagem: 'não deve ser nulo' }] },
+        { mensagem: 'Não foi possível salvar. Verifique os campos destacados e tente novamente.', campos: [{ campo: 'doseUnidade', mensagem: 'não deve ser nulo' }] },
         { status: 422 },
       )
     }
     if (body.dataAplicacao > hojeEmItu()) {
-      return HttpResponse.json({ mensagem: 'Data de aplicacao nao pode ser futura' }, { status: 422 })
+      return HttpResponse.json({ mensagem: 'A data de aplicação não pode ser futura.' }, { status: 422 })
     }
     const novo: VacinacaoMockInterna = {
       id: crypto.randomUUID(),
@@ -1653,7 +1653,7 @@ export const handlers = [
     const body = (await request.json()) as { nome?: string; categoriaId?: string }
     const categoria = categoriasFarmacologicasMock.find((item) => item.id === body.categoriaId)
     if (!categoria) {
-      return HttpResponse.json({ mensagem: 'Categoria farmacologica informada nao existe' }, { status: 422 })
+      return HttpResponse.json({ mensagem: 'A categoria farmacológica informada não existe. Selecione uma da lista.' }, { status: 422 })
     }
     const medicamento: Medicamento = {
       id: crypto.randomUUID(),
@@ -1677,7 +1677,7 @@ export const handlers = [
   http.post(`${API_BASE_URL}/categorias-farmacologicas`, async ({ request }) => {
     const nome = ((await request.json()) as { nome?: string }).nome?.trim() ?? ''
     if (categoriasFarmacologicasMock.some((item) => item.nome.toLowerCase() === nome.toLowerCase())) {
-      return HttpResponse.json({ mensagem: 'Categoria farmacologica ja cadastrada' }, { status: 409 })
+      return HttpResponse.json({ mensagem: 'Esta categoria farmacológica já está cadastrada.' }, { status: 409 })
     }
     const categoria: CategoriaFarmacologica = { id: crypto.randomUUID(), nome, ativo: true }
     categoriasFarmacologicasMock.push(categoria)

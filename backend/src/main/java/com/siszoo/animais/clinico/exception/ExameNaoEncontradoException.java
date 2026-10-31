@@ -8,6 +8,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class ExameNaoEncontradoException extends ErroNegocioException {
 
     public ExameNaoEncontradoException() {
-        super(HttpStatus.NOT_FOUND, "Exame nao encontrado");
+        super(HttpStatus.NOT_FOUND, "Exame não encontrado.");
     }
 }

@@ -35,7 +35,9 @@ import tools.jackson.databind.node.ObjectNode;
 // suportado, erro inesperado — que nao podem passar a ser capturadas), fixa:
 // status, Content-Type, corpo completo e o log do GlobalExceptionHandler
 // (nivel, mensagem e excecao anexada). A referencia esta em
-// src/test/resources/caracterizacao/global-exception-handler.json.
+// src/test/resources/caracterizacao/global-exception-handler.json. Na revisao de
+// mensagens de 31/10/2026 a referencia mudou so nos textos e ganhou `mensagem`
+// nos erros do /error; status, Content-Type e demais campos sao os mesmos.
 class GlobalExceptionHandlerCaracterizacaoIT extends AbstractIntegrationTest {
 
     static final String REFERENCIA = "/caracterizacao/global-exception-handler.json";

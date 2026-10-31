@@ -25,7 +25,7 @@ Classificação provisória de cada divergência da seção 11.5 do relatório d
 | D13 | Fonte da correção da V11 | Documentação desatualizada (incompleta) |
 | D14 | DBML do módulo 4 | Documentação desatualizada |
 | N1 | Microchip: maiúsculas e minúsculas | Decisão em aberto |
-| N2 | Microchip em criação simultânea | Decisão em aberto |
+| N2 | Microchip em criação simultânea | Fechada em 31/10/2026: mesma mensagem da pré-checagem |
 | N3 | Cargos no token | Fechada em 31/10/2026 (`docs/decisoes/sessao.md`, S-13) |
 | N4 | `VISUALIZACAO` na recarga após mutação | Decisão em aberto |
 | N5 | Baia apagada ao restaurar rascunho (opções de baia tardias) | Erro corrigido em 31/10/2026; semântica de restauração em aberto |

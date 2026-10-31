@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class IdentificacaoObrigatoriaException extends ErroNegocioException {
 
     public IdentificacaoObrigatoriaException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Amostra de animal de campo exige especie e sexo");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "Informe a espécie e o sexo do animal de campo.");
     }
 }

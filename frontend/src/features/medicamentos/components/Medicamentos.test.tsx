@@ -54,7 +54,7 @@ describe('Medicamentos', () => {
     await user.type(await screen.findByLabelText(/nova categoria farmacológica/i), 'antibiótico')
     await user.click(screen.getByRole('button', { name: /adicionar categoria/i }))
 
-    expect(await screen.findByText('Categoria farmacologica ja cadastrada')).toBeInTheDocument()
+    expect(await screen.findByText('Esta categoria farmacológica já está cadastrada.')).toBeInTheDocument()
   })
 
   it('exige nome e categoria antes de enviar', async () => {

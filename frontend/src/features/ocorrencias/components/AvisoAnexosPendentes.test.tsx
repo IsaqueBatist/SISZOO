@@ -108,14 +108,14 @@ describe('aviso de anexos pendentes (D15)', () => {
     const user = userEvent.setup()
     server.use(
       http.post(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_ABERTA_ID}/anexos`, () =>
-        HttpResponse.json({ mensagem: 'Anexo deve ser JPG, PNG ou PDF com ate 5 MB' }, { status: 422 }),
+        HttpResponse.json({ mensagem: 'Envie um arquivo JPG, PNG ou PDF com até 5 MB.' }, { status: 422 }),
       ),
     )
     renderEm('/ocorrencias/novo')
 
     await user.click(await screen.findByRole('button', { name: 'Reenviar' }))
 
-    expect(await screen.findByText('b.png: Anexo deve ser JPG, PNG ou PDF com ate 5 MB')).toBeInTheDocument()
+    expect(await screen.findByText('b.png: Envie um arquivo JPG, PNG ou PDF com até 5 MB.')).toBeInTheDocument()
     expect(screen.getByText(/reenviar não vai resolver/)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Reenviar' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Registrar Ocorrência' })).toBeDisabled()

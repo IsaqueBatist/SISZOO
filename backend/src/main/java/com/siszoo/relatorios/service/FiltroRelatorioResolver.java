@@ -35,13 +35,13 @@ public class FiltroRelatorioResolver {
         try {
             return TipoRelatorio.deCodigo(codigo);
         } catch (IllegalArgumentException ex) {
-            throw new CampoInvalidoException("tipo", "Tipo de relatório inválido");
+            throw new CampoInvalidoException("tipo", "Tipo de relatório inválido. Selecione um da lista.");
         }
     }
 
     public PeriodoRelatorio resolver(FiltroRelatorioBruto filtro) {
         if (filtro.tipo() == null) {
-            throw new CampoInvalidoException("tipo", "Tipo de relatório é obrigatório");
+            throw new CampoInvalidoException("tipo", "Selecione o tipo de relatório.");
         }
         return switch (filtro.tipo()) {
             case ANUAL_PROCESSOS -> resolverPorAno(filtro);
@@ -56,10 +56,10 @@ public class FiltroRelatorioResolver {
     private PeriodoRelatorio resolverPorAno(FiltroRelatorioBruto filtro) {
         if (filtro.periodoInicio() != null || filtro.periodoFim() != null) {
             throw new CampoInvalidoException("periodoInicio",
-                    "Relatório anual de processos usa o filtro \"ano\", não período explícito");
+                    "O relatório anual de processos é gerado por ano, não por período.");
         }
         if (filtro.ano() == null) {
-            throw new CampoInvalidoException("ano", "Ano é obrigatório para o relatório anual de processos");
+            throw new CampoInvalidoException("ano", "Informe o ano do relatório anual de processos.");
         }
         int ano = filtro.ano();
         return new PeriodoRelatorio(LocalDate.of(ano, 1, 1), LocalDate.of(ano, 12, 31));
@@ -69,7 +69,7 @@ public class FiltroRelatorioResolver {
     // quando "custom".
     private PeriodoRelatorio resolverPorJanela(FiltroRelatorioBruto filtro) {
         if (filtro.janela() == null) {
-            throw new CampoInvalidoException("janela", "Janela é obrigatória para o relatório de ocupação de baias");
+            throw new CampoInvalidoException("janela", "Selecione o período do relatório de ocupação de baias.");
         }
         String janela = filtro.janela().toLowerCase(Locale.ROOT);
         LocalDate hoje = LocalDate.now(clock);
@@ -78,16 +78,16 @@ public class FiltroRelatorioResolver {
             case JANELA_ULTIMOS_12_MESES -> new PeriodoRelatorio(hoje.minusMonths(12), hoje);
             case JANELA_CUSTOM -> resolverPorPeriodoExplicito(filtro);
             default -> throw new CampoInvalidoException("janela",
-                    "Janela inválida: use ultimos_6_meses, ultimos_12_meses ou custom");
+                    "Período inválido. Escolha os últimos 6 meses, os últimos 12 meses ou um período personalizado.");
         };
     }
 
     private PeriodoRelatorio resolverPorPeriodoExplicito(FiltroRelatorioBruto filtro) {
         if (filtro.periodoInicio() == null || filtro.periodoFim() == null) {
-            throw new CampoInvalidoException("periodoInicio", "Período (data inicial e final) é obrigatório");
+            throw new CampoInvalidoException("periodoInicio", "Informe a data inicial e a data final do período.");
         }
         if (filtro.periodoInicio().isAfter(filtro.periodoFim())) {
-            throw new CampoInvalidoException("periodoFim", "Data final deve ser maior ou igual à data inicial");
+            throw new CampoInvalidoException("periodoFim", "A data final deve ser maior ou igual à data inicial.");
         }
         return new PeriodoRelatorio(filtro.periodoInicio(), filtro.periodoFim());
     }

@@ -27,7 +27,7 @@ public record AmostraAnimalRequest(
 
         String especie,
 
-        @Pattern(regexp = "^(macho|femea|nao_identificado)$", message = "Sexo deve ser macho, femea ou nao_identificado")
+        @Pattern(regexp = "^(macho|femea|nao_identificado)$", message = "Selecione o sexo: macho, fêmea ou não identificado.")
         String sexo,
 
         @Size(max = 80)
@@ -36,13 +36,13 @@ public record AmostraAnimalRequest(
         @Size(max = 80)
         String coloracao,
 
-        @Pattern(regexp = "^(curta|longa)$", message = "Pelagem deve ser curta ou longa")
+        @Pattern(regexp = "^(curta|longa)$", message = "Selecione a pelagem: curta ou longa.")
         String pelagem,
 
         @Size(max = 30)
         String idadeAprox,
 
-        @DecimalMin(value = "0.0", inclusive = false, message = "Peso deve ser maior que zero")
+        @DecimalMin(value = "0.0", inclusive = false, message = "O peso deve ser maior que zero.")
         @Digits(integer = 3, fraction = 2)
         BigDecimal pesoKg,
 

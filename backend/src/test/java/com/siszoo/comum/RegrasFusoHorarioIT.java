@@ -94,6 +94,6 @@ class RegrasFusoHorarioIT extends AbstractIntegrationTest {
                         tokenAdmin, fixture.criarAnimal(tokenAdmin), HOJE_LOCAL.plusDays(1), UnidadeDose.MILILITRO, null)
                 .then()
                 .statusCode(422)
-                .body("mensagem", equalTo("Data de aplicacao nao pode ser futura"));
+                .body("mensagem", equalTo("A data de aplicação não pode ser futura."));
     }
 }

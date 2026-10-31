@@ -130,7 +130,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
         postarAnimal(request)
                 .then()
                 .statusCode(422)
-                .body("mensagem", equalTo("Data de entrada nao pode ser futura"))
+                .body("mensagem", equalTo("A data de entrada não pode ser futura."))
                 .body("campos[0].campo", equalTo("dataEntrada"));
     }
 
@@ -343,7 +343,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .post("/api/animais")
                 .then()
                 .statusCode(409)
-                .body("mensagem", equalTo("Microchip ja cadastrado"));
+                .body("mensagem", equalTo("Este microchip já está cadastrado em outro animal."));
     }
 
     @Test

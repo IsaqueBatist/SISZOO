@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class DenuncianteEmDenunciaAnonimaException extends ErroNegocioException {
 
     public DenuncianteEmDenunciaAnonimaException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Denuncia anonima nao aceita dados do denunciante");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "Denúncia anônima não aceita dados do denunciante.");
     }
 }

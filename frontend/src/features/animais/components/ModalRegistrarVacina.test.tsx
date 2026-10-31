@@ -123,7 +123,7 @@ describe('ModalRegistrarVacina — validação', () => {
   it('exibe a mensagem de regra devolvida pela API (422) em vez do texto genérico', async () => {
     server.use(
       http.post(`${API_BASE_URL}/vacinacoes`, () =>
-        HttpResponse.json({ mensagem: 'Data de aplicacao nao pode ser futura' }, { status: 422 }),
+        HttpResponse.json({ mensagem: 'A data de aplicação não pode ser futura.' }, { status: 422 }),
       ),
     )
     const user = userEvent.setup()
@@ -135,7 +135,7 @@ describe('ModalRegistrarVacina — validação', () => {
 
     await user.click(within(modal).getByRole('button', { name: /^registrar vacina$/i }))
 
-    expect(await within(modal).findByRole('alert')).toHaveTextContent('Data de aplicacao nao pode ser futura')
+    expect(await within(modal).findByRole('alert')).toHaveTextContent('A data de aplicação não pode ser futura.')
     expect(within(modal).queryByText(/não foi possível registrar/i)).not.toBeInTheDocument()
   })
 })

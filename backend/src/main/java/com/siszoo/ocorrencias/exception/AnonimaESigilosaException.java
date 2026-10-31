@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class AnonimaESigilosaException extends ErroNegocioException {
 
     public AnonimaESigilosaException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Denuncia nao pode ser anonima e sigilosa ao mesmo tempo");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "A denúncia não pode ser anônima e sigilosa ao mesmo tempo. Escolha uma das opções.");
     }
 }

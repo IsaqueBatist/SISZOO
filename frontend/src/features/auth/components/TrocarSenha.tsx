@@ -1,4 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react'
+import { mensagemDeRegraDaApi } from '@/lib/erroApi'
 import { useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -45,8 +46,8 @@ export function TrocarSenha() {
       await mutation.mutateAsync({ novaSenha: dados.novaSenha, confirmarSenha: dados.confirmarSenha })
       marcarSenhaAlterada(new Date().toISOString())
       navigate('/dashboard', { replace: true })
-    } catch {
-      setSubmitError('Não foi possível trocar a senha. Tente novamente.')
+    } catch (erro) {
+      setSubmitError(mensagemDeRegraDaApi(erro) ?? 'Não foi possível trocar a senha. Tente novamente.')
     }
   }
 

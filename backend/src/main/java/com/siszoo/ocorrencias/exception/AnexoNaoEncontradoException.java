@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class AnexoNaoEncontradoException extends ErroNegocioException {
 
     public AnexoNaoEncontradoException() {
-        super(HttpStatus.NOT_FOUND, "Anexo nao encontrado");
+        super(HttpStatus.NOT_FOUND, "Anexo não encontrado.");
     }
 }

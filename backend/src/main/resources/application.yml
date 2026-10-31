@@ -1,6 +1,10 @@
 spring:
   application:
     name: siszoo-backend
+  # Idioma fixo: a mensagem de validacao nao pode depender do Accept-Language.
+  web:
+    locale: pt_BR
+    locale-resolver: fixed
   # Anexos de ocorrencia (T25): ate 5 MB por arquivo, um arquivo por requisicao.
   servlet:
     multipart:

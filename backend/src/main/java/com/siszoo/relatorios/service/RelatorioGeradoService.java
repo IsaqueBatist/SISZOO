@@ -115,7 +115,7 @@ public class RelatorioGeradoService {
         boolean csv = "csv".equalsIgnoreCase(formato);
         boolean pdf = "pdf".equalsIgnoreCase(formato);
         if (!csv && !pdf) {
-            throw new CampoInvalidoException("formato", "Formato inválido: use csv ou pdf");
+            throw new CampoInvalidoException("formato", "Formato inválido. Escolha CSV ou PDF.");
         }
 
         TipoRelatorio tipo = filtroBruto.tipo();
@@ -186,7 +186,7 @@ public class RelatorioGeradoService {
     private GeradorRelatorio<?> gerador(TipoRelatorio tipo) {
         GeradorRelatorio<?> gerador = geradoresPorTipo.get(tipo);
         if (gerador == null) {
-            throw new CampoInvalidoException("tipo", "Tipo de relatório ainda não implementado");
+            throw new CampoInvalidoException("tipo", "Este tipo de relatório ainda não está disponível.");
         }
         return gerador;
     }

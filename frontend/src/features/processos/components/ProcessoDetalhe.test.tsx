@@ -253,7 +253,7 @@ describe('ProcessoDetalhe — ocorrência vinculada', () => {
   it('vínculo recusado (409) mostra a mensagem do servidor e mantém a escolha aberta', async () => {
     server.use(
       http.post(`${API_BASE_URL}/ocorrencias/:id/processo`, () =>
-        HttpResponse.json({ mensagem: 'Ocorrencia ou processo ja possui vinculo' }, { status: 409 }),
+        HttpResponse.json({ mensagem: 'A ocorrência ou o processo já tem vínculo.' }, { status: 409 }),
       ),
     )
     const user = userEvent.setup()
@@ -263,7 +263,7 @@ describe('ProcessoDetalhe — ocorrência vinculada', () => {
     await user.click(screen.getByRole('button', { name: 'Vincular uma ocorrência já cadastrada' }))
     await user.click(await screen.findByText('OC 089/2026'))
 
-    expect(await screen.findByText('Ocorrencia ou processo ja possui vinculo')).toBeInTheDocument()
+    expect(await screen.findByText('A ocorrência ou o processo já tem vínculo.')).toBeInTheDocument()
     expect(screen.getByRole('radiogroup', { name: 'Ocorrências disponíveis para vínculo' })).toBeInTheDocument()
   })
 })
@@ -298,7 +298,7 @@ describe('ProcessoDetalhe — status', () => {
   it('transição recusada (422) mostra a mensagem do servidor', async () => {
     server.use(
       http.patch(`${API_BASE_URL}/processos/:id/status`, () =>
-        HttpResponse.json({ mensagem: 'Transicao de status nao permitida para o processo' }, { status: 422 }),
+        HttpResponse.json({ mensagem: 'Esta mudança de status não é permitida para o processo.' }, { status: 422 }),
       ),
     )
     const user = userEvent.setup()
@@ -307,7 +307,7 @@ describe('ProcessoDetalhe — status', () => {
 
     await user.click(screen.getByRole('button', { name: 'Marcar amostras como enviadas' }))
 
-    expect(await screen.findByText('Transicao de status nao permitida para o processo')).toBeInTheDocument()
+    expect(await screen.findByText('Esta mudança de status não é permitida para o processo.')).toBeInTheDocument()
   })
 
   it('o botão fica desabilitado enquanto o avanço está em andamento (sem envio duplicado)', async () => {

@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class CategoriaFarmacologicaJaCadastradaException extends ErroNegocioException {
 
     public CategoriaFarmacologicaJaCadastradaException() {
-        super(HttpStatus.CONFLICT, "Categoria farmacologica ja cadastrada");
+        super(HttpStatus.CONFLICT, "Esta categoria farmacológica já está cadastrada.");
     }
 }

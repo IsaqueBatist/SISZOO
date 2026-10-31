@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class MotivoEntradaInvalidoException extends ErroNegocioException {
 
     public MotivoEntradaInvalidoException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Motivo de entrada informado nao existe");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "O motivo de entrada informado não existe. Selecione um da lista.");
     }
 }

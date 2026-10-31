@@ -309,7 +309,7 @@ describe('OcorrenciaDetalhe', () => {
       const user = userEvent.setup()
       server.use(
         http.get(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_ENCERRADA_ID}/anexos/${ANEXO_ENCERRADA_ID}`, () =>
-          HttpResponse.json({ mensagem: 'Acesso negado' }, { status: 403 }),
+          HttpResponse.json({ mensagem: 'Você não tem permissão para realizar esta ação.' }, { status: 403 }),
         ),
       )
       renderDetalhe(OCORRENCIA_ENCERRADA_ID, ['Administrador'])

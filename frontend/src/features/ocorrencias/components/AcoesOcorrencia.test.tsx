@@ -126,7 +126,7 @@ describe('nota interna (D37)', () => {
     const user = userEvent.setup()
     server.use(
       http.post(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_ABERTA_ID}/notas`, () =>
-        HttpResponse.json({ mensagem: 'Ocorrencia encerrada nao pode ser alterada' }, { status: 422 }),
+        HttpResponse.json({ mensagem: 'Uma ocorrência encerrada não pode ser alterada.' }, { status: 422 }),
       ),
     )
     renderDetalhe(OCORRENCIA_ABERTA_ID, ADMIN)
@@ -135,7 +135,7 @@ describe('nota interna (D37)', () => {
     await user.type(screen.getByLabelText('Nova nota interna'), 'Nota qualquer.')
     await user.click(screen.getByRole('button', { name: 'Adicionar nota' }))
 
-    expect(await screen.findByText('Ocorrencia encerrada nao pode ser alterada')).toBeInTheDocument()
+    expect(await screen.findByText('Uma ocorrência encerrada não pode ser alterada.')).toBeInTheDocument()
   })
 
   it('não mostra o formulário de nota para o Veterinário', async () => {

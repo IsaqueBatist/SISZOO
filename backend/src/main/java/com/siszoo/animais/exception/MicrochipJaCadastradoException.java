@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class MicrochipJaCadastradoException extends ErroNegocioException {
 
     public MicrochipJaCadastradoException() {
-        super(HttpStatus.CONFLICT, "Microchip ja cadastrado");
+        super(HttpStatus.CONFLICT, "Este microchip já está cadastrado em outro animal.");
     }
 }

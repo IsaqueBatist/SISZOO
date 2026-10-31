@@ -107,7 +107,7 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
       onSucesso()
     } catch (erro) {
       if (aplicarErrosDeCampo(erro, setError, MAPA_ERROS_SERVIDOR).length > 0) return
-      // 409/422 de regra ("Registro ja foi retificado por outro"...) mostram o
+      // 409/422 de regra ("Este registro já foi corrigido. Atualize a página para ver a versão atual."...) mostram o
       // motivo real, como nos outros modais clínicos.
       setSubmitError(
         mensagemDeRegraDaApi(erro) ??

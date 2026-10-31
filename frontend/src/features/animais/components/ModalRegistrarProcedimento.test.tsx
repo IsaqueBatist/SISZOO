@@ -143,8 +143,8 @@ describe('ModalRegistrarProcedimento', () => {
       http.post(`${API_BASE_URL}/procedimentos`, () =>
         HttpResponse.json(
           {
-            mensagem: 'Data do procedimento nao pode ser futura',
-            campos: [{ campo: 'data', mensagem: 'Data do procedimento nao pode ser futura' }],
+            mensagem: 'A data do procedimento não pode ser futura.',
+            campos: [{ campo: 'data', mensagem: 'A data do procedimento não pode ser futura.' }],
           },
           { status: 422 },
         ),
@@ -166,7 +166,7 @@ describe('ModalRegistrarProcedimento', () => {
 
     const campoData = within(modal).getByLabelText(/^data/i).closest<HTMLElement>('.field')
     if (!campoData) throw new Error('campo não encontrado')
-    expect(await within(campoData).findByText('Data do procedimento nao pode ser futura')).toBeInTheDocument()
+    expect(await within(campoData).findByText('A data do procedimento não pode ser futura.')).toBeInTheDocument()
     expect(within(modal).queryByRole('alert')).not.toBeInTheDocument()
   })
 

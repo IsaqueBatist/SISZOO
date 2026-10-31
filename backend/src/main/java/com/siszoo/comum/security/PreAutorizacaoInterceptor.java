@@ -73,7 +73,7 @@ public class PreAutorizacaoInterceptor implements HandlerInterceptor {
         AuthorizationResult resultado = autorizacao.authorize(
                 () -> SecurityContextHolder.getContext().getAuthentication(), invocacao);
         if (resultado != null && !resultado.isGranted()) {
-            throw new AccessDeniedException("Acesso negado");
+            throw new AccessDeniedException("Você não tem permissão para realizar esta ação.");
         }
         return true;
     }

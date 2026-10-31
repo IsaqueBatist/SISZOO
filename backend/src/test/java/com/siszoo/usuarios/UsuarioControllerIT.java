@@ -155,7 +155,7 @@ class UsuarioControllerIT extends AbstractIntegrationTest {
                     .then()
                     .statusCode(422)
                     .body("campos[0].campo", equalTo("senhaInicial"))
-                    .body("campos[0].mensagem", equalTo("Senha inicial deve ter no maximo 72 bytes (acentos contam 2)"));
+                    .body("campos[0].mensagem", equalTo("A senha inicial deve ter no máximo 72 bytes (letras acentuadas contam como 2)."));
         }
         assertThat(usuarioRepository.findByEmail(email).isPresent(), equalTo(false));
 

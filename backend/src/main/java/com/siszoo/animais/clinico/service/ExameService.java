@@ -86,7 +86,7 @@ public class ExameService {
         validarDatas(request.dataSolicitacao(), request.dataResultado());
         // O resultado e o laudo do exame: sem data do resultado ele nao faz sentido (e vice-versa).
         if (StringUtils.hasText(request.resultado()) != (request.dataResultado() != null)) {
-            throw new CampoInvalidoException("resultado", "Resultado e data do resultado devem ser informados juntos");
+            throw new CampoInvalidoException("resultado", "Informe o resultado e a data do resultado juntos.");
         }
 
         Exame anterior = request.retificaId() != null
@@ -139,14 +139,14 @@ public class ExameService {
     private void validarDatas(LocalDate solicitacao, LocalDate resultado) {
         LocalDate hoje = LocalDate.now(clock);
         if (solicitacao.isAfter(hoje)) {
-            throw new CampoInvalidoException("dataSolicitacao", "Data da solicitacao nao pode ser futura");
+            throw new CampoInvalidoException("dataSolicitacao", "A data da solicitação não pode ser futura.");
         }
         if (resultado != null) {
             if (resultado.isAfter(hoje)) {
-                throw new CampoInvalidoException("dataResultado", "Data do resultado nao pode ser futura");
+                throw new CampoInvalidoException("dataResultado", "A data do resultado não pode ser futura.");
             }
             if (resultado.isBefore(solicitacao)) {
-                throw new CampoInvalidoException("dataResultado", "Data do resultado nao pode ser anterior a solicitacao");
+                throw new CampoInvalidoException("dataResultado", "A data do resultado não pode ser anterior à data da solicitação.");
             }
         }
     }
@@ -172,7 +172,7 @@ public class ExameService {
             return null;
         }
         return laboratorioRepository.findByCodigo(codigo)
-                .orElseThrow(() -> new CampoInvalidoException("laboratorio", "Laboratorio informado nao existe"));
+                .orElseThrow(() -> new CampoInvalidoException("laboratorio", "O laboratório informado não existe. Selecione um da lista."));
     }
 
     private static String textoOuNulo(String texto) {

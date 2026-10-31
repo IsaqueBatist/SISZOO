@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class UrgenciaDefinidaPeloProcessoException extends ErroNegocioException {
 
     public UrgenciaDefinidaPeloProcessoException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Urgencia definida pelo processo vinculado nao pode ser desmarcada");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "A urgência foi definida pelo processo vinculado e não pode ser desmarcada.");
     }
 }

@@ -154,7 +154,7 @@ describe('AnimalForm — cadastro', () => {
   it('409 de microchip duplicado exibe a mensagem no campo microchip, sem limpar o formulário', async () => {
     const user = userEvent.setup()
     server.use(
-      http.post(`${API_BASE_URL}/animais`, () => HttpResponse.json({ mensagem: 'Microchip ja cadastrado' }, { status: 409 })),
+      http.post(`${API_BASE_URL}/animais`, () => HttpResponse.json({ mensagem: 'Este microchip já está cadastrado em outro animal.' }, { status: 409 })),
     )
 
     renderCadastrar()
@@ -165,7 +165,7 @@ describe('AnimalForm — cadastro', () => {
 
     const campoMicrochip = screen.getByLabelText(/microchip/i).closest('.field')
     expect(campoMicrochip).not.toBeNull()
-    expect(await within(campoMicrochip as HTMLElement).findByText('Microchip ja cadastrado')).toBeInTheDocument()
+    expect(await within(campoMicrochip as HTMLElement).findByText('Este microchip já está cadastrado em outro animal.')).toBeInTheDocument()
     // O nome preenchido continua lá — reenvio sem perda de dados.
     expect(screen.getByLabelText(/nome do animal/i)).toHaveValue('Rex Teste')
   })

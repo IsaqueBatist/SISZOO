@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class AnimalNaoEncontradoException extends ErroNegocioException {
 
     public AnimalNaoEncontradoException() {
-        super(HttpStatus.NOT_FOUND, "Animal nao encontrado");
+        super(HttpStatus.NOT_FOUND, "Animal não encontrado.");
     }
 }

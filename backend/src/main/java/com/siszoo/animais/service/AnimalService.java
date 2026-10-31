@@ -368,7 +368,7 @@ public class AnimalService {
         animalRepository.findByNumeroMedalha(numeroMedalha)
                 .filter(outro -> animalIdAtual == null || !outro.getId().equals(animalIdAtual))
                 .ifPresent(outro -> {
-                    throw new CampoInvalidoException("numeroMedalha", "Numero de medalha ja cadastrado para outro animal");
+                    throw new CampoInvalidoException("numeroMedalha", "Este número de medalha já está cadastrado em outro animal.");
                 });
     }
 
@@ -380,10 +380,10 @@ public class AnimalService {
         }
         if (!StringUtils.hasText(microchip)) {
             throw new CampoInvalidoException("dataImplantacaoChip",
-                    "Data de implantacao so pode ser informada junto com o microchip");
+                    "Informe a data de implantação apenas junto com o microchip.");
         }
         if (dataImplantacao.isAfter(LocalDate.now(clock))) {
-            throw new CampoInvalidoException("dataImplantacaoChip", "Data de implantacao nao pode ser futura");
+            throw new CampoInvalidoException("dataImplantacaoChip", "A data de implantação não pode ser futura.");
         }
     }
 
@@ -395,7 +395,7 @@ public class AnimalService {
                 && (statusAnterior == null || !STATUS_OBITO_EUTANASIA.equals(statusAnterior.getCodigo()));
         if (entrandoEmEutanasia && laudo == null) {
             throw new CampoInvalidoException("laudoEutanasia",
-                    "Informe o laudo do responsavel tecnico que justifica a eutanasia");
+                    "Informe o laudo do responsável técnico que justifica a eutanásia.");
         }
     }
 
@@ -408,24 +408,24 @@ public class AnimalService {
         LocalDate hoje = LocalDate.now(clock);
 
         if (dataEntrada != null && dataEntrada.toLocalDate().isAfter(hoje)) {
-            throw new CampoInvalidoException("dataEntrada", "Data de entrada nao pode ser futura");
+            throw new CampoInvalidoException("dataEntrada", "A data de entrada não pode ser futura.");
         }
         if (dataNascimento != null) {
             if (dataNascimento.isAfter(hoje)) {
-                throw new CampoInvalidoException("dataNascimentoAprox", "Data de nascimento nao pode ser futura");
+                throw new CampoInvalidoException("dataNascimentoAprox", "A data de nascimento não pode ser futura.");
             }
             if (dataEntrada != null && dataNascimento.isAfter(dataEntrada.toLocalDate())) {
                 throw new CampoInvalidoException("dataNascimentoAprox",
-                        "Data de nascimento nao pode ser posterior a data de entrada");
+                        "A data de nascimento não pode ser posterior à data de entrada.");
             }
         }
         if (dataEsterilizacao != null) {
             if (!Boolean.TRUE.equals(esterilizado)) {
                 throw new CampoInvalidoException("dataEsterilizacao",
-                        "Data da castracao so pode ser informada para animal castrado");
+                        "Informe a data da castração apenas para animal castrado.");
             }
             if (dataEsterilizacao.isAfter(hoje)) {
-                throw new CampoInvalidoException("dataEsterilizacao", "Data da castracao nao pode ser futura");
+                throw new CampoInvalidoException("dataEsterilizacao", "A data da castração não pode ser futura.");
             }
         }
     }

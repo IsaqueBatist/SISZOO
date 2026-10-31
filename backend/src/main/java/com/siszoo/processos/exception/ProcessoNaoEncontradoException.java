@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class ProcessoNaoEncontradoException extends ErroNegocioException {
 
     public ProcessoNaoEncontradoException() {
-        super(HttpStatus.NOT_FOUND, "Processo sanitario nao encontrado");
+        super(HttpStatus.NOT_FOUND, "Processo sanitário não encontrado.");
     }
 }

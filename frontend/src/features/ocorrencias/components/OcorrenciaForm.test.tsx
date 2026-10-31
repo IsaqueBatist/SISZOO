@@ -197,7 +197,7 @@ describe('OcorrenciaForm', () => {
     const user = userEvent.setup()
     server.use(
       http.post(`${API_BASE_URL}/ocorrencias`, () =>
-        HttpResponse.json({ mensagem: 'Data de abertura nao pode ser futura' }, { status: 422 }),
+        HttpResponse.json({ mensagem: 'A data de abertura não pode ser futura.' }, { status: 422 }),
       ),
     )
     renderForm()
@@ -206,7 +206,7 @@ describe('OcorrenciaForm', () => {
     await user.type(screen.getByLabelText(/Nome completo/i), 'Fulano de Tal')
     await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
 
-    expect(await screen.findByText('Data de abertura nao pode ser futura')).toBeInTheDocument()
+    expect(await screen.findByText('A data de abertura não pode ser futura.')).toBeInTheDocument()
   })
 
   describe('anexos em duas fases (D15)', () => {
@@ -226,7 +226,7 @@ describe('OcorrenciaForm', () => {
           contagem.uploads += 1
           if ((await request.text()).includes('name="arquivo"')) contagem.camposArquivo += 1
           if (contagem.uploads === 2) {
-            return HttpResponse.json({ mensagem: 'Arquivo excede o tamanho maximo de 5 MB' }, { status: statusFalha })
+            return HttpResponse.json({ mensagem: 'O arquivo passa do limite de 5 MB. Escolha um arquivo menor.' }, { status: statusFalha })
           }
           return HttpResponse.json(ANEXO_CRIADO_FIXTURE, { status: 201 })
         }),

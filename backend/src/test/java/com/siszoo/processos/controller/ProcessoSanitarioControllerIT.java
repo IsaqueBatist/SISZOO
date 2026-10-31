@@ -181,7 +181,7 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
                 comAmostra(Map.of("dataColeta", RelogioTesteConfig.HOJE.plusDays(1).toString())));
 
         futura.then().statusCode(422);
-        assertThat(futura.path("mensagem"), equalTo("Data de coleta nao pode ser futura"));
+        assertThat(futura.path("mensagem"), equalTo("A data de coleta não pode ser futura."));
         assertThat(contar("processo_sanitario"), equalTo(processosAntes));
         fixture.postarProcesso(tokenAgente, comAmostra(Map.of("dataColeta", RelogioTesteConfig.HOJE.toString())))
                 .then().statusCode(200);
@@ -200,7 +200,7 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         Response assintomatica = fixture.postarProcesso(tokenAgente,
                 comAmostra(Map.of("statusClinico", "ASSINTOMATICO", "sintomas", List.of("apatia"))));
         assintomatica.then().statusCode(422);
-        assertThat(assintomatica.path("mensagem"), containsString("sintomatico"));
+        assertThat(assintomatica.path("mensagem"), containsString("sintomático"));
         assertThat(contar("processo_sanitario"), equalTo(processosAntes));
     }
 
@@ -691,14 +691,14 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         String processoId = processoAguardandoResultado();
 
         lancarResultado(tokenAgente, processoId, corpoResultado("aguardando", HOJE, null)).then().statusCode(422)
-                .body("mensagem", containsString("Resultado laboratorial invalido"));
+                .body("mensagem", containsString("Resultado laboratorial inválido"));
         lancarResultado(tokenAgente, processoId, corpoResultado("reagente", HOJE, null)).then().statusCode(422);
         lancarResultado(tokenAgente, processoId, Map.of("dataResultado", HOJE.toString())).then().statusCode(422);
         lancarResultado(tokenAgente, processoId, Map.of("resultado", " ", "dataResultado", HOJE.toString()))
                 .then().statusCode(422);
         lancarResultado(tokenAgente, processoId, Map.of("resultado", "positivo")).then().statusCode(422);
         lancarResultado(tokenAgente, processoId, corpoResultado("positivo", HOJE.plusDays(1), null))
-                .then().statusCode(422).body("mensagem", equalTo("Data do resultado nao pode ser futura"));
+                .then().statusCode(422).body("mensagem", equalTo("A data do resultado não pode ser futura."));
 
         assertSemResultado(processoId, "AGUARDANDO_RESULTADO");
     }
@@ -772,13 +772,13 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
     void lancamentoSoEmAguardandoResultado() {
         String aberto = fixture.postarProcesso(tokenAgente, null, false).then().statusCode(200).extract().path("id");
         lancarResultado(tokenAgente, aberto, corpoResultado("positivo", HOJE, null)).then().statusCode(422)
-                .body("mensagem", equalTo("Transicao de status nao permitida para o processo"));
+                .body("mensagem", equalTo("Esta mudança de status não é permitida para o processo."));
         assertSemResultado(aberto, "ABERTO");
 
         String processoId = processoAguardandoResultado();
         lancarResultado(tokenAgente, processoId, corpoResultado("negativo", HOJE, null)).then().statusCode(200);
         lancarResultado(tokenAgente, processoId, corpoResultado("positivo", HOJE, null)).then().statusCode(409)
-                .body("mensagem", containsString("informe retificaId"));
+                .body("mensagem", containsString("use a correção do resultado"));
 
         alterarStatus(tokenAgente, processoId, "CONCLUIDO").then().statusCode(200);
         lancarResultado(tokenAgente, processoId, corpoResultado("positivo", HOJE, null)).then().statusCode(422);
@@ -798,7 +798,7 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
                 .body("statusProcesso", equalTo("AGUARDANDO_RESULTADO"));
 
         alterarStatus(tokenAgente, processoId, "COM_RESULTADO").then().statusCode(422)
-                .body("mensagem", equalTo("O status COM_RESULTADO so e alcancado pelo registro do resultado laboratorial"));
+                .body("mensagem", equalTo("Registre o resultado laboratorial para avançar o processo."));
         alterarStatus(tokenAgente, processoId, "CONCLUIDO").then().statusCode(422);
         alterarStatus(tokenAgente, processoId, "ABERTO").then().statusCode(422);
         assertSemResultado(processoId, "AGUARDANDO_RESULTADO");
@@ -815,7 +815,7 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
             alterarStatus(tokenAgente, processoId, status).then().statusCode(422);
         }
         lancarResultado(tokenAgente, processoId, corpoResultado("negativo", HOJE, vigente)).then().statusCode(422)
-                .body("mensagem", equalTo("Resultado so pode ser corrigido com o processo em COM_RESULTADO"));
+                .body("mensagem", equalTo("O resultado só pode ser corrigido enquanto o processo tiver resultado lançado e não estiver concluído."));
         assertThat(jdbcTemplate.queryForObject("SELECT status_processo FROM processo_sanitario WHERE id = CAST(? AS uuid)",
                 String.class, processoId), equalTo("CONCLUIDO"));
         assertThat(contarResultados(processoId), equalTo(1));
@@ -833,7 +833,7 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         int eventosAntes = eventosDeAtualizacao(processoId);
 
         alterarStatus(tokenAgente, processoId, "CONCLUIDO").then().statusCode(422)
-                .body("mensagem", equalTo("Processo so pode ser concluido com resultado laboratorial registrado"));
+                .body("mensagem", equalTo("Registre o resultado laboratorial antes de concluir o processo."));
 
         assertSemResultado(processoId, "COM_RESULTADO");
         assertThat(eventosDeAtualizacao(processoId), equalTo(eventosAntes));
@@ -876,11 +876,11 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
 
         // Cada registro e corrigido uma vez so; so registros do proprio processo.
         lancarResultado(tokenAgente, processoId, corpoResultado("negativo", HOJE, originalId)).then().statusCode(409)
-                .body("mensagem", equalTo("Registro ja foi retificado por outro"));
+                .body("mensagem", equalTo("Este registro já foi corrigido. Atualize a página para ver a versão atual."));
         Response doOutro = lancarResultado(tokenAgente, outroProcesso, corpoResultado("negativo", HOJE, null));
         String resultadoDoOutro = doOutro.path("resultados[0].id");
         lancarResultado(tokenAgente, processoId, corpoResultado("negativo", HOJE, resultadoDoOutro)).then()
-                .statusCode(422).body("mensagem", equalTo("Resultado a corrigir nao existe neste processo"));
+                .statusCode(422).body("mensagem", equalTo("O resultado a corrigir não pertence a este processo."));
         lancarResultado(tokenAgente, processoId, corpoResultado("negativo", HOJE, UUID.randomUUID().toString()))
                 .then().statusCode(422);
         assertThat(contarResultados(processoId), equalTo(3));
@@ -917,7 +917,7 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
 
         for (String novo : List.of("negativo", "positivo")) {
             lancarResultado(tokenAgente, processoId, corpoResultado(novo, HOJE, positivoId)).then()
-                    .statusCode(422).body("mensagem", equalTo("Resultado positivo e definitivo e nao pode ser corrigido"));
+                    .statusCode(422).body("mensagem", equalTo("Resultado positivo é definitivo e não pode ser corrigido."));
         }
 
         assertThat(contarResultados(processoId), equalTo(1));
@@ -971,7 +971,7 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         int eventosAntes = eventosDeAtualizacao(processoId);
 
         lancarResultado(tokenAgente, processoId, corpoResultado("positivo", HOJE, null)).then().statusCode(409)
-                .body("mensagem", containsString("informe retificaId"));
+                .body("mensagem", containsString("use a correção do resultado"));
 
         assertSemResultadoVigente(processoId, "AGUARDANDO_RESULTADO");
         assertThat(contarResultados(processoId), equalTo(1));
@@ -1084,7 +1084,7 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
             assertThat(respostas.stream().filter(r -> r.statusCode() == 200).count(), equalTo(1L));
             Response recusada = respostas.stream().filter(r -> r.statusCode() != 200).findFirst().orElseThrow();
             assertThat(recusada.statusCode(), equalTo(409));
-            assertThat(recusada.path("mensagem"), equalTo("Registro ja foi retificado por outro"));
+            assertThat(recusada.path("mensagem"), equalTo("Este registro já foi corrigido. Atualize a página para ver a versão atual."));
         } finally {
             executor.shutdownNow();
             if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {

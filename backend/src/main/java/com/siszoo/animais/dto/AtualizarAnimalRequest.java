@@ -21,7 +21,7 @@ public record AtualizarAnimalRequest(
         String especie,
 
         @NotBlank
-        @Pattern(regexp = "^(macho|femea|nao_identificado)$", message = "Sexo deve ser macho, femea ou nao_identificado")
+        @Pattern(regexp = "^(macho|femea|nao_identificado)$", message = "Selecione o sexo: macho, fêmea ou não identificado.")
         String sexo,
 
         @Size(max = 80)
@@ -30,13 +30,13 @@ public record AtualizarAnimalRequest(
         @Size(max = 80)
         String coloracao,
 
-        @Pattern(regexp = "^(curta|longa)$", message = "Pelagem deve ser curta ou longa")
+        @Pattern(regexp = "^(curta|longa)$", message = "Selecione a pelagem: curta ou longa.")
         String pelagem,
 
-        @Pattern(regexp = "^(pequeno|medio|grande)$", message = "Porte deve ser pequeno, medio ou grande")
+        @Pattern(regexp = "^(pequeno|medio|grande)$", message = "Selecione o porte: pequeno, médio ou grande.")
         String porte,
 
-        @DecimalMin(value = "0.0", inclusive = false, message = "Peso deve ser maior que zero")
+        @DecimalMin(value = "0.0", inclusive = false, message = "O peso deve ser maior que zero.")
         BigDecimal pesoKg,
 
         @Size(max = 30)

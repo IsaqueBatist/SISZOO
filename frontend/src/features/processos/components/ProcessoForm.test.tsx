@@ -400,7 +400,7 @@ describe('ProcessoForm — amostras e envio', () => {
     server.use(
       http.post(`${API_BASE_URL}/processos`, () =>
         HttpResponse.json(
-          { mensagem: 'Dados invalidos', campos: [{ campo: 'amostras[0].especie', mensagem: 'Especie invalida' }] },
+          { mensagem: 'Não foi possível salvar. Verifique os campos destacados e tente novamente.', campos: [{ campo: 'amostras[0].especie', mensagem: 'Especie invalida' }] },
           { status: 422 },
         ),
       ),
@@ -413,14 +413,14 @@ describe('ProcessoForm — amostras e envio', () => {
 
     await avancarERegistrar(user)
 
-    expect(await screen.findByText('Dados invalidos: amostras[0].especie — Especie invalida')).toBeInTheDocument()
+    expect(await screen.findByText('Não foi possível salvar. Verifique os campos destacados e tente novamente.: amostras[0].especie — Especie invalida')).toBeInTheDocument()
     expect(screen.getByText('Revisão').closest('.step')).toHaveClass('active')
   })
 
   it('vínculo recusado no envio (409, ocorrência já vinculada) mostra a mensagem do servidor', async () => {
     server.use(
       http.post(`${API_BASE_URL}/processos`, () =>
-        HttpResponse.json({ mensagem: 'Ocorrencia ou processo ja possui vinculo' }, { status: 409 }),
+        HttpResponse.json({ mensagem: 'A ocorrência ou o processo já tem vínculo.' }, { status: 409 }),
       ),
     )
     const user = userEvent.setup()
@@ -431,7 +431,7 @@ describe('ProcessoForm — amostras e envio', () => {
 
     await avancarERegistrar(user)
 
-    expect(await screen.findByText('Ocorrencia ou processo ja possui vinculo')).toBeInTheDocument()
+    expect(await screen.findByText('A ocorrência ou o processo já tem vínculo.')).toBeInTheDocument()
   })
 
   it('revisão mostra os nomes dos catálogos e não oferece edição da etapa 1', async () => {

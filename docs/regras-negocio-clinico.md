@@ -49,15 +49,15 @@ A janela da RN-A01 existe em dois lugares: no backend (`AlertaVacinalService`, f
 
 ## Contrato da API
 
-- `POST /api/vacinacoes`: `doseUnidade` é obrigatório. Sem ele a resposta é **422** `{"mensagem": "Dados invalidos", "campos": [{"campo": "doseUnidade", "mensagem": "..."}]}`.
+- `POST /api/vacinacoes`: `doseUnidade` é obrigatório. Sem ele a resposta é **422** `{"mensagem": "Não foi possível salvar. Verifique os campos destacados e tente novamente.", "campos": [{"campo": "doseUnidade", "mensagem": "..."}]}`.
 - `GET /api/vacinacoes`: vacinações legadas (anteriores à T24) podem continuar vindo com `doseUnidade: null`; ver "Vacinações legadas sem unidade". O modal de correção força a escolha da unidade nesses casos.
-- `POST /api/vacinacoes`: `dataAplicacao` futura retorna **422** `{"mensagem": "Data de aplicacao nao pode ser futura"}`.
+- `POST /api/vacinacoes`: `dataAplicacao` futura retorna **422** `{"mensagem": "A data de aplicação não pode ser futura."}`.
 - Todo 422 de validação (Bean Validation) passa a trazer `campos` (lista `{campo, mensagem}`, ordenada pelo nome do campo). O campo é **aditivo**: nos demais erros ele não aparece e o corpo continua sendo só `{"mensagem": ...}`.
-- Violação de constraint do banco (`DataIntegrityViolationException`) retorna **409** `{"mensagem": "Operacao viola uma regra de integridade dos dados"}`, sem detalhe de SQL. O detalhe fica só no log do servidor. Antes caía em 500 genérico.
+- Violação de constraint do banco (`DataIntegrityViolationException`) retorna **409** `{"mensagem": "Não foi possível salvar, porque os dados entram em conflito com um registro existente. Verifique as informações e tente novamente."}`, sem detalhe de SQL. O detalhe fica só no log do servidor. Antes caía em 500 genérico.
 - `GET /api/alertas/vacinas`: deixa de listar animais com status fora da custódia (RN-A05).
-- Regra presa a um campo (`CampoInvalidoException`: RN-C07, RN-C08, RN-AN01) responde **422** com a mensagem da regra e `campos` com um item: `{"mensagem": "Data do procedimento nao pode ser futura", "campos": [{"campo": "data", "mensagem": "Data do procedimento nao pode ser futura"}]}`. O frontend marca o erro no campo (`lib/erroApi.ts#aplicarErrosDeCampo`).
+- Regra presa a um campo (`CampoInvalidoException`: RN-C07, RN-C08, RN-AN01) responde **422** com a mensagem da regra e `campos` com um item: `{"mensagem": "A data do procedimento não pode ser futura.", "campos": [{"campo": "data", "mensagem": "A data do procedimento não pode ser futura."}]}`. O frontend marca o erro no campo (`lib/erroApi.ts#aplicarErrosDeCampo`).
 - `POST/PUT /api/animais`: baia inativa ou sem vaga (RN-AN02) responde **409** `{"mensagem": "Baia informada esta inativa"}` ou `{"mensagem": "Baia informada ja atingiu a capacidade"}`, sem `campos`.
-- `GET /api/categorias-farmacologicas` (`GESTAO_ANIMAIS:leitura`): categorias ativas por nome, `[{id, nome, ativo}]`. `POST` (`GESTAO_ANIMAIS:escrita`) `{"nome"}`: nome sem espaços nas pontas; repetido sem diferenciar maiúsculas → **409** `{"mensagem": "Categoria farmacologica ja cadastrada"}`; vazio → 422 com `campos`. Testes: `CategoriaFarmacologicaControllerIT`, `CategoriaFarmacologicaServiceTest`.
+- `GET /api/categorias-farmacologicas` (`GESTAO_ANIMAIS:leitura`): categorias ativas por nome, `[{id, nome, ativo}]`. `POST` (`GESTAO_ANIMAIS:escrita`) `{"nome"}`: nome sem espaços nas pontas; repetido sem diferenciar maiúsculas → **409** `{"mensagem": "Esta categoria farmacológica já está cadastrada."}`; vazio → 422 com `campos`. Testes: `CategoriaFarmacologicaControllerIT`, `CategoriaFarmacologicaServiceTest`.
 
 ## Vacinações legadas sem unidade (V7 não-destrutiva)
 

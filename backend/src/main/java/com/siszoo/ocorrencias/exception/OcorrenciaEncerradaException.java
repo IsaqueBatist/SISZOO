@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class OcorrenciaEncerradaException extends ErroNegocioException {
 
     public OcorrenciaEncerradaException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Ocorrencia encerrada nao pode ser alterada");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "Uma ocorrência encerrada não pode ser alterada.");
     }
 }

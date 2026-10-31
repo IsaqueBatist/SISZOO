@@ -8,9 +8,9 @@ function erroHttp(status: number, data: unknown): AxiosError {
 }
 
 const CAMPOS_422 = {
-  mensagem: 'Dados invalidos',
+  mensagem: 'Não foi possível salvar. Verifique os campos destacados e tente novamente.',
   campos: [
-    { campo: 'dataEntrada', mensagem: 'Data de entrada nao pode ser futura' },
+    { campo: 'dataEntrada', mensagem: 'A data de entrada não pode ser futura.' },
     { campo: 'esterilizado', mensagem: 'nao deve ser nulo' },
     { campo: 'animalId', mensagem: 'nao deve ser nulo' },
   ],
@@ -22,7 +22,7 @@ describe('aplicarErrosDeCampo', () => {
     const aplicados = aplicarErrosDeCampo(erroHttp(422, CAMPOS_422), setError)
 
     expect(aplicados).toEqual(['dataEntrada', 'esterilizado', 'animalId'])
-    expect(setError).toHaveBeenCalledWith('dataEntrada', { type: 'server', message: 'Data de entrada nao pode ser futura' })
+    expect(setError).toHaveBeenCalledWith('dataEntrada', { type: 'server', message: 'A data de entrada não pode ser futura.' })
   })
 
   it('com mapa, traduz o nome e ignora o que o formulário não tem', () => {
@@ -40,7 +40,7 @@ describe('aplicarErrosDeCampo', () => {
     const setError = vi.fn()
 
     expect(aplicarErrosDeCampo(erroHttp(409, CAMPOS_422), setError)).toEqual([])
-    expect(aplicarErrosDeCampo(erroHttp(422, { mensagem: 'Data de aplicacao nao pode ser futura' }), setError)).toEqual([])
+    expect(aplicarErrosDeCampo(erroHttp(422, { mensagem: 'A data de aplicação não pode ser futura.' }), setError)).toEqual([])
     expect(aplicarErrosDeCampo(new Error('rede'), setError)).toEqual([])
     expect(setError).not.toHaveBeenCalled()
   })

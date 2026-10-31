@@ -80,7 +80,7 @@ public class ProcedimentoService {
         // Procedimento e fato ocorrido (como a vacinacao, RN-C06): data futura
         // e recusada, inclusive na retificacao, com "hoje" do Clock do projeto.
         if (request.data().isAfter(LocalDate.now(clock))) {
-            throw new CampoInvalidoException("data", "Data do procedimento nao pode ser futura");
+            throw new CampoInvalidoException("data", "A data do procedimento não pode ser futura.");
         }
 
         Procedimento anterior = request.retificaId() != null

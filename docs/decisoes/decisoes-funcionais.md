@@ -63,3 +63,13 @@ A permissão é a feature `ocorrencias_bairro` (V32). **Fora da restrição:** d
 - **Modelo (V33):** catálogo `condicao_saude`, N:N `animal_condicao_saude` e `animal.condicoes_outras`, obrigatório só com "Outras". O campo `observacoes` não muda.
 - **Dados antigos:** nada é migrado. Animal sem condição marcada não significa que não tenha nenhuma.
 - **Tela:** checkboxes na etapa de saúde, resumo na revisão e selos na ficha, que passa a mostrar também as observações.
+
+## Mensagens do backend
+
+**Origem:** decisão funcional. Todas as mensagens que a API devolve foram revistas: português correto, sem termos internos, dizendo o que aconteceu e, quando possível, o que fazer.
+
+- **Contratos preservados:** status HTTP, campos de `ErroResponse` e `campos` não mudaram. Nos erros que saem pelo `/error` do Spring Boot (corpo ilegível, método não suportado, falha inesperada), a resposta ganhou `mensagem` e manteve os demais campos.
+- **Idioma fixo:** `spring.web.locale-resolver: fixed` e `ValidationMessages.properties`. Antes, `Accept-Language` em inglês devolvia a validação em inglês.
+- **Fora da revisão:** logs e exceções internas continuam como estão, porque não chegam ao usuário.
+- **Guarda:** `MensagensApiTest` lê o código-fonte e falha com palavra sem acento, texto em inglês ou termo interno.
+- **E-mail ao munícipe:** os textos ganharam acentos. O assunto e o conteúdo continuam os mesmos.

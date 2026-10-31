@@ -71,6 +71,6 @@ code: |-
     },
   });
   expect(response.status).to.equal(422);
-  expect(JSON.parse(response.body).mensagem).to.equal('Notificacao de alertas criticos nao pode ser desativada');
+  expect(JSON.parse(response.body).mensagem).to.equal('A notificação de alertas críticos não pode ser desativada.');
 
 metaSortKey: 27000000

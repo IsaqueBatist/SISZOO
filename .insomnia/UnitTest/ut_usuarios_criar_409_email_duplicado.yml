@@ -52,6 +52,6 @@ code: |-
 
   const segunda = await criarUsuario(adminToken, dados);
   expect(segunda.status).to.equal(409);
-  expect(JSON.parse(segunda.body).mensagem).to.equal('E-mail ja cadastrado');
+  expect(JSON.parse(segunda.body).mensagem).to.equal('Este e-mail já está cadastrado.');
 
 metaSortKey: 22000000

@@ -18,7 +18,7 @@ function buscarFixture(id: string) {
 }
 
 function naoEncontrado() {
-  return HttpResponse.json({ mensagem: 'Processo sanitario nao encontrado' }, { status: 404 })
+  return HttpResponse.json({ mensagem: 'Processo sanitário não encontrado.' }, { status: 404 })
 }
 
 export const processosHandlers = [
