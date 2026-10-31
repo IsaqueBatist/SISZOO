@@ -60,9 +60,10 @@ public class ProcessoSanitarioController {
             @RequestParam(required = false) String doenca,
             @RequestParam(required = false) StatusProcesso status,
             @RequestParam(required = false) Boolean urgente,
+            @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "0") int pagina,
             @RequestParam(defaultValue = "20") int tamanho) {
-        return processoService.listar(doenca, status, urgente, pagina, tamanho);
+        return processoService.listar(doenca, status, urgente, q, pagina, tamanho);
     }
 
     @GetMapping("/catalogos")

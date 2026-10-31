@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort;
@@ -77,6 +78,7 @@ import com.siszoo.usuarios.repository.UsuarioRepository;
 import com.siszoo.usuarios.service.AuditoriaEventoService;
 
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Subquery;
 
 /**
  * Processo sanitario (T29, DER §3.5): criacao completa — processo, responsavel
@@ -114,6 +116,9 @@ public class ProcessoSanitarioService {
     // pelo protocolo: como texto, "999/2026" vem antes de "1000/2026".
     private static final Sort ORDEM_LISTAGEM = Sort.by(
             Sort.Order.desc("urgente"), Sort.Order.desc("dataAbertura"), Sort.Order.desc("criadoEm"));
+
+    // Busca aceita o protocolo como aparece na tela ("PS 012/2026").
+    private static final Pattern PREFIXO_PROTOCOLO = Pattern.compile("^\\s*ps\\s*(?=\\d)", Pattern.CASE_INSENSITIVE);
 
     private final ProcessoSanitarioRepository processoRepository;
     private final ResponsavelProcessoRepository responsavelRepository;
@@ -268,7 +273,7 @@ public class ProcessoSanitarioService {
     // a listagem e a de sempre; presente, so os processos com aquele valor.
     @Transactional(readOnly = true)
     public PaginaResponse<ProcessoResumoResponse> listar(String doenca, StatusProcesso status, Boolean urgente,
-            int pagina, int tamanho) {
+            String q, int pagina, int tamanho) {
         Specification<ProcessoSanitario> filtro = (root, query, cb) -> {
             List<Predicate> predicados = new ArrayList<>();
             if (StringUtils.hasText(doenca)) {
@@ -279,6 +284,19 @@ public class ProcessoSanitarioService {
             }
             if (urgente != null) {
                 predicados.add(cb.equal(root.get("urgente"), urgente));
+            }
+            if (StringUtils.hasText(q)) {
+                String termo = "%" + PREFIXO_PROTOCOLO.matcher(q).replaceFirst("").trim().toLowerCase() + "%";
+                Subquery<UUID> porResponsavel = query.subquery(UUID.class);
+                var responsavel = porResponsavel.from(ResponsavelProcesso.class);
+                porResponsavel.select(responsavel.get("processo").get("id"))
+                        .where(cb.like(cb.lower(responsavel.get("nome")), termo));
+
+                predicados.add(cb.or(
+                        cb.like(cb.lower(root.get("protocolo")), termo),
+                        cb.like(cb.lower(root.get("galNumero")), termo),
+                        cb.like(cb.lower(root.get("sinanNumero")), termo),
+                        root.get("id").in(porResponsavel)));
             }
             return cb.and(predicados.toArray(Predicate[]::new));
         };

@@ -147,7 +147,7 @@ describe('Processos — listagem', () => {
     server.use(http.get(`${API_BASE_URL}/processos`, () => HttpResponse.json({ mensagem: 'erro' }, { status: 500 })))
     renderProcessos()
 
-    expect(await screen.findByText('Não foi possível carregar os processos sanitários. Tente novamente.')).toBeInTheDocument()
+    expect(await screen.findByText('Não foi possível carregar os processos sanitários.')).toBeInTheDocument()
   })
 
   it('não mostra aviso de dados de demonstração', async () => {

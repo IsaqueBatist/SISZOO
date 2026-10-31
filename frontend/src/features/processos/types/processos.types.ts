@@ -194,6 +194,8 @@ export interface ProcessosFiltro {
   status?: StatusProcesso
   // T45 (docs/contratos/processos-filtro-urgente.md): ausente = sem filtro.
   urgente?: boolean
+  // Protocolo, nome do responsável, Nº GAL ou Nº SINAN.
+  q?: string
   pagina: number
   tamanho: number
 }

@@ -21,6 +21,7 @@ export async function listarProcessos(filtro: ProcessosFiltro): Promise<PaginaRe
       doenca: filtro.doenca,
       status: filtro.status,
       urgente: filtro.urgente,
+      q: filtro.q,
       pagina: filtro.pagina,
       tamanho: filtro.tamanho,
     },
