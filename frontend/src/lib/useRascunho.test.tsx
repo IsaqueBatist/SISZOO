@@ -116,11 +116,24 @@ describe('useRascunho', () => {
     expect(armazenamento.remover).toHaveBeenCalledWith('u1:vacina:a1')
   })
 
+  it('com rascunho à espera de escolha, digitar não grava por cima dele', async () => {
+    const { armazenamento, terminarCarga } = armazenamentoFalso({ lote: 'SALVO' })
+    const { result } = renderRascunho(armazenamento)
+    await terminarCarga()
+
+    act(() => result.current.form.setValue('lote', 'L3'))
+
+    await new Promise((resolver) => setTimeout(resolver, 20))
+    expect(armazenamento.agendarSalvar).not.toHaveBeenCalled()
+    expect(armazenamento.remover).not.toHaveBeenCalled()
+  })
+
   it('sem chamada de removerAposSucesso (envio que falhou) o rascunho fica', async () => {
     const { armazenamento, terminarCarga } = armazenamentoFalso({ lote: 'SALVO' })
     const { result } = renderRascunho(armazenamento)
     await terminarCarga()
 
+    act(() => result.current.rascunho.restaurar())
     act(() => result.current.form.setValue('lote', 'L3'))
 
     await waitFor(() => expect(armazenamento.agendarSalvar).toHaveBeenCalled())
