@@ -96,7 +96,7 @@ a:hover { text-decoration: underline; }
   font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.6);
+  color: rgba(255,255,255,0.78);
   margin-left: 36px;
 }
 .sidebar-toggle {
@@ -119,7 +119,7 @@ a:hover { text-decoration: underline; }
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: rgba(255,255,255,0.45);
+  color: rgba(255,255,255,0.78);
   padding: var(--space-4) var(--space-3) var(--space-2);
 }
 .sidebar-item {
@@ -177,7 +177,7 @@ a:hover { text-decoration: underline; }
 }
 .sidebar-footer-link:hover { background: var(--sidebar-item-hover); }
 .sidebar-footer .user-name { color: #fff; font-size: 13px; font-weight: 600; line-height: 1.2; }
-.sidebar-footer .user-role { color: rgba(255,255,255,0.6); font-size: 11px; }
+.sidebar-footer .user-role { color: rgba(255,255,255,0.78); font-size: 11px; }
 .sidebar-footer .logout-btn {
   margin-left: auto;
   width: 30px; height: 30px;

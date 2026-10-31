@@ -15,7 +15,12 @@
 }
 @media (max-width: 760px) {
   .reports-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .report-card input,
+  .report-card select {
+    min-width: 0;
+    max-width: 100%;
   }
 }
 
@@ -74,3 +79,5 @@
 .recent-section {
   margin-top: var(--space-5);
 }
+
+.previa-relatorio { scroll-margin-top: calc(var(--topbar-height) + 16px); min-width: 0; }

@@ -25,8 +25,9 @@ const TEMAS: Record<TemaUsuario, Record<string, string>> = {
     '--color-border-strong': '#C5CDD8',
     '--color-text-primary': '#1A2332',
     '--color-text-secondary': '#5A6A7E',
-    '--color-text-muted': '#9AAABB',
+    '--color-text-muted': '#5F6F82',
     '--color-text-inverse': '#FFFFFF',
+    '--color-on-primary': '#FFFFFF',
     '--color-primary': '#1B5E20',
     '--color-primary-hover': '#2E7D32',
     '--color-primary-light': '#E8F5E9',
@@ -35,7 +36,7 @@ const TEMAS: Record<TemaUsuario, Record<string, string>> = {
     '--color-danger': '#C62828',
     '--color-danger-bg': '#FFEBEE',
     '--color-danger-border': '#EF9A9A',
-    '--color-warning': '#E65100',
+    '--color-warning': '#B84300',
     '--color-warning-bg': '#FFF3E0',
     '--color-warning-border': '#FFCC80',
     '--color-alert': '#F57F17',
@@ -56,8 +57,9 @@ const TEMAS: Record<TemaUsuario, Record<string, string>> = {
     '--color-border-strong': '#3A4A61',
     '--color-text-primary': '#F4F6F8',
     '--color-text-secondary': '#B8C4D3',
-    '--color-text-muted': '#7C8DA0',
+    '--color-text-muted': '#A9B7C6',
     '--color-text-inverse': '#1A2332',
+    '--color-on-primary': '#0F1720',
     '--color-primary': '#4CAF50',
     '--color-primary-hover': '#66BB6A',
     '--color-primary-light': 'rgba(76, 175, 80, 0.16)',
@@ -110,6 +112,8 @@ const DENSIDADES: Record<DensidadeUsuario, Record<string, string>> = {
 
 export function aplicarPreferenciasVisuais(preferencias: Pick<PreferenciaUsuario, 'tema' | 'densidade'>) {
   const root = document.documentElement.style
+  // Para o que não é token: selos, campos nativos e demais cores fixas do CSS.
+  document.documentElement.dataset.tema = preferencias.tema === 'DARK' ? 'escuro' : 'claro'
   const variaveisTema = TEMAS[preferencias.tema] ?? TEMAS.LIGHT
   const variaveisDensidade = DENSIDADES[preferencias.densidade] ?? DENSIDADES.NORMAL
 

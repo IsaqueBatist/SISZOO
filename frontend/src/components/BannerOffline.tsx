@@ -9,7 +9,7 @@ export function BannerOffline() {
   if (!motivo) return null
 
   return (
-    <div className="alert warning" role="status" aria-live="polite">
+    <div className="alert warning banner-conexao" role="status" aria-live="polite">
       <span className="bullet" />
       <div className="alert-content">
         <strong>{motivo === 'navegador' ? 'Sem conexão com a internet.' : 'Possível instabilidade na conexão.'}</strong>

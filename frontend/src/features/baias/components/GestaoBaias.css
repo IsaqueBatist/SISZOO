@@ -162,7 +162,7 @@
 }
 .baia-card.warn .status-label {
   background: var(--color-alert-bg);
-  color: var(--color-alert);
+  color: var(--color-warning);
 }
 .baia-card.danger .status-label {
   background: var(--color-danger-bg);

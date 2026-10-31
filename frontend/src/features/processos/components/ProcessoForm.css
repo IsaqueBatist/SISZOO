@@ -104,6 +104,7 @@
 .animal-suggestions .sug:last-child {
   border-bottom: none;
 }
+.animal-suggestions .sug.ativa,
 .animal-suggestions .sug:hover {
   background: var(--color-primary-light);
 }

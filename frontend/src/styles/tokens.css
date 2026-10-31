@@ -16,15 +16,16 @@
   /* Texto */
   --color-text-primary: #1A2332;
   --color-text-secondary: #5A6A7E;
-  --color-text-muted: #9AAABB;
+  --color-text-muted: #5F6F82;
   --color-text-inverse: #FFFFFF;
+  --color-on-primary: #FFFFFF;
 
   /* Semânticas */
   --color-danger: #C62828;
   --color-danger-bg: #FFEBEE;
   --color-danger-border: #EF9A9A;
 
-  --color-warning: #E65100;
+  --color-warning: #B84300;
   --color-warning-bg: #FFF3E0;
   --color-warning-border: #FFCC80;
 
@@ -43,13 +44,13 @@
   /* Status animais */
   --status-available: #2E7D32;
   --status-treatment: #1565C0;
-  --status-quarantine: #E65100;
+  --status-quarantine: #B84300;
   --status-adopted: #6A1B9A;
   --status-deceased: #424242;
 
   /* Processos */
   --process-open: #1565C0;
-  --process-awaiting: #E65100;
+  --process-awaiting: #B84300;
   --process-result: #2E7D32;
   --process-closed: #424242;
   --process-urgent: #C62828;
@@ -59,7 +60,7 @@
   --disease-leishmaniose: #F57F17;
   --disease-leptospirose: #1565C0;
   --disease-esporotricose: #6A1B9A;
-  --disease-febre-maculosa: #E65100;
+  --disease-febre-maculosa: #B84300;
   --disease-febre-amarela: #F9A825;
 
   /* Sidebar */
