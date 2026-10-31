@@ -49,6 +49,7 @@ function renderCadastrar() {
           <Routes>
             <Route path="/animais" element={<div>Lista de animais</div>} />
             <Route path="/animais/novo" element={<CadastrarAnimal />} />
+            <Route path="/animais/:id" element={<div>Ficha do animal</div>} />
           </Routes>
         </AuthProvider>
       </MemoryRouter>
@@ -66,6 +67,7 @@ function renderEditar(id: string) {
           <Routes>
             <Route path="/animais" element={<div>Lista de animais</div>} />
             <Route path="/animais/:id/editar" element={<EditarAnimal />} />
+            <Route path="/animais/:id" element={<div>Ficha do animal</div>} />
           </Routes>
         </AuthProvider>
       </MemoryRouter>
@@ -126,7 +128,7 @@ describe('AnimalForm — cadastro', () => {
     expect(corpoCapturado).not.toHaveProperty('statusNome')
     expect(corpoCapturado).not.toHaveProperty('motivoEntradaNome')
 
-    expect(await screen.findByText('Lista de animais')).toBeInTheDocument()
+    expect(await screen.findByText('Ficha do animal')).toBeInTheDocument()
   })
 
   it('campo obrigatório vazio impede o submit e não chama a API', async () => {
@@ -208,7 +210,7 @@ describe('AnimalForm — edição', () => {
     expect(screen.getByLabelText(/microchip/i)).toBeDisabled()
 
     await avancarParaRevisao(user)
-    await user.click(screen.getByRole('button', { name: /salvar alterações/i }))
+    await user.click(screen.getAllByRole('button', { name: /salvar alterações/i }).at(-1) as HTMLElement)
 
     await waitFor(() => expect(corpoCapturado).not.toBeNull())
     expect(corpoCapturado).toMatchObject({
@@ -220,7 +222,7 @@ describe('AnimalForm — edição', () => {
       esterilizado: true,
     })
 
-    expect(await screen.findByText('Lista de animais')).toBeInTheDocument()
+    expect(await screen.findByText('Ficha do animal')).toBeInTheDocument()
   })
 
   // O PUT substitui a ficha (AnimalService.atualizar grava o que recebe):
@@ -273,7 +275,7 @@ describe('AnimalForm — edição', () => {
     async function salvarSemAlterar(user: ReturnType<typeof userEvent.setup>) {
       await user.click(screen.getByRole('button', { name: /próximo: saúde/i }))
       await user.click(screen.getByRole('button', { name: /próximo: foto/i }))
-      await user.click(screen.getByRole('button', { name: /salvar alterações/i }))
+      await user.click(screen.getAllByRole('button', { name: /salvar alterações/i }).at(-1) as HTMLElement)
     }
 
     function capturarPut(animal: ReturnType<typeof animalDoGet>) {
@@ -321,5 +323,17 @@ describe('AnimalForm — edição', () => {
       await waitFor(() => expect(put.corpo).not.toBeNull())
       expect(put.corpo).toMatchObject({ status: 'obito_eutanasia', laudoEutanasia: laudo })
     })
+  })
+})
+
+describe('AnimalForm — etapas', () => {
+  it('Próximo valida a etapa e mantém a pessoa nela, com o erro na tela', async () => {
+    const user = userEvent.setup()
+    renderCadastrar()
+
+    await user.click(await screen.findByRole('button', { name: /Próximo: Saúde/ }))
+
+    expect(await screen.findByText('Informe o nome do animal.')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Dados Básicos' }).closest('.step-pane')).toHaveClass('active')
   })
 })

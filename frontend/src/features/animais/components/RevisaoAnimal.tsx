@@ -67,6 +67,18 @@ export function RevisaoAnimal() {
           </span>
         </div>
         <div className="review-row">
+          <span className="k">Peso</span>
+          <span className="v">{typeof valores.pesoKg === 'number' && !Number.isNaN(valores.pesoKg) ? `${valores.pesoKg} kg` : '—'}</span>
+        </div>
+        <div className="review-row">
+          <span className="k">Idade aproximada</span>
+          <span className="v">{valores.idadeAprox || '—'}</span>
+        </div>
+        <div className="review-row">
+          <span className="k">Data de entrada</span>
+          <span className="v">{formatarDataBR(valores.dataEntrada)}</span>
+        </div>
+        <div className="review-row">
           <span className="k">Motivo de entrada</span>
           <span className="v">{nomeCatalogo(catalogos?.motivosEntrada, valores.motivoEntrada ?? '')}</span>
         </div>
@@ -82,6 +94,18 @@ export function RevisaoAnimal() {
           <span className="k">Castração</span>
           <span className="v">{CASTRACAO_OPCOES.find((opcao) => opcao.valor === valores.castracaoOpcao)?.label}</span>
         </div>
+        {valores.dataEsterilizacao && (
+          <div className="review-row">
+            <span className="k">Data da castração</span>
+            <span className="v">{formatarDataBR(valores.dataEsterilizacao)}</span>
+          </div>
+        )}
+        {valores.laudoEutanasia && (
+          <div className="review-row" style={{ gridColumn: '1 / -1' }}>
+            <span className="k">Laudo de eutanásia</span>
+            <span className="v">{valores.laudoEutanasia}</span>
+          </div>
+        )}
         <div className="review-row" style={{ gridColumn: '1 / -1' }}>
           <span className="k">Observações</span>
           <span className="v">{valores.observacoes || '—'}</span>

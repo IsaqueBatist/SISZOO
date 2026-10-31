@@ -51,6 +51,7 @@ function renderCadastrar() {
         <AuthProvider>
           <Routes>
             <Route path="/animais" element={<div>Lista de animais</div>} />
+            <Route path="/animais/:id" element={<div>Ficha do animal</div>} />
             <Route path="/animais/novo" element={<CadastrarAnimal />} />
           </Routes>
         </AuthProvider>
@@ -132,7 +133,7 @@ describe('AnimalForm — foto no rascunho (T42)', () => {
 
     await preencherObrigatoriosEEnviar(user)
 
-    expect(await screen.findByText('Lista de animais')).toBeInTheDocument()
+    expect(await screen.findByText('Ficha do animal')).toBeInTheDocument()
     await waitFor(async () => expect(await conteudo('animais')).toEqual({}))
     expect(await conteudo('arquivos')).toEqual({})
   }, 20000)
