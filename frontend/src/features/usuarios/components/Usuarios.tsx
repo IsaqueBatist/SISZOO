@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { ModalConfirmacao } from '@/components/ModalConfirmacao'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import { ErroComRetry } from '@/components/layout/ErroComRetry'
 import { Icon } from '@/components/layout/Icon'
 import { avisar } from '@/lib/avisos'
@@ -10,6 +11,8 @@ import { ROLES, roleKeyFromCargos } from '@/lib/nav'
 import { useAlterarStatusUsuarioMutation, useUsuariosQuery } from '../hooks/useUsuarios'
 import { PERFIS_USUARIO, type PerfilUsuario, type UsuarioListItem } from '../types/usuarios.types'
 import { CriarUsuarioModal } from './CriarUsuarioModal'
+import { EditarUsuarioModal } from './EditarUsuarioModal'
+import { RedefinirSenhaModal } from './RedefinirSenhaModal'
 import './Usuarios.css'
 
 type FiltroStatus = 'Todos' | 'Ativos' | 'Inativos'
@@ -46,10 +49,13 @@ function contarPorPerfil(usuarios: UsuarioListItem[] | undefined): Record<Perfil
 }
 
 export function Usuarios() {
+  const { user } = useAuth()
   const { data: usuarios, isLoading, isError, refetch } = useUsuariosQuery()
   const alterarStatus = useAlterarStatusUsuarioMutation()
   const [modalAberto, setModalAberto] = useState(false)
   const [usuarioEmConfirmacao, setUsuarioEmConfirmacao] = useState<UsuarioListItem | null>(null)
+  const [usuarioEmEdicao, setUsuarioEmEdicao] = useState<UsuarioListItem | null>(null)
+  const [usuarioRedefinindoSenha, setUsuarioRedefinindoSenha] = useState<UsuarioListItem | null>(null)
   const { filtros, definirFiltros, limparFiltros, filtrosAtivos } = useFiltrosLista('usuarios', FILTROS_PADRAO)
   const { busca } = filtros
   const perfilFiltro = filtros.perfil as PerfilUsuario | 'Todos'
@@ -96,7 +102,7 @@ export function Usuarios() {
           <h1>
             Usuários do Sistema <span className="counter">{usuarios?.length ?? 0} usuários</span>
           </h1>
-          <p className="subtitle">Gerencie acessos e perfis · Apenas Administradores podem criar e desativar usuários</p>
+          <p className="subtitle">Gerencie acessos e perfis · Apenas Administradores podem criar, editar e desativar usuários</p>
         </div>
         <div className="actions">
           <button type="button" className="btn btn-primary" onClick={() => setModalAberto(true)}>
@@ -190,13 +196,16 @@ export function Usuarios() {
                   <th>Status</th>
                   <th>Último acesso</th>
                   <th>Criado em</th>
-                  <th style={{ width: 90 }}>Ações</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {usuariosFiltrados.map((usuario) => {
                   const roleKey = roleKeyFromCargos(usuario.cargos)
                   const role = ROLES[roleKey]
+                  const nomeCompleto = `${usuario.nome} ${usuario.sobrenome}`
+                  // Na própria conta, senha e acesso têm outro caminho (o backend recusa).
+                  const ehOProprioUsuario = usuario.id === user?.id
                   return (
                     <tr key={usuario.id}>
                       <td>
@@ -245,10 +254,30 @@ export function Usuarios() {
                           <button
                             type="button"
                             className="btn btn-ghost btn-sm"
-                            onClick={() => setUsuarioEmConfirmacao(usuario)}
+                            aria-label={`Editar ${nomeCompleto}`}
+                            onClick={() => setUsuarioEmEdicao(usuario)}
                           >
-                            {usuario.ativo ? 'Desativar' : 'Reativar'}
+                            Editar
                           </button>
+                          {!ehOProprioUsuario && (
+                            <>
+                              <button
+                                type="button"
+                                className="btn btn-ghost btn-sm"
+                                aria-label={`Redefinir senha de ${nomeCompleto}`}
+                                onClick={() => setUsuarioRedefinindoSenha(usuario)}
+                              >
+                                Redefinir senha
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-ghost btn-sm"
+                                onClick={() => setUsuarioEmConfirmacao(usuario)}
+                              >
+                                {usuario.ativo ? 'Desativar' : 'Reativar'}
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -266,6 +295,18 @@ export function Usuarios() {
       )}
 
       {modalAberto && <CriarUsuarioModal onFechar={() => setModalAberto(false)} />}
+
+      {usuarioEmEdicao && (
+        <EditarUsuarioModal
+          usuario={usuarioEmEdicao}
+          ehOProprioUsuario={usuarioEmEdicao.id === user?.id}
+          onFechar={() => setUsuarioEmEdicao(null)}
+        />
+      )}
+
+      {usuarioRedefinindoSenha && (
+        <RedefinirSenhaModal usuario={usuarioRedefinindoSenha} onFechar={() => setUsuarioRedefinindoSenha(null)} />
+      )}
 
       {usuarioEmConfirmacao && (
         <ModalConfirmacao

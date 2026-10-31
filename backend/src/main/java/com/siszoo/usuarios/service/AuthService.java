@@ -102,6 +102,10 @@ public class AuthService {
                 .ifPresent(mensagem -> {
                     throw new CampoInvalidoException("novaSenha", mensagem);
                 });
+        // Quem recebeu uma senha temporaria nao pode ficar com ela.
+        if (passwordEncoder.matches(request.novaSenha(), usuario.getSenha())) {
+            throw new CampoInvalidoException("novaSenha", "A nova senha precisa ser diferente da senha atual.");
+        }
 
         // T43: o evento registra so a data da troca, nunca senha nem hash. A
         // data vai truncada em microssegundos, a precisao do timestamp do

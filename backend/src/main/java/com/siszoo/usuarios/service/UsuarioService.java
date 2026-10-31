@@ -22,7 +22,10 @@ import com.siszoo.comum.exception.CampoInvalidoException;
 import com.siszoo.comum.util.Paginacao;
 import com.siszoo.usuarios.dto.AtualizarPerfilRequest;
 import com.siszoo.usuarios.dto.AtualizarStatusUsuarioRequest;
+import com.siszoo.usuarios.dto.AtualizarUsuarioRequest;
 import com.siszoo.usuarios.dto.CriarUsuarioRequest;
+import com.siszoo.usuarios.dto.RedefinirSenhaRequest;
+import com.siszoo.usuarios.dto.UsuarioAuditoriaSnapshot;
 import com.siszoo.usuarios.dto.UsuarioResponse;
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.Cargo;
@@ -30,11 +33,15 @@ import com.siszoo.usuarios.entity.MotivoEncerramentoSessao;
 import com.siszoo.usuarios.entity.PreferenciaUsuario;
 import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.entity.UsuarioCargo;
+import com.siszoo.usuarios.entity.UsuarioCargoId;
 import com.siszoo.usuarios.exception.CargoInvalidoException;
 import com.siszoo.usuarios.exception.CrmvObrigatorioException;
 import com.siszoo.usuarios.exception.EmailJaCadastradoException;
+import com.siszoo.usuarios.exception.UltimoAdministradorException;
 import com.siszoo.usuarios.exception.UsuarioNaoEncontradoException;
+import com.siszoo.usuarios.exception.UsuarioNaoPodeAlterarProprioCargoException;
 import com.siszoo.usuarios.exception.UsuarioNaoPodeDesativarASiMesmoException;
+import com.siszoo.usuarios.exception.UsuarioNaoPodeRedefinirPropriaSenhaException;
 import com.siszoo.usuarios.mapper.UsuarioMapper;
 import com.siszoo.usuarios.repository.CargoRepository;
 import com.siszoo.usuarios.repository.PreferenciaUsuarioRepository;
@@ -47,6 +54,7 @@ import jakarta.persistence.criteria.Predicate;
 public class UsuarioService {
 
     private static final String CARGO_VETERINARIO = "Veterinário";
+    private static final String CARGO_ADMINISTRADOR = "Administrador";
 
     private final UsuarioRepository usuarioRepository;
     private final CargoRepository cargoRepository;
@@ -120,9 +128,98 @@ public class UsuarioService {
         // afetado fica em entidade_id.
         UsuarioResponse response = usuarioMapper.toResponse(usuario);
         auditoriaEventoService.registrar(buscarAutor(usuarioAutenticadoId), AcaoAuditoria.CRIACAO, "usuario",
-                usuario.getId(), null, response);
+                usuario.getId(), null, response.semTelefone());
 
         return response;
+    }
+
+    // Edicao pelo Administrador. Vale para outro Administrador, com auditoria; os
+    // limites sao o proprio cargo e o ultimo Administrador ativo.
+    @Transactional
+    public UsuarioResponse atualizar(UUID id, AtualizarUsuarioRequest request, UUID usuarioAutenticadoId) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(UsuarioNaoEncontradoException::new);
+        Cargo cargo = cargoRepository.findByNome(request.cargo())
+                .orElseThrow(CargoInvalidoException::new);
+        if (CARGO_VETERINARIO.equals(cargo.getNome()) && !StringUtils.hasText(request.crmv())) {
+            throw new CrmvObrigatorioException();
+        }
+
+        List<String> cargosAntes = usuarioMapper.cargoNomes(usuario.getCargos());
+        boolean cargoMudou = !cargosAntes.equals(List.of(cargo.getNome()));
+        if (cargoMudou) {
+            if (id.equals(usuarioAutenticadoId)) {
+                throw new UsuarioNaoPodeAlterarProprioCargoException();
+            }
+            if (cargosAntes.contains(CARGO_ADMINISTRADOR)) {
+                garantirOutroAdministradorAtivo(usuario);
+            }
+        }
+
+        String telefoneNovo = StringUtils.hasText(request.telefone()) ? request.telefone() : null;
+        UsuarioAuditoriaSnapshot antes = new UsuarioAuditoriaSnapshot(
+                usuario.getNome(), usuario.getSobrenome(), usuario.getCrmv(), cargosAntes, false);
+        boolean telefoneAlterado = !Objects.equals(usuario.getTelefone(), telefoneNovo);
+
+        usuario.setNome(request.nome().trim());
+        usuario.setSobrenome(request.sobrenome().trim());
+        usuario.setCrmv(StringUtils.hasText(request.crmv()) ? request.crmv().trim() : null);
+        usuario.setTelefone(telefoneNovo);
+        if (cargoMudou) {
+            trocarCargo(usuario, cargo);
+            sessaoService.encerrarDoUsuario(id, MotivoEncerramentoSessao.CARGO_ALTERADO, null);
+        }
+        usuarioRepository.save(usuario);
+
+        UsuarioAuditoriaSnapshot depois = new UsuarioAuditoriaSnapshot(usuario.getNome(), usuario.getSobrenome(),
+                usuario.getCrmv(), List.of(cargo.getNome()), telefoneAlterado);
+        auditoriaEventoService.registrar(buscarAutor(usuarioAutenticadoId), AcaoAuditoria.ATUALIZACAO, "usuario", id,
+                antes, depois);
+
+        return usuarioMapper.toResponse(usuario);
+    }
+
+    // A senha nova e temporaria: reaproveita o primeiro acesso (senha_alterada_em
+    // nula), e a pessoa troca ao entrar. O evento so registra o fato.
+    @Transactional
+    public void redefinirSenha(UUID id, RedefinirSenhaRequest request, UUID usuarioAutenticadoId) {
+        if (id.equals(usuarioAutenticadoId)) {
+            throw new UsuarioNaoPodeRedefinirPropriaSenhaException();
+        }
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(UsuarioNaoEncontradoException::new);
+        PoliticaSenha.violacao(request.senhaTemporaria(), usuario.getEmail(), usuario.getNome(), usuario.getSobrenome())
+                .ifPresent(mensagem -> {
+                    throw new CampoInvalidoException("senhaTemporaria", mensagem);
+                });
+
+        usuario.setSenha(passwordEncoder.encode(request.senhaTemporaria()));
+        usuario.setSenhaAlteradaEm(null);
+        usuarioRepository.save(usuario);
+        sessaoService.encerrarDoUsuario(id, MotivoEncerramentoSessao.SENHA_REDEFINIDA, null);
+
+        auditoriaEventoService.registrar(buscarAutor(usuarioAutenticadoId), AcaoAuditoria.ATUALIZACAO, "usuario", id,
+                null, Map.of("senhaRedefinida", true));
+    }
+
+    private void trocarCargo(Usuario usuario, Cargo cargo) {
+        usuarioCargoRepository.deleteAll(usuario.getCargos());
+        usuario.getCargos().clear();
+        usuarioCargoRepository.flush();
+
+        UsuarioCargo vinculo = new UsuarioCargo();
+        vinculo.setId(new UsuarioCargoId(usuario.getId(), cargo.getId()));
+        vinculo.setUsuario(usuario);
+        vinculo.setCargo(cargo);
+        usuario.getCargos().add(usuarioCargoRepository.save(vinculo));
+    }
+
+    private void garantirOutroAdministradorAtivo(Usuario usuario) {
+        boolean temOutro = usuarioRepository.travarAtivosDoCargo(CARGO_ADMINISTRADOR).stream()
+                .anyMatch(administrador -> !administrador.getId().equals(usuario.getId()));
+        if (!temOutro) {
+            throw new UltimoAdministradorException();
+        }
     }
 
     @Transactional(readOnly = true)
@@ -147,7 +244,8 @@ public class UsuarioService {
                         usuario.isAtivo(),
                         usuario.getUltimoAcesso(),
                         usuario.getCriadoEm(),
-                        usuario.getSenhaAlteradaEm())));
+                        usuario.getSenhaAlteradaEm(),
+                        usuario.getTelefone())));
     }
 
     @Transactional
@@ -162,6 +260,9 @@ public class UsuarioService {
 
         boolean ativoAntes = usuario.isAtivo();
         boolean ativar = Boolean.TRUE.equals(request.ativo());
+        if (!ativar && usuarioMapper.cargoNomes(usuario.getCargos()).contains(CARGO_ADMINISTRADOR)) {
+            garantirOutroAdministradorAtivo(usuario);
+        }
         usuario.setAtivo(ativar);
         usuario.setDesativadoEm(ativar ? null : LocalDateTime.now(clock));
         usuarioRepository.save(usuario);

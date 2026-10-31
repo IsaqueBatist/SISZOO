@@ -29,6 +29,9 @@ class UsuariosSeed {
     // Senha unica e ficticia de todos os usuarios do seed, documentada no
     // README (secao "Dados ficticios"). Atende a PoliticaSenha de todos eles.
     static final String SENHA_FICTICIA = "Ficticio#2026";
+    // Quem nao fica no primeiro acesso troca a senha temporaria pela ficticia:
+    // a troca recusa a senha atual.
+    private static final String SENHA_TEMPORARIA = "Temporaria#2026";
     static final String SUFIXO_EMAIL = ".seed@itu.sp.gov.br";
 
     static final String ADMINISTRADOR = "Administrador";
@@ -135,7 +138,8 @@ class UsuariosSeed {
 
     private UUID criar(PlanoUsuario plano, SeedAtor bootstrap) {
         CriarUsuarioRequest request = executor.valido(new CriarUsuarioRequest(
-                plano.nome(), plano.sobrenome(), plano.email(), plano.cargo(), plano.crmv(), null, SENHA_FICTICIA));
+                plano.nome(), plano.sobrenome(), plano.email(), plano.cargo(), plano.crmv(), null,
+                plano.primeiroAcesso() ? SENHA_FICTICIA : SENHA_TEMPORARIA));
         return bootstrap.executar("USUARIOS_ACESSO:escrita", () -> usuarioService.criar(request, bootstrap.id()).id());
     }
 

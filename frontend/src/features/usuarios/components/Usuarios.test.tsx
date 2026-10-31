@@ -3,17 +3,36 @@ import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { http, HttpResponse } from 'msw'
+import { MemoryRouter } from 'react-router-dom'
 import { API_BASE_URL } from '@/lib/env'
 import { server } from '@/mocks/server'
 import { Avisos } from '@/components/Avisos'
+import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import { Usuarios } from './Usuarios'
+
+const ID_DE_QUEM_ESTA_LOGADA = 'a1b2c3d4-0000-0000-0000-000000000001'
 
 function renderUsuarios() {
   const queryClient = new QueryClient()
+  definirSessaoEmMemoria({
+    token: 'token-existente',
+    usuario: {
+      id: ID_DE_QUEM_ESTA_LOGADA,
+      nome: 'Stéphanie',
+      sobrenome: 'Lima',
+      email: 'stephanie.lima@itu.sp.gov.br',
+      cargos: ['Administrador'],
+      senhaAlteradaEm: '2026-01-10T12:00:00Z',
+    },
+  })
   return render(
     <QueryClientProvider client={queryClient}>
-      <Usuarios />
-      <Avisos />
+      <MemoryRouter>
+        <AuthProvider>
+          <Usuarios />
+          <Avisos />
+        </AuthProvider>
+      </MemoryRouter>
     </QueryClientProvider>,
   )
 }
@@ -31,6 +50,120 @@ describe('Usuarios', () => {
 
     expect(await screen.findByText('Stéphanie Lima')).toBeInTheDocument()
     expect(screen.getByText('Paulo Henriques')).toBeInTheDocument()
+  })
+
+  describe('edição do cadastro', () => {
+    it('edita o cadastro e mostra a confirmação', async () => {
+      const user = userEvent.setup()
+      let corpo: unknown = null
+      server.use(
+        http.put(`${API_BASE_URL}/usuarios/:id`, async ({ request }) => {
+          corpo = await request.json()
+          return HttpResponse.json({})
+        }),
+      )
+      renderUsuarios()
+
+      await user.click(await screen.findByRole('button', { name: 'Editar Paulo Henriques' }))
+      const dialogo = screen.getByRole('dialog')
+      await user.clear(within(dialogo).getByLabelText(/^sobrenome/i))
+      await user.type(within(dialogo).getByLabelText(/^sobrenome/i), 'Henriques Souza')
+      await user.type(within(dialogo).getByLabelText(/telefone/i), '11 4000-1234')
+      await user.click(within(dialogo).getByRole('button', { name: 'Salvar alterações' }))
+
+      expect(await screen.findByText('Cadastro de Paulo Henriques Souza atualizado.')).toBeInTheDocument()
+      expect(corpo).toMatchObject({ nome: 'Paulo', sobrenome: 'Henriques Souza', telefone: '11 4000-1234' })
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
+
+    it('valida no formulário antes de chamar a API', async () => {
+      const user = userEvent.setup()
+      renderUsuarios()
+
+      await user.click(await screen.findByRole('button', { name: 'Editar Paulo Henriques' }))
+      const dialogo = screen.getByRole('dialog')
+      await user.clear(within(dialogo).getByLabelText(/^nome/i))
+      await user.click(within(dialogo).getByRole('button', { name: 'Salvar alterações' }))
+
+      expect(await within(dialogo).findByText('Informe o nome.')).toBeInTheDocument()
+    })
+
+    it('avisa que mudar o perfil encerra as sessões da pessoa', async () => {
+      const user = userEvent.setup()
+      renderUsuarios()
+
+      await user.click(await screen.findByRole('button', { name: 'Editar Paulo Henriques' }))
+      const dialogo = screen.getByRole('dialog')
+      expect(within(dialogo).queryByText(/encerra as sessões/i)).not.toBeInTheDocument()
+
+      await user.selectOptions(within(dialogo).getByLabelText(/^perfil/i), 'Agente Sanitário')
+
+      expect(within(dialogo).getByText(/encerra as sessões/i)).toBeInTheDocument()
+    })
+
+    it('recusa da API aparece no formulário, com a mensagem dela', async () => {
+      const user = userEvent.setup()
+      server.use(
+        http.put(`${API_BASE_URL}/usuarios/:id`, () =>
+          HttpResponse.json({ mensagem: 'O sistema precisa de pelo menos um Administrador ativo.' }, { status: 422 }),
+        ),
+      )
+      renderUsuarios()
+
+      await user.click(await screen.findByRole('button', { name: 'Editar Paulo Henriques' }))
+      await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Salvar alterações' }))
+
+      expect(await screen.findByText('O sistema precisa de pelo menos um Administrador ativo.')).toBeInTheDocument()
+    })
+
+    it('na própria conta o perfil fica bloqueado, sem redefinir senha nem desativar', async () => {
+      const user = userEvent.setup()
+      renderUsuarios()
+
+      await screen.findByText('Stéphanie Lima')
+      expect(screen.queryByRole('button', { name: 'Redefinir senha de Stéphanie Lima' })).not.toBeInTheDocument()
+
+      await user.click(screen.getByRole('button', { name: 'Editar Stéphanie Lima' }))
+
+      expect(within(screen.getByRole('dialog')).getByLabelText(/^perfil/i)).toBeDisabled()
+    })
+  })
+
+  describe('redefinição de senha', () => {
+    it('confirma, mostra a senha temporária uma vez e nunca a recebe da API', async () => {
+      const user = userEvent.setup()
+      let enviada = ''
+      server.use(
+        http.post(`${API_BASE_URL}/usuarios/:id/senha`, async ({ request }) => {
+          enviada = ((await request.json()) as { senhaTemporaria: string }).senhaTemporaria
+          return new HttpResponse(null, { status: 204 })
+        }),
+      )
+      renderUsuarios()
+
+      await user.click(await screen.findByRole('button', { name: 'Redefinir senha de Paulo Henriques' }))
+      const dialogo = screen.getByRole('dialog')
+      expect(within(dialogo).getByText(/perderá a senha atual/i)).toBeInTheDocument()
+      await user.click(within(dialogo).getByRole('button', { name: 'Redefinir senha' }))
+
+      expect(await screen.findByRole('heading', { name: 'Senha redefinida' })).toBeInTheDocument()
+      expect(enviada.length).toBeGreaterThanOrEqual(8)
+      expect(screen.getByText(enviada)).toBeInTheDocument()
+
+      await user.click(screen.getByRole('button', { name: 'Concluir' }))
+      expect(screen.queryByText(enviada)).not.toBeInTheDocument()
+    })
+
+    it('falha na redefinição explica que nada mudou', async () => {
+      const user = userEvent.setup()
+      server.use(http.post(`${API_BASE_URL}/usuarios/:id/senha`, () => HttpResponse.json({}, { status: 500 })))
+      renderUsuarios()
+
+      await user.click(await screen.findByRole('button', { name: 'Redefinir senha de Paulo Henriques' }))
+      await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Redefinir senha' }))
+
+      expect(await screen.findByText(/não foi possível redefinir a senha de paulo henriques/i)).toBeInTheDocument()
+    })
   })
 
   it('exibe o campo CRMV apenas para o perfil Veterinário', async () => {

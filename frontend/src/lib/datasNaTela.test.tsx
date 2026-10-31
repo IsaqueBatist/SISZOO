@@ -67,7 +67,13 @@ describe.each(FUSOS_DO_NAVEGADOR)('navegador em %s', (fuso) => {
         }),
       ),
     )
-    comCliente(<Usuarios />)
+    comCliente(
+      <MemoryRouter>
+        <AuthProvider>
+          <Usuarios />
+        </AuthProvider>
+      </MemoryRouter>,
+    )
 
     expect(await screen.findByText('20/05/2026, 00:30')).toBeInTheDocument()
     expect(screen.getByText('01/03/2024')).toBeInTheDocument()

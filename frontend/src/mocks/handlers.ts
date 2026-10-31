@@ -22,7 +22,7 @@ import { API_BASE_URL } from '../lib/env'
 import { ocorrenciasHandlers } from './ocorrenciasHandlers'
 import { processosHandlers } from './processosHandlers'
 import { relatoriosHandlers } from './relatoriosHandlers'
-import type { CriarUsuarioRequest, UsuarioListItem } from '@/features/usuarios/types/usuarios.types'
+import type { AtualizarUsuarioRequest, CriarUsuarioRequest, UsuarioListItem } from '@/features/usuarios/types/usuarios.types'
 import type { PreferenciaUsuario } from '@/features/configuracoes/types/configuracoes.types'
 
 // Usado só pelos testes automatizados (mocks/server.ts) — o dev browser
@@ -61,6 +61,7 @@ function seedUsuariosMock(): UsuarioMockInterno[] {
       email: 'stephanie.lima@itu.sp.gov.br',
       cargos: ['Veterinário'],
       crmv: 'CRMV-SP 01234',
+      telefone: null,
       senhaAlteradaEm: '2026-01-10T12:00:00',
       ativo: true,
       ultimoAcesso: '2026-05-20T14:32:00',
@@ -74,6 +75,7 @@ function seedUsuariosMock(): UsuarioMockInterno[] {
       email: 'paulo.henriques@itu.sp.gov.br',
       cargos: ['Administrador'],
       crmv: null,
+      telefone: null,
       senhaAlteradaEm: '2024-03-15T09:00:00',
       ativo: true,
       ultimoAcesso: '2026-05-20T14:00:00',
@@ -87,6 +89,7 @@ function seedUsuariosMock(): UsuarioMockInterno[] {
       email: 'carlos.martins@itu.sp.gov.br',
       cargos: ['Veterinário'],
       crmv: 'CRMV-SP 05678',
+      telefone: null,
       senhaAlteradaEm: '2024-05-10T09:00:00',
       ativo: true,
       ultimoAcesso: '2026-05-19T17:02:00',
@@ -100,6 +103,7 @@ function seedUsuariosMock(): UsuarioMockInterno[] {
       email: 'rafael.santos@itu.sp.gov.br',
       cargos: ['Agente Sanitário'],
       crmv: null,
+      telefone: null,
       senhaAlteradaEm: '2024-11-03T09:00:00',
       ativo: true,
       ultimoAcesso: '2026-05-20T12:55:00',
@@ -113,6 +117,7 @@ function seedUsuariosMock(): UsuarioMockInterno[] {
       email: 'marcos.oliveira@itu.sp.gov.br',
       cargos: ['Agente Sanitário'],
       crmv: null,
+      telefone: null,
       senhaAlteradaEm: '2024-12-20T09:00:00',
       ativo: true,
       ultimoAcesso: '2026-05-20T11:08:00',
@@ -126,6 +131,7 @@ function seedUsuariosMock(): UsuarioMockInterno[] {
       email: 'joana.pires@itu.sp.gov.br',
       cargos: ['Veterinário'],
       crmv: 'CRMV-SP 09999',
+      telefone: null,
       senhaAlteradaEm: '2024-09-18T09:00:00',
       ativo: false,
       ultimoAcesso: '2026-02-12T11:00:00',
@@ -1133,6 +1139,7 @@ export const handlers = [
       email: body.email,
       cargos: [body.cargo],
       crmv: body.crmv ?? null,
+          telefone: null,
       senhaAlteradaEm: null,
       ativo: true,
       ultimoAcesso: null,
@@ -1143,6 +1150,20 @@ export const handlers = [
     usuariosMock = [...usuariosMock, novoUsuario]
     return HttpResponse.json(paraUsuarioPublico(novoUsuario), { status: 201 })
   }),
+
+  http.put(`${API_BASE_URL}/usuarios/:id`, async ({ params, request }) => {
+    const body = (await request.json()) as AtualizarUsuarioRequest
+    const usuario = usuariosMock.find((item) => item.id === params.id)
+    if (!usuario) return HttpResponse.json({ mensagem: 'Usuário não encontrado.' }, { status: 404 })
+    usuario.nome = body.nome
+    usuario.sobrenome = body.sobrenome
+    usuario.cargos = [body.cargo]
+    usuario.crmv = body.crmv ?? null
+    usuario.telefone = body.telefone ?? null
+    return HttpResponse.json(paraUsuarioPublico(usuario))
+  }),
+
+  http.post(`${API_BASE_URL}/usuarios/:id/senha`, () => new HttpResponse(null, { status: 204 })),
 
   http.patch(`${API_BASE_URL}/usuarios/:id/status`, async ({ params, request }) => {
     const { ativo } = (await request.json()) as { ativo: boolean }

@@ -193,6 +193,10 @@ A feature `geral` gera a autoridade do módulo inteiro (`MODULO:leitura|escrita|
 
 > **Correção de acesso (V11, 2026-10-12).** A V3 concedia leitura de `ocorrencias` ao Veterinário por engano. A V11 zera a linha (`leitura`, `escrita` e `exclusao` = `false`) pelo UUID fixo do cargo, sem editar a V3. Era a única linha do Veterinário no módulo (a V10 não lhe dá `denunciante_sigiloso`). As autoridades são resolvidas do banco a cada requisição, então a mudança vale também para tokens já emitidos. O Veterinário continua criando e lendo processos sanitários; vincular processo a ocorrência já exigia `OCORRENCIAS_DENUNCIAS:escrita` (D33).
 
+> **Gestão pelo Administrador (decisão de 31/10/2026).** `PUT /api/usuarios/{id}` edita nome, sobrenome, telefone, CRMV e cargo; o e-mail não muda. `POST /api/usuarios/{id}/senha` grava uma senha temporária e zera `senha_alterada_em`, reaproveitando o primeiro acesso. Ambos exigem `USUARIOS_ACESSO:escrita`, valem para outro Administrador e geram `ATUALIZACAO` sem telefone, hash nem senha. Mudar cargo ou redefinir senha encerra as sessões do alvo. Ninguém muda o próprio cargo nem redefine a própria senha por essa rota, e o último Administrador ativo não pode ser rebaixado nem desativado.
+>
+> **Senha temporária (`senha_alterada_em` nula).** O `JwtAuthenticationFilter` responde 403 fora de `/api/auth/*` e `/api/usuarios/me*` até a senha ser trocada. Antes a regra ficava só na tela. A nova senha precisa ser diferente da atual.
+
 > **Sessão (V29, `docs/decisoes/sessao.md`).** A tabela `sessao` da V2 nunca foi usada e foi removida em V8. A `sessao_usuario` nasceu da decisão funcional de 31/10/2026: guarda o hash do token de renovação (cookie httpOnly), a última atividade (limite de 60 minutos) e o encerramento. O token de acesso é um JWT de 15 minutos com o id da sessão, conferida a cada requisição.
 
 #### `preferencia_usuario`

@@ -64,6 +64,7 @@ class MedicamentoControllerIT extends AbstractIntegrationTest {
             Usuario admin = new Usuario();
             admin.setEmail(EMAIL_ADMIN);
             admin.setSenha(passwordEncoder.encode(SENHA_ADMIN));
+            admin.setSenhaAlteradaEm(java.time.LocalDateTime.now());
             admin.setNome("Admin");
             admin.setSobrenome("Medicamentos");
             usuarioRepository.save(admin);
@@ -261,6 +262,7 @@ class MedicamentoControllerIT extends AbstractIntegrationTest {
             Usuario usuario = new Usuario();
             usuario.setEmail(email);
             usuario.setSenha(passwordEncoder.encode(senha));
+            usuario.setSenhaAlteradaEm(java.time.LocalDateTime.now());
             usuario.setNome("Teste");
             usuario.setSobrenome("Medicamentos");
             usuarioRepository.save(usuario);

@@ -8,6 +8,7 @@ import { PERFIS_USUARIO, type PerfilUsuario } from '../types/usuarios.types'
 import { gerarSenhaTemporaria } from '../utils/senhaTemporaria'
 import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
 import { Modal } from '@/components/Modal'
+import { SenhaTemporariaGerada } from './SenhaTemporariaGerada'
 
 interface CriarUsuarioModalProps {
   onFechar: () => void
@@ -22,7 +23,6 @@ export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
   const [submitError, setSubmitError] = useState<string | null>(null)
   // Depois de criar, o modal mostra a senha: ela não volta a aparecer em lugar nenhum.
   const [criado, setCriado] = useState<{ nome: string; senha: string } | null>(null)
-  const [copiada, setCopiada] = useState(false)
 
   const mutation = useCriarUsuarioMutation()
 
@@ -75,38 +75,8 @@ export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
     void handleSubmit(onSubmit)(event)
   }
 
-  async function copiarSenha(senha: string) {
-    try {
-      await navigator.clipboard.writeText(senha)
-      setCopiada(true)
-    } catch {
-      // Sem acesso à área de transferência: a senha segue na tela para copiar à mão.
-      setCopiada(false)
-    }
-  }
-
   if (criado) {
-    return (
-      <Modal titulo="Usuário criado" onFechar={onFechar}>
-        <div className="modal-body col gap-3">
-          <p>
-            Entregue esta senha temporária a <strong>{criado.nome}</strong>. Ela será trocada no primeiro acesso e não
-            aparecerá de novo.
-          </p>
-          <div className="senha-temporaria">
-            <code className="mono">{criado.senha}</code>
-            <button type="button" className="btn btn-outline btn-sm" onClick={() => void copiarSenha(criado.senha)}>
-              {copiada ? 'Copiada' : 'Copiar'}
-            </button>
-          </div>
-        </div>
-        <div className="modal-footer">
-          <button type="button" className="btn btn-primary" onClick={onFechar}>
-            Concluir
-          </button>
-        </div>
-      </Modal>
-    )
+    return <SenhaTemporariaGerada titulo="Usuário criado" nome={criado.nome} senha={criado.senha} onFechar={onFechar} />
   }
 
   return (

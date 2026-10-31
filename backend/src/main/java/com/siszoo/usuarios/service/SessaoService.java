@@ -142,8 +142,8 @@ public class SessaoService {
                 .forEach(sessao -> sessao.encerrar(agora, motivo));
     }
 
-    public boolean estaAtiva(UUID sessaoId, UUID usuarioId) {
-        return sessaoRepository.estaAtiva(sessaoId, usuarioId, agora().minus(inatividade));
+    public Optional<Boolean> senhaTemporariaDaSessaoAtiva(UUID sessaoId, UUID usuarioId) {
+        return sessaoRepository.senhaTemporariaDaSessaoAtiva(sessaoId, usuarioId, agora().minus(inatividade));
     }
 
     private void revogarPorReuso(SessaoUsuario sessao, LocalDateTime agora) {

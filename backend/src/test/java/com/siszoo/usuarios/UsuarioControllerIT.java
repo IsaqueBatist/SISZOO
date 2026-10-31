@@ -62,6 +62,7 @@ class UsuarioControllerIT extends AbstractIntegrationTest {
             Usuario admin = new Usuario();
             admin.setEmail(EMAIL_ADMIN);
             admin.setSenha(passwordEncoder.encode(SENHA_ADMIN));
+            admin.setSenhaAlteradaEm(java.time.LocalDateTime.now());
             admin.setNome("Admin");
             admin.setSobrenome("Teste");
             usuarioRepository.save(admin);
@@ -205,6 +206,7 @@ class UsuarioControllerIT extends AbstractIntegrationTest {
         Usuario usuario = new Usuario();
         usuario.setEmail("teste.status@itu.sp.gov.br");
         usuario.setSenha(passwordEncoder.encode("SenhaQualquer123"));
+        usuario.setSenhaAlteradaEm(java.time.LocalDateTime.now());
         usuario.setNome("Status");
         usuario.setSobrenome("Teste");
         usuarioRepository.save(usuario);
@@ -298,6 +300,7 @@ class UsuarioControllerIT extends AbstractIntegrationTest {
         Usuario agente = new Usuario();
         agente.setEmail("teste.agente.sememautoridade@itu.sp.gov.br");
         agente.setSenha(passwordEncoder.encode("SenhaAgente123"));
+        agente.setSenhaAlteradaEm(java.time.LocalDateTime.now());
         agente.setNome("Agente");
         agente.setSobrenome("SemAutoridade");
         usuarioRepository.save(agente);

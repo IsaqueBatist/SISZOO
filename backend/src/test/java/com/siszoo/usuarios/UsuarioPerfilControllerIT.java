@@ -55,6 +55,7 @@ class UsuarioPerfilControllerIT extends AbstractIntegrationTest {
             Usuario admin = new Usuario();
             admin.setEmail(EMAIL_ADMIN);
             admin.setSenha(passwordEncoder.encode(SENHA_ADMIN));
+            admin.setSenhaAlteradaEm(java.time.LocalDateTime.now());
             admin.setNome("Admin");
             admin.setSobrenome("Perfil");
             usuarioRepository.save(admin);
@@ -119,6 +120,7 @@ class UsuarioPerfilControllerIT extends AbstractIntegrationTest {
         Usuario usuario = new Usuario();
         usuario.setEmail(email);
         usuario.setSenha(passwordEncoder.encode(senha));
+        usuario.setSenhaAlteradaEm(java.time.LocalDateTime.now());
         usuario.setNome("Seed");
         usuario.setSobrenome("SemPreferencias");
         usuarioRepository.save(usuario);

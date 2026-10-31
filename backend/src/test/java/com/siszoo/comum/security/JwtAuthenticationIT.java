@@ -117,6 +117,7 @@ class JwtAuthenticationIT extends AbstractIntegrationTest {
             Usuario usuario = new Usuario();
             usuario.setEmail(email);
             usuario.setSenha(passwordEncoder.encode(SENHA_TESTE));
+            usuario.setSenhaAlteradaEm(java.time.LocalDateTime.now());
             usuario.setNome("Teste");
             usuario.setSobrenome("Autorizacao");
             usuarioRepository.save(usuario);
