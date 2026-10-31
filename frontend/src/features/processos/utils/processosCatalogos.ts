@@ -36,6 +36,13 @@ export const STATUS_PROCESSO_OPCOES: { valor: StatusProcesso; label: string }[] 
   { valor: 'CONCLUIDO', label: 'Concluído' },
 ]
 
+// O ato real por trás de cada avanço manual. Sem entrada para
+// AGUARDANDO_RESULTADO: esse passo só acontece ao lançar o resultado (T37).
+export const ACAO_DE_AVANCO_PROCESSO: Partial<Record<StatusProcesso, string>> = {
+  ABERTO: 'Marcar amostras como enviadas',
+  COM_RESULTADO: 'Concluir processo',
+}
+
 export function labelDe<T extends string>(opcoes: readonly { valor: T; label: string }[], valor: T | null | undefined): string {
   if (!valor) return '—'
   return opcoes.find((opcao) => opcao.valor === valor)?.label ?? valor

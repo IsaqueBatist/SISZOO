@@ -210,7 +210,7 @@ describe('ProcessoDetalhe — ocorrência vinculada', () => {
   })
 })
 
-describe('ProcessoDetalhe — status (provisório, D18)', () => {
+describe('ProcessoDetalhe — status', () => {
   // T37: a transição AGUARDANDO_RESULTADO -> COM_RESULTADO saiu deste botão
   // (vai só pelo lançamento do resultado agora) — estes testes usam
   // ABERTO -> AGUARDANDO_RESULTADO, que continua provisória.
@@ -231,7 +231,7 @@ describe('ProcessoDetalhe — status (provisório, D18)', () => {
     await esperarDetalhe('046/2026')
     expect(cardDe('Status do processo').getByText('Aberto')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Avançar status do processo (provisório)' }))
+    await user.click(screen.getByRole('button', { name: 'Marcar amostras como enviadas' }))
 
     expect(await cardDe('Status do processo').findByText('Aguardando resultado')).toBeInTheDocument()
     expect(corpos).toEqual([{ status: 'AGUARDANDO_RESULTADO' }])
@@ -247,7 +247,7 @@ describe('ProcessoDetalhe — status (provisório, D18)', () => {
     renderDetalhe(PROCESSO_SEM_VINCULO_ID)
     await esperarDetalhe('046/2026')
 
-    await user.click(screen.getByRole('button', { name: 'Avançar status do processo (provisório)' }))
+    await user.click(screen.getByRole('button', { name: 'Marcar amostras como enviadas' }))
 
     expect(await screen.findByText('Transicao de status nao permitida para o processo')).toBeInTheDocument()
   })
@@ -268,8 +268,8 @@ describe('ProcessoDetalhe — status (provisório, D18)', () => {
     renderDetalhe(PROCESSO_SEM_VINCULO_ID)
     await esperarDetalhe('046/2026')
 
-    await user.click(screen.getByRole('button', { name: 'Avançar status do processo (provisório)' }))
-    const emAndamento = await screen.findByRole('button', { name: 'Avançando…' })
+    await user.click(screen.getByRole('button', { name: 'Marcar amostras como enviadas' }))
+    const emAndamento = await screen.findByRole('button', { name: 'Salvando…' })
     expect(emAndamento).toBeDisabled()
     await user.click(emAndamento)
     liberar()
@@ -284,7 +284,8 @@ describe('ProcessoDetalhe — status (provisório, D18)', () => {
     await esperarDetalhe('045/2026')
 
     expect(cardDe('Status do processo').getByText('Processo concluído.')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Avançar status do processo (provisório)' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Marcar amostras como enviadas' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Concluir processo' })).not.toBeInTheDocument()
   })
 
   it('AGUARDANDO_RESULTADO não oferece o avanço provisório: só o lançamento do resultado avança', async () => {
@@ -292,7 +293,8 @@ describe('ProcessoDetalhe — status (provisório, D18)', () => {
     await esperarDetalhe('045/2026')
 
     expect(cardDe('Status do processo').getByText('Aguardando resultado')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Avançar status do processo (provisório)' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Marcar amostras como enviadas' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Concluir processo' })).not.toBeInTheDocument()
     expect(
       cardDe('Status do processo').getByText('Lance o resultado laboratorial no card ao lado para avançar este processo.'),
     ).toBeInTheDocument()
@@ -337,6 +339,7 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
     await aguardarOpcoesDeResultado()
 
     await user.selectOptions(screen.getByLabelText('Resultado laboratorial'), 'negativo')
+    await user.click(screen.getByRole('button', { name: 'Preencher com a data de hoje' }))
     await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
 
     expect(screen.queryByText('Confirmar lançamento do resultado')).not.toBeInTheDocument()
@@ -353,6 +356,7 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
     await aguardarOpcoesDeResultado()
 
     await user.selectOptions(screen.getByLabelText('Resultado laboratorial'), 'positivo')
+    await user.click(screen.getByRole('button', { name: 'Preencher com a data de hoje' }))
     await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
 
     expect(await screen.findByText('Confirmar lançamento do resultado')).toBeInTheDocument()
@@ -377,6 +381,7 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
     await aguardarOpcoesDeResultado()
 
     await user.selectOptions(screen.getByLabelText('Resultado laboratorial'), 'inconclusivo')
+    await user.click(screen.getByRole('button', { name: 'Preencher com a data de hoje' }))
     await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
 
     expect(screen.queryByText('Confirmar lançamento do resultado')).not.toBeInTheDocument()
@@ -393,6 +398,7 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
     await aguardarOpcoesDeResultado()
 
     await user.selectOptions(screen.getByLabelText('Resultado laboratorial'), 'positivo')
+    await user.click(screen.getByRole('button', { name: 'Preencher com a data de hoje' }))
     await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
     await screen.findByText('Confirmar lançamento do resultado')
     await user.click(screen.getByRole('button', { name: 'Cancelar' }))
@@ -435,6 +441,7 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
 
     const select = screen.getByLabelText('Resultado laboratorial') as HTMLSelectElement
     await user.selectOptions(select, 'negativo')
+    await user.click(screen.getByRole('button', { name: 'Preencher com a data de hoje' }))
     await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
 
     expect(await screen.findByText('Não foi possível registrar o resultado. Tente novamente.')).toBeInTheDocument()
