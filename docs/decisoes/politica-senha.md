@@ -14,6 +14,6 @@ Uma linha por decisão, no formato de `T29.md`. Origem: pedido de adotar as regr
 
 ## Pendências
 
-- O botão "Gerar" do modal de usuário cria `Itu@NNNN!` (`gerarSenhaAleatoria` em `CriarUsuarioModal.tsx`): cumpre a regra, mas tem só 9.000 valores possíveis e prefixo fixo. Senha inicial previsível; avaliar gerar com `crypto.getRandomValues`.
+- ~~O botão "Gerar" criava `Itu@NNNN!`, com 9.000 valores possíveis.~~ Resolvido: `gerarSenhaTemporaria` (`frontend/src/features/usuarios/utils/senhaTemporaria.ts`) gera 14 caracteres com fonte criptográfica e as 4 categorias.
 - Política de bloqueio de conta, expiração, histórico e senhas proibidas por dicionário não fazem parte da política pedida e não foram implementados.
 - Senhas existentes que não cumprem a regra continuam valendo até a próxima troca; não há troca forçada.

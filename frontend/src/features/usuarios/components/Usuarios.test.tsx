@@ -2,6 +2,10 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { http, HttpResponse } from 'msw'
+import { API_BASE_URL } from '@/lib/env'
+import { server } from '@/mocks/server'
+import { Avisos } from '@/components/Avisos'
 import { Usuarios } from './Usuarios'
 
 function renderUsuarios() {
@@ -9,13 +13,13 @@ function renderUsuarios() {
   return render(
     <QueryClientProvider client={queryClient}>
       <Usuarios />
+      <Avisos />
     </QueryClientProvider>,
   )
 }
 
 describe('Usuarios', () => {
   beforeEach(() => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
   })
 
   afterEach(() => {
@@ -45,16 +49,16 @@ describe('Usuarios', () => {
     expect(screen.queryByLabelText(/crmv/i)).not.toBeInTheDocument()
   })
 
-  it('botão "Gerar" atualiza o valor visível da senha inicial', async () => {
+  it('botão "Gerar outra" atualiza o valor visível da senha temporária', async () => {
     const user = userEvent.setup()
     renderUsuarios()
 
     await screen.findByText('Stéphanie Lima')
     await user.click(screen.getByRole('button', { name: /adicionar usuário/i }))
 
-    const campoSenha = screen.getByLabelText(/senha inicial/i)
+    const campoSenha = screen.getByLabelText(/senha temporária/i)
     const senhaOriginal = (campoSenha as HTMLInputElement).value
-    await user.click(screen.getByRole('button', { name: /^gerar$/i }))
+    await user.click(screen.getByRole('button', { name: /^gerar outra$/i }))
 
     expect((campoSenha as HTMLInputElement).value).not.toBe(senhaOriginal)
   })
@@ -116,7 +120,7 @@ describe('Usuarios', () => {
     await user.type(screen.getByLabelText(/nome completo/i), 'Fernanda Rocha')
     await user.type(screen.getByLabelText(/e-mail institucional/i), 'fernanda.rocha@itu.sp.gov.br')
     await user.selectOptions(screen.getByLabelText(/^perfil/i), 'Agente Sanitário')
-    const campoSenha = screen.getByLabelText(/senha inicial/i)
+    const campoSenha = screen.getByLabelText(/senha temporária/i)
     await user.clear(campoSenha)
     await user.type(campoSenha, 'Rocha-2026!')
     await user.click(screen.getByRole('button', { name: /^criar usuário$/i }))
@@ -137,8 +141,13 @@ describe('Usuarios', () => {
     await user.selectOptions(screen.getByLabelText(/^perfil/i), 'Agente Sanitário')
     await user.click(screen.getByRole('button', { name: /^criar usuário$/i }))
 
-    expect(await screen.findByText('Fernanda Rocha')).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: /adicionar usuário/i })).not.toBeInTheDocument()
+    const dialogo = await screen.findByRole('dialog', { name: 'Usuário criado' })
+    expect(within(dialogo).getByText('Fernanda Rocha')).toBeInTheDocument()
+    expect(within(dialogo).getByRole('button', { name: 'Copiar' })).toBeInTheDocument()
+    await user.click(within(dialogo).getByRole('button', { name: 'Concluir' }))
+
+    expect(await screen.findByRole('cell', { name: /Fernanda Rocha/ })).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   it('desativa um usuário ativo após confirmação', async () => {
@@ -149,13 +158,15 @@ describe('Usuarios', () => {
     if (!linha) throw new Error('linha não encontrada')
 
     await user.click(within(linha).getByRole('button', { name: /desativar/i }))
+    const dialogo = await screen.findByRole('dialog', { name: 'Desativar usuário' })
+    await user.click(within(dialogo).getByRole('button', { name: 'Desativar' }))
 
-    expect(window.confirm).toHaveBeenCalled()
     expect(await within(linha).findByText('Inativo')).toBeInTheDocument()
+    expect(await screen.findByText('Carlos Martins foi desativado(a).')).toBeInTheDocument()
   })
 
-  it('não altera o status quando o usuário cancela a confirmação', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false)
+  it('falha ao desativar mostra o motivo e não finge que mudou', async () => {
+    server.use(http.patch(`${API_BASE_URL}/usuarios/:id/status`, () => HttpResponse.json({}, { status: 500 })))
     const user = userEvent.setup()
     renderUsuarios()
 
@@ -163,6 +174,38 @@ describe('Usuarios', () => {
     if (!linha) throw new Error('linha não encontrada')
 
     await user.click(within(linha).getByRole('button', { name: /desativar/i }))
+    const dialogo = await screen.findByRole('dialog', { name: 'Desativar usuário' })
+    await user.click(within(dialogo).getByRole('button', { name: 'Desativar' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível alterar o acesso de Rafael Santos')
+    expect(within(linha).getByText('Ativo')).toBeInTheDocument()
+  })
+
+  it('mostra e-mail duplicado no campo, sem sugerir tentar de novo', async () => {
+    server.use(http.post(`${API_BASE_URL}/usuarios`, () => HttpResponse.json({ mensagem: 'Email ja cadastrado' }, { status: 409 })))
+    const user = userEvent.setup()
+    renderUsuarios()
+
+    await screen.findByText('Rafael Santos')
+    await user.click(screen.getByRole('button', { name: /adicionar usuário/i }))
+    await user.type(screen.getByLabelText(/nome completo/i), 'Fernanda Rocha')
+    await user.type(screen.getByLabelText(/e-mail institucional/i), 'fernanda.rocha@itu.sp.gov.br')
+    await user.selectOptions(screen.getByLabelText(/^perfil/i), 'Agente Sanitário')
+    await user.click(screen.getByRole('button', { name: /^criar usuário$/i }))
+
+    expect(await screen.findByText('Já existe um usuário com este e-mail.')).toBeInTheDocument()
+  })
+
+  it('não altera o status quando o usuário cancela a confirmação', async () => {
+    const user = userEvent.setup()
+    renderUsuarios()
+
+    const linha = (await screen.findByText('Rafael Santos')).closest('tr')
+    if (!linha) throw new Error('linha não encontrada')
+
+    await user.click(within(linha).getByRole('button', { name: /desativar/i }))
+    const dialogo = await screen.findByRole('dialog', { name: 'Desativar usuário' })
+    await user.click(within(dialogo).getByRole('button', { name: 'Cancelar' }))
 
     expect(within(linha).getByText('Ativo')).toBeInTheDocument()
   })

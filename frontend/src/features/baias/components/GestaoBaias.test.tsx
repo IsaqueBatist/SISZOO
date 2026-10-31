@@ -153,52 +153,54 @@ describe('GestaoBaias', () => {
   })
 
   it('exclui uma baia sem animais alocados ao confirmar', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
     const user = userEvent.setup()
     renderGestaoBaias()
 
     const cardBaia10 = (await screen.findByText('Baia 10')).closest('.baia-card') as HTMLElement
     await user.click(within(cardBaia10).getByRole('button', { name: /excluir/i }))
 
-    expect(window.confirm).toHaveBeenCalledWith(expect.not.stringContaining('animal(is) alocado'))
+    const dialogo = await screen.findByRole('dialog', { name: 'Excluir baia' })
+    expect(dialogo).not.toHaveTextContent('animal(is) alocado')
+    await user.click(within(dialogo).getByRole('button', { name: 'Excluir' }))
     await waitFor(() => {
       expect(screen.queryByText('Baia 10')).not.toBeInTheDocument()
     })
   })
 
   it('avisa a quantidade de animais alocados ao excluir uma baia ocupada, mas não bloqueia a exclusão', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
     const user = userEvent.setup()
     renderGestaoBaias()
 
     const cardBaia3 = (await screen.findByText('Baia 3')).closest('.baia-card') as HTMLElement
     await user.click(within(cardBaia3).getByRole('button', { name: /excluir/i }))
 
-    expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining('1 animal(is) alocado(s)'))
+    const dialogo = await screen.findByRole('dialog', { name: 'Excluir baia' })
+    expect(dialogo).toHaveTextContent('1 animal(is) alocado(s)')
+    await user.click(within(dialogo).getByRole('button', { name: 'Excluir' }))
     await waitFor(() => {
       expect(screen.queryByText('Baia 3')).not.toBeInTheDocument()
     })
   })
 
   it('não exclui a baia quando o usuário cancela a confirmação', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false)
     const user = userEvent.setup()
     renderGestaoBaias()
 
     const cardBaia3 = (await screen.findByText('Baia 3')).closest('.baia-card') as HTMLElement
     await user.click(within(cardBaia3).getByRole('button', { name: /excluir/i }))
+    await user.click(within(await screen.findByRole('dialog', { name: 'Excluir baia' })).getByRole('button', { name: 'Cancelar' }))
 
     expect(screen.getByText('Baia 3')).toBeInTheDocument()
   })
 
   it('reativa uma baia inativa', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
     const user = userEvent.setup()
     renderGestaoBaias()
 
     await user.selectOptions(await screen.findByLabelText(/filtrar por status/i), 'inativas')
     const cardInterditada = (await screen.findByText('Baia Interditada')).closest('.baia-card') as HTMLElement
     await user.click(within(cardInterditada).getByRole('button', { name: /reativar/i }))
+    await user.click(within(await screen.findByRole('dialog', { name: 'Reativar baia' })).getByRole('button', { name: 'Reativar' }))
 
     await user.selectOptions(screen.getByLabelText(/filtrar por status/i), 'ativas')
     expect(await screen.findByText('Baia Interditada')).toBeInTheDocument()
