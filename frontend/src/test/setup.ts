@@ -1,7 +1,9 @@
 import '@testing-library/jest-dom/vitest'
 import { configure } from '@testing-library/react'
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest'
+import { limparAvisos } from '../lib/avisos'
 import { cancelarTodosOsSalvamentosAgendados } from '../lib/rascunhoDb'
+import { limparFiltrosDeListas } from '../lib/useFiltrosLista'
 import { server } from '../mocks/server'
 
 // Default de 1000ms para getBy/findBy fica apertado quando a suíte inteira
@@ -54,3 +56,9 @@ afterEach(() => {
   resetExamesEAnexosMock()
 })
 afterAll(() => server.close())
+
+// Filtros de lista e avisos vivem fora dos componentes: não podem vazar de um teste para outro.
+afterEach(() => {
+  limparFiltrosDeListas()
+  limparAvisos()
+})
