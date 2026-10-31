@@ -27,15 +27,34 @@ export function CamposSaudeBaia({ baiaAtualId }: CamposSaudeBaiaProps) {
     <div className="form-grid">
       <div className="field">
         <label htmlFor="baiaId">Baia atual</label>
-        <select id="baiaId" className="select" {...register('baiaId', { setValueAs: semVazio })}>
-          <option value="">Sem baia (em trânsito)</option>
-          {baias?.map((baia) => (
-            <option key={baia.id} value={baia.id} disabled={baia.superlotada && baia.id !== baiaAtualId}>
-              {baia.nome} — {baia.ocupacaoAtual}/{baia.capacidade}
-              {baia.superlotada ? ' (superlotada)' : ''}
-            </option>
-          ))}
-        </select>
+        {/* Controlado: com register, opções que chegam depois da ficha deixavam
+            o select vazio no DOM e o reset do rascunho apagava a baia (N5). */}
+        <Controller
+          control={control}
+          name="baiaId"
+          render={({ field }) => (
+            <select
+              id="baiaId"
+              className="select"
+              ref={field.ref}
+              name={field.name}
+              onBlur={field.onBlur}
+              value={field.value ?? ''}
+              onChange={(evento) => field.onChange(semVazio(evento.target.value))}
+            >
+              <option value="">Sem baia (em trânsito)</option>
+              {/* Baia inativa ou lista ainda carregando: a tela não diz "Sem baia"
+                  para um animal que tem baia. */}
+              {field.value && !baias?.some((baia) => baia.id === field.value) && <option value={field.value}>Baia atual</option>}
+              {baias?.map((baia) => (
+                <option key={baia.id} value={baia.id} disabled={baia.superlotada && baia.id !== baiaAtualId}>
+                  {baia.nome} — {baia.ocupacaoAtual}/{baia.capacidade}
+                  {baia.superlotada ? ' (superlotada)' : ''}
+                </option>
+              ))}
+            </select>
+          )}
+        />
       </div>
       <div className="field">
         <label htmlFor="status">
