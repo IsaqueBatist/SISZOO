@@ -26,6 +26,7 @@ import com.siszoo.usuarios.dto.CriarUsuarioRequest;
 import com.siszoo.usuarios.dto.UsuarioResponse;
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.Cargo;
+import com.siszoo.usuarios.entity.MotivoEncerramentoSessao;
 import com.siszoo.usuarios.entity.PreferenciaUsuario;
 import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.entity.UsuarioCargo;
@@ -54,6 +55,7 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final UsuarioMapper usuarioMapper;
     private final AuditoriaEventoService auditoriaEventoService;
+    private final SessaoService sessaoService;
     private final Clock clock;
 
     public UsuarioService(
@@ -64,6 +66,7 @@ public class UsuarioService {
             PasswordEncoder passwordEncoder,
             UsuarioMapper usuarioMapper,
             AuditoriaEventoService auditoriaEventoService,
+            SessaoService sessaoService,
             Clock clock) {
         this.usuarioRepository = usuarioRepository;
         this.cargoRepository = cargoRepository;
@@ -72,6 +75,7 @@ public class UsuarioService {
         this.passwordEncoder = passwordEncoder;
         this.usuarioMapper = usuarioMapper;
         this.auditoriaEventoService = auditoriaEventoService;
+        this.sessaoService = sessaoService;
         this.clock = clock;
     }
 
@@ -161,6 +165,10 @@ public class UsuarioService {
         usuario.setAtivo(ativar);
         usuario.setDesativadoEm(ativar ? null : LocalDateTime.now(clock));
         usuarioRepository.save(usuario);
+        // Reativar nao ressuscita sessao antiga: a pessoa entra de novo.
+        if (!ativar) {
+            sessaoService.encerrarDoUsuario(usuario.getId(), MotivoEncerramentoSessao.USUARIO_DESATIVADO, null);
+        }
 
         // T43: so o estado alterado (ativo), sem os dados pessoais do usuario.
         AcaoAuditoria acao = ativar ? AcaoAuditoria.REATIVACAO : AcaoAuditoria.DESATIVACAO;

@@ -6,7 +6,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { FichaAnimal } from '@/features/animais/components/FichaAnimal'
 import type { Animal } from '@/features/animais/types/animais.types'
-import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
+import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import { Perfil } from '@/features/perfil/components/Perfil'
 import { Usuarios } from '@/features/usuarios/components/Usuarios'
 import { API_BASE_URL } from '@/lib/env'
@@ -90,9 +90,7 @@ describe.each(FUSOS_DO_NAVEGADOR)('navegador em %s', (fuso) => {
     async function renderFichaComAtualizacao(atualizadoEm: string) {
       const rex = (await (await fetch(`${API_BASE_URL}/animais/${REX_ID}`)).json()) as Animal
       server.use(http.get(`${API_BASE_URL}/animais/:id`, () => HttpResponse.json({ ...rex, atualizadoEm })))
-      sessionStorage.setItem(
-        SESSION_STORAGE_KEY,
-        JSON.stringify({
+      definirSessaoEmMemoria({
           token: 'token-existente',
           usuario: {
             id: 'a1b2c3d4-0000-0000-0000-000000000001',
@@ -102,8 +100,7 @@ describe.each(FUSOS_DO_NAVEGADOR)('navegador em %s', (fuso) => {
             cargos: ['Veterinário'],
             senhaAlteradaEm: '2026-01-10T12:00:00Z',
           },
-        }),
-      )
+        })
       comCliente(
         <MemoryRouter initialEntries={[`/animais/${REX_ID}`]}>
           <AuthProvider>

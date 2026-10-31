@@ -4,12 +4,13 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, describe, expect, it } from 'vitest'
 import { Login } from './Login'
-import { AuthProvider, SESSION_STORAGE_KEY } from '../hooks/AuthContext'
+import { AuthProvider, definirSessaoEmMemoria } from '../hooks/AuthContext'
 import { CREDENCIAIS_VALIDAS } from '@/mocks/handlers'
 
-function renderLogin() {
+// O formulário aparece depois de a aba descobrir que não há sessão.
+async function renderLogin() {
   const queryClient = new QueryClient()
-  return render(
+  render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={['/login']}>
         <AuthProvider>
@@ -18,12 +19,13 @@ function renderLogin() {
       </MemoryRouter>
     </QueryClientProvider>,
   )
+  await screen.findByRole('button', { name: /^entrar$/i })
 }
 
 describe('validação do formulário de login', () => {
   it('rejeita e-mail fora do domínio institucional sem disparar requisição', async () => {
     const user = userEvent.setup()
-    renderLogin()
+    await renderLogin()
 
     await user.type(screen.getByLabelText(/e-mail institucional/i), 'fulano@gmail.com')
     await user.type(screen.getByLabelText(/^senha/i), 'qualquer-coisa')
@@ -37,7 +39,7 @@ describe('validação do formulário de login', () => {
 
   it('bloqueia envio com campos vazios', async () => {
     const user = userEvent.setup()
-    renderLogin()
+    await renderLogin()
 
     await user.click(screen.getByRole('button', { name: /^entrar$/i }))
 
@@ -49,7 +51,7 @@ describe('validação do formulário de login', () => {
 
   it('rejeita e-mail institucional com dígito', async () => {
     const user = userEvent.setup()
-    renderLogin()
+    await renderLogin()
 
     await user.type(screen.getByLabelText(/e-mail institucional/i), 'fulano1@itu.sp.gov.br')
     await user.type(screen.getByLabelText(/^senha/i), 'qualquer-coisa')
@@ -62,7 +64,7 @@ describe('validação do formulário de login', () => {
 
   it('aceita e-mail institucional no formato nome.sobrenome', async () => {
     const user = userEvent.setup()
-    renderLogin()
+    await renderLogin()
 
     await user.type(screen.getByLabelText(/e-mail institucional/i), CREDENCIAIS_VALIDAS.email)
     await user.type(screen.getByLabelText(/^senha/i), CREDENCIAIS_VALIDAS.senha)
@@ -97,6 +99,10 @@ describe('sessão', () => {
   afterEach(() => sessionStorage.clear())
 
   it('explica que a sessão expirou', async () => {
+    definirSessaoEmMemoria({
+      token: 'token-vencido',
+      usuario: { id: 'u1', nome: 'Ana', sobrenome: 'Silva', email: 'ana@itu.sp.gov.br', cargos: ['Agente Sanitário'], senhaAlteradaEm: '2026-01-10T12:00:00Z' },
+    })
     renderComEstado(null)
     window.dispatchEvent(new Event('auth:unauthorized'))
 
@@ -107,7 +113,7 @@ describe('sessão', () => {
     const user = userEvent.setup()
     renderComEstado({ voltarPara: '/ocorrencias' })
 
-    await user.type(screen.getByLabelText(/e-mail institucional/i), CREDENCIAIS_VALIDAS.email)
+    await user.type(await screen.findByLabelText(/e-mail institucional/i), CREDENCIAIS_VALIDAS.email)
     await user.type(screen.getByLabelText(/^senha/i), CREDENCIAIS_VALIDAS.senha)
     await user.click(screen.getByRole('button', { name: /^entrar$/i }))
 
@@ -115,13 +121,10 @@ describe('sessão', () => {
   })
 
   it('com sessão aberta, não mostra o formulário de login', async () => {
-    sessionStorage.setItem(
-      SESSION_STORAGE_KEY,
-      JSON.stringify({
+    definirSessaoEmMemoria({
         token: 'token-existente',
         usuario: { id: 'u1', nome: 'Ana', sobrenome: 'Silva', email: 'ana@itu.sp.gov.br', cargos: ['Agente Sanitário'], senhaAlteradaEm: '2026-01-10T12:00:00Z' },
-      }),
-    )
+      })
     renderComEstado(null)
 
     expect(await screen.findByText('Dashboard')).toBeInTheDocument()

@@ -19,7 +19,7 @@ export function Login() {
   const location = useLocation()
   const estado = location.state as EstadoLogin | null
   const destino = estado?.voltarPara ?? '/dashboard'
-  const { login, isLoading, token, sessaoExpirada } = useAuth()
+  const { login, isLoading, token, carregandoSessao, sessaoExpirada, expirouPorInatividade } = useAuth()
   useTituloPagina('Entrar')
   const [senhaVisivel, setSenhaVisivel] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -54,6 +54,7 @@ export function Login() {
 
   // Sessão aberta: esta tela não tem o que oferecer.
   if (token) return <Navigate to={destino} replace />
+  if (carregandoSessao) return <p role="status" className="carregando-sessao">Carregando sua sessão…</p>
 
   return (
     <div className="login-shell">
@@ -113,7 +114,9 @@ export function Login() {
           {sessaoExpirada && !submitError && (
             <div className="alert warning" role="status">
               <span className="bullet" />
-              <div className="alert-content">Sua sessão expirou. Entre de novo para continuar de onde parou.</div>
+              <div className="alert-content">
+                {expirouPorInatividade ? 'Sua sessão expirou por inatividade.' : 'Sua sessão expirou.'} Entre de novo para continuar de onde parou.
+              </div>
             </div>
           )}
 

@@ -40,7 +40,7 @@ O **SISZOO** digitaliza e centraliza esses processos em um sistema web leve, de 
 |--------|-----------|
 | **A -  Gestão de Animais do Canil** | Cadastro de animais (microchip, medalha, procedência), gestão de baias, histórico clínico imutável (vacinações, procedimentos, prescrições, exames), anexos do animal e alertas de reforço vacinal |
 | **B -  Processos Sanitários** | Registro e acompanhamento de zoonoses (raiva, esporotricose, leishmaniose visceral, leptospirose, febre maculosa, febre amarela): amostras, resultado laboratorial imutável, notificação por e-mail |
-| **C -  Autenticação e Perfis de Acesso** | Login stateless via JWT, perfis com permissões fixas, política de senha e trilha de auditoria consultável |
+| **C -  Autenticação e Perfis de Acesso** | Login com sessão renovável e expiração por inatividade, perfis com permissões fixas, política de senha e trilha de auditoria consultável |
 | **D -  Dashboard e Relatórios** | Indicadores e gráficos com cache de 5 min, seis relatórios em PDF/CSV com histórico de exportações |
 | **E -  Ocorrências e Denúncias** | Registro com protocolo anual, denunciante sigiloso/anônimo, anexos, movimentações e encerramento com providência |
 
@@ -61,7 +61,7 @@ O **SISZOO** digitaliza e centraliza esses processos em um sistema web leve, de 
 - PostgreSQL 16
 
 **Autenticação**
-- JWT (stateless)
+- JWT de curta duração com sessão renovável em cookie httpOnly ([decisões](docs/decisoes/sessao.md))
 
 ## Regras de negócio críticas
 
@@ -207,6 +207,7 @@ Exemplos em [`.env.example`](.env.example) (raiz, usado pelo `docker-compose.yml
 | `ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD` | backend | Admin inicial criado na primeira subida (`DataSeeder`); vazio = não cria |
 | `SISZOO_SEED_HABILITADO` | backend (perfil `seed`) | `true` liga o seed de dados fictícios (só com `dev`) |
 | `SISZOO_CORS_ORIGIN` | backend | Única origem do frontend aceita pela API |
+| `SISZOO_COOKIE_SECURE`, `SISZOO_COOKIE_SAMESITE` | backend | Cookie da sessão; use `SISZOO_COOKIE_SECURE=true` em produção com HTTPS ([docs/decisoes/sessao.md](docs/decisoes/sessao.md)) |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_AUTH`, `SMTP_STARTTLS*`, `SMTP_SSL` | backend | E-mail ao munícipe ([docs/email.md](docs/email.md)) |
 | `SISZOO_MAIL_FROM` | backend | Remetente dos e-mails |
 | `VITE_API_BASE_URL` | frontend (build) | URL da API |

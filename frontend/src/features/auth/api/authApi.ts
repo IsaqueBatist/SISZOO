@@ -2,7 +2,8 @@ import { http } from '@/lib/http'
 import type { LoginRequest, LoginResponse, TrocarSenhaRequest } from '../types/auth.types'
 
 export function login(payload: LoginRequest): Promise<LoginResponse> {
-  return http.post<LoginResponse>('/auth/login', payload).then((response) => response.data)
+  // withCredentials: a resposta traz o cookie httpOnly da sessão.
+  return http.post<LoginResponse>('/auth/login', payload, { withCredentials: true }).then((response) => response.data)
 }
 
 // Backend responde 204 sem corpo (ver AuthController.trocarSenha) — quem

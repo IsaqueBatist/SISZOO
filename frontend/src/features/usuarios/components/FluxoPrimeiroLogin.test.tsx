@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it, vi } from 'vitest'
 import { AppRoutes } from '@/routes/AppRoutes'
-import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
+import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
 
 const ADMIN: Usuario = {
@@ -19,7 +19,7 @@ const ADMIN: Usuario = {
 const NOVA_SENHA_INICIAL = 'senha-provisoria-123'
 
 function renderApp() {
-  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-admin', usuario: ADMIN }))
+  definirSessaoEmMemoria({ token: 'token-admin', usuario: ADMIN })
 
   const queryClient = new QueryClient()
   return render(

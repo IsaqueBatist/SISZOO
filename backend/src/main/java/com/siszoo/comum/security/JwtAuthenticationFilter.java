@@ -13,9 +13,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.siszoo.usuarios.repository.UsuarioRepository;
 import com.siszoo.usuarios.service.AutoridadeService;
 import com.siszoo.usuarios.service.JwtService;
+import com.siszoo.usuarios.service.SessaoService;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -31,13 +31,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final AutoridadeService autoridadeService;
-    private final UsuarioRepository usuarioRepository;
+    private final SessaoService sessaoService;
 
     public JwtAuthenticationFilter(
-            JwtService jwtService, AutoridadeService autoridadeService, UsuarioRepository usuarioRepository) {
+            JwtService jwtService, AutoridadeService autoridadeService, SessaoService sessaoService) {
         this.jwtService = jwtService;
         this.autoridadeService = autoridadeService;
-        this.usuarioRepository = usuarioRepository;
+        this.sessaoService = sessaoService;
     }
 
     @Override
@@ -69,12 +69,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             Claims claims = jwtService.validarToken(token).getPayload();
             String usuarioId = claims.getSubject();
-            // Token valido nao basta: o usuario desativado (ou removido) depois
-            // da emissao perde o acesso na hora, sem esperar a expiracao. Sem
-            // autenticacao, as rotas protegidas respondem 401 (entry point),
-            // como com token invalido. Uma consulta por requisicao, sem cache
-            // (volume baixo do CCZ).
-            if (usuarioId == null || !usuarioRepository.existsByIdAndAtivoTrue(UUID.fromString(usuarioId))) {
+            String sessaoId = JwtService.sessaoDe(claims);
+            // Token valido nao basta: sessao encerrada, vencida por inatividade
+            // ou de usuario desativado (ou removido) perde o acesso na hora, sem
+            // esperar a expiracao. Sem autenticacao, as rotas protegidas
+            // respondem 401 (entry point), como com token invalido. Uma consulta
+            // por requisicao, sem cache (volume baixo do CCZ).
+            if (usuarioId == null || sessaoId == null
+                    || !sessaoService.estaAtiva(UUID.fromString(sessaoId), UUID.fromString(usuarioId))) {
                 SecurityContextHolder.clearContext();
                 return;
             }
@@ -85,6 +87,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Set<GrantedAuthority> autoridades = autoridadeService.resolverAutoridades(cargos);
 
             var autenticacao = new UsernamePasswordAuthenticationToken(usuarioId, null, autoridades);
+            autenticacao.setDetails(sessaoId);
             SecurityContextHolder.getContext().setAuthentication(autenticacao);
         } catch (JwtException | IllegalArgumentException e) {
             SecurityContextHolder.clearContext();

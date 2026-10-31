@@ -159,6 +159,12 @@
 .kpi-delta.neutral { color: var(--color-text-secondary); }
 
 /* ===== Alert Banner ===== */
+.carregando-sessao {
+  padding: 48px 16px;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
 .alert {
   display: flex; gap: var(--space-3);
   padding: var(--space-3) var(--space-4);

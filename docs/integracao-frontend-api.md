@@ -7,8 +7,9 @@ Status: **auditado em 25/10/2026** (branch `feat/dados-reais-seed`). Atualize ao
 - **Cliente único:** `frontend/src/lib/http.ts`, uma instância axios.
   - URL base: `VITE_API_BASE_URL` + `/api` (`lib/env.ts`).
   - Interceptor de requisição: `Authorization: Bearer`.
-  - Interceptor de resposta: 401 → evento `auth:unauthorized` → logout e volta ao login (`AuthContext`); falha de rede →
-    aviso de conexão.
+  - Interceptor de resposta: 401 → renova uma vez e repete a requisição; se o servidor recusar a renovação, evento
+    `auth:unauthorized` → volta ao login preservando rascunhos (`AuthContext`); falha de rede → aviso de conexão.
+  - Renovação e coordenação entre abas: `lib/sessao/` ([decisões](decisoes/sessao.md)).
 - **Erros:** `lib/erroApi.ts` traduz a mensagem de regra (409/422) e os erros por campo (422) para o formulário.
 - **Estado de servidor:** React Query (`lib/queryClient.ts`); cada feature tem os seus hooks `use*Query`/`use*Mutation`.
   As telas mostram carregando (skeleton), vazio, erro com "Tentar novamente" e sem permissão (rotas e menu por perfil;

@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
@@ -24,6 +25,7 @@ import io.jsonwebtoken.security.Keys;
 public class JwtService {
 
     private static final int TAMANHO_MINIMO_SECRET_BYTES = 32;
+    private static final String CLAIM_SESSAO = "sid";
 
     private final SecretKey key;
     private final long expiracaoMinutos;
@@ -50,7 +52,9 @@ public class JwtService {
         this.jjwtClock = () -> Date.from(Instant.now(this.clock));
     }
 
-    public String gerarToken(Usuario usuario) {
+    // sid liga o token de acesso (curto) a sessao no servidor, que decide se
+    // ele ainda vale: logout e revogacao nao esperam a expiracao.
+    public String gerarToken(Usuario usuario, UUID sessaoId) {
         Instant agora = Instant.now(clock);
         List<String> cargos = usuario.getCargos().stream()
                 .map(usuarioCargo -> usuarioCargo.getCargo().getNome())
@@ -60,10 +64,15 @@ public class JwtService {
         return Jwts.builder()
                 .subject(usuario.getId().toString())
                 .claim("cargos", cargos)
+                .claim(CLAIM_SESSAO, sessaoId.toString())
                 .issuedAt(Date.from(agora))
                 .expiration(Date.from(agora.plus(expiracaoMinutos, ChronoUnit.MINUTES)))
                 .signWith(key)
                 .compact();
+    }
+
+    public static String sessaoDe(Claims claims) {
+        return claims.get(CLAIM_SESSAO, String.class);
     }
 
     public Jws<Claims> validarToken(String token) {

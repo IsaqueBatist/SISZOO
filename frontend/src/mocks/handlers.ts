@@ -1099,6 +1099,15 @@ export const handlers = [
     return HttpResponse.json({ mensagem: 'Credenciais inválidas' }, { status: 401 })
   }),
 
+  // Sem cookie de sessão nos testes: a aba que abre sem sessão vai para o login.
+  http.post(`${API_BASE_URL}/auth/renovar`, () => {
+    return HttpResponse.json({ mensagem: 'Sua sessão expirou. Entre novamente para continuar.' }, { status: 401 })
+  }),
+
+  http.post(`${API_BASE_URL}/auth/logout`, () => {
+    return new HttpResponse(null, { status: 204 })
+  }),
+
   http.post(`${API_BASE_URL}/auth/senha`, async () => {
     return new HttpResponse(null, { status: 204 })
   }),

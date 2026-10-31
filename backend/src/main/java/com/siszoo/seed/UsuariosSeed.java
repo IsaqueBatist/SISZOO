@@ -110,7 +110,7 @@ class UsuariosSeed {
                     () -> criar(plano, bootstrap));
             if (!plano.primeiroAcesso()) {
                 executor.garantir(plano.chave() + ":senha", "usuario_senha", () -> {
-                    authService.trocarSenha(id, executor.valido(new TrocarSenhaRequest(SENHA_FICTICIA, SENHA_FICTICIA)));
+                    authService.trocarSenha(id, null, executor.valido(new TrocarSenhaRequest(SENHA_FICTICIA, SENHA_FICTICIA)));
                     return id;
                 });
             }

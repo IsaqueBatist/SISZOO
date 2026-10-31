@@ -12,6 +12,7 @@ export type AcaoAuditoria =
   | 'ENCERRAMENTO'
   | 'VISUALIZACAO'
   | 'ACESSO_NEGADO'
+  | 'SESSAO_REVOGADA'
 
 // Espelha com.siszoo.usuarios.dto.AuditoriaEventoResponse.
 export interface EventoAuditoria {

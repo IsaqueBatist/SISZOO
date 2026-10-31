@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Avisos } from '@/components/Avisos'
 import { BannerOffline } from '@/components/BannerOffline'
-import { useAuth } from '@/features/auth/hooks/useAuth'
-import { useAvisoFimDeSessao } from '@/features/auth/hooks/useAvisoFimDeSessao'
 import { tituloDaRota } from '@/lib/nav'
 import { limparRascunhosExpirados } from '@/lib/rascunhoDb'
 import { useTelaEstreita } from '@/lib/useTelaEstreita'
@@ -42,10 +40,8 @@ export function Layout() {
   const [menuAberto, setMenuAberto] = useState(false)
   const telaEstreita = useTelaEstreita()
   const { pathname } = useLocation()
-  const { token } = useAuth()
 
   useTituloPagina(tituloDaRota(pathname))
-  useAvisoFimDeSessao(token)
 
   // Manutenção do IndexedDB uma vez por carga da aplicação: rascunho vencido
   // (7 dias) e arquivo órfão saem do disco da máquina compartilhada. É

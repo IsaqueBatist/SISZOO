@@ -4,7 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it } from 'vitest'
 import { TrocarSenha } from './TrocarSenha'
-import { AuthProvider, SESSION_STORAGE_KEY } from '../hooks/AuthContext'
+import { AuthProvider, definirSessaoEmMemoria } from '../hooks/AuthContext'
 import type { Usuario } from '../types/auth.types'
 
 const USUARIO_PRIMEIRO_ACESSO: Usuario = {
@@ -17,10 +17,7 @@ const USUARIO_PRIMEIRO_ACESSO: Usuario = {
 }
 
 function renderTrocarSenha() {
-  sessionStorage.setItem(
-    SESSION_STORAGE_KEY,
-    JSON.stringify({ token: 'token-existente', usuario: USUARIO_PRIMEIRO_ACESSO }),
-  )
+  definirSessaoEmMemoria({ token: 'token-existente', usuario: USUARIO_PRIMEIRO_ACESSO })
 
   const queryClient = new QueryClient()
   return render(
