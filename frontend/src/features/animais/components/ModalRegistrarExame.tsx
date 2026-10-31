@@ -116,7 +116,7 @@ export function ModalRegistrarExame({ animalId, retifica, onFechar, onSucesso }:
                 <label htmlFor="exame-tipo">
                   Tipo de exame <span className="req">*</span>
                 </label>
-                <select id="exame-tipo" className={`select${errors.tipoExame ? ' error' : ''}`} {...register('tipoExame')}>
+                <select id="exame-tipo" className={`select${errors.tipoExame ? ' error' : ''}`} aria-invalid={errors.tipoExame ? true : undefined} aria-describedby={errors.tipoExame ? 'exame-tipo-erro' : undefined} {...register('tipoExame')}>
                   <option value="" disabled>
                     Selecione…
                   </option>
@@ -126,7 +126,7 @@ export function ModalRegistrarExame({ animalId, retifica, onFechar, onSucesso }:
                     </option>
                   ))}
                 </select>
-                {errors.tipoExame && <span className="err">{errors.tipoExame.message}</span>}
+                {errors.tipoExame && <span className="err" id="exame-tipo-erro">{errors.tipoExame.message}</span>}
               </div>
 
               <div className="field">
@@ -147,24 +147,24 @@ export function ModalRegistrarExame({ animalId, retifica, onFechar, onSucesso }:
                 </label>
                 <input
                   id="exame-data-solicitacao"
-                  className={`input${errors.dataSolicitacao ? ' error' : ''}`}
+                  className={`input${errors.dataSolicitacao ? ' error' : ''}`} aria-invalid={errors.dataSolicitacao ? true : undefined} aria-describedby={errors.dataSolicitacao ? 'exame-data-solicitacao-erro' : undefined}
                   type="date"
                   max={hojeEmItu()}
                   {...register('dataSolicitacao')}
                 />
-                {errors.dataSolicitacao && <span className="err">{errors.dataSolicitacao.message}</span>}
+                {errors.dataSolicitacao && <span className="err" id="exame-data-solicitacao-erro">{errors.dataSolicitacao.message}</span>}
               </div>
 
               <div className="field">
                 <label htmlFor="exame-data-resultado">Data do resultado</label>
                 <input
                   id="exame-data-resultado"
-                  className={`input${errors.dataResultado ? ' error' : ''}`}
+                  className={`input${errors.dataResultado ? ' error' : ''}`} aria-invalid={errors.dataResultado ? true : undefined} aria-describedby={errors.dataResultado ? 'exame-data-resultado-erro' : undefined}
                   type="date"
                   max={hojeEmItu()}
                   {...register('dataResultado')}
                 />
-                {errors.dataResultado && <span className="err">{errors.dataResultado.message}</span>}
+                {errors.dataResultado && <span className="err" id="exame-data-resultado-erro">{errors.dataResultado.message}</span>}
               </div>
             </div>
 
@@ -172,12 +172,12 @@ export function ModalRegistrarExame({ animalId, retifica, onFechar, onSucesso }:
               <label htmlFor="exame-resultado">Resultado / laudo</label>
               <textarea
                 id="exame-resultado"
-                className={`textarea${errors.resultado ? ' error' : ''}`}
+                className={`textarea${errors.resultado ? ' error' : ''}`} aria-invalid={errors.resultado ? true : undefined} aria-describedby={errors.resultado ? 'exame-resultado-erro' : undefined}
                 rows={3}
                 {...register('resultado', { setValueAs: semEspacos })}
               />
               {errors.resultado ? (
-                <span className="err">{errors.resultado.message}</span>
+                <span className="err" id="exame-resultado-erro">{errors.resultado.message}</span>
               ) : (
                 <span className="hint">Informe junto com a data do resultado; deixe em branco enquanto o exame estiver pendente.</span>
               )}

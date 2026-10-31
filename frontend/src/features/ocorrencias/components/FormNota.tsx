@@ -32,12 +32,12 @@ export function FormNota({ ocorrenciaId }: { ocorrenciaId: string }) {
         <label htmlFor="nota-descricao">Nova nota interna</label>
         <textarea
           id="nota-descricao"
-          className={`textarea${erro ? ' error' : ''}`}
+          className={`textarea${erro ? ' error' : ''}`} aria-invalid={erro ? true : undefined} aria-describedby={erro ? 'nota-descricao-erro' : undefined}
           value={descricao}
           onChange={(event) => setDescricao(event.target.value)}
           placeholder="Registre uma observação para a equipe."
         />
-        {erro && <span className="err">{erro}</span>}
+        {erro && <span className="err" id="nota-descricao-erro">{erro}</span>}
       </div>
       <button type="submit" className="btn btn-outline btn-sm" style={{ marginTop: 8 }} disabled={mutation.isPending}>
         {mutation.isPending ? 'Adicionando…' : 'Adicionar nota'}

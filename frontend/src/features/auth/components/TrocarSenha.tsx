@@ -77,14 +77,14 @@ export function TrocarSenha() {
             </span>
             <input
               id="novaSenha"
-              className={`input${errors.novaSenha ? ' error' : ''}`}
+              className={`input${errors.novaSenha ? ' error' : ''}`} aria-invalid={errors.novaSenha ? true : undefined} aria-describedby={errors.novaSenha ? 'novaSenha-erro' : undefined}
               type="password"
               placeholder="••••••••"
               autoComplete="new-password"
               {...register('novaSenha')}
             />
           </div>
-          {errors.novaSenha && <span className="err">{errors.novaSenha.message}</span>}
+          {errors.novaSenha && <span className="err" id="novaSenha-erro">{errors.novaSenha.message}</span>}
         </div>
 
         <div className="field">
@@ -97,14 +97,14 @@ export function TrocarSenha() {
             </span>
             <input
               id="confirmarSenha"
-              className={`input${errors.confirmarSenha ? ' error' : ''}`}
+              className={`input${errors.confirmarSenha ? ' error' : ''}`} aria-invalid={errors.confirmarSenha ? true : undefined} aria-describedby={errors.confirmarSenha ? 'confirmarSenha-erro' : undefined}
               type="password"
               placeholder="••••••••"
               autoComplete="new-password"
               {...register('confirmarSenha')}
             />
           </div>
-          {errors.confirmarSenha && <span className="err">{errors.confirmarSenha.message}</span>}
+          {errors.confirmarSenha && <span className="err" id="confirmarSenha-erro">{errors.confirmarSenha.message}</span>}
         </div>
 
         <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={mutation.isPending}>

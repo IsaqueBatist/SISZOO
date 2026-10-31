@@ -39,11 +39,13 @@ export function SecaoDenunciado() {
               <input
                 id="dcd-cpf"
                 className={`input mono${errors.denunciado?.cpf ? ' error' : ''}`}
+                aria-invalid={errors.denunciado?.cpf ? true : undefined}
+                aria-describedby={errors.denunciado?.cpf ? 'dcd-cpf-erro' : undefined}
                 type="text"
                 placeholder="000.000.000-00"
                 {...register('denunciado.cpf', { onChange: aplicarMascaraAoDigitar(formatarCpf) })}
               />
-              {errors.denunciado?.cpf && <span className="err">{errors.denunciado.cpf.message}</span>}
+              {errors.denunciado?.cpf && <span className="err" id="dcd-cpf-erro">{errors.denunciado.cpf.message}</span>}
             </div>
             <div className="field full">
               <label htmlFor="dcd-endereco">Endereço</label>
@@ -60,11 +62,13 @@ export function SecaoDenunciado() {
               <input
                 id="dcd-telefone"
                 className={`input mono${errors.denunciado?.telefone ? ' error' : ''}`}
+                aria-invalid={errors.denunciado?.telefone ? true : undefined}
+                aria-describedby={errors.denunciado?.telefone ? 'dcd-telefone-erro' : undefined}
                 type="text"
                 placeholder="(11) 90000-0000"
                 {...register('denunciado.telefone', { onChange: aplicarMascaraAoDigitar(formatarTelefone) })}
               />
-              {errors.denunciado?.telefone && <span className="err">{errors.denunciado.telefone.message}</span>}
+              {errors.denunciado?.telefone && <span className="err" id="dcd-telefone-erro">{errors.denunciado.telefone.message}</span>}
             </div>
             <div className="field">
               <label htmlFor="dcd-observacoes">Observações</label>

@@ -120,12 +120,12 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
               </label>
               <input
                 id="baia-nome"
-                className={`input${errors.nome ? ' error' : ''}`}
+                className={`input${errors.nome ? ' error' : ''}`} aria-invalid={errors.nome ? true : undefined} aria-describedby={errors.nome ? 'baia-nome-erro' : undefined}
                 type="text"
                 placeholder="Baia 8"
                 {...register('nome')}
               />
-              {errors.nome && <span className="err">{errors.nome.message}</span>}
+              {errors.nome && <span className="err" id="baia-nome-erro">{errors.nome.message}</span>}
             </div>
 
             <div className="form-grid">
@@ -133,7 +133,7 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
                 <label htmlFor="baia-tipo">
                   Tipo <span className="req">*</span>
                 </label>
-                <select id="baia-tipo" className={`select${errors.tipoBaia ? ' error' : ''}`} {...register('tipoBaia')}>
+                <select id="baia-tipo" className={`select${errors.tipoBaia ? ' error' : ''}`} aria-invalid={errors.tipoBaia ? true : undefined} aria-describedby={errors.tipoBaia ? 'baia-tipo-erro' : undefined} {...register('tipoBaia')}>
                   <option value="" disabled>
                     Selecione…
                   </option>
@@ -143,7 +143,7 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
                     </option>
                   ))}
                 </select>
-                {errors.tipoBaia && <span className="err">{errors.tipoBaia.message}</span>}
+                {errors.tipoBaia && <span className="err" id="baia-tipo-erro">{errors.tipoBaia.message}</span>}
               </div>
 
               <div className="field">
@@ -152,13 +152,13 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
                 </label>
                 <input
                   id="baia-capacidade"
-                  className={`input${errors.capacidade ? ' error' : ''}`}
+                  className={`input${errors.capacidade ? ' error' : ''}`} aria-invalid={errors.capacidade ? true : undefined} aria-describedby={errors.capacidade ? 'baia-capacidade-erro' : undefined}
                   type="number"
                   min={1}
                   step={1}
                   {...register('capacidade', { valueAsNumber: true })}
                 />
-                {errors.capacidade && <span className="err">{errors.capacidade.message}</span>}
+                {errors.capacidade && <span className="err" id="baia-capacidade-erro">{errors.capacidade.message}</span>}
               </div>
             </div>
 
@@ -166,12 +166,12 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
               <label htmlFor="baia-finalidade">Finalidade</label>
               <input
                 id="baia-finalidade"
-                className={`input${errors.finalidade ? ' error' : ''}`}
+                className={`input${errors.finalidade ? ' error' : ''}`} aria-invalid={errors.finalidade ? true : undefined} aria-describedby={errors.finalidade ? 'baia-finalidade-erro' : undefined}
                 type="text"
                 placeholder="Cães porte médio"
                 {...register('finalidade', { setValueAs: semEspacos })}
               />
-              {errors.finalidade && <span className="err">{errors.finalidade.message}</span>}
+              {errors.finalidade && <span className="err" id="baia-finalidade-erro">{errors.finalidade.message}</span>}
             </div>
 
             <div className="field">

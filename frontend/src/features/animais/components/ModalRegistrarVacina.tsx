@@ -149,13 +149,13 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
                 </label>
                 <input
                   id="vac-data"
-                  className={`input${errors.dataAplicacao ? ' error' : ''}`}
+                  className={`input${errors.dataAplicacao ? ' error' : ''}`} aria-invalid={errors.dataAplicacao ? true : undefined} aria-describedby={errors.dataAplicacao ? 'vac-data-erro' : undefined}
                   type="date"
                   max={hojeEmItu()}
                   {...register('dataAplicacao')}
                 />
                 <AtalhoHoje onEscolher={(hoje) => setValue('dataAplicacao', hoje, { shouldDirty: true })} />
-                {errors.dataAplicacao && <span className="err">{errors.dataAplicacao.message}</span>}
+                {errors.dataAplicacao && <span className="err" id="vac-data-erro">{errors.dataAplicacao.message}</span>}
               </div>
             </div>
 
@@ -177,13 +177,13 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
                 </label>
                 <input
                   id="vac-dose-quantidade"
-                  className={`input${errors.doseQuantidade ? ' error' : ''}`}
+                  className={`input${errors.doseQuantidade ? ' error' : ''}`} aria-invalid={errors.doseQuantidade ? true : undefined} aria-describedby={errors.doseQuantidade ? 'vac-dose-quantidade-erro' : undefined}
                   type="number"
                   min={0}
                   step="0.001"
                   {...register('doseQuantidade', { valueAsNumber: true })}
                 />
-                {errors.doseQuantidade && <span className="err">{errors.doseQuantidade.message}</span>}
+                {errors.doseQuantidade && <span className="err" id="vac-dose-quantidade-erro">{errors.doseQuantidade.message}</span>}
               </div>
               <div className="field">
                 <label htmlFor="vac-dose-unidade">
@@ -191,7 +191,7 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
                 </label>
                 <select
                   id="vac-dose-unidade"
-                  className={`select${errors.doseUnidade ? ' error' : ''}`}
+                  className={`select${errors.doseUnidade ? ' error' : ''}`} aria-invalid={errors.doseUnidade ? true : undefined} aria-describedby={errors.doseUnidade ? 'vac-dose-unidade-erro' : undefined}
                   {...register('doseUnidade', { setValueAs: (v) => (v === '' ? undefined : v) })}
                 >
                   <option value="">—</option>
@@ -201,7 +201,7 @@ export function ModalRegistrarVacina({ animalId, retifica, onFechar, onSucesso }
                     </option>
                   ))}
                 </select>
-                {errors.doseUnidade && <span className="err">{errors.doseUnidade.message}</span>}
+                {errors.doseUnidade && <span className="err" id="vac-dose-unidade-erro">{errors.doseUnidade.message}</span>}
               </div>
             </div>
 

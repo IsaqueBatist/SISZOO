@@ -138,7 +138,7 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
             <label htmlFor={`amostra-${index}-especie`}>
               Espécie <span className="req">*</span>
             </label>
-            <select id={`amostra-${index}-especie`} className={`select${erros?.especie ? ' error' : ''}`} defaultValue="" {...register(campo('especie'))}>
+            <select id={`amostra-${index}-especie`} className={`select${erros?.especie ? ' error' : ''}`} aria-invalid={erros?.especie ? true : undefined} aria-describedby={erros?.especie ? `amostra-${index}-especie-erro` : undefined} defaultValue="" {...register(campo('especie'))}>
               <option value="" disabled>
                 Selecione
               </option>
@@ -148,13 +148,13 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
                 </option>
               ))}
             </select>
-            {erros?.especie && <span className="err">{erros.especie.message}</span>}
+            {erros?.especie && <span className="err" id={`amostra-${index}-especie-erro`}>{erros.especie.message}</span>}
           </div>
           <div className="field">
             <label htmlFor={`amostra-${index}-sexo`}>
               Sexo <span className="req">*</span>
             </label>
-            <select id={`amostra-${index}-sexo`} className={`select${erros?.sexo ? ' error' : ''}`} defaultValue="" {...register(campo('sexo'))}>
+            <select id={`amostra-${index}-sexo`} className={`select${erros?.sexo ? ' error' : ''}`} aria-invalid={erros?.sexo ? true : undefined} aria-describedby={erros?.sexo ? `amostra-${index}-sexo-erro` : undefined} defaultValue="" {...register(campo('sexo'))}>
               <option value="" disabled>
                 Selecione
               </option>
@@ -164,7 +164,7 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
                 </option>
               ))}
             </select>
-            {erros?.sexo && <span className="err">{erros.sexo.message}</span>}
+            {erros?.sexo && <span className="err" id={`amostra-${index}-sexo-erro`}>{erros.sexo.message}</span>}
           </div>
           <div className="field">
             <label htmlFor={`amostra-${index}-raca`}>Raça</label>
@@ -193,12 +193,12 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
             <label htmlFor={`amostra-${index}-peso`}>Peso (kg)</label>
             <input
               id={`amostra-${index}-peso`}
-              className={`input${erros?.pesoKg ? ' error' : ''}`}
+              className={`input${erros?.pesoKg ? ' error' : ''}`} aria-invalid={erros?.pesoKg ? true : undefined} aria-describedby={erros?.pesoKg ? `amostra-${index}-peso-erro` : undefined}
               type="number"
               step="0.01"
               {...register(campo('pesoKg'), { setValueAs: paraNumeroOuIndefinido })}
             />
-            {erros?.pesoKg && <span className="err">{erros.pesoKg.message}</span>}
+            {erros?.pesoKg && <span className="err" id={`amostra-${index}-peso-erro`}>{erros.pesoKg.message}</span>}
           </div>
         </div>
       )}
@@ -210,12 +210,12 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
           </label>
           <input
             id={`amostra-${index}-data-coleta`}
-            className={`input${erros?.dataColeta ? ' error' : ''}`}
+            className={`input${erros?.dataColeta ? ' error' : ''}`} aria-invalid={erros?.dataColeta ? true : undefined} aria-describedby={erros?.dataColeta ? `amostra-${index}-data-coleta-erro` : undefined}
             type="date"
             {...register(campo('dataColeta'))}
           />
           <AtalhoHoje onEscolher={(hoje) => definir('dataColeta', hoje)} />
-          {erros?.dataColeta && <span className="err">{erros.dataColeta.message}</span>}
+          {erros?.dataColeta && <span className="err" id={`amostra-${index}-data-coleta-erro`}>{erros.dataColeta.message}</span>}
         </div>
         <div className="field">
           <label htmlFor={`amostra-${index}-material`}>
@@ -223,7 +223,7 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
           </label>
           <select
             id={`amostra-${index}-material`}
-            className={`select${erros?.materialBiologico ? ' error' : ''}`}
+            className={`select${erros?.materialBiologico ? ' error' : ''}`} aria-invalid={erros?.materialBiologico ? true : undefined} aria-describedby={erros?.materialBiologico ? `amostra-${index}-material-erro` : undefined}
             defaultValue=""
             {...register(campo('materialBiologico'))}
           >
@@ -236,7 +236,7 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
               </option>
             ))}
           </select>
-          {erros?.materialBiologico && <span className="err">{erros.materialBiologico.message}</span>}
+          {erros?.materialBiologico && <span className="err" id={`amostra-${index}-material-erro`}>{erros.materialBiologico.message}</span>}
         </div>
         <div className="field">
           <label htmlFor={`amostra-${index}-status-clinico`}>
@@ -244,7 +244,7 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
           </label>
           <select
             id={`amostra-${index}-status-clinico`}
-            className={`select${erros?.statusClinico ? ' error' : ''}`}
+            className={`select${erros?.statusClinico ? ' error' : ''}`} aria-invalid={erros?.statusClinico ? true : undefined} aria-describedby={erros?.statusClinico ? `amostra-${index}-status-clinico-erro` : undefined}
             defaultValue=""
             {...register(campo('statusClinico'), {
               // T29-3: sintomas só em amostra sintomática — sair de
@@ -263,7 +263,7 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
               </option>
             ))}
           </select>
-          {erros?.statusClinico && <span className="err">{erros.statusClinico.message}</span>}
+          {erros?.statusClinico && <span className="err" id={`amostra-${index}-status-clinico-erro`}>{erros.statusClinico.message}</span>}
         </div>
         <div className="field">
           <label htmlFor={`amostra-${index}-tipo-abrigo`}>
@@ -271,7 +271,7 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
           </label>
           <select
             id={`amostra-${index}-tipo-abrigo`}
-            className={`select${erros?.tipoAbrigo ? ' error' : ''}`}
+            className={`select${erros?.tipoAbrigo ? ' error' : ''}`} aria-invalid={erros?.tipoAbrigo ? true : undefined} aria-describedby={erros?.tipoAbrigo ? `amostra-${index}-tipo-abrigo-erro` : undefined}
             defaultValue=""
             {...register(campo('tipoAbrigo'))}
           >
@@ -284,7 +284,7 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
               </option>
             ))}
           </select>
-          {erros?.tipoAbrigo && <span className="err">{erros.tipoAbrigo.message}</span>}
+          {erros?.tipoAbrigo && <span className="err" id={`amostra-${index}-tipo-abrigo-erro`}>{erros.tipoAbrigo.message}</span>}
         </div>
         <div className="field full">
           <label htmlFor={`amostra-${index}-alt-comportamental`}>Alteração comportamental</label>

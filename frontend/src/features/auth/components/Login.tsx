@@ -129,14 +129,14 @@ export function Login() {
               </span>
               <input
                 id="email"
-                className={`input${errors.email ? ' error' : ''}`}
+                className={`input${errors.email ? ' error' : ''}`} aria-invalid={errors.email ? true : undefined} aria-describedby={errors.email ? 'email-erro' : undefined}
                 type="email"
                 placeholder="nome.sobrenome@itu.sp.gov.br"
                 autoComplete="username"
                 {...register('email')}
               />
             </div>
-            {errors.email && <span className="err">{errors.email.message}</span>}
+            {errors.email && <span className="err" id="email-erro">{errors.email.message}</span>}
           </div>
 
           <div className="field">
@@ -149,7 +149,7 @@ export function Login() {
               </span>
               <input
                 id="senha"
-                className={`input${errors.senha ? ' error' : ''}`}
+                className={`input${errors.senha ? ' error' : ''}`} aria-invalid={errors.senha ? true : undefined} aria-describedby={errors.senha ? 'senha-erro' : undefined}
                 type={senhaVisivel ? 'text' : 'password'}
                 placeholder="••••••••"
                 autoComplete="current-password"
@@ -166,7 +166,7 @@ export function Login() {
                 <Icon name="eye" size={16} />
               </button>
             </div>
-            {errors.senha && <span className="err">{errors.senha.message}</span>}
+            {errors.senha && <span className="err" id="senha-erro">{errors.senha.message}</span>}
           </div>
 
           <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={isLoading}>

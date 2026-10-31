@@ -141,9 +141,9 @@ export function ModalRegistrarProcedimento({ animalId, retifica, onFechar, onSuc
                 <label htmlFor="proc-data">
                   Data <span className="req">*</span>
                 </label>
-                <input id="proc-data" className={`input${errors.data ? ' error' : ''}`} type="date" max={hojeEmItu()} {...register('data')} />
+                <input id="proc-data" className={`input${errors.data ? ' error' : ''}`} aria-invalid={errors.data ? true : undefined} aria-describedby={errors.data ? 'proc-data-erro' : undefined} type="date" max={hojeEmItu()} {...register('data')} />
                 <AtalhoHoje onEscolher={(hoje) => setValue('data', hoje, { shouldDirty: true })} />
-                {errors.data && <span className="err">{errors.data.message}</span>}
+                {errors.data && <span className="err" id="proc-data-erro">{errors.data.message}</span>}
               </div>
             </div>
 

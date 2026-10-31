@@ -156,7 +156,7 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
                 render={({ field }) => (
                   <select
                     id="pres-medicamento"
-                    className={`select${errors.medicamentoId ? ' error' : ''}`}
+                    className={`select${errors.medicamentoId ? ' error' : ''}`} aria-invalid={errors.medicamentoId ? true : undefined} aria-describedby={errors.medicamentoId ? 'pres-medicamento-erro' : undefined}
                     value={field.value}
                     onChange={field.onChange}
                     onBlur={field.onBlur}
@@ -173,7 +173,7 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
                   </select>
                 )}
               />
-              {errors.medicamentoId && <span className="err">{errors.medicamentoId.message}</span>}
+              {errors.medicamentoId && <span className="err" id="pres-medicamento-erro">{errors.medicamentoId.message}</span>}
             </div>
 
             <div className="form-grid">
@@ -183,32 +183,32 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
                 </label>
                 <input
                   id="pres-inicio"
-                  className={`input${errors.dataInicio ? ' error' : ''}`}
+                  className={`input${errors.dataInicio ? ' error' : ''}`} aria-invalid={errors.dataInicio ? true : undefined} aria-describedby={errors.dataInicio ? 'pres-inicio-erro' : undefined}
                   type="date"
                   {...register('dataInicio')}
                 />
                 <AtalhoHoje onEscolher={(hoje) => setValue('dataInicio', hoje, { shouldDirty: true })} />
-                {errors.dataInicio && <span className="err">{errors.dataInicio.message}</span>}
+                {errors.dataInicio && <span className="err" id="pres-inicio-erro">{errors.dataInicio.message}</span>}
               </div>
               <div className="field">
                 <label htmlFor="pres-fim-previsto">Término previsto</label>
                 <input
                   id="pres-fim-previsto"
-                  className={`input${errors.dataFimPrevista ? ' error' : ''}`}
+                  className={`input${errors.dataFimPrevista ? ' error' : ''}`} aria-invalid={errors.dataFimPrevista ? true : undefined} aria-describedby={errors.dataFimPrevista ? 'pres-fim-previsto-erro' : undefined}
                   type="date"
                   {...register('dataFimPrevista', { setValueAs: (v: string) => v || undefined })}
                 />
-                {errors.dataFimPrevista && <span className="err">{errors.dataFimPrevista.message}</span>}
+                {errors.dataFimPrevista && <span className="err" id="pres-fim-previsto-erro">{errors.dataFimPrevista.message}</span>}
               </div>
               <div className="field">
                 <label htmlFor="pres-fim-real">Término real</label>
                 <input
                   id="pres-fim-real"
-                  className={`input${errors.dataFimReal ? ' error' : ''}`}
+                  className={`input${errors.dataFimReal ? ' error' : ''}`} aria-invalid={errors.dataFimReal ? true : undefined} aria-describedby={errors.dataFimReal ? 'pres-fim-real-erro' : undefined}
                   type="date"
                   {...register('dataFimReal', { setValueAs: (v: string) => v || undefined })}
                 />
-                {errors.dataFimReal && <span className="err">{errors.dataFimReal.message}</span>}
+                {errors.dataFimReal && <span className="err" id="pres-fim-real-erro">{errors.dataFimReal.message}</span>}
               </div>
             </div>
 
@@ -219,13 +219,13 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
                 </label>
                 <input
                   id="pres-frequencia"
-                  className={`input${errors.frequenciaAplicada ? ' error' : ''}`}
+                  className={`input${errors.frequenciaAplicada ? ' error' : ''}`} aria-invalid={errors.frequenciaAplicada ? true : undefined} aria-describedby={errors.frequenciaAplicada ? 'pres-frequencia-erro' : undefined}
                   type="number"
                   min={1}
                   step={1}
                   {...register('frequenciaAplicada', { valueAsNumber: true })}
                 />
-                {errors.frequenciaAplicada && <span className="err">{errors.frequenciaAplicada.message}</span>}
+                {errors.frequenciaAplicada && <span className="err" id="pres-frequencia-erro">{errors.frequenciaAplicada.message}</span>}
               </div>
               <div className="field">
                 <label htmlFor="pres-unidade-frequencia">
@@ -233,7 +233,7 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
                 </label>
                 <select
                   id="pres-unidade-frequencia"
-                  className={`select${errors.unidadeFrequencia ? ' error' : ''}`}
+                  className={`select${errors.unidadeFrequencia ? ' error' : ''}`} aria-invalid={errors.unidadeFrequencia ? true : undefined} aria-describedby={errors.unidadeFrequencia ? 'pres-unidade-frequencia-erro' : undefined}
                   {...register('unidadeFrequencia')}
                 >
                   <option value="" disabled>
@@ -245,7 +245,7 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
                     </option>
                   ))}
                 </select>
-                {errors.unidadeFrequencia && <span className="err">{errors.unidadeFrequencia.message}</span>}
+                {errors.unidadeFrequencia && <span className="err" id="pres-unidade-frequencia-erro">{errors.unidadeFrequencia.message}</span>}
               </div>
             </div>
 
@@ -256,13 +256,13 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
                 </label>
                 <input
                   id="pres-dose-quantidade"
-                  className={`input${errors.doseQuantidade ? ' error' : ''}`}
+                  className={`input${errors.doseQuantidade ? ' error' : ''}`} aria-invalid={errors.doseQuantidade ? true : undefined} aria-describedby={errors.doseQuantidade ? 'pres-dose-quantidade-erro' : undefined}
                   type="number"
                   min={0}
                   step="0.001"
                   {...register('doseQuantidade', { valueAsNumber: true })}
                 />
-                {errors.doseQuantidade && <span className="err">{errors.doseQuantidade.message}</span>}
+                {errors.doseQuantidade && <span className="err" id="pres-dose-quantidade-erro">{errors.doseQuantidade.message}</span>}
               </div>
               <div className="field">
                 <label htmlFor="pres-dose-unidade">
@@ -270,7 +270,7 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
                 </label>
                 <select
                   id="pres-dose-unidade"
-                  className={`select${errors.doseUnidade ? ' error' : ''}`}
+                  className={`select${errors.doseUnidade ? ' error' : ''}`} aria-invalid={errors.doseUnidade ? true : undefined} aria-describedby={errors.doseUnidade ? 'pres-dose-unidade-erro' : undefined}
                   {...register('doseUnidade')}
                 >
                   <option value="" disabled>
@@ -282,7 +282,7 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
                     </option>
                   ))}
                 </select>
-                {errors.doseUnidade && <span className="err">{errors.doseUnidade.message}</span>}
+                {errors.doseUnidade && <span className="err" id="pres-dose-unidade-erro">{errors.doseUnidade.message}</span>}
               </div>
               <div className="field">
                 <label htmlFor="pres-via">
@@ -290,7 +290,7 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
                 </label>
                 <select
                   id="pres-via"
-                  className={`select${errors.viaAdministracao ? ' error' : ''}`}
+                  className={`select${errors.viaAdministracao ? ' error' : ''}`} aria-invalid={errors.viaAdministracao ? true : undefined} aria-describedby={errors.viaAdministracao ? 'pres-via-erro' : undefined}
                   {...register('viaAdministracao')}
                 >
                   <option value="" disabled>
@@ -302,7 +302,7 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
                     </option>
                   ))}
                 </select>
-                {errors.viaAdministracao && <span className="err">{errors.viaAdministracao.message}</span>}
+                {errors.viaAdministracao && <span className="err" id="pres-via-erro">{errors.viaAdministracao.message}</span>}
               </div>
             </div>
 

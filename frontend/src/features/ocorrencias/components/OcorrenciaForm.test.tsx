@@ -416,7 +416,7 @@ describe('OcorrenciaForm — classificação e datas', () => {
     expect(await screen.findByText('Selecione o tipo da ocorrência.')).toBeInTheDocument()
   })
 
-  it('recusa data de abertura futura antes de enviar', async () => {
+  it('recusa data de abertura futura antes de enviar, com o erro ligado ao campo', async () => {
     const user = userEvent.setup()
     renderForm()
 
@@ -426,5 +426,7 @@ describe('OcorrenciaForm — classificação e datas', () => {
     await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
 
     expect(await screen.findByText('A data de abertura não pode ser futura.')).toBeInTheDocument()
+    expect(data).toHaveAttribute('aria-invalid', 'true')
+    expect(data).toHaveAccessibleDescription('A data de abertura não pode ser futura.')
   })
 })

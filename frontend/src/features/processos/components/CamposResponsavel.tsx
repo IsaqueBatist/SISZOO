@@ -36,8 +36,8 @@ export function CamposResponsavel() {
         <label htmlFor="resp-nome">
           Nome <span className="req">*</span>
         </label>
-        <input id="resp-nome" className={`input${errors.responsavel?.nome ? ' error' : ''}`} type="text" {...register('responsavel.nome')} />
-        {errors.responsavel?.nome && <span className="err">{errors.responsavel.nome.message}</span>}
+        <input id="resp-nome" className={`input${errors.responsavel?.nome ? ' error' : ''}`} aria-invalid={errors.responsavel?.nome ? true : undefined} aria-describedby={errors.responsavel?.nome ? 'resp-nome-erro' : undefined} type="text" {...register('responsavel.nome')} />
+        {errors.responsavel?.nome && <span className="err" id="resp-nome-erro">{errors.responsavel.nome.message}</span>}
       </div>
       <div className="field">
         <label htmlFor="resp-cpf">CPF</label>

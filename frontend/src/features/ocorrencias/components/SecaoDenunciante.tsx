@@ -147,11 +147,11 @@ export function SecaoDenunciante({
               </label>
               <input
                 id="den-nome"
-                className={`input${errors.denunciante?.nome ? ' error' : ''}`}
+                className={`input${errors.denunciante?.nome ? ' error' : ''}`} aria-invalid={errors.denunciante?.nome ? true : undefined} aria-describedby={errors.denunciante?.nome ? 'den-nome-erro' : undefined}
                 type="text"
                 {...register('denunciante.nome')}
               />
-              {errors.denunciante?.nome && <span className="err">{errors.denunciante.nome.message}</span>}
+              {errors.denunciante?.nome && <span className="err" id="den-nome-erro">{errors.denunciante.nome.message}</span>}
             </div>
             <div className="field">
               <label htmlFor="den-cpf">CPF</label>

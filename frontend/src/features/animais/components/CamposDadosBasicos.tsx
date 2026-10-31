@@ -25,9 +25,9 @@ export function CamposDadosBasicos({ microchipTravado }: CamposDadosBasicosProps
         <label htmlFor="nome">
           Nome do animal <span className="req">*</span>
         </label>
-        <input id="nome" className={`input${errors.nome ? ' error' : ''}`} type="text" placeholder="Ex: Rex" {...register('nome')} />
+        <input id="nome" className={`input${errors.nome ? ' error' : ''}`} aria-invalid={errors.nome ? true : undefined} aria-describedby={errors.nome ? 'nome-erro' : undefined} type="text" placeholder="Ex: Rex" {...register('nome')} />
         {errors.nome ? (
-          <span className="err">{errors.nome.message}</span>
+          <span className="err" id="nome-erro">{errors.nome.message}</span>
         ) : (
           <span className="hint">Use o nome de chamada do animal. Se desconhecido, use um apelido.</span>
         )}
@@ -56,7 +56,7 @@ export function CamposDadosBasicos({ microchipTravado }: CamposDadosBasicosProps
         <label htmlFor="microchip">Microchip</label>
         <input
           id="microchip"
-          className={`input mono${errors.microchip ? ' error' : ''}`}
+          className={`input mono${errors.microchip ? ' error' : ''}`} aria-invalid={errors.microchip ? true : undefined} aria-describedby={errors.microchip ? 'microchip-erro' : undefined}
           type="text"
           placeholder="985121234567890"
           maxLength={15}
@@ -64,7 +64,7 @@ export function CamposDadosBasicos({ microchipTravado }: CamposDadosBasicosProps
           {...register('microchip', { setValueAs: semEspacos })}
         />
         {errors.microchip ? (
-          <span className="err">{errors.microchip.message}</span>
+          <span className="err" id="microchip-erro">{errors.microchip.message}</span>
         ) : (
           <span className="hint">
             {microchipTravado
@@ -78,13 +78,13 @@ export function CamposDadosBasicos({ microchipTravado }: CamposDadosBasicosProps
         <label htmlFor="dataImplantacaoChip">Data de implantação do chip</label>
         <input
           id="dataImplantacaoChip"
-          className={`input${errors.dataImplantacaoChip ? ' error' : ''}`}
+          className={`input${errors.dataImplantacaoChip ? ' error' : ''}`} aria-invalid={errors.dataImplantacaoChip ? true : undefined} aria-describedby={errors.dataImplantacaoChip ? 'dataImplantacaoChip-erro' : undefined}
           type="date"
           max={hojeEmItu()}
           {...register('dataImplantacaoChip', { setValueAs: semEspacos })}
         />
         {errors.dataImplantacaoChip ? (
-          <span className="err">{errors.dataImplantacaoChip.message}</span>
+          <span className="err" id="dataImplantacaoChip-erro">{errors.dataImplantacaoChip.message}</span>
         ) : (
           <span className="hint">Registrada quando o chip é implantado no CCZ (RN01). Exige microchip.</span>
         )}
@@ -94,14 +94,14 @@ export function CamposDadosBasicos({ microchipTravado }: CamposDadosBasicosProps
         <label htmlFor="numeroMedalha">Número da medalha</label>
         <input
           id="numeroMedalha"
-          className={`input mono${errors.numeroMedalha ? ' error' : ''}`}
+          className={`input mono${errors.numeroMedalha ? ' error' : ''}`} aria-invalid={errors.numeroMedalha ? true : undefined} aria-describedby={errors.numeroMedalha ? 'numeroMedalha-erro' : undefined}
           type="text"
           maxLength={30}
           placeholder="Ex.: M-0042"
           {...register('numeroMedalha', { setValueAs: semEspacos })}
         />
         {errors.numeroMedalha ? (
-          <span className="err">{errors.numeroMedalha.message}</span>
+          <span className="err" id="numeroMedalha-erro">{errors.numeroMedalha.message}</span>
         ) : (
           <span className="hint">Plaqueta de identificação; única quando informada.</span>
         )}
@@ -146,12 +146,12 @@ export function CamposDadosBasicos({ microchipTravado }: CamposDadosBasicosProps
         <label htmlFor="dataNascimentoAprox">Data provável de nascimento</label>
         <input
           id="dataNascimentoAprox"
-          className={`input${errors.dataNascimentoAprox ? ' error' : ''}`}
+          className={`input${errors.dataNascimentoAprox ? ' error' : ''}`} aria-invalid={errors.dataNascimentoAprox ? true : undefined} aria-describedby={errors.dataNascimentoAprox ? 'dataNascimentoAprox-erro' : undefined}
           type="date"
           max={hojeEmItu()}
           {...register('dataNascimentoAprox', { setValueAs: semVazio })}
         />
-        {errors.dataNascimentoAprox && <span className="err">{errors.dataNascimentoAprox.message}</span>}
+        {errors.dataNascimentoAprox && <span className="err" id="dataNascimentoAprox-erro">{errors.dataNascimentoAprox.message}</span>}
       </div>
 
       <div className="field">
@@ -184,14 +184,14 @@ export function CamposDadosBasicos({ microchipTravado }: CamposDadosBasicosProps
         <label htmlFor="pesoKg">Peso (kg)</label>
         <input
           id="pesoKg"
-          className={`input${errors.pesoKg ? ' error' : ''}`}
+          className={`input${errors.pesoKg ? ' error' : ''}`} aria-invalid={errors.pesoKg ? true : undefined} aria-describedby={errors.pesoKg ? 'pesoKg-erro' : undefined}
           type="number"
           step="0.1"
           min="0"
           placeholder="Ex: 12.5"
           {...register('pesoKg', { setValueAs: paraNumeroOuIndefinido })}
         />
-        {errors.pesoKg && <span className="err">{errors.pesoKg.message}</span>}
+        {errors.pesoKg && <span className="err" id="pesoKg-erro">{errors.pesoKg.message}</span>}
       </div>
     </div>
   )

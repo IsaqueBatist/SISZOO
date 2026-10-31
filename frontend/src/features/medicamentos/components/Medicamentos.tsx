@@ -166,12 +166,12 @@ function CadastroMedicamento() {
               </label>
               <input
                 id="med-nome"
-                className={`input${errosMedicamento.nome ? ' error' : ''}`}
+                className={`input${errosMedicamento.nome ? ' error' : ''}`} aria-invalid={errosMedicamento.nome ? true : undefined} aria-describedby={errosMedicamento.nome ? 'med-nome-erro' : undefined}
                 type="text"
                 placeholder="Ex: Amoxicilina 250mg"
                 {...formMedicamento.register('nome')}
               />
-              {errosMedicamento.nome && <span className="err">{errosMedicamento.nome.message}</span>}
+              {errosMedicamento.nome && <span className="err" id="med-nome-erro">{errosMedicamento.nome.message}</span>}
             </div>
             <div className="field">
               <label htmlFor="med-categoria">
@@ -179,7 +179,7 @@ function CadastroMedicamento() {
               </label>
               <select
                 id="med-categoria"
-                className={`select${errosMedicamento.categoriaId ? ' error' : ''}`}
+                className={`select${errosMedicamento.categoriaId ? ' error' : ''}`} aria-invalid={errosMedicamento.categoriaId ? true : undefined} aria-describedby={errosMedicamento.categoriaId ? 'med-categoria-erro' : undefined}
                 {...formMedicamento.register('categoriaId')}
               >
                 <option value="" disabled>
@@ -191,7 +191,7 @@ function CadastroMedicamento() {
                   </option>
                 ))}
               </select>
-              {errosMedicamento.categoriaId && <span className="err">{errosMedicamento.categoriaId.message}</span>}
+              {errosMedicamento.categoriaId && <span className="err" id="med-categoria-erro">{errosMedicamento.categoriaId.message}</span>}
               {semCategorias && <span className="hint">Cadastre a primeira categoria abaixo.</span>}
             </div>
           </div>
@@ -219,12 +219,12 @@ function CadastroMedicamento() {
               <label htmlFor="cat-nome">Nova categoria farmacológica</label>
               <input
                 id="cat-nome"
-                className={`input${errosCategoria.nome ? ' error' : ''}`}
+                className={`input${errosCategoria.nome ? ' error' : ''}`} aria-invalid={errosCategoria.nome ? true : undefined} aria-describedby={errosCategoria.nome ? 'cat-nome-erro' : undefined}
                 type="text"
                 placeholder="Ex: Antibiótico"
                 {...formCategoria.register('nome')}
               />
-              {errosCategoria.nome && <span className="err">{errosCategoria.nome.message}</span>}
+              {errosCategoria.nome && <span className="err" id="cat-nome-erro">{errosCategoria.nome.message}</span>}
             </div>
             <div className="field" style={{ alignSelf: 'end' }}>
               <button type="submit" className="btn btn-outline" disabled={criarCategoria.isPending}>

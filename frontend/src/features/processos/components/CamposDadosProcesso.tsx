@@ -17,14 +17,14 @@ export function CamposDadosProcesso() {
         <label htmlFor="proc-data-abertura">
           Data de abertura <span className="req">*</span>
         </label>
-        <input id="proc-data-abertura" className={`input${errors.dataAbertura ? ' error' : ''}`} type="date" {...register('dataAbertura')} />
-        {errors.dataAbertura && <span className="err">{errors.dataAbertura.message}</span>}
+        <input id="proc-data-abertura" className={`input${errors.dataAbertura ? ' error' : ''}`} aria-invalid={errors.dataAbertura ? true : undefined} aria-describedby={errors.dataAbertura ? 'proc-data-abertura-erro' : undefined} type="date" {...register('dataAbertura')} />
+        {errors.dataAbertura && <span className="err" id="proc-data-abertura-erro">{errors.dataAbertura.message}</span>}
       </div>
       <div className="field">
         <label htmlFor="proc-doenca">
           Tipo de doença investigada <span className="req">*</span>
         </label>
-        <select id="proc-doenca" className={`select${errors.doenca ? ' error' : ''}`} {...register('doenca')}>
+        <select id="proc-doenca" className={`select${errors.doenca ? ' error' : ''}`} aria-invalid={errors.doenca ? true : undefined} aria-describedby={errors.doenca ? 'proc-doenca-erro' : undefined} {...register('doenca')}>
           <option value="" disabled>
             Selecione
           </option>
@@ -34,13 +34,13 @@ export function CamposDadosProcesso() {
             </option>
           ))}
         </select>
-        {errors.doenca && <span className="err">{errors.doenca.message}</span>}
+        {errors.doenca && <span className="err" id="proc-doenca-erro">{errors.doenca.message}</span>}
       </div>
       <div className="field">
         <label htmlFor="proc-laboratorio">
           Laboratório de destino <span className="req">*</span>
         </label>
-        <select id="proc-laboratorio" className={`select${errors.laboratorio ? ' error' : ''}`} {...register('laboratorio')}>
+        <select id="proc-laboratorio" className={`select${errors.laboratorio ? ' error' : ''}`} aria-invalid={errors.laboratorio ? true : undefined} aria-describedby={errors.laboratorio ? 'proc-laboratorio-erro' : undefined} {...register('laboratorio')}>
           <option value="" disabled>
             Selecione
           </option>
@@ -50,20 +50,20 @@ export function CamposDadosProcesso() {
             </option>
           ))}
         </select>
-        {errors.laboratorio && <span className="err">{errors.laboratorio.message}</span>}
+        {errors.laboratorio && <span className="err" id="proc-laboratorio-erro">{errors.laboratorio.message}</span>}
       </div>
       <div className="field">
         <label htmlFor="proc-gal">Nº GAL</label>
         <input
           id="proc-gal"
-          className={`input mono${errors.galNumero ? ' error' : ''}`}
+          className={`input mono${errors.galNumero ? ' error' : ''}`} aria-invalid={errors.galNumero ? true : undefined} aria-describedby={errors.galNumero ? 'proc-gal-erro' : undefined}
           type="text"
           maxLength={40}
           placeholder="Protocolo no GAL (opcional)"
           {...register('galNumero')}
         />
         {errors.galNumero ? (
-          <span className="err">{errors.galNumero.message}</span>
+          <span className="err" id="proc-gal-erro">{errors.galNumero.message}</span>
         ) : (
           <span className="hint">Registro manual; sem integração com o sistema estadual.</span>
         )}
@@ -72,13 +72,13 @@ export function CamposDadosProcesso() {
         <label htmlFor="proc-sinan">Nº SINAN</label>
         <input
           id="proc-sinan"
-          className={`input mono${errors.sinanNumero ? ' error' : ''}`}
+          className={`input mono${errors.sinanNumero ? ' error' : ''}`} aria-invalid={errors.sinanNumero ? true : undefined} aria-describedby={errors.sinanNumero ? 'proc-sinan-erro' : undefined}
           type="text"
           maxLength={40}
           placeholder="Notificação no SINAN (opcional)"
           {...register('sinanNumero')}
         />
-        {errors.sinanNumero && <span className="err">{errors.sinanNumero.message}</span>}
+        {errors.sinanNumero && <span className="err" id="proc-sinan-erro">{errors.sinanNumero.message}</span>}
       </div>
       <div className="field full">
         <label htmlFor="proc-observacoes">Observações</label>

@@ -229,7 +229,7 @@ function FormResultado({ processo, retifica, onRegistrado, onCancelar }: FormRes
       <form onSubmit={aoEnviarFormulario} noValidate>
         <div className="field" style={{ marginBottom: 12 }}>
           <label htmlFor="proc-resultado">Resultado laboratorial</label>
-          <select id="proc-resultado" className={`select${errors.resultado ? ' error' : ''}`} defaultValue="" {...register('resultado')}>
+          <select id="proc-resultado" className={`select${errors.resultado ? ' error' : ''}`} aria-invalid={errors.resultado ? true : undefined} aria-describedby={errors.resultado ? 'proc-resultado-erro' : undefined} defaultValue="" {...register('resultado')}>
             <option value="" disabled>
               Selecione...
             </option>
@@ -239,7 +239,7 @@ function FormResultado({ processo, retifica, onRegistrado, onCancelar }: FormRes
               </option>
             ))}
           </select>
-          {errors.resultado && <span className="err">{errors.resultado.message}</span>}
+          {errors.resultado && <span className="err" id="proc-resultado-erro">{errors.resultado.message}</span>}
           {RESULTADOS_QUE_NOTIFICAM.includes(resultadoEscolhido) && (
             <span className="hint" role="status">
               {emailResponsavel
@@ -252,13 +252,13 @@ function FormResultado({ processo, retifica, onRegistrado, onCancelar }: FormRes
           <label htmlFor="proc-data-resultado">Data do resultado</label>
           <input
             id="proc-data-resultado"
-            className={`input${errors.dataResultado ? ' error' : ''}`}
+            className={`input${errors.dataResultado ? ' error' : ''}`} aria-invalid={errors.dataResultado ? true : undefined} aria-describedby={errors.dataResultado ? 'proc-data-resultado-erro' : undefined}
             type="date"
             max={hojeEmItu()}
             {...register('dataResultado')}
           />
           <AtalhoHoje onEscolher={(hoje) => setValue('dataResultado', hoje, { shouldDirty: true })} />
-          {errors.dataResultado && <span className="err">{errors.dataResultado.message}</span>}
+          {errors.dataResultado && <span className="err" id="proc-data-resultado-erro">{errors.dataResultado.message}</span>}
         </div>
         <div className="field" style={{ marginBottom: 12 }}>
           <label htmlFor="proc-desfecho">Desfecho do animal</label>
@@ -281,8 +281,8 @@ function FormResultado({ processo, retifica, onRegistrado, onCancelar }: FormRes
               'Observações'
             )}
           </label>
-          <textarea id="proc-observacoes" className={`textarea${errors.observacoes ? ' error' : ''}`} rows={3} {...register('observacoes')} />
-          {errors.observacoes && <span className="err">{errors.observacoes.message}</span>}
+          <textarea id="proc-observacoes" className={`textarea${errors.observacoes ? ' error' : ''}`} aria-invalid={errors.observacoes ? true : undefined} aria-describedby={errors.observacoes ? 'proc-observacoes-erro' : undefined} rows={3} {...register('observacoes')} />
+          {errors.observacoes && <span className="err" id="proc-observacoes-erro">{errors.observacoes.message}</span>}
         </div>
         <div className="flex gap-2">
           <button type="submit" className="btn btn-primary btn-sm" disabled={mutation.isPending}>

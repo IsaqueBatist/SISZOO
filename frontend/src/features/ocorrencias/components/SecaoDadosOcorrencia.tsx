@@ -29,12 +29,12 @@ export function SecaoDadosOcorrencia() {
             </label>
             <input
               id="oc-data"
-              className={`input${errors.dataAbertura ? ' error' : ''}`}
+              className={`input${errors.dataAbertura ? ' error' : ''}`} aria-invalid={errors.dataAbertura ? true : undefined} aria-describedby={errors.dataAbertura ? 'oc-data-erro' : undefined}
               type="date"
               max={hojeEmItu()}
               {...register('dataAbertura')}
             />
-            {errors.dataAbertura && <span className="err">{errors.dataAbertura.message}</span>}
+            {errors.dataAbertura && <span className="err" id="oc-data-erro">{errors.dataAbertura.message}</span>}
           </div>
           <div className="field">
             <label htmlFor="oc-hora">Hora aproximada</label>
@@ -46,12 +46,12 @@ export function SecaoDadosOcorrencia() {
             </label>
             <input
               id="oc-endereco"
-              className={`input${errors.endereco ? ' error' : ''}`}
+              className={`input${errors.endereco ? ' error' : ''}`} aria-invalid={errors.endereco ? true : undefined} aria-describedby={errors.endereco ? 'oc-endereco-erro' : undefined}
               type="text"
               placeholder="Logradouro, número, complemento"
               {...register('endereco')}
             />
-            {errors.endereco && <span className="err">{errors.endereco.message}</span>}
+            {errors.endereco && <span className="err" id="oc-endereco-erro">{errors.endereco.message}</span>}
           </div>
           <div className="field">
             <label htmlFor="oc-bairro">
@@ -59,7 +59,7 @@ export function SecaoDadosOcorrencia() {
             </label>
             <input
               id="oc-bairro"
-              className={`input${errors.bairro ? ' error' : ''}`}
+              className={`input${errors.bairro ? ' error' : ''}`} aria-invalid={errors.bairro ? true : undefined} aria-describedby={errors.bairro ? 'oc-bairro-erro' : undefined}
               type="text"
               placeholder="Ex: Vila Esperança"
               list="bairros-conhecidos"
@@ -70,7 +70,7 @@ export function SecaoDadosOcorrencia() {
                 <option key={bairro} value={bairro} />
               ))}
             </datalist>
-            {errors.bairro && <span className="err">{errors.bairro.message}</span>}
+            {errors.bairro && <span className="err" id="oc-bairro-erro">{errors.bairro.message}</span>}
           </div>
           <div className="field">
             <label htmlFor="oc-ponto-referencia">Ponto de referência</label>
@@ -88,11 +88,11 @@ export function SecaoDadosOcorrencia() {
             </label>
             <textarea
               id="oc-descricao"
-              className={`textarea${errors.descricao ? ' error' : ''}`}
+              className={`textarea${errors.descricao ? ' error' : ''}`} aria-invalid={errors.descricao ? true : undefined} aria-describedby={errors.descricao ? 'oc-descricao-erro' : undefined}
               placeholder="Descreva os fatos relatados pelo denunciante com clareza..."
               {...register('descricao')}
             />
-            {errors.descricao && <span className="err">{errors.descricao.message}</span>}
+            {errors.descricao && <span className="err" id="oc-descricao-erro">{errors.descricao.message}</span>}
           </div>
           <div className="field full">
             <label className="flex gap-2" style={{ alignItems: 'center', cursor: 'pointer' }}>

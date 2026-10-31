@@ -122,12 +122,12 @@ export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
               </label>
               <input
                 id="nomeCompleto"
-                className={`input${errors.nomeCompleto ? ' error' : ''}`}
+                className={`input${errors.nomeCompleto ? ' error' : ''}`} aria-invalid={errors.nomeCompleto ? true : undefined} aria-describedby={errors.nomeCompleto ? 'nomeCompleto-erro' : undefined}
                 type="text"
                 placeholder="Maria Silva Souza"
                 {...register('nomeCompleto')}
               />
-              {errors.nomeCompleto && <span className="err">{errors.nomeCompleto.message}</span>}
+              {errors.nomeCompleto && <span className="err" id="nomeCompleto-erro">{errors.nomeCompleto.message}</span>}
             </div>
 
             <div className="field">
@@ -136,12 +136,12 @@ export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
               </label>
               <input
                 id="email"
-                className={`input${errors.email ? ' error' : ''}`}
+                className={`input${errors.email ? ' error' : ''}`} aria-invalid={errors.email ? true : undefined} aria-describedby={errors.email ? 'email-erro' : undefined}
                 type="email"
                 placeholder="nome.sobrenome@itu.sp.gov.br"
                 {...register('email')}
               />
-              {errors.email && <span className="err">{errors.email.message}</span>}
+              {errors.email && <span className="err" id="email-erro">{errors.email.message}</span>}
             </div>
 
             <div className="form-grid">
@@ -149,7 +149,7 @@ export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
                 <label htmlFor="cargo">
                   Perfil <span className="req">*</span>
                 </label>
-                <select id="cargo" className={`select${errors.cargo ? ' error' : ''}`} {...register('cargo')}>
+                <select id="cargo" className={`select${errors.cargo ? ' error' : ''}`} aria-invalid={errors.cargo ? true : undefined} aria-describedby={errors.cargo ? 'cargo-erro' : undefined} {...register('cargo')}>
                   <option value="" disabled>
                     Selecione…
                   </option>
@@ -159,7 +159,7 @@ export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
                     </option>
                   ))}
                 </select>
-                {errors.cargo && <span className="err">{errors.cargo.message}</span>}
+                {errors.cargo && <span className="err" id="cargo-erro">{errors.cargo.message}</span>}
               </div>
 
               {cargo === 'Veterinário' && (
@@ -169,12 +169,12 @@ export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
                   </label>
                   <input
                     id="crmv"
-                    className={`input mono${errors.crmv ? ' error' : ''}`}
+                    className={`input mono${errors.crmv ? ' error' : ''}`} aria-invalid={errors.crmv ? true : undefined} aria-describedby={errors.crmv ? 'crmv-erro' : undefined}
                     type="text"
                     placeholder="CRMV-SP 00000"
                     {...register('crmv')}
                   />
-                  {errors.crmv && <span className="err">{errors.crmv.message}</span>}
+                  {errors.crmv && <span className="err" id="crmv-erro">{errors.crmv.message}</span>}
                 </div>
               )}
             </div>
@@ -184,7 +184,7 @@ export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
               <div className="flex gap-2">
                 <input
                   id="senhaInicial"
-                  className={`input mono${errors.senhaInicial ? ' error' : ''}`}
+                  className={`input mono${errors.senhaInicial ? ' error' : ''}`} aria-invalid={errors.senhaInicial ? true : undefined} aria-describedby={errors.senhaInicial ? 'senhaInicial-erro' : undefined}
                   type="text"
                   style={{ flex: 1 }}
                   {...register('senhaInicial')}
@@ -197,7 +197,7 @@ export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
                   Gerar outra
                 </button>
               </div>
-              {errors.senhaInicial && <span className="err">{errors.senhaInicial.message}</span>}
+              {errors.senhaInicial && <span className="err" id="senhaInicial-erro">{errors.senhaInicial.message}</span>}
               <span className="hint">Você verá esta senha para entregar ao usuário, que precisará trocá-la no primeiro acesso.</span>
             </div>
           </div>
