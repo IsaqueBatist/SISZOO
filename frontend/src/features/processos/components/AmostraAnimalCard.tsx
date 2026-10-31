@@ -1,4 +1,5 @@
 import { Controller, type Control, type Path, type UseFormRegister, type UseFormSetValue, type UseFormWatch } from 'react-hook-form'
+import { AtalhoHoje } from '@/components/AtalhoHoje'
 import { Switch } from '@/components/Switch'
 import { Icon } from '@/components/layout/Icon'
 import { PELAGEM_OPCOES, SEXO_OPCOES } from '@/features/animais/schemas/animalFormSchema'
@@ -213,6 +214,7 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
             type="date"
             {...register(campo('dataColeta'))}
           />
+          <AtalhoHoje onEscolher={(hoje) => definir('dataColeta', hoje)} />
           {erros?.dataColeta && <span className="err">{erros.dataColeta.message}</span>}
         </div>
         <div className="field">

@@ -1,4 +1,5 @@
 import { useCatalogosAnimaisQuery } from '@/features/animais/hooks/useAnimais'
+import { formatarDataBR } from '@/lib/datas'
 import { SEXO_OPCOES } from '@/features/animais/schemas/animalFormSchema'
 import { formatarProtocoloOcorrencia } from '@/features/ocorrencias/utils/protocolo'
 import type { ProcessoFormValues } from '../schemas/processoFormSchema'
@@ -43,7 +44,7 @@ export function RevisaoProcesso({ valores, catalogos, onEditar }: RevisaoProcess
             </div>
             <div className="field">
               <label>Data de abertura</label>
-              <div>{valores.dataAbertura}</div>
+              <div>{formatarDataBR(valores.dataAbertura)}</div>
             </div>
             <div className="field">
               <label>Doença investigada</label>
@@ -52,6 +53,14 @@ export function RevisaoProcesso({ valores, catalogos, onEditar }: RevisaoProcess
             <div className="field">
               <label>Laboratório de destino</label>
               <div>{nomeNoCatalogo(catalogos?.laboratorios, valores.laboratorio)}</div>
+            </div>
+            <div className="field">
+              <label>Nº GAL</label>
+              <div className="mono">{valores.galNumero || '—'}</div>
+            </div>
+            <div className="field">
+              <label>Nº SINAN</label>
+              <div className="mono">{valores.sinanNumero || '—'}</div>
             </div>
             {valores.observacoes?.trim() && (
               <div className="field full">
@@ -143,7 +152,7 @@ export function RevisaoProcesso({ valores, catalogos, onEditar }: RevisaoProcess
                 </div>
                 <div className="field">
                   <label>Data de coleta</label>
-                  <div>{amostra.dataColeta}</div>
+                  <div>{formatarDataBR(amostra.dataColeta)}</div>
                 </div>
                 {amostra.contatoHumano && (
                   <div className="field">
@@ -152,6 +161,18 @@ export function RevisaoProcesso({ valores, catalogos, onEditar }: RevisaoProcess
                       {labelDe(NIVEL_CONTATO_OPCOES, amostra.nivelContato)}
                       {amostra.agrediuHumano ? ' · agrediu o munícipe' : ''}
                     </div>
+                  </div>
+                )}
+                {amostra.alteracaoComportamental?.trim() && (
+                  <div className="field full">
+                    <label>Alteração comportamental</label>
+                    <div>{amostra.alteracaoComportamental}</div>
+                  </div>
+                )}
+                {amostra.observacoes?.trim() && (
+                  <div className="field full">
+                    <label>Observações</label>
+                    <div>{amostra.observacoes}</div>
                   </div>
                 )}
                 <div className="field full">
