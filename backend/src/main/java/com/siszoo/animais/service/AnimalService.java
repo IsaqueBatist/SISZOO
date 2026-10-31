@@ -4,8 +4,10 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -22,6 +24,7 @@ import com.siszoo.animais.dto.CriarAnimalRequest;
 import com.siszoo.animais.dto.DadosDescritivosAnimal;
 import com.siszoo.animais.entity.Animal;
 import com.siszoo.animais.entity.Baia;
+import com.siszoo.animais.entity.CondicaoSaude;
 import com.siszoo.animais.entity.Especie;
 import com.siszoo.animais.entity.MotivoEntrada;
 import com.siszoo.animais.entity.StatusAnimal;
@@ -36,6 +39,7 @@ import com.siszoo.animais.exception.StatusAnimalInvalidoException;
 import com.siszoo.animais.mapper.AnimalMapper;
 import com.siszoo.animais.repository.AnimalRepository;
 import com.siszoo.animais.repository.BaiaRepository;
+import com.siszoo.animais.repository.CondicaoSaudeRepository;
 import com.siszoo.animais.repository.EspecieRepository;
 import com.siszoo.animais.repository.MotivoEntradaRepository;
 import com.siszoo.animais.repository.StatusAnimalRepository;
@@ -60,6 +64,7 @@ public class AnimalService {
     private final EspecieRepository especieRepository;
     private final StatusAnimalRepository statusAnimalRepository;
     private final MotivoEntradaRepository motivoEntradaRepository;
+    private final CondicaoSaudeRepository condicaoSaudeRepository;
     private final UsuarioRepository usuarioRepository;
     private final AnimalMapper animalMapper;
     private final FichaCompletaService fichaCompletaService;
@@ -77,6 +82,7 @@ public class AnimalService {
             EspecieRepository especieRepository,
             StatusAnimalRepository statusAnimalRepository,
             MotivoEntradaRepository motivoEntradaRepository,
+            CondicaoSaudeRepository condicaoSaudeRepository,
             UsuarioRepository usuarioRepository,
             AnimalMapper animalMapper,
             FichaCompletaService fichaCompletaService,
@@ -88,6 +94,7 @@ public class AnimalService {
         this.especieRepository = especieRepository;
         this.statusAnimalRepository = statusAnimalRepository;
         this.motivoEntradaRepository = motivoEntradaRepository;
+        this.condicaoSaudeRepository = condicaoSaudeRepository;
         this.usuarioRepository = usuarioRepository;
         this.animalMapper = animalMapper;
         this.fichaCompletaService = fichaCompletaService;
@@ -221,6 +228,23 @@ public class AnimalService {
         animal.setDataEntrada(dados.dataEntrada());
         animal.setBaia(baia);
         animal.setObservacoes(dados.observacoes());
+        aplicarCondicoes(animal, dados);
+    }
+
+    private void aplicarCondicoes(Animal animal, DadosDescritivosAnimal dados) {
+        Set<String> codigos = dados.condicoes() == null ? Set.of() : new HashSet<>(dados.condicoes());
+        List<CondicaoSaude> condicoes = codigos.isEmpty() ? List.of() : condicaoSaudeRepository.findByCodigoIn(codigos)
+                .stream().filter(CondicaoSaude::isAtivo).toList();
+        if (condicoes.size() != codigos.size()) {
+            throw new CampoInvalidoException("condicoes", "Selecione apenas condições da lista.");
+        }
+        String outras = StringUtils.hasText(dados.condicoesOutras()) ? dados.condicoesOutras().trim() : null;
+        boolean marcouOutras = codigos.contains(CondicaoSaude.CODIGO_OUTRAS);
+        if (marcouOutras && outras == null) {
+            throw new CampoInvalidoException("condicoesOutras", "Descreva qual é a outra condição.");
+        }
+        animal.setCondicoes(new HashSet<>(condicoes));
+        animal.setCondicoesOutras(marcouOutras ? outras : null);
     }
 
     // Microchip e o identificador fisico implantado no animal: uma vez definido, e

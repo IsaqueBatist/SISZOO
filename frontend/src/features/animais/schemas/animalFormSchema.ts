@@ -40,6 +40,8 @@ export const CASTRACAO_OPCOES: { valor: CastracaoOpcao; label: string; sub: stri
   { valor: 'osh', label: 'OSH', sub: 'Fêmea castrada' },
 ]
 
+export const CONDICAO_OUTRAS = 'outras'
+
 export function animalCastrado(opcao: CastracaoOpcao | undefined): boolean {
   return opcao === 'orquiectomia' || opcao === 'osh'
 }
@@ -104,6 +106,8 @@ export const animalFormSchema = z.object({
   baiaId: z.string().optional(),
   fotoUrl: z.string().optional(),
   observacoes: z.string().trim().max(2000, 'Máximo de 2000 caracteres.').optional(),
+  condicoes: z.array(z.string()),
+  condicoesOutras: z.string().trim().max(500, 'Máximo de 500 caracteres.').optional(),
 })
 
 export type AnimalFormValues = z.infer<typeof animalFormSchema>
@@ -120,6 +124,9 @@ export const animalFormUiSchema = animalFormSchema
   })
   // Mesma regra do AnimalService: o animal não nasce depois de entrar no CCZ.
   .superRefine((dados, ctx) => {
+    if (dados.condicoes.includes(CONDICAO_OUTRAS) && !dados.condicoesOutras?.trim()) {
+      ctx.addIssue({ code: 'custom', path: ['condicoesOutras'], message: 'Descreva qual é a outra condição.' })
+    }
     if (dados.dataNascimentoAprox && dados.dataEntrada && dados.dataNascimentoAprox > dados.dataEntrada) {
       ctx.addIssue({
         code: 'custom',

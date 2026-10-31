@@ -2,7 +2,7 @@ import { Controller, useFormContext, useWatch } from 'react-hook-form'
 import { RadioCards } from '@/components/RadioCards'
 import { hojeEmItu } from '@/lib/datas'
 import { useBaiasAtivasQuery, useCatalogosAnimaisQuery } from '../hooks/useAnimais'
-import { animalCastrado, CASTRACAO_OPCOES, type AnimalFormUiValues } from '../schemas/animalFormSchema'
+import { animalCastrado, CASTRACAO_OPCOES, CONDICAO_OUTRAS, type AnimalFormUiValues } from '../schemas/animalFormSchema'
 import { semEspacos, semVazio } from '../utils/animalFormMapeamento'
 
 interface CamposSaudeBaiaProps {
@@ -19,7 +19,7 @@ export function CamposSaudeBaia({ baiaAtualId }: CamposSaudeBaiaProps) {
     setValue,
     formState: { errors },
   } = useFormContext<AnimalFormUiValues>()
-  const [status, castracaoOpcao] = useWatch({ control, name: ['status', 'castracaoOpcao'] })
+  const [status, castracaoOpcao, condicoes] = useWatch({ control, name: ['status', 'castracaoOpcao', 'condicoes'] })
   const { data: catalogos } = useCatalogosAnimaisQuery()
   const { data: baias } = useBaiasAtivasQuery()
 
@@ -135,6 +135,37 @@ export function CamposSaudeBaia({ baiaAtualId }: CamposSaudeBaiaProps) {
             {...register('dataEsterilizacao', { setValueAs: semVazio })}
           />
           {errors.dataEsterilizacao && <span className="err" id="dataEsterilizacao-erro">{errors.dataEsterilizacao.message}</span>}
+        </div>
+      )}
+
+      <fieldset className="field full" style={{ border: 0, padding: 0, margin: 0 }}>
+        <legend>Condições de saúde pré-existentes</legend>
+        <div className="check-list inline">
+          {catalogos?.condicoesSaude.map((condicao) => (
+            <label className="check" key={condicao.codigo}>
+              <input type="checkbox" value={condicao.codigo} {...register('condicoes')} />
+              {condicao.codigo === CONDICAO_OUTRAS ? 'Outras (descrever abaixo)' : condicao.nome}
+            </label>
+          ))}
+        </div>
+        <span className="hint">Epilepsia, agressividade e outras condições que a equipe precisa conhecer.</span>
+      </fieldset>
+
+      {condicoes?.includes(CONDICAO_OUTRAS) && (
+        <div className="field full">
+          <label htmlFor="condicoesOutras">
+            Qual é a outra condição? <span className="req">*</span>
+          </label>
+          <input
+            id="condicoesOutras"
+            className={`input${errors.condicoesOutras ? ' error' : ''}`}
+            aria-invalid={errors.condicoesOutras ? true : undefined}
+            aria-describedby={errors.condicoesOutras ? 'condicoesOutras-erro' : undefined}
+            type="text"
+            maxLength={500}
+            {...register('condicoesOutras', { setValueAs: semVazio })}
+          />
+          {errors.condicoesOutras && <span className="err" id="condicoesOutras-erro">{errors.condicoesOutras.message}</span>}
         </div>
       )}
 

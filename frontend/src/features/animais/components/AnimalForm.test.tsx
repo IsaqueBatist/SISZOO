@@ -326,6 +326,22 @@ describe('AnimalForm — edição', () => {
   })
 })
 
+describe('AnimalForm — condições de saúde', () => {
+  it('oferece as condições na etapa de saúde e exige descrever "Outras"', async () => {
+    const user = userEvent.setup()
+    renderCadastrar()
+
+    await preencherDadosBasicosObrigatorios(user)
+    await user.click(screen.getByRole('button', { name: /próximo: saúde/i }))
+
+    const grupo = await screen.findByRole('group', { name: 'Condições de saúde pré-existentes' })
+    await user.click(await within(grupo).findByLabelText('Epilepsia'))
+    await user.click(within(grupo).getByLabelText(/outras/i))
+
+    expect(screen.getByLabelText(/qual é a outra condição/i)).toBeInTheDocument()
+  })
+})
+
 describe('AnimalForm — etapas', () => {
   it('Próximo valida a etapa e mantém a pessoa nela, com o erro na tela', async () => {
     const user = userEvent.setup()

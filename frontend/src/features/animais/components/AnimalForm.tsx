@@ -48,7 +48,7 @@ interface AnimalFormProps {
 
 const CAMPOS_STEP: Record<1 | 2 | 3, (keyof AnimalFormUiValues)[]> = {
   1: ['nome', 'especie', 'sexo', 'raca', 'coloracao', 'pelagem', 'porte', 'pesoKg', 'idadeAprox', 'dataNascimentoAprox', 'microchip', 'numeroMedalha', 'dataImplantacaoChip'],
-  2: ['status', 'motivoEntrada', 'dataEntrada', 'baiaId', 'dataEsterilizacao', 'procedencia', 'laudoEutanasia'],
+  2: ['status', 'motivoEntrada', 'dataEntrada', 'baiaId', 'dataEsterilizacao', 'procedencia', 'laudoEutanasia', 'condicoes', 'condicoesOutras'],
   3: [],
 }
 

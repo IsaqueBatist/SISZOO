@@ -1,7 +1,7 @@
 import { useFormContext, useWatch } from 'react-hook-form'
 import { formatarDataBR } from '@/lib/datas'
 import { useBaiasAtivasQuery, useCatalogosAnimaisQuery } from '../hooks/useAnimais'
-import { CASTRACAO_OPCOES, PELAGEM_OPCOES, PORTE_OPCOES, SEXO_OPCOES, type AnimalFormUiValues } from '../schemas/animalFormSchema'
+import { CASTRACAO_OPCOES, CONDICAO_OUTRAS, PELAGEM_OPCOES, PORTE_OPCOES, SEXO_OPCOES, type AnimalFormUiValues } from '../schemas/animalFormSchema'
 import type { CatalogoItem } from '../types/animais.types'
 
 function nomeCatalogo(itens: CatalogoItem[] | undefined, codigo: string): string {
@@ -89,6 +89,16 @@ export function RevisaoAnimal() {
         <div className="review-row">
           <span className="k">Status</span>
           <span className="v">{nomeCatalogo(catalogos?.status, valores.status ?? '')}</span>
+        </div>
+        <div className="review-row">
+          <span className="k">Condições de saúde</span>
+          <span className="v">
+            {valores.condicoes?.length
+              ? valores.condicoes
+                  .map((codigo) => (codigo === CONDICAO_OUTRAS ? valores.condicoesOutras : nomeCatalogo(catalogos?.condicoesSaude, codigo)))
+                  .join(', ')
+              : '—'}
+          </span>
         </div>
         <div className="review-row">
           <span className="k">Castração</span>

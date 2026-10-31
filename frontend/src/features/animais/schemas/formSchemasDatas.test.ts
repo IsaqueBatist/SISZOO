@@ -13,6 +13,7 @@ const AMANHA = adicionarDiasIso(HOJE, 1)
 
 describe('animalFormSchema — datas', () => {
   const base = {
+    condicoes: [],
     nome: 'Rex',
     especie: 'canino',
     sexo: 'macho',

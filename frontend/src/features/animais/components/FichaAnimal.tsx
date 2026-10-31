@@ -203,6 +203,29 @@ export function FichaAnimal() {
             </div>
           </div>
 
+          <div className="section-title">Condições de saúde</div>
+          <div className="section-pad">
+            {animal.condicoes && animal.condicoes.length > 0 ? (
+              <div className="flex gap-1" style={{ flexWrap: 'wrap' }}>
+                {animal.condicoes.map((condicao) => (
+                  <span className="badge badge-urgent" key={condicao.codigo}>
+                    {condicao.codigo === 'outras' && animal.condicoesOutras ? animal.condicoesOutras : condicao.nome}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="hint">Nenhuma condição registrada.</p>
+            )}
+            {animal.observacoes && (
+              <div className="kv-list" style={{ marginTop: 'var(--space-2)' }}>
+                <div className="kv-row">
+                  <span className="k">Observações</span>
+                  <span className="v">{animal.observacoes}</span>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="section-title">Entrada</div>
           <div className="section-pad">
             <div className="kv-list">

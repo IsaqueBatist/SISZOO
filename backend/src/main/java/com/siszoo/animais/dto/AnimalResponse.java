@@ -3,7 +3,10 @@ package com.siszoo.animais.dto;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
+
+import com.siszoo.comum.dto.CatalogoItemResponse;
 
 public record AnimalResponse(
         UUID id,
@@ -40,5 +43,8 @@ public record AnimalResponse(
         String numeroMedalha,
         LocalDate dataImplantacaoChip,
         String procedencia,
-        String laudoEutanasia) {
+        String laudoEutanasia,
+        // V33. Nulo nas listagens: so o detalhe carrega a colecao.
+        List<CatalogoItemResponse> condicoes,
+        String condicoesOutras) {
 }

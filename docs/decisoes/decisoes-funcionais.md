@@ -55,3 +55,11 @@ As duas informações têm três estados: sim, não e não informado (`null`).
 | Histórico de relatórios | Vê o registro, sem contagens, e não gera de novo | Mantido |
 
 A permissão é a feature `ocorrencias_bairro` (V32). **Fora da restrição:** dados individuais do processo (`bairroOcorrencia` do responsável), que o Veterinário precisa para atender o caso, e os indicadores sem bairro. Arquivos já baixados ficam fora do alcance do sistema.
+
+## Condições de saúde do animal
+
+**Origem:** entrevista de 09/01/2026, linha 13 ("campo de condições especiais (epilepsia, agressividade)"), pedido da Veterinária, e a transcrição do TG, que cita epilepsia, cardiopatia, diabetes e agressividade. As opções e o nome "Condições de saúde pré-existentes" vêm de `docs/prototipo/cadastrar-animal.html`, e a forma foi aprovada nesta etapa. O dicionário de dados do TG guardava isso em `observacoes`, que a ficha nem exibia.
+
+- **Modelo (V33):** catálogo `condicao_saude`, N:N `animal_condicao_saude` e `animal.condicoes_outras`, obrigatório só com "Outras". O campo `observacoes` não muda.
+- **Dados antigos:** nada é migrado. Animal sem condição marcada não significa que não tenha nenhuma.
+- **Tela:** checkboxes na etapa de saúde, resumo na revisão e selos na ficha, que passa a mostrar também as observações.

@@ -15,5 +15,6 @@ public record CatalogosAnimalResponse(
         // Catalogos do registro de vacinacao e de procedimento (V5): antes
         // copiados no front (catalogoClinico.ts, FIXME(T22)).
         List<CatalogoItemResponse> vacinas,
-        List<CatalogoItemResponse> tiposProcedimento) {
+        List<CatalogoItemResponse> tiposProcedimento,
+        List<CatalogoItemResponse> condicoesSaude) {
 }

@@ -23,6 +23,7 @@ const CATALOGO_BASE: CatalogosAnimal = {
   tiposBaia: [],
   vacinas: [{ codigo: 'antirrabica', nome: 'Antirrábica' }],
   tiposProcedimento: [],
+  condicoesSaude: [],
 }
 
 function renderAba() {

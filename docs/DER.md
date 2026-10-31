@@ -240,6 +240,7 @@ A feature `geral` gera a autoridade do módulo inteiro (`MODULO:leitura|escrita|
 | `procedencia`           | varchar(200)        | ?      | Origem do animal na entrada, texto livre, complementar a `motivo_entrada` (V23) |
 | `laudo_eutanasia`       | text                | ?      | Laudo do responsável técnico (Lei nº 14.228/2021). **Obrigatório só na transição** para `obito_eutanasia` (criação nesse status ou edição que muda para ele), validado no `AnimalService`, sem `CHECK` — registros anteriores à V24 continuam válidos; laudo gravado é mantido se a edição vier sem o campo (AT-7) |
 | `foto_miniatura`        | text                | ?      | Miniatura da foto para as listagens (V28, T45) |
+| `condicoes_outras`      | varchar(500)        | ?      | Texto de "Outras"; as demais condições ficam em `animal_condicao_saude` (V33, catálogo `condicao_saude`) |
 | `esterilizado`          | boolean             | ?      | `true` sim, `false` não, `NULL` não informado (V31, `decisoes-funcionais.md`)       |
 | `data_esterilizacao`    | date                | ?      |                                                                                     |
 | `status_id`             | FK `status_animal`  | \*     |                                                                                     |

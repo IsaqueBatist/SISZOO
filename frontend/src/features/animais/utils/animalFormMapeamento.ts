@@ -1,6 +1,7 @@
 import { hojeEmItu } from '@/lib/datas'
 import {
   animalCastrado,
+  CONDICAO_OUTRAS,
   castracaoParaEsterilizado,
   esterilizadoParaCastracao,
   type AnimalFormUiValues,
@@ -40,6 +41,9 @@ export interface RascunhoAnimalValores {
   // ignorado na restauração (ver rascunhoParaValores).
   fotoArquivoId?: string
   observacoes: string
+  // Opcionais no rascunho: rascunhos anteriores à V33 não os têm.
+  condicoes?: string[]
+  condicoesOutras?: string
 }
 
 // Valores iniciais do formulário. Diferem do rascunho só na foto: aqui ela é o
@@ -100,6 +104,8 @@ export function valoresDeAnimal(animal: Animal): ValoresIniciaisAnimal {
     baiaId: animal.baiaId ?? '',
     fotoUrl: animal.fotoUrl ?? '',
     observacoes: animal.observacoes ?? '',
+    condicoes: animal.condicoes?.map((condicao) => condicao.codigo) ?? [],
+    condicoesOutras: animal.condicoesOutras ?? '',
   }
 }
 
@@ -131,6 +137,8 @@ export function valoresParaRascunho(valores: AnimalFormUiValues, fotoArquivoId: 
     baiaId: valores.baiaId ?? '',
     fotoArquivoId: fotoArquivoId ?? undefined,
     observacoes: valores.observacoes ?? '',
+    condicoes: valores.condicoes,
+    condicoesOutras: valores.condicoesOutras ?? '',
   }
 }
 
@@ -165,6 +173,8 @@ export function rascunhoParaValores(rascunho: RascunhoAnimalValores, fotoUrlAtua
     baiaId: rascunho.baiaId || undefined,
     fotoUrl: fotoUrlAtual || undefined,
     observacoes: rascunho.observacoes || undefined,
+    condicoes: rascunho.condicoes ?? [],
+    condicoesOutras: rascunho.condicoesOutras || undefined,
   }
 }
 
@@ -203,6 +213,8 @@ export function paraAnimalRequest(dados: AnimalFormUiValues, dataEntradaOriginal
     baiaId: dados.baiaId,
     fotoUrl: dados.fotoUrl,
     observacoes: dados.observacoes,
+    condicoes: dados.condicoes,
+    condicoesOutras: dados.condicoes.includes(CONDICAO_OUTRAS) ? dados.condicoesOutras : undefined,
   }
 }
 

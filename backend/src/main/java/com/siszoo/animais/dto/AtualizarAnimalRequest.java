@@ -3,6 +3,7 @@ package com.siszoo.animais.dto;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import jakarta.validation.constraints.DecimalMin;
@@ -77,7 +78,24 @@ public record AtualizarAnimalRequest(
 
         // F2-008: exigido pelo AnimalService na transição para obito_eutanasia.
         @Size(max = 4000)
-        String laudoEutanasia) implements DadosDescritivosAnimal {
+        String laudoEutanasia,
+
+        // V33: codigos do catalogo condicao_saude; "outras" exige o texto.
+        List<String> condicoes,
+
+        @Size(max = 500, message = "Descreva a condição em até 500 caracteres.")
+        String condicoesOutras) implements DadosDescritivosAnimal {
+
+    // Compatibilidade com chamadas anteriores à V33 (testes e fixtures).
+    public AtualizarAnimalRequest(String nome, String especie, String sexo, String raca, String coloracao, String pelagem,
+            String porte, BigDecimal pesoKg, String idadeAprox, LocalDate dataNascimentoAprox, String microchip,
+            Boolean esterilizado, LocalDate dataEsterilizacao, String status, String motivoEntrada,
+            LocalDateTime dataEntrada, UUID baiaId, String fotoUrl, String observacoes, String numeroMedalha,
+            LocalDate dataImplantacaoChip, String procedencia, String laudoEutanasia) {
+        this(nome, especie, sexo, raca, coloracao, pelagem, porte, pesoKg, idadeAprox, dataNascimentoAprox, microchip,
+                esterilizado, dataEsterilizacao, status, motivoEntrada, dataEntrada, baiaId, fotoUrl, observacoes,
+                numeroMedalha, dataImplantacaoChip, procedencia, laudoEutanasia, null, null);
+    }
 
     // Compatibilidade com chamadas anteriores à F2-004/F2-008 (testes e fixtures).
     public AtualizarAnimalRequest(String nome, String especie, String sexo, String raca, String coloracao, String pelagem,
@@ -86,6 +104,6 @@ public record AtualizarAnimalRequest(
             LocalDateTime dataEntrada, UUID baiaId, String fotoUrl, String observacoes) {
         this(nome, especie, sexo, raca, coloracao, pelagem, porte, pesoKg, idadeAprox, dataNascimentoAprox, microchip,
                 esterilizado, dataEsterilizacao, status, motivoEntrada, dataEntrada, baiaId, fotoUrl, observacoes,
-                null, null, null, null);
+                null, null, null, null, null, null);
     }
 }

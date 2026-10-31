@@ -50,6 +50,31 @@ function animal(sobrescrever: Partial<Animal> = {}): Animal {
   }
 }
 
+describe('condições de saúde', () => {
+  it('leva os códigos da ficha, e o texto de "outras" só quando ela está marcada', () => {
+    const original = animal({
+      condicoes: [
+        { codigo: 'epilepsia', nome: 'Epilepsia' },
+        { codigo: 'outras', nome: 'Outras' },
+      ],
+      condicoesOutras: 'Displasia',
+    })
+    const valores = rascunhoParaValores(valoresDeAnimal(original), '')
+
+    expect(paraAnimalRequest(valores, original.dataEntrada)).toMatchObject({
+      condicoes: ['epilepsia', 'outras'],
+      condicoesOutras: 'Displasia',
+    })
+    expect(paraAnimalRequest({ ...valores, condicoes: ['epilepsia'] }, original.dataEntrada).condicoesOutras).toBeUndefined()
+  })
+
+  it('rascunho anterior ao campo restaura sem condições, sem quebrar', () => {
+    const { condicoes: _condicoes, condicoesOutras: _outras, ...rascunhoAntigo } = valoresDeAnimal(animal())
+
+    expect(rascunhoParaValores(rascunhoAntigo, '').condicoes).toEqual([])
+  })
+})
+
 describe('castração sem resposta', () => {
   it('"não informado" vai como null e volta como "não informado", sem virar "não castrado"', () => {
     expect(castracaoParaEsterilizado('nao_informado')).toBeNull()
@@ -65,6 +90,8 @@ describe('edição: GET -> formulário -> PUT', () => {
     const valores = rascunhoParaValores(valoresDeAnimal(original), valoresDeAnimal(original).fotoUrl)
 
     expect(paraAnimalRequest(valores, original.dataEntrada)).toEqual({
+      condicoes: [],
+      condicoesOutras: undefined,
       nome: 'Pipoca',
       especie: 'canino',
       sexo: 'femea',

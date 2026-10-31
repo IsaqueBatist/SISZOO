@@ -567,6 +567,11 @@ const CATALOGOS_ANIMAIS_MOCK: CatalogosAnimal = {
     { codigo: 'obito_eutanasia', nome: 'Óbito eutanásia' },
     { codigo: 'transferido', nome: 'Transferido' },
   ],
+  condicoesSaude: [
+    { codigo: 'agressividade', nome: 'Agressividade' },
+    { codigo: 'epilepsia', nome: 'Epilepsia' },
+    { codigo: 'outras', nome: 'Outras' },
+  ],
   motivosEntrada: [
     { codigo: 'resgate', nome: 'Resgate' },
     { codigo: 'entrega_voluntaria', nome: 'Entrega voluntária' },

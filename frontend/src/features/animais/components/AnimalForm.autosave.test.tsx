@@ -89,10 +89,11 @@ describe('AnimalForm — autosave do rascunho', () => {
   })
 
   // F2-004/F2-008 (Fase 3 do TG): as 19 chaves originais mais numeroMedalha,
-  // dataImplantacaoChip, procedencia e laudoEutanasia. T42: `fotoUrl` saiu da
+  // dataImplantacaoChip, procedencia e laudoEutanasia. V33: condicoes e
+  // condicoesOutras. T42: `fotoUrl` saiu da
   // lista e entrou `fotoArquivoId` — a imagem passou a ser gravada como Blob na
   // store 'arquivos', e o rascunho de texto guarda só o id.
-  it('agenda salvar com exatamente as 23 chaves de RascunhoAnimalValores', async () => {
+  it('agenda salvar com exatamente as 25 chaves de RascunhoAnimalValores', async () => {
     vi.mocked(carregarRascunhoAnimal).mockResolvedValue(null)
 
     const user = userEvent.setup()
@@ -105,6 +106,8 @@ describe('AnimalForm — autosave do rascunho', () => {
     expect(chave).toBe(`${USUARIO_ID}:novo`)
     expect(Object.keys(valoresSalvos as object).sort()).toEqual(
       [
+        'condicoes',
+        'condicoesOutras',
         'nome',
         'especie',
         'sexo',
