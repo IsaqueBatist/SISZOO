@@ -26,6 +26,17 @@ describe('diferencasDoEvento', () => {
     expect(diferencasDoEvento('{quebrado', null)).toEqual([])
   })
 
+  it('códigos e enums aparecem legíveis, e dados digitados ficam como estão', () => {
+    const antes = JSON.stringify({ processo: { statusProcesso: 'ABERTO', laboratorio: 'pasteur_sp' }, responsavel: { nome: 'ana' } })
+    const depois = JSON.stringify({ processo: { statusProcesso: 'AGUARDANDO_RESULTADO', laboratorio: 'ial_sorocaba' }, responsavel: { nome: 'ANA_X' } })
+
+    expect(diferencasDoEvento(antes, depois)).toEqual([
+      { campo: 'Status', antes: 'Aberto', depois: 'Aguardando resultado' },
+      { campo: 'Laboratório', antes: 'Pasteur sp', depois: 'Ial sorocaba' },
+      { campo: 'Responsável · Nome', antes: 'ana', depois: 'ANA_X' },
+    ])
+  })
+
   it('a justificativa não entra na comparação', () => {
     expect(diferencasDoEvento('{}', JSON.stringify({ justificativa: 'Motivo' }))).toEqual([])
   })

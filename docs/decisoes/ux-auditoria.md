@@ -16,5 +16,4 @@ Uma linha por decisão, no formato de `T29.md`. Origem: correção dos achados d
 
 ## Pendências
 
-- Renovação de sessão, sessão entre abas, correção de dados do processo, edição e redefinição de senha de usuário, campo de condições especiais do animal e respostas explícitas para castração e contato humano dependem de decisão funcional.
-- Mensagens do backend sem acento: as duas que chegavam ao usuário nos fluxos auditados foram tratadas na tela; as demais continuam como estão.
+Todas fechadas em 31/10/2026: renovação de sessão e sessão entre abas em `sessao.md`; correção de dados do processo, edição e redefinição de senha de usuário, condições de saúde do animal, respostas explícitas de castração e contato humano e mensagens do backend em `decisoes-funcionais.md`.

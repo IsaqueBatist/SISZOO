@@ -78,11 +78,30 @@ function folhas(payload: string | null | undefined): Map<string, unknown> {
   return saida
 }
 
-function textoDe(valor: unknown): string {
+// Códigos e enums dos snapshots, que ninguém deveria ler como estão.
+const CAMPOS_DE_CODIGO = new Set([
+  'statusProcesso',
+  'statusClinico',
+  'tipoAbrigo',
+  'materialBiologico',
+  'nivelContato',
+  'doenca',
+  'laboratorio',
+  'resultado',
+  'desfechoAnimal',
+])
+
+function legivel(codigo: string): string {
+  const texto = codigo.replace(/_/g, ' ').toLowerCase()
+  return texto.charAt(0).toUpperCase() + texto.slice(1)
+}
+
+function textoDe(valor: unknown, caminho: string): string {
   if (valor === null || valor === undefined || valor === '') return VAZIO
   if (valor === true) return 'Sim'
   if (valor === false) return 'Não'
-  return String(valor)
+  const folha = caminho.split('.').pop() ?? ''
+  return CAMPOS_DE_CODIGO.has(folha) ? legivel(String(valor)) : String(valor)
 }
 
 function rotuloDe(caminho: string): string {
@@ -108,8 +127,8 @@ export function diferencasDoEvento(antes: string | null | undefined, depois: str
   const diferencas: DiferencaPayload[] = []
   for (const caminho of caminhos) {
     if (!campoRelevante(caminho)) continue
-    const valorAntes = textoDe(valoresAntes.get(caminho))
-    const valorDepois = textoDe(valoresDepois.get(caminho))
+    const valorAntes = textoDe(valoresAntes.get(caminho), caminho)
+    const valorDepois = textoDe(valoresDepois.get(caminho), caminho)
     if (valorAntes !== valorDepois) {
       diferencas.push({ campo: rotuloDe(caminho), antes: valorAntes, depois: valorDepois })
     }

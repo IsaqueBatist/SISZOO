@@ -204,7 +204,7 @@ Exemplos em [`.env.example`](.env.example) (raiz, usado pelo `docker-compose.yml
 | `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | docker-compose | Banco do container `db` |
 | `DB_URL`, `DB_USER`, `DB_PASSWORD` | backend (`dev`, `docker`, `prod`) | Conexão JDBC |
 | `JWT_SECRET` | backend | Chave do JWT, 32 bytes ou mais (sem ela o backend não sobe) |
-| `ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD` | backend | Admin inicial criado na primeira subida (`DataSeeder`); vazio = não cria |
+| `ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD` | backend | Admin inicial criado na primeira subida (`DataSeeder`); vazio = não cria. No primeiro login a senha precisa ser trocada: até lá, a API só libera a troca (vale também para a coleção do Insomnia) |
 | `SISZOO_SEED_HABILITADO` | backend (perfil `seed`) | `true` liga o seed de dados fictícios (só com `dev`) |
 | `SISZOO_CORS_ORIGIN` | backend | Única origem do frontend aceita pela API |
 | `SISZOO_COOKIE_SECURE`, `SISZOO_COOKIE_SAMESITE` | backend | Cookie da sessão; use `SISZOO_COOKIE_SECURE=true` em produção com HTTPS ([docs/decisoes/sessao.md](docs/decisoes/sessao.md)) |

@@ -5,7 +5,9 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
 import { avisar } from '@/lib/avisos'
 import { aplicarErrosDeCampo, mensagemDeRegraDaApi, statusHttpDoErro } from '@/lib/erroApi'
-import { useEditarProcessoMutation, useProcessoQuery } from '../hooks/useProcessos'
+import { useCatalogosAnimaisQuery } from '@/features/animais/hooks/useAnimais'
+import { formatarProtocoloProcesso } from '@/features/ocorrencias/utils/protocolo'
+import { useCatalogosProcessoQuery, useEditarProcessoMutation, useProcessoQuery } from '../hooks/useProcessos'
 import { processoEdicaoSchema, type ProcessoEdicaoValues } from '../schemas/processoEdicaoSchema'
 import type { ProcessoFormValues } from '../schemas/processoFormSchema'
 import type { Processo } from '../types/processos.types'
@@ -146,8 +148,12 @@ function FormularioEdicao({ processo }: { processo: Processo }) {
 export function EditarProcesso() {
   const { id } = useParams<{ id: string }>()
   const { data: processo, isLoading, isError, error } = useProcessoQuery(id)
+  const catalogosProcesso = useCatalogosProcessoQuery()
+  const catalogosAnimais = useCatalogosAnimaisQuery()
 
-  if (isLoading) return <p>Carregando processo…</p>
+  // O formulário só monta com os catálogos: um select sem a opção do valor salvo
+  // mostraria outro dado (a primeira opção) como se fosse o do processo.
+  if (isLoading || catalogosProcesso.isLoading || catalogosAnimais.isLoading) return <p>Carregando processo…</p>
 
   if (isError || !processo) {
     const naoEncontrado = statusHttpDoErro(error) === 404
@@ -168,7 +174,7 @@ export function EditarProcesso() {
           <Link to={`/processos/${processo.id}`} className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}>
             ← Voltar para o processo
           </Link>
-          <h1>Editar processo {processo.protocolo}</h1>
+          <h1>Editar processo {formatarProtocoloProcesso(processo.protocolo)}</h1>
           <p className="subtitle">
             Protocolo, abertura, status, resultados e vínculo com ocorrência não mudam por aqui.
           </p>

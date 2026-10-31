@@ -326,6 +326,30 @@ describe('AnimalForm — edição', () => {
   })
 })
 
+describe('AnimalForm — edição com catálogo lento', () => {
+  it('o status do animal aparece certo mesmo com o catálogo chegando depois da ficha', async () => {
+    const catalogos = await (await fetch(`${API_BASE_URL}/animais/catalogos`)).json()
+    let liberar: () => void = () => {}
+    const atraso = new Promise<void>((resolve) => {
+      liberar = resolve
+    })
+    server.use(
+      http.get(`${API_BASE_URL}/animais/catalogos`, async () => {
+        await atraso
+        return HttpResponse.json(catalogos)
+      }),
+    )
+    const user = userEvent.setup()
+    renderEditar('b2c3d4e5-0000-0000-0000-000000000001')
+
+    expect(await screen.findByText('Carregando animal…')).toBeInTheDocument()
+    liberar()
+    await user.click(await screen.findByRole('button', { name: /próximo: saúde/i }))
+
+    expect(((screen.getByLabelText(/^status/i) as HTMLSelectElement).value)).toBe('disponivel_adocao')
+  })
+})
+
 describe('AnimalForm — condições de saúde', () => {
   it('oferece as condições na etapa de saúde e exige descrever "Outras"', async () => {
     const user = userEvent.setup()

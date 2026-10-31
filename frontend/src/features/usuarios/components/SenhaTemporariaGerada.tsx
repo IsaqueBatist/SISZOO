@@ -27,7 +27,7 @@ export function SenhaTemporariaGerada({ titulo, nome, senha, onFechar }: SenhaTe
     <Modal titulo={titulo} onFechar={onFechar}>
       <div className="modal-body col gap-3">
         <p>
-          Entregue esta senha temporária a <strong>{nome}</strong>. Ela será trocada no primeiro acesso e não aparecerá
+          Entregue esta senha temporária a <strong>{nome}</strong>. Ela será trocada no próximo acesso e não aparecerá
           de novo.
         </p>
         <div className="senha-temporaria">

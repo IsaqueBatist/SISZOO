@@ -151,6 +151,31 @@ describe('EditarProcesso', () => {
     expect(corpos[0]).toMatchObject({ doenca: processoComResultadoFixture().doenca.codigo })
   })
 
+  it('catálogo que demora não mostra outro valor: o select só aparece com a opção salva', async () => {
+    let liberar: () => void = () => {}
+    const catalogo = new Promise<void>((resolve) => {
+      liberar = resolve
+    })
+    const fixtureFelino = {
+      ...PROCESSO,
+      amostras: [{ ...PROCESSO.amostras[0], animalId: null, especie: { codigo: 'felino', nome: 'Felino' } }],
+    }
+    const catalogos = await (await fetch(`${API_BASE_URL}/animais/catalogos`)).json()
+    server.use(
+      http.get(`${API_BASE_URL}/processos/${ID}`, () => HttpResponse.json(fixtureFelino)),
+      http.get(`${API_BASE_URL}/animais/catalogos`, async () => {
+        await catalogo
+        return HttpResponse.json(catalogos)
+      }),
+    )
+    renderEdicao()
+
+    expect(await screen.findByText('Carregando processo…')).toBeInTheDocument()
+    liberar()
+
+    expect(await screen.findByLabelText(/^espécie/i)).toHaveDisplayValue('Felino')
+  })
+
   it('o contato humano continua com as três respostas na edição', async () => {
     renderEdicao()
 

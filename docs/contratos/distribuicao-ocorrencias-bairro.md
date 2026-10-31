@@ -2,7 +2,7 @@
 
 Status: **implementado (T45, PR #113)**. `GET /api/ocorrencias/estatisticas/bairro` devolve a contagem por bairro
 agregada no banco; o gráfico e as sugestões de bairro do formulário usam esse endpoint (`ocorrencias/api`,
-`useSugestoesBairro`). O texto abaixo é o pedido original.
+`useSugestoesBairro`). O Veterinário não acessa esses agregados em nenhuma superfície (31/10/2026, `decisoes/decisoes-funcionais.md`). O texto abaixo é o pedido original.
 
 ## Contexto
 

@@ -1,12 +1,15 @@
 import { Link, useParams } from 'react-router-dom'
 import { AnimalForm } from './AnimalForm'
-import { useAnimalQuery } from '../hooks/useAnimais'
+import { useAnimalQuery, useCatalogosAnimaisQuery } from '../hooks/useAnimais'
 
 export function EditarAnimal() {
   const { id } = useParams<{ id: string }>()
   const { data: animal, isLoading, isError } = useAnimalQuery(id)
+  const catalogos = useCatalogosAnimaisQuery()
 
-  if (isLoading) {
+  // O formulário só monta com os catálogos: um select sem a opção do valor salvo
+  // não mostraria o dado do animal.
+  if (isLoading || catalogos.isLoading) {
     return (
       <div className="wizard-shell">
         <p>Carregando animal…</p>

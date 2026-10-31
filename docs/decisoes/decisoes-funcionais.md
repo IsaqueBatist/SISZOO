@@ -64,6 +64,10 @@ A permissão é a feature `ocorrencias_bairro` (V32). **Fora da restrição:** d
 - **Dados antigos:** nada é migrado. Animal sem condição marcada não significa que não tenha nenhuma.
 - **Tela:** checkboxes na etapa de saúde, resumo na revisão e selos na ficha, que passa a mostrar também as observações.
 
+## Telas que dependem de catálogo
+
+Na revisão de UX em navegador, a edição de processo mostrava **Canino** numa amostra **Felino**: o select montava antes do catálogo e exibia a primeira opção. O valor salvo não mudava, mas a tela mentia. A edição de processo e a de animal agora só montam o formulário com os catálogos carregados.
+
 ## Mensagens do backend
 
 **Origem:** decisão funcional. Todas as mensagens que a API devolve foram revistas: português correto, sem termos internos, dizendo o que aconteceu e, quando possível, o que fazer.
