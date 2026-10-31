@@ -121,6 +121,20 @@ export interface AmostraAnimal {
   sintomas: CatalogoItem[]
 }
 
+export type AmostraEditada = { id: string; dados: AmostraAnimalRequest }
+
+// PUT /api/processos/{id}: só o Administrador (decisão de 31/10/2026).
+export interface EditarProcessoRequest {
+  doenca: string
+  laboratorio: string
+  galNumero?: string
+  sinanNumero?: string
+  observacoes?: string
+  responsavel: CriarProcessoRequest['responsavel']
+  amostras: AmostraEditada[]
+  justificativa: string
+}
+
 // Um lançamento do histórico de resultado (original ou correção) — T34,
 // tabela resultado_processo, imutável. Sem retificaId = original.
 export interface ResultadoProcessoItem {

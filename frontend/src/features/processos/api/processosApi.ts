@@ -1,9 +1,11 @@
 import { http } from '@/lib/http'
 import type { PaginaResponse } from '@/features/usuarios/types/usuarios.types'
 import type { Ocorrencia } from '@/features/ocorrencias/types/ocorrencias.types'
+import type { EventoAuditoria } from '@/features/auditoria/types/auditoria.types'
 import type {
   CatalogosProcesso,
   CriarProcessoRequest,
+  EditarProcessoRequest,
   Processo,
   ProcessoResumo,
   ProcessosFiltro,
@@ -41,6 +43,16 @@ export async function buscarCatalogosProcesso(): Promise<CatalogosProcesso> {
 
 export async function criarProcesso(payload: CriarProcessoRequest): Promise<Processo> {
   const { data } = await http.post<Processo>('/processos', payload)
+  return data
+}
+
+export async function editarProcesso(id: string, payload: EditarProcessoRequest): Promise<Processo> {
+  const { data } = await http.put<Processo>(`/processos/${id}`, payload)
+  return data
+}
+
+export async function listarAlteracoesProcesso(id: string): Promise<EventoAuditoria[]> {
+  const { data } = await http.get<EventoAuditoria[]>(`/processos/${id}/alteracoes`)
   return data
 }
 

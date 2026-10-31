@@ -8,6 +8,7 @@ import { useEventosAuditoriaQuery, useOpcoesFiltroAuditoriaQuery } from '../hook
 import { agruparPorDia } from '../utils/agruparPorDia'
 import { agruparPorModulo } from '../utils/agruparPorModulo'
 import { descricaoAcao, type TomAcao } from '../utils/descricaoAcao'
+import { diferencasDoEvento, justificativaDoEvento } from '../utils/diferencasPayload'
 import { labelModulo, moduloDaEntidade, type Modulo } from '../utils/moduloDaEntidade'
 import type { EventoAuditoria } from '../types/auditoria.types'
 
@@ -31,6 +32,7 @@ function LinhaEvento({ evento }: { evento: EventoAuditoria }) {
     <li
       style={{
         display: 'flex',
+        flexWrap: 'wrap',
         alignItems: 'center',
         gap: 'var(--space-3)',
         padding: 'var(--space-3) 0',
@@ -49,7 +51,43 @@ function LinhaEvento({ evento }: { evento: EventoAuditoria }) {
       <span className="mono" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
         {formatarHora(evento.ocorreuEm.slice(11))}
       </span>
+      <DetalhesEvento evento={evento} />
     </li>
+  )
+}
+
+// O que mudou, o motivo e a origem do evento. Fica recolhido: a lista continua
+// fácil de percorrer.
+function DetalhesEvento({ evento }: { evento: EventoAuditoria }) {
+  const justificativa = justificativaDoEvento(evento.payloadDepois)
+  const diferencas = diferencasDoEvento(evento.payloadAntes, evento.payloadDepois)
+  if (!justificativa && !evento.ip && diferencas.length === 0) return null
+
+  return (
+    <details style={{ flexBasis: '100%', fontSize: 12 }}>
+      <summary style={{ cursor: 'pointer', color: 'var(--color-text-secondary)' }}>Ver detalhes</summary>
+      <div className="col gap-1" style={{ marginTop: 'var(--space-2)' }}>
+        {justificativa && (
+          <div>
+            <strong>Motivo:</strong> {justificativa}
+          </div>
+        )}
+        {diferencas.length > 0 && (
+          <ul style={{ margin: 0, paddingLeft: 16 }}>
+            {diferencas.map((diferenca) => (
+              <li key={diferenca.campo}>
+                {diferenca.campo}: {diferenca.antes} → {diferenca.depois}
+              </li>
+            ))}
+          </ul>
+        )}
+        {evento.ip && (
+          <div>
+            <strong>IP:</strong> <span className="mono">{evento.ip}</span>
+          </div>
+        )}
+      </div>
+    </details>
   )
 }
 

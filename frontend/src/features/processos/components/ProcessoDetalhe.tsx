@@ -6,6 +6,7 @@ import { SEXO_OPCOES, PELAGEM_OPCOES } from '@/features/animais/schemas/animalFo
 import { formatarData } from '@/features/ocorrencias/utils/datas'
 import { formatarProtocoloOcorrencia, formatarProtocoloProcesso } from '@/features/ocorrencias/utils/protocolo'
 import { mensagemDeRegraDaApi, statusHttpDoErro } from '@/lib/erroApi'
+import { CardHistoricoAlteracoes } from './CardHistoricoAlteracoes'
 import { CardResultadoProcesso } from './CardResultadoProcesso'
 import { CardStatusProcesso } from './CardStatusProcesso'
 import { SeletorOcorrencia, type OcorrenciaParaVinculo } from './SeletorOcorrencia'
@@ -138,6 +139,8 @@ export function ProcessoDetalhe() {
   const podeEscrever = roleKey === 'admin' || roleKey === 'vet' || roleKey === 'agente'
   // OCORRENCIAS_DENUNCIAS (V11/D33): só Admin e Agente leem e vinculam.
   const acessaOcorrencias = roleKey === 'admin' || roleKey === 'agente'
+  // Edição do registro e histórico: só o Administrador (V30).
+  const podeEditarRegistro = roleKey === 'admin'
   const { data: processo, isLoading, isError, error } = useProcessoQuery(id)
 
   if (isLoading) {
@@ -181,6 +184,13 @@ export function ProcessoDetalhe() {
             {processo.laboratorio.nome} · Aberto em {formatarData(processo.dataAbertura)}
           </p>
         </div>
+        {podeEditarRegistro && (
+          <div className="actions">
+            <Link to={`/processos/${processo.id}/editar`} className="btn btn-outline">
+              Editar processo
+            </Link>
+          </div>
+        )}
       </div>
 
       {processo.urgente && (
@@ -272,6 +282,7 @@ export function ProcessoDetalhe() {
           <CardStatusProcesso processo={processo} podeEscrever={podeEscrever} />
 
           <CardResultadoProcesso processo={processo} podeEscrever={podeEscrever} />
+          {podeEditarRegistro && <CardHistoricoAlteracoes processoId={processo.id} />}
         </div>
       </div>
     </>

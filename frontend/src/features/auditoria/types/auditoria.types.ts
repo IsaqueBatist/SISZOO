@@ -22,6 +22,7 @@ export interface EventoAuditoria {
   entidade: string
   entidadeId: string | null
   ocorreuEm: string
+  ip?: string | null
   // F2-027: estado antes/depois (JSON serializado pelo backend); opcionais.
   payloadAntes?: string | null
   payloadDepois?: string | null

@@ -55,6 +55,51 @@ function cardDe(titulo: string) {
   return within(screen.getByRole('heading', { name: titulo }).closest('.card') as HTMLElement)
 }
 
+describe('ProcessoDetalhe — edição e histórico', () => {
+  it('só o Administrador vê "Editar processo" e o histórico de alterações', async () => {
+    renderDetalhe(PROCESSO_PENDENTE_ID)
+    await esperarDetalhe(processoFixture().protocolo)
+
+    expect(screen.getByRole('link', { name: 'Editar processo' })).toHaveAttribute('href', `/processos/${PROCESSO_PENDENTE_ID}/editar`)
+    expect(await screen.findByRole('heading', { name: 'Histórico de alterações' })).toBeInTheDocument()
+  })
+
+  it.each([
+    ['Veterinário', VET],
+    ['Agente', AGENTE],
+  ])('%s não vê a edição nem o histórico, e o detalhe segue aberto', async (_perfil, cargos) => {
+    renderDetalhe(PROCESSO_PENDENTE_ID, cargos)
+    await esperarDetalhe(processoFixture().protocolo)
+
+    expect(screen.queryByRole('link', { name: 'Editar processo' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Histórico de alterações' })).not.toBeInTheDocument()
+  })
+
+  it('o histórico mostra autor, motivo e o que mudou', async () => {
+    server.use(
+      http.get(`${API_BASE_URL}/processos/:id/alteracoes`, () =>
+        HttpResponse.json([
+          {
+            id: 'e1',
+            usuarioEmail: 'ana.silva@itu.sp.gov.br',
+            acao: 'ATUALIZACAO',
+            entidade: 'processo_sanitario',
+            entidadeId: PROCESSO_PENDENTE_ID,
+            ocorreuEm: '2026-10-31T10:00:00',
+            payloadAntes: JSON.stringify({ galNumero: null, responsavel: { telefone: '1111' } }),
+            payloadDepois: JSON.stringify({ galNumero: 'GAL-9', responsavel: { telefone: '2222' }, justificativa: 'Telefone errado' }),
+          },
+        ]),
+      ),
+    )
+    renderDetalhe(PROCESSO_PENDENTE_ID)
+
+    expect(await screen.findByText('Telefone errado')).toBeInTheDocument()
+    expect(screen.getByText('Nº GAL: — → GAL-9')).toBeInTheDocument()
+    expect(screen.getByText('Responsável · Telefone: 1111 → 2222')).toBeInTheDocument()
+  })
+})
+
 describe('ProcessoDetalhe — dados', () => {
   it('mostra os dados do processo, o responsável e a amostra com identificação, campos clínicos e sintomas', async () => {
     renderDetalhe(PROCESSO_PENDENTE_ID)

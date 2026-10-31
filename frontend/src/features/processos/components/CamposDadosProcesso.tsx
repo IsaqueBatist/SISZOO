@@ -2,9 +2,15 @@ import { useFormContext } from 'react-hook-form'
 import { useCatalogosProcessoQuery } from '../hooks/useProcessos'
 import type { ProcessoFormValues } from '../schemas/processoFormSchema'
 
+interface CamposDadosProcessoProps {
+  // Edição pelo Administrador: a abertura é imutável, e a doença trava depois
+  // do resultado (o backend recusa os dois).
+  edicao?: { doencaBloqueada: boolean }
+}
+
 // Etapa 1 do processo sanitário, depois do vínculo: abertura, doença,
 // laboratório e os números GAL/SINAN.
-export function CamposDadosProcesso() {
+export function CamposDadosProcesso({ edicao }: CamposDadosProcessoProps) {
   const {
     register,
     formState: { errors },
@@ -17,14 +23,15 @@ export function CamposDadosProcesso() {
         <label htmlFor="proc-data-abertura">
           Data de abertura <span className="req">*</span>
         </label>
-        <input id="proc-data-abertura" className={`input${errors.dataAbertura ? ' error' : ''}`} aria-invalid={errors.dataAbertura ? true : undefined} aria-describedby={errors.dataAbertura ? 'proc-data-abertura-erro' : undefined} type="date" {...register('dataAbertura')} />
+        <input id="proc-data-abertura" className={`input${errors.dataAbertura ? ' error' : ''}`} aria-invalid={errors.dataAbertura ? true : undefined} aria-describedby={errors.dataAbertura ? 'proc-data-abertura-erro' : undefined} type="date" disabled={Boolean(edicao)} {...register('dataAbertura')} />
+        {edicao && <span className="hint">A data de abertura não muda depois do registro.</span>}
         {errors.dataAbertura && <span className="err" id="proc-data-abertura-erro">{errors.dataAbertura.message}</span>}
       </div>
       <div className="field">
         <label htmlFor="proc-doenca">
           Tipo de doença investigada <span className="req">*</span>
         </label>
-        <select id="proc-doenca" className={`select${errors.doenca ? ' error' : ''}`} aria-invalid={errors.doenca ? true : undefined} aria-describedby={errors.doenca ? 'proc-doenca-erro' : undefined} {...register('doenca')}>
+        <select id="proc-doenca" className={`select${errors.doenca ? ' error' : ''}`} aria-invalid={errors.doenca ? true : undefined} aria-describedby={errors.doenca ? 'proc-doenca-erro' : undefined} disabled={edicao?.doencaBloqueada} {...register('doenca')}>
           <option value="" disabled>
             Selecione
           </option>
@@ -35,6 +42,7 @@ export function CamposDadosProcesso() {
           ))}
         </select>
         {errors.doenca && <span className="err" id="proc-doenca-erro">{errors.doenca.message}</span>}
+        {edicao?.doencaBloqueada && <span className="hint">A doença não muda depois de lançado o resultado.</span>}
       </div>
       <div className="field">
         <label htmlFor="proc-laboratorio">

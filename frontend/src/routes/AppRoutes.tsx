@@ -17,6 +17,9 @@ import { RouteErrorBoundary } from './RouteErrorBoundary'
 // react-hook-form e o resolver (~48 KB gzip, cerca de 1/3 do carregamento
 // inicial) para toda recarga de tela já autenticada, que nunca o mostra. Na
 // primeira visita custa só mais um arquivo, baixado junto com o resto.
+const EditarProcesso = lazy(() =>
+  import('@/features/processos/components/EditarProcesso').then((m) => ({ default: m.EditarProcesso })),
+)
 const Login = lazy(() => import('@/features/auth/components/Login').then((m) => ({ default: m.Login })))
 const TrocarSenha = lazy(() =>
   import('@/features/auth/components/TrocarSenha').then((m) => ({ default: m.TrocarSenha })),
@@ -134,6 +137,7 @@ export function AppRoutes() {
               <Route path="/perfil" element={<Perfil />} />
               <Route path="/configuracoes" element={<Configuracoes />} />
               <Route element={<RotaAdmin />}>
+                <Route path="/processos/:id/editar" element={<EditarProcesso />} />
                 <Route path="/usuarios" element={<Usuarios />} />
                 <Route path="/logs" element={<Logs />} />
               </Route>

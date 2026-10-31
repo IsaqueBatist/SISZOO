@@ -44,6 +44,13 @@ export const processosHandlers = [
 
   http.post(`${API_BASE_URL}/processos`, () => HttpResponse.json(processoCriadoFixture())),
 
+  http.get(`${API_BASE_URL}/processos/:id/alteracoes`, () => HttpResponse.json([])),
+
+  http.put(`${API_BASE_URL}/processos/:id`, ({ params }) => {
+    const processo = buscarFixture(params.id as string)
+    return processo ? HttpResponse.json(processo) : naoEncontrado()
+  }),
+
   http.patch(`${API_BASE_URL}/processos/:id/status`, async ({ params, request }) => {
     const processo = buscarFixture(params.id as string)
     if (!processo) return naoEncontrado()

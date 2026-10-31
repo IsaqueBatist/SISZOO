@@ -1,6 +1,13 @@
 import { hojeEmItu } from '@/lib/datas'
+import type { ProcessoEdicaoValues } from '../schemas/processoEdicaoSchema'
 import type { ProcessoFormValues } from '../schemas/processoFormSchema'
-import type { AmostraAnimalRequest, CriarProcessoRequest } from '../types/processos.types'
+import type {
+  AmostraAnimal,
+  AmostraAnimalRequest,
+  CriarProcessoRequest,
+  EditarProcessoRequest,
+  Processo,
+} from '../types/processos.types'
 
 // Conversões do formulário de processo sanitário (ProcessoForm): valores
 // iniciais e o payload do POST.
@@ -85,6 +92,77 @@ function paraAmostraRequisicao(amostra: ProcessoFormValues['amostras'][number]):
     idadeAprox: textoOuIndefinido(amostra.idadeAprox),
     pesoKg: amostra.pesoKg,
     ...clinico,
+  }
+}
+
+function amostraParaFormulario(amostra: AmostraAnimal): ProcessoFormValues['amostras'][number] {
+  const clinico = {
+    statusClinico: amostra.statusClinico,
+    tipoAbrigo: amostra.tipoAbrigo,
+    alteracaoComportamental: amostra.alteracaoComportamental ?? '',
+    dataColeta: amostra.dataColeta,
+    materialBiologico: amostra.materialBiologico,
+    contatoHumano: amostra.contatoHumano,
+    nivelContato: amostra.nivelContato ?? undefined,
+    agrediuHumano: amostra.agrediuHumano ?? undefined,
+    observacoes: amostra.observacoes ?? '',
+    sintomas: amostra.sintomas.map((sintoma) => sintoma.codigo),
+  }
+  if (amostra.animalId) {
+    const animalDescricao = [amostra.especie.nome, amostra.raca, amostra.coloracao].filter(Boolean).join(' · ')
+    return { origem: 'canil', animalId: amostra.animalId, animalDescricao, ...clinico }
+  }
+  return {
+    origem: 'externo',
+    especie: amostra.especie.codigo,
+    sexo: amostra.sexo,
+    raca: amostra.raca ?? '',
+    coloracao: amostra.coloracao ?? '',
+    pelagem: amostra.pelagem ?? '',
+    idadeAprox: amostra.idadeAprox ?? '',
+    pesoKg: amostra.pesoKg ?? undefined,
+    ...clinico,
+  }
+}
+
+// Formulário de edição do Administrador, a partir do GET do processo.
+export function valoresDeProcesso(processo: Processo): ProcessoEdicaoValues {
+  return {
+    ...valoresVazios(),
+    dataAbertura: processo.dataAbertura,
+    doenca: processo.doenca.codigo,
+    laboratorio: processo.laboratorio.codigo,
+    galNumero: processo.galNumero ?? '',
+    sinanNumero: processo.sinanNumero ?? '',
+    observacoes: processo.observacoes ?? '',
+    responsavel: {
+      nome: processo.responsavel?.nome ?? '',
+      cpf: processo.responsavel?.cpf ?? '',
+      telefone: processo.responsavel?.telefone ?? '',
+      email: processo.responsavel?.email ?? '',
+      cep: processo.responsavel?.cep ?? '',
+      endereco: processo.responsavel?.endereco ?? '',
+      bairroResidencial: processo.responsavel?.bairroResidencial ?? '',
+      bairroOcorrencia: processo.responsavel?.bairroOcorrencia ?? '',
+    },
+    amostras: processo.amostras.map(amostraParaFormulario),
+    justificativa: '',
+  }
+}
+
+// Payload de PUT /api/processos/{id}: a ordem das amostras é a do GET, e a amostra
+// do canil leva o animalId, conferido pelo servidor (não troca de animal).
+export function paraEdicao(valores: ProcessoEdicaoValues, processo: Processo): EditarProcessoRequest {
+  const { responsavel, amostras, observacoes, galNumero, sinanNumero } = paraRequisicao(valores)
+  return {
+    doenca: processo.resultado ? processo.doenca.codigo : valores.doenca,
+    laboratorio: valores.laboratorio,
+    galNumero,
+    sinanNumero,
+    observacoes,
+    responsavel,
+    amostras: amostras.map((dados, index) => ({ id: processo.amostras[index].id, dados })),
+    justificativa: valores.justificativa.trim(),
   }
 }
 

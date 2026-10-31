@@ -57,9 +57,11 @@ interface AmostraAnimalCardProps {
   erros?: AmostraErros
   podeRemover: boolean
   onRemover: () => void
+  // Edição de processo registrado: corrige a amostra, sem trocar o animal.
+  identificacaoFixa?: boolean
 }
 
-export function AmostraAnimalCard({ index, numero, control, register, setValue, watch, erros, podeRemover, onRemover }: AmostraAnimalCardProps) {
+export function AmostraAnimalCard({ index, numero, control, register, setValue, watch, erros, podeRemover, onRemover, identificacaoFixa }: AmostraAnimalCardProps) {
   // Os campos de cada modalidade só existem numa das variantes da união; o
   // caminho é montado aqui e o tipo é afrouxado de propósito.
   const campo = (nome: string) => `amostras.${index}.${nome}` as Path<ProcessoFormValues>
@@ -105,14 +107,16 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
           Animal amostrado {numero}
         </span>
         <div className="flex gap-2" style={{ alignItems: 'center' }}>
-          <div className="source-toggle" role="tablist" aria-label="Origem do animal">
-            <button type="button" className={origem === 'canil' ? 'active' : ''} onClick={() => selecionarOrigem('canil')}>
-              Já cadastrado
-            </button>
-            <button type="button" className={origem === 'externo' ? 'active' : ''} onClick={() => selecionarOrigem('externo')}>
-              Animal de campo
-            </button>
-          </div>
+          {!identificacaoFixa && (
+            <div className="source-toggle" role="tablist" aria-label="Origem do animal">
+              <button type="button" className={origem === 'canil' ? 'active' : ''} onClick={() => selecionarOrigem('canil')}>
+                Já cadastrado
+              </button>
+              <button type="button" className={origem === 'externo' ? 'active' : ''} onClick={() => selecionarOrigem('externo')}>
+                Animal de campo
+              </button>
+            </div>
+          )}
           {podeRemover && (
             <button type="button" className="btn btn-ghost btn-sm btn-icon-only" aria-label={`Remover animal ${numero}`} onClick={onRemover}>
               <Icon name="x" size={14} />
@@ -130,11 +134,17 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
               </span>
               <div className="sa-info">
                 <div className="name">{animalDescricao || 'Animal selecionado'}</div>
-                <div className="meta">Espécie, sexo, raça, pelagem, idade e peso são copiados da ficha ao registrar.</div>
+                <div className="meta">
+                  {identificacaoFixa
+                    ? 'A identificação foi copiada da ficha quando a amostra foi registrada.'
+                    : 'Espécie, sexo, raça, pelagem, idade e peso são copiados da ficha ao registrar.'}
+                </div>
               </div>
-              <button type="button" className="btn btn-outline btn-sm" onClick={trocarAnimal}>
-                ← Trocar animal
-              </button>
+              {!identificacaoFixa && (
+                <button type="button" className="btn btn-outline btn-sm" onClick={trocarAnimal}>
+                  ← Trocar animal
+                </button>
+              )}
             </div>
           ) : (
             <BuscaAnimalCanil numero={numero} erro={erros?.animalId?.message} onSelecionar={selecionarAnimal} />

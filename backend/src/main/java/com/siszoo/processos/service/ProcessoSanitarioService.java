@@ -5,10 +5,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort;
@@ -33,11 +36,14 @@ import com.siszoo.processos.dto.AmostraAnimalRequest;
 import com.siszoo.processos.dto.AmostraAnimalResponse;
 import com.siszoo.processos.dto.CatalogosProcessoResponse;
 import com.siszoo.processos.dto.CriarProcessoRequest;
+import com.siszoo.processos.dto.EditarProcessoRequest;
 import com.siszoo.processos.dto.ProcessoAuditoriaSnapshot;
+import com.siszoo.processos.dto.ProcessoEdicaoAuditoria;
 import com.siszoo.processos.dto.ProcessoResumoResponse;
 import com.siszoo.processos.dto.ProcessoSanitarioResponse;
 import com.siszoo.processos.dto.RegistrarResultadoRequest;
 import com.siszoo.processos.dto.ResponsavelProcessoRequest;
+import com.siszoo.processos.entity.AnimalAmostrado;
 import com.siszoo.processos.entity.DesfechoAnimal;
 import com.siszoo.processos.entity.Doenca;
 import com.siszoo.processos.entity.Laboratorio;
@@ -48,10 +54,12 @@ import com.siszoo.processos.entity.ResultadoProcesso;
 import com.siszoo.processos.entity.Sintoma;
 import com.siszoo.processos.entity.StatusProcesso;
 import com.siszoo.processos.event.ResultadoLancadoEvent;
+import com.siszoo.processos.exception.AmostrasDaEdicaoDivergentesException;
 import com.siszoo.processos.exception.ConclusaoSemResultadoException;
 import com.siszoo.processos.exception.CorrecaoResultadoNaoPermitidaException;
 import com.siszoo.processos.exception.DataResultadoFuturaException;
 import com.siszoo.processos.exception.DesfechoInvalidoException;
+import com.siszoo.processos.exception.DoencaComResultadoLancadoException;
 import com.siszoo.processos.exception.DoencaInvalidaException;
 import com.siszoo.processos.exception.LaboratorioInvalidoException;
 import com.siszoo.processos.exception.ProcessoNaoEncontradoException;
@@ -71,6 +79,7 @@ import com.siszoo.processos.repository.ResponsavelProcessoRepository;
 import com.siszoo.processos.repository.ResultadoLaboratorialRepository;
 import com.siszoo.processos.repository.ResultadoProcessoRepository;
 import com.siszoo.processos.repository.SintomaRepository;
+import com.siszoo.usuarios.dto.AuditoriaEventoResponse;
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.exception.UsuarioNaoEncontradoException;
@@ -240,6 +249,106 @@ public class ProcessoSanitarioService {
         return resposta(processo, amostras);
     }
 
+    // Correcao de processo ja registrado, so pelo Administrador (autoridade no
+    // controller). Reaproveita as validacoes da criacao e nao toca em status,
+    // resultados, desfecho, vinculo nem notificacao. O historico fica no evento
+    // de auditoria, imutavel, com o estado anterior completo e a justificativa.
+    @Transactional
+    public ProcessoSanitarioResponse editar(UUID id, EditarProcessoRequest request, UUID usuarioId) {
+        ProcessoSanitario processo = travar(id);
+        LocalDate hoje = LocalDate.now(clock);
+        List<AmostraAnimalRequest> dadosDasAmostras = request.amostras().stream()
+                .map(EditarProcessoRequest.AmostraEditada::dados)
+                .toList();
+        dadosDasAmostras.forEach(amostra -> amostraFactory.validar(amostra, hoje));
+        Doenca doenca = doencaDaEdicao(processo, request.doenca());
+        Laboratorio laboratorio = laboratorioDaEdicao(processo, request.laboratorio());
+        Map<String, Sintoma> sintomas = amostraFactory.resolverSintomas(dadosDasAmostras);
+        List<AnimalAmostrado> amostras = amostraRepository.findByProcessoIdOrderByCriadoEmAscIdAsc(id);
+        Map<UUID, AmostraAnimalRequest> correcoes = correcoesPorAmostra(amostras, request);
+        ResponsavelProcesso responsavel = responsavelRepository.findByProcessoId(id)
+                .orElseThrow(ProcessoNaoEncontradoException::new);
+        Usuario autor = buscarUsuario(usuarioId);
+
+        ProcessoEdicaoAuditoria antes = estadoParaAuditoria(processo, responsavel, null);
+
+        processo.setDoenca(doenca);
+        processo.setCid(doenca.getCid());
+        processo.setLaboratorio(laboratorio);
+        processo.setObservacoes(request.observacoes());
+        processo.setGalNumero(normalizarNumeroExterno(request.galNumero()));
+        processo.setSinanNumero(normalizarNumeroExterno(request.sinanNumero()));
+        aplicarResponsavel(responsavel, request.responsavel());
+        amostras.forEach(amostra -> amostraFactory.corrigir(amostra, correcoes.get(amostra.getId()), sintomas));
+        processo.setUrgente(dadosDasAmostras.stream().map(AmostraAnimalRequest::contatoHumano).anyMatch(Boolean.TRUE::equals));
+        processoRepository.flush();
+
+        auditoriaEventoService.registrar(autor, AcaoAuditoria.ATUALIZACAO, ENTIDADE_AUDITORIA, id, antes,
+                estadoParaAuditoria(processo, responsavel, request.justificativa().trim()));
+        return resposta(processo, amostrasDe(processo));
+    }
+
+    // Catalogo inativado depois do cadastro nao bloqueia corrigir outro campo:
+    // o valor que ja estava no processo continua aceito.
+    private Doenca doencaDaEdicao(ProcessoSanitario processo, String codigo) {
+        if (processo.getDoenca().getCodigo().equals(codigo)) {
+            return processo.getDoenca();
+        }
+        if (processo.getResultadoLaboratorial() != null) {
+            throw new DoencaComResultadoLancadoException();
+        }
+        return doencaRepository.findByCodigo(codigo).filter(Doenca::isAtivo).orElseThrow(DoencaInvalidaException::new);
+    }
+
+    private Laboratorio laboratorioDaEdicao(ProcessoSanitario processo, String codigo) {
+        if (processo.getLaboratorio().getCodigo().equals(codigo)) {
+            return processo.getLaboratorio();
+        }
+        return laboratorioRepository.findByCodigo(codigo)
+                .filter(Laboratorio::isAtivo)
+                .orElseThrow(LaboratorioInvalidoException::new);
+    }
+
+    private static Map<UUID, AmostraAnimalRequest> correcoesPorAmostra(List<AnimalAmostrado> amostras,
+            EditarProcessoRequest request) {
+        Map<UUID, AmostraAnimalRequest> correcoes = new HashMap<>();
+        request.amostras().forEach(amostra -> correcoes.put(amostra.id(), amostra.dados()));
+        boolean mesmasAmostras = correcoes.size() == request.amostras().size()
+                && correcoes.keySet().equals(amostras.stream().map(AnimalAmostrado::getId).collect(Collectors.toSet()));
+        if (!mesmasAmostras) {
+            throw new AmostrasDaEdicaoDivergentesException();
+        }
+        for (AnimalAmostrado amostra : amostras) {
+            UUID animalAtual = amostra.getAnimal() == null ? null : amostra.getAnimal().getId();
+            if (!Objects.equals(animalAtual, correcoes.get(amostra.getId()).animalId())) {
+                throw new AmostrasDaEdicaoDivergentesException();
+            }
+        }
+        return correcoes;
+    }
+
+    private ProcessoEdicaoAuditoria estadoParaAuditoria(ProcessoSanitario processo, ResponsavelProcesso responsavel,
+            String justificativa) {
+        return new ProcessoEdicaoAuditoria(
+                processoMapper.toSnapshot(processo, amostrasDe(processo)),
+                processo.getGalNumero(),
+                processo.getSinanNumero(),
+                new ProcessoEdicaoAuditoria.ResponsavelAuditoria(responsavel.getNome(), responsavel.getCpf(),
+                        responsavel.getTelefone(), responsavel.getEmail(), responsavel.getCep(),
+                        responsavel.getEndereco(), responsavel.getBairroResidencial(), responsavel.getBairroOcorrencia()),
+                justificativa);
+    }
+
+    // Trilha completa do processo, para quem pode edita-lo. A autorizacao fica no
+    // controller: o evento da edicao traz dado pessoal do responsavel.
+    @Transactional(readOnly = true)
+    public List<AuditoriaEventoResponse> alteracoes(UUID id) {
+        if (!processoRepository.existsById(id)) {
+            throw new ProcessoNaoEncontradoException();
+        }
+        return auditoriaEventoService.listarPorEntidade(ENTIDADE_AUDITORIA, id);
+    }
+
     // As constraint triggers da V13 (1 responsavel e >= 1 amostra) sao
     // adiadas para o COMMIT, que acontece fora do service: uma violacao ali
     // nao passaria pelo tratamento de DataIntegrityViolationException. Gravar
@@ -254,6 +363,11 @@ public class ProcessoSanitarioService {
     private static ResponsavelProcesso novoResponsavel(ProcessoSanitario processo, ResponsavelProcessoRequest request) {
         ResponsavelProcesso responsavel = new ResponsavelProcesso();
         responsavel.setProcesso(processo);
+        aplicarResponsavel(responsavel, request);
+        return responsavel;
+    }
+
+    private static void aplicarResponsavel(ResponsavelProcesso responsavel, ResponsavelProcessoRequest request) {
         responsavel.setNome(request.nome().trim());
         responsavel.setCpf(request.cpf());
         responsavel.setTelefone(request.telefone());
@@ -262,7 +376,6 @@ public class ProcessoSanitarioService {
         responsavel.setEndereco(request.endereco());
         responsavel.setBairroResidencial(request.bairroResidencial());
         responsavel.setBairroOcorrencia(request.bairroOcorrencia());
-        return responsavel;
     }
 
     // ── Consulta, listagem e catalogos ───────────────────
