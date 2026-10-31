@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
+import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
 import { Icon } from '@/components/layout/Icon'
 import { formatarDataBR } from '@/lib/datas'
 import { NAV_ALL, ROLES, isNavGroup, roleKeyFromCargos } from '@/lib/nav'
@@ -142,12 +143,7 @@ export function Perfil() {
               <h3>Atualizar telefone</h3>
             </div>
             <div className="card-body">
-              {submitError && (
-                <div className="alert danger" role="alert">
-                  <span className="bullet" />
-                  <div className="alert-content">{submitError}</div>
-                </div>
-              )}
+              <AlertaErroEnvio mensagem={submitError} />
               {submitSucesso && !submitError && (
                 <div className="alert success" role="status">
                   <span className="bullet" />

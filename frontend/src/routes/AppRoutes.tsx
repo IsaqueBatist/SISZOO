@@ -2,7 +2,7 @@ import { Suspense, lazy } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from '../components/layout/Layout'
 import { ThemeProvider } from '@/components/ThemeProvider'
-import { EmConstrucao } from '../pages/EmConstrucao'
+import { PaginaNaoEncontrada } from '../pages/PaginaNaoEncontrada'
 import { RotaAdmin } from './RotaAdmin'
 import { RotaEscritaAnimais } from './RotaEscritaAnimais'
 import { RotaEscritaOcorrencias } from './RotaEscritaOcorrencias'
@@ -91,7 +91,7 @@ export function AppRoutes() {
     <RouteErrorBoundary>
       <Suspense fallback={<CarregandoRota />}>
         <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/login" element={<Login />} />
 
           <Route element={<RotaProtegida />}>
@@ -137,7 +137,7 @@ export function AppRoutes() {
                 <Route path="/usuarios" element={<Usuarios />} />
                 <Route path="/logs" element={<Logs />} />
               </Route>
-              <Route path="*" element={<EmConstrucao />} />
+              <Route path="*" element={<PaginaNaoEncontrada />} />
             </Route>
           </Route>
         </Routes>

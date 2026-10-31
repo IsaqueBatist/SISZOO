@@ -1,10 +1,10 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { Login } from './Login'
-import { AuthProvider } from '../hooks/AuthContext'
+import { AuthProvider, SESSION_STORAGE_KEY } from '../hooks/AuthContext'
 import { CREDENCIAIS_VALIDAS } from '@/mocks/handlers'
 
 function renderLogin() {
@@ -68,9 +68,62 @@ describe('validação do formulário de login', () => {
     await user.type(screen.getByLabelText(/^senha/i), CREDENCIAIS_VALIDAS.senha)
     await user.click(screen.getByRole('button', { name: /^entrar$/i }))
 
-    await waitFor(() => expect(screen.getByRole('button', { name: /^entrar$/i })).not.toBeDisabled())
+    // Login aceito: com sessão aberta, a tela de login dá lugar ao destino.
+    await waitFor(() => expect(screen.queryByRole('button', { name: /^entrar$/i })).not.toBeInTheDocument())
     expect(
       screen.queryByText('Use seu e-mail institucional (@itu.sp.gov.br).'),
     ).not.toBeInTheDocument()
+  })
+})
+
+describe('sessão', () => {
+  function renderComEstado(estado: unknown) {
+    const queryClient = new QueryClient()
+    return render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={[{ pathname: '/login', state: estado }]}>
+          <AuthProvider>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/dashboard" element={<p>Dashboard</p>} />
+              <Route path="/ocorrencias" element={<p>Ocorrências</p>} />
+            </Routes>
+          </AuthProvider>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+  }
+
+  afterEach(() => sessionStorage.clear())
+
+  it('explica que a sessão expirou', async () => {
+    renderComEstado(null)
+    window.dispatchEvent(new Event('auth:unauthorized'))
+
+    expect(await screen.findByText('Sua sessão expirou. Entre de novo para continuar de onde parou.')).toBeInTheDocument()
+  })
+
+  it('depois de entrar, volta para onde a pessoa estava', async () => {
+    const user = userEvent.setup()
+    renderComEstado({ voltarPara: '/ocorrencias' })
+
+    await user.type(screen.getByLabelText(/e-mail institucional/i), CREDENCIAIS_VALIDAS.email)
+    await user.type(screen.getByLabelText(/^senha/i), CREDENCIAIS_VALIDAS.senha)
+    await user.click(screen.getByRole('button', { name: /^entrar$/i }))
+
+    expect(await screen.findByText('Ocorrências')).toBeInTheDocument()
+  })
+
+  it('com sessão aberta, não mostra o formulário de login', async () => {
+    sessionStorage.setItem(
+      SESSION_STORAGE_KEY,
+      JSON.stringify({
+        token: 'token-existente',
+        usuario: { id: 'u1', nome: 'Ana', sobrenome: 'Silva', email: 'ana@itu.sp.gov.br', cargos: ['Agente Sanitário'], senhaAlteradaEm: '2026-01-10T12:00:00Z' },
+      }),
+    )
+    renderComEstado(null)
+
+    expect(await screen.findByText('Dashboard')).toBeInTheDocument()
   })
 })

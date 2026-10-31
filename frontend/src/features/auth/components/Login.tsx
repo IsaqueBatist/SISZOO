@@ -1,16 +1,26 @@
 import { useState, type FormEvent } from 'react'
 import { isAxiosError } from 'axios'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { useAuth } from '../hooks/useAuth'
 import { loginSchema, type LoginFormValues } from '../schemas/loginSchema'
+import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
 import { Icon } from '@/components/layout/Icon'
+import { useTituloPagina } from '@/lib/useTituloPagina'
 import './Login.css'
+
+interface EstadoLogin {
+  voltarPara?: string
+}
 
 export function Login() {
   const navigate = useNavigate()
-  const { login, isLoading } = useAuth()
+  const location = useLocation()
+  const estado = location.state as EstadoLogin | null
+  const destino = estado?.voltarPara ?? '/dashboard'
+  const { login, isLoading, token, sessaoExpirada } = useAuth()
+  useTituloPagina('Entrar')
   const [senhaVisivel, setSenhaVisivel] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
@@ -27,10 +37,10 @@ export function Login() {
   async function onSubmit(dados: LoginFormValues) {
     try {
       await login(dados)
-      navigate('/dashboard', { replace: true })
+      navigate(destino, { replace: true })
     } catch (erro) {
       if (isAxiosError(erro) && erro.response?.status === 401) {
-        setSubmitError('E-mail ou senha inválidos.')
+        setSubmitError('E-mail ou senha inválidos. Se o problema continuar, fale com o Administrador do sistema.')
       } else {
         setSubmitError('Não foi possível entrar. Verifique sua conexão e tente novamente.')
       }
@@ -41,6 +51,9 @@ export function Login() {
     setSubmitError(null)
     void handleSubmit(onSubmit)(event)
   }
+
+  // Sessão aberta: esta tela não tem o que oferecer.
+  if (token) return <Navigate to={destino} replace />
 
   return (
     <div className="login-shell">
@@ -78,7 +91,7 @@ export function Login() {
           <div className="tagline">CCZ Itu</div>
         </div>
         <div className="center">
-          <h1>Sistema de Gestão do Centro de Controle de Zoonoses</h1>
+          <p className="login-marca">Sistema de Gestão do Centro de Controle de Zoonoses</p>
           <p>
             Plataforma unificada para gestão de animais, ocorrências, investigações sanitárias e
             relatórios da Prefeitura Municipal de Itu.
@@ -93,16 +106,18 @@ export function Login() {
       <section className="login-form-area">
         <form className="login-card" onSubmit={aoEnviar} noValidate>
           <div>
-            <h2>Bem-vinda ao SISZOO</h2>
+            <h1 className="login-titulo">Boas-vindas ao SISZOO</h1>
             <p className="lead">Faça login com suas credenciais institucionais.</p>
           </div>
 
-          {submitError && (
-            <div className="alert danger" role="alert">
+          {sessaoExpirada && !submitError && (
+            <div className="alert warning" role="status">
               <span className="bullet" />
-              <div className="alert-content">{submitError}</div>
+              <div className="alert-content">Sua sessão expirou. Entre de novo para continuar de onde parou.</div>
             </div>
           )}
+
+          <AlertaErroEnvio mensagem={submitError} />
 
           <div className="field">
             <label htmlFor="email">
@@ -143,7 +158,9 @@ export function Login() {
               <button
                 type="button"
                 className="right-btn"
-                title="Mostrar senha"
+                title={senhaVisivel ? 'Ocultar senha' : 'Mostrar senha'}
+                aria-label={senhaVisivel ? 'Ocultar senha' : 'Mostrar senha'}
+                aria-pressed={senhaVisivel}
                 onClick={() => setSenhaVisivel((value) => !value)}
               >
                 <Icon name="eye" size={16} />

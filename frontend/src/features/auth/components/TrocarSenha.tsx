@@ -6,13 +6,16 @@ import { useForm } from 'react-hook-form'
 import { useAuth } from '../hooks/useAuth'
 import { trocarSenha } from '../api/authApi'
 import { criarTrocarSenhaSchema, type TrocarSenhaFormValues } from '../schemas/trocarSenhaSchema'
+import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
 import { Icon } from '@/components/layout/Icon'
+import { useTituloPagina } from '@/lib/useTituloPagina'
 import './Login.css'
 
 export function TrocarSenha() {
   const navigate = useNavigate()
   const { user, marcarSenhaAlterada } = useAuth()
   const [submitError, setSubmitError] = useState<string | null>(null)
+  useTituloPagina('Trocar senha')
 
   const mutation = useMutation({ mutationFn: trocarSenha })
 
@@ -62,12 +65,7 @@ export function TrocarSenha() {
           </p>
         </div>
 
-        {submitError && (
-          <div className="alert danger" role="alert">
-            <span className="bullet" />
-            <div className="alert-content">{submitError}</div>
-          </div>
-        )}
+        <AlertaErroEnvio mensagem={submitError} />
 
         <div className="field">
           <label htmlFor="novaSenha">

@@ -1,5 +1,6 @@
-import { Navigate, Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { RedirecionarSemAcesso } from './RedirecionarSemAcesso'
 
 // OCORRENCIAS_DENUNCIAS:escrita (V3__seed_cargos.sql) só é concedida a
 // Administrador e Agente Sanitário. No AppRoutes esta guarda fica dentro de
@@ -8,5 +9,5 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 // não deve nem aparecer para quem não tem escrita.
 export function RotaEscritaOcorrencias() {
   const { roleKey } = useAuth()
-  return roleKey === 'admin' || roleKey === 'agente' ? <Outlet /> : <Navigate to="/ocorrencias" replace />
+  return roleKey === 'admin' || roleKey === 'agente' ? <Outlet /> : <RedirecionarSemAcesso para="/ocorrencias" />
 }

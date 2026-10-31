@@ -11,6 +11,8 @@ export interface AuthContextValue {
   marcarSenhaAlterada: (senhaAlteradaEm: string) => void
   isLoading: boolean
   error: unknown
+  // A sessão caiu sozinha (401), e não por logout: o login explica o motivo.
+  sessaoExpirada: boolean
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null)

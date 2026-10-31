@@ -46,7 +46,7 @@ describe('roteamento entre login e dashboard', () => {
     await user.type(screen.getByLabelText(/^senha/i), 'senha-errada')
     await user.click(screen.getByRole('button', { name: /^entrar$/i }))
 
-    expect(await screen.findByText('E-mail ou senha inválidos.')).toBeInTheDocument()
+    expect(await screen.findByText('E-mail ou senha inválidos. Se o problema continuar, fale com o Administrador do sistema.')).toBeInTheDocument()
     expect(screen.getByLabelText(/e-mail institucional/i)).toBeInTheDocument()
   })
 

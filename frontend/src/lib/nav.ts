@@ -1,9 +1,9 @@
 import type { IconName } from '../components/layout/Icon'
 
-// Portado de docs/prototipo/assets/shell.js — manter chaves, labels e
-// access arrays idênticos ao protótipo (fonte da verdade do design system).
-// Divergência deliberada: o Veterinário não acessa 'ocorrencias' (correção de
-// regra de acesso, V11 no backend); o protótipo ainda lista o item para ele.
+// Portado de docs/prototipo/assets/shell.js. Divergências deliberadas: o
+// Veterinário não acessa 'ocorrencias' (correção de regra de acesso, V11 no
+// backend) e os grupos do menu foram separados por responsabilidade, porque
+// Medicamentos e Configurações também são usados por quem não administra.
 
 // 'sem_perfil': cargo que não corresponde a nenhum perfil conhecido (ou
 // sessão sem cargos). Não vê nenhum módulo — antes caía em 'agente' e o menu
@@ -25,7 +25,7 @@ export const ROLES: Record<RoleKey, Role> = {
     access: ['dashboard', 'animais', 'ocorrencias', 'processos', 'relatorios', 'medicamentos', 'baias', 'usuarios', 'logs', 'config'],
   },
   vet: {
-    label: 'Veterinária',
+    label: 'Veterinário(a)',
     short: 'VET',
     badgeCls: 'badge-role-vet',
     access: ['dashboard', 'animais', 'processos', 'relatorios', 'medicamentos', 'baias', 'config'],
@@ -70,13 +70,37 @@ export const NAV_ALL: NavEntry[] = [
   { id: 'ocorrencias', label: 'Ocorrências', to: '/ocorrencias', icon: 'alert' },
   { id: 'processos', label: 'Processos Sanitários', to: '/processos', icon: 'clipboard' },
   { id: 'relatorios', label: 'Relatórios', to: '/relatorios', icon: 'chart' },
-  { group: 'ADMINISTRAÇÃO' },
+  { group: 'CADASTROS' },
   { id: 'medicamentos', label: 'Medicamentos', to: '/medicamentos', icon: 'pill' },
   { id: 'baias', label: 'Gestão de Baias', to: '/baias', icon: 'grid' },
+  { group: 'ADMINISTRAÇÃO' },
   { id: 'usuarios', label: 'Usuários', to: '/usuarios', icon: 'users' },
   { id: 'logs', label: 'Logs', to: '/logs', icon: 'eye' },
+  { group: 'SISTEMA' },
   { id: 'config', label: 'Configurações', to: '/configuracoes', icon: 'cog' },
 ]
+
+// Telas fora do menu que também precisam de nome no topo e na aba do navegador.
+const ROTULOS_FORA_DO_MENU: Record<string, string> = {
+  '/alertas': 'Alertas de vacina',
+  '/perfil': 'Meu perfil',
+}
+
+export function rotuloDaRota(pathname: string): string {
+  const item = NAV_ALL.find((entry) => !isNavGroup(entry) && pathname.startsWith(entry.to))
+  if (item && !isNavGroup(item)) return item.label
+  const extra = Object.keys(ROTULOS_FORA_DO_MENU).find((rota) => pathname.startsWith(rota))
+  return extra ? ROTULOS_FORA_DO_MENU[extra] : 'Página não encontrada'
+}
+
+// Título da aba: com várias abas abertas, cada uma precisa ser reconhecível.
+export function tituloDaRota(pathname: string): string {
+  const rotulo = rotuloDaRota(pathname)
+  if (pathname.endsWith('/novo')) return `Novo registro · ${rotulo}`
+  if (pathname.endsWith('/editar')) return `Editar · ${rotulo}`
+  if (/\/[0-9a-f-]{36}$/i.test(pathname)) return `Detalhe · ${rotulo}`
+  return rotulo
+}
 
 // Mapeamento provisório entre `usuario.cargos` (schema real N:N do backend)
 // e as chaves de perfil do design system. Comparação por substring

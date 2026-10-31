@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
 import { Switch } from '@/components/Switch'
 import { Icon } from '@/components/layout/Icon'
 import { aplicarPreferenciasVisuais } from '@/lib/theme'
@@ -144,12 +145,7 @@ export function Configuracoes() {
         </nav>
 
         <div>
-          {submitError && (
-            <div className="alert danger" role="alert">
-              <span className="bullet" />
-              <div className="alert-content">{submitError}</div>
-            </div>
-          )}
+          <AlertaErroEnvio mensagem={submitError} />
           {submitSucesso && !submitError && (
             <div className="alert success" role="status">
               <span className="bullet" />
@@ -190,6 +186,7 @@ export function Configuracoes() {
                   </div>
                   <select
                     className="select"
+                    aria-label="Densidade da interface"
                     style={{ width: 180 }}
                     value={form.densidade}
                     onChange={(event) => setForm({ ...form, densidade: event.target.value as DensidadeUsuario })}

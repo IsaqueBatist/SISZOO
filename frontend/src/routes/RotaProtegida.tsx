@@ -5,7 +5,8 @@ export function RotaProtegida() {
   const { token, user } = useAuth()
   const location = useLocation()
 
-  if (!token) return <Navigate to="/login" replace />
+  // Link direto sem sessão: depois de entrar, segue para onde a pessoa ia.
+  if (!token) return <Navigate to="/login" replace state={{ voltarPara: `${location.pathname}${location.search}` }} />
 
   if (user?.senhaAlteradaEm === null && location.pathname !== '/trocar-senha') {
     return <Navigate to="/trocar-senha" replace />

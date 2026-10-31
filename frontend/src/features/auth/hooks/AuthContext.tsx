@@ -1,9 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { limparAvisos } from '@/lib/avisos'
 import { setAuthToken } from '@/lib/http'
 import { roleKeyFromCargos } from '@/lib/nav'
 import { limparRascunhos } from '@/lib/rascunhoDb'
+import { limparFiltrosDeListas } from '@/lib/useFiltrosLista'
 import type { LoginRequest, Usuario } from '../types/auth.types'
 import { login as loginRequest } from '../api/authApi'
 import { AuthContext, type AuthContextValue } from './authContextValue'
@@ -33,6 +35,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return armazenada
   })
 
+  const [sessaoExpirada, setSessaoExpirada] = useState(false)
+
   const mutation = useMutation({ mutationFn: loginRequest })
   const { mutateAsync } = mutation
 
@@ -40,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (credenciais: LoginRequest) => {
       const resposta = await mutateAsync(credenciais)
       const novaSessao: SessaoArmazenada = { token: resposta.token, usuario: resposta.usuario }
+      setSessaoExpirada(false)
       setSessao(novaSessao)
       setAuthToken(novaSessao.token)
       try {
@@ -61,6 +66,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Antes de tudo: limparRascunhos cancela já, de forma síncrona, os
       // salvamentos agendados que recriariam o rascunho.
       if (apagarRascunhos) void limparRascunhos()
+      limparFiltrosDeListas()
+      limparAvisos()
       setSessao(null)
       setAuthToken(null)
       try {
@@ -95,8 +102,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     function handleUnauthorized() {
+      // Lido antes de encerrar: a pessoa volta à tela em que estava.
+      const voltarPara = `${window.location.pathname}${window.location.search}`
+      setSessaoExpirada(true)
       encerrarSessao({ apagarRascunhos: false })
-      navigate('/login', { replace: true })
+      navigate('/login', { replace: true, state: { voltarPara } })
     }
 
     window.addEventListener('auth:unauthorized', handleUnauthorized)
@@ -118,8 +128,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       marcarSenhaAlterada,
       isLoading: isPending,
       error,
+      sessaoExpirada,
     }),
-    [sessao, login, logout, marcarSenhaAlterada, isPending, error],
+    [sessao, login, logout, marcarSenhaAlterada, isPending, error, sessaoExpirada],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
