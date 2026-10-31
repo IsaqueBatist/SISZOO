@@ -35,3 +35,23 @@ As duas informações têm três estados: sim, não e não informado (`null`).
 - **Auditoria:** reaproveita `auditoria_evento`, sem tabela nem coluna nova. O evento `ATUALIZACAO` leva autor, data, IP, antes, depois e justificativa no payload.
 - **Dado pessoal:** exceção à D23, aprovada nesta etapa. O evento da edição guarda os valores anteriores e novos do responsável, porque corrigir um CPF não pode apagar o original. A consulta é só do Administrador. Esse dado fica permanente na trilha imutável, o que reforça a pendência de retenção da T43.
 - **Limites da edição:** protocolo, data de abertura (T34-5), status, resultados, desfecho, vínculo e notificação ficam de fora, assim como incluir, remover ou trocar amostras. A doença só muda antes do resultado, porque o resultado foi dado para aquela doença. Este último limite é uma decisão de implementação, a confirmar com o CCZ.
+
+## Resultado positivo definitivo pelo Agente Sanitário
+
+**Origem:** decisão funcional. **Situação encontrada:** o sistema já permitia. Os cinco resultados lançáveis exigem `PROCESSOS_SANITARIOS:escrita`, que Administrador, Veterinário e Agente têm desde a V3, e não há filtro de resultado por perfil.
+
+"Positivo definitivo" não é um tipo de resultado: é o código `positivo`, que não pode ser corrigido (T35-15, V21). Lançá-lo leva o processo a `COM_RESULTADO`, não encerra o processo nem decide o tratamento. Por isso não houve mudança de domínio, e a decisão ficou fixada em testes por perfil.
+
+## Ocorrências por bairro
+
+**Origem:** decisão funcional. O Veterinário não vê dados agregados de ocorrências por bairro.
+
+| Superfície | Veterinário | Administrador e Agente |
+|---|---|---|
+| `GET /api/ocorrencias/estatisticas/bairro` | 403 (já era, V11) | Mantido |
+| Relatório `ocorrencias_bairro`: prévia, CSV e PDF | 403, sem gerar `doc_id` nem histórico | Mantido |
+| `GET /api/relatorios/tipos` | Sem esse tipo | Mantido |
+| Relatório `anual_processos`: prévia, CSV e PDF | Sai sem a seção de bairros, com o restante | Mantido |
+| Histórico de relatórios | Vê o registro, sem contagens, e não gera de novo | Mantido |
+
+A permissão é a feature `ocorrencias_bairro` (V32). **Fora da restrição:** dados individuais do processo (`bairroOcorrencia` do responsável), que o Veterinário precisa para atender o caso, e os indicadores sem bairro. Arquivos já baixados ficam fora do alcance do sistema.

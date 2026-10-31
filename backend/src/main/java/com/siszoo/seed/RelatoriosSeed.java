@@ -54,7 +54,7 @@ class RelatoriosSeed {
             };
             executor.garantir(exportacao.chave(), "relatorio_gerado", () -> {
                 autor.executar("RELATORIOS:leitura",
-                        () -> relatorioService.exportar(filtro, exportacao.formato(), autor.id()));
+                        () -> relatorioService.exportar(filtro, exportacao.formato(), autor.id(), true));
                 // O service so faz save(); a consulta abaixo e JDBC e nao
                 // dispara o auto-flush do Hibernate.
                 entityManager.flush();

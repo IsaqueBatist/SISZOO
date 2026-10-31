@@ -73,8 +73,8 @@
   </div>
 </div>
 
-<h2 class="section">5. Bairros com mais ocorrências</h2>
-<table>
+<h2 class="section" th:if="${d.bairros != null}">5. Bairros com mais ocorrências</h2>
+<table th:if="${d.bairros != null}">
   <thead><tr><th>Bairro</th><th>Processos</th><th>Positivos</th><th>Doenças predominantes</th></tr></thead>
   <tbody>
     <tr th:each="b : ${d.bairros}">

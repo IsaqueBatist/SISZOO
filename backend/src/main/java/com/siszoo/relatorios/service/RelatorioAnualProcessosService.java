@@ -65,6 +65,17 @@ public class RelatorioAnualProcessosService implements GeradorRelatorio<Relatori
     @Override
     @Transactional(readOnly = true)
     public RelatorioAnualProcessosResponse gerarPreview(PeriodoRelatorio periodo) {
+        return montarPreview(periodo, true);
+    }
+
+    // bairros nulo, nao vazio: "sem dados no ano" e outra coisa.
+    @Override
+    @Transactional(readOnly = true)
+    public RelatorioAnualProcessosResponse gerarPreviewSemBairros(PeriodoRelatorio periodo) {
+        return montarPreview(periodo, false);
+    }
+
+    private RelatorioAnualProcessosResponse montarPreview(PeriodoRelatorio periodo, boolean comBairros) {
         LocalDate inicio = periodo.inicio();
         LocalDate fim = periodo.fim();
         int ano = inicio.getYear();
@@ -74,7 +85,7 @@ public class RelatorioAnualProcessosService implements GeradorRelatorio<Relatori
         List<ResultadoLaboratorialPorDoencaResponse> resultadosPorDoenca = montarResultadosPorDoenca(inicio, fim);
         ResultadoLaboratorialPorDoencaResponse totalResultados = somarResultados(resultadosPorDoenca);
         List<DistribuicaoEspecieResponse> porEspecie = montarPorEspecie(inicio, fim);
-        List<BairroProcessoResponse> bairros = montarBairrosComAgregados(inicio, fim);
+        List<BairroProcessoResponse> bairros = comBairros ? montarBairrosComAgregados(inicio, fim) : null;
         List<LaboratorioUtilizadoResponse> laboratorios = montarLaboratorios(inicio, fim);
         String sumario = montarSumarioExecutivo(ano, kpis);
 
@@ -86,6 +97,16 @@ public class RelatorioAnualProcessosService implements GeradorRelatorio<Relatori
     @Override
     @Transactional(readOnly = true)
     public List<BlocoCsv> blocosCsv(PeriodoRelatorio periodo) {
+        return montarBlocosCsv(periodo, true);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<BlocoCsv> blocosCsvSemBairros(PeriodoRelatorio periodo) {
+        return montarBlocosCsv(periodo, false);
+    }
+
+    private List<BlocoCsv> montarBlocosCsv(PeriodoRelatorio periodo, boolean comBairros) {
         LocalDate inicio = periodo.inicio();
         LocalDate fim = periodo.fim();
         int ano = inicio.getYear();
@@ -113,7 +134,7 @@ public class RelatorioAnualProcessosService implements GeradorRelatorio<Relatori
 
         // CSV exporta todos os bairros (sem o top 9 + Outros do preview/PDF),
         // mas mantem a linha "Sem ocorrência vinculada" quando ha processos assim.
-        List<List<String>> linhasBairros = montarBairrosCompleto(inicio, fim).stream()
+        List<List<String>> linhasBairros = !comBairros ? List.of() : montarBairrosCompleto(inicio, fim).stream()
                 .map(l -> List.of(l.bairro(), String.valueOf(l.processos()), String.valueOf(l.positivos()), l.doencasPredominantes()))
                 .toList();
 
@@ -122,7 +143,7 @@ public class RelatorioAnualProcessosService implements GeradorRelatorio<Relatori
                         l.tempoMedioDias() != null ? String.valueOf(l.tempoMedioDias()) : "—"))
                 .toList();
 
-        return List.of(
+        List<BlocoCsv> blocos = new ArrayList<>(List.of(
                 new BlocoCsv("Distribuição por Patologia", List.of("Doença", "Quantidade"), linhasPatologia),
                 new BlocoCsv("Resultados Laboratoriais",
                         List.of("Doença", "Investigados", "Positivos", "Negativos", "Inconclus.", "Aguard.", "Positividade"),
@@ -131,10 +152,13 @@ public class RelatorioAnualProcessosService implements GeradorRelatorio<Relatori
                 new BlocoCsv("Contato humano-animal", List.of("Situação", "Processos"), List.of(
                         List.of("Com contato", String.valueOf(kpisContato.comContatoHumano())),
                         List.of("Não informado", String.valueOf(kpisContato.contatoNaoInformado())))),
-                new BlocoCsv("Bairros com mais ocorrências",
-                        List.of("Bairro", "Processos", "Positivos", "Doenças predominantes"), linhasBairros),
                 new BlocoCsv("Laboratórios utilizados",
-                        List.of("Laboratório", "Amostras", "% do total", "Tempo médio (dias)"), linhasLaboratorios));
+                        List.of("Laboratório", "Amostras", "% do total", "Tempo médio (dias)"), linhasLaboratorios)));
+        if (comBairros) {
+            blocos.add(blocos.size() - 1, new BlocoCsv("Bairros com mais ocorrências",
+                    List.of("Bairro", "Processos", "Positivos", "Doenças predominantes"), linhasBairros));
+        }
+        return blocos;
     }
 
     private KpisAnualProcessosResponse calcularKpis(LocalDate inicio, LocalDate fim) {

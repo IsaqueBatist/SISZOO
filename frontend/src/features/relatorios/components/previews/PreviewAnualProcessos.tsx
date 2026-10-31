@@ -154,6 +154,8 @@ export function PreviewAnualProcessos({ dados }: { dados: DadosAnualProcessos })
         </table>
       </div>
 
+      {dados.bairros && (
+      <>
       <div className="section-header" style={{ marginTop: 'var(--space-4)' }}>
         <h2>5. Bairros com mais ocorrências</h2>
       </div>
@@ -179,6 +181,8 @@ export function PreviewAnualProcessos({ dados }: { dados: DadosAnualProcessos })
           </tbody>
         </table>
       </div>
+      </>
+      )}
 
       <div className="section-header" style={{ marginTop: 'var(--space-4)' }}>
         <h2>6. Laboratórios utilizados</h2>

@@ -143,7 +143,7 @@ erDiagram
 - E-mail deve casar regex `^[a-z.]+@itu\.sp\.gov\.br$` (institucional).
 - Cargo `recepcionista` foi removido do escopo — não criar mais.
 - Apenas cargo `Administrador` pode criar / desativar usuários.
-- Veterinário **não acessa** o módulo de ocorrências e denúncias (nem leitura): todos os endpoints de `/api/ocorrencias` respondem 403, e o front oculta o menu e bloqueia as rotas (V11).
+- Veterinário **não acessa** o módulo de ocorrências e denúncias (nem leitura) nem os agregados por bairro dos relatórios (V32, `decisoes-funcionais.md`): todos os endpoints de `/api/ocorrencias` respondem 403, e o front oculta o menu e bloqueia as rotas (V11).
 - Dados de denunciante em ocorrências sigilosas: só quem tem a permissão `OCORRENCIAS_DENUNCIAS:denunciante_sigiloso:leitura` — Administrador e Agente Sanitário (V10).
 - Nenhum usuário, incluindo Administrador, pode desativar a si mesmo (bloqueado no backend, HTTP 422).
 

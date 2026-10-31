@@ -28,6 +28,7 @@ import com.siszoo.relatorios.dto.RelatorioGeradoResponse;
 import com.siszoo.relatorios.dto.TipoRelatorioResponse;
 import com.siszoo.relatorios.entity.RelatorioGerado;
 import com.siszoo.relatorios.entity.TipoRelatorio;
+import com.siszoo.relatorios.exception.RelatorioSemPermissaoException;
 import com.siszoo.relatorios.repository.RelatorioGeradoRepository;
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.Usuario;
@@ -81,20 +82,36 @@ public class RelatorioGeradoService {
         this.clock = clock;
     }
 
-    public List<TipoRelatorioResponse> listarTipos() {
+    public List<TipoRelatorioResponse> listarTipos(boolean veOcorrenciasPorBairro) {
         return java.util.Arrays.stream(TipoRelatorio.values())
+                .filter(tipo -> veOcorrenciasPorBairro || tipo != TipoRelatorio.OCORRENCIAS_BAIRRO)
                 .map(tipo -> new TipoRelatorioResponse(
                         tipo.codigo(), tipo.nomeExibicao(), tipo.filtroEsperado().name().toLowerCase(Locale.ROOT)))
                 .toList();
     }
 
-    public Object preview(FiltroRelatorioBruto filtroBruto) {
+    public Object preview(FiltroRelatorioBruto filtroBruto, boolean veOcorrenciasPorBairro) {
+        exigirAcessoAoTipo(filtroBruto.tipo(), veOcorrenciasPorBairro);
         PeriodoRelatorio periodo = filtroResolver.resolver(filtroBruto);
-        return gerador(filtroBruto.tipo()).gerarPreview(periodo);
+        return dadosDoRelatorio(gerador(filtroBruto.tipo()), periodo, veOcorrenciasPorBairro);
+    }
+
+    // Antes de gerar e de consumir doc_id: a recusa nao deixa rastro de geracao.
+    private static void exigirAcessoAoTipo(TipoRelatorio tipo, boolean veOcorrenciasPorBairro) {
+        if (tipo == TipoRelatorio.OCORRENCIAS_BAIRRO && !veOcorrenciasPorBairro) {
+            throw new RelatorioSemPermissaoException();
+        }
+    }
+
+    private static Object dadosDoRelatorio(GeradorRelatorio<?> gerador, PeriodoRelatorio periodo,
+            boolean veOcorrenciasPorBairro) {
+        return veOcorrenciasPorBairro ? gerador.gerarPreview(periodo) : gerador.gerarPreviewSemBairros(periodo);
     }
 
     @Transactional
-    public ArquivoRelatorio exportar(FiltroRelatorioBruto filtroBruto, String formato, UUID usuarioId) {
+    public ArquivoRelatorio exportar(FiltroRelatorioBruto filtroBruto, String formato, UUID usuarioId,
+            boolean veOcorrenciasPorBairro) {
+        exigirAcessoAoTipo(filtroBruto.tipo(), veOcorrenciasPorBairro);
         boolean csv = "csv".equalsIgnoreCase(formato);
         boolean pdf = "pdf".equalsIgnoreCase(formato);
         if (!csv && !pdf) {
@@ -116,7 +133,7 @@ public class RelatorioGeradoService {
         String contentType;
         String extensao;
         if (csv) {
-            conteudo = csvWriter.gerar(gerador.blocosCsv(periodo));
+            conteudo = csvWriter.gerar(veOcorrenciasPorBairro ? gerador.blocosCsv(periodo) : gerador.blocosCsvSemBairros(periodo));
             contentType = "text/csv;charset=UTF-8";
             extensao = "csv";
         } else {
@@ -125,7 +142,7 @@ public class RelatorioGeradoService {
                     Formatadores.DATA_HORA.format(LocalDateTime.now(clock)),
                     usuario.nomeCompleto(),
                     Formatadores.DATA.format(periodo.inicio()) + " a " + Formatadores.DATA.format(periodo.fim()));
-            conteudo = pdfRenderer.renderizar(tipo, gerador.gerarPreview(periodo), metadados);
+            conteudo = pdfRenderer.renderizar(tipo, dadosDoRelatorio(gerador, periodo, veOcorrenciasPorBairro), metadados);
             contentType = "application/pdf";
             extensao = "pdf";
         }

@@ -5,6 +5,7 @@ import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { API_BASE_URL } from '@/lib/env'
+import { previewAnualProcessosFixture, TIPOS_RELATORIO_FIXTURE } from '@/mocks/relatoriosFixtures'
 import { server } from '@/mocks/server'
 import { Relatorios } from './Relatorios'
 
@@ -55,6 +56,56 @@ describe('Relatorios', () => {
 
     expect(await within(cardVacinacao).findByText(/data final deve ser maior ou igual/i)).toBeInTheDocument()
     expect(chamouPreview).toBe(false)
+  })
+
+  it('Veterinário: sem o card de ocorrências por bairro, e o histórico não oferece gerar de novo esse tipo', async () => {
+    const tiposSemBairro = TIPOS_RELATORIO_FIXTURE.filter((tipo) => tipo.codigo !== 'ocorrencias_bairro')
+    server.use(
+      http.get(`${API_BASE_URL}/relatorios/tipos`, () => HttpResponse.json(tiposSemBairro)),
+      http.get(`${API_BASE_URL}/relatorios/historico`, () =>
+        HttpResponse.json({
+          itens: [
+            {
+              docId: 'DOC-2026-0001',
+              tipo: 'ocorrencias_bairro',
+              tipoNomeExibicao: 'Ocorrências por Bairro',
+              periodoInicio: '2026-01-01',
+              periodoFim: '2026-03-31',
+              parametrosJson: JSON.stringify({ tipo: 'ocorrencias_bairro', periodoInicio: '2026-01-01', periodoFim: '2026-03-31' }),
+              geradoPorNome: 'Ana Silva',
+              geradoEm: '2026-04-01T10:00:00Z',
+              tamanhoBytes: 2048,
+            },
+          ],
+          pagina: 0,
+          tamanho: 10,
+          totalItens: 1,
+          totalPaginas: 1,
+        }),
+      ),
+    )
+    renderRelatorios()
+
+    await screen.findByRole('heading', { level: 3, name: 'Ocupação de Baias' })
+    expect(screen.queryByRole('heading', { level: 3, name: /por bairro/i })).not.toBeInTheDocument()
+    expect(await screen.findByText('Ana Silva')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Gerar novamente' })).not.toBeInTheDocument()
+  })
+
+  it('relatório anual sem bairros (Veterinário) não mostra a seção', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.get(`${API_BASE_URL}/relatorios/preview`, () => HttpResponse.json({ ...previewAnualProcessosFixture(), bairros: null })),
+    )
+    renderRelatorios()
+
+    const cardAnual = (
+      await screen.findByRole('heading', { level: 3, name: /anual/i })
+    ).closest('.report-card') as HTMLElement
+    await user.click(within(cardAnual).getByRole('button', { name: 'Gerar Relatório' }))
+
+    expect(await screen.findByRole('heading', { name: /laboratórios utilizados/i })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /bairros com mais ocorrências/i })).not.toBeInTheDocument()
   })
 
   it('gera o preview de Ocupação de Baias e exibe os KPIs e a tabela', async () => {

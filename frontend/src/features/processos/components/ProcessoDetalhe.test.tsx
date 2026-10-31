@@ -55,6 +55,19 @@ function cardDe(titulo: string) {
   return within(screen.getByRole('heading', { name: titulo }).closest('.card') as HTMLElement)
 }
 
+describe('ProcessoDetalhe — resultado positivo definitivo', () => {
+  it.each([
+    ['Agente', AGENTE],
+    ['Veterinário', VET],
+    ['Administrador', ADMIN],
+  ])('%s pode escolher o resultado positivo', async (_perfil, cargos) => {
+    renderDetalhe(PROCESSO_PENDENTE_ID, cargos)
+    await esperarDetalhe(processoFixture().protocolo)
+
+    expect(await screen.findByRole('option', { name: 'Positivo' })).toBeInTheDocument()
+  })
+})
+
 describe('ProcessoDetalhe — edição e histórico', () => {
   it('só o Administrador vê "Editar processo" e o histórico de alterações', async () => {
     renderDetalhe(PROCESSO_PENDENTE_ID)

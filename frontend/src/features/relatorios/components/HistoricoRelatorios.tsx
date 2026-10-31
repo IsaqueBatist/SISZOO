@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Icon } from '@/components/layout/Icon'
 import { ErroComRetry } from '@/components/layout/ErroComRetry'
 import { formatarData } from '@/features/ocorrencias/utils/datas'
-import { useHistoricoRelatoriosQuery } from '../hooks/useRelatorios'
+import { useHistoricoRelatoriosQuery, useTiposRelatorioQuery } from '../hooks/useRelatorios'
 import type { FiltroRelatorio, RelatorioGeradoItem } from '../types/relatorios.types'
 
 const TAMANHO_PAGINA = 10
@@ -35,6 +35,7 @@ interface HistoricoRelatoriosProps {
 // arquivo nesta versão: a ação da linha é "Gerar novamente" (reexecuta a
 // exportação com os mesmos parâmetros, gerando um novo doc_id), não "Baixar".
 export function HistoricoRelatorios({ onGerarNovamente }: HistoricoRelatoriosProps) {
+  const tipos = useTiposRelatorioQuery()
   const [pagina, setPagina] = useState(0)
   const { data, isLoading, isError, refetch } = useHistoricoRelatoriosQuery(pagina, TAMANHO_PAGINA)
 
@@ -76,7 +77,9 @@ export function HistoricoRelatorios({ onGerarNovamente }: HistoricoRelatoriosPro
             </thead>
             <tbody>
               {data.itens.map((item) => {
-                const filtro = filtroDeParametros(item)
+                // O histórico é de todos: quem não tem acesso ao tipo vê o registro,
+                // mas não gera de novo (GET /relatorios/tipos já vem filtrado).
+                const filtro = tipos.data?.some((tipo) => tipo.codigo === item.tipo) ? filtroDeParametros(item) : null
                 return (
                   <tr key={item.docId}>
                     <td>{item.tipoNomeExibicao}</td>

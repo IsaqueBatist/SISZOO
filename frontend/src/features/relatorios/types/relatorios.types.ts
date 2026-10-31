@@ -243,7 +243,8 @@ export interface PreviewAnualProcessos {
   resultadosPorDoenca: ResultadoLaboratorialPorDoenca[]
   totalResultados: ResultadoLaboratorialPorDoenca
   porEspecie: DistribuicaoEspecie[]
-  bairros: BairroProcesso[]
+  // Nulo para quem não vê ocorrências por bairro (Veterinário, V32).
+  bairros: BairroProcesso[] | null
   laboratorios: LaboratorioUtilizado[]
 }
 
