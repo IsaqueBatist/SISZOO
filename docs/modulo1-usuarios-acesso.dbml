@@ -144,3 +144,18 @@ TableGroup Usuarios_Acesso {
   PreferenciaUsuario
   AuditoriaEvento
 }
+// V29: sessao com renovacao deslizante (docs/decisoes/sessao.md). Guarda so o
+// hash do token de renovacao, que fica em cookie httpOnly.
+Table sessao_usuario {
+  id                  uuid         [pk, default: `gen_random_uuid()`]
+  usuario_id          uuid         [not null, ref: > usuario.id]
+  token_hash          varchar(64)  [not null, unique]
+  token_anterior_hash varchar(64)  [note: 'Aceito por pouco tempo depois da rotacao; depois disso e reuso']
+  rotacionado_em      timestamp    [not null]
+  criada_em           timestamp    [not null]
+  ultima_atividade_em timestamp    [not null, note: 'Limite de inatividade: 60 minutos']
+  encerrada_em        timestamp
+  motivo_encerramento varchar(30)
+  ip                  varchar(45)
+  user_agent          varchar(255)
+}

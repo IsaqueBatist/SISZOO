@@ -367,3 +367,21 @@ TableGroup Canil_modelo_alvo {
   VacinaEspecie
   AnimalSintoma
 }
+
+// V33: condicoes de saude pre-existentes (entrevista de 09/01/2026 e prototipo).
+// O texto de "Outras" fica em animal.condicoes_outras.
+Table condicao_saude {
+  id     uuid         [pk, default: `gen_random_uuid()`]
+  codigo varchar(30)  [not null, unique]
+  nome   varchar(100) [not null]
+  ativo  boolean      [not null, default: true]
+}
+
+Table animal_condicao_saude {
+  animal_id         uuid [not null, ref: > animal.id]
+  condicao_saude_id uuid [not null, ref: > condicao_saude.id]
+
+  indexes {
+    (animal_id, condicao_saude_id) [pk]
+  }
+}
