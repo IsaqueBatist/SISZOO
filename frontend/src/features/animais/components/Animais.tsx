@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { ErroComRetry } from '@/components/layout/ErroComRetry'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { formatarDataBR } from '@/lib/datas'
+import { useFiltrosLista, useValorComAtraso } from '@/lib/useFiltrosLista'
 import { useAnimaisQuery, useBaiasAtivasQuery, useCatalogosAnimaisQuery } from '../hooks/useAnimais'
 import { badgeDeEspecie, badgeDeStatus } from '../utils/statusBadge'
 import type { Animal, Pelagem } from '../types/animais.types'
@@ -11,6 +12,7 @@ import { formatarPorte, formatarSexo } from '../utils/rotulosAnimal'
 const TAMANHO_PAGINA = 20
 const LINHAS_SKELETON = [0, 1, 2, 3, 4]
 const COLUNAS_TABELA = ['animal', 'especie', 'baia', 'status', 'sexo', 'porte', 'entrada', 'castrado', 'acoes']
+const FILTROS_PADRAO = { busca: '', status: '', especie: '', baia: '' }
 
 // dataEntrada é LocalDateTime sem fuso, já no horário do CCZ: separar a
 // string não depende do fuso do navegador (ver lib/datas.ts).
@@ -24,43 +26,25 @@ function formatarPelagem(pelagem: Pelagem | null): string {
 
 function corAvatar(seed: string): string {
   const hue = Math.abs([...seed].reduce((acumulado, char) => acumulado + char.charCodeAt(0), 0)) % 360
-  return `hsl(${hue}, 35%, 50%)`
+  return `hsl(${hue}, 35%, 34%)`
 }
 
 export function Animais() {
   const { roleKey } = useAuth()
   const podeEscrever = roleKey === 'admin' || roleKey === 'vet'
   const [searchParams] = useSearchParams()
-  const [busca, setBusca] = useState('')
-  const [buscaDebounced, setBuscaDebounced] = useState('')
-  const [statusFiltro, setStatusFiltro] = useState('')
-  const [especieFiltro, setEspecieFiltro] = useState('')
-  // Hidrata só na primeira renderização: um card de baia (T19) linka para cá
-  // com `?baiaId=`; depois disso o filtro vira estado local normal, sem
-  // sincronização de volta para a URL.
-  const [baiaFiltro, setBaiaFiltro] = useState(() => searchParams.get('baiaId') ?? '')
-  const [pagina, setPagina] = useState(0)
-  const [filtroAnterior, setFiltroAnterior] = useState({ busca: '', status: '', especie: '', baia: '' })
+  // Um card de baia (T19) linka para cá com `?baiaId=`: esse filtro vale mais
+  // que o guardado da última visita.
+  const baiaDaUrl = searchParams.get('baiaId')
+  const { filtros, pagina, definirFiltros, irParaPagina, limparFiltros, filtrosAtivos } = useFiltrosLista(
+    'animais',
+    FILTROS_PADRAO,
+    baiaDaUrl ? { baia: baiaDaUrl } : undefined,
+  )
+  const { status: statusFiltro, especie: especieFiltro, baia: baiaFiltro } = filtros
+  const buscaDebounced = useValorComAtraso(filtros.busca).trim()
 
-  useEffect(() => {
-    const timeout = setTimeout(() => setBuscaDebounced(busca.trim()), 300)
-    return () => clearTimeout(timeout)
-  }, [busca])
-
-  // Reset da página ao mudar de filtro, ajustado durante a renderização (em
-  // vez de um efeito) para não cair no anti-padrão "setState em effect" —
-  // ver https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes.
-  const filtroMudou =
-    filtroAnterior.busca !== buscaDebounced ||
-    filtroAnterior.status !== statusFiltro ||
-    filtroAnterior.especie !== especieFiltro ||
-    filtroAnterior.baia !== baiaFiltro
-  if (filtroMudou) {
-    setFiltroAnterior({ busca: buscaDebounced, status: statusFiltro, especie: especieFiltro, baia: baiaFiltro })
-    setPagina(0)
-  }
-
-  const { data, isLoading, isError } = useAnimaisQuery({
+  const { data, isLoading, isError, refetch } = useAnimaisQuery({
     status: statusFiltro || undefined,
     especie: especieFiltro || undefined,
     baiaId: baiaFiltro || undefined,
@@ -80,7 +64,7 @@ export function Animais() {
       <div className="page-header">
         <div className="title-block">
           <h1>
-            Animais <span className="counter">{data?.totalItens ?? 0} animais</span>
+            Animais {data && <span className="counter">{data.totalItens} animais</span>}
           </h1>
           <p className="subtitle">Listagem de animais cadastrados no CCZ</p>
         </div>
@@ -100,15 +84,16 @@ export function Animais() {
           <input
             type="text"
             placeholder="Buscar por nome ou microchip..."
-            value={busca}
-            onChange={(event) => setBusca(event.target.value)}
+            aria-label="Buscar animais"
+            value={filtros.busca}
+            onChange={(event) => definirFiltros({ busca: event.target.value })}
           />
         </div>
         <select
           className="filter-select"
           aria-label="Filtrar por espécie"
           value={especieFiltro}
-          onChange={(event) => setEspecieFiltro(event.target.value)}
+          onChange={(event) => definirFiltros({ especie: event.target.value })}
         >
           <option value="">Espécie: Todas</option>
           {catalogos?.especies.map((especie) => (
@@ -121,7 +106,7 @@ export function Animais() {
           className="filter-select"
           aria-label="Filtrar por status"
           value={statusFiltro}
-          onChange={(event) => setStatusFiltro(event.target.value)}
+          onChange={(event) => definirFiltros({ status: event.target.value })}
         >
           <option value="">Status: Todos</option>
           {catalogos?.status.map((status) => (
@@ -134,7 +119,7 @@ export function Animais() {
           className="filter-select"
           aria-label="Filtrar por baia"
           value={baiaFiltro}
-          onChange={(event) => setBaiaFiltro(event.target.value)}
+          onChange={(event) => definirFiltros({ baia: event.target.value })}
         >
           <option value="">Baia: Todas</option>
           {baias?.map((baia) => (
@@ -143,14 +128,14 @@ export function Animais() {
             </option>
           ))}
         </select>
+        {filtrosAtivos && (
+          <button type="button" className="btn btn-ghost btn-sm" onClick={limparFiltros}>
+            Limpar filtros
+          </button>
+        )}
       </div>
 
-      {isError && (
-        <div className="alert danger" role="alert">
-          <span className="bullet" />
-          <div className="alert-content">Não foi possível carregar os animais. Tente novamente.</div>
-        </div>
-      )}
+      {isError && <ErroComRetry mensagem="Não foi possível carregar os animais." onTentarNovamente={() => void refetch()} />}
 
       {isLoading && (
         <div className="table-wrap">
@@ -191,7 +176,12 @@ export function Animais() {
             <Icon name="paw" size={28} />
           </span>
           <h3>Nenhum animal encontrado</h3>
-          <p>Ajuste os filtros de busca.</p>
+          <p>{filtrosAtivos ? 'Nenhum resultado com estes filtros.' : 'Ainda não há animais cadastrados.'}</p>
+          {filtrosAtivos && (
+            <button type="button" className="btn btn-outline btn-sm" onClick={limparFiltros}>
+              Limpar filtros
+            </button>
+          )}
         </div>
       )}
 
@@ -300,7 +290,7 @@ export function Animais() {
                 type="button"
                 className="btn btn-ghost btn-sm"
                 disabled={pagina === 0}
-                onClick={() => setPagina((paginaAtual) => paginaAtual - 1)}
+                onClick={() => irParaPagina(pagina - 1)}
               >
                 Anterior
               </button>
@@ -311,7 +301,7 @@ export function Animais() {
                 type="button"
                 className="btn btn-outline btn-sm"
                 disabled={pagina >= totalPaginas - 1}
-                onClick={() => setPagina((paginaAtual) => paginaAtual + 1)}
+                onClick={() => irParaPagina(pagina + 1)}
               >
                 Próximo
               </button>
