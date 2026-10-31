@@ -28,7 +28,7 @@ public record AmostraAnimalResponse(
         String alteracaoComportamental,
         LocalDate dataColeta,
         MaterialBiologico materialBiologico,
-        boolean contatoHumano,
+        Boolean contatoHumano,
         NivelContato nivelContato,
         Boolean agrediuHumano,
         String observacoes,

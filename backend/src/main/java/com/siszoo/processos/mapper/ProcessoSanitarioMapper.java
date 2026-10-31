@@ -105,7 +105,7 @@ public interface ProcessoSanitarioMapper {
                 amostra.getAlteracaoComportamental(),
                 amostra.getDataColeta(),
                 amostra.getMaterialBiologico(),
-                amostra.isContatoHumano(),
+                amostra.getContatoHumano(),
                 amostra.getNivelContato(),
                 amostra.getAgrediuHumano(),
                 amostra.getObservacoes(),

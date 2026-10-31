@@ -193,7 +193,11 @@ export function FichaAnimal() {
               <div className="kv-row">
                 <span className="k">Castrado</span>
                 <span className="v">
-                  {animal.esterilizado ? `Sim${animal.dataEsterilizacao ? ` (${formatarData(animal.dataEsterilizacao)})` : ''}` : 'Não'}
+                  {animal.esterilizado === null
+                    ? 'Não informado'
+                    : animal.esterilizado
+                      ? `Sim${animal.dataEsterilizacao ? ` (${formatarData(animal.dataEsterilizacao)})` : ''}`
+                      : 'Não'}
                 </span>
               </div>
             </div>

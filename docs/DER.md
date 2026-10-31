@@ -240,7 +240,7 @@ A feature `geral` gera a autoridade do módulo inteiro (`MODULO:leitura|escrita|
 | `procedencia`           | varchar(200)        | ?      | Origem do animal na entrada, texto livre, complementar a `motivo_entrada` (V23) |
 | `laudo_eutanasia`       | text                | ?      | Laudo do responsável técnico (Lei nº 14.228/2021). **Obrigatório só na transição** para `obito_eutanasia` (criação nesse status ou edição que muda para ele), validado no `AnimalService`, sem `CHECK` — registros anteriores à V24 continuam válidos; laudo gravado é mantido se a edição vier sem o campo (AT-7) |
 | `foto_miniatura`        | text                | ?      | Miniatura da foto para as listagens (V28, T45) |
-| `esterilizado`          | boolean             | \*     | default `false`                                                                     |
+| `esterilizado`          | boolean             | ?      | `true` sim, `false` não, `NULL` não informado (V31, `decisoes-funcionais.md`)       |
 | `data_esterilizacao`    | date                | ?      |                                                                                     |
 | `status_id`             | FK `status_animal`  | \*     |                                                                                     |
 | `motivo_entrada_id`     | FK `motivo_entrada` | \*     |                                                                                     |
@@ -741,7 +741,7 @@ Não é catálogo: coluna `processo_sanitario.status_processo` varchar + `CHECK`
 | `alteracao_comportamental` | text                     | ?      |                                                                      |
 | `data_coleta`              | date                     | \*     | não pode ser futura (validado no servidor)                           |
 | `material_biologico`       | varchar(20) + `CHECK`    | \*     | `TECIDO_ENCEFALICO`, `SORO`, `SANGUE`, `SALIVA`, `URINA`             |
-| `contato_humano`           | boolean                  | \*     | "Munícipe teve contato físico"                                       |
+| `contato_humano`           | boolean                  | ?      | "Munícipe teve contato físico"; `NULL` = não informado (V31)         |
 | `nivel_contato`            | varchar(10) + `CHECK`    | ?      | `DIRETA`, `INDIRETA` — quando `contato_humano = true`                |
 | `agrediu_humano`           | boolean                  | ?      | quando `contato_humano = true`                                       |
 | `observacoes`              | text                     | ?      |                                                                      |
@@ -850,7 +850,7 @@ Um sintoma aparece no máximo uma vez por amostra (a API ignora códigos repetid
 - `baia_superlotada`: `baia WHERE atual_ocupacao >= capacidade` — mesma regra do indicador `superlotada` da tabela `baia` (`BaiaService`, `estadoLotacao` no front) e do 409 de baia sem vaga (RN-AN02): baia cheia já alerta. Decisão FS-8 em `docs/decisoes/ficha-completa-seed-fuso.md`; o alerta ainda não está implementado.
 - `medicacao_ativa`: `prescricao WHERE status = 'ATIVA' AND data_fim_prevista BETWEEN now() AND now() + 7d`
 - `ficha_incompleta`: `animal WHERE ficha_completa = false`
-- `nao_castrado`: `animal WHERE esterilizado = false AND status = 'disponivel_adocao'`
+- `nao_castrado`: `animal WHERE esterilizado = false AND status = 'disponivel_adocao'` (`NULL`, não informado, não entra)
 
 **Implementado (T38)** em `GET /api/dashboard/kpis` (`DashboardService#calcularAlertas`,
 `docs/contratos/dashboard-kpis.md`): `vacina_vencendo`/`vacina_vencida` reaproveitam

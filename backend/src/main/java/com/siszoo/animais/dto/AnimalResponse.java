@@ -19,7 +19,7 @@ public record AnimalResponse(
         String idadeAprox,
         LocalDate dataNascimentoAprox,
         String microchip,
-        boolean esterilizado,
+        Boolean esterilizado,
         LocalDate dataEsterilizacao,
         String statusCodigo,
         String statusNome,

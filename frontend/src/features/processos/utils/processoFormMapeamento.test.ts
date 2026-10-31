@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { ProcessoFormValues } from '../schemas/processoFormSchema'
 import { amostraVazia, paraRequisicao, valoresVazios } from './processoFormMapeamento'
+import { contatoHumanoParaOpcao, opcaoParaContatoHumano } from './processosCatalogos'
 
 type Amostra = ProcessoFormValues['amostras'][number]
 
@@ -15,6 +16,17 @@ function comAmostra(amostra: Partial<Amostra>, sobrescrever: Partial<ProcessoFor
     ...sobrescrever,
   }
 }
+
+describe('contato humano sem resposta', () => {
+  it('as três respostas são distintas, e a ausência não vira "não"', () => {
+    expect(opcaoParaContatoHumano('nao_informado')).toBeNull()
+    expect(opcaoParaContatoHumano('nao')).toBe(false)
+    expect(opcaoParaContatoHumano('sim')).toBe(true)
+    expect(contatoHumanoParaOpcao(null)).toBe('nao_informado')
+    expect(contatoHumanoParaOpcao(undefined)).toBe('nao_informado')
+    expect(contatoHumanoParaOpcao(false)).toBe('nao')
+  })
+})
 
 describe('paraRequisicao (POST /api/processos)', () => {
   it('amostra do canil leva só o animalId, sem identificação (DH-5)', () => {

@@ -18,7 +18,7 @@ export function amostraVazia(): ProcessoFormValues['amostras'][number] {
     // Fato técnico: quem coletou informa. A data do registro é do servidor.
     dataColeta: '',
     materialBiologico: '' as never,
-    contatoHumano: false,
+    contatoHumano: null,
     nivelContato: undefined,
     agrediuHumano: undefined,
     observacoes: '',

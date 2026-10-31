@@ -1,5 +1,6 @@
 import { hojeEmItu } from '@/lib/datas'
 import {
+  animalCastrado,
   castracaoParaEsterilizado,
   esterilizadoParaCastracao,
   type AnimalFormUiValues,
@@ -63,7 +64,7 @@ export function valoresVazios(): ValoresIniciaisAnimal {
     dataImplantacaoChip: '',
     procedencia: '',
     laudoEutanasia: '',
-    castracaoOpcao: 'nao_castrado',
+    castracaoOpcao: 'nao_informado',
     dataEsterilizacao: '',
     status: '',
     motivoEntrada: '',
@@ -195,7 +196,7 @@ export function paraAnimalRequest(dados: AnimalFormUiValues, dataEntradaOriginal
     laudoEutanasia: dados.laudoEutanasia,
     esterilizado: castracaoParaEsterilizado(dados.castracaoOpcao),
     // Rascunho antigo pode trazer data com "não castrado": não envia.
-    dataEsterilizacao: dados.castracaoOpcao === 'nao_castrado' ? undefined : dados.dataEsterilizacao,
+    dataEsterilizacao: animalCastrado(dados.castracaoOpcao) ? dados.dataEsterilizacao : undefined,
     status: dados.status,
     motivoEntrada: dados.motivoEntrada,
     dataEntrada: dataEntradaParaEnvio(dados.dataEntrada, dataEntradaOriginal),

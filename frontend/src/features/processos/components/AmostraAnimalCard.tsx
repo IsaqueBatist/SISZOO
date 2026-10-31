@@ -1,13 +1,21 @@
 import { Controller, type Control, type Path, type UseFormRegister, type UseFormSetValue, type UseFormWatch } from 'react-hook-form'
 import { AtalhoHoje } from '@/components/AtalhoHoje'
-import { Switch } from '@/components/Switch'
+import { RadioCards } from '@/components/RadioCards'
 import { Icon } from '@/components/layout/Icon'
 import { PELAGEM_OPCOES, SEXO_OPCOES } from '@/features/animais/schemas/animalFormSchema'
 import { useCatalogosAnimaisQuery } from '@/features/animais/hooks/useAnimais'
 import type { Animal } from '@/features/animais/types/animais.types'
 import type { ProcessoFormValues } from '../schemas/processoFormSchema'
 import { useCatalogosProcessoQuery } from '../hooks/useProcessos'
-import { MATERIAL_BIOLOGICO_OPCOES, NIVEL_CONTATO_OPCOES, STATUS_CLINICO_OPCOES, TIPO_ABRIGO_OPCOES } from '../utils/processosCatalogos'
+import {
+  CONTATO_HUMANO_OPCOES,
+  contatoHumanoParaOpcao,
+  MATERIAL_BIOLOGICO_OPCOES,
+  NIVEL_CONTATO_OPCOES,
+  opcaoParaContatoHumano,
+  STATUS_CLINICO_OPCOES,
+  TIPO_ABRIGO_OPCOES,
+} from '../utils/processosCatalogos'
 import { BuscaAnimalCanil } from './BuscaAnimalCanil'
 
 // Tipo mínimo do erro de uma amostra — o RHF não distribui bem FieldErrors
@@ -334,22 +342,25 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
       )}
 
       <div style={{ marginTop: 14 }}>
-        <div className="switch-row">
-          <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Munícipe teve contato físico com o animal</span>
+        <div className="field">
+          <label id={`amostra-${index}-contato-label`}>Munícipe teve contato físico com o animal?</label>
           <Controller
             name={campo('contatoHumano')}
             control={control}
             render={({ field }) => (
-              <Switch
-                checked={Boolean(field.value)}
-                onChange={(marcado) => {
-                  field.onChange(marcado)
-                  if (!marcado) {
+              <RadioCards
+                opcoes={CONTATO_HUMANO_OPCOES}
+                valor={contatoHumanoParaOpcao(field.value as boolean | null | undefined)}
+                onChange={(opcao) => {
+                  const contato = opcaoParaContatoHumano(opcao)
+                  field.onChange(contato)
+                  if (contato !== true) {
                     definir('nivelContato', undefined)
                     definir('agrediuHumano', undefined)
                   }
                 }}
-                aria-label="Contato humano-animal"
+                colunas={3}
+                aria-labelledby={`amostra-${index}-contato-label`}
               />
             )}
           />

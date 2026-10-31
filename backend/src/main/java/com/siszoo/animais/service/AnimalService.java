@@ -380,7 +380,7 @@ public class AnimalService {
     // do RN-C06 em VacinacaoService). A coerencia da castracao vale para os
     // dois caminhos (cadastro e edicao).
     private void validarDatas(
-            LocalDateTime dataEntrada, LocalDate dataNascimento, boolean esterilizado, LocalDate dataEsterilizacao) {
+            LocalDateTime dataEntrada, LocalDate dataNascimento, Boolean esterilizado, LocalDate dataEsterilizacao) {
         LocalDate hoje = LocalDate.now(clock);
 
         if (dataEntrada != null && dataEntrada.toLocalDate().isAfter(hoje)) {
@@ -396,7 +396,7 @@ public class AnimalService {
             }
         }
         if (dataEsterilizacao != null) {
-            if (!esterilizado) {
+            if (!Boolean.TRUE.equals(esterilizado)) {
                 throw new CampoInvalidoException("dataEsterilizacao",
                         "Data da castracao so pode ser informada para animal castrado");
             }

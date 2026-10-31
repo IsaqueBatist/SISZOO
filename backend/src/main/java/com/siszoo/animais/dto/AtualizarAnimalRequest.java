@@ -46,7 +46,7 @@ public record AtualizarAnimalRequest(
         @Size(max = 30)
         String microchip,
 
-        @NotNull
+        // Opcional (decisao de 31/10/2026): null = nao informado, nunca "nao".
         Boolean esterilizado,
 
         LocalDate dataEsterilizacao,

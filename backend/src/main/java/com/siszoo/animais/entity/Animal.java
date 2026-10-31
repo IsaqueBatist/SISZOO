@@ -91,8 +91,9 @@ public class Animal {
     @Column(name = "laudo_eutanasia", columnDefinition = "text")
     private String laudoEutanasia;
 
-    @Column(nullable = false)
-    private boolean esterilizado = false;
+    // true = castrado, false = nao castrado, null = nao informado (V31).
+    @Column
+    private Boolean esterilizado;
 
     @Column(name = "data_esterilizacao")
     private LocalDate dataEsterilizacao;

@@ -194,6 +194,7 @@ export interface KpisAnualProcessos {
   confirmadosPositivos: number
   percentualPositividade: number
   comContatoHumano: number
+  contatoNaoInformado: number
   tempoMedioDias: number | null
 }
 

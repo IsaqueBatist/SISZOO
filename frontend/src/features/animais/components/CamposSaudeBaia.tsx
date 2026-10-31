@@ -2,7 +2,7 @@ import { Controller, useFormContext, useWatch } from 'react-hook-form'
 import { RadioCards } from '@/components/RadioCards'
 import { hojeEmItu } from '@/lib/datas'
 import { useBaiasAtivasQuery, useCatalogosAnimaisQuery } from '../hooks/useAnimais'
-import { CASTRACAO_OPCOES, type AnimalFormUiValues } from '../schemas/animalFormSchema'
+import { animalCastrado, CASTRACAO_OPCOES, type AnimalFormUiValues } from '../schemas/animalFormSchema'
 import { semEspacos, semVazio } from '../utils/animalFormMapeamento'
 
 interface CamposSaudeBaiaProps {
@@ -115,17 +115,16 @@ export function CamposSaudeBaia({ baiaAtualId }: CamposSaudeBaiaProps) {
               onChange={(opcao) => {
                 field.onChange(opcao)
                 // O campo some da tela, mas o RHF guardaria o valor:
-                // "não castrado" com data é recusado pelo backend.
-                if (opcao === 'nao_castrado') setValue('dataEsterilizacao', undefined)
+                // data sem castração é recusada pelo backend.
+                if (!animalCastrado(opcao)) setValue('dataEsterilizacao', undefined)
               }}
-              colunas={3}
               aria-labelledby="castracao-label"
             />
           )}
         />
       </div>
 
-      {castracaoOpcao !== 'nao_castrado' && (
+      {animalCastrado(castracaoOpcao) && (
         <div className="field">
           <label htmlFor="dataEsterilizacao">Data da castração</label>
           <input

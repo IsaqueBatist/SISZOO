@@ -60,7 +60,7 @@ public record AmostraAnimalRequest(
         @NotNull
         MaterialBiologico materialBiologico,
 
-        @NotNull
+        // Opcional (decisao de 31/10/2026): null = nao informado, nunca "nao".
         Boolean contatoHumano,
 
         NivelContato nivelContato,

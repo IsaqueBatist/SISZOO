@@ -17,7 +17,7 @@ export interface Animal {
   idadeAprox: string | null
   dataNascimentoAprox: string | null
   microchip: string | null
-  esterilizado: boolean
+  esterilizado: boolean | null
   dataEsterilizacao: string | null
   statusCodigo: string
   statusNome: string
@@ -123,7 +123,7 @@ export interface AnimalRequest {
   idadeAprox?: string
   dataNascimentoAprox?: string
   microchip?: string
-  esterilizado: boolean
+  esterilizado: boolean | null
   dataEsterilizacao?: string
   status: string
   motivoEntrada: string

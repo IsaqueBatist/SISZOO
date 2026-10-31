@@ -89,6 +89,7 @@ public class RelatorioAnualProcessosService implements GeradorRelatorio<Relatori
         LocalDate inicio = periodo.inicio();
         LocalDate fim = periodo.fim();
         int ano = inicio.getYear();
+        KpisAnualProcessosResponse kpisContato = calcularKpis(inicio, fim);
 
         List<List<String>> linhasPatologia = montarPorPatologia(ano).stream()
                 .map(l -> List.of(l.doenca(), String.valueOf(l.quantidade())))
@@ -127,6 +128,9 @@ public class RelatorioAnualProcessosService implements GeradorRelatorio<Relatori
                         List.of("Doença", "Investigados", "Positivos", "Negativos", "Inconclus.", "Aguard.", "Positividade"),
                         linhasResultados),
                 new BlocoCsv("Distribuição por Espécie", List.of("Espécie", "Quantidade", "% do total"), linhasEspecie),
+                new BlocoCsv("Contato humano-animal", List.of("Situação", "Processos"), List.of(
+                        List.of("Com contato", String.valueOf(kpisContato.comContatoHumano())),
+                        List.of("Não informado", String.valueOf(kpisContato.contatoNaoInformado())))),
                 new BlocoCsv("Bairros com mais ocorrências",
                         List.of("Bairro", "Processos", "Positivos", "Doenças predominantes"), linhasBairros),
                 new BlocoCsv("Laboratórios utilizados",
@@ -139,13 +143,14 @@ public class RelatorioAnualProcessosService implements GeradorRelatorio<Relatori
                 .countByDataAberturaBetweenAndResultadoLaboratorial_Codigo(inicio, fim, "positivo");
         int percentualPositividade = processosAbertos == 0 ? 0 : (int) Math.round(confirmadosPositivos * 100.0 / processosAbertos);
         long comContatoHumano = animalAmostradoRepository.contarProcessosComContatoHumano(inicio, fim);
+        long contatoNaoInformado = animalAmostradoRepository.contarProcessosComContatoNaoInformado(inicio, fim);
 
         List<Double> dias = processoSanitarioRepository.listarTemposDeResolucao(inicio, fim).stream()
                 .map(this::diasEntre)
                 .toList();
         Double tempoMedioDias = media(dias);
 
-        return new KpisAnualProcessosResponse(processosAbertos, confirmadosPositivos, percentualPositividade, comContatoHumano, tempoMedioDias);
+        return new KpisAnualProcessosResponse(processosAbertos, confirmadosPositivos, percentualPositividade, comContatoHumano, contatoNaoInformado, tempoMedioDias);
     }
 
     private List<CasoPorPatologiaResponse> montarPorPatologia(int ano) {

@@ -1,3 +1,5 @@
+> **Revisão de 31/10/2026:** a FS-6 foi superada. `esterilizado` passou a ser opcional, e a ausência significa "não informado" (`docs/decisoes/decisoes-funcionais.md`).
+
 # Decisões — ficha completa, seed e fuso (branch `fix/ficha-completa-seed-fuso`)
 
 Uma linha por decisão, no formato de `T29.md`. Origem: roteiro de testes manuais (`docs/roteiro-testes-manuais.md`) e as revisões que se seguiram. Regras de referência: DER §3.2 (`ficha_completa`, `esterilizado`, baia), regras 4 e 25 do DER §5, RN-AN02 e RN-AN04 (`docs/regras-negocio-clinico.md`), AC-1 a AC-5 (`docs/decisoes/animais-clinico-correcoes.md`).

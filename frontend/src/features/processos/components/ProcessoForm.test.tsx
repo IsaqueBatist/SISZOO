@@ -281,7 +281,7 @@ describe('ProcessoForm — amostras e envio', () => {
           tipoAbrigo: 'INTRADOMICILIAR',
           dataColeta: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
           materialBiologico: 'SORO',
-          contatoHumano: false,
+          contatoHumano: null,
           sintomas: [],
         },
       ],
@@ -363,7 +363,7 @@ describe('ProcessoForm — amostras e envio', () => {
     await preencherEtapa2EAvancar(user)
     await preencherAmostraDeCampo(user)
 
-    await user.click(screen.getByLabelText('Contato humano-animal'))
+    await user.click(within(screen.getByRole('radiogroup', { name: /teve contato físico/i })).getByRole('radio', { name: 'Sim' }))
     expect(await screen.findByText(/ATENÇÃO — CONTATO HUMANO-ANIMAL/)).toBeInTheDocument()
     expect(screen.getByText('Este processo será marcado como urgente.')).toBeInTheDocument()
     expect(screen.queryByText(/Resultado laboratorial será obrigatório/)).not.toBeInTheDocument()

@@ -88,7 +88,7 @@ describe('ProcessoDetalhe — dados', () => {
 
     const amostra = cardDe('Amostra 1')
     expect(amostra.getByRole('link', { name: 'Ver ficha do animal' })).toHaveAttribute('href', `/animais/${ANIMAL_AMOSTRADO_ID}`)
-    expect(amostra.getByText('Sem contato humano-animal registrado nesta amostra.')).toBeInTheDocument()
+    expect(amostra.getByText('Sem contato humano-animal nesta amostra.')).toBeInTheDocument()
   })
 
   it('processo urgente mostra o banner de contato humano-animal', async () => {

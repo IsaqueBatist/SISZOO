@@ -47,7 +47,7 @@ interface AmostraClinicaRequest {
   alteracaoComportamental?: string
   dataColeta: string
   materialBiologico: MaterialBiologico
-  contatoHumano: boolean
+  contatoHumano: boolean | null
   nivelContato?: NivelContato // obrigatório se, e somente se, houve contato
   agrediuHumano?: boolean // idem
   observacoes?: string
@@ -114,7 +114,7 @@ export interface AmostraAnimal {
   alteracaoComportamental: string | null
   dataColeta: string
   materialBiologico: MaterialBiologico
-  contatoHumano: boolean
+  contatoHumano: boolean | null
   nivelContato: NivelContato | null
   agrediuHumano: boolean | null
   observacoes: string | null

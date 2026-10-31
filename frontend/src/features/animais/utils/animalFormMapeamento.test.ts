@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { castracaoParaEsterilizado, esterilizadoParaCastracao } from '../schemas/animalFormSchema'
 import type { Animal } from '../types/animais.types'
 import {
   paraAnimalRequest,
@@ -48,6 +49,15 @@ function animal(sobrescrever: Partial<Animal> = {}): Animal {
     ...sobrescrever,
   }
 }
+
+describe('castração sem resposta', () => {
+  it('"não informado" vai como null e volta como "não informado", sem virar "não castrado"', () => {
+    expect(castracaoParaEsterilizado('nao_informado')).toBeNull()
+    expect(esterilizadoParaCastracao(null, 'macho')).toBe('nao_informado')
+    expect(castracaoParaEsterilizado('nao_castrado')).toBe(false)
+    expect(esterilizadoParaCastracao(false, 'macho')).toBe('nao_castrado')
+  })
+})
 
 describe('edição: GET -> formulário -> PUT', () => {
   it('nenhum campo se perde nem muda de valor no caminho', () => {

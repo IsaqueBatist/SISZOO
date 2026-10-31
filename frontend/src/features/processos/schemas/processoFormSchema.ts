@@ -54,7 +54,7 @@ const amostraClinicaSchema = z.object({
     .min(1, 'Informe a data de coleta.')
     .refine(naoEhFutura, 'A data de coleta não pode ser uma data futura.'),
   materialBiologico: z.enum(MATERIAL_BIOLOGICO_VALORES, { message: 'Selecione o material biológico.' }),
-  contatoHumano: z.boolean(),
+  contatoHumano: z.boolean().nullable(),
   nivelContato: z.enum(['DIRETA', 'INDIRETA']).optional(),
   agrediuHumano: z.boolean().optional(),
   observacoes: z.string().trim().optional(),

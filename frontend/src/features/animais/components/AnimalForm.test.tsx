@@ -120,9 +120,9 @@ describe('AnimalForm — cadastro', () => {
       status: 'disponivel_adocao',
       motivoEntrada: 'resgate',
     })
-    // esterilizado é obrigatório no backend (422 sem ele, FS-6): o formulário
-    // sempre o envia, mesmo sem o usuário mexer nos cartões de castração.
-    expect(typeof (corpoCapturado as AnimalRequest | null)?.esterilizado).toBe('boolean')
+    // Sem mexer nos cartões de castração, a resposta é "não informado": null,
+    // nunca false (decisão de 31/10/2026).
+    expect((corpoCapturado as AnimalRequest | null)?.esterilizado).toBeNull()
     // Nomes de resposta (com sufixo) nunca devem ser reenviados no request.
     expect(corpoCapturado).not.toHaveProperty('especieNome')
     expect(corpoCapturado).not.toHaveProperty('statusNome')

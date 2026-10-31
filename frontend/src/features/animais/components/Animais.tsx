@@ -254,7 +254,9 @@ export function Animais() {
                         </span>
                       </td>
                       <td>
-                        {animal.esterilizado ? (
+                        {animal.esterilizado === null ? (
+                          <span style={{ color: 'var(--color-text-muted)' }}>Não informado</span>
+                        ) : animal.esterilizado ? (
                           <span style={{ color: 'var(--color-success)' }}>● Sim</span>
                         ) : (
                           <span style={{ color: 'var(--color-text-muted)' }}>○ Não</span>

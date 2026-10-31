@@ -36,7 +36,7 @@ export function PreviewAnualProcessos({ dados }: { dados: DadosAnualProcessos })
           </div>
           <div className="kpi-value">{dados.kpis.comContatoHumano}</div>
           <div className="kpi-foot">
-            <span>Processos urgentes no ano</span>
+            <span>{dados.kpis.contatoNaoInformado} não informado(s)</span>
           </div>
         </div>
         <div className="kpi">

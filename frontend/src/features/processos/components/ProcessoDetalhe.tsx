@@ -69,7 +69,9 @@ function CardAmostra({ amostra, indice }: { amostra: AmostraAnimal; indice: numb
           </div>
         ) : (
           <p style={{ marginTop: 'var(--space-3)', fontSize: 12, color: 'var(--color-text-secondary)' }}>
-            Sem contato humano-animal registrado nesta amostra.
+            {amostra.contatoHumano === null
+              ? 'Contato humano-animal: não informado.'
+              : 'Sem contato humano-animal nesta amostra.'}
           </p>
         )}
       </div>

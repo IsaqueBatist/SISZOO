@@ -220,7 +220,7 @@ public class ProcessoSanitarioService {
         processo.setGalNumero(normalizarNumeroExterno(request.galNumero()));
         processo.setSinanNumero(normalizarNumeroExterno(request.sinanNumero()));
         // DER regra 18: contato humano em qualquer amostra torna o processo urgente.
-        processo.setUrgente(request.amostras().stream().anyMatch(AmostraAnimalRequest::contatoHumano));
+        processo.setUrgente(request.amostras().stream().map(AmostraAnimalRequest::contatoHumano).anyMatch(Boolean.TRUE::equals));
         processo.setCriadoPor(autor);
         processoRepository.save(processo);
 

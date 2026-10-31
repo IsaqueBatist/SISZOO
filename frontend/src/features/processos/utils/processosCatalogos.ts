@@ -24,6 +24,25 @@ export const MATERIAL_BIOLOGICO_OPCOES: { valor: MaterialBiologico; label: strin
   { valor: 'URINA', label: 'Urina' },
 ]
 
+// A resposta não é obrigatória: "Não informado" (null) não equivale a "Não".
+export const CONTATO_HUMANO_OPCOES = [
+  { valor: 'nao_informado', label: 'Não informado' },
+  { valor: 'sim', label: 'Sim' },
+  { valor: 'nao', label: 'Não' },
+] as const
+
+export type ContatoHumanoOpcao = (typeof CONTATO_HUMANO_OPCOES)[number]['valor']
+
+export function contatoHumanoParaOpcao(contato: boolean | null | undefined): ContatoHumanoOpcao {
+  if (contato === null || contato === undefined) return 'nao_informado'
+  return contato ? 'sim' : 'nao'
+}
+
+export function opcaoParaContatoHumano(opcao: ContatoHumanoOpcao): boolean | null {
+  if (opcao === 'nao_informado') return null
+  return opcao === 'sim'
+}
+
 export const NIVEL_CONTATO_OPCOES: { valor: NivelContato; label: string }[] = [
   { valor: 'DIRETA', label: 'Direta' },
   { valor: 'INDIRETA', label: 'Indireta' },

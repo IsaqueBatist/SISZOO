@@ -60,10 +60,11 @@ public class AmostraProcessoFactory {
         if (amostra.dataColeta().isAfter(hoje)) {
             throw new DataColetaFuturaException();
         }
-        // Contato humano exige nivel e agressao; sem contato, nenhum dos dois.
+        // Contato humano exige nivel e agressao; sem contato ou sem resposta,
+        // nenhum dos dois.
         boolean comDadosDeContato = amostra.nivelContato() != null || amostra.agrediuHumano() != null;
         boolean contatoCompleto = amostra.nivelContato() != null && amostra.agrediuHumano() != null;
-        if (amostra.contatoHumano() ? !contatoCompleto : comDadosDeContato) {
+        if (Boolean.TRUE.equals(amostra.contatoHumano()) ? !contatoCompleto : comDadosDeContato) {
             throw new ContatoHumanoInconsistenteException();
         }
         if (!amostra.sintomasOuVazio().isEmpty() && amostra.statusClinico() != StatusClinicoAmostra.SINTOMATICO) {

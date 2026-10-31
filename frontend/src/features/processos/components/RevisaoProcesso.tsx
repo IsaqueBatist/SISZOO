@@ -154,15 +154,16 @@ export function RevisaoProcesso({ valores, catalogos, onEditar }: RevisaoProcess
                   <label>Data de coleta</label>
                   <div>{formatarDataBR(amostra.dataColeta)}</div>
                 </div>
-                {amostra.contatoHumano && (
-                  <div className="field">
-                    <label>Contato</label>
-                    <div>
-                      {labelDe(NIVEL_CONTATO_OPCOES, amostra.nivelContato)}
-                      {amostra.agrediuHumano ? ' · agrediu o munícipe' : ''}
-                    </div>
+                <div className="field">
+                  <label>Contato</label>
+                  <div>
+                    {amostra.contatoHumano === null
+                      ? 'Não informado'
+                      : amostra.contatoHumano
+                        ? `${labelDe(NIVEL_CONTATO_OPCOES, amostra.nivelContato)}${amostra.agrediuHumano ? ' · agrediu o munícipe' : ''}`
+                        : 'Sem contato'}
                   </div>
-                )}
+                </div>
                 {amostra.alteracaoComportamental?.trim() && (
                   <div className="field full">
                     <label>Alteração comportamental</label>

@@ -5,5 +5,6 @@ public record KpisAnualProcessosResponse(
         long confirmadosPositivos,
         int percentualPositividade,
         long comContatoHumano,
+        long contatoNaoInformado,
         Double tempoMedioDias) {
 }
