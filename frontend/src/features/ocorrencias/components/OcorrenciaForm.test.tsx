@@ -40,6 +40,7 @@ function renderForm() {
 const MENSAGEM_NOME_OBRIGATORIO = 'Informe o nome do denunciante ou marque a ocorrência como sigilosa ou anônima.'
 
 async function preencherCamposObrigatorios(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('radio', { name: 'Suspeita de Zoonose' }))
   await user.type(screen.getByLabelText(/Endereço da ocorrência/i), 'Rua Teste, 10')
   await user.type(screen.getByLabelText(/^Bairro/i), 'Bairro Teste')
   await user.type(screen.getByLabelText(/Descrição da ocorrência/i), 'Descrição de teste para a ocorrência.')
@@ -400,5 +401,30 @@ describe('sugestão de bairro (datalist)', () => {
       const opcoes = Array.from(datalist?.querySelectorAll('option') ?? [])
       expect(opcoes.map((opcao) => opcao.value)).toEqual(['Centro', 'Vila Nova'])
     })
+  })
+})
+
+describe('OcorrenciaForm — classificação e datas', () => {
+  it('não vem com tipo marcado: quem registra escolhe', async () => {
+    const user = userEvent.setup()
+    renderForm()
+
+    await screen.findByRole('radiogroup', { name: 'Tipo de ocorrência' })
+    for (const radio of screen.getAllByRole('radio')) expect(radio).toHaveAttribute('aria-checked', 'false')
+
+    await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
+    expect(await screen.findByText('Selecione o tipo da ocorrência.')).toBeInTheDocument()
+  })
+
+  it('recusa data de abertura futura antes de enviar', async () => {
+    const user = userEvent.setup()
+    renderForm()
+
+    const data = await screen.findByLabelText(/Data de abertura/)
+    await user.clear(data)
+    await user.type(data, '2099-01-01')
+    await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
+
+    expect(await screen.findByText('A data de abertura não pode ser futura.')).toBeInTheDocument()
   })
 })

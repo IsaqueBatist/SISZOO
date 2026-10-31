@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { salvarBlob } from '@/lib/arquivos'
+import { avisar } from '@/lib/avisos'
 import { statusHttpDoErro } from '@/lib/erroApi'
 import { AvisoAnexosPendentes } from './AvisoAnexosPendentes'
 import { CardDenunciante } from './CardDenunciante'
@@ -61,6 +62,7 @@ function BotaoIniciarAtendimento({ ocorrencia, podeEscrever }: { ocorrencia: Oco
     setErro(null)
     try {
       await mutation.mutateAsync()
+      avisar('Atendimento iniciado.')
     } catch {
       setErro('Não foi possível iniciar o atendimento. Tente novamente.')
     }
@@ -254,12 +256,6 @@ export function OcorrenciaDetalhe() {
                   </div>
                 </div>
               </div>
-              <div style={{ marginTop: 'var(--space-4)' }}>
-                <div className="uppercase-label" style={{ marginBottom: 8 }}>
-                  Localização aproximada
-                </div>
-                <div className="map-stub">{ocorrencia.bairro} · Itu/SP</div>
-              </div>
             </div>
           </div>
 
@@ -276,8 +272,7 @@ export function OcorrenciaDetalhe() {
             <div className="card-body" style={{ paddingTop: 0 }}>
               {ocorrencia.denunciado === null ? (
                 <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', paddingTop: 12 }}>
-                  Não há denunciado identificado para esta ocorrência. O animal foi reportado como abandonado ou sem
-                  proprietário visível.
+                  Nenhum denunciado informado.
                 </p>
               ) : (
                 <div className="form-grid" style={{ paddingTop: 12 }}>

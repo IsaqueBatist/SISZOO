@@ -65,6 +65,7 @@ describe('ocorrência sigilosa no IndexedDB', () => {
     const { unmount } = renderCadastroComo(USUARIO_A)
 
     await user.click(screen.getByLabelText('Ocorrência sigilosa'))
+    await user.click(screen.getByRole('radio', { name: 'Suspeita de Zoonose' }))
     await user.type(screen.getByLabelText(/Nome completo/i), NOME_DENUNCIANTE)
     await user.type(screen.getByLabelText(/^CPF/i), CPF_DENUNCIANTE)
     await user.type(screen.getByLabelText(/Endereço da ocorrência/i), 'Rua Teste, 10')
@@ -108,6 +109,7 @@ describe('ocorrência sigilosa no IndexedDB', () => {
     const user = userEvent.setup()
     const { unmount } = renderCadastroComo(USUARIO_A)
 
+    await user.click(screen.getByRole('radio', { name: 'Suspeita de Zoonose' }))
     await user.type(screen.getByLabelText(/Nome completo/i), 'Denunciante Comum')
     await user.type(screen.getByLabelText(/^Bairro/i), 'Bairro Teste')
     await user.upload(screen.getByLabelText('Adicionar anexo'), [new File(['conteudo'], 'laudo.png', { type: 'image/png' })])

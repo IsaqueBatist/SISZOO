@@ -16,7 +16,8 @@ export const DENUNCIANTE_VAZIO = { nome: '', cpf: '', telefone: '', email: '', c
 
 export function valoresVazios(): OcorrenciaFormValues {
   return {
-    tipoOcorrencia: 'zoonose',
+    // Sem padrão: é classificação técnica, e quem registra precisa escolher.
+    tipoOcorrencia: '',
     dataAbertura: hojeEmItu(),
     horaAbertura: '',
     endereco: '',

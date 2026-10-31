@@ -1,3 +1,4 @@
+import { hojeEmItu } from '@/lib/datas'
 import { useFormContext } from 'react-hook-form'
 import type { OcorrenciaFormValues } from '../schemas/ocorrenciaFormSchema'
 import { useSugestoesBairroQuery } from '../hooks/useSugestoesBairro'
@@ -26,7 +27,13 @@ export function SecaoDadosOcorrencia() {
             <label htmlFor="oc-data">
               Data de abertura <span className="req">*</span>
             </label>
-            <input id="oc-data" className={`input${errors.dataAbertura ? ' error' : ''}`} type="date" {...register('dataAbertura')} />
+            <input
+              id="oc-data"
+              className={`input${errors.dataAbertura ? ' error' : ''}`}
+              type="date"
+              max={hojeEmItu()}
+              {...register('dataAbertura')}
+            />
             {errors.dataAbertura && <span className="err">{errors.dataAbertura.message}</span>}
           </div>
           <div className="field">
