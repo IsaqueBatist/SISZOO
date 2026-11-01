@@ -44,7 +44,8 @@ public class SecurityConfig {
                         .accessDeniedHandler(jwtAccessDeniedHandler))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/login", "/api/auth/renovar", "/api/auth/logout", "/api/health").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/renovar", "/api/auth/logout",
+                                "/api/auth/recuperacao/**", "/api/health").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

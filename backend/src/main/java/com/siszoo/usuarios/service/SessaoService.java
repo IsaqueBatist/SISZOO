@@ -1,14 +1,8 @@
 package com.siszoo.usuarios.service;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Base64;
-import java.util.HexFormat;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,9 +24,7 @@ import com.siszoo.usuarios.repository.SessaoUsuarioRepository;
 @Service
 public class SessaoService {
 
-    private static final int BYTES_TOKEN = 32;
     private static final int TAMANHO_USER_AGENT = 255;
-    private static final SecureRandom ALEATORIO = new SecureRandom();
 
     private final SessaoUsuarioRepository sessaoRepository;
     private final AuditoriaEventoService auditoriaEventoService;
@@ -63,11 +55,11 @@ public class SessaoService {
     @Transactional
     public SessaoRenovada criar(Usuario usuario, String ip, String userAgent) {
         LocalDateTime agora = agora();
-        String token = novoToken();
+        String token = TokenOpaco.novo();
 
         SessaoUsuario sessao = new SessaoUsuario();
         sessao.setUsuario(usuario);
-        sessao.setTokenHash(hash(token));
+        sessao.setTokenHash(TokenOpaco.hash(token));
         sessao.setRotacionadoEm(agora);
         sessao.setCriadaEm(agora);
         sessao.setUltimaAtividadeEm(agora);
@@ -83,7 +75,7 @@ public class SessaoService {
         if (token == null || token.isBlank()) {
             throw new SessaoExpiradaException();
         }
-        String hashApresentado = hash(token);
+        String hashApresentado = TokenOpaco.hash(token);
         SessaoUsuario sessao = sessaoRepository.buscarPorHashParaAtualizar(hashApresentado)
                 .orElseThrow(SessaoExpiradaException::new);
         LocalDateTime agora = agora();
@@ -112,9 +104,9 @@ public class SessaoService {
         if (!tokenAtual || sessao.getRotacionadoEm().plus(intervaloRotacao).isAfter(agora)) {
             return new SessaoRenovada(sessao, null);
         }
-        String novoToken = novoToken();
+        String novoToken = TokenOpaco.novo();
         sessao.setTokenAnteriorHash(sessao.getTokenHash());
-        sessao.setTokenHash(hash(novoToken));
+        sessao.setTokenHash(TokenOpaco.hash(novoToken));
         sessao.setRotacionadoEm(agora);
         return new SessaoRenovada(sessao, novoToken);
     }
@@ -125,7 +117,7 @@ public class SessaoService {
         if (token == null || token.isBlank()) {
             return Optional.empty();
         }
-        return sessaoRepository.buscarPorHashParaAtualizar(hash(token))
+        return sessaoRepository.buscarPorHashParaAtualizar(TokenOpaco.hash(token))
                 .filter(sessao -> sessao.getEncerradaEm() == null)
                 .map(sessao -> {
                     sessao.encerrar(agora(), MotivoEncerramentoSessao.LOGOUT);
@@ -154,21 +146,6 @@ public class SessaoService {
 
     private LocalDateTime agora() {
         return LocalDateTime.now(clock);
-    }
-
-    private static String novoToken() {
-        byte[] bytes = new byte[BYTES_TOKEN];
-        ALEATORIO.nextBytes(bytes);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-    }
-
-    private static String hash(String token) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            return HexFormat.of().formatHex(digest.digest(token.getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 indisponivel na JVM", e);
-        }
     }
 
     private static String limitar(String userAgent) {

@@ -25,13 +25,28 @@ import { relatoriosHandlers } from './relatoriosHandlers'
 import type { AtualizarUsuarioRequest, CriarUsuarioRequest, UsuarioListItem } from '@/features/usuarios/types/usuarios.types'
 import type { PreferenciaUsuario } from '@/features/configuracoes/types/configuracoes.types'
 
-// Usado só pelos testes automatizados (mocks/server.ts) — o dev browser
+// Usado só pelos testes automatizados (mocks/server.ts) - o dev browser
 // (mocks/browser.ts) não intercepta mais login/senha/usuários, que já existem
 // de verdade no backend (módulo usuarios). Mantido aqui para os componentes
 // não dependerem de um Postgres/Spring de pé para rodar `npm run test`.
 export const CREDENCIAIS_VALIDAS: LoginRequest = {
   email: 'stephanie.lima@itu.sp.gov.br',
   senha: 'senha-de-exemplo',
+}
+
+// Recuperação de senha: o único token que o mock aceita, e o e-mail que
+// simula o limite de tentativas (429).
+export const TOKEN_RECUPERACAO_VALIDO = 'token-recuperacao-valido'
+export const EMAIL_RECUPERACAO_LIMITADO = 'limite.atingido@itu.sp.gov.br'
+// Senha que o mock considera "a atual" do dono do token: cumpre a política do
+// formulário e, por isso, chega à API, que a recusa com 422 por campo.
+export const SENHA_ATUAL_RECUPERACAO = 'Senha-Atual-2026'
+
+function respostaLinkInvalido() {
+  return HttpResponse.json(
+    { mensagem: 'Este link de redefinição de senha é inválido ou já expirou. Solicite um novo link.' },
+    { status: 410 },
+  )
 }
 
 const LOGIN_RESPONSE: LoginResponse = {
@@ -147,7 +162,7 @@ export function resetUsuariosMock() {
   usuariosMock = seedUsuariosMock()
 }
 
-// GET/PATCH /usuarios/me e /usuarios/me/preferencias não recebem id — no
+// GET/PATCH /usuarios/me e /usuarios/me/preferencias não recebem id - no
 // backend real o usuário vem do token JWT. Aqui sempre representam o usuário
 // logado nos testes (usuariosMock[0]).
 function seedPreferenciasMock(): PreferenciaUsuario {
@@ -722,7 +737,7 @@ function fichaCompletaMock(animalId: string, microchip: string | null): boolean 
 }
 
 // Recompõe um `Animal` (resposta) a partir de um `AnimalRequest` (o que o
-// form de T18 envia) — espelha o que o service real faz ao resolver os
+// form de T18 envia) - espelha o que o service real faz ao resolver os
 // códigos de espécie/status/motivo/baia para os nomes exibidos.
 function construirAnimalMock(id: string, body: AnimalRequest, existente: Animal | null): Animal {
   const baia = body.baiaId ? baiasMock.find((item) => item.id === body.baiaId) : undefined
@@ -763,7 +778,7 @@ function construirAnimalMock(id: string, body: AnimalRequest, existente: Animal 
 
 // Registros clínicos: o mock guarda os campos crus +
 // `retificaId`, e deriva `retificadoPorId`/`statusRegistro` do mesmo jeito
-// que o mapper real do backend faz — nunca armazenados diretamente.
+// que o mapper real do backend faz - nunca armazenados diretamente.
 type RegistroClinicoBruto = { id: string; retificaId: string | null }
 
 function derivarStatusRegistro<T extends RegistroClinicoBruto>(
@@ -845,7 +860,7 @@ function seedVacinacoesMock(): VacinacaoMockInterna[] {
       criadoEm: `${addDiasIso(-30)}T09:00:00`,
     },
     // Par retificado: o registro 004 é corrigido pelo 005 (aponta retificaId
-    // de volta para 004) — 004 deve aparecer como "RETIFICADO", 005 "ATIVO".
+    // de volta para 004) - 004 deve aparecer como "RETIFICADO", 005 "ATIVO".
     {
       id: 'd1000000-0000-0000-0000-000000000004',
       animalId: ANIMAL_REX_ID,
@@ -884,7 +899,7 @@ function seedVacinacoesMock(): VacinacaoMockInterna[] {
 }
 
 // Seed V5 do backend: toda vacina do catálogo tem intervalo_meses = 12
-// (provisório, pendente de decisão do CCZ — ver docs/regras-negocio-clinico.md).
+// (provisório, pendente de decisão do CCZ - ver docs/regras-negocio-clinico.md).
 const INTERVALO_MESES_SEED_V5 = 12
 
 // Mesmos códigos de StatusAnimal.CODIGOS_FORA_DA_CUSTODIA (RN-A05).
@@ -1013,7 +1028,7 @@ export function resetPrescricoesMock() {
   prescricoesMock = seedPrescricoesMock()
 }
 
-// Alguns eventos "hoje", alguns "ontem", um mais antigo — exercita o
+// Alguns eventos "hoje", alguns "ontem", um mais antigo - exercita o
 // agrupamento por dia da tela de Logs (agruparPorDia.ts) sem precisar de
 // fixture dedicada em cada teste.
 function seedAuditoriaMock(): EventoAuditoria[] {
@@ -1123,6 +1138,40 @@ export const handlers = [
     return new HttpResponse(null, { status: 204 })
   }),
 
+  // Recuperação de senha: 202 para qualquer e-mail institucional (a API não
+  // revela se a conta existe); 429 só para o e-mail reservado ao teste do limite.
+  http.post(`${API_BASE_URL}/auth/recuperacao`, async ({ request }) => {
+    const body = (await request.json()) as { email: string }
+    if (body.email === EMAIL_RECUPERACAO_LIMITADO) {
+      return HttpResponse.json(
+        { mensagem: 'Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente.' },
+        { status: 429 },
+      )
+    }
+    return new HttpResponse(null, { status: 202 })
+  }),
+
+  http.post(`${API_BASE_URL}/auth/recuperacao/validar`, async ({ request }) => {
+    const body = (await request.json()) as { token: string }
+    if (body.token !== TOKEN_RECUPERACAO_VALIDO) return respostaLinkInvalido()
+    return new HttpResponse(null, { status: 204 })
+  }),
+
+  http.post(`${API_BASE_URL}/auth/recuperacao/redefinir`, async ({ request }) => {
+    const body = (await request.json()) as { token: string; novaSenha: string; confirmarSenha: string }
+    if (body.token !== TOKEN_RECUPERACAO_VALIDO) return respostaLinkInvalido()
+    if (body.novaSenha === SENHA_ATUAL_RECUPERACAO) {
+      return HttpResponse.json(
+        {
+          mensagem: 'A nova senha precisa ser diferente da senha atual.',
+          campos: [{ campo: 'novaSenha', mensagem: 'A nova senha precisa ser diferente da senha atual.' }],
+        },
+        { status: 422 },
+      )
+    }
+    return new HttpResponse(null, { status: 204 })
+  }),
+
   http.get(`${API_BASE_URL}/usuarios`, () => {
     const itens = usuariosMock.map(paraUsuarioPublico)
     return HttpResponse.json({
@@ -1188,7 +1237,7 @@ export const handlers = [
 
   http.patch(`${API_BASE_URL}/usuarios/me`, async () => {
     // O backend real também não devolve `telefone` na resposta (só aceita no
-    // PATCH) — o mock replica essa lacuna de propósito.
+    // PATCH) - o mock replica essa lacuna de propósito.
     return HttpResponse.json(paraUsuarioPublico(usuariosMock[0]))
   }),
 
@@ -1256,7 +1305,7 @@ export const handlers = [
     return HttpResponse.json({ itens, pagina, tamanho, totalItens, totalPaginas })
   }),
 
-  // T45: residentes (sob custódia) de todas as baias, como o backend — por nome.
+  // T45: residentes (sob custódia) de todas as baias, como o backend - por nome.
   http.get(`${API_BASE_URL}/baias/residentes`, () => {
     const residentes = animaisMock
       .filter((animal) => animal.baiaId && !STATUS_FORA_DA_CUSTODIA.includes(animal.statusCodigo))

@@ -25,3 +25,17 @@ export interface TrocarSenhaRequest {
   novaSenha: string
   confirmarSenha: string
 }
+
+export interface SolicitarRecuperacaoSenhaRequest {
+  email: string
+}
+
+export interface ValidarTokenRecuperacaoRequest {
+  token: string
+}
+
+export interface RedefinirSenhaComTokenRequest {
+  token: string
+  novaSenha: string
+  confirmarSenha: string
+}

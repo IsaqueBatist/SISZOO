@@ -54,7 +54,7 @@ spring:
         await-termination-period: 20s
   # Cache das agregacoes do dashboard (com.siszoo.relatorios, T38): TTL curto
   # para nao recalcular a cada refresh/polling em maquinas com ~2GB RAM. Sem
-  # @CacheEvict — ver docs/contratos/dashboard-kpis.md para o atraso que isso
+  # @CacheEvict - ver docs/contratos/dashboard-kpis.md para o atraso que isso
   # pode introduzir. Desligado no perfil de teste (abaixo).
   cache:
     cache-names: dashboardKpis, dashboardGraficos
@@ -88,6 +88,21 @@ siszoo:
     cookie-same-site: ${SISZOO_COOKIE_SAMESITE:Strict}
   notificacoes:
     remetente: ${SISZOO_MAIL_FROM:nao-responda@itu.sp.gov.br}
+  # Endereco do frontend usado nos links enviados por e-mail (recuperacao de
+  # senha). Por padrao e a mesma origem aceita pelo CORS: o navegador abre a
+  # aplicacao exatamente de onde a API a aceita.
+  app:
+    url: ${SISZOO_APP_URL:${SISZOO_CORS_ORIGIN:http://localhost:5173}}
+  # Recuperacao de senha (docs/decisoes/recuperacao-senha.md): validade do
+  # link e limites de tentativas em memoria (LimitadorRecuperacaoSenha).
+  recuperacao-senha:
+    validade-minutos: 30
+    limite:
+      solicitacoes-por-email: 3
+      solicitacoes-por-ip: 10
+      janela-solicitacoes-minutos: 60
+      consumos-por-ip: 20
+      janela-consumos-minutos: 15
 
 ---
 spring:

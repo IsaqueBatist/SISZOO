@@ -13,10 +13,14 @@ import org.springframework.web.bind.annotation.RestController;
 import com.siszoo.comum.security.UsuarioAutenticado;
 import com.siszoo.usuarios.dto.LoginRequest;
 import com.siszoo.usuarios.dto.LoginResponse;
+import com.siszoo.usuarios.dto.RedefinirSenhaComTokenRequest;
 import com.siszoo.usuarios.dto.RenovarSessaoRequest;
+import com.siszoo.usuarios.dto.SolicitarRecuperacaoSenhaRequest;
 import com.siszoo.usuarios.dto.TrocarSenhaRequest;
+import com.siszoo.usuarios.dto.ValidarTokenRecuperacaoRequest;
 import com.siszoo.usuarios.exception.CabecalhoSessaoAusenteException;
 import com.siszoo.usuarios.service.AuthService;
+import com.siszoo.usuarios.service.RecuperacaoSenhaService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,10 +33,13 @@ public class AuthController {
     private static final String CABECALHO_SESSAO = "X-SISZOO-Sessao";
 
     private final AuthService authService;
+    private final RecuperacaoSenhaService recuperacaoSenhaService;
     private final CookieSessao cookieSessao;
 
-    public AuthController(AuthService authService, CookieSessao cookieSessao) {
+    public AuthController(AuthService authService, RecuperacaoSenhaService recuperacaoSenhaService,
+            CookieSessao cookieSessao) {
         this.authService = authService;
+        this.recuperacaoSenhaService = recuperacaoSenhaService;
         this.cookieSessao = cookieSessao;
     }
 
@@ -74,6 +81,30 @@ public class AuthController {
     @PostMapping("/senha")
     public ResponseEntity<Void> trocarSenha(Authentication authentication, @Valid @RequestBody TrocarSenhaRequest request) {
         authService.trocarSenha(UsuarioAutenticado.id(authentication), UsuarioAutenticado.sessao(authentication), request);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Recuperacao de senha (sem sessao). 202 sempre: a resposta nao diz se o
+    // e-mail tem conta. Os tres endpoints sao publicos (SecurityConfig) e
+    // limitados por IP e por e-mail (LimitadorRecuperacaoSenha).
+    @PostMapping("/recuperacao")
+    public ResponseEntity<Void> solicitarRecuperacaoSenha(@Valid @RequestBody SolicitarRecuperacaoSenhaRequest request,
+            HttpServletRequest requisicao) {
+        recuperacaoSenhaService.solicitar(request.email(), requisicao.getRemoteAddr());
+        return ResponseEntity.accepted().build();
+    }
+
+    @PostMapping("/recuperacao/validar")
+    public ResponseEntity<Void> validarTokenRecuperacao(@Valid @RequestBody ValidarTokenRecuperacaoRequest request,
+            HttpServletRequest requisicao) {
+        recuperacaoSenhaService.validar(request.token(), requisicao.getRemoteAddr());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/recuperacao/redefinir")
+    public ResponseEntity<Void> redefinirSenhaComToken(@Valid @RequestBody RedefinirSenhaComTokenRequest request,
+            HttpServletRequest requisicao) {
+        recuperacaoSenhaService.redefinir(request, requisicao.getRemoteAddr());
         return ResponseEntity.noContent().build();
     }
 

@@ -8,7 +8,9 @@ Sessão e autenticação têm documento próprio: [sessao.md](sessao.md).
 
 **Origem:** decisão funcional. **Decisões complementares:** um Administrador pode alterar outro; ninguém muda o próprio cargo nem redefine a própria senha por essa rota; o último Administrador ativo fica protegido.
 
-A redefinição usa senha temporária, entregue em mãos pelo Administrador, e reaproveita o primeiro acesso. Não há fluxo por e-mail porque a única mensagem que o sistema envia hoje é a notificação de resultado. A senha temporária passou a valer no backend: antes, o bloqueio estava só na tela.
+A redefinição usa senha temporária, entregue em mãos pelo Administrador, e reaproveita o primeiro acesso. A senha temporária passou a valer no backend: antes, o bloqueio estava só na tela.
+
+**Revisão de 01/11/2026.** Passou a existir também a recuperação pela própria pessoa, por link enviado ao e-mail institucional ("Esqueci minha senha" na tela de login). A senha temporária do Administrador continua como está; os dois caminhos se invalidam mutuamente. Decisões em [recuperacao-senha.md](recuperacao-senha.md).
 
 ## Castração e contato humano
 

@@ -1,5 +1,5 @@
 // ══════════════════════════════════════════════════════
-// MÓDULO 01 — USUÁRIOS & ACESSO
+// MÓDULO 01 - USUÁRIOS & ACESSO
 // Tabelas: Usuario, Cargo, UsuarioCargo,
 //          CargoPermissao, PreferenciaUsuario,
 //          AuditoriaEvento
@@ -158,4 +158,17 @@ Table sessao_usuario {
   motivo_encerramento varchar(30)
   ip                  varchar(45)
   user_agent          varchar(255)
+}
+
+// V34: recuperacao de senha pela tela de login (docs/decisoes/recuperacao-senha.md).
+// Guarda so o hash do token enviado no link do e-mail; uso unico e prazo curto.
+Table token_recuperacao_senha {
+  id             uuid        [pk, default: `gen_random_uuid()`]
+  usuario_id     uuid        [not null, ref: > usuario.id, note: 'ON DELETE CASCADE']
+  token_hash     varchar(64) [not null, unique]
+  criado_em      timestamp   [not null]
+  expira_em      timestamp   [not null, note: 'criado_em + 30 min']
+  usado_em       timestamp   [note: 'Preenchido ao redefinir a senha']
+  invalidado_em  timestamp   [note: 'Novo pedido ou senha trocada por outro caminho']
+  ip_solicitacao varchar(45)
 }

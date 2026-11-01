@@ -23,6 +23,12 @@ async function renderLogin() {
 }
 
 describe('validação do formulário de login', () => {
+  it('oferece o caminho de recuperação de senha', async () => {
+    await renderLogin()
+
+    expect(screen.getByRole('link', { name: /esqueci minha senha/i })).toHaveAttribute('href', '/esqueci-senha')
+  })
+
   it('rejeita e-mail fora do domínio institucional sem disparar requisição', async () => {
     const user = userEvent.setup()
     await renderLogin()

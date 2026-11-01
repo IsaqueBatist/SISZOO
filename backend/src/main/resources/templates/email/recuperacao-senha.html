@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<!--/*
+  E-mail do link de recuperacao de senha (RecuperacaoSenhaService). Mesmo
+  layout de resultado-processo.html: tabelas e estilo inline para os clientes
+  de e-mail, cores e tipografia do design system do SISZOO, pata em SVG
+  embutido no cabecalho.
+  Variaveis: nome, link, validadeMinutos. th:text e th:href escapam o valor.
+  O link tambem aparece por extenso, para quem nao consegue clicar no botao.
+  Este comentario nao sai no e-mail (comentario de parser do Thymeleaf).
+  Versao em texto puro: recuperacao-senha.txt.
+*/-->
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SISZOO</title>
+</head>
+<body style="margin:0; padding:0; background-color:#F4F6F8;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F4F6F8;">
+<tr>
+<td align="center" style="padding:32px 16px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px; background-color:#FFFFFF; border:1px solid #E0E4EA; border-radius:10px; overflow:hidden;">
+
+<tr>
+<td style="background-color:#1B5E20; padding:24px 32px;">
+<table role="presentation" cellpadding="0" cellspacing="0"><tr>
+<td style="vertical-align:middle; padding-right:8px;"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjRkZGRkZGIj48Y2lyY2xlIGN4PSI2IiBjeT0iOSIgcj0iMiIvPjxjaXJjbGUgY3g9IjEwIiBjeT0iNSIgcj0iMiIvPjxjaXJjbGUgY3g9IjE0IiBjeT0iNSIgcj0iMiIvPjxjaXJjbGUgY3g9IjE4IiBjeT0iOSIgcj0iMiIvPjxwYXRoIGQ9Ik0xMiAxMWMtMyAwLTUgMi41LTUgNSAwIDIgMS41IDMgMyAzIDEgMCAxLjUtLjUgMi0uNXMxIC41IDIgLjVjMS41IDAgMy0xIDMtMyAwLTIuNS0yLTUtNS01eiIvPjwvc3ZnPgo=" width="22" height="22" alt="" style="display:block;"></td>
+<td style="vertical-align:middle; font-family:Arial, Helvetica, sans-serif; font-size:20px; font-weight:700; color:#FFFFFF;">SISZOO</td>
+</tr></table>
+<div style="font-family:Arial, Helvetica, sans-serif; font-size:12px; color:#C8E6C9; margin-top:4px;">Centro de Controle de Zoonoses de Itu</div>
+</td>
+</tr>
+
+<tr>
+<td style="padding:32px;">
+<p style="margin:0 0 16px; font-family:Arial, Helvetica, sans-serif; font-size:15px; line-height:1.6; color:#1A2332;">Olá, <span th:text="${nome}">Nome</span>.</p>
+<p style="margin:0 0 24px; font-family:Arial, Helvetica, sans-serif; font-size:14px; line-height:1.6; color:#1A2332;">Recebemos um pedido para redefinir a senha da sua conta no SISZOO. Para escolher uma nova senha, use o botão abaixo.</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 24px;">
+<tr>
+<td style="background-color:#1B5E20; border-radius:8px;">
+<a th:href="${link}" href="#" style="display:inline-block; padding:12px 28px; font-family:Arial, Helvetica, sans-serif; font-size:14px; font-weight:700; color:#FFFFFF; text-decoration:none;">Redefinir minha senha</a>
+</td>
+</tr>
+</table>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#FFF8E1; border-radius:10px; margin:0 0 24px;">
+<tr>
+<td style="padding:16px 20px;">
+<div style="font-family:Arial, Helvetica, sans-serif; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#8D6E00; font-weight:700;">Validade do link</div>
+<div style="font-family:Arial, Helvetica, sans-serif; font-size:14px; line-height:1.6; color:#1A2332; margin-top:4px;">Este link vale por <strong th:text="${validadeMinutos}">30</strong> minutos e só pode ser usado uma vez. Depois disso, solicite um novo link na tela de login.</div>
+</td>
+</tr>
+</table>
+
+<p style="margin:0 0 16px; font-family:Arial, Helvetica, sans-serif; font-size:13px; line-height:1.6; color:#5A6A7E;">Se o botão não funcionar, copie e cole este endereço no navegador:<br><a th:href="${link}" th:text="${link}" href="#" style="color:#1B5E20; word-break:break-all;">link</a></p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F9FAFB; border:1px solid #E0E4EA; border-radius:10px;">
+<tr>
+<td style="padding:16px 20px;">
+<div style="font-family:Arial, Helvetica, sans-serif; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#5A6A7E; font-weight:700; margin-bottom:8px;">Não foi você?</div>
+<div style="font-family:Arial, Helvetica, sans-serif; font-size:13px; line-height:1.7; color:#1A2332;">Se você não pediu a redefinição, ignore esta mensagem: sua senha atual continua valendo e nada muda na sua conta. Em caso de dúvida, avise o Administrador do sistema.</div>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+
+<tr>
+<td style="padding:0 32px 28px;">
+<hr style="border:none; border-top:1px solid #E0E4EA; margin:0 0 16px;">
+<p style="margin:0; font-family:Arial, Helvetica, sans-serif; font-size:12px; line-height:1.5; color:#9AAABB;">Esta é uma mensagem automática do SISZOO, Sistema de Gestão do CCZ de Itu. Não é necessário responder este e-mail.</p>
+</td>
+</tr>
+
+</table>
+</td>
+</tr>
+</table>
+</body>
+</html>

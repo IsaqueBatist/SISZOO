@@ -25,8 +25,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-// V29 a V33 (decisoes funcionais de 31/10/2026) sobre um banco parado na V28 com
-// dados, num schema proprio do PostgreSQL de teste: nada existente pode mudar.
+// V29 a V33 (decisoes funcionais de 31/10/2026) e V34 (recuperacao de senha)
+// sobre um banco parado na V28 com dados, num schema proprio do PostgreSQL de
+// teste: nada existente pode mudar.
 class MigracaoDecisoesFuncionaisIT extends AbstractIntegrationTest {
 
     private static final String SCHEMA = "migracao_decisoes_funcionais";
@@ -50,15 +51,15 @@ class MigracaoDecisoesFuncionaisIT extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("V28 -> V33 com dados: respostas antigas preservadas, sem condicao inventada e auditoria intacta")
+    @DisplayName("V28 -> V34 com dados: respostas antigas preservadas, sem condicao inventada e auditoria intacta")
     void atualizacaoComDados() throws Exception {
         assertThat(migrarAte("28").targetSchemaVersion, equalTo("28"));
         Dados dados = inserirDadosNaV28();
 
-        MigrateResult resultado = migrarAte("33");
+        MigrateResult resultado = migrarAte("34");
 
         assertThat(resultado.success, equalTo(true));
-        assertThat(resultado.migrationsExecuted, equalTo(5));
+        assertThat(resultado.migrationsExecuted, equalTo(6));
 
         // V31: false continua false, e true continua true.
         assertThat(esterilizado(dados.castrado()), equalTo(true));
@@ -86,7 +87,7 @@ class MigracaoDecisoesFuncionaisIT extends AbstractIntegrationTest {
     @Test
     @DisplayName("V31: nao informado e aceito, e o CHECK continua amarrando contato, nivel e agressao")
     void checkDoContato() throws Exception {
-        migrarAte("33");
+        migrarAte("34");
         UUID usuario = inserirUsuario();
         UUID processo = UUID.randomUUID();
         assertThat(transacao(processo(processo, usuario), responsavel(processo)
@@ -101,7 +102,7 @@ class MigracaoDecisoesFuncionaisIT extends AbstractIntegrationTest {
     @Test
     @DisplayName("V31: INSERT que omite esterilizado fica nao informado, sem o DEFAULT false antigo")
     void semDefaultFalse() throws Exception {
-        migrarAte("33");
+        migrarAte("34");
         UUID usuario = inserirUsuario();
         UUID animal = UUID.randomUUID();
 
@@ -113,7 +114,7 @@ class MigracaoDecisoesFuncionaisIT extends AbstractIntegrationTest {
     @Test
     @DisplayName("V30 e V32: so os cargos previstos recebem as permissoes novas")
     void permissoes() {
-        migrarAte("33");
+        migrarAte("34");
 
         assertThat(cargosComFeature("edicao_registro"), equalTo(List.of(ADMINISTRADOR)));
         assertThat(cargosComFeature("ocorrencias_bairro"), equalTo(List.of(ADMINISTRADOR, AGENTE)));
@@ -123,7 +124,7 @@ class MigracaoDecisoesFuncionaisIT extends AbstractIntegrationTest {
     @Test
     @DisplayName("V29: remover o usuario leva as sessoes; o token de renovacao e unico")
     void sessaoUsuario() throws Exception {
-        migrarAte("33");
+        migrarAte("34");
         UUID usuario = inserirUsuario();
         String sessao = "INSERT INTO " + S + "sessao_usuario (usuario_id, token_hash, rotacionado_em, criada_em,"
                 + " ultima_atividade_em) VALUES ('" + usuario + "', 'hash-unico', now(), now(), now())";
@@ -133,6 +134,22 @@ class MigracaoDecisoesFuncionaisIT extends AbstractIntegrationTest {
 
         assertThat(transacao("DELETE FROM " + S + "usuario WHERE id = '" + usuario + "'"), nullValue());
         assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM " + S + "sessao_usuario", Integer.class), equalTo(0));
+    }
+
+    @Test
+    @DisplayName("V34: token de recuperacao unico por hash, e remover o usuario leva os tokens")
+    void tokenRecuperacaoSenha() throws Exception {
+        migrarAte("34");
+        UUID usuario = inserirUsuario();
+        String token = "INSERT INTO " + S + "token_recuperacao_senha (usuario_id, token_hash, criado_em, expira_em)"
+                + " VALUES ('" + usuario + "', 'hash-recuperacao', now(), now() + interval '1 minute')";
+        assertThat(transacao(token), nullValue());
+
+        assertViolacao(transacao(token), "uq_token_recuperacao_senha_token_hash");
+
+        assertThat(transacao("DELETE FROM " + S + "usuario WHERE id = '" + usuario + "'"), nullValue());
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM " + S + "token_recuperacao_senha", Integer.class),
+                equalTo(0));
     }
 
     private Dados inserirDadosNaV28() throws SQLException {

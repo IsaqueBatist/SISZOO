@@ -24,8 +24,10 @@ window.addEventListener(EVENTO_SESSAO_RENOVADA, (evento) => {
   setAuthToken((evento as CustomEvent<LoginResponse>).detail.token)
 })
 
+// Rotas sem sessão: login e recuperação de senha. Um 401 delas é resposta
+// de negócio, não sessão vencida, e não deve disparar renovação.
 function ehRotaDeSessao(url: string) {
-  return url === '/auth/login'
+  return url === '/auth/login' || url.startsWith('/auth/recuperacao')
 }
 
 // Token prestes a vencer: renova antes de enviar, para a requisição não voltar
@@ -59,12 +61,6 @@ async function tentarDeNovoComSessaoRenovada(config: RequisicaoRepetivel, erroOr
   return http({ ...config, repetida: true } as RequisicaoRepetivel)
 }
 
-// Endpoints que só existiam como mock (MSW) até existir backend real — hoje
-// login, troca de senha e CRUD de usuários já são reais (módulo usuarios),
-// então um 401 deles já reflete sessão expirada/inválida de verdade. Mantido
-// vazio como ponto de extensão para o próximo módulo que nascer só mockado.
-const ENDPOINTS_AINDA_SO_MOCKADOS: string[] = []
-
 http.interceptors.response.use(
   (response) => {
     window.dispatchEvent(new Event(EVENTO_REDE_OK))
@@ -72,8 +68,7 @@ http.interceptors.response.use(
   },
   (error) => {
     const url: string = error.config?.url ?? ''
-    const isEndpointAindaSoMockado = ENDPOINTS_AINDA_SO_MOCKADOS.some((endpoint) => url.startsWith(endpoint))
-    if (error.response?.status === 401 && !ehRotaDeSessao(url) && !isEndpointAindaSoMockado) {
+    if (error.response?.status === 401 && !ehRotaDeSessao(url)) {
       window.dispatchEvent(new Event(EVENTO_REDE_OK))
       if ((error.config as RequisicaoRepetivel).repetida) {
         window.dispatchEvent(new Event('auth:unauthorized'))

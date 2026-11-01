@@ -1,4 +1,4 @@
-# Integração frontend ↔ API — inventário de mocks e rastreabilidade
+# Integração frontend ↔ API - inventário de mocks e rastreabilidade
 
 Status: **auditado em 25/10/2026** (branch `feat/dados-reais-seed`). Atualize ao incluir uma tela, endpoint ou mock.
 
@@ -45,7 +45,7 @@ dashboard com o valor exato `"true"` no build:
 - ausente ou qualquer outro valor = dados reais, e o chunk do mock é podado do bundle;
 - quando ligado, todos os cards, o painel de alertas e os gráficos mostram o selo "Dados de demonstração".
 
-### 4. Mocks indevidos no fluxo de produção — **nenhum**
+### 4. Mocks indevidos no fluxo de produção - **nenhum**
 
 Itens encontrados na auditoria e o que foi feito:
 
@@ -74,6 +74,7 @@ mesmo método, caminho e parâmetros, os tipos TS batem com os records Java e h�
 | Funcionalidade | Tela | Serviço frontend | Endpoint | Persistência |
 |---|---|---|---|---|
 | Login / troca de senha | Login, TrocarSenha | `auth/api/authApi.ts` | `POST /auth/login`, `POST /auth/senha` | `usuario` |
+| Recuperação de senha | EsqueciSenha, RedefinirSenha | `auth/api/authApi.ts` | `POST /auth/recuperacao`, `POST /auth/recuperacao/validar`, `POST /auth/recuperacao/redefinir` | `token_recuperacao_senha`, `usuario` |
 | Usuários | Usuarios | `usuarios/api/usuariosApi.ts` | `GET/POST /usuarios`, `PATCH /usuarios/{id}/status` | `usuario`, `usuario_cargo` |
 | Perfil e preferências | Perfil, Configuracoes | `perfil/api`, `configuracoes/api` | `GET/PATCH /usuarios/me`, `GET/PATCH /usuarios/me/preferencias` | `usuario`, `preferencia_usuario` |
 | Auditoria | Logs | `auditoria/api/auditoriaApi.ts` | `GET /auditoria`, `GET /auditoria/filtros` | `auditoria_evento` |
@@ -89,7 +90,7 @@ mesmo método, caminho e parâmetros, os tipos TS batem com os records Java e h�
 | Dashboard | Dashboard | `dashboard/api/dashboardApi.ts` | `GET /dashboard/kpis` | calculado (cache de 5 min) |
 | Gráficos | GraficosDashboard | `graficos/api/graficosApi.ts` | `GET /dashboard/graficos` | calculado |
 | Relatórios | Relatorios, PainelPreviewRelatorio, HistoricoRelatorios | `relatorios/api/relatoriosApi.ts` | `GET /relatorios/tipos`, `GET /relatorios/preview`, `POST /relatorios/exportar`, `GET /relatorios/historico` | `relatorio_gerado` |
-| CEP | SecaoDenunciante, CamposResponsavel | `lib/viaCep.ts` | serviço externo ViaCEP | — |
+| CEP | SecaoDenunciante, CamposResponsavel | `lib/viaCep.ts` | serviço externo ViaCEP | - |
 
 **Notas da matriz:**
 - **Endpoints sem tela:** `GET /health`, `GET` por id dos registros clínicos, de baia e de medicamento, e

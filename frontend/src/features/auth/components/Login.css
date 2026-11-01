@@ -123,6 +123,15 @@
   gap: 8px;
 }
 
+.login-ajuda {
+  text-align: center;
+  font-size: 13px;
+  margin: -4px 0 0;
+}
+.login-ajuda a {
+  color: var(--color-primary);
+}
+
 .login-foot {
   text-align: center;
   font-size: 11px;

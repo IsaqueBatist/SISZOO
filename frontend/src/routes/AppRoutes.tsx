@@ -13,7 +13,7 @@ import { RotaProtegida } from './RotaProtegida'
 import { RouteErrorBoundary } from './RouteErrorBoundary'
 
 // Code-splitting por rota (máquinas do CCZ têm ~2GB RAM): todas as telas,
-// carregadas sob demanda. T45: o Login também — eager, ele levava zod,
+// carregadas sob demanda. T45: o Login também - eager, ele levava zod,
 // react-hook-form e o resolver (~48 KB gzip, cerca de 1/3 do carregamento
 // inicial) para toda recarga de tela já autenticada, que nunca o mostra. Na
 // primeira visita custa só mais um arquivo, baixado junto com o resto.
@@ -21,6 +21,12 @@ const EditarProcesso = lazy(() =>
   import('@/features/processos/components/EditarProcesso').then((m) => ({ default: m.EditarProcesso })),
 )
 const Login = lazy(() => import('@/features/auth/components/Login').then((m) => ({ default: m.Login })))
+const EsqueciSenha = lazy(() =>
+  import('@/features/auth/components/EsqueciSenha').then((m) => ({ default: m.EsqueciSenha })),
+)
+const RedefinirSenha = lazy(() =>
+  import('@/features/auth/components/RedefinirSenha').then((m) => ({ default: m.RedefinirSenha })),
+)
 const TrocarSenha = lazy(() =>
   import('@/features/auth/components/TrocarSenha').then((m) => ({ default: m.TrocarSenha })),
 )
@@ -96,6 +102,8 @@ export function AppRoutes() {
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/esqueci-senha" element={<EsqueciSenha />} />
+          <Route path="/redefinir-senha" element={<RedefinirSenha />} />
 
           <Route element={<RotaProtegida />}>
             <Route path="/trocar-senha" element={<TrocarSenha />} />
@@ -132,7 +140,7 @@ export function AppRoutes() {
               <Route element={<RotaEscritaProcessos />}>
                 <Route path="/processos/novo" element={<CadastrarProcesso />} />
               </Route>
-              {/* RELATORIOS:leitura (todos os perfis) — sem guard extra, nav.ts ja libera os 3. */}
+              {/* RELATORIOS:leitura (todos os perfis) - sem guard extra, nav.ts ja libera os 3. */}
               <Route path="/relatorios" element={<Relatorios />} />
               <Route path="/perfil" element={<Perfil />} />
               <Route path="/configuracoes" element={<Configuracoes />} />

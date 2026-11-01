@@ -32,6 +32,7 @@ public class AuthService {
     private final UsuarioMapper usuarioMapper;
     private final AuditoriaEventoService auditoriaEventoService;
     private final SessaoService sessaoService;
+    private final RecuperacaoSenhaService recuperacaoSenhaService;
     private final Clock clock;
 
     // tokenRenovacao vai so no cookie httpOnly; nulo quando o cookie nao muda.
@@ -45,6 +46,7 @@ public class AuthService {
             UsuarioMapper usuarioMapper,
             AuditoriaEventoService auditoriaEventoService,
             SessaoService sessaoService,
+            RecuperacaoSenhaService recuperacaoSenhaService,
             Clock clock) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
@@ -52,6 +54,7 @@ public class AuthService {
         this.usuarioMapper = usuarioMapper;
         this.auditoriaEventoService = auditoriaEventoService;
         this.sessaoService = sessaoService;
+        this.recuperacaoSenhaService = recuperacaoSenhaService;
         this.clock = clock;
     }
 
@@ -117,6 +120,8 @@ public class AuthService {
         usuario.setSenhaAlteradaEm(alteradaAgora);
         usuarioRepository.save(usuario);
         sessaoService.encerrarDoUsuario(usuario.getId(), MotivoEncerramentoSessao.SENHA_ALTERADA, sessaoAtual);
+        // Um link de recuperacao pedido antes da troca nao pode valer depois dela.
+        recuperacaoSenhaService.invalidarPendentes(usuario.getId());
 
         auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "usuario", usuario.getId(),
                 Collections.singletonMap("senhaAlteradaEm", alteradaAntes),

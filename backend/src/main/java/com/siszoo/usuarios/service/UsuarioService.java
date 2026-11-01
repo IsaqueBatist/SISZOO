@@ -64,6 +64,7 @@ public class UsuarioService {
     private final UsuarioMapper usuarioMapper;
     private final AuditoriaEventoService auditoriaEventoService;
     private final SessaoService sessaoService;
+    private final RecuperacaoSenhaService recuperacaoSenhaService;
     private final Clock clock;
 
     public UsuarioService(
@@ -75,6 +76,7 @@ public class UsuarioService {
             UsuarioMapper usuarioMapper,
             AuditoriaEventoService auditoriaEventoService,
             SessaoService sessaoService,
+            RecuperacaoSenhaService recuperacaoSenhaService,
             Clock clock) {
         this.usuarioRepository = usuarioRepository;
         this.cargoRepository = cargoRepository;
@@ -84,6 +86,7 @@ public class UsuarioService {
         this.usuarioMapper = usuarioMapper;
         this.auditoriaEventoService = auditoriaEventoService;
         this.sessaoService = sessaoService;
+        this.recuperacaoSenhaService = recuperacaoSenhaService;
         this.clock = clock;
     }
 
@@ -197,6 +200,7 @@ public class UsuarioService {
         usuario.setSenhaAlteradaEm(null);
         usuarioRepository.save(usuario);
         sessaoService.encerrarDoUsuario(id, MotivoEncerramentoSessao.SENHA_REDEFINIDA, null);
+        recuperacaoSenhaService.invalidarPendentes(id);
 
         auditoriaEventoService.registrar(buscarAutor(usuarioAutenticadoId), AcaoAuditoria.ATUALIZACAO, "usuario", id,
                 null, Map.of("senhaRedefinida", true));
@@ -301,7 +305,7 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
 
         // T43/LGPD: auditoria_evento e imutavel e sem expurgo, entao o telefone
-        // nao entra no evento — so se mudou, no padrao do denuncianteAlterado
+        // nao entra no evento - so se mudou, no padrao do denuncianteAlterado
         // da ocorrencia (D23).
         boolean telefoneAlterado = !Objects.equals(telefoneAnterior, telefoneNovo);
         auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "usuario", usuario.getId(),
