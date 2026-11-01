@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
 import { BannerRascunho } from '@/components/BannerRascunho'
 import { Icon } from '@/components/layout/Icon'
+import { useToast } from '@/components/toast/useToast'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
 import { useRascunho } from '@/lib/useRascunho'
@@ -15,6 +16,7 @@ import {
   LABELS_VIA_ADMINISTRACAO,
 } from '../utils/historicoLabels'
 import { useCriarPrescricaoMutation, useMedicamentosAtivosQuery } from '../hooks/useHistoricoAnimal'
+import { CadastroRapidoMedicamento } from './CadastroRapidoMedicamento'
 import type { Prescricao } from '../types/historico.types'
 
 // Erros por campo do 422: só os campos que existem no modal.
@@ -34,9 +36,11 @@ interface ModalRegistrarMedicamentoProps {
 
 export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSucesso }: ModalRegistrarMedicamentoProps) {
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [cadastrandoMedicamento, setCadastrandoMedicamento] = useState(false)
 
   const { data: medicamentos } = useMedicamentosAtivosQuery()
   const mutation = useCriarPrescricaoMutation(animalId)
+  const toast = useToast()
 
   const { user } = useAuth()
 
@@ -45,6 +49,7 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
     control,
     handleSubmit,
     setError,
+    setValue,
     watch,
     reset,
     getValues,
@@ -98,6 +103,7 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
         retificaId: retifica?.id,
       })
       await rascunho.removerAposSucesso()
+      toast.sucesso(retifica ? 'Correção da prescrição registrada.' : 'Prescrição registrada.')
       onSucesso()
     } catch (erro) {
       if (aplicarErrosDeCampo(erro, setError, MAPA_ERROS_SERVIDOR).length > 0) return
@@ -108,6 +114,15 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
           `Não foi possível ${retifica ? 'corrigir' : 'registrar'} a prescrição. Tente novamente.`,
       )
     }
+  }
+
+  // Volta do cadastro rápido: o medicamento novo já entra escolhido. Aqui o
+  // select é controlado (Controller), então o setValue basta — diferente do
+  // modal de vacina, cujo select é não-controlado e precisa esperar a opção.
+  function aoCadastrarMedicamento(id: string) {
+    setValue('medicamentoId', id, { shouldValidate: true })
+    setCadastrandoMedicamento(false)
+    toast.sucesso('Medicamento cadastrado e selecionado.')
   }
 
   function aoEnviar(event: FormEvent<HTMLFormElement>) {
@@ -157,31 +172,57 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
                     controlado — um register() não-controlado fixaria o valor
                     no momento do mount, antes das opções existirem, e nunca
                     mais re-sincronizaria quando elas chegassem. */}
-                <Controller
-                  name="medicamentoId"
-                  control={control}
-                  render={({ field }) => (
-                    <select
-                      id="pres-medicamento"
-                      className={`select${errors.medicamentoId ? ' error' : ''}`}
-                      value={field.value}
-                      onChange={field.onChange}
-                      onBlur={field.onBlur}
-                      ref={field.ref}
-                    >
-                      <option value="" disabled>
-                        Selecione…
-                      </option>
-                      {medicamentos?.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.nome}
+                <div className="flex gap-2">
+                  <Controller
+                    name="medicamentoId"
+                    control={control}
+                    render={({ field }) => (
+                      <select
+                        id="pres-medicamento"
+                        className={`select${errors.medicamentoId ? ' error' : ''}`}
+                        style={{ flex: 1 }}
+                        value={field.value}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
+                      >
+                        <option value="" disabled>
+                          Selecione…
                         </option>
-                      ))}
-                    </select>
+                        {medicamentos?.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.nome}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  />
+                  {/* Sem checagem de papel: a aba só oferece o caminho para
+                      este modal a quem tem escrita, e o backend recusa o POST
+                      de qualquer outro. */}
+                  {!cadastrandoMedicamento && (
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm btn-icon-only"
+                      title="Cadastrar novo medicamento"
+                      aria-label="Cadastrar novo medicamento"
+                      onClick={() => setCadastrandoMedicamento(true)}
+                    >
+                      <Icon name="plus" size={16} />
+                    </button>
                   )}
-                />
+                </div>
                 {errors.medicamentoId && <span className="err">{errors.medicamentoId.message}</span>}
               </div>
+
+              {cadastrandoMedicamento && (
+                <div className="field full">
+                  <CadastroRapidoMedicamento
+                    onCadastrado={aoCadastrarMedicamento}
+                    onCancelar={() => setCadastrandoMedicamento(false)}
+                  />
+                </div>
+              )}
 
               <div className="form-grid">
                 <div className="field">

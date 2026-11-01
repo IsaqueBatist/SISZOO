@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
+import { ToastProvider } from '@/components/toast/ToastProvider'
 import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
 import { AbaMedicamentos } from './AbaMedicamentos'
@@ -25,9 +26,11 @@ function renderAba() {
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter>
-        <AuthProvider>
-          <AbaMedicamentos animalId={REX_ID} onRegistroCriado={() => {}} />
-        </AuthProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <AbaMedicamentos animalId={REX_ID} onRegistroCriado={() => {}} />
+          </AuthProvider>
+        </ToastProvider>
       </MemoryRouter>
     </QueryClientProvider>,
   )
@@ -44,7 +47,7 @@ describe('ModalRegistrarMedicamento', () => {
     const modal = screen.getByRole('heading', { name: 'Registrar medicamento' }).closest<HTMLElement>('.modal')
     if (!modal) throw new Error('modal não encontrado')
 
-    await user.selectOptions(await within(modal).findByLabelText(/medicamento/i), 'Amoxicilina 250mg')
+    await user.selectOptions(await within(modal).findByLabelText(/^medicamento/i), 'Amoxicilina 250mg')
     await user.type(within(modal).getByLabelText(/^início/i), '2026-05-01')
     await user.type(within(modal).getByLabelText(/frequência/i), '3')
     await user.selectOptions(within(modal).getByLabelText(/a cada/i), 'HORAS')
@@ -93,7 +96,7 @@ describe('ModalRegistrarMedicamento', () => {
     // (useMedicamentosAtivosQuery) — a pré-seleção do medicamentoId da
     // retifica só pode ser confirmada depois que as opções carregarem.
     await waitFor(() => {
-      expect(within(modal).getByLabelText(/medicamento/i)).toHaveValue(MEDICAMENTO_FENOBARBITAL_ID)
+      expect(within(modal).getByLabelText(/^medicamento/i)).toHaveValue(MEDICAMENTO_FENOBARBITAL_ID)
     })
 
     await user.selectOptions(within(modal).getByLabelText(/^status/i), 'SUSPENSA')
@@ -107,5 +110,44 @@ describe('ModalRegistrarMedicamento', () => {
       (card): card is HTMLElement => card !== null && within(card).queryByText('Retificado') !== null,
     )
     expect(comBadgeRetificado).toHaveLength(1)
+  })
+})
+
+describe('ModalRegistrarMedicamento — cadastro rápido pelo "+"', () => {
+  async function abrirModal(user: ReturnType<typeof userEvent.setup>) {
+    renderAba()
+    await user.click(await screen.findByRole('button', { name: /registrar medicamento/i }))
+    const modal = screen.getByRole('heading', { name: 'Registrar medicamento' }).closest<HTMLElement>('.modal')
+    if (!modal) throw new Error('modal não encontrado')
+    await within(modal).findByRole('option', { name: /fenobarbital/i })
+    return modal
+  }
+
+  it('cadastra o medicamento sem sair do modal e já o deixa escolhido', async () => {
+    const user = userEvent.setup()
+    const modal = await abrirModal(user)
+
+    await user.click(within(modal).getByRole('button', { name: /cadastrar novo medicamento/i }))
+    await user.type(within(modal).getByLabelText(/^nome/i), 'Medicamento Novo Teste')
+    const categoria = within(modal).getByLabelText(/^categoria/i) as HTMLSelectElement
+    await user.selectOptions(categoria, categoria.options[1].value)
+    await user.click(within(modal).getByRole('button', { name: /^cadastrar medicamento$/i }))
+
+    const select = within(modal).getByLabelText(/^medicamento/i) as HTMLSelectElement
+    await waitFor(() =>
+      expect(within(modal).getByRole('option', { name: 'Medicamento Novo Teste' })).toBeInTheDocument(),
+    )
+    await waitFor(() => expect(select.selectedOptions[0]?.textContent).toBe('Medicamento Novo Teste'))
+  })
+
+  it('cancelar fecha o cadastro e devolve o "+"', async () => {
+    const user = userEvent.setup()
+    const modal = await abrirModal(user)
+
+    await user.click(within(modal).getByRole('button', { name: /cadastrar novo medicamento/i }))
+    await user.click(within(modal).getByRole('button', { name: /cancelar cadastro/i }))
+
+    expect(within(modal).queryByLabelText(/^categoria/i)).not.toBeInTheDocument()
+    expect(within(modal).getByRole('button', { name: /cadastrar novo medicamento/i })).toBeInTheDocument()
   })
 })
