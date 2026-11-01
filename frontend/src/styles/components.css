@@ -233,6 +233,73 @@
 }
 .menu-perfil-item:hover { background: var(--color-bg); text-decoration: none; }
 
+/* Portado de docs/prototipo/assets/shell.js (#dd-notif), com as cores saindo
+   de tokens: o protótipo usa rgba(198,40,40,…) cru, que não acompanha o tema
+   escuro. */
+.menu-notificacoes { position: relative; }
+.menu-notificacoes-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 340px;
+  max-width: calc(100vw - 2 * var(--space-4));
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-2);
+  z-index: 20;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+.menu-notificacoes-popover .dd-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px 6px;
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--color-text-secondary); font-weight: 600;
+}
+.menu-notificacoes-popover .dd-header-contagem {
+  background: var(--color-danger); color: #fff;
+  font-size: 10px; font-weight: 700;
+  min-width: 18px; height: 18px; border-radius: 9px;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0 5px;
+  letter-spacing: 0;
+}
+.menu-notificacoes-popover .dd-vazio {
+  padding: var(--space-4) 12px;
+  font-size: 13px; color: var(--color-text-secondary); text-align: center;
+}
+.dd-notif-item {
+  display: flex; gap: 10px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--color-text-primary);
+}
+a.dd-notif-item:hover { background: var(--color-bg); text-decoration: none; }
+.dd-notif-item.urgent { background: color-mix(in srgb, var(--color-danger) 5%, transparent); }
+a.dd-notif-item.urgent:hover { background: color-mix(in srgb, var(--color-danger) 10%, transparent); }
+.dd-notif-ico {
+  width: 30px; height: 30px; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.dd-notif-ico.tom-danger { background: var(--color-danger-bg); color: var(--color-danger); }
+.dd-notif-ico.tom-warning { background: var(--color-warning-bg); color: var(--color-warning); }
+.dd-notif-ico.tom-alert-yellow { background: var(--color-alert-bg); color: var(--color-alert); }
+.dd-notif-ico.tom-info { background: var(--color-info-bg); color: var(--color-info); }
+.dd-notif-title { font-size: 13px; font-weight: 600; }
+.dd-notif-desc { font-size: 11px; color: var(--color-text-secondary); }
+.menu-notificacoes-popover .dd-foot {
+  padding: 8px 12px;
+  font-size: 11px;
+  text-align: center;
+  border-top: 1px solid var(--color-border);
+  margin-top: var(--space-2);
+}
+
+
 /* ===== Badge ===== */
 .badge {
   display: inline-flex; align-items: center; gap: 4px;

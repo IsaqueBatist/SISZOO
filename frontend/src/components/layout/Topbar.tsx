@@ -1,6 +1,7 @@
 import { useLocation } from 'react-router-dom'
 import { NAV_ALL, ROLES, isNavGroup } from '../../lib/nav'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { MenuNotificacoes } from './MenuNotificacoes'
 import { MenuPerfil } from './MenuPerfil'
 
 function currentCrumbLabel(pathname: string): string {
@@ -23,6 +24,7 @@ export function Topbar() {
         <span className={`badge role-pill ${role.badgeCls}`} title="Papel atual">
           {role.short}
         </span>
+        <MenuNotificacoes />
         <MenuPerfil />
       </div>
     </header>
