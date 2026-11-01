@@ -1,8 +1,8 @@
-# Documentação — SISZOO
+# Documentação - SISZOO
 
 Documentação de análise, modelagem e decisões do sistema, derivada do protótipo navegável, da entrevista com a equipe
 do CCZ-Itu (09/01/2026) e do que foi implementado. **Fonte de verdade, nesta ordem:** código em `main` (migrations
-`backend/src/main/resources/db/migration`, V1–V28) → `DER.md` → decisões → documento do TG. Se algo divergir, o código
+`backend/src/main/resources/db/migration`, V1–V34) → `DER.md` → decisões → documento do TG. Se algo divergir, o código
 manda e a documentação é corrigida no mesmo PR (checklist abaixo, em "Como manter").
 
 ## Conteúdo
@@ -11,7 +11,7 @@ manda e a documentação é corrigida no mesmo PR (checklist abaixo, em "Como ma
 |---|---|
 | `DER.md` | Diagrama Entidade-Relacionamento completo: entidades, atributos, relacionamentos, catálogos, estado do schema por migration e as regras de negócio numeradas (§5). Referência central do modelo de dados. |
 | `modulo1-usuarios-acesso.dbml` … `modulo5-relatorios.dbml` | Diagramas lógicos por módulo, em DBML (espelham as migrations; tabelas só modeladas trazem `Note: 'modelo-alvo…'`). |
-| `decisoes/` | Uma linha por decisão, por task: `T25-T26.md` (ocorrências, sigilo), `T29.md` (processos), `T34.md` (resultado laboratorial), `T35.md` (e-mail), `T37.md` (notificação), `T42.md` (rascunho offline), `T43.md` (auditoria), `animais-clinico-correcoes.md`, `auditoria-rn.md`, `pendencias-auditoria-rn.md`, `ficha-completa-seed-fuso.md`, `politica-senha.md`, **`alinhamento-tg.md`** (decisões AT-1…AT-21 do alinhamento com o TG, 22–24/10/2026), `seed-dev.md` (seed de dados fictícios: guardas, idempotência, massa), `sessao.md` (renovação, inatividade, abas), `decisoes-funcionais.md` (decisões de 31/10/2026). |
+| `decisoes/` | Uma linha por decisão, por task: `T25-T26.md` (ocorrências, sigilo), `T29.md` (processos), `T34.md` (resultado laboratorial), `T35.md` (e-mail), `T37.md` (notificação), `T42.md` (rascunho offline), `T43.md` (auditoria), `animais-clinico-correcoes.md`, `auditoria-rn.md`, `pendencias-auditoria-rn.md`, `ficha-completa-seed-fuso.md`, `politica-senha.md`, **`alinhamento-tg.md`** (decisões AT-1…AT-21 do alinhamento com o TG, 22–24/10/2026), `seed-dev.md` (seed de dados fictícios: guardas, idempotência, massa, fotos), `sessao.md` (renovação, inatividade, abas), `decisoes-funcionais.md` (decisões de 31/10/2026), `recuperacao-senha.md` (esqueci minha senha: token, e-mail, limites). |
 | `integracao-frontend-api.md` | Inventário de mocks (teste, seed, estáticos legítimos, indevidos) e matriz de rastreabilidade tela → serviço → endpoint → tabela. |
 | `contratos/` | Pedidos do frontend ao backend e contratos de endpoints, cada um com `Status:` na primeira linha (implementado/pendente). |
 | `regras-negocio-clinico.md` | Regras de vacinação, procedimento, prescrição, exame, anexos do animal, datas e ficha completa; alerta vacinal. |
@@ -30,11 +30,11 @@ Os `modulo*.dbml` usam a sintaxe **DBML**. Para visualizar, cole o conteúdo em 
 
 | Módulo | Arquivo | Tabelas implementadas | Só modeladas (trabalho futuro) |
 |---|---|---|---|
-| 1 — Usuários & Acesso | `modulo1-usuarios-acesso.dbml` | usuario, cargo, usuario_cargo, cargo_permissao, preferencia_usuario, auditoria_evento | — |
-| 2 — Animais e clínico | `modulo2-animais.dbml` | especie, status_animal, motivo_entrada, tipo_baia, baia, animal, vacina, vacinacao, tipo_procedimento, procedimento, categoria_farmacologica, medicamento, prescricao, tipo_exame, exame, anexo_animal (+conteúdo) | adocao, vacina_especie, animal_sintoma, anexo_vacinacao, anexo_procedimento, anexo_exame |
-| 3 — Ocorrências | `modulo3-ocorrencias.dbml` | protocolo_sequencia, tipo_ocorrencia, providencia_tomada, ocorrencia, denunciante, denunciado, movimentacao_ocorrencia, anexo_ocorrencia (+conteúdo) | — |
-| 4 — Processos Sanitários | `modulo4-processos.dbml` | doenca, laboratorio, sintoma, resultado_laboratorial, desfecho_animal, processo_sanitario, responsavel_processo, animal_amostrado, amostra_sintoma, resultado_processo | documento_processo, tipo_documento_processo |
-| 5 — Relatórios | `modulo5-relatorios.dbml` | relatorio_gerado (dashboard e alertas são computados, sem tabela) | — |
+| 1 - Usuários & Acesso | `modulo1-usuarios-acesso.dbml` | usuario, cargo, usuario_cargo, cargo_permissao, preferencia_usuario, auditoria_evento, sessao_usuario, token_recuperacao_senha | - |
+| 2 - Animais e clínico | `modulo2-animais.dbml` | especie, status_animal, motivo_entrada, tipo_baia, baia, animal, vacina, vacinacao, tipo_procedimento, procedimento, categoria_farmacologica, medicamento, prescricao, tipo_exame, exame, anexo_animal (+conteúdo) | adocao, vacina_especie, animal_sintoma, anexo_vacinacao, anexo_procedimento, anexo_exame |
+| 3 - Ocorrências | `modulo3-ocorrencias.dbml` | protocolo_sequencia, tipo_ocorrencia, providencia_tomada, ocorrencia, denunciante, denunciado, movimentacao_ocorrencia, anexo_ocorrencia (+conteúdo) | - |
+| 4 - Processos Sanitários | `modulo4-processos.dbml` | doenca, laboratorio, sintoma, resultado_laboratorial, desfecho_animal, processo_sanitario, responsavel_processo, animal_amostrado, amostra_sintoma, resultado_processo | documento_processo, tipo_documento_processo |
+| 5 - Relatórios | `modulo5-relatorios.dbml` | relatorio_gerado (dashboard e alertas são computados, sem tabela) | - |
 
 ## Documento do TG
 
@@ -52,4 +52,4 @@ Ao implementar entidade, endpoint, regra ou tela: (1) compare com `DER.md` e nã
 modelagem, atualize `DER.md` e o DBML **primeiro**, depois o código; (3) registre a decisão em `decisoes/<task>.md`
 (nova linha "Revisão de DD/MM/AAAA" quando mudar algo já decidido); (4) ajuste o `Status:` do contrato atendido;
 (5) anote em `tg/analise_fase3/pendencias_novas.md` o que o TG precisa refletir; (6) acrescente o passo manual ao roteiro
-quando a regra é visível na tela. Nunca versione dados pessoais reais (LGPD) — só dados fictícios em exemplos e seeds.
+quando a regra é visível na tela. Nunca versione dados pessoais reais (LGPD) - só dados fictícios em exemplos e seeds.
