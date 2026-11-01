@@ -19,13 +19,28 @@ export function AbaVacinas({ animalId, onRegistroCriado }: AbaVacinasProps) {
   const [pagina, setPagina] = useState(0)
   const [modalAberto, setModalAberto] = useState(false)
   const [retificando, setRetificando] = useState<Vacinacao | undefined>(undefined)
+  const [reforcandoDe, setReforcandoDe] = useState<Vacinacao | undefined>(undefined)
 
   const { data, isLoading, isError } = useVacinacoesQuery(animalId, pagina)
   const totalPaginas = Math.max(data?.totalPaginas ?? 1, 1)
 
+
+  // Qual aplicação de cada vacina é a que vale hoje (a mais recente, ativa) —
+  // é só nela que faz sentido oferecer o reforço. Mesma ideia da RN-A02, que
+  // ignora aplicações anteriores ao calcular o alerta.
+  const idDaAplicacaoVigentePorVacina = new Map<string, string>()
+  for (const item of data?.itens ?? []) {
+    if (item.statusRegistro !== 'ATIVO') continue
+    const vigente = idDaAplicacaoVigentePorVacina.get(item.vacinaCodigo)
+    const dataVigente = data?.itens.find((outro) => outro.id === vigente)?.dataAplicacao
+    if (!vigente || !dataVigente || item.dataAplicacao > dataVigente) {
+      idDaAplicacaoVigentePorVacina.set(item.vacinaCodigo, item.id)
+    }
+  }
   function fecharModal() {
     setModalAberto(false)
     setRetificando(undefined)
+    setReforcandoDe(undefined)
   }
 
   function handleSucesso() {
@@ -99,6 +114,15 @@ export function AbaVacinas({ animalId, onRegistroCriado }: AbaVacinasProps) {
               <tbody>
                 {data.itens.map((vacinacao) => {
                   const badge = badgeReforcoVacina(vacinacao.dataValidade)
+                  // O reforço só é oferecido quando ele está de fato na hora
+                  // (dentro dos 7 dias ou já vencido) e só na aplicação que
+                  // conta — a mais recente daquela vacina (RN-A02). O botão do
+                  // topo continua disponível para aplicar fora dessa janela.
+                  const podeRegistrarReforco =
+                    podeEscrever &&
+                    vacinacao.statusRegistro === 'ATIVO' &&
+                    (badge?.status === 'vencida' || badge?.status === 'a_vencer') &&
+                    vacinacao.id === idDaAplicacaoVigentePorVacina.get(vacinacao.vacinaCodigo)
                   return (
                     <tr key={vacinacao.id} className={badge?.classeLinha || undefined}>
                       <td>
@@ -115,10 +139,24 @@ export function AbaVacinas({ animalId, onRegistroCriado }: AbaVacinasProps) {
                       <td>{badge && <span className={`badge ${badge.classeBadge}`}>{badge.label}</span>}</td>
                       {podeEscrever && (
                         <td>
+                          {podeRegistrarReforco && (
+                            <button
+                              type="button"
+                              className="btn btn-secondary btn-sm"
+                              onClick={() => setReforcandoDe(vacinacao)}
+                            >
+                              Registrar reforço
+                            </button>
+                          )}
                           {vacinacao.statusRegistro === 'ATIVO' && (
                             <button
                               type="button"
                               className="btn btn-ghost btn-sm"
+                              // Deixa explícito o que "Corrigir" faz: é fácil
+                              // confundir com o registro do reforço, e a
+                              // correção marca a aplicação original como
+                              // retificada, como se não tivesse valido.
+                              title="Corrigir um erro deste registro. Para uma nova aplicação, use Registrar reforço."
                               onClick={() => setRetificando(vacinacao)}
                             >
                               Corrigir
@@ -161,9 +199,11 @@ export function AbaVacinas({ animalId, onRegistroCriado }: AbaVacinasProps) {
         </>
       )}
 
-      {(modalAberto || retificando) && (
+      {(modalAberto || retificando || reforcandoDe) && (
         <ModalRegistrarVacina
           animalId={animalId}
+          reforco={Boolean(reforcandoDe)}
+          vacinaPreSelecionada={reforcandoDe?.vacinaCodigo}
           retifica={retificando}
           onFechar={fecharModal}
           onSucesso={handleSucesso}
