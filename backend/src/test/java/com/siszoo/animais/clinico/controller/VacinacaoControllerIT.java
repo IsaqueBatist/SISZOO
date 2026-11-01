@@ -35,6 +35,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.siszoo.animais.clinico.dto.CriarVacinacaoRequest;
 import com.siszoo.animais.clinico.entity.UnidadeDose;
+import com.siszoo.animais.clinico.entity.Vacina;
 import com.siszoo.animais.clinico.entity.Vacinacao;
 import com.siszoo.animais.clinico.repository.VacinaRepository;
 import com.siszoo.animais.clinico.repository.VacinacaoRepository;
@@ -130,6 +131,79 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
                 .then()
                 .statusCode(422)
                 .body("mensagem", equalTo("Vacina informada nao existe"));
+    }
+
+    // RN-C09: vacina desativada no catalogo (DELETE /api/vacinas/{id}) nao
+    // aceita registro novo. A vacina e criada aqui, nunca uma do seed:
+    // ApiTesteFixture grava vacinacao com "antirrabica" fixo e o banco e
+    // compartilhado por toda a JVM.
+    @Test
+    void deveRetornar422QuandoVacinaDoCatalogoEstaInativa() {
+        String animalId = fixture.criarAnimal(tokenAdmin);
+        Vacina inativa = vacinaDeTeste("vacina_inativa_it", "Vacina Inativa IT");
+        inativa.setAtivo(false);
+        vacinaRepository.save(inativa);
+
+        given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .body(new CriarVacinacaoRequest(
+                        UUID.fromString(animalId), "vacina_inativa_it", HOJE, 1,
+                        new BigDecimal("1.000"), UnidadeDose.MILILITRO, null, null, null))
+                .when()
+                .post("/api/vacinacoes")
+                .then()
+                .statusCode(422)
+                .body("mensagem", equalTo("Vacina informada nao existe"));
+    }
+
+    // RN06: registro clinico so se corrige por um POST novo com retificaId.
+    // Desativar a vacina depois nao pode impedir a correcao de um historico.
+    @Test
+    void devePermitirRetificarRegistroCujaVacinaFoiDesativadaDepois() {
+        String animalId = fixture.criarAnimal(tokenAdmin);
+        Vacina vacina = vacinaDeTeste("vacina_retifica_it", "Vacina Retifica IT");
+        vacina.setAtivo(true);
+        vacinaRepository.save(vacina);
+
+        String vacinacaoId = given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .body(new CriarVacinacaoRequest(
+                        UUID.fromString(animalId), "vacina_retifica_it", HOJE, 1,
+                        new BigDecimal("1.000"), UnidadeDose.MILILITRO, null, null, null))
+                .when()
+                .post("/api/vacinacoes")
+                .then()
+                .statusCode(200)
+                .extract()
+                .path("id");
+
+        vacina.setAtivo(false);
+        vacinaRepository.save(vacina);
+
+        given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .body(new CriarVacinacaoRequest(
+                        UUID.fromString(animalId), "vacina_retifica_it", HOJE, 2,
+                        new BigDecimal("2.000"), UnidadeDose.MILILITRO, null, "Correcao", UUID.fromString(vacinacaoId)))
+                .when()
+                .post("/api/vacinacoes")
+                .then()
+                .statusCode(200);
+    }
+
+    // Idempotente: o banco e compartilhado, e `codigo` tem UNIQUE — numa
+    // segunda execucao o insert falharia.
+    private Vacina vacinaDeTeste(String codigo, String nome) {
+        return vacinaRepository.findByCodigo(codigo).orElseGet(() -> {
+            Vacina nova = new Vacina();
+            nova.setCodigo(codigo);
+            nova.setNome(nome);
+            nova.setIntervaloMeses(12);
+            return nova;
+        });
     }
 
     @Test

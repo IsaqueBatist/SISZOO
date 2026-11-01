@@ -95,7 +95,7 @@ public class VacinacaoService {
 
         Vacinacao vacinacao = new Vacinacao();
         vacinacao.setAnimal(animal);
-        vacinacao.setVacina(resolverVacina(request.vacina()));
+        vacinacao.setVacina(resolverVacina(request.vacina(), anterior));
         vacinacao.setAplicadoPor(usuarioAutenticado);
         vacinacao.setDataAplicacao(request.dataAplicacao());
         vacinacao.setNumeroDose(request.numeroDose());
@@ -155,8 +155,32 @@ public class VacinacaoService {
         return anterior;
     }
 
-    private Vacina resolverVacina(String codigo) {
-        return vacinaRepository.findByCodigo(codigo).orElseThrow(VacinaInvalidaException::new);
+    /**
+     * Resolve a vacina pelo codigo do catalogo. Vacina inativa nao aceita
+     * registro NOVO (RN-C09) — mesmo idioma de
+     * {@code ExameService.resolverTipoExame} e da decisao DH-22 da T37:
+     * catalogo inativo e invalido para registro novo.
+     *
+     * <p>A excecao e a retificacao da MESMA vacina do registro original: um
+     * registro clinico so se corrige por um POST novo com {@code retificaId}
+     * (RN06), e recusar aqui tornaria impossivel corrigir um historico cuja
+     * vacina saiu do catalogo depois.
+     *
+     * <p>Filtra em memoria, e nao com {@code findByCodigoAndAtivoTrue}: os
+     * testes unitarios mockam {@code findByCodigo}, e trocar a assinatura
+     * faria esses mocks devolverem vazio silenciosamente.
+     */
+    private Vacina resolverVacina(String codigo, Vacinacao retificada) {
+        Vacina vacina = vacinaRepository.findByCodigo(codigo).orElseThrow(VacinaInvalidaException::new);
+
+        boolean mantemAVacinaDoOriginal = retificada != null
+                && retificada.getVacina() != null
+                && retificada.getVacina().getId().equals(vacina.getId());
+
+        if (!vacina.isAtivo() && !mantemAVacinaDoOriginal) {
+            throw new VacinaInvalidaException();
+        }
+        return vacina;
     }
 
     private Specification<Vacinacao> construirFiltro(UUID animalId) {
