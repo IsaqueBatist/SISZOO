@@ -1,8 +1,15 @@
 import { Link } from 'react-router-dom'
+import { FiltroPeriodo } from '@/components/FiltroPeriodo'
 import { ErroComRetry } from '@/components/layout/ErroComRetry'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { useFiltrosLista, useValorComAtraso } from '@/lib/useFiltrosLista'
+import {
+  classeDoFiltro,
+  useFiltroDeLink,
+  useFiltrosLista,
+  useManterPaginaNoIntervalo,
+  useValorComAtraso,
+} from '@/lib/useFiltrosLista'
 import { formatarData } from '@/features/ocorrencias/utils/datas'
 import { formatarProtocoloOcorrencia, formatarProtocoloProcesso } from '@/features/ocorrencias/utils/protocolo'
 import { STATUS_PROCESSO_OPCOES } from '../utils/processosCatalogos'
@@ -13,7 +20,10 @@ import { useCatalogosProcessoQuery, useProcessosQuery } from '../hooks/useProces
 const TAMANHO_PAGINA = 20
 const LINHAS_SKELETON = [0, 1, 2, 3, 4]
 const COLUNAS_TABELA = ['protocolo', 'doenca', 'status', 'data', 'ocorrencia', 'acoes']
-const FILTROS_PADRAO = { busca: '', doenca: '', status: '', urgencia: '' }
+const FILTROS_PADRAO = { busca: '', doenca: '', status: '', urgencia: '', de: '', ate: '' }
+
+const STATUS_EM_ANDAMENTO = 'EM_ANDAMENTO'
+const STATUS_NAO_CONCLUIDOS: StatusProcesso[] = ['ABERTO', 'AGUARDANDO_RESULTADO', 'COM_RESULTADO']
 
 function Cabecalho() {
   return (
@@ -35,19 +45,31 @@ export function Processos() {
   // PROCESSOS_SANITARIOS:escrita (V3): os três cargos.
   const podeEscrever = roleKey === 'admin' || roleKey === 'vet' || roleKey === 'agente'
 
-  const { filtros, pagina, definirFiltros, irParaPagina, limparFiltros, filtrosAtivos } = useFiltrosLista('processos', FILTROS_PADRAO)
-  const { doenca: doencaFiltro, status: statusFiltro, urgencia: urgenciaFiltro } = filtros
+  const urgentesDoLink = useFiltroDeLink('urgente')
+  const { filtros, pagina, definirFiltros, irParaPagina, limparFiltros, filtrosAtivos } = useFiltrosLista(
+    'processos',
+    FILTROS_PADRAO,
+    urgentesDoLink ? { urgencia: 'urgentes' } : undefined,
+  )
+  const { doenca: doencaFiltro, status: statusFiltro, urgencia: urgenciaFiltro, de: deFiltro, ate: ateFiltro } = filtros
   const buscaDebounced = useValorComAtraso(filtros.busca).trim()
+  const deDebounced = useValorComAtraso(deFiltro)
+  const ateDebounced = useValorComAtraso(ateFiltro)
+  const soUrgentes = urgenciaFiltro === 'urgentes'
 
   const { data: catalogos } = useCatalogosProcessoQuery()
   const { data, isLoading, isError, refetch } = useProcessosQuery({
     doenca: doencaFiltro || undefined,
-    status: (statusFiltro || undefined) as StatusProcesso | undefined,
-    urgente: urgenciaFiltro === 'urgentes' ? true : undefined,
+    status: statusFiltro === STATUS_EM_ANDAMENTO ? STATUS_NAO_CONCLUIDOS : ((statusFiltro || undefined) as StatusProcesso | undefined),
+    urgente: soUrgentes ? true : undefined,
     q: buscaDebounced || undefined,
+    de: deDebounced || undefined,
+    ate: ateDebounced || undefined,
     pagina,
     tamanho: TAMANHO_PAGINA,
   })
+
+  useManterPaginaNoIntervalo(pagina, data?.totalPaginas, irParaPagina)
 
   const totalPaginas = Math.max(data?.totalPaginas ?? 1, 1)
   const primeiroItem = data && data.totalItens > 0 ? pagina * TAMANHO_PAGINA + 1 : 0
@@ -77,14 +99,28 @@ export function Processos() {
           <Icon name="search" size={14} />
           <input
             type="text"
-            placeholder="Buscar protocolo, responsável, Nº GAL ou Nº SINAN..."
+            placeholder="Buscar protocolo, ocorrência, animal, responsável, Nº GAL ou Nº SINAN..."
             aria-label="Buscar processos"
             value={filtros.busca}
             onChange={(event) => definirFiltros({ busca: event.target.value })}
           />
         </div>
         <select
-          className="filter-select"
+          className={classeDoFiltro(statusFiltro)}
+          aria-label="Filtrar por status"
+          value={statusFiltro}
+          onChange={(event) => definirFiltros({ status: event.target.value })}
+        >
+          <option value="">Status: Todos</option>
+          <option value={STATUS_EM_ANDAMENTO}>Em andamento</option>
+          {STATUS_PROCESSO_OPCOES.map((opcao) => (
+            <option key={opcao.valor} value={opcao.valor}>
+              {opcao.label}
+            </option>
+          ))}
+        </select>
+        <select
+          className={classeDoFiltro(doencaFiltro)}
           aria-label="Filtrar por doença"
           value={doencaFiltro}
           onChange={(event) => definirFiltros({ doenca: event.target.value })}
@@ -96,28 +132,15 @@ export function Processos() {
             </option>
           ))}
         </select>
-        <select
-          className="filter-select"
-          aria-label="Filtrar por status"
-          value={statusFiltro}
-          onChange={(event) => definirFiltros({ status: event.target.value })}
+        <button
+          type="button"
+          className={`btn btn-sm ${soUrgentes ? 'btn-primary' : 'btn-outline'}`}
+          aria-pressed={soUrgentes}
+          onClick={() => definirFiltros({ urgencia: soUrgentes ? '' : 'urgentes' })}
         >
-          <option value="">Status: Todos</option>
-          {STATUS_PROCESSO_OPCOES.map((opcao) => (
-            <option key={opcao.valor} value={opcao.valor}>
-              {opcao.label}
-            </option>
-          ))}
-        </select>
-        <select
-          className="filter-select"
-          aria-label="Filtrar por urgência"
-          value={urgenciaFiltro}
-          onChange={(event) => definirFiltros({ urgencia: event.target.value })}
-        >
-          <option value="">Urgência: Todos</option>
-          <option value="urgentes">Só urgentes</option>
-        </select>
+          Só urgentes
+        </button>
+        <FiltroPeriodo rotulo="Abertura" de={deFiltro} ate={ateFiltro} onAlterar={definirFiltros} />
         {filtrosAtivos && (
           <button type="button" className="btn btn-ghost btn-sm" onClick={limparFiltros}>
             Limpar filtros
@@ -148,7 +171,7 @@ export function Processos() {
         </div>
       )}
 
-      {!isLoading && !isError && data && data.itens.length === 0 && (
+      {!isLoading && !isError && data && data.totalItens === 0 && (
         <div className="empty">
           <span className="ico">
             <Icon name="clipboard" size={28} />

@@ -26,6 +26,7 @@ import com.siszoo.animais.clinico.exception.RegistroJaRetificadoException;
 import com.siszoo.comum.dto.CatalogoItemResponse;
 import com.siszoo.comum.dto.PaginaResponse;
 import com.siszoo.comum.service.ProtocoloService;
+import com.siszoo.comum.util.BuscaTexto;
 import com.siszoo.comum.util.Paginacao;
 import com.siszoo.ocorrencias.entity.Ocorrencia;
 import com.siszoo.ocorrencias.exception.DataAberturaFuturaException;
@@ -90,8 +91,8 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Subquery;
 
 /**
- * Processo sanitario (T29, DER §3.5): criacao completa — processo, responsavel
- * e pelo menos uma amostra numa unica transacao —, consulta, listagem (T32),
+ * Processo sanitario (T29, DER §3.5): criacao completa - processo, responsavel
+ * e pelo menos uma amostra numa unica transacao -, consulta, listagem (T32),
  * catalogos, o avanco de status e o registro do resultado laboratorial com
  * desfecho e notificacao (T34 + T37). As regras de cada amostra ficam em
  * {@link AmostraProcessoFactory}; o mapeamento, em {@link ProcessoSanitarioMapper}.
@@ -114,7 +115,7 @@ public class ProcessoSanitarioService {
 
     // Resultado definitivo, que nao se corrige (T35-15, trigger V21). A
     // notificacao ao municipe e criterio separado (RN10, F2-014: positivo e
-    // inconclusivo) — ver ResultadosNotificaveis.
+    // inconclusivo) - ver ResultadosNotificaveis.
     private static final String RESULTADO_DEFINITIVO = "positivo";
 
     // Unico campo do evento de auditoria do envio da notificacao (T35-16).
@@ -128,6 +129,7 @@ public class ProcessoSanitarioService {
 
     // Busca aceita o protocolo como aparece na tela ("PS 012/2026").
     private static final Pattern PREFIXO_PROTOCOLO = Pattern.compile("^\\s*ps\\s*(?=\\d)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern PREFIXO_OCORRENCIA = Pattern.compile("^\\s*oc\\s*(?=\\d)", Pattern.CASE_INSENSITIVE);
 
     private final ProcessoSanitarioRepository processoRepository;
     private final ResponsavelProcessoRepository responsavelRepository;
@@ -210,7 +212,7 @@ public class ProcessoSanitarioService {
         Map<String, Sintoma> sintomas = amostraFactory.resolverSintomas(request.amostras());
 
         // D33: com ocorrenciaId, a escrita em ocorrencias e checada ANTES de
-        // inserir o processo — sem ela, nada e criado. A ocorrencia e travada
+        // inserir o processo - sem ela, nada e criado. A ocorrencia e travada
         // antes do processo existir (ordem global de locks, ver OcorrenciaService).
         Ocorrencia ocorrencia = null;
         if (request.ocorrenciaId() != null) {
@@ -380,36 +382,55 @@ public class ProcessoSanitarioService {
 
     // ── Consulta, listagem e catalogos ───────────────────
 
-    // Filtros por codigo de doenca, status e urgencia, urgentes primeiro
-    // (ORDEM_LISTAGEM). Sem filtro por bairro ou texto livre (T32). `urgente`
-    // (T45, docs/contratos/processos-filtro-urgente.md) e opcional: ausente,
-    // a listagem e a de sempre; presente, so os processos com aquele valor.
+    // Filtros por codigo de doenca, status, urgencia, periodo de abertura (dias
+    // inclusivos) e busca, urgentes primeiro (ORDEM_LISTAGEM). `urgente` (T45,
+    // docs/contratos/processos-filtro-urgente.md) e opcional: ausente, a
+    // listagem e a de sempre; presente, so os processos com aquele valor.
     @Transactional(readOnly = true)
-    public PaginaResponse<ProcessoResumoResponse> listar(String doenca, StatusProcesso status, Boolean urgente,
-            String q, int pagina, int tamanho) {
+    public PaginaResponse<ProcessoResumoResponse> listar(String doenca, List<StatusProcesso> status, Boolean urgente,
+            String q, LocalDate de, LocalDate ate, int pagina, int tamanho) {
         Specification<ProcessoSanitario> filtro = (root, query, cb) -> {
             List<Predicate> predicados = new ArrayList<>();
             if (StringUtils.hasText(doenca)) {
                 predicados.add(cb.equal(root.get("doenca").get("codigo"), doenca));
             }
-            if (status != null) {
-                predicados.add(cb.equal(root.get("statusProcesso"), status));
+            if (status != null && !status.isEmpty()) {
+                predicados.add(root.get("statusProcesso").in(status));
             }
             if (urgente != null) {
                 predicados.add(cb.equal(root.get("urgente"), urgente));
             }
+            if (de != null) {
+                predicados.add(cb.greaterThanOrEqualTo(root.get("dataAbertura"), de));
+            }
+            if (ate != null) {
+                predicados.add(cb.lessThanOrEqualTo(root.get("dataAbertura"), ate));
+            }
             if (StringUtils.hasText(q)) {
-                String termo = "%" + PREFIXO_PROTOCOLO.matcher(q).replaceFirst("").trim().toLowerCase() + "%";
+                String termo = BuscaTexto.padrao(PREFIXO_PROTOCOLO.matcher(q).replaceFirst(""));
                 Subquery<UUID> porResponsavel = query.subquery(UUID.class);
                 var responsavel = porResponsavel.from(ResponsavelProcesso.class);
                 porResponsavel.select(responsavel.get("processo").get("id"))
-                        .where(cb.like(cb.lower(responsavel.get("nome")), termo));
+                        .where(BuscaTexto.contem(cb, responsavel.get("nome"), termo));
+
+                Subquery<UUID> porOcorrencia = query.subquery(UUID.class);
+                var ocorrencia = porOcorrencia.from(Ocorrencia.class);
+                porOcorrencia.select(ocorrencia.get("id"))
+                        .where(BuscaTexto.contem(cb, ocorrencia.get("protocolo"),
+                                BuscaTexto.padrao(PREFIXO_OCORRENCIA.matcher(q).replaceFirst(""))));
+
+                Subquery<UUID> porAnimal = query.subquery(UUID.class);
+                var amostra = porAnimal.from(AnimalAmostrado.class);
+                porAnimal.select(amostra.get("processo").get("id"))
+                        .where(BuscaTexto.contem(cb, amostra.get("animal").get("nome"), termo));
 
                 predicados.add(cb.or(
-                        cb.like(cb.lower(root.get("protocolo")), termo),
-                        cb.like(cb.lower(root.get("galNumero")), termo),
-                        cb.like(cb.lower(root.get("sinanNumero")), termo),
-                        root.get("id").in(porResponsavel)));
+                        BuscaTexto.contem(cb, root.get("protocolo"), termo),
+                        BuscaTexto.contem(cb, root.get("galNumero"), termo),
+                        BuscaTexto.contem(cb, root.get("sinanNumero"), termo),
+                        root.get("id").in(porResponsavel),
+                        root.get("ocorrencia").get("id").in(porOcorrencia),
+                        root.get("id").in(porAnimal)));
             }
             return cb.and(predicados.toArray(Predicate[]::new));
         };
@@ -476,7 +497,7 @@ public class ProcessoSanitarioService {
     // corrigido fica preservado. O registro, o vigente em processo_sanitario e
     // a auditoria entram na mesma transacao, sob o lock do processo, que
     // serializa lancamentos concorrentes no mesmo processo. Desfecho do
-    // animal (T37) nao faz parte do historico imutavel — e so do processo, e
+    // animal (T37) nao faz parte do historico imutavel - e so do processo, e
     // pode vir em qualquer lancamento (original ou correcao).
     @Transactional
     public ProcessoSanitarioResponse registrarResultado(UUID id, RegistrarResultadoRequest request, UUID usuarioId) {
@@ -554,7 +575,7 @@ public class ProcessoSanitarioService {
     }
 
     // Como RN-C02: so o vigente (ainda nao corrigido) do mesmo processo.
-    // T35-15: positivo e definitivo — nao se corrige (422), para nenhum
+    // T35-15: positivo e definitivo - nao se corrige (422), para nenhum
     // resultado; o trigger da V21 recusa o mesmo no banco.
     private ResultadoProcesso resultadoACorrigir(ProcessoSanitario processo, UUID retificaId) {
         if (processo.getStatusProcesso() != StatusProcesso.COM_RESULTADO) {

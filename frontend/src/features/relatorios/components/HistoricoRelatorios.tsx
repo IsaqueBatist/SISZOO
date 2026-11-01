@@ -3,6 +3,7 @@ import { Icon } from '@/components/layout/Icon'
 import { ErroComRetry } from '@/components/layout/ErroComRetry'
 import { formatarData } from '@/features/ocorrencias/utils/datas'
 import { useHistoricoRelatoriosQuery, useTiposRelatorioQuery } from '../hooks/useRelatorios'
+import { ehRelatorioDePosicao } from '../utils/filtroRelatorio'
 import type { FiltroRelatorio, RelatorioGeradoItem } from '../types/relatorios.types'
 
 const TAMANHO_PAGINA = 10
@@ -14,10 +15,11 @@ function formatarTamanho(bytes: number | null): string {
 }
 
 // parametrosJson e o filtro bruto original (RelatorioGeradoService#serializarParametros)
-// — necessario porque periodoInicio/periodoFim do historico ja vem resolvidos
+// - necessario porque periodoInicio/periodoFim do historico ja vem resolvidos
 // (ex.: "ano" virou 01/01..31/12); reenviar so o periodo resolvido quebraria
-// a validacao do backend para os tipos que usam "ano" ou "janela".
+// a validacao do backend para o tipo que usa "ano".
 function filtroDeParametros(item: RelatorioGeradoItem): FiltroRelatorio | null {
+  if (ehRelatorioDePosicao(item.tipo)) return { tipo: item.tipo }
   try {
     const bruto = JSON.parse(item.parametrosJson ?? 'null') as Partial<FiltroRelatorio> | null
     if (!bruto || typeof bruto.tipo !== 'string') return null
@@ -84,7 +86,9 @@ export function HistoricoRelatorios({ onGerarNovamente }: HistoricoRelatoriosPro
                   <tr key={item.docId}>
                     <td>{item.tipoNomeExibicao}</td>
                     <td className="mono">
-                      {formatarData(item.periodoInicio)}–{formatarData(item.periodoFim)}
+                      {ehRelatorioDePosicao(item.tipo)
+                        ? `Posição em ${formatarData(item.geradoEm)}`
+                        : `${formatarData(item.periodoInicio)}–${formatarData(item.periodoFim)}`}
                     </td>
                     <td>{item.geradoPorNome}</td>
                     <td className="mono">{formatarData(item.geradoEm)}</td>

@@ -17,13 +17,13 @@ import com.siszoo.animais.repository.ContagemPorCaracteristicaProjection;
 import com.siszoo.relatorios.dto.PeriodoRelatorio;
 import com.siszoo.relatorios.dto.RelatorioAdocoesResponse;
 
-// Versao simplificada (sem tabela `adocao` no schema) — ver comentario de
-// RelatorioAdocoesResponse. O periodo e aceito mas NAO filtra os dados
-// (snapshot atual de Animal.status = 'adotado').
+// Versao simplificada (sem tabela `adocao` no schema) - ver comentario de
+// RelatorioAdocoesResponse. E a posicao de Animal.status = 'adotado' na data
+// da geracao, sem filtro de periodo.
 @ExtendWith(MockitoExtension.class)
 class RelatorioAdocoesServiceTest {
 
-    private static final PeriodoRelatorio PERIODO = new PeriodoRelatorio(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31));
+    private static final PeriodoRelatorio PERIODO = new PeriodoRelatorio(LocalDate.of(2026, 3, 31), LocalDate.of(2026, 3, 31));
 
     @Mock
     private AnimalRepository animalRepository;
@@ -52,7 +52,7 @@ class RelatorioAdocoesServiceTest {
                         org.assertj.core.groups.Tuple.tuple("Porte Pequeno", 11L, 46), // 11/24 = 45.8% -> 46
                         org.assertj.core.groups.Tuple.tuple("Porte Médio", 9L, 38),
                         org.assertj.core.groups.Tuple.tuple("Porte Grande", 4L, 17));
-        assertThat(resposta.notaLimitacao()).contains("não é filtrado pelo período");
+        assertThat(resposta.notaLimitacao()).startsWith("Posição em 31/03/2026:").contains("Não é um histórico por período");
     }
 
     @Test

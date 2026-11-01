@@ -47,7 +47,7 @@ function pagina(itens: OcorrenciaResumo[]) {
 }
 
 // Registra os query params de cada GET /ocorrencias e responde com a lista
-// fixa — ou com `filtrada` quando o param esperado aparece. O filtro em si é
+// fixa - ou com `filtrada` quando o param esperado aparece. O filtro em si é
 // do backend; aqui só se confere o que a tela envia e o que ela exibe.
 function capturarListagem(filtrada?: { param: string; valor: string; itens: OcorrenciaResumo[] }) {
   const chamadas: URLSearchParams[] = []
@@ -115,6 +115,56 @@ describe('Ocorrencias', () => {
     await waitFor(() => expect(screen.queryByText('OC 089/2026')).not.toBeInTheDocument())
     expect(screen.getByText('OC 070/2026')).toBeInTheDocument()
     expect(chamadas.at(-1)?.get('status')).toBe('ENCERRADA')
+  })
+
+  it('"Pendentes" envia os dois status não encerrados, sem alterar os status individuais', async () => {
+    const user = userEvent.setup()
+    const chamadas = capturarListagem()
+    renderLista(['Administrador'])
+    await screen.findByText('OC 089/2026')
+
+    await user.selectOptions(screen.getByLabelText('Filtrar por status'), 'Pendentes')
+
+    await waitFor(() => expect(chamadas.at(-1)?.get('status')).toBe('ABERTA,EM_ATENDIMENTO'))
+    expect(screen.getByRole('option', { name: 'Aberta' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Em atendimento' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Encerrada' })).toBeInTheDocument()
+  })
+
+  it('o tipo vem do catálogo da API', async () => {
+    renderLista(['Administrador'])
+
+    expect(await screen.findByRole('option', { name: 'Suspeita de Zoonose' })).toHaveValue('zoonose')
+  })
+
+  it('avisa quando a data final digitada é anterior à inicial', async () => {
+    const user = userEvent.setup()
+    capturarListagem()
+    renderLista(['Administrador'])
+    await screen.findByText('OC 089/2026')
+
+    await user.type(screen.getByLabelText('Abertura a partir de'), '2026-05-20')
+    await user.type(screen.getByLabelText('Abertura até'), '2026-05-01')
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('A data final deve ser igual ou posterior à inicial.')
+  })
+
+  it('volta para a última página quando a atual deixou de existir', async () => {
+    sessionStorage.setItem('siszoo_filtros:ocorrencias', JSON.stringify({ filtros: { status: 'ABERTA' }, pagina: 1 }))
+    const paginas: (string | null)[] = []
+    server.use(
+      http.get(`${API_BASE_URL}/ocorrencias`, ({ request }) => {
+        const params = new URL(request.url).searchParams
+        paginas.push(params.get('pagina'))
+        const itens = params.get('pagina') === '0' ? resumosFixture() : []
+        return HttpResponse.json({ ...pagina(itens), totalItens: 5 })
+      }),
+    )
+    renderLista(['Administrador'])
+
+    expect(await screen.findByText('OC 089/2026')).toBeInTheDocument()
+    expect(screen.queryByText('Nenhuma ocorrência encontrada')).not.toBeInTheDocument()
+    expect(paginas).toEqual(['1', '0'])
   })
 
   it('envia a busca como foi digitada, com o prefixo "OC" (o backend aceita com ou sem, D36)', async () => {

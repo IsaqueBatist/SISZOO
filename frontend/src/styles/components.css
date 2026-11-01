@@ -636,6 +636,24 @@ table.data .row-num { color: var(--color-text-muted); font-size: 11px; font-fami
   font-family: var(--font-body);
   cursor: pointer;
 }
+.filter-bar select.filter-select.ativo { border-color: var(--color-primary); font-weight: 600; }
+.filter-periodo {
+  display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2);
+  font-size: 12px;
+}
+.filter-periodo .rotulo { color: var(--color-text-secondary); }
+.filter-periodo .erro { flex-basis: 100%; color: var(--color-danger); }
+.filter-periodo input {
+  height: 36px;
+  padding: 0 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: 12px;
+}
+.filter-periodo.ativo input { border-color: var(--color-primary); }
 
 /* ===== Tabs ===== */
 .tabs {
@@ -1129,6 +1147,8 @@ table.data .row-num { color: var(--color-text-muted); font-size: 11px; font-fami
   .form-grid, .form-grid.cols-3, .review-grid, .grid-2, .grid-3, .grid-4, .grid-5 { grid-template-columns: minmax(0, 1fr); }
   .filter-bar .search-input { flex-basis: 100%; min-width: 0; }
   .filter-bar .filter-select { flex: 1 1 140px; min-width: 0; }
+  .filter-periodo { flex-basis: 100%; }
+  .filter-periodo input { flex: 1 1 120px; min-width: 0; }
   .stepper { padding: var(--space-3); }
   .stepper .arrow { margin: 0 6px; }
   .stepper .step:not(.active) span:last-child { display: none; }

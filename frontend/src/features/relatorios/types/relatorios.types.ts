@@ -1,5 +1,5 @@
 // Espelha com.siszoo.relatorios.entity.TipoRelatorio / dto do backend (T41).
-// Os 6 codigos vem do catalogo do DER §3.6 — nao inventar outro aqui.
+// Os 6 codigos vem do catalogo do DER §3.6 - nao inventar outro aqui.
 export type TipoRelatorioCodigo =
   | 'anual_processos'
   | 'vacinacao'
@@ -8,7 +8,7 @@ export type TipoRelatorioCodigo =
   | 'ocupacao_baias'
   | 'ocorrencias_bairro'
 
-export type FiltroEsperado = 'ano' | 'janela' | 'periodo'
+export type FiltroEsperado = 'ano' | 'posicao' | 'periodo'
 
 export interface TipoRelatorioInfo {
   codigo: TipoRelatorioCodigo
@@ -16,17 +16,14 @@ export interface TipoRelatorioInfo {
   filtro: FiltroEsperado
 }
 
-export type JanelaOcupacao = 'ultimos_6_meses' | 'ultimos_12_meses' | 'custom'
-
-// Filtro bruto enviado para /preview e /exportar — cada tipo usa um
-// subconjunto (periodoInicio/Fim, OU ano, OU janela), resolvido no backend
-// (FiltroRelatorioResolver) para um periodo sempre concreto.
+// Filtro bruto enviado para /preview e /exportar - cada tipo usa um
+// subconjunto (periodoInicio/Fim, OU ano, OU nenhum nos relatórios de posição),
+// resolvido no backend (FiltroRelatorioResolver) para um periodo sempre concreto.
 export interface FiltroRelatorio {
   tipo: TipoRelatorioCodigo
   periodoInicio?: string
   periodoFim?: string
   ano?: number
-  janela?: JanelaOcupacao
 }
 
 export type StatusOcupacaoBaia = 'normal' | 'proximo_limite' | 'superlotada'
@@ -37,6 +34,7 @@ export interface LinhaOcupacaoBaia {
   atual: number
   percentualOcupacao: number
   status: StatusOcupacaoBaia
+  rotuloStatus: string
 }
 
 export interface KpisOcupacaoBaias {
@@ -167,7 +165,7 @@ export interface PreviewOcorrenciasBairro {
   notaFocoGeografico: string
 }
 
-// --- Adoções (versão simplificada — ver backend RelatorioAdocoesResponse) ---
+// --- Adoções (versão simplificada - ver backend RelatorioAdocoesResponse) ---
 
 export interface PerfilAdocao {
   caracteristica: string
@@ -248,7 +246,7 @@ export interface PreviewAnualProcessos {
   laboratorios: LaboratorioUtilizado[]
 }
 
-// GET /api/relatorios/historico — sem arquivoUrl: o arquivo nao e persistido
+// GET /api/relatorios/historico - sem arquivoUrl: o arquivo nao e persistido
 // nesta versao. A acao da linha e "Gerar novamente", nao "Baixar".
 // parametrosJson e o filtro bruto original (string JSON), necessario porque
 // periodoInicio/periodoFim aqui ja vem resolvidos (ver RelatorioGeradoResponse no backend).

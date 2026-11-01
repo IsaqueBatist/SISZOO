@@ -45,6 +45,7 @@ import com.siszoo.animais.repository.MotivoEntradaRepository;
 import com.siszoo.animais.repository.StatusAnimalRepository;
 import com.siszoo.comum.dto.PaginaResponse;
 import com.siszoo.comum.exception.CampoInvalidoException;
+import com.siszoo.comum.util.BuscaTexto;
 import com.siszoo.comum.util.Paginacao;
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.Usuario;
@@ -59,6 +60,8 @@ public class AnimalService {
 
     private static final Pattern ESPACOS = Pattern.compile("\\s+");
 
+    private static final Sort ORDEM_LISTAGEM = Sort.by("nome").ascending().and(Sort.by("id"));
+
     private final AnimalRepository animalRepository;
     private final BaiaRepository baiaRepository;
     private final EspecieRepository especieRepository;
@@ -72,7 +75,7 @@ public class AnimalService {
     private final MiniaturaFoto miniaturaFoto;
     private final Clock clock;
 
-    // RNF10 (F2-078/F2-029): o cadastro do animal e alteracao critica — cada
+    // RNF10 (F2-078/F2-029): o cadastro do animal e alteracao critica - cada
     // criacao e edicao gera AuditoriaEvento com o estado antes/depois.
     private static final String ENTIDADE_AUDITORIA = "animal";
 
@@ -200,10 +203,9 @@ public class AnimalService {
 
     @Transactional(readOnly = true)
     public PaginaResponse<AnimalResponse> listar(
-            String status, String especie, UUID baiaId, String q, int pagina, int tamanho) {
-        Specification<Animal> filtro = construirFiltro(status, especie, baiaId, q);
-        Page<Animal> paginaAnimais = animalRepository.findAll(
-                filtro, Paginacao.pagina(pagina, tamanho, Sort.by("nome").ascending()));
+            String status, Boolean custodia, String especie, UUID baiaId, String q, int pagina, int tamanho) {
+        Specification<Animal> filtro = construirFiltro(status, custodia, especie, baiaId, q);
+        Page<Animal> paginaAnimais = animalRepository.findAll(filtro, Paginacao.pagina(pagina, tamanho, ORDEM_LISTAGEM));
         // T45: na listagem, fotoUrl e a miniatura (avatar); a foto inteira fica no detalhe.
         return PaginaResponse.de(paginaAnimais.map(animalMapper::toResponseListagem));
     }
@@ -372,7 +374,7 @@ public class AnimalService {
                 });
     }
 
-    // RN01: a data de implantacao e registrada junto com o numero do chip —
+    // RN01: a data de implantacao e registrada junto com o numero do chip -
     // sem microchip nao ha o que datar; e e fato ocorrido (nunca futura).
     private void validarDataImplantacaoChip(LocalDate dataImplantacao, String microchip) {
         if (dataImplantacao == null) {
@@ -400,7 +402,7 @@ public class AnimalService {
     }
 
     // Datas de fato ocorrido: nao podem ser futuras, com "hoje" do Clock do
-    // projeto (nao @PastOrPresent, que usaria o relogio da JVM — mesmo motivo
+    // projeto (nao @PastOrPresent, que usaria o relogio da JVM - mesmo motivo
     // do RN-C06 em VacinacaoService). A coerencia da castracao vale para os
     // dois caminhos (cadastro e edicao).
     private void validarDatas(
@@ -430,12 +432,16 @@ public class AnimalService {
         }
     }
 
-    private Specification<Animal> construirFiltro(String status, String especie, UUID baiaId, String q) {
+    private Specification<Animal> construirFiltro(String status, Boolean custodia, String especie, UUID baiaId, String q) {
         return (root, query, cb) -> {
             List<Predicate> predicados = new ArrayList<>();
 
             if (StringUtils.hasText(status)) {
                 predicados.add(cb.equal(root.get("status").get("codigo"), status));
+            }
+
+            if (Boolean.TRUE.equals(custodia)) {
+                predicados.add(cb.not(root.get("status").get("codigo").in(StatusAnimal.CODIGOS_FORA_DA_CUSTODIA)));
             }
 
             if (StringUtils.hasText(especie)) {
@@ -447,13 +453,15 @@ public class AnimalService {
             }
 
             if (StringUtils.hasText(q)) {
-                String termo = "%" + q.toLowerCase() + "%";
+                String termo = BuscaTexto.padrao(q);
                 // O microchip e comparado na forma normalizada: " 985" acha "985".
                 String microchip = normalizarMicrochip(q);
-                Predicate porNome = cb.like(cb.lower(root.get("nome")), termo);
+                Predicate porIdentificacao = cb.or(
+                        BuscaTexto.contem(cb, root.get("nome"), termo),
+                        BuscaTexto.contem(cb, root.get("numeroMedalha"), termo));
                 predicados.add(microchip == null
-                        ? porNome
-                        : cb.or(porNome, cb.like(cb.lower(root.get("microchip")), "%" + microchip.toLowerCase() + "%")));
+                        ? porIdentificacao
+                        : cb.or(porIdentificacao, BuscaTexto.contem(cb, root.get("microchip"), BuscaTexto.padrao(microchip))));
             }
 
             return cb.and(predicados.toArray(new Predicate[0]));

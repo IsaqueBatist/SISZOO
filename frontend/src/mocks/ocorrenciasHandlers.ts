@@ -8,7 +8,7 @@ import {
   resumosFixture,
 } from './ocorrenciasFixtures'
 
-// Handlers de ocorrências (T25, PR2) com respostas FIXAS — sem estado e sem
+// Handlers de ocorrências (T25, PR2) com respostas FIXAS - sem estado e sem
 // regra de negócio (máscara, transições, protocolo e D12 são do backend).
 // Cada mutação devolve a fixture da ocorrência como está; o teste que precisa
 // ver o estado depois da ação, ou forçar 403/404/409/413/422, sobrescreve o
@@ -44,10 +44,10 @@ export const ocorrenciasHandlers = [
     // F2-010: período da data de abertura (dias inclusivos), como no backend.
     const de = url.searchParams.get('de')
     const ate = url.searchParams.get('ate')
-    const status = url.searchParams.get('status')
+    const status = url.searchParams.get('status')?.split(',')
     const itens = resumosFixture().filter(
       (o) =>
-        (!de || o.dataAbertura >= de) && (!ate || o.dataAbertura <= ate) && (!status || o.statusOcorrencia === status),
+        (!de || o.dataAbertura >= de) && (!ate || o.dataAbertura <= ate) && (!status || status.includes(o.statusOcorrencia)),
     )
     return HttpResponse.json({ itens, pagina, tamanho, totalItens: itens.length, totalPaginas: 1 })
   }),

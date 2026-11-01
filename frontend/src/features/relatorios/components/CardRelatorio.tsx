@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Icon, type IconName } from '@/components/layout/Icon'
-import { hojeEmItu } from '@/lib/datas'
+import { formatarDataBR, hojeEmItu } from '@/lib/datas'
 import { validarFiltro } from '../utils/filtroRelatorio'
-import type { FiltroRelatorio, JanelaOcupacao, TipoRelatorioInfo } from '../types/relatorios.types'
+import type { FiltroRelatorio, TipoRelatorioInfo } from '../types/relatorios.types'
 
 interface InfoVisualCard {
   icone: IconName
@@ -11,10 +11,10 @@ interface InfoVisualCard {
   descricao: string
 }
 
-// Icone/cor/descricao vem do prototipo (docs/prototipo/relatorios.html) —
+// Icone/cor/descricao vem do prototipo (docs/prototipo/relatorios.html) -
 // texto literal, nao inventado. Filtro padrao de cada tipo (ano atual,
-// ultimos 6 meses, periodo dos ultimos 30 dias) é só o valor inicial do
-// controle; o usuário pode mudar antes de clicar em "Gerar Relatório".
+// periodo dos ultimos 30 dias) é só o valor inicial do controle; o usuário
+// pode mudar antes de clicar em "Gerar Relatório".
 const INFO_VISUAL: Record<string, InfoVisualCard> = {
   anual_processos: {
     icone: 'fileText',
@@ -78,18 +78,13 @@ export function CardRelatorio({ info, onGerar }: CardRelatorioProps) {
   const [ano, setAno] = useState(anoAtual)
   const [periodoInicio, setPeriodoInicio] = useState(periodo.inicio)
   const [periodoFim, setPeriodoFim] = useState(periodo.fim)
-  const [janela, setJanela] = useState<JanelaOcupacao>('ultimos_6_meses')
   const [erro, setErro] = useState<string | null>(null)
 
   const visual = INFO_VISUAL[info.codigo]
 
   function montarFiltro(): FiltroRelatorio {
     if (info.filtro === 'ano') return { tipo: info.codigo, ano }
-    if (info.filtro === 'janela') {
-      return janela === 'custom'
-        ? { tipo: info.codigo, janela, periodoInicio, periodoFim }
-        : { tipo: info.codigo, janela }
-    }
+    if (info.filtro === 'posicao') return { tipo: info.codigo }
     return { tipo: info.codigo, periodoInicio, periodoFim }
   }
 
@@ -129,24 +124,9 @@ export function CardRelatorio({ info, onGerar }: CardRelatorioProps) {
         </div>
       )}
 
-      {info.filtro === 'janela' && (
-        <div className="period-row">
-          <label htmlFor={`janela-${info.codigo}`}>Período</label>
-          <select
-            id={`janela-${info.codigo}`}
-            className="select"
-            style={{ height: 34, flex: 1 }}
-            value={janela}
-            onChange={(event) => setJanela(event.target.value as JanelaOcupacao)}
-          >
-            <option value="ultimos_6_meses">Últimos 6 meses</option>
-            <option value="ultimos_12_meses">Últimos 12 meses</option>
-            <option value="custom">Custom...</option>
-          </select>
-        </div>
-      )}
+      {info.filtro === 'posicao' && <div className="period-row">Posição em {formatarDataBR(hojeEmItu())}</div>}
 
-      {(info.filtro === 'periodo' || (info.filtro === 'janela' && janela === 'custom')) && (
+      {info.filtro === 'periodo' && (
         <div className="period-row">
           <label htmlFor={`periodo-inicio-${info.codigo}`}>Período</label>
           <input

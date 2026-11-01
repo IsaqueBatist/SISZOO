@@ -36,12 +36,13 @@ public class AnimalController {
     @PreAuthorize("hasAuthority('GESTAO_ANIMAIS:leitura')")
     public PaginaResponse<AnimalResponse> listar(
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) Boolean custodia,
             @RequestParam(required = false) String especie,
             @RequestParam(required = false) UUID baiaId,
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "0") int pagina,
             @RequestParam(defaultValue = "20") int tamanho) {
-        return animalService.listar(status, especie, baiaId, q, pagina, tamanho);
+        return animalService.listar(status, custodia, especie, baiaId, q, pagina, tamanho);
     }
 
     @GetMapping("/{id}")

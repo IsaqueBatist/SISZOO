@@ -23,6 +23,7 @@ import com.siszoo.animais.dto.BaiaResponse;
 import com.siszoo.animais.dto.CriarBaiaRequest;
 import com.siszoo.animais.dto.ResidenteBaiaResponse;
 import com.siszoo.animais.entity.Baia;
+import com.siszoo.animais.entity.NivelLotacao;
 import com.siszoo.animais.entity.StatusAnimal;
 import com.siszoo.animais.entity.TipoBaia;
 import com.siszoo.animais.exception.BaiaNaoEncontradaException;
@@ -47,11 +48,11 @@ public class BaiaService {
 
     private static final Logger log = LoggerFactory.getLogger(BaiaService.class);
 
-    // DER §3.3: status que removem o animal da contagem de ocupação da baia —
+    // DER §3.3: status que removem o animal da contagem de ocupação da baia,
     // os mesmos que o tiram da custódia do CCZ (fonte única em StatusAnimal).
     private static final Set<String> STATUS_FORA_DA_OCUPACAO = StatusAnimal.CODIGOS_FORA_DA_CUSTODIA;
 
-    // RNF10 (F2-078): baia e cadastro critico (define a ocupacao do canil) —
+    // RNF10 (F2-078): baia e cadastro critico (define a ocupacao do canil):
     // criacao, edicao, (des)ativacao e exclusao logica geram AuditoriaEvento.
     private static final String ENTIDADE_AUDITORIA = "baia";
 
@@ -162,7 +163,7 @@ public class BaiaService {
 
         return PaginaResponse.de(paginaBaias.map(baia -> {
                     long ocupacaoAtual = ocupacaoPorBaia.getOrDefault(baia.getId(), 0L);
-                    return baiaMapper.toResponse(baia, ocupacaoAtual, ocupacaoAtual >= baia.getCapacidade());
+                    return baiaMapper.toResponse(baia, ocupacaoAtual, superlotada(baia, ocupacaoAtual));
                 }));
     }
 
@@ -177,7 +178,7 @@ public class BaiaService {
 
     private BaiaResponse mapearComOcupacao(Baia baia, boolean avisarSeSuperlotada) {
         long ocupacaoAtual = animalRepository.countByBaia_IdAndStatus_CodigoNotIn(baia.getId(), STATUS_FORA_DA_OCUPACAO);
-        boolean superlotada = ocupacaoAtual >= baia.getCapacidade();
+        boolean superlotada = superlotada(baia, ocupacaoAtual);
 
         if (avisarSeSuperlotada && superlotada) {
             log.warn("Baia superlotada: baiaId={} capacidade={} ocupacaoAtual={}",
@@ -185,6 +186,10 @@ public class BaiaService {
         }
 
         return baiaMapper.toResponse(baia, ocupacaoAtual, superlotada);
+    }
+
+    private static boolean superlotada(Baia baia, long ocupacaoAtual) {
+        return NivelLotacao.de(ocupacaoAtual, baia.getCapacidade()) == NivelLotacao.SUPERLOTADA;
     }
 
     private TipoBaia resolverTipoBaia(String codigo) {

@@ -1,8 +1,10 @@
 package com.siszoo.processos.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -62,12 +64,14 @@ public class ProcessoSanitarioController {
     @PreAuthorize("hasAuthority('PROCESSOS_SANITARIOS:leitura')")
     public PaginaResponse<ProcessoResumoResponse> listar(
             @RequestParam(required = false) String doenca,
-            @RequestParam(required = false) StatusProcesso status,
+            @RequestParam(required = false) List<StatusProcesso> status,
             @RequestParam(required = false) Boolean urgente,
             @RequestParam(required = false) String q,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate de,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate ate,
             @RequestParam(defaultValue = "0") int pagina,
             @RequestParam(defaultValue = "20") int tamanho) {
-        return processoService.listar(doenca, status, urgente, q, pagina, tamanho);
+        return processoService.listar(doenca, status, urgente, q, de, ate, pagina, tamanho);
     }
 
     @GetMapping("/catalogos")
@@ -113,7 +117,7 @@ public class ProcessoSanitarioController {
 
     // Reenvio manual da notificacao ao municipe (pendencia da T35): so com
     // resultado positivo vigente e sem data de notificacao ainda gravada
-    // (422 nos dois casos — NotificacaoResultadoService). O envio continua
+    // (422 nos dois casos - NotificacaoResultadoService). O envio continua
     // assincrono; a resposta reflete o processo no instante da chamada.
     @PostMapping("/{id}/notificacoes/reenviar")
     @PreAuthorize("hasAuthority('PROCESSOS_SANITARIOS:escrita')")

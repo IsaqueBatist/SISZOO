@@ -6,7 +6,8 @@ import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { avisar } from '@/lib/avisos'
 import { mensagemDeRegraDaApi } from '@/lib/erroApi'
-import { useFiltrosLista } from '@/lib/useFiltrosLista'
+import { normalizarBusca } from '@/lib/texto'
+import { classeDoFiltro, useFiltrosLista } from '@/lib/useFiltrosLista'
 import {
   useAlterarStatusBaiaMutation,
   useBaiasQuery,
@@ -17,19 +18,13 @@ import {
 import type { Baia, ResidenteBaia } from '@/features/animais/types/animais.types'
 import { BaiaFormModal } from './BaiaFormModal'
 import { ResidentesBaia } from './ResidentesBaia'
-import { calcularPercentual, estadoLotacao, type EstadoLotacao } from '../utils/estadoLotacao'
+import { calcularPercentual, estadoLotacao, ROTULO_LOTACAO, type EstadoLotacao } from '../utils/estadoLotacao'
 import './GestaoBaias.css'
 
 type FiltroLotacao = '' | EstadoLotacao
 type FiltroStatus = 'ativas' | 'inativas' | 'todas'
 
 const FILTROS_PADRAO = { busca: '', tipo: '', lotacao: '', status: 'ativas' }
-
-const LABEL_LOTACAO: Record<EstadoLotacao, string> = {
-  disponivel: 'Disponível',
-  atencao: 'Próx. limite',
-  superlotada: 'Superlotada',
-}
 
 function classeCard(baia: Baia, estado: EstadoLotacao): string {
   if (!baia.ativa) return 'baia-card inativa'
@@ -47,7 +42,7 @@ function classeBarra(estado: EstadoLotacao): string {
 function rotuloStatus(baia: Baia, estado: EstadoLotacao): string | null {
   if (!baia.ativa) return 'Inativa'
   if (estado === 'disponivel') return null
-  return LABEL_LOTACAO[estado]
+  return ROTULO_LOTACAO[estado]
 }
 
 export function GestaoBaias() {
@@ -95,13 +90,13 @@ export function GestaoBaias() {
   }, [baias])
 
   const baiasFiltradas = useMemo(() => {
-    const buscaNormalizada = busca.trim().toLowerCase()
+    const buscaNormalizada = normalizarBusca(busca)
     return (baias ?? []).filter((baia) => {
       const combinaStatus =
         statusFiltro === 'todas' || (statusFiltro === 'ativas' ? baia.ativa : !baia.ativa)
       const combinaTipo = !tipoFiltro || baia.tipoBaiaCodigo === tipoFiltro
       const combinaLotacao = !lotacaoFiltro || estadoLotacao(baia.ocupacaoAtual, baia.capacidade) === lotacaoFiltro
-      const combinaBusca = !buscaNormalizada || baia.nome.toLowerCase().includes(buscaNormalizada)
+      const combinaBusca = !buscaNormalizada || normalizarBusca(baia.nome).includes(buscaNormalizada)
       return combinaStatus && combinaTipo && combinaLotacao && combinaBusca
     })
   }, [baias, busca, tipoFiltro, lotacaoFiltro, statusFiltro])
@@ -164,15 +159,15 @@ export function GestaoBaias() {
       <div className="legend-strip" style={{ marginBottom: 'var(--space-3)' }}>
         <span className="l-dot">
           <span className="d" style={{ background: 'var(--color-success)' }} />
-          Disponível (até 80%)
+          {ROTULO_LOTACAO.disponivel} (abaixo de 80%)
         </span>
         <span className="l-dot">
           <span className="d" style={{ background: 'var(--color-alert)' }} />
-          Atenção (80–99%)
+          {ROTULO_LOTACAO.atencao} (80% a 99%)
         </span>
         <span className="l-dot">
           <span className="d" style={{ background: 'var(--color-danger)' }} />
-          Superlotada (100%+)
+          {ROTULO_LOTACAO.superlotada} (100% ou mais)
         </span>
       </div>
 
@@ -188,7 +183,7 @@ export function GestaoBaias() {
           />
         </div>
         <select
-          className="filter-select"
+          className={classeDoFiltro(tipoFiltro)}
           aria-label="Filtrar por tipo"
           value={tipoFiltro}
           onChange={(event) => definirFiltros({ tipo: event.target.value })}
@@ -201,18 +196,18 @@ export function GestaoBaias() {
           ))}
         </select>
         <select
-          className="filter-select"
+          className={classeDoFiltro(lotacaoFiltro)}
           aria-label="Filtrar por lotação"
           value={lotacaoFiltro}
           onChange={(event) => definirFiltros({ lotacao: event.target.value })}
         >
           <option value="">Lotação: Todas</option>
-          <option value="disponivel">Disponível</option>
-          <option value="atencao">Atenção</option>
-          <option value="superlotada">Superlotada</option>
+          <option value="disponivel">{ROTULO_LOTACAO.disponivel}</option>
+          <option value="atencao">{ROTULO_LOTACAO.atencao}</option>
+          <option value="superlotada">{ROTULO_LOTACAO.superlotada}</option>
         </select>
         <select
-          className="filter-select"
+          className={classeDoFiltro(statusFiltro, FILTROS_PADRAO.status)}
           aria-label="Filtrar por status"
           value={statusFiltro}
           onChange={(event) => definirFiltros({ status: event.target.value })}
@@ -239,6 +234,11 @@ export function GestaoBaias() {
           </span>
           <h3>Nenhuma baia encontrada</h3>
           <p>Ajuste os filtros ou cadastre uma nova baia.</p>
+          {filtrosAtivos && (
+            <button type="button" className="btn btn-outline btn-sm" onClick={limparFiltros}>
+              Limpar filtros
+            </button>
+          )}
         </div>
       )}
 

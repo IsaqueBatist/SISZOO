@@ -46,11 +46,9 @@ class RelatoriosSeed {
             // Metade pelo Administrador, metade por um Veterinario.
             SeedAtor autor = i % 2 == 0 ? atores.admin() : atores.veterinario(i);
             FiltroRelatorioBruto filtro = switch (exportacao.tipo()) {
-                case ANUAL_PROCESSOS -> new FiltroRelatorioBruto(exportacao.tipo(), null, null,
-                        datas.hoje().getYear(), null);
-                case OCUPACAO_BAIAS -> new FiltroRelatorioBruto(exportacao.tipo(), null, null, null,
-                        "ultimos_6_meses");
-                default -> new FiltroRelatorioBruto(exportacao.tipo(), datas.diasAtras(300), datas.hoje(), null, null);
+                case ANUAL_PROCESSOS -> new FiltroRelatorioBruto(exportacao.tipo(), null, null, datas.hoje().getYear());
+                case ADOCOES, OCUPACAO_BAIAS -> new FiltroRelatorioBruto(exportacao.tipo(), null, null, null);
+                default -> new FiltroRelatorioBruto(exportacao.tipo(), datas.diasAtras(300), datas.hoje(), null);
             };
             executor.garantir(exportacao.chave(), "relatorio_gerado", () -> {
                 autor.executar("RELATORIOS:leitura",

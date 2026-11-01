@@ -31,6 +31,11 @@ describe('descricaoAcao', () => {
   })
 
   it('ACESSO_NEGADO (acesso a dado sigiloso recusado, T43) também usa o tom de maior destaque', () => {
-    expect(descricaoAcao('ACESSO_NEGADO')).toEqual({ verbo: 'teve acesso negado a', icone: 'lock', tom: 'danger' })
+    expect(descricaoAcao('ACESSO_NEGADO')).toEqual({
+      verbo: 'teve acesso negado a',
+      rotulo: 'Acesso negado',
+      icone: 'lock',
+      tom: 'danger',
+    })
   })
 })

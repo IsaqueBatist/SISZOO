@@ -1,6 +1,6 @@
 // Contrato da API de ocorrências (T25, backend com.siszoo.ocorrencias.dto).
 // Datas sem fuso, já no horário do CCZ: LocalDate "2026-10-11",
-// LocalDateTime "2026-10-11T19:28:59.97", LocalTime "10:30:00" — formatar com
+// LocalDateTime "2026-10-11T19:28:59.97", LocalTime "10:30:00" - formatar com
 // ../utils/datas.ts, nunca com new Date.
 
 export type TipoOcorrencia = 'zoonose' | 'morcegos' | 'irregular' | 'agressivo' | 'outros'
@@ -27,7 +27,7 @@ export type TipoMovimentacao =
 export type StatusProcesso = 'ABERTO' | 'AGUARDANDO_RESULTADO' | 'COM_RESULTADO' | 'CONCLUIDO'
 
 // Em ocorrência sigilosa, os campos vêm todos `null` para quem não tem a
-// permissão de sigilo (D14) — o mascaramento é do backend; o front só lê
+// permissão de sigilo (D14) - o mascaramento é do backend; o front só lê
 // `podeVerDenunciante` para decidir o que exibir e o que enviar.
 export interface Denunciante {
   nome: string | null
@@ -128,7 +128,7 @@ export interface OcorrenciaResumo {
 
 export interface OcorrenciasFiltro {
   tipo?: TipoOcorrencia
-  status?: StatusOcorrencia
+  status?: StatusOcorrencia | StatusOcorrencia[]
   q?: string
   // F2-010 (RF-E02): período da data de abertura (AAAA-MM-DD, dias inclusivos)
   de?: string
@@ -204,7 +204,7 @@ export interface CatalogosOcorrencia {
   providencias: CatalogoItem[]
 }
 
-// Processo sanitário mínimo (PR1, D2/D18) — aberto e avançado pela tela da
+// Processo sanitário mínimo (PR1, D2/D18) - aberto e avançado pela tela da
 // ocorrência (D40).
 export interface ProcessoSanitario {
   id: string

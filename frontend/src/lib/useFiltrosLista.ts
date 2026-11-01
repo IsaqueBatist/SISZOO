@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 const PREFIXO = 'siszoo_filtros:'
 
@@ -67,6 +68,40 @@ export function useFiltrosLista<T extends Record<string, string>>(lista: string,
   const filtrosAtivos = (Object.keys(padrao) as (keyof T)[]).some((chave) => estado.filtros[chave] !== padrao[chave])
 
   return { filtros: estado.filtros, pagina: estado.pagina, definirFiltros, irParaPagina, limparFiltros, filtrosAtivos }
+}
+
+export function useFiltroDeLink(parametro: string): string | null {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [valor] = useState(() => searchParams.get(parametro))
+
+  useEffect(() => {
+    if (!searchParams.has(parametro)) return
+    setSearchParams(
+      (atuais) => {
+        atuais.delete(parametro)
+        return atuais
+      },
+      { replace: true },
+    )
+  }, [parametro, searchParams, setSearchParams])
+
+  return valor
+}
+
+export function useManterPaginaNoIntervalo(
+  pagina: number,
+  totalPaginas: number | undefined,
+  irParaPagina: (pagina: number) => void,
+) {
+  useEffect(() => {
+    if (totalPaginas !== undefined && pagina > 0 && pagina >= totalPaginas) {
+      irParaPagina(Math.max(totalPaginas - 1, 0))
+    }
+  }, [pagina, totalPaginas, irParaPagina])
+}
+
+export function classeDoFiltro(valor: string, padrao = ''): string {
+  return valor === padrao ? 'filter-select' : 'filter-select ativo'
 }
 
 // Valor atrasado para busca ao digitar: uma requisição por pausa, não por tecla.

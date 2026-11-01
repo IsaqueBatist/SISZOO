@@ -32,7 +32,6 @@ public class AuditoriaController {
     @PreAuthorize("hasAuthority('USUARIOS_ACESSO:leitura')")
     public PaginaResponse<AuditoriaEventoResponse> listar(
             @RequestParam(required = false) AcaoAuditoria acao,
-            @RequestParam(required = false) String entidade,
             @RequestParam(required = false) String usuarioEmail,
             @RequestParam(required = false) Modulo modulo,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate de,
@@ -40,7 +39,7 @@ public class AuditoriaController {
             @RequestParam(defaultValue = "0") int pagina,
             @RequestParam(defaultValue = "20") int tamanho) {
         return auditoriaEventoService.listar(
-                new AuditoriaEventoService.FiltroAuditoria(acao, entidade, usuarioEmail, modulo, de, ate), pagina, tamanho);
+                new AuditoriaEventoService.FiltroAuditoria(acao, usuarioEmail, modulo, de, ate), pagina, tamanho);
     }
 
     @GetMapping("/filtros")

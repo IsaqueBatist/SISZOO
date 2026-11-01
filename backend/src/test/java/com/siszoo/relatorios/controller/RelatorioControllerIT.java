@@ -147,10 +147,10 @@ class RelatorioControllerIT extends AbstractIntegrationTest {
     @DisplayName("preview de adocoes (versao simplificada) responde 200 e explica a limitacao")
     void previewAdocoesDeveResponder200ComNotaDeLimitacao() {
         given().header("Authorization", "Bearer " + tokenAdmin)
-                .when().get(ROTA + "/preview?tipo=adocoes&periodoInicio=2026-01-01&periodoFim=2026-03-31")
+                .when().get(ROTA + "/preview?tipo=adocoes")
                 .then().statusCode(200)
                 .body("kpis.animaisAdotados", greaterThanOrEqualTo(0))
-                .body("notaLimitacao", containsString("não é filtrado pelo período"));
+                .body("notaLimitacao", containsString("Não é um histórico por período"));
     }
 
     @Test
@@ -172,13 +172,65 @@ class RelatorioControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("preview de ocupacao_baias com janela ultimos_6_meses responde 200 com os KPIs esperados")
+    @DisplayName("preview de ocupacao_baias e a posicao de hoje, sem filtro de periodo")
     void previewOcupacaoBaiasDeveResponder200() {
+        String hoje = fixture.hoje().toString();
         given().header("Authorization", "Bearer " + tokenAdmin)
-                .when().get(ROTA + "/preview?tipo=ocupacao_baias&janela=ultimos_6_meses")
+                .when().get(ROTA + "/preview?tipo=ocupacao_baias")
                 .then().statusCode(200)
+                .body("periodoInicio", equalTo(hoje))
+                .body("periodoFim", equalTo(hoje))
                 .body("kpis.capacidadeTotal", greaterThanOrEqualTo(0))
                 .body("baias", org.hamcrest.Matchers.notNullValue());
+    }
+
+    @Test
+    @DisplayName("preview de adocoes e a posicao de hoje, sem filtro de periodo")
+    void previewAdocoesDeveSerPosicaoDeHoje() {
+        String hoje = fixture.hoje().toString();
+        given().header("Authorization", "Bearer " + tokenAdmin)
+                .when().get(ROTA + "/preview?tipo=adocoes")
+                .then().statusCode(200)
+                .body("periodoInicio", equalTo(hoje))
+                .body("periodoFim", equalTo(hoje))
+                .body("notaLimitacao", containsString("Posição em"));
+    }
+
+    @Test
+    @DisplayName("GET /tipos informa posicao para adocoes e ocupacao_baias")
+    void tiposDePosicao() {
+        given().header("Authorization", "Bearer " + tokenAdmin)
+                .when().get(ROTA + "/tipos")
+                .then().statusCode(200)
+                .body("find { it.codigo == 'adocoes' }.filtro", equalTo("posicao"))
+                .body("find { it.codigo == 'ocupacao_baias' }.filtro", equalTo("posicao"))
+                .body("find { it.codigo == 'vacinacao' }.filtro", equalTo("periodo"))
+                .body("find { it.codigo == 'anual_processos' }.filtro", equalTo("ano"));
+    }
+
+    @Test
+    @DisplayName("registro antigo com janela ou periodo continua gerando: vale a posicao de hoje")
+    void parametrosAntigosDeRelatorioDePosicaoSaoIgnorados() {
+        String hoje = fixture.hoje().toString();
+        given().header("Authorization", "Bearer " + tokenAdmin)
+                .when().get(ROTA + "/preview?tipo=ocupacao_baias&janela=ultimos_6_meses&periodoInicio=2020-01-01&periodoFim=2020-12-31")
+                .then().statusCode(200)
+                .body("periodoInicio", equalTo(hoje))
+                .body("periodoFim", equalTo(hoje));
+
+        Map<String, Object> corpo = new HashMap<>();
+        corpo.put("tipo", "adocoes");
+        corpo.put("janela", "ultimos_6_meses");
+        corpo.put("periodoInicio", "2020-01-01");
+        corpo.put("periodoFim", "2020-12-31");
+        corpo.put("formato", "csv");
+
+        given().header("Authorization", "Bearer " + tokenAdmin)
+                .contentType(ContentType.JSON)
+                .body(corpo)
+                .when().post(ROTA + "/exportar")
+                .then().statusCode(200)
+                .header("Content-Disposition", containsString("adocoes-posicao-" + hoje + ".csv"));
     }
 
     @Test
@@ -214,7 +266,6 @@ class RelatorioControllerIT extends AbstractIntegrationTest {
     void exportarPdfDeOcupacaoBaiasNaoDeveConterAssinaturaOuRecomendacao() throws Exception {
         Map<String, Object> corpo = new HashMap<>();
         corpo.put("tipo", "ocupacao_baias");
-        corpo.put("janela", "ultimos_6_meses");
         corpo.put("formato", "pdf");
 
         byte[] pdf = given()
@@ -231,11 +282,13 @@ class RelatorioControllerIT extends AbstractIntegrationTest {
         assertThat(new String(pdf, 0, 4, StandardCharsets.US_ASCII), equalTo("%PDF"));
 
         // Extracao de texto via OpenPDF (ja e dependencia transitiva do Flying
-        // Saucer — sem precisar de Apache PDFBox so pra isso).
+        // Saucer - sem precisar de Apache PDFBox so pra isso).
         com.lowagie.text.pdf.PdfReader leitor = new com.lowagie.text.pdf.PdfReader(pdf);
         String texto = new com.lowagie.text.pdf.parser.PdfTextExtractor(leitor).getTextFromPage(1)
                 .toLowerCase(java.util.Locale.ROOT);
         assertThat(texto, containsString("ocupação de baias"));
+        assertThat(texto, containsString("posição em"));
+        assertThat(texto, not(containsString("período:")));
         assertThat(texto, not(containsString("assinatura")));
         assertThat(texto, not(containsString("assinado")));
         assertThat(texto, not(containsString("recomendação")));
