@@ -4,15 +4,6 @@ import type { AtualizarVacinaRequest } from '../types/vacinas.types'
 
 const VACINAS_QUERY_KEY = ['vacinas']
 
-// Só as ativas: é o que o modal de registro de vacinação precisa oferecer.
-export function useVacinasAtivasQuery() {
-  return useQuery({
-    queryKey: [...VACINAS_QUERY_KEY, { ativo: true }],
-    queryFn: () => listarVacinas(true),
-    select: (pagina) => pagina.itens,
-  })
-}
-
 // A tela de catálogo também lista as inativas, para permitir reativar — sem
 // isso, recadastrar uma vacina desativada daria 409 sem saída.
 export function useVacinasQuery(incluirInativas: boolean) {

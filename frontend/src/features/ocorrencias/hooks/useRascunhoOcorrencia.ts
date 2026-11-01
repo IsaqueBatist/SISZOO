@@ -116,7 +116,6 @@ export function useRascunhoOcorrencia({ chave, usuarioId, watch, reset, getValue
     })
     return () => inscricao.unsubscribe()
     // referenciasDosAnexos só lê uma ref, não precisa recriar a assinatura.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prontoParaAutoSalvar, aguardandoEscolha, watch, chave])
 
   useEffect(() => {

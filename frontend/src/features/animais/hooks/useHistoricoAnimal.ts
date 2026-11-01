@@ -61,7 +61,7 @@ export function usePrescricoesQuery(animalId: string, pagina: number, tamanho: n
 }
 
 // F2-007 / RF-A04
-export function chaveExames(animalId: string, pagina: number) {
+function chaveExames(animalId: string, pagina: number) {
   return ['exames', animalId, 'pagina', pagina] as const
 }
 

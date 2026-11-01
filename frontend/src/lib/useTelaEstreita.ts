@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 
-export const CONSULTA_TELA_ESTREITA = '(max-width: 768px)'
+const CONSULTA_TELA_ESTREITA = '(max-width: 768px)'
 
 function assinar(aoMudar: () => void) {
   const consulta = window.matchMedia?.(CONSULTA_TELA_ESTREITA)

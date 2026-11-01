@@ -1,7 +1,7 @@
 import { http } from '@/lib/http'
 import type { DashboardGraficos } from '../types/graficos.types'
 
-export async function buscarGraficosDashboard(ano: number): Promise<DashboardGraficos> {
+async function buscarGraficosDashboard(ano: number): Promise<DashboardGraficos> {
   const { data } = await http.get<DashboardGraficos>('/dashboard/graficos', { params: { ano } })
   return data
 }

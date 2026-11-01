@@ -9,7 +9,7 @@ const QUALIDADE_JPEG = 0.7
 
 export class ImagemInvalidaError extends Error {}
 
-export function validarArquivoFoto(arquivo: File): void {
+function validarArquivoFoto(arquivo: File): void {
   if (!TIPOS_ACEITOS.includes(arquivo.type)) {
     throw new ImagemInvalidaError('Envie uma imagem JPG ou PNG.')
   }

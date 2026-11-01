@@ -110,7 +110,6 @@ export const animalFormSchema = z.object({
   condicoesOutras: z.string().trim().max(500, 'Máximo de 500 caracteres.').optional(),
 })
 
-export type AnimalFormValues = z.infer<typeof animalFormSchema>
 
 // Schema de UI: troca `esterilizado` (campo real do DTO) por
 // `castracaoOpcao` (os cartões da tela) — a conversão para o DTO

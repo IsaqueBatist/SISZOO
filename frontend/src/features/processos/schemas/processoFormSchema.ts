@@ -107,7 +107,6 @@ export const amostraSchema = amostraUniaoSchema.superRefine((dados, ctx) => {
   }
 })
 
-export type AmostraFormValues = z.infer<typeof amostraUniaoSchema>
 
 // `vinculoDecisao` não é campo da API — gateia a etapa 1 exigindo uma decisão
 // explícita (selecionar ocorrência OU "Pular esta etapa"), já que o vínculo em

@@ -157,15 +157,6 @@
   color: var(--color-text-secondary);
   margin-top: 4px;
 }
-.selected-animal-card .sa-chip {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  background: rgba(255, 255, 255, 0.7);
-  padding: 4px 8px;
-  border-radius: 6px;
-  color: var(--color-text-primary);
-  margin-right: 6px;
-}
 
 /* Portado de docs/prototipo/processo.html — aviso de urgência (RN4) e flags
    de contato humano dentro do card de amostra. */
@@ -213,9 +204,6 @@
   border: 1px solid #ffecb3;
   border-radius: var(--radius-sm);
   flex-wrap: wrap;
-}
-.am-flags .ico-warn {
-  color: var(--color-warning);
 }
 
 .checkbox-grid {

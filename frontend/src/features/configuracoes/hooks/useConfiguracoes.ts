@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { atualizarPreferencias, buscarPreferencias } from '../api/configuracoesApi'
 
-export const PREFERENCIAS_QUERY_KEY = ['preferencias', 'me']
+const PREFERENCIAS_QUERY_KEY = ['preferencias', 'me']
 
 export function usePreferenciasQuery() {
   return useQuery({ queryKey: PREFERENCIAS_QUERY_KEY, queryFn: buscarPreferencias })

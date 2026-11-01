@@ -37,7 +37,7 @@ export const DENUNCIANTE_MASCARADO: Denunciante = {
   bairroResidencial: null,
 }
 
-export const DENUNCIANTE_SIGILOSO_VISIVEL: Denunciante = {
+const DENUNCIANTE_SIGILOSO_VISIVEL: Denunciante = {
   nome: 'João Pereira Lima',
   cpf: '987.654.321-00',
   telefone: '(11) 91234-5678',
@@ -108,7 +108,7 @@ export function criarOcorrenciaFixture(sobrescrever: Partial<Ocorrencia> = {}): 
 // Sigilosa como o backend devolve para quem NÃO tem a permissão de sigilo
 // (Vet). Para o cenário com permissão (Admin/Agente), usar
 // `ocorrenciaSigilosaVisivel()`.
-export function ocorrenciaSigilosaMascarada(): Ocorrencia {
+function ocorrenciaSigilosaMascarada(): Ocorrencia {
   return criarOcorrenciaFixture({
     id: OCORRENCIA_SIGILOSA_ID,
     protocolo: '090/2026',
@@ -385,7 +385,7 @@ export const CATALOGOS_OCORRENCIA_FIXTURE: CatalogosOcorrencia = {
 }
 
 // Resposta fixa do POST /ocorrencias (uma ocorrência nova qualquer).
-export const OCORRENCIA_CRIADA_ID = 'h5000000-0000-0000-0000-000000000099'
+const OCORRENCIA_CRIADA_ID = 'h5000000-0000-0000-0000-000000000099'
 export function ocorrenciaCriadaFixture(): Ocorrencia {
   return criarOcorrenciaFixture({ id: OCORRENCIA_CRIADA_ID, protocolo: '100/2026', anexos: [] })
 }

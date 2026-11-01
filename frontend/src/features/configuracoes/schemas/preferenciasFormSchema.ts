@@ -12,4 +12,3 @@ export const preferenciasFormSchema = z.object({
   notifEmailDiario: z.boolean(),
 })
 
-export type PreferenciasFormValues = z.infer<typeof preferenciasFormSchema>

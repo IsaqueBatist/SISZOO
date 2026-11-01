@@ -1,7 +1,7 @@
 import { http } from '@/lib/http'
 import type { DashboardKpis } from '../types/dashboard.types'
 
-export async function buscarKpisDashboard(): Promise<DashboardKpis> {
+async function buscarKpisDashboard(): Promise<DashboardKpis> {
   const { data } = await http.get<DashboardKpis>('/dashboard/kpis')
   return data
 }

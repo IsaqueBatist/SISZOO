@@ -4,7 +4,7 @@
 // UTC (regra do ECMAScript para data sem hora) e, formatado em São Paulo,
 // mostra o dia anterior — por isso a formatação separa a string em vez de
 // passar por `Date`.
-export const FUSO_ITU = 'America/Sao_Paulo'
+const FUSO_ITU = 'America/Sao_Paulo'
 
 // Data de hoje (AAAA-MM-DD) no fuso do CCZ. `toISOString()` daria o dia em
 // UTC, que entre 21h e 23h59 em Itu já é o dia seguinte.

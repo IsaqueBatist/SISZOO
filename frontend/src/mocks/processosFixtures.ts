@@ -45,7 +45,7 @@ export const CATALOGOS_PROCESSO_FIXTURE: CatalogosProcesso = {
   ],
 }
 
-export function amostraFixture(sobrescrever: Partial<AmostraAnimal> = {}): AmostraAnimal {
+function amostraFixture(sobrescrever: Partial<AmostraAnimal> = {}): AmostraAnimal {
   return {
     id: 'h9000000-0000-0000-0000-000000000001',
     animalId: null,
