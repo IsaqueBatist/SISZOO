@@ -141,3 +141,43 @@ funcionalidades à mão em vez de mesclar a pilha, para não reintroduzir códig
   `AnimalControllerIT` sobre a lista de vacinas passaram de `containsInAnyOrder` para `hasItems`. Motivo: com
   o POST novo, outros ITs cadastram vacinas no mesmo banco (a JVM compartilha o Postgres, sem rollback), e
   exigir conjunto exato tornava os testes dependentes da ordem de execução.
+
+## Redesenho das telas de catálogo (01/11/2026)
+
+As telas `/vacinas` e `/medicamentos` eram as duas únicas telas de lista fora do padrão do projeto, e isso
+era em boa parte consequência de elas fazerem pouco. Nenhum endpoint foi criado ou alterado.
+
+- **CV-36** As duas telas passam ao esqueleto das outras seis (`page-header` → `.filter-bar` → `.table-wrap`
+  → `.table-footer`), com **cadastro em modal**. Motivo: o formulário sempre aberto ocupava um terço da
+  altura e empurrava o catálogo — a razão de abrir a tela — para baixo da dobra.
+- **CV-37** Os filtros (busca, situação, categoria) são aplicados **em memória**, não por requisição, como em
+  `Usuarios.tsx`. Motivo: a faixa de resumo precisa do conjunto completo de qualquer forma, então carregar
+  tudo numa página e filtrar no cliente é a única escolha coerente — e evita uma requisição por tecla nas
+  máquinas de ~2 GB. Os parâmetros `ativo`/`categoriaId` do backend continuam servindo os outros consumidores.
+- **CV-38** A tela de vacinas ganha **edição** (nome e intervalo). Motivo: o `PUT` sempre aceitou os dois, mas
+  a interface só o usava para virar `ativo`; sem isso o CCZ não tinha como corrigir o intervalo de 12 meses
+  que a V5 marca como provisório ("CONFIRMAR com a equipe veterinária"). Fecha o que a CV-19 já prometia.
+- **CV-39** O modal de edição avisa, **antes de salvar**, que mudar o intervalo recalcula a validade de todas
+  as aplicações já lançadas daquela vacina. Motivo: a validade é derivada, não persistida — nenhum registro é
+  tocado, mas a ficha e o alerta passam a mostrar outra data, e nada na interface dizia isso.
+- **CV-40** O `codigo` aparece **somente-leitura** no modal de edição. Motivo: ele nunca aparecia em lugar
+  nenhum, mas é o que a mensagem de 409 cita (CV-7) — o usuário lia um erro sobre algo que a tela nunca
+  mostrou. Continua sem aparecer no cadastro, onde ainda não existe.
+- **CV-41** Coluna "Em alerta" na tela de vacinas, com os animais de reforço vencido ou a vencer, agrupados
+  de `GET /api/alertas/vacinas` por `vacinaId`. Motivo: é o único dado relacional alcançável pelo frontend com
+  `GESTAO_ANIMAIS:leitura` e sem backend novo, e reusa a `queryKey` `['alertas','vacinas']` do dashboard, logo
+  não custa requisição. A interface declara as ressalvas da regra (janela de 7 dias, só animais sob custódia,
+  só a aplicação vigente) porque senão o número engana; o traço em vacina inativa ou sem intervalo é a
+  resposta certa (RN-A03), não dado faltando.
+  - Descartados: aplicações por vacina (exige `RELATORIOS:leitura`, período obrigatório e é chaveada por
+    nome) e prescrições por medicamento (não existe em forma nenhuma no backend).
+- **CV-42** A tela de medicamentos ganha **editar, desativar, ver inativos e filtrar por categoria** — tudo
+  com endpoint que já existia, inclusive o `?categoriaId=` que nunca tinha sido usado. Ganha também camada de
+  dados própria: antes lia pelo fetcher do select de prescrição (`ativo=true` fixo, teto de 100), então nunca
+  enxergava o catálogo inteiro.
+- **CV-43** A confirmação de desativar medicamento diz que **não há volta**. Motivo: diferente da vacina,
+  `AtualizarMedicamentoRequest` não tem `ativo` e não existe reativação (CV-8). O inativo aparece no filtro
+  com "Sem reativação" no lugar das ações, para a assimetria ficar visível em vez de surpreender.
+- **CV-44** `.table-toolbar` (CSS órfão que serviria de barra de ações dentro do `.table-wrap`) foi
+  **considerado e descartado**: a `.filter-bar` acima da tabela já resolve e é o que as outras seis telas
+  usam. Consistência vale mais do que adotar um órfão só porque ele existe.
