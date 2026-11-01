@@ -56,9 +56,6 @@ function LinhaEvento({ evento }: { evento: EventoAuditoria }) {
   )
 }
 
-// O que mudou e o motivo do evento. Fica recolhido: a lista continua fácil de
-// percorrer. O IP da requisição fica só no banco (auditoria_evento.ip, T43),
-// não na tela.
 function DetalhesEvento({ evento }: { evento: EventoAuditoria }) {
   const justificativa = justificativaDoEvento(evento.payloadDepois)
   const diferencas = diferencasDoEvento(evento.payloadAntes, evento.payloadDepois)
