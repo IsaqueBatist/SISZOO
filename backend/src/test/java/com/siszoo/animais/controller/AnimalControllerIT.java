@@ -4,11 +4,10 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 
 import java.util.UUID;
@@ -536,8 +535,14 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     }
 
     // Os codigos sao os do seed da V5 — os mesmos que o front grava nos
-    // rascunhos dos modais de vacina/procedimento (antes copiados em
-    // catalogoClinico.ts).
+    // rascunhos dos modais de vacina/procedimento.
+    //
+    // `hasItems` e nao `containsInAnyOrder` para as vacinas: desde que existe
+    // POST /api/vacinas, outros ITs cadastram vacinas no mesmo banco (a JVM
+    // compartilha o Postgres do Testcontainers, sem rollback). Exigir conjunto
+    // exato tornaria este teste dependente da ordem de execucao. O que ele
+    // afirma — que o seed da V5 esta exposto no catalogo — continua intacto.
+    // Tipos de procedimento seguem exatos: nada na aplicacao os cria.
     @Test
     void deveListarVacinasETiposDeProcedimentoDaV5() {
         given()
@@ -546,7 +551,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .get("/api/animais/catalogos")
                 .then()
                 .statusCode(200)
-                .body("vacinas.codigo", containsInAnyOrder(
+                .body("vacinas.codigo", hasItems(
                         "antirrabica", "v10", "v8", "v4_felinos", "giardia", "gripe_canina", "felv", "leishmaniose"))
                 .body("tiposProcedimento.codigo", containsInAnyOrder(
                         "atendimento_clinico", "castracao", "cirurgia_maior", "vacinacao"));
@@ -554,7 +559,11 @@ class AnimalControllerIT extends AbstractIntegrationTest {
 
     // O catalogo leva o intervalo de reforco adiante (VacinaCatalogoResponse)
     // para o formulario de vacinacao conseguir prever a proxima aplicacao sem
-    // uma segunda consulta. Seed da V5: 12 meses para todas.
+    // uma segunda consulta.
+    //
+    // Assertivas so sobre uma vacina do seed, nunca sobre a lista toda:
+    // intervalo nulo e valido (vacina sem reforco, RN-A03) e outros ITs
+    // cadastram vacinas neste mesmo banco.
     @Test
     void catalogoDeVacinasLevaOIntervaloDeReforco() {
         given()
@@ -563,8 +572,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .get("/api/animais/catalogos")
                 .then()
                 .statusCode(200)
-                .body("vacinas.find { it.codigo == 'antirrabica' }.intervaloMeses", equalTo(12))
-                .body("vacinas.intervaloMeses", everyItem(notNullValue()));
+                .body("vacinas.find { it.codigo == 'antirrabica' }.intervaloMeses", equalTo(12));
     }
 
     private CriarAnimalRequest animalMinimo(String microchip) {
