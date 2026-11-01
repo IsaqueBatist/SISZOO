@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Icon } from '@/components/layout/Icon'
+import { useToast } from '@/components/toast/useToast'
 import { useMedicamentosAtivosQuery } from '@/features/animais/hooks/useHistoricoAnimal'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
@@ -91,8 +92,8 @@ export function Medicamentos() {
 
 function CadastroMedicamento() {
   const [erroMedicamento, setErroMedicamento] = useState<string | null>(null)
+  const toast = useToast()
   const [erroCategoria, setErroCategoria] = useState<string | null>(null)
-  const [mensagem, setMensagem] = useState<string | null>(null)
 
   const { data: categorias } = useCategoriasFarmacologicasQuery()
   const criarMedicamento = useCriarMedicamentoMutation()
@@ -111,12 +112,11 @@ function CadastroMedicamento() {
 
   async function salvarMedicamento(dados: MedicamentoFormValues) {
     setErroMedicamento(null)
-    setMensagem(null)
     try {
       const criado = await criarMedicamento.mutateAsync({ nome: dados.nome, categoriaId: dados.categoriaId })
       // Mantém a categoria: costuma-se cadastrar vários da mesma em sequência.
       formMedicamento.reset({ nome: '', categoriaId: dados.categoriaId })
-      setMensagem(`${criado.nome} cadastrado.`)
+      toast.sucesso(`${criado.nome} cadastrado.`)
     } catch (erro) {
       if (aplicarErrosDeCampo(erro, formMedicamento.setError, MAPA_ERROS_MEDICAMENTO).length > 0) return
       setErroMedicamento(mensagemDeRegraDaApi(erro) ?? 'Não foi possível cadastrar o medicamento. Tente novamente.')
@@ -130,6 +130,7 @@ function CadastroMedicamento() {
       formCategoria.reset({ nome: '' })
       // A categoria nova já fica escolhida no cadastro do medicamento.
       formMedicamento.setValue('categoriaId', criada.id, { shouldValidate: true })
+      toast.sucesso(`Categoria ${criada.nome} cadastrada e selecionada.`)
     } catch (erro) {
       if (aplicarErrosDeCampo(erro, formCategoria.setError, MAPA_ERROS_CATEGORIA).length > 0) return
       setErroCategoria(mensagemDeRegraDaApi(erro) ?? 'Não foi possível cadastrar a categoria. Tente novamente.')
@@ -151,12 +152,6 @@ function CadastroMedicamento() {
             <div className="alert danger" role="alert" style={{ marginBottom: 'var(--space-3)' }}>
               <span className="bullet" />
               <div className="alert-content">{erroMedicamento}</div>
-            </div>
-          )}
-          {mensagem && (
-            <div className="alert success" role="status" style={{ marginBottom: 'var(--space-3)' }}>
-              <span className="bullet" />
-              <div className="alert-content">{mensagem}</div>
             </div>
           )}
           <div className="form-grid">

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Icon } from '@/components/layout/Icon'
+import { useToast } from '@/components/toast/useToast'
 import { formatarDataBR } from '@/lib/datas'
 import { NAV_ALL, ROLES, isNavGroup, roleKeyFromCargos } from '@/lib/nav'
 import { perfilFormSchema, type PerfilFormValues } from '../schemas/perfilFormSchema'
@@ -18,7 +19,7 @@ export function Perfil() {
   const mutation = useAtualizarTelefoneMutation()
 
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [submitSucesso, setSubmitSucesso] = useState(false)
+  const toast = useToast()
 
   const {
     register,
@@ -38,7 +39,7 @@ export function Perfil() {
   async function onSubmit(dados: PerfilFormValues) {
     try {
       await mutation.mutateAsync({ telefone: dados.telefone })
-      setSubmitSucesso(true)
+      toast.sucesso('Telefone atualizado.')
     } catch {
       setSubmitError('Não foi possível salvar o telefone. Verifique a conexão e tente novamente.')
     }
@@ -46,7 +47,6 @@ export function Perfil() {
 
   function aoEnviar(event: FormEvent<HTMLFormElement>) {
     setSubmitError(null)
-    setSubmitSucesso(false)
     void handleSubmit(onSubmit)(event)
   }
 
@@ -148,12 +148,6 @@ export function Perfil() {
                   <div className="alert-content">{submitError}</div>
                 </div>
               )}
-              {submitSucesso && !submitError && (
-                <div className="alert success" role="status">
-                  <span className="bullet" />
-                  <div className="alert-content">Telefone atualizado com sucesso.</div>
-                </div>
-              )}
               <form onSubmit={aoEnviar} noValidate>
                 <div className="field">
                   <label htmlFor="telefone">Telefone</label>
@@ -166,7 +160,7 @@ export function Perfil() {
                       className={`input${errors.telefone ? ' error' : ''}`}
                       type="text"
                       placeholder="(11) 91234-5678"
-                      {...register('telefone', { onChange: () => setSubmitSucesso(false) })}
+                      {...register('telefone')}
                     />
                   </div>
                   {errors.telefone && <span className="err">{errors.telefone.message}</span>}

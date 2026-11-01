@@ -1,3 +1,4 @@
+import { ToastProvider } from '@/components/toast/ToastProvider'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
@@ -13,7 +14,9 @@ function renderPerfil() {
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter>
-        <Perfil />
+        <ToastProvider>
+          <Perfil />
+        </ToastProvider>
       </MemoryRouter>
     </QueryClientProvider>,
   )
@@ -44,7 +47,7 @@ describe('Perfil', () => {
     await user.type(screen.getByLabelText(/telefone/i), '(11) 91234-5678')
     await user.click(screen.getByRole('button', { name: /salvar telefone/i }))
 
-    expect(await screen.findByText(/atualizado com sucesso/i)).toBeInTheDocument()
+    expect(await screen.findByText(/telefone atualizado/i)).toBeInTheDocument()
   })
 
   it('mantém o telefone digitado quando a requisição falha', async () => {

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Switch } from '@/components/Switch'
 import { Icon } from '@/components/layout/Icon'
+import { useToast } from '@/components/toast/useToast'
 import { aplicarPreferenciasVisuais } from '@/lib/theme'
 import type { DensidadeUsuario, TemaUsuario } from '../types/configuracoes.types'
 import { preferenciasFormSchema } from '../schemas/preferenciasFormSchema'
@@ -38,7 +39,7 @@ export function Configuracoes() {
   const [aba, setAba] = useState<Aba>('prefs')
   const [form, setForm] = useState<FormState | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [submitSucesso, setSubmitSucesso] = useState(false)
+  const toast = useToast()
 
   // Seed único a partir do servidor, ajustado durante o render (sem efeito):
   // `form` só é null antes do primeiro carregamento, então essa checagem
@@ -59,7 +60,6 @@ export function Configuracoes() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setSubmitError(null)
-    setSubmitSucesso(false)
     if (!form) return
 
     const resultado = preferenciasFormSchema.safeParse(form)
@@ -71,7 +71,7 @@ export function Configuracoes() {
         notifAlertasCriticos: true,
       })
       aplicarPreferenciasVisuais(resposta)
-      setSubmitSucesso(true)
+      toast.sucesso('Preferências salvas.')
     } catch {
       setSubmitError('Não foi possível salvar as preferências. Verifique a conexão e tente novamente.')
     }
@@ -148,12 +148,6 @@ export function Configuracoes() {
             <div className="alert danger" role="alert">
               <span className="bullet" />
               <div className="alert-content">{submitError}</div>
-            </div>
-          )}
-          {submitSucesso && !submitError && (
-            <div className="alert success" role="status">
-              <span className="bullet" />
-              <div className="alert-content">Preferências salvas com sucesso.</div>
             </div>
           )}
 

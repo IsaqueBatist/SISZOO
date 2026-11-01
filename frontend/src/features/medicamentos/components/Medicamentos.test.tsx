@@ -1,3 +1,4 @@
+import { ToastProvider } from '@/components/toast/ToastProvider'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -20,9 +21,11 @@ function renderComCargo(cargo: string) {
   return render(
     <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
       <MemoryRouter>
-        <AuthProvider>
-          <Medicamentos />
-        </AuthProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <Medicamentos />
+          </AuthProvider>
+        </ToastProvider>
       </MemoryRouter>
     </QueryClientProvider>,
   )
@@ -44,7 +47,7 @@ describe('Medicamentos', () => {
     await user.click(screen.getByRole('button', { name: /cadastrar medicamento/i }))
 
     expect(await screen.findByRole('cell', { name: 'Meloxicam 2mg' })).toBeInTheDocument()
-    expect(screen.getByRole('status')).toHaveTextContent('Meloxicam 2mg cadastrado.')
+    expect(await screen.findByText('Meloxicam 2mg cadastrado.')).toBeInTheDocument()
   })
 
   it('categoria repetida mostra o motivo do 409', async () => {
