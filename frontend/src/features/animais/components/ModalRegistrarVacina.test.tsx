@@ -21,7 +21,7 @@ const CATALOGO_BASE: CatalogosAnimal = {
   status: [],
   motivosEntrada: [],
   tiposBaia: [],
-  vacinas: [{ codigo: 'antirrabica', nome: 'Antirrábica' }],
+  vacinas: [{ codigo: 'antirrabica', nome: 'Antirrábica', intervaloMeses: 12 }],
   tiposProcedimento: [],
 }
 
@@ -192,7 +192,7 @@ describe('ModalRegistrarVacina — catálogo de vacinas da API', () => {
     server.use(
       http.get(`${API_BASE_URL}/animais/catalogos`, async () => {
         await delay(300)
-        return HttpResponse.json({ ...CATALOGO_BASE, vacinas: [{ codigo: 'antirrabica', nome: 'Antirrábica' }] })
+        return HttpResponse.json({ ...CATALOGO_BASE, vacinas: [{ codigo: 'antirrabica', nome: 'Antirrábica', intervaloMeses: 12 }] })
       }),
     )
     const user = userEvent.setup()

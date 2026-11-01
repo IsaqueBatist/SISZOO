@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw'
 import type { AlertaVacinalAnimal, AlertaVacinalItem } from '@/features/alertas/types/alertas.types'
 import type { Animal, AnimalRequest, AnexoAnimal, Baia, BaiaRequest, CatalogosAnimal } from '@/features/animais/types/animais.types'
 import type { CriarExameRequest, Exame } from '@/features/animais/types/historico.types'
+import type { Vacina } from '@/features/vacinas/types/vacinas.types'
 import { DIAS_ANTECEDENCIA_ALERTA_VACINA, diasAteVencimento, hojeEmItu } from '@/features/animais/utils/regrasVacina'
 import { adicionarDiasIso, agoraEmItu } from '@/lib/datas'
 import type {
@@ -579,16 +580,18 @@ const CATALOGOS_ANIMAIS_MOCK: CatalogosAnimal = {
     { codigo: 'canil', nome: 'Canil' },
     { codigo: 'gatil', nome: 'Gatil' },
   ],
-  // Mesmos códigos do seed da V5 (o backend devolve todos em /animais/catalogos).
+  // Mesmos códigos do seed da V5 (o backend devolve todos em /animais/catalogos),
+  // com o `intervaloMeses` que o seed grava (12 para todas) — o modal de
+  // vacinação o usa para prever o próximo reforço.
   vacinas: [
-    { codigo: 'antirrabica', nome: 'Antirrábica' },
-    { codigo: 'v10', nome: 'V10' },
-    { codigo: 'v8', nome: 'V8' },
-    { codigo: 'v4_felinos', nome: 'V4 (felinos)' },
-    { codigo: 'giardia', nome: 'Giárdia' },
-    { codigo: 'gripe_canina', nome: 'Gripe canina' },
-    { codigo: 'felv', nome: 'FeLV' },
-    { codigo: 'leishmaniose', nome: 'Leishmaniose' },
+    { codigo: 'antirrabica', nome: 'Antirrábica', intervaloMeses: 12 },
+    { codigo: 'v10', nome: 'V10', intervaloMeses: 12 },
+    { codigo: 'v8', nome: 'V8', intervaloMeses: 12 },
+    { codigo: 'v4_felinos', nome: 'V4 (felinos)', intervaloMeses: 12 },
+    { codigo: 'giardia', nome: 'Giárdia', intervaloMeses: 12 },
+    { codigo: 'gripe_canina', nome: 'Gripe canina', intervaloMeses: 12 },
+    { codigo: 'felv', nome: 'FeLV', intervaloMeses: 12 },
+    { codigo: 'leishmaniose', nome: 'Leishmaniose', intervaloMeses: 12 },
   ],
   tiposProcedimento: [
     { codigo: 'atendimento_clinico', nome: 'Atendimento clínico' },
@@ -892,6 +895,37 @@ let vacinacoesMock: VacinacaoMockInterna[] = seedVacinacoesMock()
 
 export function resetVacinacoesMock() {
   vacinacoesMock = seedVacinacoesMock()
+}
+
+// Catálogo de vacinas (GET/POST/PUT/DELETE /api/vacinas). O estado parte do
+// mesmo CATALOGOS_ANIMAIS_MOCK que /animais/catalogos devolve — não de uma
+// segunda lista copiada —, para a tela de catálogo e o select do modal nunca
+// discordarem no mock. O `id` é derivado do código: estável entre reseeds, o
+// que mantém os testes legíveis.
+function seedVacinasMock(): Vacina[] {
+  return CATALOGOS_ANIMAIS_MOCK.vacinas.map((item) => ({
+    id: `vac-${item.codigo}`,
+    codigo: item.codigo,
+    nome: item.nome,
+    intervaloMeses: item.intervaloMeses,
+    ativo: true,
+  }))
+}
+
+let vacinasMock: Vacina[] = seedVacinasMock()
+
+export function resetVacinasMock() {
+  vacinasMock = seedVacinasMock()
+}
+
+// Mesma slugificação de VacinaService.derivarCodigo, no backend.
+function derivarCodigoVacina(nome: string): string {
+  return nome
+    .normalize('NFD')
+    .replace(/\p{M}+/gu, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
 }
 
 type ProcedimentoMockInterno = Omit<Procedimento, 'retificadoPorId' | 'statusRegistro'>
@@ -1201,8 +1235,89 @@ export const handlers = [
     return HttpResponse.json({ itens, pagina, tamanho, totalItens, totalPaginas })
   }),
 
+  // `vacinas` sai do estado do mock de /api/vacinas, não da constante: espelha
+  // o findByAtivoTrueOrderByNomeAsc do CatalogoAnimalService. Sem isso, uma
+  // vacina cadastrada pelo "+" não apareceria no select do modal, e o mock
+  // mentiria exatamente sobre o fluxo que ele existe para exercitar.
   http.get(`${API_BASE_URL}/animais/catalogos`, () => {
-    return HttpResponse.json(CATALOGOS_ANIMAIS_MOCK)
+    return HttpResponse.json({
+      ...CATALOGOS_ANIMAIS_MOCK,
+      vacinas: vacinasMock
+        .filter((item) => item.ativo)
+        .map(({ codigo, nome, intervaloMeses }) => ({ codigo, nome, intervaloMeses }))
+        .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
+    })
+  }),
+
+  http.get(`${API_BASE_URL}/vacinas`, ({ request }) => {
+    const url = new URL(request.url)
+    const ativoParam = url.searchParams.get('ativo')
+    const pagina = Number(url.searchParams.get('pagina') ?? '0')
+    const tamanho = Number(url.searchParams.get('tamanho') ?? '20')
+    const filtrados = vacinasMock
+      .filter((item) => ativoParam === null || item.ativo === (ativoParam === 'true'))
+      .toSorted((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+    return HttpResponse.json(paginar(filtrados, pagina, tamanho))
+  }),
+
+  http.post(`${API_BASE_URL}/vacinas`, async ({ request }) => {
+    const body = (await request.json()) as { nome?: string; intervaloMeses?: number }
+    const nome = (body.nome ?? '').trim()
+    const codigo = derivarCodigoVacina(nome)
+    // Mesmas recusas do VacinaService: nome que não produz código válido, ou
+    // longo demais para a coluna varchar(30), é 422 — nunca truncado.
+    if (!codigo || codigo.length > 30) {
+      return HttpResponse.json(
+        { mensagem: 'Dados invalidos', campos: [{ campo: 'nome', mensagem: 'Nome invalido' }] },
+        { status: 422 },
+      )
+    }
+    const existente = vacinasMock.find((item) => item.codigo === codigo)
+    if (existente) {
+      return HttpResponse.json(
+        {
+          mensagem: existente.ativo
+            ? `Ja existe a vacina "${existente.nome}" com o mesmo codigo (${codigo}). Use um nome que as diferencie.`
+            : `A vacina "${existente.nome}" ja existe com o mesmo codigo (${codigo}), mas esta desativada. Reative-a em Vacinas.`,
+        },
+        { status: 409 },
+      )
+    }
+    const vacina: Vacina = {
+      id: crypto.randomUUID(),
+      codigo,
+      nome,
+      intervaloMeses: body.intervaloMeses ?? null,
+      ativo: true,
+    }
+    vacinasMock.push(vacina)
+    return HttpResponse.json(vacina)
+  }),
+
+  http.get(`${API_BASE_URL}/vacinas/:id`, ({ params }) => {
+    const vacina = vacinasMock.find((item) => item.id === params.id)
+    if (!vacina) return HttpResponse.json({ mensagem: 'Vacina nao encontrada' }, { status: 404 })
+    return HttpResponse.json(vacina)
+  }),
+
+  http.put(`${API_BASE_URL}/vacinas/:id`, async ({ params, request }) => {
+    const body = (await request.json()) as { nome?: string; intervaloMeses?: number; ativo?: boolean }
+    const vacina = vacinasMock.find((item) => item.id === params.id)
+    if (!vacina) return HttpResponse.json({ mensagem: 'Vacina nao encontrada' }, { status: 404 })
+    // O código é imutável: renomear altera só o nome. `ativo: true` é o
+    // caminho de reativação.
+    vacina.nome = (body.nome ?? vacina.nome).trim()
+    vacina.intervaloMeses = body.intervaloMeses ?? null
+    vacina.ativo = body.ativo ?? vacina.ativo
+    return HttpResponse.json(vacina)
+  }),
+
+  // Soft-delete: a linha permanece, só sai do catálogo clínico.
+  http.delete(`${API_BASE_URL}/vacinas/:id`, ({ params }) => {
+    const vacina = vacinasMock.find((item) => item.id === params.id)
+    if (!vacina) return HttpResponse.json({ mensagem: 'Vacina nao encontrada' }, { status: 404 })
+    vacina.ativo = false
+    return HttpResponse.json(vacina)
   }),
 
   http.get(`${API_BASE_URL}/baias`, ({ request }) => {
