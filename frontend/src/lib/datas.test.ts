@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { adicionarDiasIso, diasCivisAteHoje, formatarDataBR, formatarDataHoraBR, hojeEmItu } from './datas'
+import { adicionarDiasIso, adicionarMesesIso, diasCivisAteHoje, formatarDataBR, formatarDataHoraBR, hojeEmItu } from './datas'
 
 describe('formatarDataHoraBR', () => {
   it('formata LocalDateTime pelo horário de parede, sem converter fuso', () => {
@@ -71,5 +71,30 @@ describe('hojeEmItu', () => {
   it('vira o dia à meia-noite de São Paulo', () => {
     vi.useFakeTimers({ now: new Date('2026-10-19T03:00:00Z') })
     expect(hojeEmItu()).toBe('2026-10-19')
+  })
+})
+
+describe('adicionarMesesIso', () => {
+  it('soma meses mantendo o dia quando ele existe no mês de destino', () => {
+    expect(adicionarMesesIso('2026-01-15', 12)).toBe('2027-01-15')
+    expect(adicionarMesesIso('2026-03-10', 1)).toBe('2026-04-10')
+  })
+
+  // Mesmo comportamento de LocalDate.plusMonths: trunca para o último dia do
+  // mês em vez de transbordar. Sem isso, a previsão no formulário divergiria
+  // da data de validade que o servidor calcula depois de salvar.
+  it('trunca para o último dia quando o dia não existe no mês de destino', () => {
+    expect(adicionarMesesIso('2026-01-31', 1)).toBe('2026-02-28')
+    expect(adicionarMesesIso('2026-03-31', 1)).toBe('2026-04-30')
+    expect(adicionarMesesIso('2026-08-31', 6)).toBe('2027-02-28')
+  })
+
+  it('respeita ano bissexto', () => {
+    expect(adicionarMesesIso('2028-01-31', 1)).toBe('2028-02-29')
+    expect(adicionarMesesIso('2028-02-29', 12)).toBe('2029-02-28')
+  })
+
+  it('atravessa a virada do ano', () => {
+    expect(adicionarMesesIso('2026-12-15', 1)).toBe('2027-01-15')
   })
 })

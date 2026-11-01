@@ -4,7 +4,7 @@ import type { Animal, AnimalRequest, AnexoAnimal, Baia, BaiaRequest, CatalogosAn
 import type { CriarExameRequest, Exame } from '@/features/animais/types/historico.types'
 import type { Vacina } from '@/features/vacinas/types/vacinas.types'
 import { DIAS_ANTECEDENCIA_ALERTA_VACINA, diasAteVencimento, hojeEmItu } from '@/features/animais/utils/regrasVacina'
-import { adicionarDiasIso, agoraEmItu } from '@/lib/datas'
+import { adicionarDiasIso, adicionarMesesIso, agoraEmItu } from '@/lib/datas'
 import type {
   CategoriaFarmacologica,
   CriarPrescricaoRequest,
@@ -882,14 +882,6 @@ const INTERVALO_MESES_SEED_V5 = 12
 // Mesmos códigos de StatusAnimal.CODIGOS_FORA_DA_CUSTODIA (RN-A05).
 const STATUS_FORA_DA_CUSTODIA = ['adotado', 'obito_natural', 'obito_eutanasia', 'transferido']
 
-// Mesma aritmética de LocalDate.plusMonths do backend: se o dia não existe no
-// mês de destino, fica no último dia do mês (31/01 + 1 mês = 28 ou 29/02),
-// em vez de transbordar para o mês seguinte como Date faz.
-function somarMesesIso(isoDate: string, meses: number): string {
-  const [ano, mes, dia] = isoDate.split('-').map(Number)
-  const ultimoDiaDoMesDestino = new Date(Date.UTC(ano, mes - 1 + meses + 1, 0)).getUTCDate()
-  return new Date(Date.UTC(ano, mes - 1 + meses, Math.min(dia, ultimoDiaDoMesDestino))).toISOString().slice(0, 10)
-}
 
 let vacinacoesMock: VacinacaoMockInterna[] = seedVacinacoesMock()
 
@@ -1494,7 +1486,7 @@ export const handlers = [
       aplicadoPorId: usuariosMock[0].id,
       aplicadoPorNome: `${usuariosMock[0].nome} ${usuariosMock[0].sobrenome}`,
       dataAplicacao: body.dataAplicacao,
-      dataValidade: somarMesesIso(body.dataAplicacao, INTERVALO_MESES_SEED_V5),
+      dataValidade: adicionarMesesIso(body.dataAplicacao, INTERVALO_MESES_SEED_V5),
       numeroDose: body.numeroDose ?? null,
       doseQuantidade: body.doseQuantidade,
       doseUnidade: body.doseUnidade,
