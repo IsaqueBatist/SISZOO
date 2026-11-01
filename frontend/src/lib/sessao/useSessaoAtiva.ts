@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { avisar } from '../avisos'
+import { toast } from '@/components/toast/toast'
 import {
   ANTECEDENCIA_AVISO_MS,
   INTERVALO_EXTENSAO_MS,
@@ -45,7 +45,7 @@ export function useSessaoAtiva(ativa: boolean, aoExpirar: () => void, aoSerRecus
         avisado = false
       } else if (!avisado) {
         avisado = true
-        avisar(TEXTO_AVISO_INATIVIDADE, 'atencao')
+        toast.atencao(TEXTO_AVISO_INATIVIDADE)
       }
       return true
     }

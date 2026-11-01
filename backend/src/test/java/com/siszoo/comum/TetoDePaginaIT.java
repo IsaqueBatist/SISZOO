@@ -27,8 +27,8 @@ class TetoDePaginaIT extends AbstractIntegrationTest {
     @ParameterizedTest(name = "{0}")
     @ValueSource(strings = {
             "/api/animais", "/api/baias", "/api/vacinacoes", "/api/procedimentos", "/api/prescricoes", "/api/exames",
-            "/api/medicamentos", "/api/ocorrencias", "/api/processos", "/api/relatorios/historico", "/api/auditoria",
-            "/api/usuarios"})
+            "/api/medicamentos", "/api/vacinas", "/api/ocorrencias", "/api/processos", "/api/relatorios/historico",
+            "/api/auditoria", "/api/usuarios"})
     void tamanhoForaDoIntervaloResponde422EAte500Aceita(String rota) {
         for (int tamanho : new int[] {0, 501}) {
             given().header("Authorization", "Bearer " + tokenAdmin)

@@ -5,7 +5,7 @@ import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
 import { AtalhoHoje } from '@/components/AtalhoHoje'
 import { Modal } from '@/components/Modal'
 import { formatarData, formatarDataHora } from '@/features/ocorrencias/utils/datas'
-import { avisar } from '@/lib/avisos'
+import { toast } from '@/components/toast/toast'
 import { hojeEmItu } from '@/lib/datas'
 import { mensagemDeRegraDaApi, statusHttpDoErro } from '@/lib/erroApi'
 import {
@@ -182,7 +182,7 @@ function FormResultado({ processo, retifica, onRegistrado, onCancelar }: FormRes
         retificaId: retifica?.id,
       })
       setPendente(null)
-      avisar(retifica ? 'Resultado corrigido.' : 'Resultado registrado.')
+      toast.sucesso(retifica ? 'Resultado corrigido.' : 'Resultado registrado.')
       onRegistrado(dados.resultado)
     } catch (falha) {
       setPendente(null)

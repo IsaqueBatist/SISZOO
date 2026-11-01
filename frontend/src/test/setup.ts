@@ -2,10 +2,10 @@ import '@testing-library/jest-dom/vitest'
 import { configure } from '@testing-library/react'
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest'
 import { definirSessaoEmMemoria } from '../features/auth/hooks/AuthContext'
-import { limparAvisos } from '../lib/avisos'
 import { limparAtividade } from '../lib/sessao/atividade'
 import { reiniciarCanal } from '../lib/sessao/canal'
 import { cancelarTodosOsSalvamentosAgendados } from '../lib/rascunhoDb'
+import { limparToasts } from '../components/toast/toast'
 import { limparFiltrosDeListas } from '../lib/useFiltrosLista'
 import { server } from '../mocks/server'
 
@@ -24,6 +24,7 @@ import {
   resetProcedimentosMock,
   resetUsuariosMock,
   resetVacinacoesMock,
+  resetVacinasMock,
   resetExamesEAnexosMock,
 } from '../mocks/handlers'
 
@@ -59,6 +60,7 @@ afterEach(() => {
   resetAnimaisMock()
   resetBaiasMock()
   resetVacinacoesMock()
+  resetVacinasMock()
   resetProcedimentosMock()
   resetPrescricoesMock()
   resetMedicamentosMock()
@@ -67,8 +69,10 @@ afterEach(() => {
 })
 afterAll(() => server.close())
 
-// Filtros de lista e avisos vivem fora dos componentes: não podem vazar de um teste para outro.
+// Filtros de lista vivem fora dos componentes e não podem vazar de um teste
+// para outro. Os avisos não precisam de limpeza: são estado do ToastProvider,
+// que morre junto com o unmount de cada teste.
 afterEach(() => {
   limparFiltrosDeListas()
-  limparAvisos()
+  limparToasts()
 })

@@ -6,7 +6,7 @@ import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router-dom'
 import { API_BASE_URL } from '@/lib/env'
 import { server } from '@/mocks/server'
-import { Avisos } from '@/components/Avisos'
+import { Toasts } from '@/components/toast/Toasts'
 import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import { Usuarios } from './Usuarios'
 
@@ -30,9 +30,9 @@ function renderUsuarios() {
       <MemoryRouter>
         <AuthProvider>
           <Usuarios />
-          <Avisos />
         </AuthProvider>
       </MemoryRouter>
+      <Toasts />
     </QueryClientProvider>,
   )
 }

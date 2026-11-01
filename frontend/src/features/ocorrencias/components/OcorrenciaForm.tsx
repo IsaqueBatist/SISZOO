@@ -8,7 +8,7 @@ import { BannerRascunho } from '@/components/BannerRascunho'
 import { RadioCards } from '@/components/RadioCards'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { avisar } from '@/lib/avisos'
+import { toast } from '@/components/toast/toast'
 import { mensagemDeRegraDaApi, statusHttpDoErro } from '@/lib/erroApi'
 import { AnexoInvalidoError, MAXIMO_ANEXOS, validarAnexo } from '../utils/anexoOcorrencia'
 import './OcorrenciaForm.css'
@@ -124,7 +124,7 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
     }
 
     await rascunho.encerrarAposEnvio()
-    avisar(`Ocorrência ${formatarProtocoloOcorrencia(nova.protocolo)} registrada.`)
+    toast.sucesso(`Ocorrência ${formatarProtocoloOcorrencia(nova.protocolo)} registrada.`)
 
     if (dados.anexos.length === 0) {
       navigate(`/ocorrencias/${nova.id}`)
@@ -157,7 +157,7 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
       return
     }
     await rascunho.encerrarAposEnvio()
-    avisar('Alterações salvas.')
+    toast.sucesso('Alterações salvas.')
     navigate(`/ocorrencias/${original.id}`)
   }
 

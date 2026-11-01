@@ -4,7 +4,7 @@ import { ModalConfirmacao } from '@/components/ModalConfirmacao'
 import { ErroComRetry } from '@/components/layout/ErroComRetry'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { avisar } from '@/lib/avisos'
+import { toast } from '@/components/toast/toast'
 import { mensagemDeRegraDaApi } from '@/lib/erroApi'
 import { normalizarBusca } from '@/lib/texto'
 import { classeDoFiltro, useFiltrosLista } from '@/lib/useFiltrosLista'
@@ -123,9 +123,9 @@ export function GestaoBaias() {
     try {
       if (acao === 'excluir') await excluirMutation.mutateAsync(baia.id)
       else await alterarStatusMutation.mutateAsync({ id: baia.id, ativa: true })
-      avisar(acao === 'excluir' ? `Baia ${baia.nome} excluída.` : `Baia ${baia.nome} reativada.`)
+      toast.sucesso(acao === 'excluir' ? `Baia ${baia.nome} excluída.` : `Baia ${baia.nome} reativada.`)
     } catch (erro) {
-      avisar(mensagemDeRegraDaApi(erro) ?? `Não foi possível ${acao} a baia ${baia.nome}. Nada foi mudado.`, 'erro')
+      toast.erro(mensagemDeRegraDaApi(erro) ?? `Não foi possível ${acao} a baia ${baia.nome}. Nada foi mudado.`)
     } finally {
       setConfirmacao(null)
     }

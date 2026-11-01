@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { FormProvider, useForm, type FieldErrors as RhfFieldErrors } from 'react-hook-form'
 import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { avisar } from '@/lib/avisos'
+import { toast } from '@/components/toast/toast'
 import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
 import type { Animal } from '../types/animais.types'
 import { animalFormUiSchema, type AnimalFormUiValues } from '../schemas/animalFormSchema'
@@ -223,7 +223,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
       }
       await rascunho.removerAposSucesso()
       await removerArquivosDoRascunho(donoDosArquivos)
-      avisar(animal ? 'Alterações salvas.' : `${dados.nome} cadastrado(a).`)
+      toast.sucesso(animal ? 'Alterações salvas.' : `${dados.nome} cadastrado(a).`)
       navigate(`/animais/${idSalvo}`)
     } catch (erro) {
       tratarErroSubmit(erro)

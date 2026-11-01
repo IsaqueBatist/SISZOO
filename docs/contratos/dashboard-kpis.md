@@ -123,3 +123,15 @@ TTL de 5 minutos (Caffeine, sem `@CacheEvict`): uma mudança real (nova
 vacinação, novo animal, baia lotando) pode levar até 5 minutos para aparecer
 no dashboard. Decisão aceita para não recalcular as agregações a cada
 refresh/polling em máquinas com ~2GB RAM.
+
+Desde 01/11/2026 o **sino de notificações da topbar** (`MenuNotificacoes`,
+`features/alertas/hooks/useResumoNotificacoes.ts`) consome este mesmo endpoint,
+pelo mesmo `useKpisDashboardQuery` — então herda o atraso: os cinco alertas
+agregados podem demorar até 5 minutos para refletir uma escrita. Herda também o
+efeito de desativar uma vacina no catálogo (ver
+`docs/regras-negocio-clinico.md`).
+
+O sino **reusa** a chave `['dashboard','kpis']` em vez de declarar consulta
+própria, e por isso não acrescenta requisição nenhuma. Declarar outra consulta
+na mesma chave com `queryFn` diferente faria o cache depender de quem montasse
+primeiro — sino e dashboard passariam a mostrar números diferentes.

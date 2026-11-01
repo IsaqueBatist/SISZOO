@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { AvisoEnvioPausado } from '@/components/AvisoEnvioPausado'
-import { avisar } from '@/lib/avisos'
+import { toast } from '@/components/toast/toast'
 import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
 import { Modal } from '@/components/Modal'
 import { BannerRascunho } from '@/components/BannerRascunho'
@@ -80,7 +80,7 @@ export function ModalRegistrarExame({ animalId, retifica, onFechar, onSucesso }:
         retificaId: retifica?.id,
       })
       await rascunho.removerAposSucesso()
-      avisar(retifica ? 'Exame corrigido.' : 'Exame registrado.')
+      toast.sucesso(retifica ? 'Exame corrigido.' : 'Exame registrado.')
       onSucesso()
     } catch (erro) {
       if (aplicarErrosDeCampo(erro, setError, MAPA_ERROS_SERVIDOR).length > 0) return

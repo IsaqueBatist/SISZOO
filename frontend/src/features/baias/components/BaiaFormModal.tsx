@@ -7,7 +7,7 @@ import { BannerRascunho } from '@/components/BannerRascunho'
 import { useAtualizarBaiaMutation, useCatalogosAnimaisQuery, useCriarBaiaMutation } from '@/features/animais/hooks/useAnimais'
 import type { Baia } from '@/features/animais/types/animais.types'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { avisar } from '@/lib/avisos'
+import { toast } from '@/components/toast/toast'
 import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
 import { useRascunho } from '@/lib/useRascunho'
 import { baiaFormSchema, type BaiaFormValues } from '../schemas/baiaFormSchema'
@@ -91,7 +91,7 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
         await criarMutation.mutateAsync(payload)
       }
       await rascunho.removerAposSucesso()
-      avisar(editando ? 'Baia atualizada.' : 'Baia criada.')
+      toast.sucesso(editando ? 'Baia atualizada.' : 'Baia criada.')
       onFechar()
     } catch (erro) {
       if (aplicarErrosDeCampo(erro, setError, MAPA_ERROS_SERVIDOR).length > 0) return

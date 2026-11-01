@@ -4,6 +4,7 @@ import { render, screen } from '@testing-library/react'
 import { HttpResponse, http } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { Toasts } from '@/components/toast/Toasts'
 import { FichaAnimal } from '@/features/animais/components/FichaAnimal'
 import type { Animal } from '@/features/animais/types/animais.types'
 import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
@@ -24,7 +25,12 @@ const TZ_ORIGINAL = process.env.TZ
 
 function comCliente(ui: React.ReactNode) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
+  return render(
+    <QueryClientProvider client={queryClient}>
+      {ui}
+      <Toasts />
+    </QueryClientProvider>,
+  )
 }
 
 function usuarioDaApi(sobrescrever: Record<string, unknown>) {

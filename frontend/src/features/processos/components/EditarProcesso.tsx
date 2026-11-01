@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { FormProvider, useForm, type Control, type Resolver, type UseFormRegister, type UseFormSetValue, type UseFormWatch } from 'react-hook-form'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
-import { avisar } from '@/lib/avisos'
+import { toast } from '@/components/toast/toast'
 import { aplicarErrosDeCampo, mensagemDeRegraDaApi, statusHttpDoErro } from '@/lib/erroApi'
 import { useCatalogosAnimaisQuery } from '@/features/animais/hooks/useAnimais'
 import { formatarProtocoloProcesso } from '@/features/ocorrencias/utils/protocolo'
@@ -42,7 +42,7 @@ function FormularioEdicao({ processo }: { processo: Processo }) {
   async function salvar(valores: ProcessoEdicaoValues) {
     try {
       await editar.mutateAsync(paraEdicao(valores, processo))
-      avisar('Alterações salvas e registradas no histórico do processo.')
+      toast.sucesso('Alterações salvas e registradas no histórico do processo.')
       navigate(voltar)
     } catch (erro) {
       const campos = aplicarErrosDeCampo(erro, setError)

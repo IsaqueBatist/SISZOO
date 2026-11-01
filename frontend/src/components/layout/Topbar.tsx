@@ -1,6 +1,7 @@
 import { useLocation } from 'react-router-dom'
 import { ROLES, rotuloDaRota } from '../../lib/nav'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { MenuNotificacoes } from './MenuNotificacoes'
 import { Icon } from './Icon'
 import { MenuPerfil } from './MenuPerfil'
 
@@ -26,6 +27,7 @@ export function Topbar({ onAbrirMenu }: TopbarProps) {
         <span className={`badge role-pill ${role.badgeCls}`} title="Papel atual">
           {role.short}
         </span>
+        <MenuNotificacoes />
         <MenuPerfil />
       </div>
     </header>

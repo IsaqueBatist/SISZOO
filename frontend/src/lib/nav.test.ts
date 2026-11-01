@@ -19,7 +19,7 @@ describe('ordem do menu lateral', () => {
   it('mantém os grupos e ordena os itens de cada grupo de A a Z pelo nome exibido', () => {
     expect(rotulosPorGrupo(NAV_ALL)).toEqual({
       PRINCIPAL: ['Animais', 'Dashboard', 'Ocorrências', 'Processos Sanitários', 'Relatórios'],
-      CADASTROS: ['Gestão de Baias', 'Medicamentos'],
+      CADASTROS: ['Gestão de Baias', 'Medicamentos', 'Vacinas'],
       ADMINISTRAÇÃO: ['Logs', 'Usuários'],
       SISTEMA: ['Configurações'],
     })
@@ -42,12 +42,12 @@ describe('ordem do menu lateral', () => {
   it('cada perfil continua vendo só os módulos permitidos, já em ordem alfabética', () => {
     expect(rotulosPorGrupo(getNavForRole('vet'))).toEqual({
       PRINCIPAL: ['Animais', 'Dashboard', 'Processos Sanitários', 'Relatórios'],
-      CADASTROS: ['Gestão de Baias', 'Medicamentos'],
+      CADASTROS: ['Gestão de Baias', 'Medicamentos', 'Vacinas'],
       SISTEMA: ['Configurações'],
     })
     expect(rotulosPorGrupo(getNavForRole('agente'))).toEqual({
       PRINCIPAL: ['Animais', 'Dashboard', 'Ocorrências', 'Processos Sanitários', 'Relatórios'],
-      CADASTROS: ['Medicamentos'],
+      CADASTROS: ['Medicamentos', 'Vacinas'],
       SISTEMA: ['Configurações'],
     })
     expect(getNavForRole('sem_perfil')).toEqual([])

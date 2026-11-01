@@ -52,6 +52,9 @@ const GestaoBaias = lazy(() =>
 const Medicamentos = lazy(() =>
   import('@/features/medicamentos/components/Medicamentos').then((m) => ({ default: m.Medicamentos })),
 )
+const Vacinas = lazy(() =>
+  import('@/features/vacinas/components/Vacinas').then((m) => ({ default: m.Vacinas })),
+)
 const Ocorrencias = lazy(() =>
   import('@/features/ocorrencias/components/Ocorrencias').then((m) => ({ default: m.Ocorrencias })),
 )
@@ -124,6 +127,10 @@ export function AppRoutes() {
               </Route>
               {/* GESTAO_ANIMAIS:leitura (todos os perfis); o cadastro só aparece com escrita. */}
               <Route path="/medicamentos" element={<Medicamentos />} />
+              {/* Mesma autoridade do catalogo de medicamentos: leitura para os 3
+                  perfis, cadastro/edicao so com escrita (checado no componente)
+                  e desativacao so para o Administrador, recusada pelo backend. */}
+              <Route path="/vacinas" element={<Vacinas />} />
               <Route element={<RotaGestaoBaias />}>
                 <Route path="/baias" element={<GestaoBaias />} />
               </Route>

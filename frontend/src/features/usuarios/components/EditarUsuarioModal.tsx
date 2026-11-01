@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
 import { Modal } from '@/components/Modal'
-import { avisar } from '@/lib/avisos'
+import { toast } from '@/components/toast/toast'
 import { aplicarErrosDeCampo, mensagemDeRegraDaApi } from '@/lib/erroApi'
 import { useAtualizarUsuarioMutation } from '../hooks/useUsuarios'
 import { edicaoUsuarioSchema, type EdicaoUsuarioValues } from '../schemas/edicaoUsuarioSchema'
@@ -55,7 +55,7 @@ export function EditarUsuarioModal({ usuario, ehOProprioUsuario, onFechar }: Edi
           telefone: dados.telefone || undefined,
         },
       })
-      avisar(`Cadastro de ${dados.nome} ${dados.sobrenome} atualizado.`)
+      toast.sucesso(`Cadastro de ${dados.nome} ${dados.sobrenome} atualizado.`)
       onFechar()
     } catch (erro) {
       const campos = aplicarErrosDeCampo(erro, setError)

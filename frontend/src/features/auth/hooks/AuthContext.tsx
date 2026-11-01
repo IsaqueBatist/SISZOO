@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { limparAvisos } from '@/lib/avisos'
+import { toast } from '@/components/toast/toast'
 import { setAuthToken } from '@/lib/http'
 import { roleKeyFromCargos } from '@/lib/nav'
 import { limparRascunhos } from '@/lib/rascunhoDb'
@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // salvamentos agendados que recriariam o rascunho.
       if (apagarRascunhos) void limparRascunhos()
       limparFiltrosDeListas()
-      limparAvisos()
+      toast.limpar()
       aplicarSessao(null)
       void queryClient.cancelQueries().then(() => queryClient.clear())
     },

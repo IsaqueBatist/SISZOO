@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { AtalhoHoje } from '@/components/AtalhoHoje'
 import { AvisoEnvioPausado } from '@/components/AvisoEnvioPausado'
-import { avisar } from '@/lib/avisos'
+import { toast } from '@/components/toast/toast'
 import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
 import { Modal } from '@/components/Modal'
 import { BannerRascunho } from '@/components/BannerRascunho'
@@ -86,7 +86,7 @@ export function ModalRegistrarProcedimento({ animalId, retifica, onFechar, onSuc
         retificaId: retifica?.id,
       })
       await rascunho.removerAposSucesso()
-      avisar(retifica ? 'Procedimento corrigido.' : 'Procedimento registrado.')
+      toast.sucesso(retifica ? 'Procedimento corrigido.' : 'Procedimento registrado.')
       onSucesso()
     } catch (erro) {
       if (aplicarErrosDeCampo(erro, setError, MAPA_ERROS_SERVIDOR).length > 0) return

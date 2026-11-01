@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
-import { Avisos } from '@/components/Avisos'
 import { BannerOffline } from '@/components/BannerOffline'
 import { tituloDaRota } from '@/lib/nav'
 import { limparRascunhosExpirados } from '@/lib/rascunhoDb'
@@ -84,7 +83,6 @@ export function Layout() {
           <Outlet />
         </main>
       </div>
-      <Avisos />
     </div>
   )
 }

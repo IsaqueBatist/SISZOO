@@ -7,7 +7,7 @@ import { AvisoEnvioPausado } from '@/components/AvisoEnvioPausado'
 import { BannerRascunho } from '@/components/BannerRascunho'
 import { Stepper } from '@/components/Stepper'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { avisar } from '@/lib/avisos'
+import { toast } from '@/components/toast/toast'
 import { camposDoErro, mensagemDeRegraDaApi, statusHttpDoErro } from '@/lib/erroApi'
 import { AmostraAnimalCard, type AmostraErros } from './AmostraAnimalCard'
 import './ProcessoForm.css'
@@ -206,7 +206,7 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular, denuncianteDaOcorr
     try {
       const novo = await mutation.mutateAsync(paraRequisicao(dados))
       await removerRascunhoProcesso(chaveRascunho)
-      avisar(`Processo ${formatarProtocoloProcesso(novo.protocolo)} registrado.`)
+      toast.sucesso(`Processo ${formatarProtocoloProcesso(novo.protocolo)} registrado.`)
       navigate(`/processos/${novo.id}`)
     } catch (erro) {
       setSubmitError(mensagemDoErro(erro))

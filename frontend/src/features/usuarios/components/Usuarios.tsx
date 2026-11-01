@@ -3,7 +3,7 @@ import { ModalConfirmacao } from '@/components/ModalConfirmacao'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { ErroComRetry } from '@/components/layout/ErroComRetry'
 import { Icon } from '@/components/layout/Icon'
-import { avisar } from '@/lib/avisos'
+import { toast } from '@/components/toast/toast'
 import { formatarDataBR, formatarDataHoraBR } from '@/lib/datas'
 import { mensagemDeRegraDaApi } from '@/lib/erroApi'
 import { normalizarBusca } from '@/lib/texto'
@@ -88,9 +88,9 @@ export function Usuarios() {
     const nome = `${usuario.nome} ${usuario.sobrenome}`
     try {
       await alterarStatus.mutateAsync({ id: usuario.id, ativo: !usuario.ativo })
-      avisar(usuario.ativo ? `${nome} foi desativado(a).` : `${nome} foi reativado(a).`)
+      toast.sucesso(usuario.ativo ? `${nome} foi desativado(a).` : `${nome} foi reativado(a).`)
     } catch (erro) {
-      avisar(mensagemDeRegraDaApi(erro) ?? `Não foi possível alterar o acesso de ${nome}. Nada foi mudado.`, 'erro')
+      toast.erro(mensagemDeRegraDaApi(erro) ?? `Não foi possível alterar o acesso de ${nome}. Nada foi mudado.`)
     } finally {
       setUsuarioEmConfirmacao(null)
     }

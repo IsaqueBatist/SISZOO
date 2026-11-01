@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
-import { Avisos } from '@/components/Avisos'
+import { Toasts } from '@/components/toast/Toasts'
 import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import { API_BASE_URL } from '@/lib/env'
 import { processoComResultadoFixture, processoFixture } from '@/mocks/processosFixtures'
@@ -31,7 +31,6 @@ function renderEdicao(cargos = ['Administrador']) {
     <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
       <MemoryRouter initialEntries={[`/processos/${ID}/editar`]}>
         <AuthProvider>
-          <Avisos />
           <Routes>
             <Route element={<RotaAdmin />}>
               <Route path="/processos/:id/editar" element={<EditarProcesso />} />
@@ -41,6 +40,7 @@ function renderEdicao(cargos = ['Administrador']) {
           </Routes>
         </AuthProvider>
       </MemoryRouter>
+      <Toasts />
     </QueryClientProvider>,
   )
 }

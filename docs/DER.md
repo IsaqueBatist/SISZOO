@@ -323,12 +323,17 @@ A feature `geral` gera a autoridade do módulo inteiro (`MODULO:leitura|escrita|
 | Campo             | Tipo         | Obrig. | Observações                                                                                     |
 | ----------------- | ------------ | ------ | ----------------------------------------------------------------------------------------------- |
 | `id`              | uuid PK      | \*     |                                                                                                 |
-| `codigo`          | varchar(30)  | \*     | único (`antirrabica`, `v10`, `v8`, `v4_felinos`, `giardia`, `gripe_canina`, `felv`, `leishmaniose`) |
+| `codigo`          | varchar(30)  | \*     | único; **derivado do `nome` pelo servidor e imutável** (`v4_felinos` ← "V4 (felinos)"). Seed: `antirrabica`, `v10`, `v8`, `v4_felinos`, `giardia`, `gripe_canina`, `felv`, `leishmaniose` |
 | `nome`            | varchar(100) | \*     |                                                                                                 |
-| `intervalo_meses` | integer      | ?      | seed provisório de 12 meses (pendente CCZ)                                                      |
-| `ativo`           | boolean      | \*     | default `true`                                                                                  |
+| `intervalo_meses` | integer      | ?      | seed de 12 meses; **editável pelo CCZ** (`PUT /api/vacinas/{id}`). Alterar recalcula a validade de **todas** as vacinações daquela vacina, por ser campo derivado |
+| `ativo`           | boolean      | \*     | default `true`; `DELETE /api/vacinas/{id}` = soft-delete. Vacina inativa não aceita vacinação nova (RN-C09) e sai do catálogo clínico, do alerta e do KPI de cobertura, sem alterar registros passados |
 
 > Vínculo vacina–espécie (`especie_aplicavel`) não existe no schema - pendente de decisão do CCZ.
+
+Catálogo mantido por `/api/vacinas` (`GET`, `GET /{id}`, `POST`, `PUT`, `DELETE`), com leitura para os três
+perfis, escrita em `GESTAO_ANIMAIS:escrita` e desativação em `:exclusao`. Contrato em
+`docs/contratos/catalogo-vacinas.md`; decisões em `docs/decisoes/catalogo-vacina.md`. Os efeitos de desativar
+ou reeditar uma vacina estão em `docs/regras-negocio-clinico.md`.
 
 #### `procedimento`
 
@@ -994,6 +999,11 @@ consideram só quem está sob custódia (`StatusAnimal.CODIGOS_SOB_CUSTODIA`), e
 ### Catálogos imutáveis pelo usuário final
 
 23. Espécies, status de animal, motivos de entrada, tipos de baia, doenças, laboratórios, sintomas, tipos de ocorrência, providências tomadas, status de processo, resultados laboratoriais, desfechos, vacinas → mantidos pelo administrador via `Catálogos`. Não há mais aba "Parâmetros" nem "Integrações" expostas ao usuário.
+    - **Ressalva (01/11/2026):** o catálogo de **vacinas** (`/api/vacinas`, tela `/vacinas`) e o de
+      **medicamentos** usam `GESTAO_ANIMAIS:escrita`, então o **Veterinário** também cadastra e edita — só a
+      desativação é exclusiva do Administrador (`:exclusao`). Restringir a escrita ao Administrador exigiria
+      autoridade nova em `cargo_permissao`, e portanto migration. Ver `docs/decisoes/catalogo-vacina.md`
+      (CV-3). Os demais catálogos da lista continuam sem tela.
 
 ### Acesso e segurança (adendo)
 

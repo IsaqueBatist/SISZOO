@@ -49,6 +49,18 @@ export interface CatalogoItem {
   nome: string
 }
 
+// Espelha com.siszoo.animais.dto.VacinaCatalogoResponse: é um CatalogoItem
+// que leva também o intervalo de reforço, de que o modal de vacinação precisa
+// para prever a próxima aplicação. Estende `CatalogoItem`, então continua
+// servindo ao `SelectCatalogoClinico` sem mudança nenhuma lá.
+//
+// `intervaloMeses` nulo = vacina sem reforço definido, que não gera alerta
+// (RN-A03). A validade de uma vacinação já gravada continua vindo de
+// `Vacinacao.dataValidade` — não recalcular a partir daqui.
+export interface VacinaCatalogo extends CatalogoItem {
+  intervaloMeses: number | null
+}
+
 // Espelha com.siszoo.animais.dto.CatalogosAnimalResponse.
 export interface CatalogosAnimal {
   especies: CatalogoItem[]
@@ -59,7 +71,7 @@ export interface CatalogosAnimal {
   tiposExame?: CatalogoItem[]
   laboratorios?: CatalogoItem[]
   // Registro de vacinação e de procedimento (seed da V5).
-  vacinas: CatalogoItem[]
+  vacinas: VacinaCatalogo[]
   tiposProcedimento: CatalogoItem[]
   condicoesSaude: CatalogoItem[]
 }

@@ -77,6 +77,20 @@ export function adicionarDiasIso(isoDate: string, dias: number): string {
   return new Date(Date.UTC(ano, mes - 1, dia + dias)).toISOString().slice(0, 10)
 }
 
+
+// Soma meses a uma data civil, replicando LocalDate.plusMonths do backend:
+// quando o dia não existe no mês de destino, o resultado é o ÚLTIMO dia desse
+// mês (31/01 + 1 mês = 28/02), e não o transbordo para o mês seguinte que um
+// `Date.UTC(ano, mes + n, dia)` ingênuo produziria (03/03). A previsão de
+// reforço mostrada no formulário precisa bater exatamente com a data de
+// validade que o servidor calcula depois de salvar.
+export function adicionarMesesIso(isoDate: string, meses: number): string {
+  const [ano, mes, dia] = isoDate.slice(0, 10).split('-').map(Number)
+  const mesAlvoZeroBased = mes - 1 + meses
+  // Dia 0 do mês seguinte = último dia do mês alvo.
+  const ultimoDiaDoMesAlvo = new Date(Date.UTC(ano, mesAlvoZeroBased + 1, 0)).getUTCDate()
+  return new Date(Date.UTC(ano, mesAlvoZeroBased, Math.min(dia, ultimoDiaDoMesAlvo))).toISOString().slice(0, 10)
+}
 // Dias civis em Itu de uma data ou LocalDateTime da API até hoje: 0 = hoje,
 // 1 = ontem. Conta pelo calendário, não por blocos de 24 h.
 export function diasCivisAteHoje(iso: string): number {

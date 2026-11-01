@@ -22,21 +22,23 @@ export const ROLES: Record<RoleKey, Role> = {
     label: 'Administrador',
     short: 'ADMIN',
     badgeCls: 'badge-role-admin',
-    access: ['dashboard', 'animais', 'ocorrencias', 'processos', 'relatorios', 'medicamentos', 'baias', 'usuarios', 'logs', 'config'],
+    access: ['dashboard', 'animais', 'ocorrencias', 'processos', 'relatorios', 'medicamentos', 'vacinas', 'baias', 'usuarios', 'logs', 'config'],
   },
   vet: {
     label: 'Veterinário(a)',
     short: 'VET',
     badgeCls: 'badge-role-vet',
-    access: ['dashboard', 'animais', 'processos', 'relatorios', 'medicamentos', 'baias', 'config'],
+    access: ['dashboard', 'animais', 'processos', 'relatorios', 'medicamentos', 'vacinas', 'baias', 'config'],
   },
-  // 'medicamentos' (fora do protótipo): o Agente tem GESTAO_ANIMAIS:leitura,
-  // então vê o catálogo; cadastrar exige escrita (Admin e Vet).
+  // 'medicamentos' e 'vacinas' (fora do protótipo): o Agente tem
+  // GESTAO_ANIMAIS:leitura, então vê os dois catálogos; cadastrar exige
+  // escrita (Admin e Vet) e desativar exige :exclusao (só Admin). Divergência
+  // deliberada do shell.js — ver docs/decisoes/catalogo-vacina.md.
   agente: {
     label: 'Agente Sanitário',
     short: 'AGENTE',
     badgeCls: 'badge-role-agent',
-    access: ['dashboard', 'animais', 'ocorrencias', 'processos', 'relatorios', 'medicamentos', 'config'],
+    access: ['dashboard', 'animais', 'ocorrencias', 'processos', 'relatorios', 'medicamentos', 'vacinas', 'config'],
   },
   sem_perfil: {
     label: 'Sem perfil reconhecido',
@@ -75,6 +77,7 @@ const NAV_DECLARADA: NavEntry[] = [
   { id: 'relatorios', label: 'Relatórios', to: '/relatorios', icon: 'chart' },
   { group: 'CADASTROS' },
   { id: 'medicamentos', label: 'Medicamentos', to: '/medicamentos', icon: 'pill' },
+  { id: 'vacinas', label: 'Vacinas', to: '/vacinas', icon: 'syringe' },
   { id: 'baias', label: 'Gestão de Baias', to: '/baias', icon: 'grid' },
   { group: 'ADMINISTRAÇÃO' },
   { id: 'usuarios', label: 'Usuários', to: '/usuarios', icon: 'users' },

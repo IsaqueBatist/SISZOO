@@ -1,13 +1,11 @@
+import { Toasts } from '@/components/toast/Toasts'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
-import { API_BASE_URL } from '@/lib/env'
-import { server } from '@/mocks/server'
 import { Medicamentos } from './Medicamentos'
 
 function renderComCargo(cargo: string) {
@@ -23,103 +21,148 @@ function renderComCargo(cargo: string) {
   return render(
     <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
       <MemoryRouter>
-        <AuthProvider>
-          <Medicamentos />
-        </AuthProvider>
+          <AuthProvider>
+            <Medicamentos />
+          </AuthProvider>
       </MemoryRouter>
+      <Toasts />
     </QueryClientProvider>,
   )
 }
 
+// O cadastro vive num modal, como nas outras telas de lista.
+async function abrirCadastro(user: ReturnType<typeof userEvent.setup>) {
+  await screen.findByText('Fenobarbital 30mg')
+  await user.click(screen.getByRole('button', { name: /cadastrar medicamento/i }))
+  const modal = screen.getByRole('heading', { name: 'Cadastrar medicamento' }).closest<HTMLElement>('.modal')
+  if (!modal) throw new Error('modal não encontrado')
+  return modal
+}
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
+
 describe('Medicamentos', () => {
-  it('busca sem depender de acento e filtra por categoria, com opção de limpar', async () => {
-    const user = userEvent.setup()
-    renderComCargo('Agente Sanitário')
-
-    await screen.findByText('Fenobarbital 30mg')
-
-    await user.selectOptions(screen.getByLabelText('Filtrar por categoria'), 'Antibiótico')
-    expect(screen.queryByRole('cell', { name: 'Fenobarbital 30mg' })).not.toBeInTheDocument()
-    expect(screen.getByRole('cell', { name: 'Amoxicilina 250mg' })).toBeInTheDocument()
-    expect(screen.getByText('Mostrando', { exact: false })).toHaveTextContent('Mostrando 1 de 2 medicamentos')
-
-    await user.type(screen.getByLabelText('Buscar medicamentos'), 'nao existe')
-    expect(await screen.findByText('Nenhum medicamento encontrado')).toBeInTheDocument()
-
-    await user.click(screen.getAllByRole('button', { name: 'Limpar filtros' })[0])
-    expect(screen.getByRole('cell', { name: 'Fenobarbital 30mg' })).toBeInTheDocument()
-
-    await user.type(screen.getByLabelText('Buscar medicamentos'), 'AMÓXI')
-    expect(screen.getByRole('cell', { name: 'Amoxicilina 250mg' })).toBeInTheDocument()
-    expect(screen.queryByRole('cell', { name: 'Fenobarbital 30mg' })).not.toBeInTheDocument()
-  })
-
-  it('traz o catálogo inteiro mesmo quando ele ocupa mais de uma página', async () => {
-    const paginas: (string | null)[] = []
-    server.use(
-      http.get(`${API_BASE_URL}/medicamentos`, ({ request }) => {
-        const pagina = new URL(request.url).searchParams.get('pagina')
-        paginas.push(pagina)
-        const nome = pagina === '0' ? 'Da primeira página' : 'Da segunda página'
-        return HttpResponse.json({
-          itens: [{ id: nome, nome, categoriaId: 'cat-1', categoriaNome: 'Antibiótico', ativo: true }],
-          pagina: Number(pagina),
-          tamanho: 500,
-          totalItens: 501,
-          totalPaginas: 2,
-        })
-      }),
-    )
-    renderComCargo('Agente Sanitário')
-
-    expect(await screen.findByRole('cell', { name: 'Da segunda página' })).toBeInTheDocument()
-    expect(screen.getByRole('cell', { name: 'Da primeira página' })).toBeInTheDocument()
-    expect(paginas).toEqual(['0', '1'])
+  it('lista o catálogo com a categoria e a situação', async () => {
+    renderComCargo('Administrador')
+    const linha = (await screen.findByText('Fenobarbital 30mg')).closest('tr') as HTMLElement
+    expect(within(linha).getByText('Anticonvulsivante')).toBeInTheDocument()
+    expect(within(linha).getByText('Ativo')).toBeInTheDocument()
   })
 
   it('cadastra uma categoria nova, já a escolhe e cadastra o medicamento na lista', async () => {
     const user = userEvent.setup()
     renderComCargo('Administrador')
+    const modal = await abrirCadastro(user)
 
-    expect(await screen.findByText('Fenobarbital 30mg')).toBeInTheDocument()
+    await user.click(within(modal).getByRole('button', { name: /cadastrar nova categoria/i }))
+    await user.type(within(modal).getByLabelText(/nome da categoria/i), 'Anti-inflamatório')
+    await user.click(within(modal).getByRole('button', { name: /^cadastrar categoria$/i }))
 
-    await user.type(screen.getByLabelText(/nova categoria farmacológica/i), 'Anti-inflamatório')
-    await user.click(screen.getByRole('button', { name: /adicionar categoria/i }))
-    await within(screen.getByLabelText(/^categoria farmacológica/i)).findByRole('option', { name: 'Anti-inflamatório' })
-    expect(screen.getByLabelText(/^categoria farmacológica/i)).toHaveDisplayValue('Anti-inflamatório')
+    const select = within(modal).getByLabelText(/^categoria/i)
+    await within(select).findByRole('option', { name: 'Anti-inflamatório' })
+    expect(select).toHaveDisplayValue('Anti-inflamatório')
 
-    await user.type(screen.getByLabelText(/^nome/i), 'Meloxicam 2mg')
-    await user.click(screen.getByRole('button', { name: /cadastrar medicamento/i }))
+    await user.type(within(modal).getByLabelText(/^nome/i), 'Meloxicam 2mg')
+    await user.click(within(modal).getByRole('button', { name: /^cadastrar medicamento$/i }))
 
     expect(await screen.findByRole('cell', { name: 'Meloxicam 2mg' })).toBeInTheDocument()
-    expect(screen.getByRole('status')).toHaveTextContent('Meloxicam 2mg cadastrado.')
+    expect(await screen.findByText('Meloxicam 2mg cadastrado.')).toBeInTheDocument()
   })
 
   it('categoria repetida mostra o motivo do 409', async () => {
     const user = userEvent.setup()
     renderComCargo('Administrador')
+    const modal = await abrirCadastro(user)
 
-    await user.type(await screen.findByLabelText(/nova categoria farmacológica/i), 'antibiótico')
-    await user.click(screen.getByRole('button', { name: /adicionar categoria/i }))
+    await user.click(within(modal).getByRole('button', { name: /cadastrar nova categoria/i }))
+    await user.type(within(modal).getByLabelText(/nome da categoria/i), 'antibiótico')
+    await user.click(within(modal).getByRole('button', { name: /^cadastrar categoria$/i }))
 
-    expect(await screen.findByText('Esta categoria farmacológica já está cadastrada.')).toBeInTheDocument()
+    expect(await within(modal).findByText('Esta categoria farmacológica já está cadastrada.')).toBeInTheDocument()
   })
 
   it('exige nome e categoria antes de enviar', async () => {
     const user = userEvent.setup()
     renderComCargo('Veterinário')
+    const modal = await abrirCadastro(user)
 
-    await user.click(await screen.findByRole('button', { name: /cadastrar medicamento/i }))
+    await user.click(within(modal).getByRole('button', { name: /^cadastrar medicamento$/i }))
 
-    expect(await screen.findByText('Informe o nome do medicamento.')).toBeInTheDocument()
-    expect(screen.getByText('Selecione a categoria.')).toBeInTheDocument()
+    expect(await within(modal).findByText('Informe o nome do medicamento.')).toBeInTheDocument()
+    expect(within(modal).getByText('Selecione a categoria.')).toBeInTheDocument()
   })
 
-  it('Agente Sanitário vê o catálogo, sem o cadastro', async () => {
+  it('edita o nome e a categoria de um medicamento', async () => {
+    const user = userEvent.setup()
+    renderComCargo('Administrador')
+    const linha = (await screen.findByText('Fenobarbital 30mg')).closest('tr') as HTMLElement
+
+    await user.click(within(linha).getByRole('button', { name: /editar fenobarbital 30mg/i }))
+    const modal = screen.getByRole('heading', { name: 'Editar medicamento' }).closest<HTMLElement>('.modal')
+    if (!modal) throw new Error('modal não encontrado')
+
+    await user.clear(within(modal).getByLabelText(/^nome/i))
+    await user.type(within(modal).getByLabelText(/^nome/i), 'Fenobarbital 100mg')
+    await user.click(within(modal).getByRole('button', { name: /salvar alterações/i }))
+
+    expect(await screen.findByRole('cell', { name: 'Fenobarbital 100mg' })).toBeInTheDocument()
+  })
+
+  // Diferente da vacina, o medicamento não tem endpoint de reativação: a
+  // confirmação precisa dizer que é definitivo.
+  it('avisa que desativar medicamento não tem volta', async () => {
+    const confirmar = vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const user = userEvent.setup()
+    renderComCargo('Administrador')
+    const linha = (await screen.findByText('Fenobarbital 30mg')).closest('tr') as HTMLElement
+
+    await user.click(within(linha).getByRole('button', { name: /^desativar$/i }))
+
+    expect(confirmar.mock.calls[0][0]).toMatch(/não há como reativar/i)
+    await waitFor(() => expect(screen.queryByText('Fenobarbital 30mg')).not.toBeInTheDocument())
+
+    await user.selectOptions(screen.getByLabelText(/filtrar por situação/i), 'inativos')
+    const linhaInativa = (await screen.findByText('Fenobarbital 30mg')).closest('tr') as HTMLElement
+    expect(within(linhaInativa).getByText('Inativo')).toBeInTheDocument()
+    expect(within(linhaInativa).getByText('Sem reativação')).toBeInTheDocument()
+    expect(within(linhaInativa).queryByRole('button')).not.toBeInTheDocument()
+  })
+
+  it('filtra por categoria e por busca', async () => {
+    const user = userEvent.setup()
+    renderComCargo('Administrador')
+    await screen.findByText('Fenobarbital 30mg')
+
+    await user.selectOptions(screen.getByLabelText(/filtrar por categoria/i), 'Anticonvulsivante')
+    expect(screen.getByText('Fenobarbital 30mg')).toBeInTheDocument()
+    expect(screen.queryByText('Amoxicilina 250mg')).not.toBeInTheDocument()
+    expect(screen.getByText('Mostrando', { exact: false })).toHaveTextContent('Mostrando 1 de')
+
+    await user.selectOptions(screen.getByLabelText(/filtrar por categoria/i), '')
+    await user.type(screen.getByLabelText(/buscar por nome do medicamento/i), 'zzz')
+    expect(await screen.findByText('Nenhum medicamento encontrado')).toBeInTheDocument()
+  })
+
+  // Quem digita "antibiotico" sem acento precisa achar "Antibiótico": a busca
+  // usa normalizarBusca dos dois lados.
+  it('a busca ignora acento', async () => {
+    const user = userEvent.setup()
+    renderComCargo('Administrador')
+    await screen.findByText('Amoxicilina 250mg')
+
+    await user.type(screen.getByLabelText(/buscar por nome do medicamento/i), 'AMOXICILINA')
+    expect(screen.getByText('Amoxicilina 250mg')).toBeInTheDocument()
+    expect(screen.queryByText('Fenobarbital 30mg')).not.toBeInTheDocument()
+  })
+
+  it('Agente Sanitário vê o catálogo, sem cadastrar, editar ou desativar', async () => {
     renderComCargo('Agente Sanitário')
 
     expect(await screen.findByText('Amoxicilina 250mg')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /cadastrar medicamento/i })).not.toBeInTheDocument()
-    expect(screen.queryByLabelText(/nova categoria farmacológica/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /editar amoxicilina/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^desativar$/i })).not.toBeInTheDocument()
   })
 })

@@ -6,6 +6,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
+import { Toasts } from '@/components/toast/Toasts'
 import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
 import { FichaAnimal } from './FichaAnimal'
@@ -29,12 +30,13 @@ function renderFicha(cargos: string[] = ['Veterinário'], animalId = REX_ID) {
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[`/animais/${animalId}`]}>
-        <AuthProvider>
-          <Routes>
-            <Route path="/animais/:id" element={<FichaAnimal />} />
-          </Routes>
-        </AuthProvider>
+          <AuthProvider>
+            <Routes>
+              <Route path="/animais/:id" element={<FichaAnimal />} />
+            </Routes>
+          </AuthProvider>
       </MemoryRouter>
+      <Toasts />
     </QueryClientProvider>,
   )
 }

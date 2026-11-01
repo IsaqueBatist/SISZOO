@@ -10,7 +10,7 @@ import { LIMITE_INATIVIDADE_MS, registrarAtividade, registrarExtensao, ultimaAti
 import { TEXTO_AVISO_INATIVIDADE } from '@/lib/sessao/useSessaoAtiva'
 import { server } from '@/mocks/server'
 import { RotaProtegida } from '@/routes/RotaProtegida'
-import { Avisos } from '@/components/Avisos'
+import { Toasts } from '@/components/toast/Toasts'
 import { Login } from '../components/Login'
 import type { Usuario } from '../types/auth.types'
 import { AuthProvider, definirSessaoEmMemoria } from './AuthContext'
@@ -72,7 +72,6 @@ function renderApp(rota = '/painel') {
       <MemoryRouter initialEntries={[rota]}>
         <AuthProvider>
           <LocalAtual />
-          <Avisos />
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route element={<RotaProtegida />}>
@@ -81,6 +80,7 @@ function renderApp(rota = '/painel') {
           </Routes>
         </AuthProvider>
       </MemoryRouter>
+      <Toasts />
     </QueryClientProvider>,
   )
 }

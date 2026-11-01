@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { avisar } from '@/lib/avisos'
+import { toast } from '@/components/toast/toast'
 import { mensagemDeRegraDaApi } from '@/lib/erroApi'
 import type { Processo } from '../types/processos.types'
 import { useAvancarStatusProcessoMutation } from '../hooks/useProcessos'
@@ -29,7 +29,7 @@ export function CardStatusProcesso({ processo, podeEscrever }: CardStatusProcess
     setErro(null)
     try {
       await avancar.mutateAsync(proximo)
-      avisar(`Processo agora está como ${labelDe(STATUS_PROCESSO_OPCOES, proximo)}.`)
+      toast.sucesso(`Processo agora está como ${labelDe(STATUS_PROCESSO_OPCOES, proximo)}.`)
     } catch (falha) {
       setErro(mensagemDeRegraDaApi(falha) ?? 'Não foi possível avançar o status do processo. Tente novamente.')
     }

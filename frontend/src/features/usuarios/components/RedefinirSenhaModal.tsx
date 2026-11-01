@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ModalConfirmacao } from '@/components/ModalConfirmacao'
-import { avisar } from '@/lib/avisos'
+import { toast } from '@/components/toast/toast'
 import { mensagemDeRegraDaApi } from '@/lib/erroApi'
 import { useRedefinirSenhaMutation } from '../hooks/useUsuarios'
 import type { UsuarioListItem } from '../types/usuarios.types'
@@ -25,7 +25,7 @@ export function RedefinirSenhaModal({ usuario, onFechar }: RedefinirSenhaModalPr
       await mutation.mutateAsync({ id: usuario.id, senhaTemporaria })
       setSenhaGerada(senhaTemporaria)
     } catch (erro) {
-      avisar(mensagemDeRegraDaApi(erro) ?? `Não foi possível redefinir a senha de ${nome}. Nada foi mudado.`, 'erro')
+      toast.erro(mensagemDeRegraDaApi(erro) ?? `Não foi possível redefinir a senha de ${nome}. Nada foi mudado.`)
       onFechar()
     }
   }

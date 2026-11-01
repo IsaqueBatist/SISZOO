@@ -4,7 +4,7 @@ import { Link, useParams } from 'react-router-dom'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { salvarBlob } from '@/lib/arquivos'
-import { avisar } from '@/lib/avisos'
+import { toast } from '@/components/toast/toast'
 import { statusHttpDoErro } from '@/lib/erroApi'
 import { AvisoAnexosPendentes } from './AvisoAnexosPendentes'
 import { CardDenunciante } from './CardDenunciante'
@@ -62,7 +62,7 @@ function BotaoIniciarAtendimento({ ocorrencia, podeEscrever }: { ocorrencia: Oco
     setErro(null)
     try {
       await mutation.mutateAsync()
-      avisar('Atendimento iniciado.')
+      toast.sucesso('Atendimento iniciado.')
     } catch {
       setErro('Não foi possível iniciar o atendimento. Tente novamente.')
     }
