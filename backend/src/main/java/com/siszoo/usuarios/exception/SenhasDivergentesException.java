@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class SenhasDivergentesException extends ErroNegocioException {
 
     public SenhasDivergentesException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Nova senha e confirmacao nao conferem");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "A nova senha e a confirmação não são iguais.");
     }
 }

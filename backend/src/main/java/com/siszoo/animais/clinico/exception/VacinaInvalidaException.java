@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class VacinaInvalidaException extends ErroNegocioException {
 
     public VacinaInvalidaException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Vacina informada nao existe");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "A vacina informada não existe. Selecione uma da lista.");
     }
 }

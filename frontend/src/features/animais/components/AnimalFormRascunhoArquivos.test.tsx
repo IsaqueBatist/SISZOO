@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
+import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
 import { API_BASE_URL } from '@/lib/env'
 import { abrirBancoRascunhos, VALIDADE_RASCUNHO_MS } from '@/lib/rascunhoDb'
@@ -39,7 +39,7 @@ function autenticar() {
     cargos: ['Administrador'],
     senhaAlteradaEm: '2026-01-10T12:00:00Z',
   }
-  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario }))
+  definirSessaoEmMemoria({ token: 'token-existente', usuario })
 }
 
 function renderCadastrar() {
@@ -51,6 +51,7 @@ function renderCadastrar() {
         <AuthProvider>
           <Routes>
             <Route path="/animais" element={<div>Lista de animais</div>} />
+            <Route path="/animais/:id" element={<div>Ficha do animal</div>} />
             <Route path="/animais/novo" element={<CadastrarAnimal />} />
           </Routes>
         </AuthProvider>
@@ -132,7 +133,7 @@ describe('AnimalForm — foto no rascunho (T42)', () => {
 
     await preencherObrigatoriosEEnviar(user)
 
-    expect(await screen.findByText('Lista de animais')).toBeInTheDocument()
+    expect(await screen.findByText('Ficha do animal')).toBeInTheDocument()
     await waitFor(async () => expect(await conteudo('animais')).toEqual({}))
     expect(await conteudo('arquivos')).toEqual({})
   }, 20000)

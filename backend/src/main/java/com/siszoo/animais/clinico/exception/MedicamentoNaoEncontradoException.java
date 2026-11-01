@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class MedicamentoNaoEncontradoException extends ErroNegocioException {
 
     public MedicamentoNaoEncontradoException() {
-        super(HttpStatus.NOT_FOUND, "Medicamento nao encontrado");
+        super(HttpStatus.NOT_FOUND, "Medicamento não encontrado.");
     }
 }

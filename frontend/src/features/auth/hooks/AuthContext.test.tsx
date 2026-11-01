@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it, vi } from 'vitest'
-import { AuthProvider, SESSION_STORAGE_KEY } from './AuthContext'
+import { AuthProvider, definirSessaoEmMemoria } from './AuthContext'
 import { useAuth } from './useAuth'
 import { CREDENCIAIS_VALIDAS } from '@/mocks/handlers'
 import type { Usuario } from '../types/auth.types'
@@ -46,11 +46,8 @@ function renderComRouter(initialEntry = '/protegida') {
 }
 
 describe('AuthContext', () => {
-  it('rehidrata a sessão a partir do sessionStorage no boot', () => {
-    sessionStorage.setItem(
-      SESSION_STORAGE_KEY,
-      JSON.stringify({ token: 'token-existente', usuario: USUARIO_EXEMPLO }),
-    )
+  it('usa a sessão já em memória, sem esperar a renovação', () => {
+    definirSessaoEmMemoria({ token: 'token-existente', usuario: USUARIO_EXEMPLO })
 
     renderComRouter()
 
@@ -58,7 +55,7 @@ describe('AuthContext', () => {
     expect(screen.getByTestId('user-email')).toHaveTextContent(USUARIO_EXEMPLO.email)
   })
 
-  it('login bem-sucedido grava token e usuário em memória e sessionStorage', async () => {
+  it('login bem-sucedido deixa token e usuário só em memória', async () => {
     const user = userEvent.setup()
     renderComRouter()
 
@@ -66,12 +63,12 @@ describe('AuthContext', () => {
 
     await waitFor(() => expect(screen.getByTestId('token')).not.toHaveTextContent(''))
 
-    const armazenado = JSON.parse(sessionStorage.getItem(SESSION_STORAGE_KEY)!)
-    expect(armazenado.token).toBeTruthy()
-    expect(armazenado.usuario.email).toBe(CREDENCIAIS_VALIDAS.email)
+    expect(screen.getByTestId('user-email')).toHaveTextContent(CREDENCIAIS_VALIDAS.email)
+    expect(Object.keys(sessionStorage)).toHaveLength(0)
+    expect(Object.values(localStorage).join('')).not.toContain(screen.getByTestId('token').textContent)
   })
 
-  it('logout limpa o token da memória e do sessionStorage', async () => {
+  it('logout limpa o token da memória', async () => {
     const user = userEvent.setup()
     renderComRouter()
 
@@ -81,7 +78,6 @@ describe('AuthContext', () => {
     await user.click(screen.getByRole('button', { name: 'logout' }))
 
     expect(screen.getByTestId('token')).toHaveTextContent('')
-    expect(sessionStorage.getItem(SESSION_STORAGE_KEY)).toBeNull()
   })
 
   it('evento auth:unauthorized dispara logout e navega para /login', async () => {
@@ -96,13 +92,12 @@ describe('AuthContext', () => {
     })
 
     expect(await screen.findByText('Tela de login')).toBeInTheDocument()
-    expect(sessionStorage.getItem(SESSION_STORAGE_KEY)).toBeNull()
   })
 
   // T45: o AuthProvider re-renderiza a cada navegação (useNavigate); com o
   // value memoizado, quem só lê o contexto não re-renderiza junto.
   it('não re-renderiza quem lê o contexto quando só a rota muda', async () => {
-    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario: USUARIO_EXEMPLO }))
+    definirSessaoEmMemoria({ token: 'token-existente', usuario: USUARIO_EXEMPLO })
     const aoRenderizar = vi.fn()
     function LeitorDoContexto() {
       const { user } = useAuth()

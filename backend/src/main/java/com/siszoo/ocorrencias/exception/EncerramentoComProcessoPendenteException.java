@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class EncerramentoComProcessoPendenteException extends ErroNegocioException {
 
     public EncerramentoComProcessoPendenteException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Ocorrencia com processo sanitario vinculado nao concluido nao pode ser encerrada");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "Conclua o processo sanitário vinculado antes de encerrar a ocorrência.");
     }
 }

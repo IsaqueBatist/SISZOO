@@ -84,8 +84,8 @@ class PoliticaSenhaTest {
     @Test
     @DisplayName("exemplo da politica: 'Erin M. Hagens' recusa 'erin' e 'hagens'; 'M' e ignorado")
     void exemploDaPolitica() {
-        assertThat(violacao("Senha-erin-1")).hasValueSatisfying(m -> assertThat(m).contains("nome do usuario"));
-        assertThat(violacao("HAGENS2026!")).hasValueSatisfying(m -> assertThat(m).contains("nome do usuario"));
+        assertThat(violacao("Senha-erin-1")).hasValueSatisfying(m -> assertThat(m).contains("nome do usuário"));
+        assertThat(violacao("HAGENS2026!")).hasValueSatisfying(m -> assertThat(m).contains("nome do usuário"));
         assertThat(violacao("Mm-Forte-2026")).isEmpty();
     }
 

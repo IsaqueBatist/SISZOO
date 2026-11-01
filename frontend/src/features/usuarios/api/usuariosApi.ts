@@ -1,5 +1,5 @@
 import { http } from '@/lib/http'
-import type { CriarUsuarioRequest, PaginaResponse, UsuarioListItem } from '../types/usuarios.types'
+import type { AtualizarUsuarioRequest, CriarUsuarioRequest, PaginaResponse, UsuarioListItem } from '../types/usuarios.types'
 
 // A tela de Usuários ainda não tem paginação própria (lista tudo e filtra no
 // cliente) — pedimos uma página grande o bastante para cobrir o quadro de
@@ -16,6 +16,15 @@ export function listarUsuarios(): Promise<UsuarioListItem[]> {
 
 export function criarUsuario(payload: CriarUsuarioRequest): Promise<UsuarioListItem> {
   return http.post<UsuarioListItem>('/usuarios', payload).then((response) => response.data)
+}
+
+export function atualizarUsuario(id: string, payload: AtualizarUsuarioRequest): Promise<UsuarioListItem> {
+  return http.put<UsuarioListItem>(`/usuarios/${id}`, payload).then((response) => response.data)
+}
+
+// Backend responde 204: a senha não volta em nenhuma resposta.
+export function redefinirSenhaUsuario(id: string, senhaTemporaria: string): Promise<void> {
+  return http.post(`/usuarios/${id}/senha`, { senhaTemporaria }).then(() => undefined)
 }
 
 export function alterarStatusUsuario(id: string, ativo: boolean): Promise<UsuarioListItem> {

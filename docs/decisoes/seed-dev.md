@@ -1,4 +1,4 @@
-# Decisões — seed de dados fictícios (`com.siszoo.seed`, branch `feat/dados-reais-seed`)
+# Decisões - seed de dados fictícios (`com.siszoo.seed`, branch `feat/dados-reais-seed`)
 
 Uma linha por decisão, no formato de `T29.md`. Origem: missão de eliminação de mocks e população do banco com dados
 fictícios (25/10/2026). Substitui o `scripts/seed-test-data.mjs` (SQL direto) e o seed via API da `fix/seed-ficha-completa`
@@ -73,6 +73,19 @@ fictícios (25/10/2026). Substitui o `scripts/seed-test-data.mjs` (SQL direto) e
     indevido fica nas outras camadas: o arquivo é separado e opt-in, e a guarda de banco recusa qualquer banco com dados
     reais. O arquivo e o README dizem para nunca usá-lo num servidor.
 
+- **SD-9 Fotos reais dos animais (revisão de 01/11/2026).**
+  - Revisa a frase "nenhum arquivo binário versionado e nenhuma imagem real" que valia para `ArquivosFicticios`: os 32
+    animais passaram a ter fotografia, para a listagem, a ficha e as baias ficarem fiéis ao uso real do sistema.
+  - As fotos são fotografias de domínio público (CC0) do Wikimedia Commons, redimensionadas para lado maior de 640 px e
+    recomprimidas em JPEG (75%), entre 20 e 150 KB cada (cerca de 1,9 MB no total), em
+    `backend/src/main/resources/seed/fotos/NNN-nome.jpg`. Fonte, autor e licença de cada uma em `CREDITOS.md`, na mesma
+    pasta. Nenhuma retrata um animal real do CCZ.
+  - O nome do arquivo deriva do plano (`ArquivosFicticios.nomeDaFoto`): todo animal tem foto, e `SeedPlanoTest` falha se
+    faltar, se não for JPEG legível ou se passar de 800 px ou 200 KB. A seed envia a foto como data URI em `fotoUrl`,
+    exatamente como o frontend, e o `AnimalService` gera `foto_miniatura`. Os anexos (PNG e PDF) continuam gerados em
+    código.
+  - Idempotência inalterada: um banco já semeado não recebe as fotos; recrie o banco.
+
 ## Massa
 
 | Entidade | Quantidade | Cobertura |
@@ -80,7 +93,7 @@ fictícios (25/10/2026). Substitui o `scripts/seed-test-data.mjs` (SQL direto) e
 | Usuários | 8 (+ admin inicial) | 1 admin, 3 veterinários (1 em primeiro acesso), 4 agentes (1 desativado). Senha única `Ficticio#2026`, com hash do `PasswordEncoder` |
 | Categorias / medicamentos | 4 / 8 | 1 medicamento inativo |
 | Baias | 6 | uma lotada (alerta), uma perto do limite, um gatil, uma quarentena, uma inativa |
-| Animais | 32 | 21 sob custódia (2 páginas na listagem) e 11 fora (6 adotados, transferido, óbitos, eutanásia com laudo) |
+| Animais | 32 | 21 sob custódia (2 páginas na listagem) e 11 fora (6 adotados, transferido, óbitos, eutanásia com laudo); todos com foto real CC0 (SD-9) |
 | Vacinações / procedimentos / prescrições / exames | 38 / 35 / 12 / 11 | vencendo e vencidas, sem avaliação há 30 dias, prescrições terminando em 7 dias, 1 retificação de cada |
 | Anexos de animal | 3 | PNG e PDF gerados em código |
 | Ocorrências | 26 | 8 abertas (2 de hoje), 7 em atendimento, 11 encerradas (todas as providências, inclusive `registro_indevido`); sigilosas, anônimas, notas, anexos |

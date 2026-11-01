@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class CorrecaoResultadoNaoPermitidaException extends ErroNegocioException {
 
     public CorrecaoResultadoNaoPermitidaException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Resultado so pode ser corrigido com o processo em COM_RESULTADO");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "O resultado só pode ser corrigido enquanto o processo tiver resultado lançado e não estiver concluído.");
     }
 }

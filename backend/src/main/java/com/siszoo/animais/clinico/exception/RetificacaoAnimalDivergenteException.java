@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class RetificacaoAnimalDivergenteException extends ErroNegocioException {
 
     public RetificacaoAnimalDivergenteException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Registro retificado pertence a outro animal");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "O registro a corrigir pertence a outro animal.");
     }
 }

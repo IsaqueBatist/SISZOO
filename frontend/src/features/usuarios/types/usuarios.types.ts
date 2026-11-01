@@ -9,6 +9,7 @@ export type UsuarioListItem = Usuario & {
   ultimoAcesso: string | null
   criadoEm: string
   crmv: string | null
+  telefone: string | null
 }
 
 export interface CriarUsuarioRequest {
@@ -18,6 +19,14 @@ export interface CriarUsuarioRequest {
   cargo: PerfilUsuario
   crmv?: string
   senhaInicial: string
+}
+
+export interface AtualizarUsuarioRequest {
+  nome: string
+  sobrenome: string
+  cargo: PerfilUsuario
+  crmv?: string
+  telefone?: string
 }
 
 // Espelha comum/dto/PaginaResponse do backend — envelope de paginação

@@ -55,6 +55,7 @@ class UsuarioPerfilControllerIT extends AbstractIntegrationTest {
             Usuario admin = new Usuario();
             admin.setEmail(EMAIL_ADMIN);
             admin.setSenha(passwordEncoder.encode(SENHA_ADMIN));
+            admin.setSenhaAlteradaEm(java.time.LocalDateTime.now());
             admin.setNome("Admin");
             admin.setSobrenome("Perfil");
             usuarioRepository.save(admin);
@@ -114,11 +115,12 @@ class UsuarioPerfilControllerIT extends AbstractIntegrationTest {
     // usuario + usuario_cargo diretamente, sem passar por UsuarioService.criar(),
     // que é o único lugar que hoje cria a linha de preferencia_usuario. Antes
     // da correção, GET/PATCH /me/preferencias para esse tipo de usuário
-    // respondia 404 "Usuario nao encontrado" mesmo o usuário existindo.
+    // respondia 404 "Usuário não encontrado." mesmo o usuário existindo.
     private String criarUsuarioSemPreferenciasEObterToken(String email, String senha) {
         Usuario usuario = new Usuario();
         usuario.setEmail(email);
         usuario.setSenha(passwordEncoder.encode(senha));
+        usuario.setSenhaAlteradaEm(java.time.LocalDateTime.now());
         usuario.setNome("Seed");
         usuario.setSobrenome("SemPreferencias");
         usuarioRepository.save(usuario);

@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class NomeDenuncianteObrigatorioException extends ErroNegocioException {
 
     public NomeDenuncianteObrigatorioException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Nome do denunciante e obrigatorio quando a denuncia nao e anonima nem sigilosa");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "Informe o nome do denunciante quando a denúncia não for anônima nem sigilosa.");
     }
 }

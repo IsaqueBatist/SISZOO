@@ -1,6 +1,10 @@
 spring:
   application:
     name: siszoo-backend
+  # Idioma fixo: a mensagem de validacao nao pode depender do Accept-Language.
+  web:
+    locale: pt_BR
+    locale-resolver: fixed
   # Anexos de ocorrencia (T25): ate 5 MB por arquivo, um arquivo por requisicao.
   servlet:
     multipart:
@@ -50,7 +54,7 @@ spring:
         await-termination-period: 20s
   # Cache das agregacoes do dashboard (com.siszoo.relatorios, T38): TTL curto
   # para nao recalcular a cada refresh/polling em maquinas com ~2GB RAM. Sem
-  # @CacheEvict — ver docs/contratos/dashboard-kpis.md para o atraso que isso
+  # @CacheEvict - ver docs/contratos/dashboard-kpis.md para o atraso que isso
   # pode introduzir. Desligado no perfil de teste (abaixo).
   cache:
     cache-names: dashboardKpis, dashboardGraficos
@@ -61,9 +65,10 @@ spring:
 # meio), e as respostas JSON trafegavam sem compressao. So JSON e so a partir
 # de 1 KB (respostas pequenas nao compensam). BREACH (compressao + TLS) exige
 # segredo e texto escolhido pelo atacante na mesma resposta: o unico segredo
-# no corpo e o token do login, cuja resposta (token + usuario) fica abaixo de
-# 1 KB e, com e-mail/senha forjados pelo atacante, e 401 sem token; a API nao
-# usa cookie. Reavaliar se algum desses pontos mudar.
+# no corpo e o token de acesso do login e da renovacao, cuja resposta (token +
+# usuario) fica abaixo de 1 KB e, com e-mail/senha forjados pelo atacante, e 401
+# sem token; o token de renovacao so trafega em Set-Cookie, que nao e
+# comprimido. Reavaliar se algum desses pontos mudar.
 server:
   compression:
     enabled: true
@@ -73,8 +78,38 @@ server:
 siszoo:
   cors:
     allowed-origin: ${SISZOO_CORS_ORIGIN:http://localhost:5173}
+  # docs/decisoes/sessao.md. inatividade-minutos e o limite da decisao funcional
+  # de 31/10/2026; o token de acesso dura menos (siszoo.jwt.expiracao-minutos).
+  sessao:
+    inatividade-minutos: 60
+    rotacao-minutos: 5
+    tolerancia-token-anterior-segundos: 60
+    cookie-secure: ${SISZOO_COOKIE_SECURE:false}
+    cookie-same-site: ${SISZOO_COOKIE_SAMESITE:Strict}
   notificacoes:
     remetente: ${SISZOO_MAIL_FROM:nao-responda@itu.sp.gov.br}
+  # Endereco do frontend usado nos links enviados por e-mail (recuperacao de
+  # senha). Por padrao e a mesma origem aceita pelo CORS: o navegador abre a
+  # aplicacao exatamente de onde a API a aceita.
+  app:
+    url: ${SISZOO_APP_URL:${SISZOO_CORS_ORIGIN:http://localhost:5173}}
+  # Limite de tentativas do login (LimitadorLogin, PS-8): so as falhas contam,
+  # em janela fixa, por e-mail e por IP. Atingido, 429 ate a janela vencer.
+  login:
+    limite:
+      falhas-por-email: 5
+      falhas-por-ip: 30
+      janela-minutos: 15
+  # Recuperacao de senha (docs/decisoes/recuperacao-senha.md): validade do
+  # link e limites de tentativas em memoria (LimitadorRecuperacaoSenha).
+  recuperacao-senha:
+    validade-minutos: 30
+    limite:
+      solicitacoes-por-email: 3
+      solicitacoes-por-ip: 10
+      janela-solicitacoes-minutos: 60
+      consumos-por-ip: 20
+      janela-consumos-minutos: 15
 
 ---
 spring:
@@ -98,7 +133,7 @@ siszoo:
     password: ${ADMIN_SEED_PASSWORD:}
   jwt:
     secret: ${JWT_SECRET:}
-    expiracao-minutos: 60
+    expiracao-minutos: 15
 
 ---
 # `prod` tem a mesma configuracao do `docker` (o docker-compose continua com
@@ -125,7 +160,7 @@ siszoo:
     password: ${ADMIN_SEED_PASSWORD:}
   jwt:
     secret: ${JWT_SECRET:}
-    expiracao-minutos: 60
+    expiracao-minutos: 15
 
 ---
 spring:
@@ -173,9 +208,17 @@ spring:
 siszoo:
   jwt:
     secret: chave-secreta-de-teste-determin-nao-usar-em-producao-1234567890
-    expiracao-minutos: 60
+    expiracao-minutos: 15
   notificacoes:
     remetente: nao-responda@siszoo.test
+  # Os *IT chegam todos de 127.0.0.1 e alguns erram a senha de proposito: os
+  # limites do login ficam altos no contexto compartilhado. LimiteLoginIT
+  # sobe um contexto proprio com limites baixos para testar o 429.
+  login:
+    limite:
+      falhas-por-email: 1000
+      falhas-por-ip: 100000
+      janela-minutos: 15
 
 ---
 # Seed de dados ficticios (com.siszoo.seed, docs/decisoes/seed-dev.md): so com

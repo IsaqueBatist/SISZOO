@@ -4,11 +4,14 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes, useParams } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
+import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
 import { API_BASE_URL } from '@/lib/env'
 import { server } from '@/mocks/server'
 import {
+  criarOcorrenciaFixture,
+  ocorrenciaAnonima,
+  ocorrenciaSigilosaVisivel,
   OCORRENCIA_ABERTA_ID,
   OCORRENCIA_ENCERRADA_ID,
   OCORRENCIA_PROCESSO_PENDENTE_ID,
@@ -42,7 +45,7 @@ function renderCadastrar(initialEntry = '/processos/novo', cargos = ADMIN) {
     cargos,
     senhaAlteradaEm: '2026-01-10T12:00:00Z',
   }
-  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario }))
+  definirSessaoEmMemoria({ token: 'token-existente', usuario })
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
@@ -96,6 +99,7 @@ async function preencherEtapa2EAvancar(user: Usuario_) {
 }
 
 async function preencherClinicoMinimo(user: Usuario_, status = 'ASSINTOMATICO') {
+  await user.click(screen.getByRole('button', { name: 'Preencher com a data de hoje' }))
   await user.selectOptions(screen.getByLabelText(/Status clínico/i), status)
   await user.selectOptions(screen.getByLabelText(/Tipo de abrigo/i), 'INTRADOMICILIAR')
   await user.selectOptions(screen.getByLabelText(/Material biológico/i), 'SORO')
@@ -277,7 +281,7 @@ describe('ProcessoForm — amostras e envio', () => {
           tipoAbrigo: 'INTRADOMICILIAR',
           dataColeta: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
           materialBiologico: 'SORO',
-          contatoHumano: false,
+          contatoHumano: null,
           sintomas: [],
         },
       ],
@@ -359,7 +363,7 @@ describe('ProcessoForm — amostras e envio', () => {
     await preencherEtapa2EAvancar(user)
     await preencherAmostraDeCampo(user)
 
-    await user.click(screen.getByLabelText('Contato humano-animal'))
+    await user.click(within(screen.getByRole('radiogroup', { name: /teve contato físico/i })).getByRole('radio', { name: 'Sim' }))
     expect(await screen.findByText(/ATENÇÃO — CONTATO HUMANO-ANIMAL/)).toBeInTheDocument()
     expect(screen.getByText('Este processo será marcado como urgente.')).toBeInTheDocument()
     expect(screen.queryByText(/Resultado laboratorial será obrigatório/)).not.toBeInTheDocument()
@@ -396,7 +400,7 @@ describe('ProcessoForm — amostras e envio', () => {
     server.use(
       http.post(`${API_BASE_URL}/processos`, () =>
         HttpResponse.json(
-          { mensagem: 'Dados invalidos', campos: [{ campo: 'amostras[0].especie', mensagem: 'Especie invalida' }] },
+          { mensagem: 'Não foi possível salvar. Verifique os campos destacados e tente novamente.', campos: [{ campo: 'amostras[0].especie', mensagem: 'Especie invalida' }] },
           { status: 422 },
         ),
       ),
@@ -409,14 +413,14 @@ describe('ProcessoForm — amostras e envio', () => {
 
     await avancarERegistrar(user)
 
-    expect(await screen.findByText('Dados invalidos: amostras[0].especie — Especie invalida')).toBeInTheDocument()
+    expect(await screen.findByText('Não foi possível salvar. Verifique os campos destacados e tente novamente.: amostras[0].especie — Especie invalida')).toBeInTheDocument()
     expect(screen.getByText('Revisão').closest('.step')).toHaveClass('active')
   })
 
   it('vínculo recusado no envio (409, ocorrência já vinculada) mostra a mensagem do servidor', async () => {
     server.use(
       http.post(`${API_BASE_URL}/processos`, () =>
-        HttpResponse.json({ mensagem: 'Ocorrencia ou processo ja possui vinculo' }, { status: 409 }),
+        HttpResponse.json({ mensagem: 'A ocorrência ou o processo já tem vínculo.' }, { status: 409 }),
       ),
     )
     const user = userEvent.setup()
@@ -427,7 +431,7 @@ describe('ProcessoForm — amostras e envio', () => {
 
     await avancarERegistrar(user)
 
-    expect(await screen.findByText('Ocorrencia ou processo ja possui vinculo')).toBeInTheDocument()
+    expect(await screen.findByText('A ocorrência ou o processo já tem vínculo.')).toBeInTheDocument()
   })
 
   it('revisão mostra os nomes dos catálogos e não oferece edição da etapa 1', async () => {
@@ -502,5 +506,54 @@ describe('ProcessoForm — máscara de campos e autopreenchimento de CEP (ViaCEP
 
     await waitFor(() => expect(screen.getByLabelText('CEP')).toHaveValue('00000-000'))
     expect(screen.getByLabelText('Endereço')).toHaveValue('')
+  })
+})
+
+describe('ProcessoForm — reaproveitar a ocorrência', () => {
+  async function irParaResponsavel(user: Usuario_) {
+    await screen.findByTestId('vinculo-travado')
+    await escolherDoencaELaboratorio(user)
+    await user.click(paneDoStep(/^1\. Dados/).getByRole('button', { name: 'Continuar →' }))
+  }
+
+  it('já traz o bairro e oferece os dados do denunciante, sem copiar nada sozinho', async () => {
+    server.use(http.get(`${API_BASE_URL}/ocorrencias/:id`, () => HttpResponse.json(criarOcorrenciaFixture())))
+    const user = userEvent.setup()
+    renderCadastrar(`/processos/novo?ocorrencia=${OCORRENCIA_ABERTA_ID}`)
+    await irParaResponsavel(user)
+
+    const fixture = criarOcorrenciaFixture()
+    expect(screen.getByLabelText('Bairro da ocorrência')).toHaveValue(fixture.bairro)
+    expect(screen.getByLabelText(/^Nome/)).toHaveValue('')
+
+    await user.click(screen.getByRole('button', { name: 'Usar dados do denunciante' }))
+    expect(screen.getByLabelText(/^Nome/)).toHaveValue(fixture.denunciante?.nome ?? '')
+  })
+
+  it.each([
+    ['sigilosa', ocorrenciaSigilosaVisivel],
+    ['anônima', ocorrenciaAnonima],
+  ])('ocorrência %s nunca oferece os dados do denunciante', async (_tipo, fixture) => {
+    server.use(http.get(`${API_BASE_URL}/ocorrencias/:id`, () => HttpResponse.json(fixture())))
+    const user = userEvent.setup()
+    renderCadastrar(`/processos/novo?ocorrencia=${OCORRENCIA_ABERTA_ID}`)
+    await irParaResponsavel(user)
+
+    expect(screen.queryByRole('button', { name: 'Usar dados do denunciante' })).not.toBeInTheDocument()
+  })
+
+  it('escolhe o animal pelo teclado', async () => {
+    const user = userEvent.setup()
+    renderCadastrar()
+    await preencherEtapa1SemVinculoEAvancar(user)
+    await preencherEtapa2EAvancar(user)
+
+    const busca = screen.getByRole('combobox', { name: /Buscar animal do canil/ })
+    await user.click(busca)
+    await user.keyboard('Rex')
+    await screen.findByRole('option', { name: /Rex/ })
+    await user.keyboard('{ArrowDown}{Enter}')
+
+    expect(await screen.findByText(/Espécie, sexo, raça, pelagem, idade e peso são copiados da ficha/)).toBeInTheDocument()
   })
 })

@@ -132,7 +132,7 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
             assertThat(corpo, corpo, not(containsString(interno)));
         }
         assertThat(corpo, objectMapper.readTree(corpo).propertyNames(),
-                containsInAnyOrder("timestamp", "status", "error", "path"));
+                containsInAnyOrder("timestamp", "status", "error", "path", "mensagem"));
 
         assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM ocorrencia WHERE descricao = ?", Integer.class, marca),
                 equalTo(0));

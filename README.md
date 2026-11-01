@@ -40,7 +40,7 @@ O **SISZOO** digitaliza e centraliza esses processos em um sistema web leve, de 
 |--------|-----------|
 | **A -  Gestão de Animais do Canil** | Cadastro de animais (microchip, medalha, procedência), gestão de baias, histórico clínico imutável (vacinações, procedimentos, prescrições, exames), anexos do animal e alertas de reforço vacinal |
 | **B -  Processos Sanitários** | Registro e acompanhamento de zoonoses (raiva, esporotricose, leishmaniose visceral, leptospirose, febre maculosa, febre amarela): amostras, resultado laboratorial imutável, notificação por e-mail |
-| **C -  Autenticação e Perfis de Acesso** | Login stateless via JWT, perfis com permissões fixas, política de senha e trilha de auditoria consultável |
+| **C -  Autenticação e Perfis de Acesso** | Login com sessão renovável, expiração por inatividade e limite de tentativas, recuperação de senha por e-mail ("Esqueci minha senha"), perfis com permissões fixas, política de senha e trilha de auditoria consultável |
 | **D -  Dashboard e Relatórios** | Indicadores e gráficos com cache de 5 min, seis relatórios em PDF/CSV com histórico de exportações |
 | **E -  Ocorrências e Denúncias** | Registro com protocolo anual, denunciante sigiloso/anônimo, anexos, movimentações e encerramento com providência |
 
@@ -61,7 +61,7 @@ O **SISZOO** digitaliza e centraliza esses processos em um sistema web leve, de 
 - PostgreSQL 16
 
 **Autenticação**
-- JWT (stateless)
+- JWT de curta duração com sessão renovável em cookie httpOnly ([decisões](docs/decisoes/sessao.md))
 
 ## Regras de negócio críticas
 
@@ -69,7 +69,7 @@ O **SISZOO** digitaliza e centraliza esses processos em um sistema web leve, de 
 - **Protocolo** de ocorrência e de processo segue o formato `NNN/AAAA`, sequencial por ano e por entidade, gerado pelo sistema.
 - **Ocorrências sigilosas:** dados do denunciante são mascarados no servidor para quem não tem a permissão `denunciante_sigiloso` (Administrador e Agente Sanitário a têm); cada acesso e cada recusa geram evento de auditoria (LGPD).
 - **Contato humano-animal:** processos com essa característica são marcados como urgentes e aparecem no topo das listagens.
-- **Imutabilidade:** vacinações, procedimentos, prescrições, exames e resultados laboratoriais nunca são editados ou excluídos — a correção é um novo registro que retifica o anterior, com auditoria; o resultado positivo é definitivo.
+- **Imutabilidade:** vacinações, procedimentos, prescrições, exames e resultados laboratoriais nunca são editados ou excluídos - a correção é um novo registro que retifica o anterior, com auditoria; o resultado positivo é definitivo.
 - **Alerta vacinal:** reforços são sinalizados com 7 dias de antecedência.
 - **Resultado "Positivo" ou "Inconclusivo"** em processo sanitário dispara notificação ao munícipe por e-mail (uma vez por resultado; reenvio manual).
 - **Laudo de eutanásia** é obrigatório ao registrar óbito por eutanásia.
@@ -92,7 +92,7 @@ O **SISZOO** digitaliza e centraliza esses processos em um sistema web leve, de 
 
 > Pré-requisitos: Java 21, Node.js 18+, PostgreSQL 16 e Docker (para os testes
 > de integração com Testcontainers). O Maven não precisa estar instalado à
-> parte — o projeto já traz o Maven Wrapper (`./mvnw`).
+> parte - o projeto já traz o Maven Wrapper (`./mvnw`).
 
 ### Backend
 
@@ -104,11 +104,21 @@ export DB_PASSWORD=postgres
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-**E-mail (opcional):** a notificação ao munícipe sai pelo SMTP de `SMTP_HOST`,
-`SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` e afins. Sem elas, o backend sobe
-normalmente e cada envio só gera um aviso no log. No desenvolvimento, use um
-SMTP sandbox (Mailtrap/Ethereal), nunca uma caixa real. Variáveis, sandbox e
-testes com GreenMail: [docs/email.md](docs/email.md).
+**E-mail (opcional):** a notificação ao munícipe e o link de recuperação de
+senha saem pelo SMTP de `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`
+e afins. Sem elas, o backend sobe normalmente e cada envio só gera um aviso no
+log. No desenvolvimento, use um SMTP sandbox (Mailtrap/Ethereal), nunca uma
+caixa real. Variáveis, sandbox e testes com GreenMail: [docs/email.md](docs/email.md).
+
+### Recuperação de senha
+
+Na tela de login, **Esqueci minha senha** pede o e-mail institucional e envia um
+link de uso único, válido por 30 minutos, para `/redefinir-senha?token=...`. A
+resposta é a mesma para e-mail cadastrado ou não; o banco guarda só o hash do
+token; redefinir encerra as sessões abertas e invalida os links anteriores, e há
+limite de tentativas por e-mail e por IP. O link usa `SISZOO_APP_URL` (por padrão,
+a origem do frontend em `SISZOO_CORS_ORIGIN`). Detalhes e decisões:
+[docs/decisoes/recuperacao-senha.md](docs/decisoes/recuperacao-senha.md).
 
 ### Frontend
 
@@ -168,8 +178,9 @@ registra no log quantos registros criou.
 
 **O que é criado:**
 - 6 baias;
-- 32 animais com histórico clínico: vacinas vencendo e vencidas, procedimentos, prescrições, exames, anexos e
-  retificações;
+- 32 animais com foto real (fotografias CC0 do Wikimedia Commons, créditos em
+  `backend/src/main/resources/seed/fotos/CREDITOS.md`) e histórico clínico: vacinas vencendo e vencidas,
+  procedimentos, prescrições, exames, anexos e retificações;
 - 26 ocorrências (sigilosas, anônimas, em todos os status);
 - 24 processos sanitários (todos os status e doenças, resultados positivos e retificados);
 - categorias e medicamentos;
@@ -204,11 +215,13 @@ Exemplos em [`.env.example`](.env.example) (raiz, usado pelo `docker-compose.yml
 | `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | docker-compose | Banco do container `db` |
 | `DB_URL`, `DB_USER`, `DB_PASSWORD` | backend (`dev`, `docker`, `prod`) | Conexão JDBC |
 | `JWT_SECRET` | backend | Chave do JWT, 32 bytes ou mais (sem ela o backend não sobe) |
-| `ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD` | backend | Admin inicial criado na primeira subida (`DataSeeder`); vazio = não cria |
+| `ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD` | backend | Admin inicial criado na primeira subida (`DataSeeder`); vazio = não cria. No primeiro login a senha precisa ser trocada: até lá, a API só libera a troca (vale também para a coleção do Insomnia) |
 | `SISZOO_SEED_HABILITADO` | backend (perfil `seed`) | `true` liga o seed de dados fictícios (só com `dev`) |
 | `SISZOO_CORS_ORIGIN` | backend | Única origem do frontend aceita pela API |
+| `SISZOO_COOKIE_SECURE`, `SISZOO_COOKIE_SAMESITE` | backend | Cookie da sessão; use `SISZOO_COOKIE_SECURE=true` em produção com HTTPS ([docs/decisoes/sessao.md](docs/decisoes/sessao.md)) |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_AUTH`, `SMTP_STARTTLS*`, `SMTP_SSL` | backend | E-mail ao munícipe ([docs/email.md](docs/email.md)) |
 | `SISZOO_MAIL_FROM` | backend | Remetente dos e-mails |
+| `SISZOO_APP_URL` | backend | Endereço do frontend nos links enviados por e-mail (recuperação de senha); opcional, padrão = `SISZOO_CORS_ORIGIN` |
 | `VITE_API_BASE_URL` | frontend (build) | URL da API |
 | `VITE_USE_MOCK_KPIS`, `VITE_USE_MOCK_GRAFICOS` | frontend (build) | Só `"true"` liga dados de demonstração no dashboard (com selo); ausente = dados reais |
 

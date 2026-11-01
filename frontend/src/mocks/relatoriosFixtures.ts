@@ -122,7 +122,7 @@ export function previewAnualProcessosFixture(): PreviewAnualProcessos {
     ano: 2025,
     periodoInicio: '2025-01-01',
     periodoFim: '2025-12-31',
-    kpis: { processosAbertos: 87, confirmadosPositivos: 14, percentualPositividade: 16, comContatoHumano: 9, tempoMedioDias: 11 },
+    kpis: { processosAbertos: 87, confirmadosPositivos: 14, percentualPositividade: 16, comContatoHumano: 9, contatoNaoInformado: 2, tempoMedioDias: 11 },
     sumarioExecutivo: 'Durante o exercício de 2025, o CCZ instaurou 87 processo(s) sanitário(s)...',
     porPatologia: [{ doenca: 'Raiva', quantidade: 28 }],
     resultadosPorDoenca: [

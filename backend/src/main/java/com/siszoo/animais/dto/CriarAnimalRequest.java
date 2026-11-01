@@ -3,6 +3,7 @@ package com.siszoo.animais.dto;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import jakarta.validation.constraints.DecimalMin;
@@ -20,7 +21,7 @@ public record CriarAnimalRequest(
         String especie,
 
         @NotBlank
-        @Pattern(regexp = "^(macho|femea|nao_identificado)$", message = "Sexo deve ser macho, femea ou nao_identificado")
+        @Pattern(regexp = "^(macho|femea|nao_identificado)$", message = "Selecione o sexo: macho, fêmea ou não identificado.")
         String sexo,
 
         @Size(max = 80)
@@ -29,13 +30,13 @@ public record CriarAnimalRequest(
         @Size(max = 80)
         String coloracao,
 
-        @Pattern(regexp = "^(curta|longa)$", message = "Pelagem deve ser curta ou longa")
+        @Pattern(regexp = "^(curta|longa)$", message = "Selecione a pelagem: curta ou longa.")
         String pelagem,
 
-        @Pattern(regexp = "^(pequeno|medio|grande)$", message = "Porte deve ser pequeno, medio ou grande")
+        @Pattern(regexp = "^(pequeno|medio|grande)$", message = "Selecione o porte: pequeno, médio ou grande.")
         String porte,
 
-        @DecimalMin(value = "0.0", inclusive = false, message = "Peso deve ser maior que zero")
+        @DecimalMin(value = "0.0", inclusive = false, message = "O peso deve ser maior que zero.")
         BigDecimal pesoKg,
 
         @Size(max = 30)
@@ -46,7 +47,7 @@ public record CriarAnimalRequest(
         @Size(max = 30)
         String microchip,
 
-        @NotNull
+        // Opcional (decisao de 31/10/2026): null = nao informado, nunca "nao".
         Boolean esterilizado,
 
         LocalDate dataEsterilizacao,
@@ -77,7 +78,24 @@ public record CriarAnimalRequest(
 
         // F2-008: exigido pelo AnimalService quando status = obito_eutanasia.
         @Size(max = 4000)
-        String laudoEutanasia) implements DadosDescritivosAnimal {
+        String laudoEutanasia,
+
+        // V33: codigos do catalogo condicao_saude; "outras" exige o texto.
+        List<String> condicoes,
+
+        @Size(max = 500, message = "Descreva a condição em até 500 caracteres.")
+        String condicoesOutras) implements DadosDescritivosAnimal {
+
+    // Compatibilidade com chamadas anteriores à V33 (testes e fixtures).
+    public CriarAnimalRequest(String nome, String especie, String sexo, String raca, String coloracao, String pelagem,
+            String porte, BigDecimal pesoKg, String idadeAprox, LocalDate dataNascimentoAprox, String microchip,
+            Boolean esterilizado, LocalDate dataEsterilizacao, String status, String motivoEntrada,
+            LocalDateTime dataEntrada, UUID baiaId, String fotoUrl, String observacoes, String numeroMedalha,
+            LocalDate dataImplantacaoChip, String procedencia, String laudoEutanasia) {
+        this(nome, especie, sexo, raca, coloracao, pelagem, porte, pesoKg, idadeAprox, dataNascimentoAprox, microchip,
+                esterilizado, dataEsterilizacao, status, motivoEntrada, dataEntrada, baiaId, fotoUrl, observacoes,
+                numeroMedalha, dataImplantacaoChip, procedencia, laudoEutanasia, null, null);
+    }
 
     // Compatibilidade com chamadas anteriores à F2-004/F2-008 (testes e fixtures).
     public CriarAnimalRequest(String nome, String especie, String sexo, String raca, String coloracao, String pelagem,
@@ -86,6 +104,6 @@ public record CriarAnimalRequest(
             LocalDateTime dataEntrada, UUID baiaId, String fotoUrl, String observacoes) {
         this(nome, especie, sexo, raca, coloracao, pelagem, porte, pesoKg, idadeAprox, dataNascimentoAprox, microchip,
                 esterilizado, dataEsterilizacao, status, motivoEntrada, dataEntrada, baiaId, fotoUrl, observacoes,
-                null, null, null, null);
+                null, null, null, null, null, null);
     }
 }

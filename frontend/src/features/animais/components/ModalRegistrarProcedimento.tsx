@@ -1,8 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
+import { AtalhoHoje } from '@/components/AtalhoHoje'
+import { AvisoEnvioPausado } from '@/components/AvisoEnvioPausado'
+import { avisar } from '@/lib/avisos'
+import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
+import { Modal } from '@/components/Modal'
 import { BannerRascunho } from '@/components/BannerRascunho'
-import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { hojeEmItu } from '@/lib/datas'
 import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
@@ -48,6 +52,7 @@ export function ModalRegistrarProcedimento({ animalId, retifica, onFechar, onSuc
     watch,
     reset,
     getValues,
+    setValue,
     formState: { errors },
   } = useForm<ProcedimentoFormValues>({
     resolver: zodResolver(procedimentoFormSchema),
@@ -81,6 +86,7 @@ export function ModalRegistrarProcedimento({ animalId, retifica, onFechar, onSuc
         retificaId: retifica?.id,
       })
       await rascunho.removerAposSucesso()
+      avisar(retifica ? 'Procedimento corrigido.' : 'Procedimento registrado.')
       onSucesso()
     } catch (erro) {
       if (aplicarErrosDeCampo(erro, setError, MAPA_ERROS_SERVIDOR).length > 0) return
@@ -97,88 +103,76 @@ export function ModalRegistrarProcedimento({ animalId, retifica, onFechar, onSuc
   }
 
   return (
-    <div className="modal-overlay" onClick={onFechar}>
-      <div className="modal" onClick={(event) => event.stopPropagation()}>
-        <div className="modal-header">
-          <h3>{retifica ? 'Corrigir procedimento' : 'Registrar procedimento'}</h3>
-          <button type="button" className="btn btn-ghost btn-sm btn-icon-only" onClick={onFechar} aria-label="Fechar">
-            <Icon name="x" size={16} />
-          </button>
-        </div>
+    <Modal titulo={retifica ? 'Corrigir procedimento' : 'Registrar procedimento'} onFechar={onFechar}>
+      <form onSubmit={aoEnviar} noValidate>
+        <div className="modal-body">
+          <div className="form-grid cols-1">
+            {rascunho.rascunhoDisponivel && (
+              <BannerRascunho onRestaurar={rascunho.restaurar} onDescartar={() => void rascunho.descartar()} salvoEm={rascunho.rascunhoSalvoEm} />
+            )}
+            <AlertaErroEnvio mensagem={submitError} />
+            {retifica && (
+              <div className="alert info" role="alert">
+                <span className="bullet" />
+                <div className="alert-content">
+                  O registro original não será alterado — esta correção cria um novo registro vinculado a ele.
+                </div>
+              </div>
+            )}
 
-        <form onSubmit={aoEnviar} noValidate>
-          <div className="modal-body">
-            <div className="form-grid cols-1">
-              {rascunho.rascunhoDisponivel && (
-                <BannerRascunho onRestaurar={rascunho.restaurar} onDescartar={() => void rascunho.descartar()} salvoEm={rascunho.rascunhoSalvoEm} />
-              )}
-              {submitError && (
-                <div className="alert danger" role="alert">
-                  <span className="bullet" />
-                  <div className="alert-content">{submitError}</div>
-                </div>
-              )}
-              {retifica && (
-                <div className="alert info" role="alert">
-                  <span className="bullet" />
-                  <div className="alert-content">
-                    O registro original não será alterado — esta correção cria um novo registro vinculado a ele.
-                  </div>
-                </div>
-              )}
-
-              <div className="form-grid">
-                <div className="field">
-                  <label htmlFor="proc-tipo">
-                    Tipo de procedimento <span className="req">*</span>
-                  </label>
-                  <SelectCatalogoClinico
-                    id="proc-tipo"
-                    itens={catalogos.data?.tiposProcedimento}
-                    carregando={catalogos.isLoading}
-                    comErro={catalogos.isError}
-                    onTentarNovamente={() => void catalogos.refetch()}
-                    registro={register('tipoProcedimento')}
-                    temErro={Boolean(errors.tipoProcedimento)}
-                  />
-                  {errors.tipoProcedimento && <span className="err">{errors.tipoProcedimento.message}</span>}
-                </div>
-
-                <div className="field">
-                  <label htmlFor="proc-data">
-                    Data <span className="req">*</span>
-                  </label>
-                  <input id="proc-data" className={`input${errors.data ? ' error' : ''}`} type="date" max={hojeEmItu()} {...register('data')} />
-                  {errors.data && <span className="err">{errors.data.message}</span>}
-                </div>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="proc-tipo">
+                  Tipo de procedimento <span className="req">*</span>
+                </label>
+                <SelectCatalogoClinico
+                  id="proc-tipo"
+                  itens={catalogos.data?.tiposProcedimento}
+                  carregando={catalogos.isLoading}
+                  comErro={catalogos.isError}
+                  onTentarNovamente={() => void catalogos.refetch()}
+                  registro={register('tipoProcedimento')}
+                  temErro={Boolean(errors.tipoProcedimento)}
+                />
+                {errors.tipoProcedimento && <span className="err">{errors.tipoProcedimento.message}</span>}
               </div>
 
               <div className="field">
-                <label htmlFor="proc-descricao">Descrição</label>
-                <textarea id="proc-descricao" className="textarea" rows={3} {...register('descricao', { setValueAs: semEspacos })} />
-              </div>
-
-              <div className="field">
-                <label htmlFor="proc-resultado">Resultado / observações pós-procedimento</label>
-                <textarea id="proc-resultado" className="textarea" rows={3} {...register('resultado', { setValueAs: semEspacos })} />
+                <label htmlFor="proc-data">
+                  Data <span className="req">*</span>
+                </label>
+                <input id="proc-data" className={`input${errors.data ? ' error' : ''}`} aria-invalid={errors.data ? true : undefined} aria-describedby={errors.data ? 'proc-data-erro' : undefined} type="date" max={hojeEmItu()} {...register('data')} />
+                <AtalhoHoje onEscolher={(hoje) => setValue('data', hoje, { shouldDirty: true })} />
+                {errors.data && <span className="err" id="proc-data-erro">{errors.data.message}</span>}
               </div>
             </div>
-          </div>
 
-          <div className="modal-footer">
-            <button type="button" className="btn btn-ghost" onClick={onFechar}>
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={mutation.isPending || !catalogos.data?.tiposProcedimento.length}
-            >
-              {mutation.isPending ? 'Salvando…' : retifica ? 'Salvar correção' : 'Registrar procedimento'}
-            </button>
+            <div className="field">
+              <label htmlFor="proc-descricao">Descrição</label>
+              <textarea id="proc-descricao" className="textarea" rows={3} {...register('descricao', { setValueAs: semEspacos })} />
+            </div>
+
+            <div className="field">
+              <label htmlFor="proc-resultado">Resultado / observações pós-procedimento</label>
+              <textarea id="proc-resultado" className="textarea" rows={3} {...register('resultado', { setValueAs: semEspacos })} />
+            </div>
           </div>
-        </form>
-      </div>
-    </div>
+        </div>
+
+        <div className="modal-footer">
+          <AvisoEnvioPausado pausado={mutation.isPaused} />
+          <button type="button" className="btn btn-ghost" onClick={onFechar}>
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={mutation.isPending || !catalogos.data?.tiposProcedimento.length}
+          >
+            {mutation.isPaused ? 'Aguardando conexão…' : mutation.isPending ? 'Salvando…' : retifica ? 'Salvar correção' : 'Registrar procedimento'}
+          </button>
+        </div>
+      </form>
+    </Modal>
   )
 }

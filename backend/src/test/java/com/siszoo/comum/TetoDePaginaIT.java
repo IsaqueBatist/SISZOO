@@ -35,7 +35,7 @@ class TetoDePaginaIT extends AbstractIntegrationTest {
                     .when().get(rota + "?pagina=0&tamanho=" + tamanho)
                     .then().statusCode(422)
                     .body("campos[0].campo", equalTo("tamanho"))
-                    .body("campos[0].mensagem", equalTo("Tamanho de pagina deve estar entre 1 e 500"));
+                    .body("campos[0].mensagem", equalTo("O tamanho da página deve estar entre 1 e 500."));
         }
         given().header("Authorization", "Bearer " + tokenAdmin)
                 .when().get(rota + "?pagina=0&tamanho=500")

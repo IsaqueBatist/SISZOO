@@ -1,11 +1,13 @@
 import { Suspense, lazy } from 'react'
 import { Link } from 'react-router-dom'
-import { Icon } from '@/components/layout/Icon'
+import { Icon, type IconName } from '@/components/layout/Icon'
 import { ErroComRetry } from '@/components/layout/ErroComRetry'
 import { MontarQuandoVisivel } from '@/components/layout/MontarQuandoVisivel'
 import { Skeleton } from '@/components/layout/Skeleton'
 import { SeloDadosMock } from '@/components/layout/SeloDadosMock'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import type { SeveridadeAlerta } from '@/features/alertas/types/alertas.types'
+import { podeAcessar, type RoleKey } from '@/lib/nav'
 import { useAlertasVacinaisQuery } from '@/features/alertas/hooks/useAlertas'
 import { kpisUsamMock } from '../api/dashboardApi'
 import { useKpisDashboardQuery } from '../hooks/useDashboardKpis'
@@ -15,10 +17,31 @@ import type { AlertaCritico } from '../types/dashboard.types'
 import './Dashboard.css'
 
 // Lazy: isola o chunk de `recharts` (pesado) do carregamento inicial do
-// dashboard — máquinas do CCZ têm ~2GB RAM (ver CLAUDE.md).
+// dashboard — máquinas do CCZ têm ~2GB RAM.
 const GraficosDashboard = lazy(() =>
   import('@/features/graficos/components/GraficosDashboard').then((m) => ({ default: m.GraficosDashboard })),
 )
+
+// O que cada perfil mais faz ao abrir o sistema. Só atalho: quem decide o que
+// pode ser feito continuam sendo as rotas e a API.
+const ATALHOS_POR_PERFIL: Record<RoleKey, { to: string; rotulo: string; icone: IconName }[]> = {
+  admin: [
+    { to: '/ocorrencias/novo', rotulo: 'Registrar Ocorrência', icone: 'plus' },
+    { to: '/animais/novo', rotulo: 'Novo animal', icone: 'plus' },
+    { to: '/usuarios', rotulo: 'Usuários', icone: 'users' },
+  ],
+  vet: [
+    { to: '/animais/novo', rotulo: 'Novo animal', icone: 'plus' },
+    { to: '/processos/novo', rotulo: 'Novo Processo', icone: 'plus' },
+    { to: '/alertas/vacinas', rotulo: 'Vacinas a vencer', icone: 'syringe' },
+  ],
+  agente: [
+    { to: '/ocorrencias/novo', rotulo: 'Registrar Ocorrência', icone: 'plus' },
+    { to: '/processos/novo', rotulo: 'Novo Processo', icone: 'plus' },
+    { to: '/ocorrencias', rotulo: 'Ver ocorrências', icone: 'alert' },
+  ],
+  sem_perfil: [],
+}
 
 interface ItemAlertaAchatado {
   vacinacaoId: string
@@ -200,22 +223,33 @@ const TOM_POR_TIPO_DE_ALERTA: Record<string, string> = {
   nao_castrado: 'danger',
 }
 
-// Sem link "ver detalhes": diferente do alerta de vacina, estes 5 tipos não
-// têm endpoint de lista de itens (só o total agregado) — navegar para uma
-// tela vazia seria pior do que não navegar.
-function AlertaCriticoGenerico({ alerta }: { alerta: AlertaCritico }) {
+// Sem link "ver detalhes" nos que não têm endpoint de lista de itens (só o total
+// agregado): navegar para uma tela sem o recorte seria pior do que não navegar.
+// A exceção é a baia superlotada, que a tela de Baias já mostra destacada.
+function AlertaCriticoGenerico({ alerta, linkBaias }: { alerta: AlertaCritico; linkBaias: boolean }) {
   return (
     <div className={`alert ${TOM_POR_TIPO_DE_ALERTA[alerta.tipo] ?? 'info'}`}>
       <span className="bullet" />
       <div className="alert-content">
         <strong>{alerta.titulo}</strong>
-        <div className="alert-desc">{alerta.descricao}</div>
+        <div className="alert-desc">
+          {alerta.descricao}
+          {alerta.tipo === 'baia_superlotada' && linkBaias && (
+            <>
+              {' '}
+              <Link to="/baias">ver baias →</Link>
+            </>
+          )}
+        </div>
       </div>
     </div>
   )
 }
 
 export function Dashboard() {
+  const { roleKey } = useAuth()
+  const atalhos = ATALHOS_POR_PERFIL[roleKey]
+  const linkBaias = podeAcessar(roleKey, 'baias')
   const { data: kpis, isLoading: kpisCarregando, isError: kpisComErro, refetch: refazerKpis } = useKpisDashboardQuery()
   const kpisMockados = kpisUsamMock()
   const cards = kpis ? mapearKpisParaCards(kpis, kpisMockados) : []
@@ -224,6 +258,9 @@ export function Dashboard() {
   const alertasGenericos = (kpis?.alertas ?? []).filter(
     (alerta) => !TIPOS_JA_EXIBIDOS_EM_CARD_DEDICADO.has(alerta.tipo) && alerta.total > 0,
   )
+  // "Crítico" só para o que a API classifica assim: o resto é rotina a acompanhar.
+  const alertasCriticos = alertasGenericos.filter((alerta) => alerta.severidade === 'critico')
+  const avisos = alertasGenericos.filter((alerta) => alerta.severidade !== 'critico')
 
   return (
     <>
@@ -232,6 +269,16 @@ export function Dashboard() {
           <h1>Dashboard Operacional</h1>
           <p className="subtitle">Visão geral do Centro de Controle de Zoonoses</p>
         </div>
+        {atalhos.length > 0 && (
+          <div className="actions">
+            {atalhos.map((atalho, indice) => (
+              <Link key={atalho.to} to={atalho.to} className={`btn ${indice === 0 ? 'btn-primary' : 'btn-outline'}`}>
+                <Icon name={atalho.icone} size={14} />
+                {atalho.rotulo}
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="section-header">
@@ -281,9 +328,22 @@ export function Dashboard() {
           <AlertaProcessosUrgentes />
           {!kpisCarregando &&
             !kpisComErro &&
-            alertasGenericos.map((alerta) => <AlertaCriticoGenerico key={alerta.tipo} alerta={alerta} />)}
+            alertasCriticos.map((alerta) => <AlertaCriticoGenerico key={alerta.tipo} alerta={alerta} linkBaias={linkBaias} />)}
         </div>
       </div>
+
+      {!kpisCarregando && !kpisComErro && avisos.length > 0 && (
+        <div style={{ marginTop: 'var(--space-4)' }}>
+          <div className="section-header">
+            <h2>Acompanhamento</h2>
+          </div>
+          <div className="alerts-grid">
+            {avisos.map((alerta) => (
+              <AlertaCriticoGenerico key={alerta.tipo} alerta={alerta} linkBaias={linkBaias} />
+            ))}
+          </div>
+        </div>
+      )}
 
       <div style={{ marginTop: 'var(--space-4)' }}>
         {/* T45: os gráficos ficam abaixo de KPIs e alertas; o chunk do recharts

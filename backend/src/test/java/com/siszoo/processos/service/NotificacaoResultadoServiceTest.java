@@ -90,7 +90,7 @@ class NotificacaoResultadoServiceTest {
 
         service.notificarResultado(processoId);
 
-        verify(emailService).enviar("maria@exemplo.com", "SISZOO — Resultado do processo sanitario 045/2026",
+        verify(emailService).enviar("maria@exemplo.com", "SISZOO — Resultado do processo sanitário 045/2026",
                 "<p>html</p>", "texto");
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Map<String, Object>> variaveis = ArgumentCaptor.forClass(Map.class);

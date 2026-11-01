@@ -48,7 +48,7 @@ class GlobalExceptionHandlerIT extends AbstractIntegrationTest {
 
         resposta.then()
                 .statusCode(409)
-                .body("mensagem", equalTo("Operacao viola uma regra de integridade dos dados"));
+                .body("mensagem", equalTo("Não foi possível salvar, porque os dados entram em conflito com um registro existente. Verifique as informações e tente novamente."));
         // O detalhe do PostgreSQL (SQL, tabela, constraint, valor) fica so no log.
         String corpo = resposta.asString();
         for (String detalheInterno : new String[] {
@@ -98,6 +98,6 @@ class GlobalExceptionHandlerIT extends AbstractIntegrationTest {
                 .jsonPath()
                 .getMap("$");
 
-        assertThat(corpo, equalTo(Map.of("mensagem", "Vacinacao nao encontrada")));
+        assertThat(corpo, equalTo(Map.of("mensagem", "Vacinação não encontrada.")));
     }
 }

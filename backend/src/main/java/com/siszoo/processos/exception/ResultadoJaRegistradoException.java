@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class ResultadoJaRegistradoException extends ErroNegocioException {
 
     public ResultadoJaRegistradoException() {
-        super(HttpStatus.CONFLICT, "Processo ja tem resultado registrado; para corrigir, informe retificaId do resultado vigente");
+        super(HttpStatus.CONFLICT, "Este processo já tem resultado registrado. Para mudar, use a correção do resultado.");
     }
 }

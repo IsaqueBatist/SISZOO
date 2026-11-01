@@ -140,7 +140,7 @@ class AuditoriaSigiloIT extends AbstractIntegrationTest {
         assertThat(detalhe.asString(), not(containsString(marcador)));
         Response download = baixar(tokenLeitor, id, anexoId);
         download.then().statusCode(403);
-        assertThat(objectMapper.readTree(download.asString()), equalTo(objectMapper.readTree("{\"mensagem\":\"Acesso negado\"}")));
+        assertThat(objectMapper.readTree(download.asString()), equalTo(objectMapper.readTree("{\"mensagem\":\"Você não tem permissão para realizar esta ação.\"}")));
 
         assertThat(eventosDaOcorrencia(id), equalTo(0));
         List<Map<String, Object>> negados = new ArrayList<>(eventos("denunciante", denuncianteId, leitorId));

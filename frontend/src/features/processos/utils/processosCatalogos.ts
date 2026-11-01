@@ -24,6 +24,25 @@ export const MATERIAL_BIOLOGICO_OPCOES: { valor: MaterialBiologico; label: strin
   { valor: 'URINA', label: 'Urina' },
 ]
 
+// A resposta não é obrigatória: "Não informado" (null) não equivale a "Não".
+export const CONTATO_HUMANO_OPCOES = [
+  { valor: 'nao_informado', label: 'Não informado' },
+  { valor: 'sim', label: 'Sim' },
+  { valor: 'nao', label: 'Não' },
+] as const
+
+export type ContatoHumanoOpcao = (typeof CONTATO_HUMANO_OPCOES)[number]['valor']
+
+export function contatoHumanoParaOpcao(contato: boolean | null | undefined): ContatoHumanoOpcao {
+  if (contato === null || contato === undefined) return 'nao_informado'
+  return contato ? 'sim' : 'nao'
+}
+
+export function opcaoParaContatoHumano(opcao: ContatoHumanoOpcao): boolean | null {
+  if (opcao === 'nao_informado') return null
+  return opcao === 'sim'
+}
+
 export const NIVEL_CONTATO_OPCOES: { valor: NivelContato; label: string }[] = [
   { valor: 'DIRETA', label: 'Direta' },
   { valor: 'INDIRETA', label: 'Indireta' },
@@ -35,6 +54,13 @@ export const STATUS_PROCESSO_OPCOES: { valor: StatusProcesso; label: string }[] 
   { valor: 'COM_RESULTADO', label: 'Com resultado' },
   { valor: 'CONCLUIDO', label: 'Concluído' },
 ]
+
+// O ato real por trás de cada avanço manual. Sem entrada para
+// AGUARDANDO_RESULTADO: esse passo só acontece ao lançar o resultado (T37).
+export const ACAO_DE_AVANCO_PROCESSO: Partial<Record<StatusProcesso, string>> = {
+  ABERTO: 'Marcar amostras como enviadas',
+  COM_RESULTADO: 'Concluir processo',
+}
 
 export function labelDe<T extends string>(opcoes: readonly { valor: T; label: string }[], valor: T | null | undefined): string {
   if (!valor) return '—'

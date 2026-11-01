@@ -307,7 +307,7 @@ class AuthControllerIT extends AbstractIntegrationTest {
                     .then()
                     .statusCode(422)
                     .body("campos[0].campo", equalTo("novaSenha"))
-                    .body("campos[0].mensagem", equalTo("Nova senha deve ter no maximo 72 bytes (acentos contam 2)"));
+                    .body("campos[0].mensagem", equalTo("A nova senha deve ter no máximo 72 bytes (letras acentuadas contam como 2)."));
         }
         assertThat(passwordEncoder.matches(senhaAtual, usuarioRepository.findByEmail(email).orElseThrow().getSenha()),
                 equalTo(true));

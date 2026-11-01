@@ -166,7 +166,7 @@ Table Animal {
   numero_medalha        varchar(30)  [unique, note: 'V23: único quando informado (índice parcial); normalizado sem espaços']
   data_implantacao_chip date         [note: 'V23: CHECK exige microchip; não futura']
   procedencia           varchar(200) [note: 'V23: origem na entrada, texto livre']
-  esterilizado          boolean      [not null, default: false]
+  esterilizado          boolean      [note: 'NULL = nao informado (V31)']
   data_esterilizacao    date
   status_id             uuid         [not null, ref: > StatusAnimal.id]
   motivo_entrada_id     uuid         [not null, ref: > MotivoEntrada.id]
@@ -366,4 +366,22 @@ TableGroup Canil_modelo_alvo {
   AnexoExame
   VacinaEspecie
   AnimalSintoma
+}
+
+// V33: condicoes de saude pre-existentes (entrevista de 09/01/2026 e prototipo).
+// O texto de "Outras" fica em animal.condicoes_outras.
+Table condicao_saude {
+  id     uuid         [pk, default: `gen_random_uuid()`]
+  codigo varchar(30)  [not null, unique]
+  nome   varchar(100) [not null]
+  ativo  boolean      [not null, default: true]
+}
+
+Table animal_condicao_saude {
+  animal_id         uuid [not null, ref: > animal.id]
+  condicao_saude_id uuid [not null, ref: > condicao_saude.id]
+
+  indexes {
+    (animal_id, condicao_saude_id) [pk]
+  }
 }

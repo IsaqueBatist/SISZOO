@@ -46,6 +46,6 @@ code: |-
     senhaInicial: '{{ _.senha_teste_padrao }}',
   });
   expect(response.status).to.equal(422);
-  expect(JSON.parse(response.body).mensagem).to.equal('CRMV e obrigatorio para o cargo Veterinario');
+  expect(JSON.parse(response.body).mensagem).to.equal('Informe o CRMV para o perfil Veterinário.');
 
 metaSortKey: 23000000

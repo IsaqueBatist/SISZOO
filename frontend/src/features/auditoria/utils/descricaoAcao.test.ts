@@ -13,6 +13,7 @@ const TODAS_AS_ACOES: AcaoAuditoria[] = [
   'ENCERRAMENTO',
   'VISUALIZACAO',
   'ACESSO_NEGADO',
+  'SESSAO_REVOGADA',
 ]
 
 describe('descricaoAcao', () => {

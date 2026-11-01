@@ -85,7 +85,7 @@ class ProcedimentoControllerIT extends AbstractIntegrationTest {
                 .post("/api/procedimentos")
                 .then()
                 .statusCode(422)
-                .body("mensagem", equalTo("Tipo de procedimento informado nao existe"));
+                .body("mensagem", equalTo("O tipo de procedimento informado não existe. Selecione um da lista."));
     }
 
     @Test
@@ -123,7 +123,7 @@ class ProcedimentoControllerIT extends AbstractIntegrationTest {
                 .post("/api/procedimentos")
                 .then()
                 .statusCode(422)
-                .body("mensagem", equalTo("Data do procedimento nao pode ser futura"))
+                .body("mensagem", equalTo("A data do procedimento não pode ser futura."))
                 .body("campos[0].campo", equalTo("data"));
     }
 
@@ -204,7 +204,7 @@ class ProcedimentoControllerIT extends AbstractIntegrationTest {
                 .post("/api/procedimentos")
                 .then()
                 .statusCode(409)
-                .body("mensagem", equalTo("Registro ja foi retificado por outro"));
+                .body("mensagem", equalTo("Este registro já foi corrigido. Atualize a página para ver a versão atual."));
     }
 
     private io.restassured.response.Response criarProcedimentoViaApi(String animalId, String retificaId) {

@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it } from 'vitest'
 import { AppRoutes } from './AppRoutes'
-import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
+import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import { CREDENCIAIS_VALIDAS } from '../mocks/handlers'
 
 function renderApp(initialEntry = '/login') {
@@ -46,7 +46,7 @@ describe('roteamento entre login e dashboard', () => {
     await user.type(screen.getByLabelText(/^senha/i), 'senha-errada')
     await user.click(screen.getByRole('button', { name: /^entrar$/i }))
 
-    expect(await screen.findByText('E-mail ou senha inválidos.')).toBeInTheDocument()
+    expect(await screen.findByText('E-mail ou senha inválidos. Se o problema continuar, fale com o Administrador do sistema.')).toBeInTheDocument()
     expect(screen.getByLabelText(/e-mail institucional/i)).toBeInTheDocument()
   })
 
@@ -57,9 +57,7 @@ describe('roteamento entre login e dashboard', () => {
   })
 
   it('mantém a sessão ao remontar com sessionStorage já preenchido (rehidratação)', async () => {
-    sessionStorage.setItem(
-      SESSION_STORAGE_KEY,
-      JSON.stringify({
+    definirSessaoEmMemoria({
         token: 'token-existente',
         usuario: {
           id: 'a1b2c3d4-0000-0000-0000-000000000002',
@@ -69,8 +67,7 @@ describe('roteamento entre login e dashboard', () => {
           cargos: ['Veterinário'],
           senhaAlteradaEm: '2026-01-10T12:00:00Z',
         },
-      }),
-    )
+      })
 
     renderApp('/dashboard')
 

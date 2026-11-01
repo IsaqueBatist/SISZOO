@@ -80,9 +80,9 @@ code: |-
     expect(corpo.campos === undefined).to.equal(true);
   }
 
-  await esperarCatalogoInvalido({ especie: 'especie-que-nao-existe' }, 'Especie informada nao existe');
-  await esperarCatalogoInvalido({ status: 'status-que-nao-existe' }, 'Status informado nao existe');
-  await esperarCatalogoInvalido({ motivoEntrada: 'motivo-que-nao-existe' }, 'Motivo de entrada informado nao existe');
-  await esperarCatalogoInvalido({ baiaId: '00000000-0000-4000-8000-000000000099' }, 'Baia informada nao existe');
+  await esperarCatalogoInvalido({ especie: 'especie-que-nao-existe' }, 'A espécie informada não existe. Selecione uma da lista.');
+  await esperarCatalogoInvalido({ status: 'status-que-nao-existe' }, 'O status informado não existe. Selecione um da lista.');
+  await esperarCatalogoInvalido({ motivoEntrada: 'motivo-que-nao-existe' }, 'O motivo de entrada informado não existe. Selecione um da lista.');
+  await esperarCatalogoInvalido({ baiaId: '00000000-0000-4000-8000-000000000099' }, 'A baia informada não existe. Atualize a página e selecione outra.');
 
 metaSortKey: 30000000

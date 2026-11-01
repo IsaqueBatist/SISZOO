@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class StatusAnimalInvalidoException extends ErroNegocioException {
 
     public StatusAnimalInvalidoException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Status informado nao existe");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "O status informado não existe. Selecione um da lista.");
     }
 }

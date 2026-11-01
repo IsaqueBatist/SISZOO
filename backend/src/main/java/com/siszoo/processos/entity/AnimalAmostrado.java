@@ -100,8 +100,9 @@ public class AnimalAmostrado {
     @Column(name = "material_biologico", nullable = false, length = 20)
     private MaterialBiologico materialBiologico;
 
-    @Column(name = "contato_humano", nullable = false)
-    private boolean contatoHumano;
+    // true = houve, false = nao houve, null = nao informado (V31).
+    @Column(name = "contato_humano")
+    private Boolean contatoHumano;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "nivel_contato", length = 10)

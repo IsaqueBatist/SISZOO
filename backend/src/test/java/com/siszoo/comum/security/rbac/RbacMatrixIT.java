@@ -145,6 +145,33 @@ class RbacMatrixIT extends AbstractIntegrationTest {
                 .then().statusCode(statusEsperado);
     }
 
+    // Decisao de 31/10/2026: o Agente lanca o resultado positivo definitivo. Definitivo
+    // e "nao corrigivel" (T35-15), nao encerramento: o processo fica em COM_RESULTADO.
+    @ParameterizedTest(name = "{0} lanca resultado positivo definitivo -> status {1}")
+    @MethodSource("lancarResultadoPorPerfil")
+    void lancarPositivoDefinitivoPorPerfil(Perfil perfil, int statusEsperado) {
+        String token = tokenPara(perfil);
+        String processoId = fixture.postarProcesso(token, null, false).then().statusCode(200).extract().path("id");
+        given().header("Authorization", "Bearer " + token).contentType(ContentType.JSON)
+                .body(Map.of("status", "AGUARDANDO_RESULTADO"))
+                .when().patch("/api/processos/" + processoId + "/status").then().statusCode(200);
+
+        String resultadoId = given().header("Authorization", "Bearer " + token).contentType(ContentType.JSON)
+                .body(Map.of("resultado", "positivo", "dataResultado", fixture.hoje().toString()))
+                .when().post("/api/processos/" + processoId + "/resultados")
+                .then().statusCode(statusEsperado)
+                .body("statusProcesso", org.hamcrest.Matchers.equalTo("COM_RESULTADO"))
+                .body("resultado.codigo", org.hamcrest.Matchers.equalTo("positivo"))
+                .body("resultados.size()", org.hamcrest.Matchers.equalTo(1))
+                .extract().path("resultados[0].id");
+
+        // Definitivo vale para todos os perfis, inclusive o Administrador.
+        given().header("Authorization", "Bearer " + token).contentType(ContentType.JSON)
+                .body(Map.of("resultado", "negativo", "dataResultado", fixture.hoje().toString(), "retificaId", resultadoId))
+                .when().post("/api/processos/" + processoId + "/resultados")
+                .then().statusCode(422);
+    }
+
     @ParameterizedTest(name = "{0} ao criar usuário -> status {1}")
     @MethodSource("criarUsuarioPorPerfil")
     void somenteAdminCriaUsuario(Perfil perfil, int statusEsperado) {

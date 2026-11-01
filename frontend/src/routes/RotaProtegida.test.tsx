@@ -3,7 +3,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it } from 'vitest'
 import { RotaProtegida } from './RotaProtegida'
-import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
+import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
 
 const USUARIO_EXEMPLO: Usuario = {
@@ -35,14 +35,16 @@ function renderRotaProtegida(initialEntry: string) {
 }
 
 function autenticar(usuario: Usuario) {
-  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario }))
+  definirSessaoEmMemoria({ token: 'token-existente', usuario })
 }
 
 describe('RotaProtegida', () => {
-  it('sem token redireciona para /login', () => {
+  it('sem sessão no servidor redireciona para /login, sem mostrar o conteúdo enquanto confere', async () => {
     renderRotaProtegida('/protegida')
 
-    expect(screen.getByText('Tela de login')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent(/carregando sua sessão/i)
+    expect(screen.queryByText('Conteúdo protegido')).not.toBeInTheDocument()
+    expect(await screen.findByText('Tela de login')).toBeInTheDocument()
     expect(screen.queryByText('Conteúdo protegido')).not.toBeInTheDocument()
   })
 

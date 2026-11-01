@@ -59,7 +59,7 @@ class ProcessoSemAmostraIT extends AbstractIntegrationTest {
         Response resposta = fixture.postarProcesso(token, null, false);
 
         resposta.then().statusCode(409);
-        assertThat(resposta.path("mensagem"), equalTo("Operacao viola uma regra de integridade dos dados"));
+        assertThat(resposta.path("mensagem"), equalTo("Não foi possível salvar, porque os dados entram em conflito com um registro existente. Verifique as informações e tente novamente."));
         assertThat(resposta.asString(), not(containsString("ck_processo_sanitario_amostra")));
         assertThat(contar("processo_sanitario"), equalTo(processos));
         assertThat(contar("responsavel_processo"), equalTo(responsaveis));

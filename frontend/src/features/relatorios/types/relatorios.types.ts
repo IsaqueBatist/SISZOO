@@ -194,6 +194,7 @@ export interface KpisAnualProcessos {
   confirmadosPositivos: number
   percentualPositividade: number
   comContatoHumano: number
+  contatoNaoInformado: number
   tempoMedioDias: number | null
 }
 
@@ -242,7 +243,8 @@ export interface PreviewAnualProcessos {
   resultadosPorDoenca: ResultadoLaboratorialPorDoenca[]
   totalResultados: ResultadoLaboratorialPorDoenca
   porEspecie: DistribuicaoEspecie[]
-  bairros: BairroProcesso[]
+  // Nulo para quem não vê ocorrências por bairro (Veterinário, V32).
+  bairros: BairroProcesso[] | null
   laboratorios: LaboratorioUtilizado[]
 }
 

@@ -40,7 +40,7 @@ code: |-
 
   const tipoInvalido = await criarBaia(adminToken, { tipoBaia: 'tipo-que-nao-existe' });
   expect(tipoInvalido.status).to.equal(422);
-  expect(JSON.parse(tipoInvalido.body).mensagem).to.equal('Tipo de baia informado nao existe');
+  expect(JSON.parse(tipoInvalido.body).mensagem).to.equal('O tipo de baia informado não existe. Selecione um da lista.');
 
   const tipoValido = await criarBaia(adminToken, { nome: `Baia ${Date.now()}` });
   expect(tipoValido.status).to.equal(200);

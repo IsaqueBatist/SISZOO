@@ -9,7 +9,7 @@
     "status" : 401,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Credenciais invalidas"
+      "mensagem" : "E-mail ou senha incorretos."
     },
     "logs" : [ ]
   }, {
@@ -22,7 +22,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Nova senha e confirmacao nao conferem"
+      "mensagem" : "A nova senha e a confirmação não são iguais."
     },
     "logs" : [ ]
   }, {
@@ -35,7 +35,7 @@
     "status" : 409,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "E-mail ja cadastrado"
+      "mensagem" : "Este e-mail já está cadastrado."
     },
     "logs" : [ ]
   }, {
@@ -48,7 +48,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "CRMV e obrigatorio para o cargo Veterinario"
+      "mensagem" : "Informe o CRMV para o perfil Veterinário."
     },
     "logs" : [ ]
   }, {
@@ -61,7 +61,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Cargo informado nao existe"
+      "mensagem" : "O perfil informado não existe. Selecione um perfil da lista."
     },
     "logs" : [ ]
   }, {
@@ -74,7 +74,7 @@
     "status" : 404,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Usuario nao encontrado"
+      "mensagem" : "Usuário não encontrado."
     },
     "logs" : [ ]
   }, {
@@ -87,7 +87,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Notificacao de alertas criticos nao pode ser desativada"
+      "mensagem" : "A notificação de alertas críticos não pode ser desativada."
     },
     "logs" : [ ]
   }, {
@@ -100,7 +100,7 @@
     "status" : 409,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Microchip ja cadastrado"
+      "mensagem" : "Este microchip já está cadastrado em outro animal."
     },
     "logs" : [ ]
   }, {
@@ -113,7 +113,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Microchip nao pode ser alterado apos definido"
+      "mensagem" : "O microchip não pode ser alterado depois de definido."
     },
     "logs" : [ ]
   }, {
@@ -126,7 +126,7 @@
     "status" : 404,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Animal nao encontrado"
+      "mensagem" : "Animal não encontrado."
     },
     "logs" : [ ]
   }, {
@@ -139,7 +139,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Especie informada nao existe"
+      "mensagem" : "A espécie informada não existe. Selecione uma da lista."
     },
     "logs" : [ ]
   }, {
@@ -152,7 +152,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Status informado nao existe"
+      "mensagem" : "O status informado não existe. Selecione um da lista."
     },
     "logs" : [ ]
   }, {
@@ -165,7 +165,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Motivo de entrada informado nao existe"
+      "mensagem" : "O motivo de entrada informado não existe. Selecione um da lista."
     },
     "logs" : [ ]
   }, {
@@ -178,7 +178,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Baia informada nao existe"
+      "mensagem" : "A baia informada não existe. Atualize a página e selecione outra."
     },
     "logs" : [ ]
   }, {
@@ -191,7 +191,7 @@
     "status" : 404,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Baia nao encontrada"
+      "mensagem" : "Baia não encontrada."
     },
     "logs" : [ ]
   }, {
@@ -204,7 +204,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Tipo de baia informado nao existe"
+      "mensagem" : "O tipo de baia informado não existe. Selecione um da lista."
     },
     "logs" : [ ]
   }, {
@@ -217,7 +217,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Nao e permitido desativar o proprio usuario"
+      "mensagem" : "Você não pode desativar o seu próprio usuário."
     },
     "logs" : [ ]
   }, {
@@ -230,7 +230,7 @@
     "status" : 404,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Vacinacao nao encontrada"
+      "mensagem" : "Vacinação não encontrada."
     },
     "logs" : [ ]
   }, {
@@ -243,7 +243,7 @@
     "status" : 404,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Procedimento nao encontrado"
+      "mensagem" : "Procedimento não encontrado."
     },
     "logs" : [ ]
   }, {
@@ -256,7 +256,7 @@
     "status" : 404,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Prescricao nao encontrada"
+      "mensagem" : "Prescrição não encontrada."
     },
     "logs" : [ ]
   }, {
@@ -269,7 +269,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Vacina informada nao existe"
+      "mensagem" : "A vacina informada não existe. Selecione uma da lista."
     },
     "logs" : [ ]
   }, {
@@ -282,7 +282,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Tipo de procedimento informado nao existe"
+      "mensagem" : "O tipo de procedimento informado não existe. Selecione um da lista."
     },
     "logs" : [ ]
   }, {
@@ -295,7 +295,7 @@
     "status" : 404,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Exame nao encontrado"
+      "mensagem" : "Exame não encontrado."
     },
     "logs" : [ ]
   }, {
@@ -308,7 +308,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Tipo de exame informado nao existe"
+      "mensagem" : "O tipo de exame informado não existe. Selecione um da lista."
     },
     "logs" : [ ]
   }, {
@@ -321,7 +321,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Anexo deve ser JPG, PNG ou PDF com ate 5 MB"
+      "mensagem" : "Envie um arquivo JPG, PNG ou PDF com até 5 MB."
     },
     "logs" : [ ]
   }, {
@@ -334,7 +334,7 @@
     "status" : 404,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Anexo nao encontrado"
+      "mensagem" : "Anexo não encontrado."
     },
     "logs" : [ ]
   }, {
@@ -347,7 +347,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Limite de 10 anexos por animal atingido"
+      "mensagem" : "Este animal atingiu o limite de 10 anexos."
     },
     "logs" : [ ]
   }, {
@@ -360,7 +360,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Medicamento informado nao existe"
+      "mensagem" : "O medicamento informado não existe. Selecione um da lista."
     },
     "logs" : [ ]
   }, {
@@ -373,7 +373,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Registro retificado pertence a outro animal"
+      "mensagem" : "O registro a corrigir pertence a outro animal."
     },
     "logs" : [ ]
   }, {
@@ -386,7 +386,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Data de aplicacao nao pode ser futura"
+      "mensagem" : "A data de aplicação não pode ser futura."
     },
     "logs" : [ ]
   }, {
@@ -399,7 +399,7 @@
     "status" : 409,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Registro ja foi retificado por outro"
+      "mensagem" : "Este registro já foi corrigido. Atualize a página para ver a versão atual."
     },
     "logs" : [ ]
   }, {
@@ -412,7 +412,7 @@
     "status" : 404,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Medicamento nao encontrado"
+      "mensagem" : "Medicamento não encontrado."
     },
     "logs" : [ ]
   }, {
@@ -425,7 +425,7 @@
     "status" : 409,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Categoria farmacologica ja cadastrada"
+      "mensagem" : "Esta categoria farmacológica já está cadastrada."
     },
     "logs" : [ ]
   }, {
@@ -438,7 +438,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Categoria farmacologica informada nao existe"
+      "mensagem" : "A categoria farmacológica informada não existe. Selecione uma da lista."
     },
     "logs" : [ ]
   }, {
@@ -451,7 +451,7 @@
     "status" : 404,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Ocorrencia nao encontrada"
+      "mensagem" : "Ocorrência não encontrada."
     },
     "logs" : [ ]
   }, {
@@ -464,7 +464,7 @@
     "status" : 404,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Anexo nao encontrado"
+      "mensagem" : "Anexo não encontrado."
     },
     "logs" : [ ]
   }, {
@@ -477,7 +477,7 @@
     "status" : 404,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Processo sanitario nao encontrado"
+      "mensagem" : "Processo sanitário não encontrado."
     },
     "logs" : [ ]
   }, {
@@ -490,7 +490,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Tipo de ocorrencia informado nao existe"
+      "mensagem" : "O tipo de ocorrência informado não existe. Selecione um da lista."
     },
     "logs" : [ ]
   }, {
@@ -503,7 +503,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Providencia informada nao existe"
+      "mensagem" : "A providência informada não existe. Selecione uma da lista."
     },
     "logs" : [ ]
   }, {
@@ -516,7 +516,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Providencia tomada e obrigatoria no encerramento"
+      "mensagem" : "Informe a providência tomada para encerrar a ocorrência."
     },
     "logs" : [ ]
   }, {
@@ -529,7 +529,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Descricao do encerramento e obrigatoria quando a providencia e Outro"
+      "mensagem" : "Descreva o encerramento quando a providência for \"Outro\"."
     },
     "logs" : [ ]
   }, {
@@ -542,7 +542,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Transicao de status nao permitida para a ocorrencia"
+      "mensagem" : "Esta mudança de status não é permitida para a ocorrência."
     },
     "logs" : [ ]
   }, {
@@ -555,7 +555,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Transicao de status nao permitida para o processo"
+      "mensagem" : "Esta mudança de status não é permitida para o processo."
     },
     "logs" : [ ]
   }, {
@@ -568,7 +568,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Doenca invalida"
+      "mensagem" : "A doença informada não está disponível. Selecione outra da lista."
     },
     "logs" : [ ]
   }, {
@@ -581,7 +581,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Laboratorio invalido"
+      "mensagem" : "O laboratório informado não está disponível. Selecione outro da lista."
     },
     "logs" : [ ]
   }, {
@@ -594,7 +594,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Sintoma invalido"
+      "mensagem" : "Um dos sintomas informados não está disponível. Selecione os sintomas da lista."
     },
     "logs" : [ ]
   }, {
@@ -607,7 +607,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Data de coleta nao pode ser futura"
+      "mensagem" : "A data de coleta não pode ser futura."
     },
     "logs" : [ ]
   }, {
@@ -620,7 +620,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Data do resultado nao pode ser futura"
+      "mensagem" : "A data do resultado não pode ser futura."
     },
     "logs" : [ ]
   }, {
@@ -633,7 +633,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Resultado laboratorial invalido: use positivo, negativo, inconclusivo, material_inadequado ou nao_realizado"
+      "mensagem" : "Resultado laboratorial inválido. Selecione um resultado da lista."
     },
     "logs" : [ ]
   }, {
@@ -646,7 +646,7 @@
     "status" : 409,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Processo ja tem resultado registrado; para corrigir, informe retificaId do resultado vigente"
+      "mensagem" : "Este processo já tem resultado registrado. Para mudar, use a correção do resultado."
     },
     "logs" : [ ]
   }, {
@@ -659,7 +659,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "O status COM_RESULTADO so e alcancado pelo registro do resultado laboratorial"
+      "mensagem" : "Registre o resultado laboratorial para avançar o processo."
     },
     "logs" : [ ]
   }, {
@@ -672,7 +672,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Processo so pode ser concluido com resultado laboratorial registrado"
+      "mensagem" : "Registre o resultado laboratorial antes de concluir o processo."
     },
     "logs" : [ ]
   }, {
@@ -685,7 +685,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Resultado a corrigir nao existe neste processo"
+      "mensagem" : "O resultado a corrigir não pertence a este processo."
     },
     "logs" : [ ]
   }, {
@@ -698,7 +698,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Resultado so pode ser corrigido com o processo em COM_RESULTADO"
+      "mensagem" : "O resultado só pode ser corrigido enquanto o processo tiver resultado lançado e não estiver concluído."
     },
     "logs" : [ ]
   }, {
@@ -711,7 +711,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Resultado positivo e definitivo e nao pode ser corrigido"
+      "mensagem" : "Resultado positivo é definitivo e não pode ser corrigido."
     },
     "logs" : [ ]
   }, {
@@ -724,7 +724,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "So ha notificacao ao municipe para reenviar com resultado positivo vigente"
+      "mensagem" : "Só há notificação para reenviar quando o resultado vigente é positivo ou inconclusivo."
     },
     "logs" : [ ]
   }, {
@@ -737,7 +737,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Municipe ja foi notificado: o SMTP ja aceitou o envio"
+      "mensagem" : "O munícipe já foi notificado. Não é preciso reenviar."
     },
     "logs" : [ ]
   }, {
@@ -750,7 +750,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Amostra de animal do canil nao aceita dados de identificacao: eles vem da ficha"
+      "mensagem" : "A identificação do animal do canil vem da ficha dele e não pode ser enviada na amostra."
     },
     "logs" : [ ]
   }, {
@@ -763,7 +763,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Amostra de animal de campo exige especie e sexo"
+      "mensagem" : "Informe a espécie e o sexo do animal de campo."
     },
     "logs" : [ ]
   }, {
@@ -776,7 +776,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Nivel de contato e agressao sao obrigatorios com contato humano e proibidos sem ele"
+      "mensagem" : "Informe o nível de contato e a agressão somente quando houver contato humano."
     },
     "logs" : [ ]
   }, {
@@ -789,7 +789,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Sintomas so podem ser informados em amostra com status clinico sintomatico"
+      "mensagem" : "Informe sintomas apenas em amostra com status clínico sintomático."
     },
     "logs" : [ ]
   }, {
@@ -802,7 +802,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Ocorrencia encerrada nao pode ser alterada"
+      "mensagem" : "Uma ocorrência encerrada não pode ser alterada."
     },
     "logs" : [ ]
   }, {
@@ -815,7 +815,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Ocorrencia com processo sanitario vinculado nao concluido nao pode ser encerrada"
+      "mensagem" : "Conclua o processo sanitário vinculado antes de encerrar a ocorrência."
     },
     "logs" : [ ]
   }, {
@@ -828,7 +828,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Nome do denunciante e obrigatorio quando a denuncia nao e anonima nem sigilosa"
+      "mensagem" : "Informe o nome do denunciante quando a denúncia não for anônima nem sigilosa."
     },
     "logs" : [ ]
   }, {
@@ -841,7 +841,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Data de abertura nao pode ser futura"
+      "mensagem" : "A data de abertura não pode ser futura."
     },
     "logs" : [ ]
   }, {
@@ -854,7 +854,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Denuncia anonima nao aceita dados do denunciante"
+      "mensagem" : "Denúncia anônima não aceita dados do denunciante."
     },
     "logs" : [ ]
   }, {
@@ -867,7 +867,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Denuncia nao pode ser anonima e sigilosa ao mesmo tempo"
+      "mensagem" : "A denúncia não pode ser anônima e sigilosa ao mesmo tempo. Escolha uma das opções."
     },
     "logs" : [ ]
   }, {
@@ -880,7 +880,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Denuncia identificada nao pode passar a anonima"
+      "mensagem" : "Uma denúncia identificada não pode passar a ser anônima."
     },
     "logs" : [ ]
   }, {
@@ -893,7 +893,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Urgencia definida pelo processo vinculado nao pode ser desmarcada"
+      "mensagem" : "A urgência foi definida pelo processo vinculado e não pode ser desmarcada."
     },
     "logs" : [ ]
   }, {
@@ -906,7 +906,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Anexo deve ser JPG, PNG ou PDF com ate 5 MB"
+      "mensagem" : "Envie um arquivo JPG, PNG ou PDF com até 5 MB."
     },
     "logs" : [ ]
   }, {
@@ -919,7 +919,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Limite de 5 anexos por ocorrencia atingido"
+      "mensagem" : "Esta ocorrência atingiu o limite de 5 anexos."
     },
     "logs" : [ ]
   }, {
@@ -932,7 +932,7 @@
     "status" : 409,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Ocorrencia ou processo ja possui vinculo"
+      "mensagem" : "A ocorrência ou o processo já tem vínculo."
     },
     "logs" : [ ]
   }, {
@@ -945,7 +945,7 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Desfecho do animal informado nao existe"
+      "mensagem" : "O desfecho informado não existe. Selecione um da lista."
     },
     "logs" : [ ]
   }, {
@@ -1001,7 +1001,7 @@
     "status" : 500,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Nao foi possivel concluir a operacao"
+      "mensagem" : "Não foi possível concluir a operação. Tente novamente em instantes."
     },
     "logs" : [ {
       "nivel" : "ERROR",
@@ -1018,7 +1018,7 @@
     "status" : 409,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Registro ja foi retificado por outro"
+      "mensagem" : "Este registro já foi corrigido. Atualize a página para ver a versão atual."
     },
     "logs" : [ {
       "nivel" : "WARN",
@@ -1039,7 +1039,7 @@
     "status" : 409,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Registro ja foi retificado por outro"
+      "mensagem" : "Este registro já foi corrigido. Atualize a página para ver a versão atual."
     },
     "logs" : [ {
       "nivel" : "WARN",
@@ -1060,7 +1060,7 @@
     "status" : 409,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Registro ja foi retificado por outro"
+      "mensagem" : "Este registro já foi corrigido. Atualize a página para ver a versão atual."
     },
     "logs" : [ {
       "nivel" : "WARN",
@@ -1081,7 +1081,7 @@
     "status" : 409,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Registro ja foi retificado por outro"
+      "mensagem" : "Este registro já foi corrigido. Atualize a página para ver a versão atual."
     },
     "logs" : [ {
       "nivel" : "WARN",
@@ -1102,7 +1102,7 @@
     "status" : 409,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Processo ja tem resultado registrado; para corrigir, informe retificaId do resultado vigente"
+      "mensagem" : "Este processo já tem resultado registrado. Para mudar, use a correção do resultado."
     },
     "logs" : [ {
       "nivel" : "WARN",
@@ -1123,7 +1123,7 @@
     "status" : 409,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Registro ja foi retificado por outro"
+      "mensagem" : "Este registro já foi corrigido. Atualize a página para ver a versão atual."
     },
     "logs" : [ {
       "nivel" : "WARN",
@@ -1144,7 +1144,7 @@
     "status" : 409,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Operacao viola uma regra de integridade dos dados"
+      "mensagem" : "Não foi possível salvar, porque os dados entram em conflito com um registro existente. Verifique as informações e tente novamente."
     },
     "logs" : [ {
       "nivel" : "WARN",
@@ -1165,7 +1165,7 @@
     "status" : 409,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Operacao viola uma regra de integridade dos dados"
+      "mensagem" : "Não foi possível salvar, porque os dados entram em conflito com um registro existente. Verifique as informações e tente novamente."
     },
     "logs" : [ {
       "nivel" : "WARN",
@@ -1186,7 +1186,7 @@
     "status" : 409,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Operacao viola uma regra de integridade dos dados"
+      "mensagem" : "Não foi possível salvar, porque os dados entram em conflito com um registro existente. Verifique as informações e tente novamente."
     },
     "logs" : [ {
       "nivel" : "WARN",
@@ -1207,7 +1207,7 @@
     "status" : 409,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Operacao viola uma regra de integridade dos dados"
+      "mensagem" : "Não foi possível salvar, porque os dados entram em conflito com um registro existente. Verifique as informações e tente novamente."
     },
     "logs" : [ {
       "nivel" : "WARN",
@@ -1228,13 +1228,13 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Dados invalidos",
+      "mensagem" : "Não foi possível salvar. Verifique os campos destacados e tente novamente.",
       "campos" : [ {
         "campo" : "primeiro",
-        "mensagem" : "não deve estar em branco"
+        "mensagem" : "Preencha este campo."
       }, {
         "campo" : "segundo",
-        "mensagem" : "não deve estar em branco"
+        "mensagem" : "Preencha este campo."
       } ]
     },
     "logs" : [ ]
@@ -1248,10 +1248,10 @@
     "status" : 422,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Dados invalidos",
+      "mensagem" : "Não foi possível salvar. Verifique os campos destacados e tente novamente.",
       "campos" : [ {
         "campo" : "segundo",
-        "mensagem" : "não deve estar em branco"
+        "mensagem" : "Preencha este campo."
       } ]
     },
     "logs" : [ ]
@@ -1265,7 +1265,7 @@
     "status" : 413,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Arquivo excede o tamanho maximo de 5 MB"
+      "mensagem" : "O arquivo passa do limite de 5 MB. Escolha um arquivo menor."
     },
     "logs" : [ ]
   }, {
@@ -1292,7 +1292,8 @@
       "timestamp" : "<varia a cada execucao>",
       "status" : 400,
       "error" : "Bad Request",
-      "path" : "/api/teste/excecoes/validacao"
+      "path" : "/api/teste/excecoes/validacao",
+      "mensagem" : "Não foi possível processar os dados enviados. Verifique as informações e tente novamente."
     },
     "logs" : [ ]
   }, {
@@ -1308,7 +1309,8 @@
       "timestamp" : "<varia a cada execucao>",
       "status" : 405,
       "error" : "Method Not Allowed",
-      "path" : "/api/teste/excecoes/validacao"
+      "path" : "/api/teste/excecoes/validacao",
+      "mensagem" : "Esta operação não está disponível."
     },
     "logs" : [ ]
   }, {
@@ -1321,7 +1323,7 @@
     "status" : 403,
     "contentType" : "application/json",
     "corpo" : {
-      "mensagem" : "Acesso negado"
+      "mensagem" : "Você não tem permissão para realizar esta ação."
     },
     "logs" : [ ]
   }, {
@@ -1337,7 +1339,8 @@
       "timestamp" : "<varia a cada execucao>",
       "status" : 500,
       "error" : "Internal Server Error",
-      "path" : "/api/teste/excecoes/inesperada"
+      "path" : "/api/teste/excecoes/inesperada",
+      "mensagem" : "Não foi possível concluir a operação. Tente novamente em instantes. Se o problema continuar, fale com o Administrador do sistema."
     },
     "logs" : [ ]
   } ]

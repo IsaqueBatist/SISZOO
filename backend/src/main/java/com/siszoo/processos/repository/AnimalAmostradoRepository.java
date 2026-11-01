@@ -45,6 +45,12 @@ public interface AnimalAmostradoRepository extends JpaRepository<AnimalAmostrado
             + "WHERE a.contatoHumano = true AND a.processo.dataAbertura BETWEEN :inicio AND :fim")
     long contarProcessosComContatoHumano(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
+    // Processos com alguma amostra sem resposta sobre contato humano: nao entram
+    // como "com contato" nem como "sem contato".
+    @Query("SELECT COUNT(DISTINCT a.processo) FROM AnimalAmostrado a "
+            + "WHERE a.contatoHumano IS NULL AND a.processo.dataAbertura BETWEEN :inicio AND :fim")
+    long contarProcessosComContatoNaoInformado(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
+
     // "Distribuição por Espécie" (secao 4): mesmo padrao de contarRaivaPorEspecie,
     // mas sem o filtro de doenca = 'raiva' (todas as doencas do periodo).
     @Query("SELECT a.especie.codigo AS codigo, a.especie.nome AS nome, "

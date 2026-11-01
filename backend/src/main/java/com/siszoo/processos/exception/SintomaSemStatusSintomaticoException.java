@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class SintomaSemStatusSintomaticoException extends ErroNegocioException {
 
     public SintomaSemStatusSintomaticoException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Sintomas so podem ser informados em amostra com status clinico sintomatico");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "Informe sintomas apenas em amostra com status clínico sintomático.");
     }
 }

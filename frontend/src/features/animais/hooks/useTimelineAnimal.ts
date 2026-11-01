@@ -1,3 +1,4 @@
+import { formatarDataBR } from '@/lib/datas'
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { listarPrescricoes, listarProcedimentos, listarVacinacoes } from '../api/historicoApi'
@@ -35,7 +36,7 @@ function estadoFonteInicial<T>(): EstadoFonte<T> {
 
 function vacinacaoParaEvento(v: Vacinacao): EventoTimeline {
   const badge = badgeReforcoVacina(v.dataValidade)
-  const partesCorpo = [v.lote ? `Lote ${v.lote}` : null, v.dataValidade ? `Próximo reforço: ${v.dataValidade}` : null].filter(
+  const partesCorpo = [v.lote ? `Lote ${v.lote}` : null, v.dataValidade ? `Próximo reforço: ${formatarDataBR(v.dataValidade)}` : null].filter(
     Boolean,
   )
   return {

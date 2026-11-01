@@ -37,6 +37,10 @@ import com.siszoo.relatorios.service.RelatorioGeradoService;
 @RequestMapping("/api/relatorios")
 public class RelatorioController {
 
+    // V32: @PreAuthorize nao le argumentos (PreAuthorizeSemArgumentosTest), e a
+    // regra depende do tipo pedido; quem decide e o service.
+    private static final String AUTORIDADE_OCORRENCIAS_BAIRRO = "RELATORIOS:ocorrencias_bairro:leitura";
+
     private final RelatorioGeradoService relatorioGeradoService;
     private final FiltroRelatorioResolver filtroResolver;
 
@@ -47,13 +51,19 @@ public class RelatorioController {
 
     @GetMapping("/tipos")
     @PreAuthorize("hasAuthority('RELATORIOS:leitura')")
-    public List<TipoRelatorioResponse> tipos() {
-        return relatorioGeradoService.listarTipos();
+    public List<TipoRelatorioResponse> tipos(Authentication authentication) {
+        return relatorioGeradoService.listarTipos(veOcorrenciasPorBairro(authentication));
+    }
+
+    private static boolean veOcorrenciasPorBairro(Authentication authentication) {
+        return authentication.getAuthorities().stream()
+                .anyMatch(autoridade -> AUTORIDADE_OCORRENCIAS_BAIRRO.equals(autoridade.getAuthority()));
     }
 
     @GetMapping("/preview")
     @PreAuthorize("hasAuthority('RELATORIOS:leitura')")
     public Object preview(
+            Authentication authentication,
             @RequestParam String tipo,
             @RequestParam(required = false) @DateTimeFormat(iso = ISO.DATE) LocalDate periodoInicio,
             @RequestParam(required = false) @DateTimeFormat(iso = ISO.DATE) LocalDate periodoFim,
@@ -61,7 +71,7 @@ public class RelatorioController {
             @RequestParam(required = false) String janela) {
         FiltroRelatorioBruto filtro = new FiltroRelatorioBruto(
                 filtroResolver.tipoPorCodigo(tipo), periodoInicio, periodoFim, ano, janela);
-        return relatorioGeradoService.preview(filtro);
+        return relatorioGeradoService.preview(filtro, veOcorrenciasPorBairro(authentication));
     }
 
     @PostMapping("/exportar")
@@ -72,7 +82,8 @@ public class RelatorioController {
                 request.periodoInicio(), request.periodoFim(), request.ano(), request.janela());
         UUID usuarioId = UsuarioAutenticado.id(authentication);
 
-        ArquivoRelatorio arquivo = relatorioGeradoService.exportar(filtro, request.formato(), usuarioId);
+        ArquivoRelatorio arquivo = relatorioGeradoService.exportar(
+                filtro, request.formato(), usuarioId, veOcorrenciasPorBairro(authentication));
 
         ContentDisposition disposicao = ContentDisposition.attachment()
                 .filename(arquivo.nomeArquivo(), java.nio.charset.StandardCharsets.UTF_8)

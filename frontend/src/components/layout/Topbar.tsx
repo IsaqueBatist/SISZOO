@@ -1,22 +1,25 @@
 import { useLocation } from 'react-router-dom'
-import { NAV_ALL, ROLES, isNavGroup } from '../../lib/nav'
+import { ROLES, rotuloDaRota } from '../../lib/nav'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { Icon } from './Icon'
 import { MenuPerfil } from './MenuPerfil'
 
-function currentCrumbLabel(pathname: string): string {
-  const match = NAV_ALL.find((entry) => !isNavGroup(entry) && pathname.startsWith(entry.to))
-  return match && !isNavGroup(match) ? match.label : 'Dashboard'
+interface TopbarProps {
+  onAbrirMenu?: () => void
 }
 
-export function Topbar() {
+export function Topbar({ onAbrirMenu }: TopbarProps) {
   const location = useLocation()
   const { roleKey } = useAuth()
   const role = ROLES[roleKey]
 
   return (
     <header className="topbar">
+      <button type="button" className="icon-btn menu-btn" aria-label="Abrir menu" onClick={onAbrirMenu}>
+        <Icon name="menu" />
+      </button>
       <div className="breadcrumb">
-        <span className="crumb current">{currentCrumbLabel(location.pathname)}</span>
+        <span className="crumb current">{rotuloDaRota(location.pathname)}</span>
       </div>
 
       <div className="topbar-actions">

@@ -18,7 +18,7 @@
   <div class="kpi"><div class="kpi-box"><div class="l">Confirmados positivos</div><div class="v" th:text="${d.kpis.confirmadosPositivos}">0</div>
     <div class="d" th:text="${d.kpis.percentualPositividade} + '% de positividade'">0% de positividade</div></div></div>
   <div class="kpi"><div class="kpi-box"><div class="l">Com contato humano</div><div class="v" th:text="${d.kpis.comContatoHumano}">0</div>
-    <div class="d">Notificados ao SINAN</div></div></div>
+    <div class="d" th:text="${d.kpis.contatoNaoInformado} + ' não informado(s)'">0 não informado(s)</div></div></div>
   <div class="kpi"><div class="kpi-box"><div class="l">Tempo médio (dias)</div><div class="v" th:text="${d.kpis.tempoMedioDias} ?: '—'">0</div>
     <div class="d">Abertura → resultado</div></div></div>
 </div>
@@ -73,8 +73,8 @@
   </div>
 </div>
 
-<h2 class="section">5. Bairros com mais ocorrências</h2>
-<table>
+<h2 class="section" th:if="${d.bairros != null}">5. Bairros com mais ocorrências</h2>
+<table th:if="${d.bairros != null}">
   <thead><tr><th>Bairro</th><th>Processos</th><th>Positivos</th><th>Doenças predominantes</th></tr></thead>
   <tbody>
     <tr th:each="b : ${d.bairros}">

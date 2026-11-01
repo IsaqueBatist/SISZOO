@@ -12,6 +12,7 @@ export type AcaoAuditoria =
   | 'ENCERRAMENTO'
   | 'VISUALIZACAO'
   | 'ACESSO_NEGADO'
+  | 'SESSAO_REVOGADA'
 
 // Espelha com.siszoo.usuarios.dto.AuditoriaEventoResponse.
 export interface EventoAuditoria {
@@ -21,6 +22,7 @@ export interface EventoAuditoria {
   entidade: string
   entidadeId: string | null
   ocorreuEm: string
+  ip?: string | null
   // F2-027: estado antes/depois (JSON serializado pelo backend); opcionais.
   payloadAntes?: string | null
   payloadDepois?: string | null

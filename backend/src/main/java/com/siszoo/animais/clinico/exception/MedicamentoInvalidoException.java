@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class MedicamentoInvalidoException extends ErroNegocioException {
 
     public MedicamentoInvalidoException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Medicamento informado nao existe");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "O medicamento informado não existe. Selecione um da lista.");
     }
 }

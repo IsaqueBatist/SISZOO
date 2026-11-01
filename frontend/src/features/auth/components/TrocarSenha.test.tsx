@@ -4,7 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it } from 'vitest'
 import { TrocarSenha } from './TrocarSenha'
-import { AuthProvider, SESSION_STORAGE_KEY } from '../hooks/AuthContext'
+import { AuthProvider, definirSessaoEmMemoria } from '../hooks/AuthContext'
 import type { Usuario } from '../types/auth.types'
 
 const USUARIO_PRIMEIRO_ACESSO: Usuario = {
@@ -17,10 +17,7 @@ const USUARIO_PRIMEIRO_ACESSO: Usuario = {
 }
 
 function renderTrocarSenha() {
-  sessionStorage.setItem(
-    SESSION_STORAGE_KEY,
-    JSON.stringify({ token: 'token-existente', usuario: USUARIO_PRIMEIRO_ACESSO }),
-  )
+  definirSessaoEmMemoria({ token: 'token-existente', usuario: USUARIO_PRIMEIRO_ACESSO })
 
   const queryClient = new QueryClient()
   return render(
@@ -51,9 +48,9 @@ describe('TrocarSenha', () => {
   })
 
   it.each([
-    ['somente-minusculas', /3 tipos de caractere/i],
-    ['Beatriz-2026!', /partes do nome/i],
-    ['X1-beatriz.camargo', /nome da conta/i],
+    ['somente-minusculas', /^Use ao menos 3 tipos de caractere/],
+    ['Beatriz-2026!', /^A senha não pode conter partes do nome/],
+    ['X1-beatriz.camargo', /^A senha não pode conter o nome da conta/],
   ])('recusa "%s" pela política de senha sem chamar a API', async (senha, mensagem) => {
     const user = userEvent.setup()
     renderTrocarSenha()
@@ -64,6 +61,23 @@ describe('TrocarSenha', () => {
 
     expect(await screen.findByText(mensagem)).toBeInTheDocument()
     expect(screen.queryByText('Dashboard')).not.toBeInTheDocument()
+  })
+
+  it('a lista de critérios acompanha a senha digitada', async () => {
+    const user = userEvent.setup()
+    renderTrocarSenha()
+
+    expect(screen.getByText(/ao menos 8 caracteres/i).closest('li')).toHaveClass('pendente')
+
+    await user.type(screen.getByLabelText(/^nova senha/i), 'beatriz1')
+    expect(screen.getByText(/ao menos 8 caracteres/i).closest('li')).toHaveClass('ok')
+    expect(screen.getByText(/partes do seu nome/i).closest('li')).toHaveClass('falha')
+    expect(screen.getByText(/3 tipos de caractere/i).closest('li')).toHaveClass('falha')
+
+    await user.clear(screen.getByLabelText(/^nova senha/i))
+    await user.type(screen.getByLabelText(/^nova senha/i), 'Nova-Senha-2026')
+    expect(screen.getByText(/partes do seu nome/i).closest('li')).toHaveClass('ok')
+    expect(screen.getByText(/3 tipos de caractere/i).closest('li')).toHaveClass('ok')
   })
 
   it('troca a senha com sucesso e navega para /dashboard', async () => {

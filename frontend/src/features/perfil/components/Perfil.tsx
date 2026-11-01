@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
+import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
 import { Icon } from '@/components/layout/Icon'
 import { formatarDataBR } from '@/lib/datas'
 import { NAV_ALL, ROLES, isNavGroup, roleKeyFromCargos } from '@/lib/nav'
@@ -142,12 +143,7 @@ export function Perfil() {
               <h3>Atualizar telefone</h3>
             </div>
             <div className="card-body">
-              {submitError && (
-                <div className="alert danger" role="alert">
-                  <span className="bullet" />
-                  <div className="alert-content">{submitError}</div>
-                </div>
-              )}
+              <AlertaErroEnvio mensagem={submitError} />
               {submitSucesso && !submitError && (
                 <div className="alert success" role="status">
                   <span className="bullet" />
@@ -163,13 +159,13 @@ export function Perfil() {
                     </span>
                     <input
                       id="telefone"
-                      className={`input${errors.telefone ? ' error' : ''}`}
+                      className={`input${errors.telefone ? ' error' : ''}`} aria-invalid={errors.telefone ? true : undefined} aria-describedby={errors.telefone ? 'telefone-erro' : undefined}
                       type="text"
                       placeholder="(11) 91234-5678"
                       {...register('telefone', { onChange: () => setSubmitSucesso(false) })}
                     />
                   </div>
-                  {errors.telefone && <span className="err">{errors.telefone.message}</span>}
+                  {errors.telefone && <span className="err" id="telefone-erro">{errors.telefone.message}</span>}
                 </div>
                 <button type="submit" className="btn btn-primary btn-sm" disabled={mutation.isPending}>
                   {mutation.isPending ? 'Salvando…' : 'Salvar telefone'}

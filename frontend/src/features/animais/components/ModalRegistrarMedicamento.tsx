@@ -1,8 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
+import { AtalhoHoje } from '@/components/AtalhoHoje'
+import { AvisoEnvioPausado } from '@/components/AvisoEnvioPausado'
+import { avisar } from '@/lib/avisos'
+import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
+import { Modal } from '@/components/Modal'
 import { BannerRascunho } from '@/components/BannerRascunho'
-import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
 import { useRascunho } from '@/lib/useRascunho'
@@ -48,6 +52,7 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
     watch,
     reset,
     getValues,
+    setValue,
     formState: { errors },
   } = useForm<PrescricaoFormValues>({
     resolver: zodResolver(prescricaoFormSchema),
@@ -98,10 +103,11 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
         retificaId: retifica?.id,
       })
       await rascunho.removerAposSucesso()
+      avisar(retifica ? 'Prescrição corrigida.' : 'Medicamento registrado.')
       onSucesso()
     } catch (erro) {
       if (aplicarErrosDeCampo(erro, setError, MAPA_ERROS_SERVIDOR).length > 0) return
-      // 409/422 de regra ("Registro ja foi retificado por outro"...) mostram o
+      // 409/422 de regra ("Este registro já foi corrigido. Atualize a página para ver a versão atual."...) mostram o
       // motivo real, como nos outros modais clínicos.
       setSubmitError(
         mensagemDeRegraDaApi(erro) ??
@@ -116,227 +122,215 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
   }
 
   return (
-    <div className="modal-overlay" onClick={onFechar}>
-      <div className="modal" onClick={(event) => event.stopPropagation()}>
-        <div className="modal-header">
-          <h3>{retifica ? 'Corrigir prescrição' : 'Registrar medicamento'}</h3>
-          <button type="button" className="btn btn-ghost btn-sm btn-icon-only" onClick={onFechar} aria-label="Fechar">
-            <Icon name="x" size={16} />
-          </button>
-        </div>
-
-        <form onSubmit={aoEnviar} noValidate>
-          <div className="modal-body">
-            <div className="form-grid cols-1">
-              {rascunho.rascunhoDisponivel && (
-                <BannerRascunho onRestaurar={rascunho.restaurar} onDescartar={() => void rascunho.descartar()} salvoEm={rascunho.rascunhoSalvoEm} />
-              )}
-              {submitError && (
-                <div className="alert danger" role="alert">
-                  <span className="bullet" />
-                  <div className="alert-content">{submitError}</div>
+    <Modal titulo={retifica ? 'Corrigir prescrição' : 'Registrar medicamento'} onFechar={onFechar}>
+      <form onSubmit={aoEnviar} noValidate>
+        <div className="modal-body">
+          <div className="form-grid cols-1">
+            {rascunho.rascunhoDisponivel && (
+              <BannerRascunho onRestaurar={rascunho.restaurar} onDescartar={() => void rascunho.descartar()} salvoEm={rascunho.rascunhoSalvoEm} />
+            )}
+            <AlertaErroEnvio mensagem={submitError} />
+            {retifica && (
+              <div className="alert info" role="alert">
+                <span className="bullet" />
+                <div className="alert-content">
+                  O registro original não será alterado — esta correção cria um novo registro vinculado a ele (também usado
+                  para mudar o status da prescrição).
                 </div>
-              )}
-              {retifica && (
-                <div className="alert info" role="alert">
-                  <span className="bullet" />
-                  <div className="alert-content">
-                    O registro original não será alterado — esta correção cria um novo registro vinculado a ele (também usado
-                    para mudar o status da prescrição).
-                  </div>
-                </div>
-              )}
+              </div>
+            )}
 
-              <div className="field">
-                <label htmlFor="pres-medicamento">
-                  Medicamento <span className="req">*</span>
-                </label>
-                {/* Controller (não register puro): as opções vêm de uma query
-                    assíncrona, e a pré-seleção do medicamentoId da retifica
-                    só é aplicada corretamente se o <select> continuar
-                    controlado — um register() não-controlado fixaria o valor
-                    no momento do mount, antes das opções existirem, e nunca
-                    mais re-sincronizaria quando elas chegassem. */}
-                <Controller
-                  name="medicamentoId"
-                  control={control}
-                  render={({ field }) => (
-                    <select
-                      id="pres-medicamento"
-                      className={`select${errors.medicamentoId ? ' error' : ''}`}
-                      value={field.value}
-                      onChange={field.onChange}
-                      onBlur={field.onBlur}
-                      ref={field.ref}
-                    >
-                      <option value="" disabled>
-                        Selecione…
+            <div className="field">
+              <label htmlFor="pres-medicamento">
+                Medicamento <span className="req">*</span>
+              </label>
+              {/* Controller (não register puro): as opções vêm de uma query
+                  assíncrona, e a pré-seleção do medicamentoId da retifica
+                  só é aplicada corretamente se o <select> continuar
+                  controlado — um register() não-controlado fixaria o valor
+                  no momento do mount, antes das opções existirem, e nunca
+                  mais re-sincronizaria quando elas chegassem. */}
+              <Controller
+                name="medicamentoId"
+                control={control}
+                render={({ field }) => (
+                  <select
+                    id="pres-medicamento"
+                    className={`select${errors.medicamentoId ? ' error' : ''}`} aria-invalid={errors.medicamentoId ? true : undefined} aria-describedby={errors.medicamentoId ? 'pres-medicamento-erro' : undefined}
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    ref={field.ref}
+                  >
+                    <option value="" disabled>
+                      Selecione…
+                    </option>
+                    {medicamentos?.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.nome}
                       </option>
-                      {medicamentos?.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.nome}
-                        </option>
-                      ))}
-                    </select>
-                  )}
+                    ))}
+                  </select>
+                )}
+              />
+              {errors.medicamentoId && <span className="err" id="pres-medicamento-erro">{errors.medicamentoId.message}</span>}
+            </div>
+
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="pres-inicio">
+                  Início <span className="req">*</span>
+                </label>
+                <input
+                  id="pres-inicio"
+                  className={`input${errors.dataInicio ? ' error' : ''}`} aria-invalid={errors.dataInicio ? true : undefined} aria-describedby={errors.dataInicio ? 'pres-inicio-erro' : undefined}
+                  type="date"
+                  {...register('dataInicio')}
                 />
-                {errors.medicamentoId && <span className="err">{errors.medicamentoId.message}</span>}
+                <AtalhoHoje onEscolher={(hoje) => setValue('dataInicio', hoje, { shouldDirty: true })} />
+                {errors.dataInicio && <span className="err" id="pres-inicio-erro">{errors.dataInicio.message}</span>}
               </div>
-
-              <div className="form-grid">
-                <div className="field">
-                  <label htmlFor="pres-inicio">
-                    Início <span className="req">*</span>
-                  </label>
-                  <input
-                    id="pres-inicio"
-                    className={`input${errors.dataInicio ? ' error' : ''}`}
-                    type="date"
-                    {...register('dataInicio')}
-                  />
-                  {errors.dataInicio && <span className="err">{errors.dataInicio.message}</span>}
-                </div>
-                <div className="field">
-                  <label htmlFor="pres-fim-previsto">Término previsto</label>
-                  <input
-                    id="pres-fim-previsto"
-                    className={`input${errors.dataFimPrevista ? ' error' : ''}`}
-                    type="date"
-                    {...register('dataFimPrevista', { setValueAs: (v: string) => v || undefined })}
-                  />
-                  {errors.dataFimPrevista && <span className="err">{errors.dataFimPrevista.message}</span>}
-                </div>
-                <div className="field">
-                  <label htmlFor="pres-fim-real">Término real</label>
-                  <input
-                    id="pres-fim-real"
-                    className={`input${errors.dataFimReal ? ' error' : ''}`}
-                    type="date"
-                    {...register('dataFimReal', { setValueAs: (v: string) => v || undefined })}
-                  />
-                  {errors.dataFimReal && <span className="err">{errors.dataFimReal.message}</span>}
-                </div>
-              </div>
-
-              <div className="form-grid">
-                <div className="field">
-                  <label htmlFor="pres-frequencia">
-                    Frequência <span className="req">*</span>
-                  </label>
-                  <input
-                    id="pres-frequencia"
-                    className={`input${errors.frequenciaAplicada ? ' error' : ''}`}
-                    type="number"
-                    min={1}
-                    step={1}
-                    {...register('frequenciaAplicada', { valueAsNumber: true })}
-                  />
-                  {errors.frequenciaAplicada && <span className="err">{errors.frequenciaAplicada.message}</span>}
-                </div>
-                <div className="field">
-                  <label htmlFor="pres-unidade-frequencia">
-                    A cada <span className="req">*</span>
-                  </label>
-                  <select
-                    id="pres-unidade-frequencia"
-                    className={`select${errors.unidadeFrequencia ? ' error' : ''}`}
-                    {...register('unidadeFrequencia')}
-                  >
-                    <option value="" disabled>
-                      Selecione…
-                    </option>
-                    {(Object.keys(LABELS_UNIDADE_FREQUENCIA) as (keyof typeof LABELS_UNIDADE_FREQUENCIA)[]).map((unidade) => (
-                      <option key={unidade} value={unidade}>
-                        {LABELS_UNIDADE_FREQUENCIA[unidade]}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.unidadeFrequencia && <span className="err">{errors.unidadeFrequencia.message}</span>}
-                </div>
-              </div>
-
-              <div className="form-grid">
-                <div className="field">
-                  <label htmlFor="pres-dose-quantidade">
-                    Dose <span className="req">*</span>
-                  </label>
-                  <input
-                    id="pres-dose-quantidade"
-                    className={`input${errors.doseQuantidade ? ' error' : ''}`}
-                    type="number"
-                    min={0}
-                    step="0.001"
-                    {...register('doseQuantidade', { valueAsNumber: true })}
-                  />
-                  {errors.doseQuantidade && <span className="err">{errors.doseQuantidade.message}</span>}
-                </div>
-                <div className="field">
-                  <label htmlFor="pres-dose-unidade">
-                    Unidade <span className="req">*</span>
-                  </label>
-                  <select
-                    id="pres-dose-unidade"
-                    className={`select${errors.doseUnidade ? ' error' : ''}`}
-                    {...register('doseUnidade')}
-                  >
-                    <option value="" disabled>
-                      Selecione…
-                    </option>
-                    {(Object.keys(LABELS_UNIDADE_DOSE) as (keyof typeof LABELS_UNIDADE_DOSE)[]).map((unidade) => (
-                      <option key={unidade} value={unidade}>
-                        {LABELS_UNIDADE_DOSE[unidade]}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.doseUnidade && <span className="err">{errors.doseUnidade.message}</span>}
-                </div>
-                <div className="field">
-                  <label htmlFor="pres-via">
-                    Via <span className="req">*</span>
-                  </label>
-                  <select
-                    id="pres-via"
-                    className={`select${errors.viaAdministracao ? ' error' : ''}`}
-                    {...register('viaAdministracao')}
-                  >
-                    <option value="" disabled>
-                      Selecione…
-                    </option>
-                    {(Object.keys(LABELS_VIA_ADMINISTRACAO) as (keyof typeof LABELS_VIA_ADMINISTRACAO)[]).map((via) => (
-                      <option key={via} value={via}>
-                        {LABELS_VIA_ADMINISTRACAO[via]}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.viaAdministracao && <span className="err">{errors.viaAdministracao.message}</span>}
-                </div>
-              </div>
-
               <div className="field">
-                <label htmlFor="pres-status">
-                  Status <span className="req">*</span>
+                <label htmlFor="pres-fim-previsto">Término previsto</label>
+                <input
+                  id="pres-fim-previsto"
+                  className={`input${errors.dataFimPrevista ? ' error' : ''}`} aria-invalid={errors.dataFimPrevista ? true : undefined} aria-describedby={errors.dataFimPrevista ? 'pres-fim-previsto-erro' : undefined}
+                  type="date"
+                  {...register('dataFimPrevista', { setValueAs: (v: string) => v || undefined })}
+                />
+                {errors.dataFimPrevista && <span className="err" id="pres-fim-previsto-erro">{errors.dataFimPrevista.message}</span>}
+              </div>
+              <div className="field">
+                <label htmlFor="pres-fim-real">Término real</label>
+                <input
+                  id="pres-fim-real"
+                  className={`input${errors.dataFimReal ? ' error' : ''}`} aria-invalid={errors.dataFimReal ? true : undefined} aria-describedby={errors.dataFimReal ? 'pres-fim-real-erro' : undefined}
+                  type="date"
+                  {...register('dataFimReal', { setValueAs: (v: string) => v || undefined })}
+                />
+                {errors.dataFimReal && <span className="err" id="pres-fim-real-erro">{errors.dataFimReal.message}</span>}
+              </div>
+            </div>
+
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="pres-frequencia">
+                  Frequência <span className="req">*</span>
                 </label>
-                <select id="pres-status" className="select" {...register('status')}>
-                  {(Object.keys(LABELS_STATUS_PRESCRICAO) as (keyof typeof LABELS_STATUS_PRESCRICAO)[]).map((s) => (
-                    <option key={s} value={s}>
-                      {LABELS_STATUS_PRESCRICAO[s]}
+                <input
+                  id="pres-frequencia"
+                  className={`input${errors.frequenciaAplicada ? ' error' : ''}`} aria-invalid={errors.frequenciaAplicada ? true : undefined} aria-describedby={errors.frequenciaAplicada ? 'pres-frequencia-erro' : undefined}
+                  type="number"
+                  min={1}
+                  step={1}
+                  {...register('frequenciaAplicada', { valueAsNumber: true })}
+                />
+                {errors.frequenciaAplicada && <span className="err" id="pres-frequencia-erro">{errors.frequenciaAplicada.message}</span>}
+              </div>
+              <div className="field">
+                <label htmlFor="pres-unidade-frequencia">
+                  A cada <span className="req">*</span>
+                </label>
+                <select
+                  id="pres-unidade-frequencia"
+                  className={`select${errors.unidadeFrequencia ? ' error' : ''}`} aria-invalid={errors.unidadeFrequencia ? true : undefined} aria-describedby={errors.unidadeFrequencia ? 'pres-unidade-frequencia-erro' : undefined}
+                  {...register('unidadeFrequencia')}
+                >
+                  <option value="" disabled>
+                    Selecione…
+                  </option>
+                  {(Object.keys(LABELS_UNIDADE_FREQUENCIA) as (keyof typeof LABELS_UNIDADE_FREQUENCIA)[]).map((unidade) => (
+                    <option key={unidade} value={unidade}>
+                      {LABELS_UNIDADE_FREQUENCIA[unidade]}
                     </option>
                   ))}
                 </select>
+                {errors.unidadeFrequencia && <span className="err" id="pres-unidade-frequencia-erro">{errors.unidadeFrequencia.message}</span>}
               </div>
             </div>
-          </div>
 
-          <div className="modal-footer">
-            <button type="button" className="btn btn-ghost" onClick={onFechar}>
-              Cancelar
-            </button>
-            <button type="submit" className="btn btn-primary" disabled={mutation.isPending}>
-              {mutation.isPending ? 'Salvando…' : retifica ? 'Salvar correção' : 'Registrar medicamento'}
-            </button>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="pres-dose-quantidade">
+                  Dose <span className="req">*</span>
+                </label>
+                <input
+                  id="pres-dose-quantidade"
+                  className={`input${errors.doseQuantidade ? ' error' : ''}`} aria-invalid={errors.doseQuantidade ? true : undefined} aria-describedby={errors.doseQuantidade ? 'pres-dose-quantidade-erro' : undefined}
+                  type="number"
+                  min={0}
+                  step="0.001"
+                  {...register('doseQuantidade', { valueAsNumber: true })}
+                />
+                {errors.doseQuantidade && <span className="err" id="pres-dose-quantidade-erro">{errors.doseQuantidade.message}</span>}
+              </div>
+              <div className="field">
+                <label htmlFor="pres-dose-unidade">
+                  Unidade <span className="req">*</span>
+                </label>
+                <select
+                  id="pres-dose-unidade"
+                  className={`select${errors.doseUnidade ? ' error' : ''}`} aria-invalid={errors.doseUnidade ? true : undefined} aria-describedby={errors.doseUnidade ? 'pres-dose-unidade-erro' : undefined}
+                  {...register('doseUnidade')}
+                >
+                  <option value="" disabled>
+                    Selecione…
+                  </option>
+                  {(Object.keys(LABELS_UNIDADE_DOSE) as (keyof typeof LABELS_UNIDADE_DOSE)[]).map((unidade) => (
+                    <option key={unidade} value={unidade}>
+                      {LABELS_UNIDADE_DOSE[unidade]}
+                    </option>
+                  ))}
+                </select>
+                {errors.doseUnidade && <span className="err" id="pres-dose-unidade-erro">{errors.doseUnidade.message}</span>}
+              </div>
+              <div className="field">
+                <label htmlFor="pres-via">
+                  Via <span className="req">*</span>
+                </label>
+                <select
+                  id="pres-via"
+                  className={`select${errors.viaAdministracao ? ' error' : ''}`} aria-invalid={errors.viaAdministracao ? true : undefined} aria-describedby={errors.viaAdministracao ? 'pres-via-erro' : undefined}
+                  {...register('viaAdministracao')}
+                >
+                  <option value="" disabled>
+                    Selecione…
+                  </option>
+                  {(Object.keys(LABELS_VIA_ADMINISTRACAO) as (keyof typeof LABELS_VIA_ADMINISTRACAO)[]).map((via) => (
+                    <option key={via} value={via}>
+                      {LABELS_VIA_ADMINISTRACAO[via]}
+                    </option>
+                  ))}
+                </select>
+                {errors.viaAdministracao && <span className="err" id="pres-via-erro">{errors.viaAdministracao.message}</span>}
+              </div>
+            </div>
+
+            <div className="field">
+              <label htmlFor="pres-status">
+                Status <span className="req">*</span>
+              </label>
+              <select id="pres-status" className="select" {...register('status')}>
+                {(Object.keys(LABELS_STATUS_PRESCRICAO) as (keyof typeof LABELS_STATUS_PRESCRICAO)[]).map((s) => (
+                  <option key={s} value={s}>
+                    {LABELS_STATUS_PRESCRICAO[s]}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-        </form>
-      </div>
-    </div>
+        </div>
+
+        <div className="modal-footer">
+          <AvisoEnvioPausado pausado={mutation.isPaused} />
+          <button type="button" className="btn btn-ghost" onClick={onFechar}>
+            Cancelar
+          </button>
+          <button type="submit" className="btn btn-primary" disabled={mutation.isPending}>
+            {mutation.isPaused ? 'Aguardando conexão…' : mutation.isPending ? 'Salvando…' : retifica ? 'Salvar correção' : 'Registrar medicamento'}
+          </button>
+        </div>
+      </form>
+    </Modal>
   )
 }

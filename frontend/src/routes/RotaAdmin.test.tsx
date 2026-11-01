@@ -3,7 +3,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it } from 'vitest'
 import { RotaAdmin } from './RotaAdmin'
-import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
+import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
 
 function autenticarComCargos(cargos: string[]) {
@@ -15,7 +15,7 @@ function autenticarComCargos(cargos: string[]) {
     cargos,
     senhaAlteradaEm: '2026-01-10T12:00:00Z',
   }
-  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario }))
+  definirSessaoEmMemoria({ token: 'token-existente', usuario })
 }
 
 function renderRotaAdmin(initialEntry = '/usuarios') {

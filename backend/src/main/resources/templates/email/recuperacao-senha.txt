@@ -1,0 +1,13 @@
+Olá, [(${nome})].
+
+Recebemos um pedido para redefinir a senha da sua conta no SISZOO. Para escolher uma nova senha, abra o endereço abaixo no navegador:
+
+[(${link})]
+
+O link vale por [(${validadeMinutos})] minutos e só pode ser usado uma vez. Depois disso, solicite um novo link na tela de login.
+
+Se você não pediu a redefinição, ignore esta mensagem: sua senha atual continua valendo e nada muda na sua conta. Em caso de dúvida, avise o Administrador do sistema.
+
+SISZOO - Sistema de Gestão do CCZ de Itu
+Mensagem automática; não é necessário responder.
+/*[- Versao em texto puro de recuperacao-senha.html (RecuperacaoSenhaService). Variaveis: nome, link, validadeMinutos. Comentario de template: nao sai no e-mail. Sem quebra de linha depois dele, para o texto terminar na linha acima. -]*/

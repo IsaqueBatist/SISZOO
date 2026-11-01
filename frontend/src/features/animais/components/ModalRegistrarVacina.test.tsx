@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { delay, http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
-import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
+import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
 import { API_BASE_URL } from '@/lib/env'
 import { server } from '@/mocks/server'
@@ -23,6 +23,7 @@ const CATALOGO_BASE: CatalogosAnimal = {
   tiposBaia: [],
   vacinas: [{ codigo: 'antirrabica', nome: 'Antirrábica' }],
   tiposProcedimento: [],
+  condicoesSaude: [],
 }
 
 function renderAba() {
@@ -34,7 +35,7 @@ function renderAba() {
     cargos: ['Administrador'],
     senhaAlteradaEm: '2026-01-10T12:00:00Z',
   }
-  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario }))
+  definirSessaoEmMemoria({ token: 'token-existente', usuario })
 
   // Sem retry: o teste de erro do catálogo mostra a falha na primeira resposta.
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -122,7 +123,7 @@ describe('ModalRegistrarVacina — validação', () => {
   it('exibe a mensagem de regra devolvida pela API (422) em vez do texto genérico', async () => {
     server.use(
       http.post(`${API_BASE_URL}/vacinacoes`, () =>
-        HttpResponse.json({ mensagem: 'Data de aplicacao nao pode ser futura' }, { status: 422 }),
+        HttpResponse.json({ mensagem: 'A data de aplicação não pode ser futura.' }, { status: 422 }),
       ),
     )
     const user = userEvent.setup()
@@ -134,7 +135,7 @@ describe('ModalRegistrarVacina — validação', () => {
 
     await user.click(within(modal).getByRole('button', { name: /^registrar vacina$/i }))
 
-    expect(await within(modal).findByRole('alert')).toHaveTextContent('Data de aplicacao nao pode ser futura')
+    expect(await within(modal).findByRole('alert')).toHaveTextContent('A data de aplicação não pode ser futura.')
     expect(within(modal).queryByText(/não foi possível registrar/i)).not.toBeInTheDocument()
   })
 })

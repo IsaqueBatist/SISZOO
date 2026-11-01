@@ -8,6 +8,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class AnexoAnimalInvalidoException extends ErroNegocioException {
 
     public AnexoAnimalInvalidoException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Anexo deve ser JPG, PNG ou PDF com ate 5 MB");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "Envie um arquivo JPG, PNG ou PDF com até 5 MB.");
     }
 }

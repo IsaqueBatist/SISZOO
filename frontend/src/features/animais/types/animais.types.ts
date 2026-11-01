@@ -17,7 +17,7 @@ export interface Animal {
   idadeAprox: string | null
   dataNascimentoAprox: string | null
   microchip: string | null
-  esterilizado: boolean
+  esterilizado: boolean | null
   dataEsterilizacao: string | null
   statusCodigo: string
   statusNome: string
@@ -30,6 +30,9 @@ export interface Animal {
   fichaCompleta: boolean
   fotoUrl: string | null
   observacoes: string | null
+  // Nulo nas listagens: só o detalhe traz as condições.
+  condicoes?: CatalogoItem[] | null
+  condicoesOutras?: string | null
   criadoPorId: string
   criadoPorNome: string
   criadoEm: string
@@ -58,6 +61,7 @@ export interface CatalogosAnimal {
   // Registro de vacinação e de procedimento (seed da V5).
   vacinas: CatalogoItem[]
   tiposProcedimento: CatalogoItem[]
+  condicoesSaude: CatalogoItem[]
 }
 
 // F2-007 / RF-A04 — espelha com.siszoo.animais.dto.AnexoAnimalResponse.
@@ -123,7 +127,7 @@ export interface AnimalRequest {
   idadeAprox?: string
   dataNascimentoAprox?: string
   microchip?: string
-  esterilizado: boolean
+  esterilizado: boolean | null
   dataEsterilizacao?: string
   status: string
   motivoEntrada: string
@@ -131,6 +135,8 @@ export interface AnimalRequest {
   baiaId?: string
   fotoUrl?: string
   observacoes?: string
+  condicoes?: string[]
+  condicoesOutras?: string
   numeroMedalha?: string
   dataImplantacaoChip?: string
   procedencia?: string

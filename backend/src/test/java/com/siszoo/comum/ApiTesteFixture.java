@@ -115,6 +115,8 @@ public class ApiTesteFixture {
         usuario.setSenha(passwordEncoder.encode(SENHA_PADRAO));
         usuario.setNome(nome);
         usuario.setSobrenome(sobrenome);
+        // Quem precisa do primeiro acesso cria o usuario pela API ou zera o campo.
+        usuario.setSenhaAlteradaEm(LocalDateTime.now());
         return usuarioRepository.save(usuario);
     }
 

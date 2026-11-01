@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class RegistroJaRetificadoException extends ErroNegocioException {
 
     public RegistroJaRetificadoException() {
-        super(HttpStatus.CONFLICT, "Registro ja foi retificado por outro");
+        super(HttpStatus.CONFLICT, "Este registro já foi corrigido. Atualize a página para ver a versão atual.");
     }
 }

@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
-import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
+import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
 import { API_BASE_URL } from '@/lib/env'
 import { server } from '@/mocks/server'
@@ -32,7 +32,7 @@ function renderDetalhe(id: string, cargos = ADMIN) {
     cargos,
     senhaAlteradaEm: '2026-01-10T12:00:00Z',
   }
-  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario }))
+  definirSessaoEmMemoria({ token: 'token-existente', usuario })
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
@@ -54,6 +54,64 @@ async function esperarDetalhe(protocolo: string) {
 function cardDe(titulo: string) {
   return within(screen.getByRole('heading', { name: titulo }).closest('.card') as HTMLElement)
 }
+
+describe('ProcessoDetalhe — resultado positivo definitivo', () => {
+  it.each([
+    ['Agente', AGENTE],
+    ['Veterinário', VET],
+    ['Administrador', ADMIN],
+  ])('%s pode escolher o resultado positivo', async (_perfil, cargos) => {
+    renderDetalhe(PROCESSO_PENDENTE_ID, cargos)
+    await esperarDetalhe(processoFixture().protocolo)
+
+    expect(await screen.findByRole('option', { name: 'Positivo' })).toBeInTheDocument()
+  })
+})
+
+describe('ProcessoDetalhe — edição e histórico', () => {
+  it('só o Administrador vê "Editar processo" e o histórico de alterações', async () => {
+    renderDetalhe(PROCESSO_PENDENTE_ID)
+    await esperarDetalhe(processoFixture().protocolo)
+
+    expect(screen.getByRole('link', { name: 'Editar processo' })).toHaveAttribute('href', `/processos/${PROCESSO_PENDENTE_ID}/editar`)
+    expect(await screen.findByRole('heading', { name: 'Histórico de alterações' })).toBeInTheDocument()
+  })
+
+  it.each([
+    ['Veterinário', VET],
+    ['Agente', AGENTE],
+  ])('%s não vê a edição nem o histórico, e o detalhe segue aberto', async (_perfil, cargos) => {
+    renderDetalhe(PROCESSO_PENDENTE_ID, cargos)
+    await esperarDetalhe(processoFixture().protocolo)
+
+    expect(screen.queryByRole('link', { name: 'Editar processo' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Histórico de alterações' })).not.toBeInTheDocument()
+  })
+
+  it('o histórico mostra autor, motivo e o que mudou', async () => {
+    server.use(
+      http.get(`${API_BASE_URL}/processos/:id/alteracoes`, () =>
+        HttpResponse.json([
+          {
+            id: 'e1',
+            usuarioEmail: 'ana.silva@itu.sp.gov.br',
+            acao: 'ATUALIZACAO',
+            entidade: 'processo_sanitario',
+            entidadeId: PROCESSO_PENDENTE_ID,
+            ocorreuEm: '2026-10-31T10:00:00',
+            payloadAntes: JSON.stringify({ galNumero: null, responsavel: { telefone: '1111' } }),
+            payloadDepois: JSON.stringify({ galNumero: 'GAL-9', responsavel: { telefone: '2222' }, justificativa: 'Telefone errado' }),
+          },
+        ]),
+      ),
+    )
+    renderDetalhe(PROCESSO_PENDENTE_ID)
+
+    expect(await screen.findByText('Telefone errado')).toBeInTheDocument()
+    expect(screen.getByText('Nº GAL: — → GAL-9')).toBeInTheDocument()
+    expect(screen.getByText('Responsável · Telefone: 1111 → 2222')).toBeInTheDocument()
+  })
+})
 
 describe('ProcessoDetalhe — dados', () => {
   it('mostra os dados do processo, o responsável e a amostra com identificação, campos clínicos e sintomas', async () => {
@@ -88,7 +146,7 @@ describe('ProcessoDetalhe — dados', () => {
 
     const amostra = cardDe('Amostra 1')
     expect(amostra.getByRole('link', { name: 'Ver ficha do animal' })).toHaveAttribute('href', `/animais/${ANIMAL_AMOSTRADO_ID}`)
-    expect(amostra.getByText('Sem contato humano-animal registrado nesta amostra.')).toBeInTheDocument()
+    expect(amostra.getByText('Sem contato humano-animal nesta amostra.')).toBeInTheDocument()
   })
 
   it('processo urgente mostra o banner de contato humano-animal', async () => {
@@ -195,7 +253,7 @@ describe('ProcessoDetalhe — ocorrência vinculada', () => {
   it('vínculo recusado (409) mostra a mensagem do servidor e mantém a escolha aberta', async () => {
     server.use(
       http.post(`${API_BASE_URL}/ocorrencias/:id/processo`, () =>
-        HttpResponse.json({ mensagem: 'Ocorrencia ou processo ja possui vinculo' }, { status: 409 }),
+        HttpResponse.json({ mensagem: 'A ocorrência ou o processo já tem vínculo.' }, { status: 409 }),
       ),
     )
     const user = userEvent.setup()
@@ -205,12 +263,12 @@ describe('ProcessoDetalhe — ocorrência vinculada', () => {
     await user.click(screen.getByRole('button', { name: 'Vincular uma ocorrência já cadastrada' }))
     await user.click(await screen.findByText('OC 089/2026'))
 
-    expect(await screen.findByText('Ocorrencia ou processo ja possui vinculo')).toBeInTheDocument()
+    expect(await screen.findByText('A ocorrência ou o processo já tem vínculo.')).toBeInTheDocument()
     expect(screen.getByRole('radiogroup', { name: 'Ocorrências disponíveis para vínculo' })).toBeInTheDocument()
   })
 })
 
-describe('ProcessoDetalhe — status (provisório, D18)', () => {
+describe('ProcessoDetalhe — status', () => {
   // T37: a transição AGUARDANDO_RESULTADO -> COM_RESULTADO saiu deste botão
   // (vai só pelo lançamento do resultado agora) — estes testes usam
   // ABERTO -> AGUARDANDO_RESULTADO, que continua provisória.
@@ -231,7 +289,7 @@ describe('ProcessoDetalhe — status (provisório, D18)', () => {
     await esperarDetalhe('046/2026')
     expect(cardDe('Status do processo').getByText('Aberto')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Avançar status do processo (provisório)' }))
+    await user.click(screen.getByRole('button', { name: 'Marcar amostras como enviadas' }))
 
     expect(await cardDe('Status do processo').findByText('Aguardando resultado')).toBeInTheDocument()
     expect(corpos).toEqual([{ status: 'AGUARDANDO_RESULTADO' }])
@@ -240,16 +298,16 @@ describe('ProcessoDetalhe — status (provisório, D18)', () => {
   it('transição recusada (422) mostra a mensagem do servidor', async () => {
     server.use(
       http.patch(`${API_BASE_URL}/processos/:id/status`, () =>
-        HttpResponse.json({ mensagem: 'Transicao de status nao permitida para o processo' }, { status: 422 }),
+        HttpResponse.json({ mensagem: 'Esta mudança de status não é permitida para o processo.' }, { status: 422 }),
       ),
     )
     const user = userEvent.setup()
     renderDetalhe(PROCESSO_SEM_VINCULO_ID)
     await esperarDetalhe('046/2026')
 
-    await user.click(screen.getByRole('button', { name: 'Avançar status do processo (provisório)' }))
+    await user.click(screen.getByRole('button', { name: 'Marcar amostras como enviadas' }))
 
-    expect(await screen.findByText('Transicao de status nao permitida para o processo')).toBeInTheDocument()
+    expect(await screen.findByText('Esta mudança de status não é permitida para o processo.')).toBeInTheDocument()
   })
 
   it('o botão fica desabilitado enquanto o avanço está em andamento (sem envio duplicado)', async () => {
@@ -268,8 +326,8 @@ describe('ProcessoDetalhe — status (provisório, D18)', () => {
     renderDetalhe(PROCESSO_SEM_VINCULO_ID)
     await esperarDetalhe('046/2026')
 
-    await user.click(screen.getByRole('button', { name: 'Avançar status do processo (provisório)' }))
-    const emAndamento = await screen.findByRole('button', { name: 'Avançando…' })
+    await user.click(screen.getByRole('button', { name: 'Marcar amostras como enviadas' }))
+    const emAndamento = await screen.findByRole('button', { name: 'Salvando…' })
     expect(emAndamento).toBeDisabled()
     await user.click(emAndamento)
     liberar()
@@ -284,7 +342,8 @@ describe('ProcessoDetalhe — status (provisório, D18)', () => {
     await esperarDetalhe('045/2026')
 
     expect(cardDe('Status do processo').getByText('Processo concluído.')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Avançar status do processo (provisório)' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Marcar amostras como enviadas' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Concluir processo' })).not.toBeInTheDocument()
   })
 
   it('AGUARDANDO_RESULTADO não oferece o avanço provisório: só o lançamento do resultado avança', async () => {
@@ -292,7 +351,8 @@ describe('ProcessoDetalhe — status (provisório, D18)', () => {
     await esperarDetalhe('045/2026')
 
     expect(cardDe('Status do processo').getByText('Aguardando resultado')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Avançar status do processo (provisório)' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Marcar amostras como enviadas' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Concluir processo' })).not.toBeInTheDocument()
     expect(
       cardDe('Status do processo').getByText('Lance o resultado laboratorial no card ao lado para avançar este processo.'),
     ).toBeInTheDocument()
@@ -337,6 +397,7 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
     await aguardarOpcoesDeResultado()
 
     await user.selectOptions(screen.getByLabelText('Resultado laboratorial'), 'negativo')
+    await user.click(screen.getByRole('button', { name: 'Preencher com a data de hoje' }))
     await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
 
     expect(screen.queryByText('Confirmar lançamento do resultado')).not.toBeInTheDocument()
@@ -353,6 +414,7 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
     await aguardarOpcoesDeResultado()
 
     await user.selectOptions(screen.getByLabelText('Resultado laboratorial'), 'positivo')
+    await user.click(screen.getByRole('button', { name: 'Preencher com a data de hoje' }))
     await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
 
     expect(await screen.findByText('Confirmar lançamento do resultado')).toBeInTheDocument()
@@ -377,6 +439,7 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
     await aguardarOpcoesDeResultado()
 
     await user.selectOptions(screen.getByLabelText('Resultado laboratorial'), 'inconclusivo')
+    await user.click(screen.getByRole('button', { name: 'Preencher com a data de hoje' }))
     await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
 
     expect(screen.queryByText('Confirmar lançamento do resultado')).not.toBeInTheDocument()
@@ -393,6 +456,7 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
     await aguardarOpcoesDeResultado()
 
     await user.selectOptions(screen.getByLabelText('Resultado laboratorial'), 'positivo')
+    await user.click(screen.getByRole('button', { name: 'Preencher com a data de hoje' }))
     await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
     await screen.findByText('Confirmar lançamento do resultado')
     await user.click(screen.getByRole('button', { name: 'Cancelar' }))
@@ -435,6 +499,7 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
 
     const select = screen.getByLabelText('Resultado laboratorial') as HTMLSelectElement
     await user.selectOptions(select, 'negativo')
+    await user.click(screen.getByRole('button', { name: 'Preencher com a data de hoje' }))
     await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
 
     expect(await screen.findByText('Não foi possível registrar o resultado. Tente novamente.')).toBeInTheDocument()

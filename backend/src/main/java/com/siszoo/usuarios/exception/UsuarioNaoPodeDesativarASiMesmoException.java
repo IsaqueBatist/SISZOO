@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class UsuarioNaoPodeDesativarASiMesmoException extends ErroNegocioException {
 
     public UsuarioNaoPodeDesativarASiMesmoException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Nao e permitido desativar o proprio usuario");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "Você não pode desativar o seu próprio usuário.");
     }
 }

@@ -57,7 +57,7 @@ export function SelectCatalogoClinico({
   }
 
   return (
-    <select id={id} className={`select${temErro ? ' error' : ''}`} {...registro}>
+    <select id={id} className={`select${temErro ? ' error' : ''}`} aria-invalid={temErro ? true : undefined} {...registro}>
       <option value="" disabled>
         Selecione…
       </option>

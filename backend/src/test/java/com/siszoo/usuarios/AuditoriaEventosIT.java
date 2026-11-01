@@ -189,6 +189,7 @@ class AuditoriaEventosIT extends AbstractIntegrationTest {
         String email = emailUnico("senha");
         String token = fixture.tokenComCargo(email, "Troca", "Eventos", ApiTesteFixture.CARGO_VETERINARIO_ID);
         UUID usuarioId = usuarioId(email);
+        jdbcTemplate.update("UPDATE usuario SET senha_alterada_em = NULL WHERE id = ?", usuarioId);
         String novaSenha = "NovaSenhaT43-" + marcador();
 
         for (int i = 0; i < 2; i++) {

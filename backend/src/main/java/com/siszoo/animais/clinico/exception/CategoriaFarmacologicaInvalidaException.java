@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class CategoriaFarmacologicaInvalidaException extends ErroNegocioException {
 
     public CategoriaFarmacologicaInvalidaException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Categoria farmacologica informada nao existe");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "A categoria farmacológica informada não existe. Selecione uma da lista.");
     }
 }

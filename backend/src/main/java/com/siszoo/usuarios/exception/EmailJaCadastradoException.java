@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class EmailJaCadastradoException extends ErroNegocioException {
 
     public EmailJaCadastradoException() {
-        super(HttpStatus.CONFLICT, "E-mail ja cadastrado");
+        super(HttpStatus.CONFLICT, "Este e-mail já está cadastrado.");
     }
 }

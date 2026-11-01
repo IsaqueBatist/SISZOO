@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Pattern;
 
 public record LoginRequest(
         @NotBlank
-        @Pattern(regexp = "^[a-z.]+@itu\\.sp\\.gov\\.br$", message = "E-mail deve ser institucional (@itu.sp.gov.br)")
+        @Pattern(regexp = "^[a-z.]+@itu\\.sp\\.gov\\.br$", message = "Use o e-mail institucional (@itu.sp.gov.br).")
         String email,
 
         @NotBlank

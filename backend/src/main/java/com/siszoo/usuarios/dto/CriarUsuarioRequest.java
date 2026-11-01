@@ -14,7 +14,7 @@ public record CriarUsuarioRequest(
         String sobrenome,
 
         @NotBlank
-        @Pattern(regexp = "^[a-z.]+@itu\\.sp\\.gov\\.br$", message = "E-mail deve ser institucional (@itu.sp.gov.br)")
+        @Pattern(regexp = "^[a-z.]+@itu\\.sp\\.gov\\.br$", message = "Use o e-mail institucional (@itu.sp.gov.br).")
         String email,
 
         @NotBlank
@@ -25,7 +25,7 @@ public record CriarUsuarioRequest(
         String telefone,
 
         @NotBlank
-        @Size(min = 8, message = "Senha inicial deve ter no minimo 8 caracteres")
-        @TamanhoMaximoBytes(value = 72, message = "Senha inicial deve ter no maximo 72 bytes (acentos contam 2)")
+        @Size(min = 8, message = "A senha inicial deve ter no mínimo 8 caracteres.")
+        @TamanhoMaximoBytes(value = 72, message = "A senha inicial deve ter no máximo 72 bytes (letras acentuadas contam como 2).")
         String senhaInicial) {
 }

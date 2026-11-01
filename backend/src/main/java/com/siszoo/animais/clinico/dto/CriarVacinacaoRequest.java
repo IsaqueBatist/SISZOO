@@ -26,7 +26,7 @@ public record CriarVacinacaoRequest(
         Integer numeroDose,
 
         @NotNull
-        @DecimalMin(value = "0.0", inclusive = false, message = "Dose deve ser maior que zero")
+        @DecimalMin(value = "0.0", inclusive = false, message = "A dose deve ser maior que zero.")
         BigDecimal doseQuantidade,
 
         @NotNull

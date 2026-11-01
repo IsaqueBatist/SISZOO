@@ -8,6 +8,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class TipoExameInvalidoException extends ErroNegocioException {
 
     public TipoExameInvalidoException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Tipo de exame informado nao existe");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "O tipo de exame informado não existe. Selecione um da lista.");
     }
 }

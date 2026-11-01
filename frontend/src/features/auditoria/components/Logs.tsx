@@ -1,16 +1,19 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Icon } from '@/components/layout/Icon'
 import { ErroComRetry } from '@/components/layout/ErroComRetry'
 import { Skeleton } from '@/components/layout/Skeleton'
 import { formatarHora } from '@/features/ocorrencias/utils/datas'
+import { useFiltrosLista } from '@/lib/useFiltrosLista'
 import { useEventosAuditoriaQuery, useOpcoesFiltroAuditoriaQuery } from '../hooks/useAuditoria'
 import { agruparPorDia } from '../utils/agruparPorDia'
 import { agruparPorModulo } from '../utils/agruparPorModulo'
 import { descricaoAcao, type TomAcao } from '../utils/descricaoAcao'
+import { diferencasDoEvento, justificativaDoEvento } from '../utils/diferencasPayload'
 import { labelModulo, moduloDaEntidade, type Modulo } from '../utils/moduloDaEntidade'
 import type { EventoAuditoria } from '../types/auditoria.types'
 
 const TAMANHO_PAGINA = 20
+const FILTROS_PADRAO = { acao: '', entidade: '', usuario: '', modulo: '', de: '', ate: '' }
 
 const COR_POR_TOM: Record<TomAcao, string> = {
   info: 'var(--color-info)',
@@ -29,6 +32,7 @@ function LinhaEvento({ evento }: { evento: EventoAuditoria }) {
     <li
       style={{
         display: 'flex',
+        flexWrap: 'wrap',
         alignItems: 'center',
         gap: 'var(--space-3)',
         padding: 'var(--space-3) 0',
@@ -47,37 +51,53 @@ function LinhaEvento({ evento }: { evento: EventoAuditoria }) {
       <span className="mono" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
         {formatarHora(evento.ocorreuEm.slice(11))}
       </span>
+      <DetalhesEvento evento={evento} />
     </li>
   )
 }
 
+function DetalhesEvento({ evento }: { evento: EventoAuditoria }) {
+  const justificativa = justificativaDoEvento(evento.payloadDepois)
+  const diferencas = diferencasDoEvento(evento.payloadAntes, evento.payloadDepois)
+  if (!justificativa && diferencas.length === 0) return null
+
+  return (
+    <details style={{ flexBasis: '100%', fontSize: 12 }}>
+      <summary style={{ cursor: 'pointer', color: 'var(--color-text-secondary)' }}>Ver detalhes</summary>
+      <div className="col gap-1" style={{ marginTop: 'var(--space-2)' }}>
+        {justificativa && (
+          <div>
+            <strong>Motivo:</strong> {justificativa}
+          </div>
+        )}
+        {diferencas.length > 0 && (
+          <ul style={{ margin: 0, paddingLeft: 16 }}>
+            {diferencas.map((diferenca) => (
+              <li key={diferenca.campo}>
+                {diferenca.campo}: {diferenca.antes} → {diferenca.depois}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </details>
+  )
+}
+
 export function Logs() {
-  const [pagina, setPagina] = useState(0)
-  const [acaoFiltro, setAcaoFiltro] = useState('')
-  const [entidadeFiltro, setEntidadeFiltro] = useState('')
-  const [usuarioFiltro, setUsuarioFiltro] = useState('')
-  const [moduloFiltro, setModuloFiltro] = useState<Modulo | ''>('')
+  const { filtros: filtrosLista, pagina, definirFiltros, irParaPagina, limparFiltros, filtrosAtivos: filtroAtivo } = useFiltrosLista('logs', FILTROS_PADRAO)
+  const { acao: acaoFiltro, entidade: entidadeFiltro, usuario: usuarioFiltro, de: deFiltro, ate: ateFiltro } = filtrosLista
+  const moduloFiltro = filtrosLista.modulo as Modulo | ''
 
   // F2-027 (Fase 3 do TG): os filtros vão ao servidor (GET /api/auditoria com
-  // acao/entidade/usuarioEmail/modulo) e valem para toda a trilha, não só para
+  // acao/entidade/usuarioEmail/modulo/de/ate) e valem para toda a trilha, não só para
   // a página carregada. Trocar um filtro volta à primeira página.
   const filtros = useMemo(
-    () => ({ acao: acaoFiltro, entidade: entidadeFiltro, usuarioEmail: usuarioFiltro, modulo: moduloFiltro }),
-    [acaoFiltro, entidadeFiltro, usuarioFiltro, moduloFiltro],
+    () => ({ acao: acaoFiltro, entidade: entidadeFiltro, usuarioEmail: usuarioFiltro, modulo: moduloFiltro, de: deFiltro, ate: ateFiltro }),
+    [acaoFiltro, entidadeFiltro, usuarioFiltro, moduloFiltro, deFiltro, ateFiltro],
   )
   const { data, isLoading, isError, refetch } = useEventosAuditoriaQuery(pagina, TAMANHO_PAGINA, filtros)
   const { data: opcoes } = useOpcoesFiltroAuditoriaQuery()
-
-  function aplicarFiltro<T>(definir: (valor: T) => void) {
-    return (valor: T) => {
-      definir(valor)
-      setPagina(0)
-    }
-  }
-  const definirAcao = aplicarFiltro(setAcaoFiltro)
-  const definirEntidade = aplicarFiltro(setEntidadeFiltro)
-  const definirUsuario = aplicarFiltro(setUsuarioFiltro)
-  const definirModulo = aplicarFiltro(setModuloFiltro)
 
   // Memoizado: `data?.itens ?? []` cria um array novo a cada render enquanto
   // `data` está undefined, o que quebraria a identidade estável exigida
@@ -108,7 +128,6 @@ export function Logs() {
     const combinaModulo = !moduloFiltro || moduloDaEntidade(evento.entidade) === moduloFiltro
     return combinaAcao && combinaEntidade && combinaUsuario && combinaModulo
   })
-  const filtroAtivo = Boolean(acaoFiltro || entidadeFiltro || usuarioFiltro || moduloFiltro)
   const grupos = agruparPorDia(eventosFiltrados)
 
   const totalPaginas = Math.max(data?.totalPaginas ?? 1, 1)
@@ -127,7 +146,7 @@ export function Logs() {
           className="filter-select"
           aria-label="Filtrar por ação"
           value={acaoFiltro}
-          onChange={(event) => definirAcao(event.target.value)}
+          onChange={(event) => definirFiltros({ acao: event.target.value })}
         >
           <option value="">Ação: Todas</option>
           {acoesDisponiveis.map((acao) => (
@@ -140,7 +159,7 @@ export function Logs() {
           className="filter-select"
           aria-label="Filtrar por entidade"
           value={entidadeFiltro}
-          onChange={(event) => definirEntidade(event.target.value)}
+          onChange={(event) => definirFiltros({ entidade: event.target.value })}
         >
           <option value="">Entidade: Todas</option>
           {entidadesDisponiveis.map((entidade) => (
@@ -153,7 +172,7 @@ export function Logs() {
           className="filter-select"
           aria-label="Filtrar por usuário"
           value={usuarioFiltro}
-          onChange={(event) => definirUsuario(event.target.value)}
+          onChange={(event) => definirFiltros({ usuario: event.target.value })}
         >
           <option value="">Usuário: Todos</option>
           {usuariosDisponiveis.map((email) => (
@@ -166,7 +185,7 @@ export function Logs() {
           className="filter-select"
           aria-label="Filtrar por módulo"
           value={moduloFiltro}
-          onChange={(event) => definirModulo(event.target.value as Modulo | '')}
+          onChange={(event) => definirFiltros({ modulo: event.target.value })}
         >
           <option value="">Módulo: Todos</option>
           {modulosDisponiveis.map((modulo) => (
@@ -175,6 +194,29 @@ export function Logs() {
             </option>
           ))}
         </select>
+        <input
+          className="filter-select"
+          type="date"
+          aria-label="Eventos a partir de"
+          title="Eventos a partir de"
+          value={deFiltro}
+          max={ateFiltro || undefined}
+          onChange={(event) => definirFiltros({ de: event.target.value })}
+        />
+        <input
+          className="filter-select"
+          type="date"
+          aria-label="Eventos até"
+          title="Eventos até"
+          value={ateFiltro}
+          min={deFiltro || undefined}
+          onChange={(event) => definirFiltros({ ate: event.target.value })}
+        />
+        {filtroAtivo && (
+          <button type="button" className="btn btn-ghost btn-sm" onClick={limparFiltros}>
+            Limpar filtros
+          </button>
+        )}
       </div>
 
       {filtroAtivo && data && (
@@ -226,7 +268,7 @@ export function Logs() {
             type="button"
             className="btn btn-ghost btn-sm"
             disabled={pagina === 0}
-            onClick={() => setPagina((paginaAtual) => paginaAtual - 1)}
+            onClick={() => irParaPagina(pagina - 1)}
           >
             Anterior
           </button>
@@ -237,7 +279,7 @@ export function Logs() {
             type="button"
             className="btn btn-outline btn-sm"
             disabled={pagina >= totalPaginas - 1}
-            onClick={() => setPagina((paginaAtual) => paginaAtual + 1)}
+            onClick={() => irParaPagina(pagina + 1)}
           >
             Próximo
           </button>

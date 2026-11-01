@@ -2,12 +2,14 @@ package com.siszoo.usuarios.controller;
 
 import java.util.UUID;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,7 +19,9 @@ import com.siszoo.comum.dto.PaginaResponse;
 import com.siszoo.comum.security.UsuarioAutenticado;
 import com.siszoo.usuarios.dto.AtualizarPerfilRequest;
 import com.siszoo.usuarios.dto.AtualizarStatusUsuarioRequest;
+import com.siszoo.usuarios.dto.AtualizarUsuarioRequest;
 import com.siszoo.usuarios.dto.CriarUsuarioRequest;
+import com.siszoo.usuarios.dto.RedefinirSenhaRequest;
 import com.siszoo.usuarios.dto.UsuarioResponse;
 import com.siszoo.usuarios.service.UsuarioService;
 
@@ -48,6 +52,21 @@ public class UsuarioController {
     @PreAuthorize("hasAuthority('USUARIOS_ACESSO:escrita')")
     public UsuarioResponse criar(Authentication authentication, @Valid @RequestBody CriarUsuarioRequest request) {
         return usuarioService.criar(request, UsuarioAutenticado.id(authentication));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('USUARIOS_ACESSO:escrita')")
+    public UsuarioResponse atualizar(
+            Authentication authentication, @PathVariable UUID id, @Valid @RequestBody AtualizarUsuarioRequest request) {
+        return usuarioService.atualizar(id, request, UsuarioAutenticado.id(authentication));
+    }
+
+    @PostMapping("/{id}/senha")
+    @PreAuthorize("hasAuthority('USUARIOS_ACESSO:escrita')")
+    public ResponseEntity<Void> redefinirSenha(
+            Authentication authentication, @PathVariable UUID id, @Valid @RequestBody RedefinirSenhaRequest request) {
+        usuarioService.redefinirSenha(id, request, UsuarioAutenticado.id(authentication));
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/status")

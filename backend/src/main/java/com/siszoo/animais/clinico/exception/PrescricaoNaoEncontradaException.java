@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class PrescricaoNaoEncontradaException extends ErroNegocioException {
 
     public PrescricaoNaoEncontradaException() {
-        super(HttpStatus.NOT_FOUND, "Prescricao nao encontrada");
+        super(HttpStatus.NOT_FOUND, "Prescrição não encontrada.");
     }
 }

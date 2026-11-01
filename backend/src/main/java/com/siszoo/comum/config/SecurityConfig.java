@@ -33,7 +33,9 @@ public class SecurityConfig {
             JwtAccessDeniedHandler jwtAccessDeniedHandler,
             CorsConfigurationSource corsConfigurationSource) throws Exception {
         return http
-                // API stateless com Bearer token, sem cookie de sessao: sem CSRF, nada a proteger.
+                // A API autentica por Bearer. O unico cookie (sessao de renovacao) tem Path
+                // /api/auth e SameSite, e renovar/logout exigem um header proprio que forca
+                // o preflight de CORS (AuthController): sem CSRF, nada a proteger.
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -42,7 +44,8 @@ public class SecurityConfig {
                         .accessDeniedHandler(jwtAccessDeniedHandler))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/login", "/api/health").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/renovar", "/api/auth/logout",
+                                "/api/auth/recuperacao/**", "/api/health").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
@@ -53,11 +56,12 @@ public class SecurityConfig {
         CorsConfiguration configuracao = new CorsConfiguration();
         configuracao.setAllowedOrigins(List.of(origemPermitida));
         configuracao.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuracao.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        configuracao.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-SISZOO-Sessao"));
         // O front (outra origem) le o nome do arquivo exportado em
         // POST /api/relatorios/exportar; sem isto o navegador esconde o header.
         configuracao.setExposedHeaders(List.of("Content-Disposition"));
-        configuracao.setAllowCredentials(false);
+        // Credenciais so para o cookie de renovacao; a origem continua sendo uma so.
+        configuracao.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource fonte = new UrlBasedCorsConfigurationSource();
         fonte.registerCorsConfiguration("/**", configuracao);

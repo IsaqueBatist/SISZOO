@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class EspecieInvalidaException extends ErroNegocioException {
 
     public EspecieInvalidaException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Especie informada nao existe");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "A espécie informada não existe. Selecione uma da lista.");
     }
 }

@@ -28,6 +28,6 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
             throws IOException {
         response.setStatus(HttpStatus.FORBIDDEN.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        objectMapper.writeValue(response.getOutputStream(), new ErroResponse("Acesso negado"));
+        objectMapper.writeValue(response.getOutputStream(), new ErroResponse("Você não tem permissão para realizar esta ação."));
     }
 }

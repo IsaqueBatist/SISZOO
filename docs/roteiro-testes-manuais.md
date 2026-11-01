@@ -1,4 +1,4 @@
-# Roteiro de testes manuais — processos, auditoria de RN, animais e clínico
+# Roteiro de testes manuais - processos, auditoria de RN, animais e clínico
 
 Cobre o que entrou nos PRs abaixo. Teste a `main` atual (ou a branch que estiver em revisão, se ela mexer nesses módulos).
 
@@ -8,7 +8,7 @@ Cobre o que entrou nos PRs abaixo. Teste a `main` atual (ou a branch que estiver
 | #98 | `fix/T34-follow-up` | Data do resultado sem limite inferior, CONCLUIDO exige resultado, V15 (integridade + TRUNCATE), notificação só p/ positivo |
 | #99 | `fix/auditoria-rn-rebase` | Autor da auditoria de usuário, sigilo nas respostas de mutação, token de usuário desativado, microchip normalizado (V16), registros críticos sem DELETE (V17) |
 | #100 | `feat/animais-clinico-correcoes` | Fuso de SP, datas do animal/procedimento/prescrição, baia ativa+vaga com trava, ficha completa (V18), rascunhos nos modais, tela de Medicamentos/categorias |
-| — | `fix/ficha-completa-seed-fuso` | Seed sem cópia da regra de ficha completa, testes de fuso com instante fixo, "hoje" único no front, mock e Insomnia com a regra atual, tela da ficha mostrando ficha incompleta, `esterilizado` ausente → 422 |
+| - | `fix/ficha-completa-seed-fuso` | Seed sem cópia da regra de ficha completa, testes de fuso com instante fixo, "hoje" único no front, mock e Insomnia com a regra atual, tela da ficha mostrando ficha incompleta, `esterilizado` ausente → 422 |
 
 Legenda: **[UI]** navegador · **[API]** PowerShell · **[DB]** psql · ☐ marque ao passar.
 
@@ -16,7 +16,7 @@ Legenda: **[UI]** navegador · **[API]** PowerShell · **[DB]** psql · ☐ marq
 
 ## 0. Preparação
 
-Suba o banco e o backend com o **seed de dados fictícios** (`com.siszoo.seed`, README "Dados fictícios"). O seed roda no backend local com os perfis `dev,seed` — no `docker` ele recusa a subida — e chama os services reais: regras, protocolos, ficha completa e auditoria são os da aplicação. Ele só aceita um banco **vazio** (ou já semeado por ele): use um database próprio para não misturar com dados seus.
+Suba o banco e o backend com o **seed de dados fictícios** (`com.siszoo.seed`, README "Dados fictícios"). O seed roda no backend local com os perfis `dev,seed` - no `docker` ele recusa a subida - e chama os services reais: regras, protocolos, ficha completa e auditoria são os da aplicação. Ele só aceita um banco **vazio** (ou já semeado por ele): use um database próprio para não misturar com dados seus.
 
 ```powershell
 docker compose up -d db                                  # só o Postgres (o backend do compose usa o perfil docker)
@@ -66,9 +66,9 @@ $ADM = Login "marta.siqueira.seed@itu.sp.gov.br"; $VET = Login "renato.albuquerq
 
 ---
 
-## 1. Processos sanitários — resultado e status (PR #94 e #98)
+## 1. Processos sanitários - resultado e status (PR #94 e #98)
 
-### 1.1 Fluxo feliz pela tela [UI] — logado como Agente
+### 1.1 Fluxo feliz pela tela [UI] - logado como Agente
 1. ☐ Processos Sanitários → novo processo (com pelo menos uma amostra). Salvar.
 2. ☐ No detalhe: status **Aberto**; card "Resultado Laboratorial" diz *"Aguardando o envio das amostras ao laboratório."*
 3. ☐ Clicar **"Avançar status do processo (provisório)"** → status **Aguardando resultado**. O botão some e aparece *"Lance o resultado laboratorial no card ao lado para avançar este processo."*
@@ -99,7 +99,7 @@ Pegue o id de um processo em **Aguardando resultado** (`$P`) e de um em **Com re
 | ☐ | `Api POST "/processos/$P/resultados" @{resultado="negativo"}` | 422 (data obrigatória) |
 | ☐ | `Api POST "/processos/$P/resultados" @{resultado="negativo"; dataResultado="2020-01-01"}` | 200/201, aceita data antiga |
 | ☐ | De novo o mesmo POST em `$P` (sem `retificaId`) | **409** (resultado já registrado) |
-| ☐ | `Api GET "/processos/$P"` → copie `resultados[0].id` para `$R` | — |
+| ☐ | `Api GET "/processos/$P"` → copie `resultados[0].id` para `$R` | - |
 | ☐ | `Api POST "/processos/$P/resultados" @{resultado="positivo"; dataResultado="2026-10-10"; retificaId="$R"}` | Sucesso: correção. GET mostra 2 itens no histórico, o original intacto, vigente = positivo. Na tela: "Correção para Positivo…" e alerta de notificação (passou a positivo) |
 | ☐ | Mesmo POST de novo com o **mesmo** `$R` (que não é mais o vigente) | 422 |
 | ☐ | `Api PATCH "/processos/$P/status" @{status="CONCLUIDO"}` e depois uma correção com `retificaId` do vigente | Conclusão OK; correção depois de concluído → 422 |
@@ -338,7 +338,7 @@ Os UnitTests de animais e baias (`.insomnia/UnitTest/ut_animais_*` e `ut_baias_*
 - Cargo alterado só vale no próximo login (P6).
 - Erro de microchip no formulário é detectado pelo texto da mensagem.
 
-## 6. Alinhamento com o TG (22/10/2026 — PRs #108 a #110)
+## 6. Alinhamento com o TG (22/10/2026 - PRs #108 a #110)
 
 Decisões em `docs/decisoes/alinhamento-tg.md`. Logado como Veterinário, salvo indicação.
 
@@ -362,7 +362,7 @@ Decisões em `docs/decisoes/alinhamento-tg.md`. Logado como Veterinário, salvo 
 
 ### 6.3 Processos: GAL/SINAN, notificação e reenvio [UI + API]
 
-1. Abrir processo informando **Nº GAL** e **Nº SINAN** → aparecem no detalhe (T13); vazios → "—".
+1. Abrir processo informando **Nº GAL** e **Nº SINAN** → aparecem no detalhe (T13); vazios → "-".
 2. Lançar resultado **inconclusivo** em processo com e-mail do responsável → e-mail no sandbox SMTP e
    `data_notificacao_municipe` preenchida; corrigir para **positivo** → novo e-mail. `negativo`, `material_inadequado`
    e `nao_realizado` não notificam.
@@ -378,3 +378,47 @@ Decisões em `docs/decisoes/alinhamento-tg.md`. Logado como Veterinário, salvo 
    medicamento, exame e anexo_animal; filtro por período e por e-mail do usuário; o aviso informa o total filtrado.
 4. Central de relatórios (T14) aberta direto pela URL: os quatro cartões de KPI da pré-visualização ficam lado a lado
    (PR #110); a grade de cartões não transborda em 1366 px; o período padrão é "último mês até hoje" no fuso de Itu.
+
+## 7. Recuperação de senha, menu lateral e fotos da seed (01/11/2026)
+
+Pré-requisito do item 7.1: SMTP sandbox no `.env` (Mailtrap ou Ethereal, `docs/email.md`). Sem SMTP, a solicitação
+responde 202 e o envio só aparece como `WARN` no log do backend.
+
+### 7.1 Esqueci minha senha [UI + API + DB]
+
+1. Na tela de login, clicar **Esqueci minha senha** → `/esqueci-senha`. Informar `fulano@gmail.com` → erro de formato
+   sem chamar a API; informar `renato.albuquerque.seed@itu.sp.gov.br` → tela "Verifique seu e-mail", que não afirma se
+   a conta existe. Repetir com `ninguem.aqui@itu.sp.gov.br` → mesma tela, nenhum e-mail no sandbox.
+2. No sandbox, abrir "SISZOO - Redefinição de senha": botão, link por extenso, validade de 30 minutos e orientação
+   para quem não pediu. No banco, `token_recuperacao_senha` tem só o hash (`token_hash`), nunca o valor do link.
+3. Abrir o link → `/redefinir-senha?token=...` mostra o formulário. `somenteminusculas` → recusa local (3 tipos de
+   caractere); `Renato-2026!` → 422 da API no campo (partes do nome); `Ficticio#2026` → 422 "diferente da atual".
+   `Nova-Senha-2026` → tela "Senha redefinida" → login com a senha nova entra; a antiga → 401.
+4. Abrir o mesmo link de novo → "Link inválido ou expirado" (uso único). Pedir dois links seguidos → só o segundo vale.
+5. Quarta solicitação do mesmo e-mail dentro de uma hora → aviso de muitas tentativas (429).
+6. Logs (Admin): o evento `ATUALIZACAO` em `usuario` traz `senhaAlteradaEm` e `recuperacaoPorEmail: true`, sem senha.
+7. Com o usuário logado em outra aba antes da redefinição, essa aba cai no próximo uso (sessões encerradas).
+
+### 7.2 Menu lateral em ordem alfabética [UI]
+
+1. Como Admin: PRINCIPAL = Animais, Dashboard, Ocorrências, Processos Sanitários, Relatórios; CADASTROS = Gestão de
+   Baias, Medicamentos; ADMINISTRAÇÃO = Logs, Usuários; SISTEMA = Configurações.
+2. Como Veterinário: sem Ocorrências, Usuários e Logs; como Agente: sem Gestão de Baias, Usuários e Logs. Ícones,
+   rotas e o contador de ocorrências abertas continuam os mesmos; em tela estreita o menu em gaveta tem a mesma ordem.
+
+### 7.3 Fotos dos animais fictícios [UI]
+
+1. Com o seed (`docker compose -f docker-compose.yml -f docker-compose.seed.yml up --build`), a listagem de animais
+   mostra uma miniatura diferente por animal, coerente com a espécie (cães, gatos e o sagui Chico).
+2. A ficha (T06) mostra a foto em tamanho maior; Gestão de Baias mostra as miniaturas dos residentes.
+3. Créditos e licenças: `backend/src/main/resources/seed/fotos/CREDITOS.md`.
+
+### 7.4 Limite de tentativas no login e critérios de senha [UI + API]
+
+1. Na tela de login, errar a senha de `paulo.teixeira.seed@itu.sp.gov.br` 5 vezes → a 6ª tentativa, mesmo com
+   `Ficticio#2026`, mostra "Muitas tentativas em pouco tempo" (429). Outro usuário continua entrando. Depois de 15 min
+   (ou de reiniciar o backend), o login volta. Nenhum evento `LOGIN` aparece em `/logs` para as tentativas recusadas.
+2. Entrar como `helena.duarte.seed@itu.sp.gov.br` (primeiro acesso): a tela de troca mostra a lista de critérios
+   abaixo do campo, neutra antes de digitar; `helena1` marca "8 caracteres" e "partes do seu nome" em vermelho; ao
+   completar `Nova-Senha-2026`, todos ficam verdes. A mesma lista aparece em `/redefinir-senha` (sem os critérios de
+   nome) e no modal "Adicionar Usuário" (Admin), reagindo ao e-mail e ao nome completo digitados.

@@ -9,6 +9,6 @@ code: |-
   const response = await insomnia.send('req_auth_login_401_credencial');
   expect(response.status).to.equal(401);
   const body = JSON.parse(response.body);
-  expect(body.mensagem).to.equal('Credenciais invalidas');
+  expect(body.mensagem).to.equal('E-mail ou senha incorretos.');
 
 metaSortKey: 17000000

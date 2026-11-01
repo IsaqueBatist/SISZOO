@@ -5,6 +5,8 @@ import {
   buscarCatalogosProcesso,
   buscarProcessoPorId,
   criarProcesso,
+  editarProcesso,
+  listarAlteracoesProcesso,
   listarProcessos,
   reenviarNotificacaoMunicipe,
   registrarResultado,
@@ -12,6 +14,7 @@ import {
 } from '../api/processosApi'
 import type {
   CriarProcessoRequest,
+  EditarProcessoRequest,
   Processo,
   ProcessosFiltro,
   RegistrarResultadoRequest,
@@ -35,6 +38,20 @@ export function useProcessoQuery(id: string | undefined) {
     queryKey: chaveDetalhe(id as string),
     queryFn: () => buscarProcessoPorId(id as string),
     enabled: Boolean(id),
+  })
+}
+
+export function useAlteracoesProcessoQuery(id: string) {
+  return useQuery({ queryKey: ['processos', 'alteracoes', id], queryFn: () => listarAlteracoesProcesso(id) })
+}
+
+export function useEditarProcessoMutation(id: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: EditarProcessoRequest) => editarProcesso(id, payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['processos'] })
+    },
   })
 }
 

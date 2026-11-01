@@ -102,7 +102,7 @@ class PrescricaoControllerIT extends AbstractIntegrationTest {
                 .post("/api/prescricoes")
                 .then()
                 .statusCode(422)
-                .body("mensagem", equalTo("Medicamento informado nao existe"));
+                .body("mensagem", equalTo("O medicamento informado não existe. Selecione um da lista."));
     }
 
     @Test
@@ -208,7 +208,7 @@ class PrescricaoControllerIT extends AbstractIntegrationTest {
                 .post("/api/prescricoes")
                 .then()
                 .statusCode(409)
-                .body("mensagem", equalTo("Registro ja foi retificado por outro"));
+                .body("mensagem", equalTo("Este registro já foi corrigido. Atualize a página para ver a versão atual."));
     }
 
     private CriarPrescricaoRequest requestBase(String animalId, String retificaId) {

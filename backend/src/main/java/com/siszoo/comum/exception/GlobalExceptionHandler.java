@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import com.siszoo.animais.clinico.exception.RegistroJaRetificadoException;
+import com.siszoo.animais.exception.MicrochipJaCadastradoException;
 import com.siszoo.comum.dto.ErroResponse;
 import com.siszoo.processos.exception.ResultadoJaRegistradoException;
 import com.siszoo.usuarios.exception.FalhaAuditoriaException;
@@ -32,12 +33,12 @@ public class GlobalExceptionHandler {
             "uq_resultado_processo_retifica_id");
 
     // T43: a causa (SQL do INSERT do evento, so ids) vai so para o log; o
-    // cliente recebe mensagem generica, sem nenhum dado da requisicao.
+    // cliente recebe uma orientacao, sem nenhum dado da requisicao.
     @ExceptionHandler(FalhaAuditoriaException.class)
     public ResponseEntity<ErroResponse> handleFalhaAuditoria(FalhaAuditoriaException ex) {
         log.error("Evento de auditoria obrigatorio nao foi gravado", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErroResponse("Nao foi possivel concluir a operacao"));
+                .body(new ErroResponse("Não foi possível concluir a operação. Tente novamente em instantes."));
     }
 
     // Toda regra de negocio com status e mensagem fixos (T45, D1): cada
@@ -57,7 +58,7 @@ public class GlobalExceptionHandler {
                 .sorted(Comparator.comparing(ErroResponse.CampoInvalido::campo))
                 .toList();
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
-                .body(new ErroResponse("Dados invalidos", campos));
+                .body(new ErroResponse("Não foi possível salvar. Verifique os campos destacados e tente novamente.", campos));
     }
 
     // Ultima barreira: uma constraint do banco (NOT NULL, UNIQUE, FK, CHECK)
@@ -83,8 +84,11 @@ public class GlobalExceptionHandler {
         if ("uq_resultado_processo_original".equals(constraint)) {
             return handleErroNegocio(new ResultadoJaRegistradoException());
         }
+        if ("uq_animal_microchip".equals(constraint)) {
+            return handleErroNegocio(new MicrochipJaCadastradoException());
+        }
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(new ErroResponse("Operacao viola uma regra de integridade dos dados"));
+                .body(new ErroResponse("Não foi possível salvar, porque os dados entram em conflito com um registro existente. Verifique as informações e tente novamente."));
     }
 
     private static String nomeDaConstraint(Throwable ex) {
@@ -117,6 +121,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ErroResponse> handleMaxUploadSizeExceeded() {
         return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)
-                .body(new ErroResponse("Arquivo excede o tamanho maximo de 5 MB"));
+                .body(new ErroResponse("O arquivo passa do limite de 5 MB. Escolha um arquivo menor."));
     }
 }

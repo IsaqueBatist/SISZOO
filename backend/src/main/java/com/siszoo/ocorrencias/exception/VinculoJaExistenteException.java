@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class VinculoJaExistenteException extends ErroNegocioException {
 
     public VinculoJaExistenteException() {
-        super(HttpStatus.CONFLICT, "Ocorrencia ou processo ja possui vinculo");
+        super(HttpStatus.CONFLICT, "A ocorrência ou o processo já tem vínculo.");
     }
 }

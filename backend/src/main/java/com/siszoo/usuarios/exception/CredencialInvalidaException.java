@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class CredencialInvalidaException extends ErroNegocioException {
 
     public CredencialInvalidaException() {
-        super(HttpStatus.UNAUTHORIZED, "Credenciais invalidas");
+        super(HttpStatus.UNAUTHORIZED, "E-mail ou senha incorretos.");
     }
 }

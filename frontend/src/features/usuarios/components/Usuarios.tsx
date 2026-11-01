@@ -1,13 +1,23 @@
 import { useMemo, useState } from 'react'
+import { ModalConfirmacao } from '@/components/ModalConfirmacao'
+import { useAuth } from '@/features/auth/hooks/useAuth'
+import { ErroComRetry } from '@/components/layout/ErroComRetry'
 import { Icon } from '@/components/layout/Icon'
+import { avisar } from '@/lib/avisos'
 import { formatarDataBR, formatarDataHoraBR } from '@/lib/datas'
+import { mensagemDeRegraDaApi } from '@/lib/erroApi'
+import { useFiltrosLista } from '@/lib/useFiltrosLista'
 import { ROLES, roleKeyFromCargos } from '@/lib/nav'
 import { useAlterarStatusUsuarioMutation, useUsuariosQuery } from '../hooks/useUsuarios'
 import { PERFIS_USUARIO, type PerfilUsuario, type UsuarioListItem } from '../types/usuarios.types'
 import { CriarUsuarioModal } from './CriarUsuarioModal'
+import { EditarUsuarioModal } from './EditarUsuarioModal'
+import { RedefinirSenhaModal } from './RedefinirSenhaModal'
 import './Usuarios.css'
 
 type FiltroStatus = 'Todos' | 'Ativos' | 'Inativos'
+
+const FILTROS_PADRAO = { busca: '', perfil: 'Todos', status: 'Todos' }
 
 // ultimoAcesso e criadoEm são LocalDateTime sem fuso, já no horário de Itu:
 // `new Date(iso)` os leria no fuso do navegador (ver lib/datas.ts).
@@ -21,7 +31,7 @@ function iniciais(nome: string, sobrenome: string): string {
 
 function corAvatar(seed: string): string {
   const hue = Math.abs([...seed].reduce((acumulado, char) => acumulado + char.charCodeAt(0), 0)) % 360
-  return `hsl(${hue}, 35%, 50%)`
+  return `hsl(${hue}, 35%, 34%)`
 }
 
 function contarPorPerfil(usuarios: UsuarioListItem[] | undefined): Record<PerfilUsuario, number> {
@@ -39,12 +49,17 @@ function contarPorPerfil(usuarios: UsuarioListItem[] | undefined): Record<Perfil
 }
 
 export function Usuarios() {
-  const { data: usuarios, isLoading, isError } = useUsuariosQuery()
+  const { user } = useAuth()
+  const { data: usuarios, isLoading, isError, refetch } = useUsuariosQuery()
   const alterarStatus = useAlterarStatusUsuarioMutation()
   const [modalAberto, setModalAberto] = useState(false)
-  const [busca, setBusca] = useState('')
-  const [perfilFiltro, setPerfilFiltro] = useState<PerfilUsuario | 'Todos'>('Todos')
-  const [statusFiltro, setStatusFiltro] = useState<FiltroStatus>('Todos')
+  const [usuarioEmConfirmacao, setUsuarioEmConfirmacao] = useState<UsuarioListItem | null>(null)
+  const [usuarioEmEdicao, setUsuarioEmEdicao] = useState<UsuarioListItem | null>(null)
+  const [usuarioRedefinindoSenha, setUsuarioRedefinindoSenha] = useState<UsuarioListItem | null>(null)
+  const { filtros, definirFiltros, limparFiltros, filtrosAtivos } = useFiltrosLista('usuarios', FILTROS_PADRAO)
+  const { busca } = filtros
+  const perfilFiltro = filtros.perfil as PerfilUsuario | 'Todos'
+  const statusFiltro = filtros.status as FiltroStatus
 
   const usuariosFiltrados = useMemo(() => {
     if (!usuarios) return []
@@ -68,13 +83,16 @@ export function Usuarios() {
 
   const contagemPorPerfil = contarPorPerfil(usuarios)
 
-  function handleAlterarStatus(usuario: UsuarioListItem) {
-    const acao = usuario.ativo ? 'desativar' : 'reativar'
-    const confirmado = window.confirm(
-      `Tem certeza que deseja ${acao} o usuário ${usuario.nome} ${usuario.sobrenome}?`,
-    )
-    if (!confirmado) return
-    alterarStatus.mutate({ id: usuario.id, ativo: !usuario.ativo })
+  async function confirmarAlteracaoDeStatus(usuario: UsuarioListItem) {
+    const nome = `${usuario.nome} ${usuario.sobrenome}`
+    try {
+      await alterarStatus.mutateAsync({ id: usuario.id, ativo: !usuario.ativo })
+      avisar(usuario.ativo ? `${nome} foi desativado(a).` : `${nome} foi reativado(a).`)
+    } catch (erro) {
+      avisar(mensagemDeRegraDaApi(erro) ?? `Não foi possível alterar o acesso de ${nome}. Nada foi mudado.`, 'erro')
+    } finally {
+      setUsuarioEmConfirmacao(null)
+    }
   }
 
   return (
@@ -84,7 +102,7 @@ export function Usuarios() {
           <h1>
             Usuários do Sistema <span className="counter">{usuarios?.length ?? 0} usuários</span>
           </h1>
-          <p className="subtitle">Gerencie acessos e perfis · Apenas Administradores podem criar e desativar usuários</p>
+          <p className="subtitle">Gerencie acessos e perfis · Apenas Administradores podem criar, editar e desativar usuários</p>
         </div>
         <div className="actions">
           <button type="button" className="btn btn-primary" onClick={() => setModalAberto(true)}>
@@ -118,14 +136,16 @@ export function Usuarios() {
           <input
             type="text"
             placeholder="Buscar por nome ou e-mail..."
+            aria-label="Buscar usuários"
             value={busca}
-            onChange={(event) => setBusca(event.target.value)}
+            onChange={(event) => definirFiltros({ busca: event.target.value })}
           />
         </div>
         <select
           className="filter-select"
+          aria-label="Filtrar por perfil"
           value={perfilFiltro}
-          onChange={(event) => setPerfilFiltro(event.target.value as PerfilUsuario | 'Todos')}
+          onChange={(event) => definirFiltros({ perfil: event.target.value })}
         >
           <option value="Todos">Perfil: Todos</option>
           {PERFIS_USUARIO.map((perfil) => (
@@ -136,23 +156,24 @@ export function Usuarios() {
         </select>
         <select
           className="filter-select"
+          aria-label="Filtrar por status"
           value={statusFiltro}
-          onChange={(event) => setStatusFiltro(event.target.value as FiltroStatus)}
+          onChange={(event) => definirFiltros({ status: event.target.value })}
         >
           <option value="Todos">Status: Todos</option>
           <option value="Ativos">Ativos</option>
           <option value="Inativos">Inativos</option>
         </select>
+        {filtrosAtivos && (
+          <button type="button" className="btn btn-ghost btn-sm" onClick={limparFiltros}>
+            Limpar filtros
+          </button>
+        )}
       </div>
 
       {isLoading && <p className="subtitle">Carregando usuários…</p>}
 
-      {isError && (
-        <div className="alert danger" role="alert">
-          <span className="bullet" />
-          <div className="alert-content">Não foi possível carregar os usuários. Tente novamente.</div>
-        </div>
-      )}
+      {isError && <ErroComRetry mensagem="Não foi possível carregar os usuários." onTentarNovamente={() => void refetch()} />}
 
       {!isLoading && !isError && usuariosFiltrados.length === 0 && (
         <div className="empty">
@@ -175,13 +196,16 @@ export function Usuarios() {
                   <th>Status</th>
                   <th>Último acesso</th>
                   <th>Criado em</th>
-                  <th style={{ width: 90 }}>Ações</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {usuariosFiltrados.map((usuario) => {
                   const roleKey = roleKeyFromCargos(usuario.cargos)
                   const role = ROLES[roleKey]
+                  const nomeCompleto = `${usuario.nome} ${usuario.sobrenome}`
+                  // Na própria conta, senha e acesso têm outro caminho (o backend recusa).
+                  const ehOProprioUsuario = usuario.id === user?.id
                   return (
                     <tr key={usuario.id}>
                       <td>
@@ -229,20 +253,31 @@ export function Usuarios() {
                         <div className="flex gap-1">
                           <button
                             type="button"
-                            className="btn btn-ghost btn-sm btn-icon-only"
-                            disabled
-                            title="Edição de usuário — disponível em tarefa futura"
-                            aria-label="Edição de usuário — disponível em tarefa futura"
-                          >
-                            <Icon name="edit" size={14} />
-                          </button>
-                          <button
-                            type="button"
                             className="btn btn-ghost btn-sm"
-                            onClick={() => handleAlterarStatus(usuario)}
+                            aria-label={`Editar ${nomeCompleto}`}
+                            onClick={() => setUsuarioEmEdicao(usuario)}
                           >
-                            {usuario.ativo ? 'Desativar' : 'Reativar'}
+                            Editar
                           </button>
+                          {!ehOProprioUsuario && (
+                            <>
+                              <button
+                                type="button"
+                                className="btn btn-ghost btn-sm"
+                                aria-label={`Redefinir senha de ${nomeCompleto}`}
+                                onClick={() => setUsuarioRedefinindoSenha(usuario)}
+                              >
+                                Redefinir senha
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-ghost btn-sm"
+                                onClick={() => setUsuarioEmConfirmacao(usuario)}
+                              >
+                                {usuario.ativo ? 'Desativar' : 'Reativar'}
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -260,6 +295,35 @@ export function Usuarios() {
       )}
 
       {modalAberto && <CriarUsuarioModal onFechar={() => setModalAberto(false)} />}
+
+      {usuarioEmEdicao && (
+        <EditarUsuarioModal
+          usuario={usuarioEmEdicao}
+          ehOProprioUsuario={usuarioEmEdicao.id === user?.id}
+          onFechar={() => setUsuarioEmEdicao(null)}
+        />
+      )}
+
+      {usuarioRedefinindoSenha && (
+        <RedefinirSenhaModal usuario={usuarioRedefinindoSenha} onFechar={() => setUsuarioRedefinindoSenha(null)} />
+      )}
+
+      {usuarioEmConfirmacao && (
+        <ModalConfirmacao
+          titulo={usuarioEmConfirmacao.ativo ? 'Desativar usuário' : 'Reativar usuário'}
+          rotuloConfirmar={usuarioEmConfirmacao.ativo ? 'Desativar' : 'Reativar'}
+          perigo={usuarioEmConfirmacao.ativo}
+          processando={alterarStatus.isPending}
+          onConfirmar={() => void confirmarAlteracaoDeStatus(usuarioEmConfirmacao)}
+          onFechar={() => setUsuarioEmConfirmacao(null)}
+        >
+          <p>
+            {usuarioEmConfirmacao.ativo
+              ? `${usuarioEmConfirmacao.nome} ${usuarioEmConfirmacao.sobrenome} perderá o acesso ao SISZOO. O histórico continua preservado.`
+              : `${usuarioEmConfirmacao.nome} ${usuarioEmConfirmacao.sobrenome} voltará a acessar o SISZOO.`}
+          </p>
+        </ModalConfirmacao>
+      )}
     </>
   )
 }

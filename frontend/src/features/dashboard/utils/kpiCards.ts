@@ -14,14 +14,23 @@ export interface KpiCardData {
   isMock?: boolean
 }
 
+function rodapeDeEspecies({ animais }: DashboardKpis): string {
+  const outros = animais.total - animais.caninos - animais.felinos
+  const partes = [`${animais.caninos} cães`, `${animais.felinos} gatos`]
+  if (outros > 0) partes.push(`${outros} ${outros === 1 ? 'outro' : 'outros'}`)
+  return partes.join(' · ')
+}
+
 export function mapearKpisParaCards(kpis: DashboardKpis, usaMock = false): KpiCardData[] {
   const cards: KpiCardData[] = [
     {
       tone: 'kpi-info',
       icon: 'paw',
-      label: 'Total de Animais',
+      // O indicador conta quem está sob custódia, e não todo animal cadastrado:
+      // adotados, transferidos e falecidos ficam na lista de Animais.
+      label: 'Animais sob custódia',
       value: String(kpis.animais.total),
-      foot: `${kpis.animais.caninos} cães · ${kpis.animais.felinos} gatos`,
+      foot: rodapeDeEspecies(kpis),
     },
     {
       tone: 'kpi-success',

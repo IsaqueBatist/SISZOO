@@ -9,6 +9,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class NotificacaoJaConfirmadaException extends ErroNegocioException {
 
     public NotificacaoJaConfirmadaException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Municipe ja foi notificado: o SMTP ja aceitou o envio");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "O munícipe já foi notificado. Não é preciso reenviar.");
     }
 }

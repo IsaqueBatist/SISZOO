@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it, vi } from 'vitest'
 import { AppRoutes } from '@/routes/AppRoutes'
-import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
+import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
 
 const ADMIN: Usuario = {
@@ -19,7 +19,7 @@ const ADMIN: Usuario = {
 const NOVA_SENHA_INICIAL = 'senha-provisoria-123'
 
 function renderApp() {
-  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-admin', usuario: ADMIN }))
+  definirSessaoEmMemoria({ token: 'token-admin', usuario: ADMIN })
 
   const queryClient = new QueryClient()
   return render(
@@ -46,12 +46,13 @@ describe('fluxo completo: admin cria usuário → 1º login força troca de senh
     await user.type(screen.getByLabelText(/e-mail institucional/i), 'fernanda.rocha@itu.sp.gov.br')
     await user.selectOptions(screen.getByLabelText(/^perfil/i), 'Agente Sanitário')
 
-    const senhaInicialInput = screen.getByLabelText(/senha inicial/i)
+    const senhaInicialInput = screen.getByLabelText(/senha temporária/i)
     await user.clear(senhaInicialInput)
     await user.type(senhaInicialInput, NOVA_SENHA_INICIAL)
 
     await user.click(screen.getByRole('button', { name: /^criar usuário$/i }))
-    await screen.findByText('Fernanda Rocha')
+    await user.click(await screen.findByRole('button', { name: 'Concluir' }))
+    await screen.findByRole('cell', { name: /Fernanda Rocha/ })
 
     await user.click(screen.getByRole('button', { name: 'Sair' }))
     await screen.findByLabelText(/e-mail institucional/i)

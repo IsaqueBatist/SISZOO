@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
+import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
 import { API_BASE_URL } from '@/lib/env'
 import { server } from '@/mocks/server'
@@ -20,7 +20,7 @@ function renderForm() {
     cargos: ['Administrador'],
     senhaAlteradaEm: '2026-01-10T12:00:00Z',
   }
-  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario }))
+  definirSessaoEmMemoria({ token: 'token-existente', usuario })
 
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   return render(
@@ -40,6 +40,7 @@ function renderForm() {
 const MENSAGEM_NOME_OBRIGATORIO = 'Informe o nome do denunciante ou marque a ocorrência como sigilosa ou anônima.'
 
 async function preencherCamposObrigatorios(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('radio', { name: 'Suspeita de Zoonose' }))
   await user.type(screen.getByLabelText(/Endereço da ocorrência/i), 'Rua Teste, 10')
   await user.type(screen.getByLabelText(/^Bairro/i), 'Bairro Teste')
   await user.type(screen.getByLabelText(/Descrição da ocorrência/i), 'Descrição de teste para a ocorrência.')
@@ -196,7 +197,7 @@ describe('OcorrenciaForm', () => {
     const user = userEvent.setup()
     server.use(
       http.post(`${API_BASE_URL}/ocorrencias`, () =>
-        HttpResponse.json({ mensagem: 'Data de abertura nao pode ser futura' }, { status: 422 }),
+        HttpResponse.json({ mensagem: 'A data de abertura não pode ser futura.' }, { status: 422 }),
       ),
     )
     renderForm()
@@ -205,7 +206,7 @@ describe('OcorrenciaForm', () => {
     await user.type(screen.getByLabelText(/Nome completo/i), 'Fulano de Tal')
     await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
 
-    expect(await screen.findByText('Data de abertura nao pode ser futura')).toBeInTheDocument()
+    expect(await screen.findByText('A data de abertura não pode ser futura.')).toBeInTheDocument()
   })
 
   describe('anexos em duas fases (D15)', () => {
@@ -225,7 +226,7 @@ describe('OcorrenciaForm', () => {
           contagem.uploads += 1
           if ((await request.text()).includes('name="arquivo"')) contagem.camposArquivo += 1
           if (contagem.uploads === 2) {
-            return HttpResponse.json({ mensagem: 'Arquivo excede o tamanho maximo de 5 MB' }, { status: statusFalha })
+            return HttpResponse.json({ mensagem: 'O arquivo passa do limite de 5 MB. Escolha um arquivo menor.' }, { status: statusFalha })
           }
           return HttpResponse.json(ANEXO_CRIADO_FIXTURE, { status: 201 })
         }),
@@ -400,5 +401,32 @@ describe('sugestão de bairro (datalist)', () => {
       const opcoes = Array.from(datalist?.querySelectorAll('option') ?? [])
       expect(opcoes.map((opcao) => opcao.value)).toEqual(['Centro', 'Vila Nova'])
     })
+  })
+})
+
+describe('OcorrenciaForm — classificação e datas', () => {
+  it('não vem com tipo marcado: quem registra escolhe', async () => {
+    const user = userEvent.setup()
+    renderForm()
+
+    await screen.findByRole('radiogroup', { name: 'Tipo de ocorrência' })
+    for (const radio of screen.getAllByRole('radio')) expect(radio).toHaveAttribute('aria-checked', 'false')
+
+    await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
+    expect(await screen.findByText('Selecione o tipo da ocorrência.')).toBeInTheDocument()
+  })
+
+  it('recusa data de abertura futura antes de enviar, com o erro ligado ao campo', async () => {
+    const user = userEvent.setup()
+    renderForm()
+
+    const data = await screen.findByLabelText(/Data de abertura/)
+    await user.clear(data)
+    await user.type(data, '2099-01-01')
+    await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
+
+    expect(await screen.findByText('A data de abertura não pode ser futura.')).toBeInTheDocument()
+    expect(data).toHaveAttribute('aria-invalid', 'true')
+    expect(data).toHaveAccessibleDescription('A data de abertura não pode ser futura.')
   })
 })

@@ -154,7 +154,7 @@ export function CardEncerramento({ ocorrencia, podeEncerrar }: CardEncerramentoP
             <label htmlFor="enc-providencia">Providência tomada</label>
             <select
               id="enc-providencia"
-              className={`select${errors.providenciaTomada ? ' error' : ''}`}
+              className={`select${errors.providenciaTomada ? ' error' : ''}`} aria-invalid={errors.providenciaTomada ? true : undefined} aria-describedby={errors.providenciaTomada ? 'enc-providencia-erro' : undefined}
               disabled={providencias.length === 0}
               {...register('providenciaTomada')}
             >
@@ -167,13 +167,13 @@ export function CardEncerramento({ ocorrencia, podeEncerrar }: CardEncerramentoP
                 </option>
               ))}
             </select>
-            {errors.providenciaTomada && <span className="err">{errors.providenciaTomada.message}</span>}
+            {errors.providenciaTomada && <span className="err" id="enc-providencia-erro">{errors.providenciaTomada.message}</span>}
           </div>
           <div className="field" style={{ marginBottom: 12 }}>
             <label htmlFor="enc-descricao">Descrição do encerramento</label>
             <textarea
               id="enc-descricao"
-              className={`textarea${errors.descricaoEncerramento ? ' error' : ''}`}
+              className={`textarea${errors.descricaoEncerramento ? ' error' : ''}`} aria-invalid={errors.descricaoEncerramento ? true : undefined} aria-describedby={errors.descricaoEncerramento ? 'enc-descricao-erro' : undefined}
               placeholder={
                 providenciaSelecionada === 'outro'
                   ? 'Descreva a providência efetivamente realizada.'
@@ -181,7 +181,7 @@ export function CardEncerramento({ ocorrencia, podeEncerrar }: CardEncerramentoP
               }
               {...register('descricaoEncerramento')}
             />
-            {errors.descricaoEncerramento && <span className="err">{errors.descricaoEncerramento.message}</span>}
+            {errors.descricaoEncerramento && <span className="err" id="enc-descricao-erro">{errors.descricaoEncerramento.message}</span>}
           </div>
           <button type="submit" className="btn btn-danger w-full" disabled={mutation.isPending || providencias.length === 0}>
             {mutation.isPending ? 'Encerrando…' : 'Encerrar ocorrência'}

@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class ProvidenciaInvalidaException extends ErroNegocioException {
 
     public ProvidenciaInvalidaException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Providencia informada nao existe");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "A providência informada não existe. Selecione uma da lista.");
     }
 }

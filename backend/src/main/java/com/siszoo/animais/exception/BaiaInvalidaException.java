@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class BaiaInvalidaException extends ErroNegocioException {
 
     public BaiaInvalidaException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Baia informada nao existe");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "A baia informada não existe. Atualize a página e selecione outra.");
     }
 }
