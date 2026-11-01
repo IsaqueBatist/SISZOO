@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.Clock;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -26,7 +25,6 @@ import com.siszoo.animais.clinico.repository.VacinacaoRepository;
 import com.siszoo.animais.entity.Animal;
 import com.siszoo.animais.entity.Baia;
 import com.siszoo.animais.repository.AnimalRepository;
-import com.siszoo.comum.repository.ContagemCatalogoProjection;
 import com.siszoo.comum.util.BlocoCsv;
 import com.siszoo.relatorios.dto.PeriodoRelatorio;
 import com.siszoo.relatorios.dto.RelatorioVacinacaoResponse;

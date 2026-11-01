@@ -85,7 +85,7 @@ class EmailServiceTest {
 
     @Test
     void destinatarioEmBrancoViraFutureFalhoSemTentarEnviar() {
-        CompletableFuture<Void> envio = service.enviar("  ", ASSUNTO, "<p>corpo</p>");
+        CompletableFuture<Void> envio = service.enviar("  ", ASSUNTO, "<p>corpo</p>", null);
 
         ExecutionException falha = assertThrows(ExecutionException.class, envio::get);
         assertThat(falha.getCause(), instanceOf(IllegalArgumentException.class));
@@ -97,7 +97,7 @@ class EmailServiceTest {
 
     @Test
     void assuntoEmBrancoViraFutureFalhoSemTentarEnviar() {
-        CompletableFuture<Void> envio = service.enviar(DESTINATARIO, "", "<p>corpo</p>");
+        CompletableFuture<Void> envio = service.enviar(DESTINATARIO, "", "<p>corpo</p>", null);
 
         ExecutionException falha = assertThrows(ExecutionException.class, envio::get);
         assertThat(falha.getCause(), instanceOf(IllegalArgumentException.class));
@@ -113,7 +113,7 @@ class EmailServiceTest {
         MailSendException erro = new MailSendException("550 5.1.1 <" + DESTINATARIO + ">: usuario desconhecido");
         doThrow(erro).when(mailSender).send(any(MimeMessage.class));
 
-        CompletableFuture<Void> envio = service.enviar(DESTINATARIO, ASSUNTO, "<p>corpo</p>");
+        CompletableFuture<Void> envio = service.enviar(DESTINATARIO, ASSUNTO, "<p>corpo</p>", null);
 
         ExecutionException falha = assertThrows(ExecutionException.class, envio::get);
         assertThat(falha.getCause(), is(erro));
@@ -139,7 +139,7 @@ class EmailServiceTest {
         fabrica.addAdvice(new AnnotationAsyncExecutionInterceptor(executor));
         EmailService proxy = (EmailService) fabrica.getProxy();
 
-        assertThrows(TaskRejectedException.class, () -> proxy.enviar(DESTINATARIO, ASSUNTO, "<p>corpo</p>"));
+        assertThrows(TaskRejectedException.class, () -> proxy.enviar(DESTINATARIO, ASSUNTO, "<p>corpo</p>", null));
         verify(mailSender, never()).send(any(MimeMessage.class));
         verify(mailSender, never()).createMimeMessage();
     }

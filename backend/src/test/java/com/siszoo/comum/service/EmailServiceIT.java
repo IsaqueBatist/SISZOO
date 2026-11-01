@@ -115,7 +115,7 @@ class EmailServiceIT extends AbstractIntegrationTest {
     @Test
     @DisplayName("[T35] assinatura da issue (so HTML): parte unica text/html em UTF-8")
     void enviaSoHtml() throws Exception {
-        emailService.enviar(DESTINATARIO, "Somente HTML", "<p>Conteúdo em HTML</p>")
+        emailService.enviar(DESTINATARIO, "Somente HTML", "<p>Conteúdo em HTML</p>", null)
                 .get(ESPERA_MS, MILLISECONDS);
 
         MimeMessage recebida = unicaRecebida();
@@ -176,7 +176,7 @@ class EmailServiceIT extends AbstractIntegrationTest {
             return chamada.callRealMethod();
         }).when(mailSender).send(any(MimeMessage.class));
 
-        CompletableFuture<Void> envio = emailService.enviar(DESTINATARIO, "Assincrono", "<p>corpo</p>");
+        CompletableFuture<Void> envio = emailService.enviar(DESTINATARIO, "Assincrono", "<p>corpo</p>", null);
 
         assertThat(entrou.await(5, SECONDS), is(true));
         assertThat(envio.isDone(), is(false));

@@ -97,7 +97,7 @@ class EmailServiceSmtpsIT extends AbstractIntegrationTest {
 
         EmailService servico = new EmailService(semConfianca, "nao-responda@siszoo.test");
         ExecutionException falha = assertThrows(ExecutionException.class,
-                () -> servico.enviar(DESTINATARIO, "Nao deve sair", "<p>x</p>").get(10, SECONDS));
+                () -> servico.enviar(DESTINATARIO, "Nao deve sair", "<p>x</p>", null).get(10, SECONDS));
 
         assertThat(falha.getCause(), instanceOf(MailSendException.class));
         assertThat(temCausa(falha.getCause(), SSLException.class), is(true));

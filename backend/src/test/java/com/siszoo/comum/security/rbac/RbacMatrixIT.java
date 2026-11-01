@@ -288,7 +288,7 @@ class RbacMatrixIT extends AbstractIntegrationTest {
     private CriarAnimalRequest animalValidoParaTeste() {
         return new CriarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null, null,
-                false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null);
+                false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null, null, null, null, null);
     }
 
     private String tokenPara(Perfil perfil) {

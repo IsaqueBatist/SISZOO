@@ -7,8 +7,6 @@ package com.siszoo.processos.repository;
 // nao "resultados LANCADOS no ano".
 public interface ResultadosLaboratoriaisProjection {
 
-    String getCodigo();
-
     String getNome();
 
     long getInvestigados();

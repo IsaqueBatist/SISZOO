@@ -380,7 +380,6 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
     // O listener e @Async: a ausencia de chamada e conferida depois de uma espera.
     private void semEnvio() {
         verify(emailService, after(1000).never()).enviar(any(), any(), any(), any());
-        verify(emailService, never()).enviar(any(), any(), any());
     }
 
     private LocalDateTime dataNotificacao(String processoId) {

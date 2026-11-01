@@ -53,7 +53,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Rex", "canino", "macho", "SRD", "Preto", "curta", "medio", null, "2 anos", null,
                 fixture.microchipUnico(), false, null, "disponivel_adocao", "resgate", fixture.agora(),
-                baia.getId(), null, null);
+                baia.getId(), null, null, null, null, null, null);
 
         given()
                 .contentType(ContentType.JSON)
@@ -109,7 +109,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .body(new AtualizarAnimalRequest(
                         "Rex", "canino", "macho", null, null, null, null, null, null, null,
                         fixture.microchipUnico(), false, null, "disponivel_adocao", "resgate", fixture.agora(),
-                        null, null, null))
+                        null, null, null, null, null, null, null))
                 .when()
                 .put("/api/animais/" + id)
                 .then()
@@ -126,7 +126,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     void deveRetornar422ComCampoQuandoDataDeEntradaFutura() {
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                null, false, null, "disponivel_adocao", "resgate", fixture.agora().plusDays(1), null, null, null);
+                null, false, null, "disponivel_adocao", "resgate", fixture.agora().plusDays(1), null, null, null, null, null, null, null);
 
         postarAnimal(request)
                 .then()
@@ -171,7 +171,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     void deveRetornar422ComCampoQuandoDataDeCastracaoSemCastracao() {
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                null, false, fixture.hoje(), "disponivel_adocao", "resgate", fixture.agora(), null, null, null);
+                null, false, fixture.hoje(), "disponivel_adocao", "resgate", fixture.agora(), null, null, null, null, null, null, null);
 
         postarAnimal(request)
                 .then()
@@ -240,7 +240,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     void deveRetornar422QuandoEspecieInvalida() {
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Rex", "especie-inexistente", "macho", null, null, null, null, null, null, null,
-                null, false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null);
+                null, false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null, null, null, null, null);
 
         given()
                 .contentType(ContentType.JSON)
@@ -256,7 +256,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     void deveRetornar422QuandoStatusInvalido() {
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                null, false, null, "status-inexistente", "resgate", fixture.agora(), null, null, null);
+                null, false, null, "status-inexistente", "resgate", fixture.agora(), null, null, null, null, null, null, null);
 
         given()
                 .contentType(ContentType.JSON)
@@ -272,7 +272,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     void deveRetornar422QuandoMotivoEntradaInvalido() {
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                null, false, null, "disponivel_adocao", "motivo-inexistente", fixture.agora(), null, null, null);
+                null, false, null, "disponivel_adocao", "motivo-inexistente", fixture.agora(), null, null, null, null, null, null, null);
 
         given()
                 .contentType(ContentType.JSON)
@@ -288,7 +288,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     void deveRetornar422QuandoBaiaInvalida() {
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                null, false, null, "disponivel_adocao", "resgate", fixture.agora(), UUID.randomUUID(), null, null);
+                null, false, null, "disponivel_adocao", "resgate", fixture.agora(), UUID.randomUUID(), null, null, null, null, null, null);
 
         given()
                 .contentType(ContentType.JSON)
@@ -304,10 +304,10 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     void deveListarComFiltroStatusEEspecie() {
         criarAnimalViaApi(new CriarAnimalRequest(
                 "Mimi", "felino", "femea", null, null, null, null, null, null, null,
-                fixture.microchipUnico(), false, null, "em_quarentena", "abandono", fixture.agora(), null, null, null));
+                fixture.microchipUnico(), false, null, "em_quarentena", "abandono", fixture.agora(), null, null, null, null, null, null, null));
         criarAnimalViaApi(new CriarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                fixture.microchipUnico(), false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null));
+                fixture.microchipUnico(), false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null, null, null, null, null));
 
         given()
                 .header("Authorization", "Bearer " + tokenAdmin)
@@ -388,7 +388,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                     .header("Authorization", "Bearer " + tokenAdmin)
                     .body(new AtualizarAnimalRequest(
                             "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                            microchip, false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null))
+                            microchip, false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null, null, null, null, null))
                     .when()
                     .put("/api/animais/" + id)
                     .then()
@@ -417,7 +417,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
 
         AtualizarAnimalRequest atualizacao = new AtualizarAnimalRequest(
                 "Rex Atualizado", "canino", "macho", null, null, null, null, null, null, null,
-                null, false, null, "em_tratamento", "resgate", fixture.agora(), null, null, null);
+                null, false, null, "em_tratamento", "resgate", fixture.agora(), null, null, null, null, null, null, null);
 
         given()
                 .contentType(ContentType.JSON)
@@ -446,7 +446,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
 
         AtualizarAnimalRequest atualizacao = new AtualizarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                fixture.microchipUnico(), false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null);
+                fixture.microchipUnico(), false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null, null, null, null, null);
 
         given()
                 .contentType(ContentType.JSON)
@@ -473,7 +473,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
 
         AtualizarAnimalRequest atualizacao = new AtualizarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                novoMicrochip, false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null);
+                novoMicrochip, false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null, null, null, null, null);
 
         given()
                 .contentType(ContentType.JSON)
@@ -574,7 +574,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     private CriarAnimalRequest animalMinimo(String microchip) {
         return new CriarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                microchip, false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null);
+                microchip, false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null, null, null, null, null);
     }
 
     private io.restassured.response.Response criarAnimalViaApi(CriarAnimalRequest request) {
@@ -611,7 +611,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     private CriarAnimalRequest animalNaBaia(UUID baiaId) {
         return new CriarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                null, false, null, "disponivel_adocao", "resgate", fixture.agora(), baiaId, null, null);
+                null, false, null, "disponivel_adocao", "resgate", fixture.agora(), baiaId, null, null, null, null, null, null);
     }
 
     private Baia criarBaia(String nome) {

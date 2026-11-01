@@ -216,7 +216,7 @@ class DashboardControllerIT extends AbstractIntegrationTest {
                 .header("Authorization", "Bearer " + tokenAdmin)
                 .body(new CriarAnimalRequest(
                         "Animal Adocao Teste", "canino", "macho", null, null, null, null, null, null, null,
-                        microchip, false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null))
+                        microchip, false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null, null, null, null, null))
                 .when().post("/api/animais")
                 .then().statusCode(200)
                 .extract().path("id");
@@ -227,7 +227,7 @@ class DashboardControllerIT extends AbstractIntegrationTest {
         given().contentType(ContentType.JSON).header("Authorization", "Bearer " + tokenAdmin)
                 .body(new AtualizarAnimalRequest(
                         "Animal Adocao Teste", "canino", "macho", null, null, null, null, null, null, null,
-                        microchip, false, null, "adotado", "resgate", fixture.agora(), null, null, null))
+                        microchip, false, null, "adotado", "resgate", fixture.agora(), null, null, null, null, null, null, null))
                 .when().put("/api/animais/" + animalId)
                 .then().statusCode(200);
 
@@ -479,7 +479,7 @@ class DashboardControllerIT extends AbstractIntegrationTest {
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Animal Baia Teste", "canino", "macho", null, null, null, null, null, null, null,
                 fixture.microchipUnico(), false, null, "disponivel_adocao", "resgate", fixture.agora(),
-                UUID.fromString(baiaId), null, null);
+                UUID.fromString(baiaId), null, null, null, null, null, null);
         given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + tokenAdmin)

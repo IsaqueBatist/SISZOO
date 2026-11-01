@@ -306,11 +306,11 @@ class AnimalServiceTest {
     private static CriarAnimalRequest criar(LocalDateTime entrada, LocalDate nascimento, boolean esterilizado,
             LocalDate castracao, UUID baiaId, String status) {
         return new CriarAnimalRequest("Rex", "canino", "macho", null, null, null, null, null, null, nascimento,
-                null, esterilizado, castracao, status, "resgate", entrada, baiaId, null, null);
+                null, esterilizado, castracao, status, "resgate", entrada, baiaId, null, null, null, null, null, null);
     }
 
     private static AtualizarAnimalRequest atualizar(UUID baiaId, String status) {
         return new AtualizarAnimalRequest("Rex", "canino", "macho", null, null, null, null, null, null, null,
-                null, false, null, status, "resgate", ENTRADA, baiaId, null, null);
+                null, false, null, status, "resgate", ENTRADA, baiaId, null, null, null, null, null, null);
     }
 }

@@ -107,11 +107,6 @@ public class AuditoriaEventoService {
         return zona < 0 ? ip : ip.substring(0, zona);
     }
 
-    @Transactional(readOnly = true)
-    public PaginaResponse<AuditoriaEventoResponse> listar(int pagina, int tamanho) {
-        return listar(FiltroAuditoria.VAZIO, pagina, tamanho);
-    }
-
     // F2-027 (Fase 3 do TG): filtros de servidor para a tela de Logs. Sem
     // parametros, comportamento anterior (so paginacao). `modulo` e derivado da
     // entidade (auditoria_evento nao guarda modulo): ver MODULO_POR_ENTIDADE.
@@ -151,7 +146,6 @@ public class AuditoriaEventoService {
 
     // Filtro da listagem (todos opcionais). `de`/`ate` sao dias inclusivos no fuso do sistema.
     public record FiltroAuditoria(AcaoAuditoria acao, String usuarioEmail, Modulo modulo, LocalDate de, LocalDate ate) {
-        static final FiltroAuditoria VAZIO = new FiltroAuditoria(null, null, null, null, null);
     }
 
     // Nomes de entidade usados nas chamadas de registrar(...) em cada modulo

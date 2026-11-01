@@ -236,7 +236,7 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         given().header("Authorization", "Bearer " + tokenAdmin).contentType(ContentType.JSON)
                 .body(new AtualizarAnimalRequest("Rex", "canino", "macho", "Labrador", "Preto", "longa", null,
                         new BigDecimal("9.90"), "5 anos", null, microchip, false, null, "em_tratamento", "resgate",
-                        fixture.agora(), null, null, "Ficha alterada"))
+                        fixture.agora(), null, null, "Ficha alterada", null, null, null, null))
                 .when().put("/api/animais/" + animalId)
                 .then().statusCode(200);
 
@@ -1315,7 +1315,7 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         return given().header("Authorization", "Bearer " + tokenAdmin).contentType(ContentType.JSON)
                 .body(new CriarAnimalRequest(nome, especie, sexo, raca, coloracao, pelagem, null,
                         new BigDecimal(peso), idade, null, microchip, false, null, "em_quarentena", "resgate",
-                        fixture.agora(), null, null, null))
+                        fixture.agora(), null, null, null, null, null, null, null))
                 .when().post("/api/animais")
                 .then().statusCode(200).extract().path("id");
     }

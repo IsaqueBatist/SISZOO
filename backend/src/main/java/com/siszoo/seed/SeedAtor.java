@@ -42,11 +42,4 @@ record SeedAtor(UUID id, String cargo, Set<GrantedAuthority> autoridades) {
             SecurityContextHolder.clearContext();
         }
     }
-
-    void executarSemRetorno(String autoridadeExigida, Runnable operacao) {
-        executar(autoridadeExigida, () -> {
-            operacao.run();
-            return null;
-        });
-    }
 }

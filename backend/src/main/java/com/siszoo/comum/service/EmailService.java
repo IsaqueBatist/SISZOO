@@ -29,8 +29,8 @@ import jakarta.mail.internet.MimeMultipart;
  * configurado em {@code spring.mail.*} (docs/email.md). O corpo vem pronto
  * de quem chama, normalmente de {@link EmailTemplateService}.
  *
- * <p>Os dois {@code enviar} sao {@link Async}: rodam no executor do
- * {@code @EnableAsync} e devolvem na hora um future. A validacao dos
+ * <p>{@code enviar} e {@link Async}: roda no executor do
+ * {@code @EnableAsync} e devolve na hora um future. A validacao dos
  * argumentos e o envio acontecem na thread assincrona: argumento invalido ou
  * falha de SMTP aparecem so como future completado com erro, ja logado aqui.
  * Quem nao precisa do resultado pode ignorar o future. <b>Excecao:</b> se o
@@ -65,12 +65,6 @@ public class EmailService {
         }
         this.mailSender = mailSender;
         this.remetente = remetente.trim();
-    }
-
-    /** Envia so HTML (assinatura da issue #36). Ver {@link #enviar(String, String, String, String)}. */
-    @Async
-    public CompletableFuture<Void> enviar(String destinatario, String assunto, String corpoHtml) {
-        return enviar(destinatario, assunto, corpoHtml, null);
     }
 
     /**

@@ -96,14 +96,4 @@ public record CriarAnimalRequest(
                 esterilizado, dataEsterilizacao, status, motivoEntrada, dataEntrada, baiaId, fotoUrl, observacoes,
                 numeroMedalha, dataImplantacaoChip, procedencia, laudoEutanasia, null, null);
     }
-
-    // Compatibilidade com chamadas anteriores à F2-004/F2-008 (testes e fixtures).
-    public CriarAnimalRequest(String nome, String especie, String sexo, String raca, String coloracao, String pelagem,
-            String porte, BigDecimal pesoKg, String idadeAprox, LocalDate dataNascimentoAprox, String microchip,
-            Boolean esterilizado, LocalDate dataEsterilizacao, String status, String motivoEntrada,
-            LocalDateTime dataEntrada, UUID baiaId, String fotoUrl, String observacoes) {
-        this(nome, especie, sexo, raca, coloracao, pelagem, porte, pesoKg, idadeAprox, dataNascimentoAprox, microchip,
-                esterilizado, dataEsterilizacao, status, motivoEntrada, dataEntrada, baiaId, fotoUrl, observacoes,
-                null, null, null, null, null, null);
-    }
 }

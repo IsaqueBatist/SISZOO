@@ -51,7 +51,7 @@ class EmailServiceFalhaSmtpIT extends AbstractIntegrationTest {
     void falhaDeConexaoViraFutureFalhoELogSeguro() {
         try (LogCapturado log = LogCapturado.de(EmailService.class)) {
             // Nenhuma excecao aqui: o proxy @Async devolve o future na hora.
-            CompletableFuture<Void> envio = emailService.enviar(DESTINATARIO, "Assunto", "<p>corpo</p>");
+            CompletableFuture<Void> envio = emailService.enviar(DESTINATARIO, "Assunto", "<p>corpo</p>", null);
 
             // Windows repete o SYN antes de desistir (~2 s); timeouts SMTP sao de 5 s.
             ExecutionException falha = assertThrows(ExecutionException.class, () -> envio.get(15, SECONDS));

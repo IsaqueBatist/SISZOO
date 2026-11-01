@@ -60,14 +60,14 @@ class AuditoriaAnimaisBaiasIT extends AbstractIntegrationTest {
         CriarAnimalRequest criar = new CriarAnimalRequest(
                 "Auditado", "canino", "macho", "SRD", "Preto", "curta", "medio", null, "2 anos", null,
                 microchip, false, null, "em_tratamento", "resgate", fixture.agora(),
-                UUID.fromString(baiaId), null, null);
+                UUID.fromString(baiaId), null, null, null, null, null, null);
         String animalId = given().contentType(ContentType.JSON).header("Authorization", "Bearer " + tokenAdmin)
                 .body(criar).when().post("/api/animais").then().statusCode(200).extract().path("id");
 
         AtualizarAnimalRequest atualizar = new AtualizarAnimalRequest(
                 "Auditado Renomeado", "canino", "macho", "SRD", "Preto", "curta", "medio", null, "2 anos", null,
                 microchip, false, null, "em_tratamento", "resgate", fixture.agora(),
-                UUID.fromString(baiaId), null, "editado");
+                UUID.fromString(baiaId), null, "editado", null, null, null, null);
         given().contentType(ContentType.JSON).header("Authorization", "Bearer " + tokenAdmin)
                 .body(atualizar).when().put("/api/animais/" + animalId).then().statusCode(200);
 

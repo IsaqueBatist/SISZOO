@@ -28,6 +28,9 @@ import tools.jackson.databind.ObjectMapper;
 
 class AuditoriaEventoServiceIT extends AbstractIntegrationTest {
 
+    private static final AuditoriaEventoService.FiltroAuditoria SEM_FILTRO =
+            new AuditoriaEventoService.FiltroAuditoria(null, null, null, null, null);
+
     @Autowired
     private AuditoriaEventoService auditoriaEventoService;
 
@@ -101,7 +104,7 @@ class AuditoriaEventoServiceIT extends AbstractIntegrationTest {
         auditoriaEventoService.registrar(usuario, AcaoAuditoria.CRIACAO, "usuario", null, null, null);
         auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "usuario", null, null, null);
 
-        PaginaResponse<AuditoriaEventoResponse> pagina = auditoriaEventoService.listar(0, 50);
+        PaginaResponse<AuditoriaEventoResponse> pagina = auditoriaEventoService.listar(SEM_FILTRO, 0, 50);
         List<AuditoriaEventoResponse> itens = pagina.itens();
 
         assertThat(itens.size(), greaterThanOrEqualTo(2));
@@ -121,7 +124,7 @@ class AuditoriaEventoServiceIT extends AbstractIntegrationTest {
                 .findFirst()
                 .orElseThrow();
         assertThat(evento.getEntidadeId(), equalTo(usuario.getId()));
-        AuditoriaEventoResponse response = auditoriaEventoService.listar(0, 50).itens().stream()
+        AuditoriaEventoResponse response = auditoriaEventoService.listar(SEM_FILTRO, 0, 50).itens().stream()
                 .filter(r -> r.id().equals(evento.getId()))
                 .findFirst()
                 .orElseThrow();
@@ -143,6 +146,6 @@ class AuditoriaEventoServiceIT extends AbstractIntegrationTest {
         assertThat(evento.getEntidadeId(), nullValue());
         assertThat(response.entidadeId(), nullValue());
         assertThat(response.entidade(), equalTo("vacinacao"));
-        assertThat(auditoriaEventoService.listar(0, 50).itens(), notNullValue());
+        assertThat(auditoriaEventoService.listar(SEM_FILTRO, 0, 50).itens(), notNullValue());
     }
 }

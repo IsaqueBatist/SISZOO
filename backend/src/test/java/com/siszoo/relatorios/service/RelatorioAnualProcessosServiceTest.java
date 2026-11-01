@@ -152,9 +152,6 @@ class RelatorioAnualProcessosServiceTest {
         return projecao;
     }
 
-    // "codigo" nao e lido pelo service (paraResultadoResponse so usa nome e
-    // os contadores) — nao stubado, de proposito, pra nao disparar
-    // UnnecessaryStubbingException.
     private ResultadosLaboratoriaisProjection resultadoDetalhado(
             String nome, long investigados, long positivos, long negativos, long inconclusivos, long aguardando) {
         ResultadosLaboratoriaisProjection projecao = mock(ResultadosLaboratoriaisProjection.class);
