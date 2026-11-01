@@ -5,11 +5,16 @@ import { toast } from '@/components/toast/toast'
 import { useAlertasVacinaisQuery } from '@/features/alertas/hooks/useAlertas'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { mensagemDeRegraDaApi } from '@/lib/erroApi'
+import { useFiltrosLista } from '@/lib/useFiltrosLista'
 import { useAtualizarVacinaMutation, useDesativarVacinaMutation, useVacinasQuery } from '../hooks/useVacinas'
 import type { Vacina } from '../types/vacinas.types'
 import { VacinaFormModal } from './VacinaFormModal'
 
 type FiltroSituacao = 'ativas' | 'inativas' | 'todas'
+
+// Busca e situação sobrevivem a abrir uma vacina e voltar (sessionStorage),
+// como nas outras listas.
+const FILTROS_PADRAO = { busca: '', situacao: 'ativas' }
 
 const LINHAS_SKELETON = [0, 1, 2, 3]
 const COLUNAS_TABELA = 5
@@ -34,8 +39,9 @@ export function Vacinas() {
   const podeEscrever = roleKey === 'admin' || roleKey === 'vet'
   const podeDesativar = roleKey === 'admin'
 
-  const [busca, setBusca] = useState('')
-  const [situacao, setSituacao] = useState<FiltroSituacao>('ativas')
+  const { filtros, definirFiltros, limparFiltros, filtrosAtivos } = useFiltrosLista('vacinas', FILTROS_PADRAO)
+  const { busca } = filtros
+  const situacao = filtros.situacao as FiltroSituacao
   // `undefined` = fechado; `'nova'` = cadastro; uma vacina = edição.
   const [emEdicao, setEmEdicao] = useState<Vacina | 'nova' | undefined>(undefined)
 
@@ -119,19 +125,24 @@ export function Vacinas() {
             placeholder="Buscar por nome da vacina..."
             aria-label="Buscar por nome da vacina"
             value={busca}
-            onChange={(evento) => setBusca(evento.target.value)}
+            onChange={(evento) => definirFiltros({ busca: evento.target.value })}
           />
         </div>
         <select
           className="filter-select"
           aria-label="Filtrar por situação"
           value={situacao}
-          onChange={(evento) => setSituacao(evento.target.value as FiltroSituacao)}
+          onChange={(evento) => definirFiltros({ situacao: evento.target.value })}
         >
           <option value="ativas">Situação: Ativas</option>
           <option value="inativas">Situação: Inativas</option>
           <option value="todas">Situação: Todas</option>
         </select>
+        {filtrosAtivos && (
+          <button type="button" className="btn btn-ghost btn-sm" onClick={limparFiltros}>
+            Limpar filtros
+          </button>
+        )}
       </div>
 
       {isError && (

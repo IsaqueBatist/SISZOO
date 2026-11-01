@@ -172,6 +172,25 @@ describe('Vacinas', () => {
     expect(await screen.findByText('Nenhuma vacina encontrada')).toBeInTheDocument()
   })
 
+  // O filtro vive no sessionStorage (useFiltrosLista): abrir uma vacina e
+  // voltar não pode devolver a lista ao estado inicial.
+  it('a busca e o filtro sobrevivem a sair e voltar da tela', async () => {
+    const user = userEvent.setup()
+    const { unmount } = renderVacinas()
+    await screen.findByText('Antirrábica')
+
+    await user.type(screen.getByLabelText(/buscar por nome da vacina/i), 'felv')
+    await user.selectOptions(screen.getByLabelText(/filtrar por situação/i), 'todas')
+    unmount()
+
+    renderVacinas()
+    expect(await screen.findByLabelText(/buscar por nome da vacina/i)).toHaveValue('felv')
+    expect(screen.getByLabelText(/filtrar por situação/i)).toHaveValue('todas')
+
+    await user.click(screen.getByRole('button', { name: /limpar filtros/i }))
+    expect(screen.getByLabelText(/buscar por nome da vacina/i)).toHaveValue('')
+  })
+
   it('o Agente vê o catálogo mas não cadastra, edita nem desativa', async () => {
     renderVacinas(['Agente Sanitário'])
     await screen.findByText('Antirrábica')

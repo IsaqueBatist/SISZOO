@@ -5,6 +5,7 @@ import { toast } from '@/components/toast/toast'
 import type { Medicamento } from '@/features/animais/types/historico.types'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { mensagemDeRegraDaApi } from '@/lib/erroApi'
+import { useFiltrosLista } from '@/lib/useFiltrosLista'
 import {
   useCategoriasFarmacologicasQuery,
   useDesativarMedicamentoMutation,
@@ -13,6 +14,10 @@ import {
 import { MedicamentoFormModal } from './MedicamentoFormModal'
 
 type FiltroSituacao = 'ativos' | 'inativos' | 'todos'
+
+// Busca, categoria e situação sobrevivem a abrir um medicamento e voltar
+// (sessionStorage), como nas outras listas.
+const FILTROS_PADRAO = { busca: '', categoriaId: '', situacao: 'ativos' }
 
 const LINHAS_SKELETON = [0, 1, 2, 3]
 const COLUNAS_TABELA = 4
@@ -28,9 +33,9 @@ export function Medicamentos() {
   const podeEscrever = roleKey === 'admin' || roleKey === 'vet'
   const podeDesativar = roleKey === 'admin'
 
-  const [busca, setBusca] = useState('')
-  const [situacao, setSituacao] = useState<FiltroSituacao>('ativos')
-  const [categoriaId, setCategoriaId] = useState('')
+  const { filtros, definirFiltros, limparFiltros, filtrosAtivos } = useFiltrosLista('medicamentos', FILTROS_PADRAO)
+  const { busca, categoriaId } = filtros
+  const situacao = filtros.situacao as FiltroSituacao
   // `undefined` = fechado; `'novo'` = cadastro; um medicamento = edição.
   const [emEdicao, setEmEdicao] = useState<Medicamento | 'novo' | undefined>(undefined)
 
@@ -97,14 +102,14 @@ export function Medicamentos() {
             placeholder="Buscar por nome do medicamento..."
             aria-label="Buscar por nome do medicamento"
             value={busca}
-            onChange={(evento) => setBusca(evento.target.value)}
+            onChange={(evento) => definirFiltros({ busca: evento.target.value })}
           />
         </div>
         <select
           className="filter-select"
           aria-label="Filtrar por categoria"
           value={categoriaId}
-          onChange={(evento) => setCategoriaId(evento.target.value)}
+          onChange={(evento) => definirFiltros({ categoriaId: evento.target.value })}
         >
           <option value="">Categoria: Todas</option>
           {categorias?.map((categoria) => (
@@ -117,12 +122,17 @@ export function Medicamentos() {
           className="filter-select"
           aria-label="Filtrar por situação"
           value={situacao}
-          onChange={(evento) => setSituacao(evento.target.value as FiltroSituacao)}
+          onChange={(evento) => definirFiltros({ situacao: evento.target.value })}
         >
           <option value="ativos">Situação: Ativos</option>
           <option value="inativos">Situação: Inativos</option>
           <option value="todos">Situação: Todos</option>
         </select>
+        {filtrosAtivos && (
+          <button type="button" className="btn btn-ghost btn-sm" onClick={limparFiltros}>
+            Limpar filtros
+          </button>
+        )}
       </div>
 
       {isError && (
