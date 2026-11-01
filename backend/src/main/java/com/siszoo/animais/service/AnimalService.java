@@ -47,6 +47,7 @@ import com.siszoo.comum.dto.PaginaResponse;
 import com.siszoo.comum.exception.CampoInvalidoException;
 import com.siszoo.comum.util.BuscaTexto;
 import com.siszoo.comum.util.Paginacao;
+import com.siszoo.comum.util.Textos;
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.exception.UsuarioNaoEncontradoException;
@@ -113,18 +114,18 @@ public class AnimalService {
         String microchip = normalizarMicrochip(request.microchip());
         verificarMicrochipDisponivel(microchip, null);
         // F2-004 / F2-008: identificacao complementar e laudo de eutanasia.
-        String numeroMedalha = normalizarTexto(request.numeroMedalha());
+        String numeroMedalha = Textos.normalizar(request.numeroMedalha());
         verificarMedalhaDisponivel(numeroMedalha, null);
         validarDataImplantacaoChip(request.dataImplantacaoChip(), microchip);
         StatusAnimal status = resolverStatus(request.status());
-        String laudoEutanasia = normalizarTexto(request.laudoEutanasia());
+        String laudoEutanasia = Textos.normalizar(request.laudoEutanasia());
         exigirLaudoNaEutanasia(null, status, laudoEutanasia);
         Baia baia = resolverBaia(request.baiaId(), status, null);
 
         Animal animal = new Animal();
         animal.setNumeroMedalha(numeroMedalha);
         animal.setDataImplantacaoChip(request.dataImplantacaoChip());
-        animal.setProcedencia(normalizarTexto(request.procedencia()));
+        animal.setProcedencia(Textos.normalizar(request.procedencia()));
         animal.setLaudoEutanasia(laudoEutanasia);
         animal.setMicrochip(microchip);
         aplicarDadosDescritivos(animal, request, status, baia);
@@ -163,17 +164,17 @@ public class AnimalService {
         aplicarMicrochipNaAtualizacao(animal, request.microchip());
 
         // F2-004: medalha unica; data de implantacao exige microchip (ja aplicado acima).
-        String numeroMedalha = normalizarTexto(request.numeroMedalha());
+        String numeroMedalha = Textos.normalizar(request.numeroMedalha());
         verificarMedalhaDisponivel(numeroMedalha, animal.getId());
         validarDataImplantacaoChip(request.dataImplantacaoChip(), animal.getMicrochip());
         // F2-008: laudo obrigatorio so na TRANSICAO para obito_eutanasia; quem ja
         // estava em eutanasia (inclusive registros anteriores a V24) segue
         // editavel, e um laudo ja gravado e mantido se o request vier vazio.
-        String laudoEutanasia = normalizarTexto(request.laudoEutanasia());
+        String laudoEutanasia = Textos.normalizar(request.laudoEutanasia());
         exigirLaudoNaEutanasia(animal.getStatus(), status, laudoEutanasia);
         animal.setNumeroMedalha(numeroMedalha);
         animal.setDataImplantacaoChip(request.dataImplantacaoChip());
-        animal.setProcedencia(normalizarTexto(request.procedencia()));
+        animal.setProcedencia(Textos.normalizar(request.procedencia()));
         if (laudoEutanasia != null) {
             animal.setLaudoEutanasia(laudoEutanasia);
         }
@@ -352,15 +353,6 @@ public class AnimalService {
     // ── F2-004 / F2-008 (Fase 3 do TG) ───────────────────
 
     private static final String STATUS_OBITO_EUTANASIA = "obito_eutanasia";
-
-    // Texto livre opcional: sem espacos nas pontas; vazio vira null.
-    private static String normalizarTexto(String valor) {
-        if (valor == null) {
-            return null;
-        }
-        String limpo = valor.trim();
-        return limpo.isEmpty() ? null : limpo;
-    }
 
     // Medalha e identificador fisico alternativo: unica quando informada (V23).
     private void verificarMedalhaDisponivel(String numeroMedalha, UUID animalIdAtual) {

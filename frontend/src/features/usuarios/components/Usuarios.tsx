@@ -14,6 +14,7 @@ import { PERFIS_USUARIO, type PerfilUsuario, type UsuarioListItem } from '../typ
 import { CriarUsuarioModal } from './CriarUsuarioModal'
 import { EditarUsuarioModal } from './EditarUsuarioModal'
 import { RedefinirSenhaModal } from './RedefinirSenhaModal'
+import { corAvatar } from '@/lib/avatar'
 import './Usuarios.css'
 
 type FiltroStatus = 'Todos' | 'Ativos' | 'Inativos'
@@ -28,11 +29,6 @@ function formatarData(iso: string | null, comHora = false): string {
 
 function iniciais(nome: string, sobrenome: string): string {
   return `${nome[0] ?? ''}${sobrenome[0] ?? ''}`.toUpperCase()
-}
-
-function corAvatar(seed: string): string {
-  const hue = Math.abs([...seed].reduce((acumulado, char) => acumulado + char.charCodeAt(0), 0)) % 360
-  return `hsl(${hue}, 35%, 34%)`
 }
 
 function contarPorPerfil(usuarios: UsuarioListItem[] | undefined): Record<PerfilUsuario, number> {

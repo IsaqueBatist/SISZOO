@@ -1,14 +1,8 @@
 import { z } from 'zod'
-import { hojeEmItu } from '@/lib/datas'
+import { naoEhFutura } from '@/lib/datas'
 import { cepValido, cpfValido, emailValido, telefoneValido } from '@/lib/mascaras'
 import { MATERIAL_BIOLOGICO_OPCOES, STATUS_CLINICO_OPCOES, TIPO_ABRIGO_OPCOES } from '../utils/processosCatalogos'
 import type { MaterialBiologico, StatusClinicoAmostra, TipoAbrigo } from '../types/processos.types'
-
-// Mesmas regras do servidor (D21 para a abertura, T29-5 para a coleta): o
-// backend recusa data futura com 422; aqui o erro aparece antes de enviar.
-function naoEhFutura(data: string): boolean {
-  return !data || data <= hojeEmItu()
-}
 
 const STATUS_CLINICO_VALORES = STATUS_CLINICO_OPCOES.map((item) => item.valor) as [StatusClinicoAmostra, ...StatusClinicoAmostra[]]
 const TIPO_ABRIGO_VALORES = TIPO_ABRIGO_OPCOES.map((item) => item.valor) as [TipoAbrigo, ...TipoAbrigo[]]

@@ -3,13 +3,9 @@ import { formatarDataBR } from '@/lib/datas'
 import { SEXO_OPCOES } from '@/features/animais/schemas/animalFormSchema'
 import { formatarProtocoloOcorrencia } from '@/features/ocorrencias/utils/protocolo'
 import type { ProcessoFormValues } from '../schemas/processoFormSchema'
-import type { CatalogoItem, CatalogosProcesso } from '../types/processos.types'
+import type { CatalogosProcesso } from '../types/processos.types'
 import { labelDe, MATERIAL_BIOLOGICO_OPCOES, NIVEL_CONTATO_OPCOES, STATUS_CLINICO_OPCOES, TIPO_ABRIGO_OPCOES } from '../utils/processosCatalogos'
-
-function nomeNoCatalogo(itens: CatalogoItem[] | undefined, codigo: string): string {
-  if (!codigo) return '—'
-  return itens?.find((item) => item.codigo === codigo)?.nome ?? codigo
-}
+import { nomeNoCatalogo } from '@/lib/catalogos'
 
 interface RevisaoProcessoProps {
   valores: ProcessoFormValues

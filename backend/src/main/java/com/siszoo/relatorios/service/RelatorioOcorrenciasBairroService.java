@@ -7,13 +7,13 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.OptionalDouble;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.siszoo.comum.repository.ContagemCatalogoProjection;
 import com.siszoo.comum.util.BlocoCsv;
+import com.siszoo.comum.util.Estatisticas;
 import com.siszoo.ocorrencias.repository.BairroTipoProjection;
 import com.siszoo.ocorrencias.repository.ContagemPorBairroProjection;
 import com.siszoo.ocorrencias.repository.OcorrenciaRepository;
@@ -98,7 +98,7 @@ public class RelatorioOcorrenciasBairroService implements GeradorRelatorio<Relat
         List<Double> todasAsHoras = tempos.stream()
                 .map(this::horasEntre)
                 .toList();
-        Double tempoMedio = media(todasAsHoras);
+        Double tempoMedio = Estatisticas.mediaComUmaCasa(todasAsHoras);
 
         return new KpisOcorrenciasBairroResponse(registradas, bairrosAtingidos, tempoMedio, encerradas, percentualEncerradas);
     }
@@ -123,7 +123,7 @@ public class RelatorioOcorrenciasBairroService implements GeradorRelatorio<Relat
         return contagens.stream()
                 .map(c -> new LinhaBairroOcorrenciaResponse(
                         c.getBairro(), c.getQuantidade(), tipoPredominante(tipoPorBairro.get(c.getBairro())),
-                        media(horasPorBairro.get(c.getBairro()))))
+                        Estatisticas.mediaComUmaCasa(horasPorBairro.get(c.getBairro()))))
                 .toList();
     }
 
@@ -144,7 +144,7 @@ public class RelatorioOcorrenciasBairroService implements GeradorRelatorio<Relat
 
         List<LinhaBairroOcorrenciaResponse> resultado = new ArrayList<>(top);
         resultado.add(new LinhaBairroOcorrenciaResponse(
-                "Outros (" + resto.size() + " bairros)", ocorrenciasRestantes, SEM_DADOS, media(horasRestantes)));
+                "Outros (" + resto.size() + " bairros)", ocorrenciasRestantes, SEM_DADOS, Estatisticas.mediaComUmaCasa(horasRestantes)));
         return resultado;
     }
 
@@ -176,14 +176,6 @@ public class RelatorioOcorrenciasBairroService implements GeradorRelatorio<Relat
 
     private double horasEntre(TempoAtendimentoProjection linha) {
         return Duration.between(linha.getCriadoEm(), linha.getEncerradaEm()).toMinutes() / 60.0;
-    }
-
-    private Double media(List<Double> valores) {
-        if (valores == null || valores.isEmpty()) {
-            return null;
-        }
-        OptionalDouble media = valores.stream().mapToDouble(Double::doubleValue).average();
-        return media.isPresent() ? Math.round(media.getAsDouble() * 10.0) / 10.0 : null;
     }
 
     // "3.4" -> "3,4" (separador decimal PT-BR, DER regra de formatacao).

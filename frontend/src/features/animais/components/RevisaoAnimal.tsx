@@ -2,12 +2,7 @@ import { useFormContext, useWatch } from 'react-hook-form'
 import { formatarDataBR } from '@/lib/datas'
 import { useBaiasAtivasQuery, useCatalogosAnimaisQuery } from '../hooks/useAnimais'
 import { CASTRACAO_OPCOES, CONDICAO_OUTRAS, PELAGEM_OPCOES, PORTE_OPCOES, SEXO_OPCOES, type AnimalFormUiValues } from '../schemas/animalFormSchema'
-import type { CatalogoItem } from '../types/animais.types'
-
-function nomeCatalogo(itens: CatalogoItem[] | undefined, codigo: string): string {
-  if (!codigo) return '—'
-  return itens?.find((item) => item.codigo === codigo)?.nome ?? codigo
-}
+import { nomeNoCatalogo } from '@/lib/catalogos'
 
 // Revisão dos dados antes de salvar (etapa 3): só leitura, ao vivo.
 export function RevisaoAnimal() {
@@ -26,7 +21,7 @@ export function RevisaoAnimal() {
         </div>
         <div className="review-row">
           <span className="k">Espécie</span>
-          <span className="v">{nomeCatalogo(catalogos?.especies, valores.especie ?? '')}</span>
+          <span className="v">{nomeNoCatalogo(catalogos?.especies, valores.especie ?? '')}</span>
         </div>
         <div className="review-row">
           <span className="k">Microchip</span>
@@ -80,7 +75,7 @@ export function RevisaoAnimal() {
         </div>
         <div className="review-row">
           <span className="k">Motivo de entrada</span>
-          <span className="v">{nomeCatalogo(catalogos?.motivosEntrada, valores.motivoEntrada ?? '')}</span>
+          <span className="v">{nomeNoCatalogo(catalogos?.motivosEntrada, valores.motivoEntrada ?? '')}</span>
         </div>
         <div className="review-row">
           <span className="k">Baia</span>
@@ -88,14 +83,14 @@ export function RevisaoAnimal() {
         </div>
         <div className="review-row">
           <span className="k">Status</span>
-          <span className="v">{nomeCatalogo(catalogos?.status, valores.status ?? '')}</span>
+          <span className="v">{nomeNoCatalogo(catalogos?.status, valores.status ?? '')}</span>
         </div>
         <div className="review-row">
           <span className="k">Condições de saúde</span>
           <span className="v">
             {valores.condicoes?.length
               ? valores.condicoes
-                  .map((codigo) => (codigo === CONDICAO_OUTRAS ? valores.condicoesOutras : nomeCatalogo(catalogos?.condicoesSaude, codigo)))
+                  .map((codigo) => (codigo === CONDICAO_OUTRAS ? valores.condicoesOutras : nomeNoCatalogo(catalogos?.condicoesSaude, codigo)))
                   .join(', ')
               : '—'}
           </span>

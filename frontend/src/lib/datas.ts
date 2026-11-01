@@ -12,6 +12,12 @@ export function hojeEmItu(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: FUSO_ITU }).format(new Date())
 }
 
+// "Hoje" lido a cada validação, não fixado no carregamento do módulo. Mesma
+// regra do servidor, que recusa data futura com 422.
+export function naoEhFutura(data: string): boolean {
+  return !data || data <= hojeEmItu()
+}
+
 // Agora como LocalDateTime de Itu ("AAAA-MM-DDTHH:mm:ss"), o formato que a API
 // devolve em criadoEm/atualizadoEm (sem fuso). Usado pelo mock.
 export function agoraEmItu(): string {

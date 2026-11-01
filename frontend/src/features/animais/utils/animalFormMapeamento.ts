@@ -221,7 +221,6 @@ export function paraAnimalRequest(dados: AnimalFormUiValues, dataEntradaOriginal
 // setValueAs dos campos: roda tanto sobre o valor digitado (string, do DOM)
 // quanto sobre o valor inicial vindo de defaultValues/reset/setValue
 // diretamente — que pode já chegar como number/undefined, não só string.
-export const semEspacos = (v: unknown) => (typeof v === 'string' ? v.trim() || undefined : v)
 export const semVazio = (v: unknown) => (typeof v === 'string' ? v || undefined : v)
 export const paraNumeroOuIndefinido = (v: unknown) => {
   if (typeof v === 'number') return Number.isFinite(v) ? v : undefined

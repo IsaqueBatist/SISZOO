@@ -12,10 +12,10 @@ import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/e
 import { useRascunho } from '@/lib/useRascunho'
 import { baiaFormSchema, type BaiaFormValues } from '../schemas/baiaFormSchema'
 import { armazenamentoRascunhoBaia, chaveRascunhoBaia } from '../storage/rascunhoBaiaStorage'
+import { semEspacos } from '@/lib/texto'
 
 // Texto vazio ou só com espaços vai como ausente (o backend grava NULL e a
 // listagem usa o tipo da baia). Mesmo padrão de AnimalForm.
-const semEspacos = (v: unknown) => (typeof v === 'string' ? v.trim() || undefined : v)
 
 // Erros por campo do 422: só os campos que existem no modal.
 const MAPA_ERROS_SERVIDOR = mapaDeCampos<BaiaFormValues>(

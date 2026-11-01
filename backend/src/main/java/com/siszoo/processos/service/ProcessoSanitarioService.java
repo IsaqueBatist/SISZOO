@@ -28,6 +28,7 @@ import com.siszoo.comum.dto.PaginaResponse;
 import com.siszoo.comum.service.ProtocoloService;
 import com.siszoo.comum.util.BuscaTexto;
 import com.siszoo.comum.util.Paginacao;
+import com.siszoo.comum.util.Textos;
 import com.siszoo.ocorrencias.entity.Ocorrencia;
 import com.siszoo.ocorrencias.exception.DataAberturaFuturaException;
 import com.siszoo.ocorrencias.service.OcorrenciaService;
@@ -228,8 +229,8 @@ public class ProcessoSanitarioService {
         processo.setLaboratorio(laboratorio);
         processo.setObservacoes(request.observacoes());
         // F2-012: numeros GAL/SINAN registrados manualmente (RF-B01; sem integracao, 3.5.2).
-        processo.setGalNumero(normalizarNumeroExterno(request.galNumero()));
-        processo.setSinanNumero(normalizarNumeroExterno(request.sinanNumero()));
+        processo.setGalNumero(Textos.normalizar(request.galNumero()));
+        processo.setSinanNumero(Textos.normalizar(request.sinanNumero()));
         // DER regra 18: contato humano em qualquer amostra torna o processo urgente.
         processo.setUrgente(request.amostras().stream().map(AmostraAnimalRequest::contatoHumano).anyMatch(Boolean.TRUE::equals));
         processo.setCriadoPor(autor);
@@ -278,8 +279,8 @@ public class ProcessoSanitarioService {
         processo.setCid(doenca.getCid());
         processo.setLaboratorio(laboratorio);
         processo.setObservacoes(request.observacoes());
-        processo.setGalNumero(normalizarNumeroExterno(request.galNumero()));
-        processo.setSinanNumero(normalizarNumeroExterno(request.sinanNumero()));
+        processo.setGalNumero(Textos.normalizar(request.galNumero()));
+        processo.setSinanNumero(Textos.normalizar(request.sinanNumero()));
         aplicarResponsavel(responsavel, request.responsavel());
         amostras.forEach(amostra -> amostraFactory.corrigir(amostra, correcoes.get(amostra.getId()), sintomas));
         processo.setUrgente(dadosDasAmostras.stream().map(AmostraAnimalRequest::contatoHumano).anyMatch(Boolean.TRUE::equals));
@@ -634,14 +635,5 @@ public class ProcessoSanitarioService {
                 responsavelRepository.findByProcessoId(processo.getId()).orElse(null),
                 amostras,
                 resultadoProcessoRepository.findByProcessoId(processo.getId()));
-    }
-
-    // F2-012: GAL/SINAN sao texto livre opcional (sem espacos nas pontas; vazio = null).
-    private static String normalizarNumeroExterno(String valor) {
-        if (valor == null) {
-            return null;
-        }
-        String limpo = valor.trim();
-        return limpo.isEmpty() ? null : limpo;
     }
 }

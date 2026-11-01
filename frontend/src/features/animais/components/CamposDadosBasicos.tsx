@@ -3,7 +3,8 @@ import { RadioCards } from '@/components/RadioCards'
 import { hojeEmItu } from '@/lib/datas'
 import { useCatalogosAnimaisQuery } from '../hooks/useAnimais'
 import { PELAGEM_OPCOES, PORTE_OPCOES, SEXO_OPCOES, type AnimalFormUiValues } from '../schemas/animalFormSchema'
-import { paraNumeroOuIndefinido, semEspacos, semVazio } from '../utils/animalFormMapeamento'
+import { paraNumeroOuIndefinido, semVazio } from '../utils/animalFormMapeamento'
+import { semEspacos } from '@/lib/texto'
 
 interface CamposDadosBasicosProps {
   // Microchip já definido não muda mais (regra do backend replicada na UI).

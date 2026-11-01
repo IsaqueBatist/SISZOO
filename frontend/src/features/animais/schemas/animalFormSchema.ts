@@ -1,10 +1,5 @@
 import { z } from 'zod'
-import { hojeEmItu } from '@/lib/datas'
-
-// "Hoje" lido a cada validação, não fixado no carregamento do módulo.
-function naoEhFutura(data: string): boolean {
-  return !data || data <= hojeEmItu()
-}
+import { naoEhFutura } from '@/lib/datas'
 
 // Opções fixas do design system (não vêm de catálogo da API): Sexo/Pelagem/
 // Porte já são tipos fechados em animais.types.ts, espelhando os regex do

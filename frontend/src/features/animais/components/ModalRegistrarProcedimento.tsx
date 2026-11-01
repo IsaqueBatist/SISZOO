@@ -17,10 +17,10 @@ import { SelectCatalogoClinico } from './SelectCatalogoClinico'
 import { procedimentoFormSchema, type ProcedimentoFormValues } from '../schemas/historicoFormSchemas'
 import { useCriarProcedimentoMutation } from '../hooks/useHistoricoAnimal'
 import type { Procedimento } from '../types/historico.types'
+import { semEspacos } from '@/lib/texto'
 
 // Texto vazio ou só com espaços vai como ausente (o backend grava NULL e a
 // tela mostra "—"). Mesmo padrão de AnimalForm.
-const semEspacos = (v: unknown) => (typeof v === 'string' ? v.trim() || undefined : v)
 
 // Erros por campo do 422: só os campos que existem no modal.
 const MAPA_ERROS_SERVIDOR = mapaDeCampos<ProcedimentoFormValues>(

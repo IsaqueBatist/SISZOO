@@ -14,6 +14,7 @@ import { useAnimaisQuery, useBaiasQuery, useCatalogosAnimaisQuery } from '../hoo
 import { badgeDeEspecie, badgeDeStatus } from '../utils/statusBadge'
 import type { Animal, Pelagem } from '../types/animais.types'
 import { formatarPorte, formatarSexo } from '../utils/rotulosAnimal'
+import { corAvatar } from '@/lib/avatar'
 
 const TAMANHO_PAGINA = 20
 const LINHAS_SKELETON = [0, 1, 2, 3, 4]
@@ -30,11 +31,6 @@ function formatarPelagem(pelagem: Pelagem | null): string {
   if (pelagem === 'curta') return 'Curta'
   if (pelagem === 'longa') return 'Longa'
   return ''
-}
-
-function corAvatar(seed: string): string {
-  const hue = Math.abs([...seed].reduce((acumulado, char) => acumulado + char.charCodeAt(0), 0)) % 360
-  return `hsl(${hue}, 35%, 34%)`
 }
 
 export function Animais() {

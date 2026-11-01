@@ -7,13 +7,13 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.OptionalDouble;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.siszoo.comum.repository.ContagemCatalogoProjection;
 import com.siszoo.comum.util.BlocoCsv;
+import com.siszoo.comum.util.Estatisticas;
 import com.siszoo.processos.repository.AnimalAmostradoRepository;
 import com.siszoo.processos.repository.BairroDoencaProjection;
 import com.siszoo.processos.repository.BairroProcessoProjection;
@@ -172,7 +172,7 @@ public class RelatorioAnualProcessosService implements GeradorRelatorio<Relatori
         List<Double> dias = processoSanitarioRepository.listarTemposDeResolucao(inicio, fim).stream()
                 .map(this::diasEntre)
                 .toList();
-        Double tempoMedioDias = media(dias);
+        Double tempoMedioDias = Estatisticas.mediaComUmaCasa(dias);
 
         return new KpisAnualProcessosResponse(processosAbertos, confirmadosPositivos, percentualPositividade, comContatoHumano, contatoNaoInformado, tempoMedioDias);
     }
@@ -299,7 +299,7 @@ public class RelatorioAnualProcessosService implements GeradorRelatorio<Relatori
                 .map(l -> new LaboratorioUtilizadoResponse(
                         l.getNome(), l.getQuantidade(),
                         totalAmostras == 0 ? 0 : (int) Math.round(l.getQuantidade() * 100.0 / totalAmostras),
-                        media(diasPorLab.get(l.getCodigo()))))
+                        Estatisticas.mediaComUmaCasa(diasPorLab.get(l.getCodigo()))))
                 .sorted(Comparator.comparingLong(LaboratorioUtilizadoResponse::amostras).reversed())
                 .toList();
     }
@@ -314,13 +314,5 @@ public class RelatorioAnualProcessosService implements GeradorRelatorio<Relatori
 
     private double diasEntre(TempoResolucaoProjection linha) {
         return ChronoUnit.DAYS.between(linha.getDataAbertura(), linha.getDataResultado());
-    }
-
-    private Double media(List<Double> valores) {
-        if (valores == null || valores.isEmpty()) {
-            return null;
-        }
-        OptionalDouble media = valores.stream().mapToDouble(Double::doubleValue).average();
-        return media.isPresent() ? Math.round(media.getAsDouble() * 10.0) / 10.0 : null;
     }
 }

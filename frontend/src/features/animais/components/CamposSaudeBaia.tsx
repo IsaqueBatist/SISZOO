@@ -3,7 +3,8 @@ import { RadioCards } from '@/components/RadioCards'
 import { hojeEmItu } from '@/lib/datas'
 import { useBaiasAtivasQuery, useCatalogosAnimaisQuery } from '../hooks/useAnimais'
 import { animalCastrado, CASTRACAO_OPCOES, CONDICAO_OUTRAS, type AnimalFormUiValues } from '../schemas/animalFormSchema'
-import { semEspacos, semVazio } from '../utils/animalFormMapeamento'
+import { semVazio } from '../utils/animalFormMapeamento'
+import { semEspacos } from '@/lib/texto'
 
 interface CamposSaudeBaiaProps {
   // Baia em que o animal já está (edição): continua selecionável mesmo
