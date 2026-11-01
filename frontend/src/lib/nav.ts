@@ -6,7 +6,7 @@ import type { IconName } from '../components/layout/Icon'
 // Medicamentos e Configurações também são usados por quem não administra.
 
 // 'sem_perfil': cargo que não corresponde a nenhum perfil conhecido (ou
-// sessão sem cargos). Não vê nenhum módulo — antes caía em 'agente' e o menu
+// sessão sem cargos). Não vê nenhum módulo. Antes caía em 'agente' e o menu
 // mostrava telas que o backend recusaria com 403.
 export type RoleKey = 'admin' | 'vet' | 'agente' | 'sem_perfil'
 
@@ -63,7 +63,10 @@ function isNavGroup(entry: NavEntry): entry is NavGroup {
   return 'group' in entry
 }
 
-export const NAV_ALL: NavEntry[] = [
+// Os grupos seguem a responsabilidade de cada módulo e ficam na ordem em que
+// aparecem aqui. Dentro de cada grupo, os itens ficam em ordem alfabética pelo
+// nome exibido (ordenarItensPorRotulo), independentemente da ordem desta lista.
+const NAV_DECLARADA: NavEntry[] = [
   { group: 'PRINCIPAL' },
   { id: 'dashboard', label: 'Dashboard', to: '/dashboard', icon: 'home' },
   { id: 'animais', label: 'Animais', to: '/animais', icon: 'paw' },
@@ -79,6 +82,31 @@ export const NAV_ALL: NavEntry[] = [
   { group: 'SISTEMA' },
   { id: 'config', label: 'Configurações', to: '/configuracoes', icon: 'cog' },
 ]
+
+const COMPARADOR_ROTULO = new Intl.Collator('pt-BR', { sensitivity: 'base' })
+
+// Ordena os itens de cada grupo de A a Z pelo rótulo visível, com acentos
+// tratados como a letra base. Os grupos e a ordem entre eles não mudam.
+export function ordenarItensPorRotulo(entradas: NavEntry[]): NavEntry[] {
+  const resultado: NavEntry[] = []
+  let itensDoGrupo: NavItem[] = []
+  const despejarGrupo = () => {
+    resultado.push(...[...itensDoGrupo].sort((a, b) => COMPARADOR_ROTULO.compare(a.label, b.label)))
+    itensDoGrupo = []
+  }
+  for (const entrada of entradas) {
+    if (isNavGroup(entrada)) {
+      despejarGrupo()
+      resultado.push(entrada)
+    } else {
+      itensDoGrupo.push(entrada)
+    }
+  }
+  despejarGrupo()
+  return resultado
+}
+
+export const NAV_ALL: NavEntry[] = ordenarItensPorRotulo(NAV_DECLARADA)
 
 // Telas fora do menu que também precisam de nome no topo e na aba do navegador.
 const ROTULOS_FORA_DO_MENU: Record<string, string> = {
@@ -107,14 +135,14 @@ export function tituloDaRota(pathname: string): string {
 // normalizada tolera variação de acento/gênero entre o cargo real e o
 // rótulo interno (ex.: "Veterinário" vs. label "Veterinária"). Quando o
 // usuário acumula múltiplos cargos, a precedência é fixa:
-// admin > veterinário > agente — independente da ordem vinda do backend.
+// admin > veterinário > agente, independente da ordem vinda do backend.
 const PRECEDENCIA_CARGOS: { chave: RoleKey; correspondeA: string }[] = [
   { chave: 'admin', correspondeA: 'admin' },
   { chave: 'vet', correspondeA: 'veterin' },
   { chave: 'agente', correspondeA: 'agente' },
 ]
 
-// Marcas diacríticas combinantes (U+0300–U+036F), isoladas por normalize('NFD').
+// Marcas diacríticas combinantes (U+0300 a U+036F), isoladas por normalize('NFD').
 const DIACRITICOS = new RegExp(`[${String.fromCharCode(0x300)}-${String.fromCharCode(0x36f)}]`, 'g')
 
 function normalizar(valor: string): string {
