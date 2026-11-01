@@ -7,6 +7,7 @@ import { usuarioFormSchema, type UsuarioFormValues } from '../schemas/usuarioFor
 import { PERFIS_USUARIO, type PerfilUsuario } from '../types/usuarios.types'
 import { gerarSenhaTemporaria } from '../utils/senhaTemporaria'
 import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
+import { CriteriosSenha } from '@/features/auth/components/CriteriosSenha'
 import { Modal } from '@/components/Modal'
 import { SenhaTemporariaGerada } from './SenhaTemporariaGerada'
 
@@ -47,6 +48,9 @@ export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
   })
 
   const cargo = watch('cargo')
+  const senhaInicial = watch('senhaInicial')
+  const email = watch('email')
+  const nomeCompleto = watch('nomeCompleto')
 
   async function onSubmit(dados: UsuarioFormValues) {
     const { nome, sobrenome } = dividirNomeCompleto(dados.nomeCompleto)
@@ -169,6 +173,7 @@ export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
               </div>
               {errors.senhaInicial && <span className="err" id="senhaInicial-erro">{errors.senhaInicial.message}</span>}
               <span className="hint">Você verá esta senha para entregar ao usuário, que precisará trocá-la no primeiro acesso.</span>
+              <CriteriosSenha senha={senhaInicial} dono={{ email, nomeExibicao: nomeCompleto }} />
             </div>
           </div>
         </div>

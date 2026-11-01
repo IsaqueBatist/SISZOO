@@ -33,6 +33,7 @@ public class AuthService {
     private final AuditoriaEventoService auditoriaEventoService;
     private final SessaoService sessaoService;
     private final RecuperacaoSenhaService recuperacaoSenhaService;
+    private final LimitadorLogin limitadorLogin;
     private final Clock clock;
 
     // tokenRenovacao vai so no cookie httpOnly; nulo quando o cookie nao muda.
@@ -47,6 +48,7 @@ public class AuthService {
             AuditoriaEventoService auditoriaEventoService,
             SessaoService sessaoService,
             RecuperacaoSenhaService recuperacaoSenhaService,
+            LimitadorLogin limitadorLogin,
             Clock clock) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
@@ -55,15 +57,24 @@ public class AuthService {
         this.auditoriaEventoService = auditoriaEventoService;
         this.sessaoService = sessaoService;
         this.recuperacaoSenhaService = recuperacaoSenhaService;
+        this.limitadorLogin = limitadorLogin;
         this.clock = clock;
     }
 
+    // Limite de tentativas antes de conferir a senha (PS-8): dentro da janela,
+    // a resposta e 429 mesmo para a senha certa. Login recusado continua sem
+    // evento de auditoria (T43-5); so a falha conta no limitador.
     @Transactional
     public SessaoAutenticada login(LoginRequest request, String ip, String userAgent) {
+        limitadorLogin.exigirPermitido(request.email(), ip);
         Usuario usuario = usuarioRepository.findByEmail(request.email())
                 .filter(Usuario::isAtivo)
                 .filter(candidato -> passwordEncoder.matches(request.senha(), candidato.getSenha()))
-                .orElseThrow(CredencialInvalidaException::new);
+                .orElseThrow(() -> {
+                    limitadorLogin.registrarFalha(request.email(), ip);
+                    return new CredencialInvalidaException();
+                });
+        limitadorLogin.registrarSucesso(request.email());
 
         usuario.setUltimoAcesso(LocalDateTime.now(clock));
         auditoriaEventoService.registrar(usuario, AcaoAuditoria.LOGIN, "usuario", usuario.getId(), null, null);

@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, describe, expect, it } from 'vitest'
 import { Login } from './Login'
 import { AuthProvider, definirSessaoEmMemoria } from '../hooks/AuthContext'
-import { CREDENCIAIS_VALIDAS } from '@/mocks/handlers'
+import { CREDENCIAIS_VALIDAS, EMAIL_RECUPERACAO_LIMITADO } from '@/mocks/handlers'
 
 // O formulário aparece depois de a aba descobrir que não há sessão.
 async function renderLogin() {
@@ -23,6 +23,17 @@ async function renderLogin() {
 }
 
 describe('validação do formulário de login', () => {
+  it('mostra a mensagem de limite de tentativas quando a API responde 429', async () => {
+    const user = userEvent.setup()
+    await renderLogin()
+
+    await user.type(screen.getByLabelText(/e-mail institucional/i), EMAIL_RECUPERACAO_LIMITADO)
+    await user.type(screen.getByLabelText(/^senha/i), 'qualquer-coisa')
+    await user.click(screen.getByRole('button', { name: /^entrar$/i }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/muitas tentativas em pouco tempo/i)
+  })
+
   it('oferece o caminho de recuperação de senha', async () => {
     await renderLogin()
 

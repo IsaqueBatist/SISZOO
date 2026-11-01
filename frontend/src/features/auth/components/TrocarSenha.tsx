@@ -10,6 +10,7 @@ import { criarTrocarSenhaSchema, type TrocarSenhaFormValues } from '../schemas/t
 import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
 import { Icon } from '@/components/layout/Icon'
 import { useTituloPagina } from '@/lib/useTituloPagina'
+import { CriteriosSenha } from './CriteriosSenha'
 import './Login.css'
 
 export function TrocarSenha() {
@@ -22,24 +23,24 @@ export function TrocarSenha() {
 
   // A rota é protegida (sempre há usuário); a política usa o nome da conta e
   // o nome de exibição de quem troca. O backend aplica a mesma regra.
-  const schema = useMemo(
-    () =>
-      criarTrocarSenhaSchema({
-        email: user?.email ?? '',
-        nomeExibicao: user ? `${user.nome} ${user.sobrenome}` : '',
-      }),
+  const dono = useMemo(
+    () => ({ email: user?.email ?? '', nomeExibicao: user ? `${user.nome} ${user.sobrenome}` : '' }),
     [user],
   )
+  const schema = useMemo(() => criarTrocarSenhaSchema(dono), [dono])
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<TrocarSenhaFormValues>({
     resolver: zodResolver(schema),
     mode: 'onSubmit',
     reValidateMode: 'onSubmit',
+    defaultValues: { novaSenha: '', confirmarSenha: '' },
   })
+  const novaSenha = watch('novaSenha')
 
   async function onSubmit(dados: TrocarSenhaFormValues) {
     try {
@@ -86,6 +87,7 @@ export function TrocarSenha() {
             />
           </div>
           {errors.novaSenha && <span className="err" id="novaSenha-erro">{errors.novaSenha.message}</span>}
+          <CriteriosSenha senha={novaSenha} dono={dono} />
         </div>
 
         <div className="field">

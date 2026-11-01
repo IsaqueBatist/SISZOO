@@ -10,6 +10,7 @@ import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
 import { Icon } from '@/components/layout/Icon'
 import { aplicarErrosDeCampo, mensagemDeRegraDaApi, statusHttpDoErro } from '@/lib/erroApi'
 import { useTituloPagina } from '@/lib/useTituloPagina'
+import { CriteriosSenha } from './CriteriosSenha'
 import { PainelMarcaLogin } from './PainelMarcaLogin'
 import './Login.css'
 
@@ -48,12 +49,15 @@ export function RedefinirSenha() {
     register,
     handleSubmit,
     setError,
+    watch,
     formState: { errors },
   } = useForm<TrocarSenhaFormValues>({
     resolver: zodResolver(schema),
     mode: 'onSubmit',
     reValidateMode: 'onSubmit',
+    defaultValues: { novaSenha: '', confirmarSenha: '' },
   })
+  const novaSenha = watch('novaSenha')
 
   async function onSubmit(dados: TrocarSenhaFormValues) {
     try {
@@ -145,9 +149,7 @@ export function RedefinirSenha() {
       <form className="login-card" onSubmit={aoEnviar} noValidate>
         <div>
           <h1 className="login-titulo">Escolha uma nova senha</h1>
-          <p className="lead">
-            Use ao menos 8 caracteres, combinando 3 tipos: letras maiúsculas, minúsculas, números e símbolos.
-          </p>
+          <p className="lead">Os critérios abaixo do campo acompanham o que você digita.</p>
         </div>
 
         <AlertaErroEnvio mensagem={submitError} />
@@ -172,6 +174,7 @@ export function RedefinirSenha() {
             />
           </div>
           {errors.novaSenha && <span className="err" id="novaSenha-erro">{errors.novaSenha.message}</span>}
+          <CriteriosSenha senha={novaSenha} />
         </div>
 
         <div className="field">

@@ -7,6 +7,7 @@ import { useAuth } from '../hooks/useAuth'
 import { loginSchema, type LoginFormValues } from '../schemas/loginSchema'
 import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
 import { Icon } from '@/components/layout/Icon'
+import { mensagemDeRegraDaApi } from '@/lib/erroApi'
 import { useTituloPagina } from '@/lib/useTituloPagina'
 import { PainelMarcaLogin } from './PainelMarcaLogin'
 import './Login.css'
@@ -42,6 +43,11 @@ export function Login() {
     } catch (erro) {
       if (isAxiosError(erro) && erro.response?.status === 401) {
         setSubmitError('E-mail ou senha inválidos. Se o problema continuar, fale com o Administrador do sistema.')
+      } else if (isAxiosError(erro) && erro.response?.status === 429) {
+        // Limite de tentativas (LimitadorLogin): vale mesmo com a senha certa.
+        setSubmitError(
+          mensagemDeRegraDaApi(erro) ?? 'Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente.',
+        )
       } else {
         setSubmitError('Não foi possível entrar. Verifique sua conexão e tente novamente.')
       }

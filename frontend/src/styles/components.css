@@ -1,4 +1,4 @@
-/* SISZOO — Components */
+/* SISZOO - Components */
 
 /* ===== Buttons ===== */
 .btn {
@@ -20,7 +20,7 @@
 .btn:hover { transform: translateY(-1px); text-decoration: none; }
 .btn .icon { width: 16px; height: 16px; }
 /* Sem isso, um botão `disabled` (ex.: "Vincular processo selecionado" antes
-   de selecionar uma linha) fica visualmente idêntico a um habilitado — o
+   de selecionar uma linha) fica visualmente idêntico a um habilitado - o
    usuário clica, nada acontece, e parece bug em vez de "ainda não
    selecionou nada". */
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -915,7 +915,7 @@ table.data .row-num { color: var(--color-text-muted); font-size: 11px; font-fami
 .kv-list .kv-row:first-child { padding-top: 0; }
 .tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
 
-/* Layout de detalhe (coluna principal + coluna lateral) — usado por
+/* Layout de detalhe (coluna principal + coluna lateral) - usado por
    OcorrenciaDetalhe.tsx e ProcessoDetalhe.tsx, promovido de
    OcorrenciaDetalhe.css para cá quando passou a ser compartilhado. */
 .det-grid {
@@ -1171,3 +1171,30 @@ table.data .row-num { color: var(--color-text-muted); font-size: 11px; font-fami
 :root[data-tema='escuro'] .sidebar-item .badge-count,
 :root[data-tema='escuro'] .badge-urgent { color: var(--color-on-primary); }
 :root[data-tema='escuro'] .alert-desc-item.severidade-vencida { color: #FF9E9B; }
+
+/* ===== Critérios de senha (CriteriosSenha) ===== */
+.criterios-senha {
+  margin-top: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted, var(--color-surface));
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.criterios-senha-titulo { margin: 0 0 6px; font-weight: 600; color: var(--color-text-primary); }
+.criterios-senha ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.criterios-senha .criterio { display: flex; align-items: flex-start; gap: 6px; }
+.criterios-senha .criterio.ok { color: var(--color-success); }
+.criterios-senha .criterio.falha { color: var(--color-danger); }
+.criterios-senha .criterio.pendente { color: var(--color-text-secondary); }
+.criterios-senha .criterio.pendente .criterios-senha-icone { opacity: 0.35; }
+.criterios-senha-icone { display: inline-flex; flex-shrink: 0; margin-top: 2px; }
+.criterios-senha .criterio-texto { flex: 1; }
+.criterios-senha-contagem { font-weight: 400; }
+.criterios-senha-tipos { margin-top: 4px !important; padding-left: 2px !important; gap: 2px !important; }
+.criterios-senha-tipos li { display: flex; align-items: center; gap: 6px; color: var(--color-text-secondary); }
+.criterios-senha-tipos li .criterios-senha-icone { margin-top: 0; opacity: 0.3; }
+.criterios-senha-tipos li.presente { color: var(--color-success); }
+.criterios-senha-tipos li.presente .criterios-senha-icone { opacity: 1; }
+.criterios-senha .hint { margin: 8px 0 0; }

@@ -35,7 +35,7 @@ export const CREDENCIAIS_VALIDAS: LoginRequest = {
 }
 
 // Recuperação de senha: o único token que o mock aceita, e o e-mail que
-// simula o limite de tentativas (429).
+// simula o limite de tentativas (429) no login e na recuperação.
 export const TOKEN_RECUPERACAO_VALIDO = 'token-recuperacao-valido'
 export const EMAIL_RECUPERACAO_LIMITADO = 'limite.atingido@itu.sp.gov.br'
 // Senha que o mock considera "a atual" do dono do token: cumpre a política do
@@ -1100,6 +1100,12 @@ export const handlers = [
   http.post(`${API_BASE_URL}/auth/login`, async ({ request }) => {
     const body = (await request.json()) as LoginRequest
 
+    if (body.email === EMAIL_RECUPERACAO_LIMITADO) {
+      return HttpResponse.json(
+        { mensagem: 'Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente.' },
+        { status: 429 },
+      )
+    }
     if (body.email === CREDENCIAIS_VALIDAS.email && body.senha === CREDENCIAIS_VALIDAS.senha) {
       return HttpResponse.json(LOGIN_RESPONSE)
     }

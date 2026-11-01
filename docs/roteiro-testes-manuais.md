@@ -412,3 +412,13 @@ responde 202 e o envio só aparece como `WARN` no log do backend.
    mostra uma miniatura diferente por animal, coerente com a espécie (cães, gatos e o sagui Chico).
 2. A ficha (T06) mostra a foto em tamanho maior; Gestão de Baias mostra as miniaturas dos residentes.
 3. Créditos e licenças: `backend/src/main/resources/seed/fotos/CREDITOS.md`.
+
+### 7.4 Limite de tentativas no login e critérios de senha [UI + API]
+
+1. Na tela de login, errar a senha de `paulo.teixeira.seed@itu.sp.gov.br` 5 vezes → a 6ª tentativa, mesmo com
+   `Ficticio#2026`, mostra "Muitas tentativas em pouco tempo" (429). Outro usuário continua entrando. Depois de 15 min
+   (ou de reiniciar o backend), o login volta. Nenhum evento `LOGIN` aparece em `/logs` para as tentativas recusadas.
+2. Entrar como `helena.duarte.seed@itu.sp.gov.br` (primeiro acesso): a tela de troca mostra a lista de critérios
+   abaixo do campo, neutra antes de digitar; `helena1` marca "8 caracteres" e "partes do seu nome" em vermelho; ao
+   completar `Nova-Senha-2026`, todos ficam verdes. A mesma lista aparece em `/redefinir-senha` (sem os critérios de
+   nome) e no modal "Adicionar Usuário" (Admin), reagindo ao e-mail e ao nome completo digitados.

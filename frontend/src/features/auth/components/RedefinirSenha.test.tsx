@@ -69,7 +69,7 @@ describe('RedefinirSenha', () => {
     await user.type(screen.getByLabelText(/confirmar nova senha/i), 'outra')
     await user.click(screen.getByRole('button', { name: /salvar nova senha/i }))
 
-    expect(await screen.findByText(/3 tipos de caractere/i)).toBeInTheDocument()
+    expect(await screen.findByText(/^Use ao menos 3 tipos de caractere/)).toBeInTheDocument()
     expect(screen.getByText('As senhas não coincidem.')).toBeInTheDocument()
   })
 

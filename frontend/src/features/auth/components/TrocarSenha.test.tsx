@@ -48,9 +48,9 @@ describe('TrocarSenha', () => {
   })
 
   it.each([
-    ['somente-minusculas', /3 tipos de caractere/i],
-    ['Beatriz-2026!', /partes do nome/i],
-    ['X1-beatriz.camargo', /nome da conta/i],
+    ['somente-minusculas', /^Use ao menos 3 tipos de caractere/],
+    ['Beatriz-2026!', /^A senha não pode conter partes do nome/],
+    ['X1-beatriz.camargo', /^A senha não pode conter o nome da conta/],
   ])('recusa "%s" pela política de senha sem chamar a API', async (senha, mensagem) => {
     const user = userEvent.setup()
     renderTrocarSenha()
@@ -61,6 +61,23 @@ describe('TrocarSenha', () => {
 
     expect(await screen.findByText(mensagem)).toBeInTheDocument()
     expect(screen.queryByText('Dashboard')).not.toBeInTheDocument()
+  })
+
+  it('a lista de critérios acompanha a senha digitada', async () => {
+    const user = userEvent.setup()
+    renderTrocarSenha()
+
+    expect(screen.getByText(/ao menos 8 caracteres/i).closest('li')).toHaveClass('pendente')
+
+    await user.type(screen.getByLabelText(/^nova senha/i), 'beatriz1')
+    expect(screen.getByText(/ao menos 8 caracteres/i).closest('li')).toHaveClass('ok')
+    expect(screen.getByText(/partes do seu nome/i).closest('li')).toHaveClass('falha')
+    expect(screen.getByText(/3 tipos de caractere/i).closest('li')).toHaveClass('falha')
+
+    await user.clear(screen.getByLabelText(/^nova senha/i))
+    await user.type(screen.getByLabelText(/^nova senha/i), 'Nova-Senha-2026')
+    expect(screen.getByText(/partes do seu nome/i).closest('li')).toHaveClass('ok')
+    expect(screen.getByText(/3 tipos de caractere/i).closest('li')).toHaveClass('ok')
   })
 
   it('troca a senha com sucesso e navega para /dashboard', async () => {

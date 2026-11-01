@@ -40,7 +40,7 @@ O **SISZOO** digitaliza e centraliza esses processos em um sistema web leve, de 
 |--------|-----------|
 | **A -  Gestão de Animais do Canil** | Cadastro de animais (microchip, medalha, procedência), gestão de baias, histórico clínico imutável (vacinações, procedimentos, prescrições, exames), anexos do animal e alertas de reforço vacinal |
 | **B -  Processos Sanitários** | Registro e acompanhamento de zoonoses (raiva, esporotricose, leishmaniose visceral, leptospirose, febre maculosa, febre amarela): amostras, resultado laboratorial imutável, notificação por e-mail |
-| **C -  Autenticação e Perfis de Acesso** | Login com sessão renovável e expiração por inatividade, recuperação de senha por e-mail ("Esqueci minha senha"), perfis com permissões fixas, política de senha e trilha de auditoria consultável |
+| **C -  Autenticação e Perfis de Acesso** | Login com sessão renovável, expiração por inatividade e limite de tentativas, recuperação de senha por e-mail ("Esqueci minha senha"), perfis com permissões fixas, política de senha e trilha de auditoria consultável |
 | **D -  Dashboard e Relatórios** | Indicadores e gráficos com cache de 5 min, seis relatórios em PDF/CSV com histórico de exportações |
 | **E -  Ocorrências e Denúncias** | Registro com protocolo anual, denunciante sigiloso/anônimo, anexos, movimentações e encerramento com providência |
 

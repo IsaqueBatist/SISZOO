@@ -93,6 +93,13 @@ siszoo:
   # aplicacao exatamente de onde a API a aceita.
   app:
     url: ${SISZOO_APP_URL:${SISZOO_CORS_ORIGIN:http://localhost:5173}}
+  # Limite de tentativas do login (LimitadorLogin, PS-8): so as falhas contam,
+  # em janela fixa, por e-mail e por IP. Atingido, 429 ate a janela vencer.
+  login:
+    limite:
+      falhas-por-email: 5
+      falhas-por-ip: 30
+      janela-minutos: 15
   # Recuperacao de senha (docs/decisoes/recuperacao-senha.md): validade do
   # link e limites de tentativas em memoria (LimitadorRecuperacaoSenha).
   recuperacao-senha:
@@ -204,6 +211,14 @@ siszoo:
     expiracao-minutos: 15
   notificacoes:
     remetente: nao-responda@siszoo.test
+  # Os *IT chegam todos de 127.0.0.1 e alguns erram a senha de proposito: os
+  # limites do login ficam altos no contexto compartilhado. LimiteLoginIT
+  # sobe um contexto proprio com limites baixos para testar o 429.
+  login:
+    limite:
+      falhas-por-email: 1000
+      falhas-por-ip: 100000
+      janela-minutos: 15
 
 ---
 # Seed de dados ficticios (com.siszoo.seed, docs/decisoes/seed-dev.md): so com

@@ -2,19 +2,14 @@ package com.siszoo.usuarios.service;
 
 import java.time.Duration;
 import java.util.Locale;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.siszoo.usuarios.exception.LimiteTentativasException;
 
 // Limite de tentativas da recuperacao de senha, em memoria e por instancia
-// (o CCZ roda uma so). Janela fixa por chave: o contador nasce na primeira
-// chamada e some quando a janela vence. Caffeine ja e dependencia do cache do
-// dashboard; nenhuma biblioteca nova.
+// (o CCZ roda uma so), sobre JanelaDeTentativas.
 //
 // Tres contadores independentes:
 // - solicitacoes por e-mail: freia o envio repetido para uma mesma caixa;
@@ -29,9 +24,9 @@ public class LimitadorRecuperacaoSenha {
     private final int solicitacoesPorEmail;
     private final int solicitacoesPorIp;
     private final int consumosPorIp;
-    private final Cache<String, AtomicInteger> solicitacoesEmail;
-    private final Cache<String, AtomicInteger> solicitacoesIp;
-    private final Cache<String, AtomicInteger> consumosIp;
+    private final JanelaDeTentativas solicitacoesEmail;
+    private final JanelaDeTentativas solicitacoesIp;
+    private final JanelaDeTentativas consumosIp;
 
     public LimitadorRecuperacaoSenha(
             @Value("${siszoo.recuperacao-senha.limite.solicitacoes-por-email}") int solicitacoesPorEmail,
@@ -43,41 +38,32 @@ public class LimitadorRecuperacaoSenha {
         this.solicitacoesPorIp = solicitacoesPorIp;
         this.consumosPorIp = consumosPorIp;
         Duration janelaSolicitacoes = Duration.ofMinutes(janelaSolicitacoesMinutos);
-        Duration janelaConsumos = Duration.ofMinutes(janelaConsumosMinutos);
-        this.solicitacoesEmail = contadores(janelaSolicitacoes);
-        this.solicitacoesIp = contadores(janelaSolicitacoes);
-        this.consumosIp = contadores(janelaConsumos);
+        this.solicitacoesEmail = new JanelaDeTentativas(janelaSolicitacoes);
+        this.solicitacoesIp = new JanelaDeTentativas(janelaSolicitacoes);
+        this.consumosIp = new JanelaDeTentativas(Duration.ofMinutes(janelaConsumosMinutos));
     }
 
     // Conta a solicitacao antes de qualquer consulta ao banco: um e-mail
     // inexistente gasta a cota do mesmo jeito que um cadastrado.
     public void registrarSolicitacao(String email, String ip) {
-        boolean dentroDoLimiteIp = incrementar(solicitacoesIp, chaveIp(ip)) <= solicitacoesPorIp;
-        boolean dentroDoLimiteEmail = incrementar(solicitacoesEmail, normalizar(email)) <= solicitacoesPorEmail;
+        boolean dentroDoLimiteIp = solicitacoesIp.incrementar(chaveIp(ip)) <= solicitacoesPorIp;
+        boolean dentroDoLimiteEmail = solicitacoesEmail.incrementar(normalizar(email)) <= solicitacoesPorEmail;
         if (!dentroDoLimiteIp || !dentroDoLimiteEmail) {
             throw new LimiteTentativasException();
         }
     }
 
     public void registrarConsumo(String ip) {
-        if (incrementar(consumosIp, chaveIp(ip)) > consumosPorIp) {
+        if (consumosIp.incrementar(chaveIp(ip)) > consumosPorIp) {
             throw new LimiteTentativasException();
         }
     }
 
-    private static int incrementar(Cache<String, AtomicInteger> contadores, String chave) {
-        return contadores.get(chave, ignorada -> new AtomicInteger()).incrementAndGet();
-    }
-
-    private static Cache<String, AtomicInteger> contadores(Duration janela) {
-        return Caffeine.newBuilder().expireAfterWrite(janela).maximumSize(10_000).build();
-    }
-
-    private static String normalizar(String email) {
+    static String normalizar(String email) {
         return email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
     }
 
-    private static String chaveIp(String ip) {
+    static String chaveIp(String ip) {
         return ip == null ? "desconhecido" : ip;
     }
 }
