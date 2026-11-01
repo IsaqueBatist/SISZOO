@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -39,6 +39,22 @@ function renderLogs(cargos: string[] = ['Administrador']) {
   )
 }
 
+function capturarEventos() {
+  const chamadas: URLSearchParams[] = []
+  server.use(
+    http.get(`${API_BASE_URL}/auditoria`, ({ request }) => {
+      chamadas.push(new URL(request.url).searchParams)
+      return HttpResponse.json(
+        paginaDe([
+          { id: '1', usuarioEmail: 'a@itu.sp.gov.br', acao: 'LOGIN', entidade: 'usuario', entidadeId: null, ocorreuEm: new Date().toISOString() },
+          { id: '2', usuarioEmail: 'b@itu.sp.gov.br', acao: 'CRIACAO', entidade: 'vacinacao', entidadeId: null, ocorreuEm: new Date().toISOString() },
+        ], 50),
+      )
+    }),
+  )
+  return chamadas
+}
+
 function paginaDe(itens: Record<string, unknown>[], totalItens = itens.length) {
   return { itens, pagina: 0, tamanho: 20, totalItens, totalPaginas: 1 }
 }
@@ -48,7 +64,7 @@ describe('Logs', () => {
     renderLogs()
 
     expect(await screen.findByRole('heading', { name: 'Logs do Sistema' })).toBeInTheDocument()
-    // A fixture tem 2 eventos de stephanie.lima — confere ao menos uma linha
+    // A fixture tem 2 eventos de stephanie.lima - confere ao menos uma linha
     // de evento (<strong>), não a opção do filtro por usuário.
     const linhas = await screen.findAllByText('stephanie.lima@itu.sp.gov.br', { selector: 'strong' })
     expect(linhas.length).toBeGreaterThan(0)
@@ -61,29 +77,26 @@ describe('Logs', () => {
     expect(screen.queryByRole('heading', { name: 'Logs do Sistema' })).not.toBeInTheDocument()
   })
 
-  it('filtrar por ação mostra o aviso "Filtro aplicado..." e não mostra sem filtro', async () => {
+  it('filtrar por ação envia o parâmetro ao servidor e mostra o total da trilha só com filtro ativo', async () => {
     const user = userEvent.setup()
-    server.use(
-      http.get(`${API_BASE_URL}/auditoria`, () =>
-        HttpResponse.json(
-          paginaDe([
-            { id: '1', usuarioEmail: 'a@itu.sp.gov.br', acao: 'LOGIN', entidade: 'usuario', entidadeId: null, ocorreuEm: new Date().toISOString() },
-            { id: '2', usuarioEmail: 'b@itu.sp.gov.br', acao: 'CRIACAO', entidade: 'vacinacao', entidadeId: null, ocorreuEm: new Date().toISOString() },
-          ], 50),
-        ),
-      ),
-    )
+    const chamadas = capturarEventos()
     renderLogs()
 
     await screen.findByText('a@itu.sp.gov.br', { selector: 'strong' })
-    expect(screen.queryByText(/Filtro aplicado/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/encontrado\(s\) em toda a trilha/)).not.toBeInTheDocument()
 
-    await user.selectOptions(screen.getByLabelText('Filtrar por ação'), 'LOGIN')
+    await user.selectOptions(screen.getByLabelText('Filtrar por ação'), 'Entrada no sistema')
 
-    // F2-027: o filtro é aplicado no servidor (o handler fixo deste teste devolve a
-    // mesma página; a passagem local garante a página exibida).
-    expect(await screen.findByText('Filtro aplicado em toda a trilha: 50 evento(s) encontrado(s), 1 nesta página.')).toBeInTheDocument()
-    expect(screen.queryByText('b@itu.sp.gov.br', { selector: 'strong' })).not.toBeInTheDocument()
+    expect(await screen.findByText('50 evento(s) encontrado(s) em toda a trilha.')).toBeInTheDocument()
+    expect(chamadas.at(-1)?.get('acao')).toBe('LOGIN')
+  })
+
+  it('não oferece filtro por entidade', async () => {
+    capturarEventos()
+    renderLogs()
+
+    await screen.findByText('a@itu.sp.gov.br', { selector: 'strong' })
+    expect(screen.queryByLabelText('Filtrar por entidade')).not.toBeInTheDocument()
   })
 
   it('estado vazio quando não há eventos', async () => {
@@ -91,6 +104,37 @@ describe('Logs', () => {
     renderLogs()
 
     expect(await screen.findByText('Nenhum evento encontrado')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Limpar filtros' })).not.toBeInTheDocument()
+  })
+
+  it('sem resultado com filtro, oferece limpar direto do estado vazio', async () => {
+    const user = userEvent.setup()
+    server.use(http.get(`${API_BASE_URL}/auditoria`, () => HttpResponse.json(paginaDe([]))))
+    renderLogs()
+    await screen.findByText('Nenhum evento encontrado')
+
+    await user.selectOptions(await screen.findByLabelText('Filtrar por módulo'), 'Relatórios')
+
+    expect(await screen.findByText('Nenhum resultado com estes filtros.')).toBeInTheDocument()
+    await user.click(screen.getAllByRole('button', { name: 'Limpar filtros' })[1])
+    expect(await screen.findByText('Ainda não há eventos registrados.')).toBeInTheDocument()
+  })
+
+  it('volta para a última página quando a atual deixou de existir', async () => {
+    sessionStorage.setItem('siszoo_filtros:logs', JSON.stringify({ filtros: {}, pagina: 3 }))
+    const paginas: string[] = []
+    server.use(
+      http.get(`${API_BASE_URL}/auditoria`, ({ request }) => {
+        const pagina = new URL(request.url).searchParams.get('pagina') as string
+        paginas.push(pagina)
+        const itens = pagina === '0' ? [{ id: '1', usuarioEmail: 'a@itu.sp.gov.br', acao: 'LOGIN', entidade: 'usuario', entidadeId: null, ocorreuEm: new Date().toISOString() }] : []
+        return HttpResponse.json({ ...paginaDe(itens, 1), totalPaginas: 1 })
+      }),
+    )
+    renderLogs()
+
+    expect(await screen.findByText('a@itu.sp.gov.br', { selector: 'strong' })).toBeInTheDocument()
+    expect(paginas).toEqual(['3', '0'])
   })
 
   it('erro ao carregar mostra retry', async () => {
@@ -117,27 +161,16 @@ describe('Logs', () => {
     expect(screen.getByRole('heading', { name: 'Gestão de Animais' })).toBeInTheDocument()
   })
 
-  it('filtrar por módulo mostra só os eventos daquele módulo', async () => {
+  it('filtrar por módulo envia o parâmetro ao servidor', async () => {
     const user = userEvent.setup()
-    server.use(
-      http.get(`${API_BASE_URL}/auditoria`, () =>
-        HttpResponse.json(
-          paginaDe([
-            { id: '1', usuarioEmail: 'a@itu.sp.gov.br', acao: 'LOGIN', entidade: 'usuario', entidadeId: null, ocorreuEm: new Date().toISOString() },
-            { id: '2', usuarioEmail: 'b@itu.sp.gov.br', acao: 'CRIACAO', entidade: 'vacinacao', entidadeId: null, ocorreuEm: new Date().toISOString() },
-          ], 50),
-        ),
-      ),
-    )
+    const chamadas = capturarEventos()
     renderLogs()
 
     await screen.findByText('a@itu.sp.gov.br', { selector: 'strong' })
 
     await user.selectOptions(screen.getByLabelText('Filtrar por módulo'), 'Usuários e Acesso')
 
-    // F2-027: o filtro é aplicado no servidor (o handler fixo deste teste devolve a
-    // mesma página; a passagem local garante a página exibida).
-    expect(await screen.findByText('Filtro aplicado em toda a trilha: 50 evento(s) encontrado(s), 1 nesta página.')).toBeInTheDocument()
-    expect(screen.queryByText('b@itu.sp.gov.br', { selector: 'strong' })).not.toBeInTheDocument()
+    await waitFor(() => expect(chamadas.at(-1)?.get('modulo')).toBe('USUARIOS_ACESSO'))
+    expect(await screen.findByText('50 evento(s) encontrado(s) em toda a trilha.')).toBeInTheDocument()
   })
 })

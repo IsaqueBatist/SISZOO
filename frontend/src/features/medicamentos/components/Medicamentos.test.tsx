@@ -1,10 +1,13 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
+import { API_BASE_URL } from '@/lib/env'
+import { server } from '@/mocks/server'
 import { Medicamentos } from './Medicamentos'
 
 function renderComCargo(cargo: string) {
@@ -29,6 +32,51 @@ function renderComCargo(cargo: string) {
 }
 
 describe('Medicamentos', () => {
+  it('busca sem depender de acento e filtra por categoria, com opção de limpar', async () => {
+    const user = userEvent.setup()
+    renderComCargo('Agente Sanitário')
+
+    await screen.findByText('Fenobarbital 30mg')
+
+    await user.selectOptions(screen.getByLabelText('Filtrar por categoria'), 'Antibiótico')
+    expect(screen.queryByRole('cell', { name: 'Fenobarbital 30mg' })).not.toBeInTheDocument()
+    expect(screen.getByRole('cell', { name: 'Amoxicilina 250mg' })).toBeInTheDocument()
+    expect(screen.getByText('Mostrando', { exact: false })).toHaveTextContent('Mostrando 1 de 2 medicamentos')
+
+    await user.type(screen.getByLabelText('Buscar medicamentos'), 'nao existe')
+    expect(await screen.findByText('Nenhum medicamento encontrado')).toBeInTheDocument()
+
+    await user.click(screen.getAllByRole('button', { name: 'Limpar filtros' })[0])
+    expect(screen.getByRole('cell', { name: 'Fenobarbital 30mg' })).toBeInTheDocument()
+
+    await user.type(screen.getByLabelText('Buscar medicamentos'), 'AMÓXI')
+    expect(screen.getByRole('cell', { name: 'Amoxicilina 250mg' })).toBeInTheDocument()
+    expect(screen.queryByRole('cell', { name: 'Fenobarbital 30mg' })).not.toBeInTheDocument()
+  })
+
+  it('traz o catálogo inteiro mesmo quando ele ocupa mais de uma página', async () => {
+    const paginas: (string | null)[] = []
+    server.use(
+      http.get(`${API_BASE_URL}/medicamentos`, ({ request }) => {
+        const pagina = new URL(request.url).searchParams.get('pagina')
+        paginas.push(pagina)
+        const nome = pagina === '0' ? 'Da primeira página' : 'Da segunda página'
+        return HttpResponse.json({
+          itens: [{ id: nome, nome, categoriaId: 'cat-1', categoriaNome: 'Antibiótico', ativo: true }],
+          pagina: Number(pagina),
+          tamanho: 500,
+          totalItens: 501,
+          totalPaginas: 2,
+        })
+      }),
+    )
+    renderComCargo('Agente Sanitário')
+
+    expect(await screen.findByRole('cell', { name: 'Da segunda página' })).toBeInTheDocument()
+    expect(screen.getByRole('cell', { name: 'Da primeira página' })).toBeInTheDocument()
+    expect(paginas).toEqual(['0', '1'])
+  })
+
   it('cadastra uma categoria nova, já a escolhe e cadastra o medicamento na lista', async () => {
     const user = userEvent.setup()
     renderComCargo('Administrador')

@@ -1,13 +1,14 @@
-# Pedido — filtro `urgente` em GET /api/processos
+# Pedido - filtro `urgente` em GET /api/processos
 
 Status: **implementado (T45, PR #113)**. `GET /api/processos?urgente=true` filtra no servidor; o card do dashboard
 passou a mostrar o total exato (`ProcessoSanitarioController`, parâmetro `urgente` opcional ao lado de `doenca` e
-`status`). O texto abaixo é o pedido original.
+`status`). Desde 01/11/2026, `status` aceita vários valores separados por vírgula e há período de abertura em `de` e
+`ate` (`docs/decisoes/filtros-consulta.md` FC-4). O texto abaixo é o pedido original.
 
 ## Contexto
 
 O dashboard (T39) tem um card de alerta para processos sanitários urgentes
-(contato humano-animal, regra 18 — já aplicada 100% no backend ao criar o
+(contato humano-animal, regra 18 - já aplicada 100% no backend ao criar o
 processo, o frontend nunca recalcula isso). Hoje `GET /api/processos` ordena
 `urgente desc, dataAbertura desc`, mas não tem um parâmetro de query para
 filtrar só os urgentes.
@@ -16,7 +17,7 @@ O card atual (`frontend/src/features/dashboard/hooks/useAlertaProcessosUrgentes.
 contorna isso pedindo uma página de `tamanho=50` e filtrando `urgente ===
 true` no cliente. Funciona porque o backend já ordena urgentes primeiro, mas
 tem um limite: se houver mais de 50 processos urgentes abertos ao mesmo
-tempo, o card perde itens silenciosamente (sem erro — só não aparecem).
+tempo, o card perde itens silenciosamente (sem erro - só não aparecem).
 
 ## Pedido
 
@@ -33,5 +34,5 @@ inalterado (retrocompatível).
 Alternativa equivalente, se for mais simples de implementar: um endpoint
 dedicado de contagem/lista curta, ex. `GET /api/processos/urgentes`, sem
 paginação, já que o volume esperado de urgentes simultâneos é pequeno.
-Qualquer uma das duas resolve o problema do frontend — a decisão de qual é
+Qualquer uma das duas resolve o problema do frontend - a decisão de qual é
 mais simples no backend fica com quem for implementar.

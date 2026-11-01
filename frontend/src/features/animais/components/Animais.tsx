@@ -1,10 +1,16 @@
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { ErroComRetry } from '@/components/layout/ErroComRetry'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { formatarDataBR } from '@/lib/datas'
-import { useFiltrosLista, useValorComAtraso } from '@/lib/useFiltrosLista'
-import { useAnimaisQuery, useBaiasAtivasQuery, useCatalogosAnimaisQuery } from '../hooks/useAnimais'
+import {
+  classeDoFiltro,
+  useFiltroDeLink,
+  useFiltrosLista,
+  useManterPaginaNoIntervalo,
+  useValorComAtraso,
+} from '@/lib/useFiltrosLista'
+import { useAnimaisQuery, useBaiasQuery, useCatalogosAnimaisQuery } from '../hooks/useAnimais'
 import { badgeDeEspecie, badgeDeStatus } from '../utils/statusBadge'
 import type { Animal, Pelagem } from '../types/animais.types'
 import { formatarPorte, formatarSexo } from '../utils/rotulosAnimal'
@@ -13,6 +19,8 @@ const TAMANHO_PAGINA = 20
 const LINHAS_SKELETON = [0, 1, 2, 3, 4]
 const COLUNAS_TABELA = ['animal', 'especie', 'baia', 'status', 'sexo', 'porte', 'entrada', 'castrado', 'acoes']
 const FILTROS_PADRAO = { busca: '', status: '', especie: '', baia: '' }
+const STATUS_SOB_CUSTODIA = 'sob_custodia'
+const ROTULOS_STATUS_FILTRO: Record<string, string> = { disponivel_adocao: 'Disponível p/ adoção' }
 
 // dataEntrada é LocalDateTime sem fuso, já no horário do CCZ: separar a
 // string não depende do fuso do navegador (ver lib/datas.ts).
@@ -32,10 +40,9 @@ function corAvatar(seed: string): string {
 export function Animais() {
   const { roleKey } = useAuth()
   const podeEscrever = roleKey === 'admin' || roleKey === 'vet'
-  const [searchParams] = useSearchParams()
   // Um card de baia (T19) linka para cá com `?baiaId=`: esse filtro vale mais
   // que o guardado da última visita.
-  const baiaDaUrl = searchParams.get('baiaId')
+  const baiaDaUrl = useFiltroDeLink('baiaId')
   const { filtros, pagina, definirFiltros, irParaPagina, limparFiltros, filtrosAtivos } = useFiltrosLista(
     'animais',
     FILTROS_PADRAO,
@@ -43,9 +50,11 @@ export function Animais() {
   )
   const { status: statusFiltro, especie: especieFiltro, baia: baiaFiltro } = filtros
   const buscaDebounced = useValorComAtraso(filtros.busca).trim()
+  const sobCustodia = statusFiltro === STATUS_SOB_CUSTODIA
 
   const { data, isLoading, isError, refetch } = useAnimaisQuery({
-    status: statusFiltro || undefined,
+    status: sobCustodia ? undefined : statusFiltro || undefined,
+    custodia: sobCustodia || undefined,
     especie: especieFiltro || undefined,
     baiaId: baiaFiltro || undefined,
     q: buscaDebounced || undefined,
@@ -53,7 +62,10 @@ export function Animais() {
     tamanho: TAMANHO_PAGINA,
   })
   const { data: catalogos } = useCatalogosAnimaisQuery()
-  const { data: baias } = useBaiasAtivasQuery()
+  const { data: baias } = useBaiasQuery()
+  const opcoesDeBaia = baias?.filter((baia) => baia.ativa || baia.id === baiaFiltro)
+
+  useManterPaginaNoIntervalo(pagina, data?.totalPaginas, irParaPagina)
 
   const totalPaginas = Math.max(data?.totalPaginas ?? 1, 1)
   const primeiroItem = data && data.totalItens > 0 ? pagina * TAMANHO_PAGINA + 1 : 0
@@ -83,14 +95,28 @@ export function Animais() {
           <Icon name="search" size={14} />
           <input
             type="text"
-            placeholder="Buscar por nome ou microchip..."
+            placeholder="Buscar por nome, microchip ou medalha..."
             aria-label="Buscar animais"
             value={filtros.busca}
             onChange={(event) => definirFiltros({ busca: event.target.value })}
           />
         </div>
         <select
-          className="filter-select"
+          className={classeDoFiltro(statusFiltro)}
+          aria-label="Filtrar por status"
+          value={statusFiltro}
+          onChange={(event) => definirFiltros({ status: event.target.value })}
+        >
+          <option value="">Status: Todos</option>
+          <option value={STATUS_SOB_CUSTODIA}>Sob custódia</option>
+          {catalogos?.status.map((status) => (
+            <option key={status.codigo} value={status.codigo}>
+              {ROTULOS_STATUS_FILTRO[status.codigo] ?? status.nome}
+            </option>
+          ))}
+        </select>
+        <select
+          className={classeDoFiltro(especieFiltro)}
           aria-label="Filtrar por espécie"
           value={especieFiltro}
           onChange={(event) => definirFiltros({ especie: event.target.value })}
@@ -103,28 +129,15 @@ export function Animais() {
           ))}
         </select>
         <select
-          className="filter-select"
-          aria-label="Filtrar por status"
-          value={statusFiltro}
-          onChange={(event) => definirFiltros({ status: event.target.value })}
-        >
-          <option value="">Status: Todos</option>
-          {catalogos?.status.map((status) => (
-            <option key={status.codigo} value={status.codigo}>
-              {status.nome}
-            </option>
-          ))}
-        </select>
-        <select
-          className="filter-select"
+          className={classeDoFiltro(baiaFiltro)}
           aria-label="Filtrar por baia"
           value={baiaFiltro}
           onChange={(event) => definirFiltros({ baia: event.target.value })}
         >
           <option value="">Baia: Todas</option>
-          {baias?.map((baia) => (
+          {opcoesDeBaia?.map((baia) => (
             <option key={baia.id} value={baia.id}>
-              {baia.nome}
+              {baia.ativa ? baia.nome : `${baia.nome} (inativa)`}
             </option>
           ))}
         </select>
@@ -170,7 +183,7 @@ export function Animais() {
         </div>
       )}
 
-      {!isLoading && !isError && data && data.itens.length === 0 && (
+      {!isLoading && !isError && data && data.totalItens === 0 && (
         <div className="empty">
           <span className="ico">
             <Icon name="paw" size={28} />
@@ -228,7 +241,10 @@ export function Animais() {
                             <div className="name">
                               <Link to={`/animais/${animal.id}`}>{animal.nome}</Link>
                             </div>
-                            <div className="chip">{animal.microchip ?? '—'}</div>
+                            <div className="chip">
+                              {animal.microchip ?? '—'}
+                              {animal.numeroMedalha && ` · Medalha ${animal.numeroMedalha}`}
+                            </div>
                           </div>
                         </div>
                       </td>

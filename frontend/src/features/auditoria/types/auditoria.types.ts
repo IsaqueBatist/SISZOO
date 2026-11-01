@@ -28,10 +28,9 @@ export interface EventoAuditoria {
   payloadDepois?: string | null
 }
 
-// F2-027: filtros aplicados no servidor (GET /api/auditoria?acao=&entidade=&usuarioEmail=&modulo=&de=&ate=).
+// F2-027: filtros aplicados no servidor (GET /api/auditoria?acao=&usuarioEmail=&modulo=&de=&ate=).
 export interface FiltrosAuditoria {
   acao?: string
-  entidade?: string
   usuarioEmail?: string
   modulo?: string
   de?: string
@@ -41,7 +40,6 @@ export interface FiltrosAuditoria {
 // Espelha com.siszoo.usuarios.dto.OpcoesFiltroAuditoriaResponse (GET /api/auditoria/filtros).
 export interface OpcoesFiltroAuditoria {
   acoes: AcaoAuditoria[]
-  entidades: string[]
   usuarios: string[]
   modulos: string[]
 }

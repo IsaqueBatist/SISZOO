@@ -52,14 +52,19 @@ export function criarPrescricao(payload: CriarPrescricaoRequest): Promise<Prescr
 }
 
 // Só medicamentos ativos: são os únicos que fazem sentido oferecer numa
-// nova prescrição. Tamanho grande o bastante para cobrir o catálogo inteiro
-// sem paginação própria (mesmo padrão de `listarBaiasAtivas` em animaisApi.ts).
-const TAMANHO_PAGINA_SEM_UI_DE_PAGINACAO = 100
+// nova prescrição. Percorre todas as páginas: o catálogo entra inteiro na tela
+// de Medicamentos e no modal da ficha, que filtram no cliente.
+const TAMANHO_PAGINA_CATALOGO = 500
 
-export function listarMedicamentosAtivos(): Promise<Medicamento[]> {
-  return http
-    .get<PaginaResponse<Medicamento>>('/medicamentos', {
-      params: { ativo: true, pagina: 0, tamanho: TAMANHO_PAGINA_SEM_UI_DE_PAGINACAO },
+export async function listarMedicamentosAtivos(): Promise<Medicamento[]> {
+  const medicamentos: Medicamento[] = []
+  let totalPaginas = 1
+  for (let pagina = 0; pagina < totalPaginas; pagina += 1) {
+    const { data } = await http.get<PaginaResponse<Medicamento>>('/medicamentos', {
+      params: { ativo: true, pagina, tamanho: TAMANHO_PAGINA_CATALOGO },
     })
-    .then((response) => response.data.itens)
+    medicamentos.push(...data.itens)
+    totalPaginas = data.totalPaginas
+  }
+  return medicamentos
 }

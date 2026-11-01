@@ -36,6 +36,20 @@ function renderAnimais(initialEntry = '/animais') {
   )
 }
 
+function capturarListagem(itensDaPagina: (pagina: number) => Record<string, unknown>[] = () => []) {
+  const chamadas: URLSearchParams[] = []
+  server.use(
+    http.get(`${API_BASE_URL}/animais`, ({ request }) => {
+      const params = new URL(request.url).searchParams
+      chamadas.push(params)
+      const pagina = Number(params.get('pagina'))
+      const itens = itensDaPagina(pagina)
+      return HttpResponse.json({ itens, pagina, tamanho: 20, totalItens: 1, totalPaginas: 1 })
+    }),
+  )
+  return chamadas
+}
+
 describe('badgeDeStatus', () => {
   it('mapeia cada status do catálogo real para a classe e o rótulo corretos', () => {
     expect(badgeDeStatus('disponivel_adocao', 'Disponível')).toEqual({ classe: 'badge-available', label: 'Disponível' })
@@ -145,15 +159,82 @@ describe('Animais', () => {
     expect(screen.getByLabelText(/filtrar por baia/i)).toHaveValue('c3d4e5f6-0000-0000-0000-000000000002')
   })
 
+  it('o seletor mostra a baia inativa que veio do link do card', async () => {
+    server.use(
+      http.get(`${API_BASE_URL}/baias`, () =>
+        HttpResponse.json({
+          itens: [
+            { id: 'baia-ativa', nome: 'Baia 1', ativa: true },
+            { id: 'baia-inativa', nome: 'Baia 9', ativa: false },
+            { id: 'outra-inativa', nome: 'Baia 10', ativa: false },
+          ],
+          pagina: 0,
+          tamanho: 100,
+          totalItens: 3,
+          totalPaginas: 1,
+        }),
+      ),
+    )
+    renderAnimais('/animais?baiaId=baia-inativa')
+
+    expect(await screen.findByRole('option', { name: 'Baia 9 (inativa)' })).toBeInTheDocument()
+    expect(screen.getByLabelText(/filtrar por baia/i)).toHaveValue('baia-inativa')
+    expect(screen.queryByRole('option', { name: /Baia 10/ })).not.toBeInTheDocument()
+  })
+
+  it('"Sob custódia" pede ao servidor só quem está no canil, sem enviar um status', async () => {
+    const user = userEvent.setup()
+    const chamadas = capturarListagem()
+    renderAnimais()
+
+    await user.selectOptions(await screen.findByLabelText(/filtrar por status/i), 'Sob custódia')
+
+    await waitFor(() => expect(chamadas.at(-1)?.get('custodia')).toBe('true'))
+    expect(chamadas.at(-1)?.has('status')).toBe(false)
+  })
+
+  it('o filtro explica que "Disponível" é para adoção', async () => {
+    renderAnimais()
+
+    expect(await screen.findByRole('option', { name: 'Disponível p/ adoção' })).toHaveValue('disponivel_adocao')
+  })
+
+  it('mostra a medalha na lista, junto do microchip', async () => {
+    server.use(
+      http.get(`${API_BASE_URL}/animais`, () =>
+        HttpResponse.json({
+          itens: [{ id: 'a1', nome: 'Tobias', microchip: '985', numeroMedalha: 'M-77', statusCodigo: 'em_tratamento', statusNome: 'Em tratamento', especieCodigo: 'canino', especieNome: 'Canino' }],
+          pagina: 0,
+          tamanho: 20,
+          totalItens: 1,
+          totalPaginas: 1,
+        }),
+      ),
+    )
+    renderAnimais()
+
+    expect(await screen.findByText(/985 · Medalha M-77/)).toBeInTheDocument()
+  })
+
+  it('volta para a última página quando a atual deixou de existir', async () => {
+    sessionStorage.setItem('siszoo_filtros:animais', JSON.stringify({ filtros: {}, pagina: 2 }))
+    const chamadas = capturarListagem((pagina) => (pagina === 0 ? [{ id: 'a1', nome: 'Tobias', statusCodigo: 'em_tratamento', statusNome: 'Em tratamento', especieCodigo: 'canino', especieNome: 'Canino' }] : []))
+    renderAnimais()
+
+    expect(await screen.findByText('Tobias')).toBeInTheDocument()
+    expect(screen.queryByText('Nenhum animal encontrado')).not.toBeInTheDocument()
+    expect(chamadas.map((chamada) => chamada.get('pagina'))).toEqual(['2', '0'])
+  })
+
   it('busca por nome', async () => {
     const user = userEvent.setup()
     renderAnimais()
 
     await screen.findByText('Rex')
-    await user.type(screen.getByPlaceholderText(/buscar por nome ou microchip/i), 'Luna')
+    await user.type(screen.getByPlaceholderText(/buscar por nome, microchip ou medalha/i), 'Luna')
 
     // "Luna" já está na lista inicial (placeholderData mantém a página anterior
-    // visível enquanto a busca debounced ainda não voltou) — a asserção que
+    // visível enquanto a busca debounced ainda não voltou) - a asserção que
     // realmente comprova que o filtro foi aplicado no servidor é "Rex" sumir.
     await waitFor(() => {
       expect(screen.queryByText('Rex')).not.toBeInTheDocument()
@@ -166,7 +247,7 @@ describe('Animais', () => {
     renderAnimais()
 
     await screen.findByText('Rex')
-    await user.type(screen.getByPlaceholderText(/buscar por nome ou microchip/i), 'nome-que-nao-existe')
+    await user.type(screen.getByPlaceholderText(/buscar por nome, microchip ou medalha/i), 'nome-que-nao-existe')
 
     expect(await screen.findByText('Nenhum animal encontrado')).toBeInTheDocument()
   })

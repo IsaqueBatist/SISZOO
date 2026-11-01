@@ -5,7 +5,7 @@ import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { API_BASE_URL } from '@/lib/env'
-import { previewAnualProcessosFixture, TIPOS_RELATORIO_FIXTURE } from '@/mocks/relatoriosFixtures'
+import { previewAnualProcessosFixture, previewOcupacaoBaiasFixture, TIPOS_RELATORIO_FIXTURE } from '@/mocks/relatoriosFixtures'
 import { server } from '@/mocks/server'
 import { Relatorios } from './Relatorios'
 
@@ -119,7 +119,78 @@ describe('Relatorios', () => {
 
     expect(await screen.findByText('Baia 3')).toBeInTheDocument()
     expect(screen.getByText('Superlotada')).toBeInTheDocument()
-    expect(screen.getByText('Próx. limite')).toBeInTheDocument()
+    expect(screen.getByText('Próximo do limite')).toBeInTheDocument()
+    expect(screen.getByText('Posição em 10/09/2026')).toBeInTheDocument()
+  })
+
+  it('Adoções e Ocupação não pedem período e geram sem filtro', async () => {
+    const user = userEvent.setup()
+    const pedidos: URLSearchParams[] = []
+    server.use(
+      http.get(`${API_BASE_URL}/relatorios/preview`, ({ request }) => {
+        pedidos.push(new URL(request.url).searchParams)
+        return HttpResponse.json(previewOcupacaoBaiasFixture())
+      }),
+    )
+    renderRelatorios()
+
+    const cardOcupacao = (
+      await screen.findByRole('heading', { level: 3, name: 'Ocupação de Baias' })
+    ).closest('.report-card') as HTMLElement
+    const cardAdocoes = screen
+      .getByRole('heading', { level: 3, name: 'Relatório de Adoções' })
+      .closest('.report-card') as HTMLElement
+
+    for (const card of [cardOcupacao, cardAdocoes]) {
+      expect(within(card).getByText(/^Posição em \d{2}\/\d{2}\/\d{4}$/)).toBeInTheDocument()
+      expect(card.querySelector('input, select')).toBeNull()
+    }
+
+    await user.click(within(cardOcupacao).getByRole('button', { name: 'Gerar Relatório' }))
+
+    await screen.findByText('Baia 3')
+    expect([...pedidos[0].keys()]).toEqual(['tipo'])
+  })
+
+  it('histórico antigo de relatório de posição mostra a data da geração e gera de novo sem o período antigo', async () => {
+    const user = userEvent.setup()
+    const pedidos: URLSearchParams[] = []
+    server.use(
+      http.get(`${API_BASE_URL}/relatorios/historico`, () =>
+        HttpResponse.json({
+          itens: [
+            {
+              docId: 'DOC-2026-0002',
+              tipo: 'ocupacao_baias',
+              tipoNomeExibicao: 'Ocupação de Baias',
+              periodoInicio: '2026-03-10',
+              periodoFim: '2026-09-10',
+              parametrosJson: JSON.stringify({ tipo: 'ocupacao_baias', janela: 'ultimos_6_meses' }),
+              geradoPorNome: 'Ana Silva',
+              geradoEm: '2026-09-10T15:00:00-03:00',
+              tamanhoBytes: 2048,
+            },
+          ],
+          pagina: 0,
+          tamanho: 10,
+          totalItens: 1,
+          totalPaginas: 1,
+        }),
+      ),
+      http.get(`${API_BASE_URL}/relatorios/preview`, ({ request }) => {
+        pedidos.push(new URL(request.url).searchParams)
+        return HttpResponse.json(previewOcupacaoBaiasFixture())
+      }),
+    )
+    renderRelatorios()
+
+    const linha = (await screen.findByText('Ana Silva')).closest('tr') as HTMLElement
+    expect(within(linha).getByText('Posição em 10/09/2026')).toBeInTheDocument()
+
+    await user.click(within(linha).getByRole('button', { name: 'Gerar novamente' }))
+
+    await screen.findByText('Baia 3')
+    expect([...pedidos[0].keys()]).toEqual(['tipo'])
   })
 
   it('gera o preview de Adoções e exibe a nota de limitação e o perfil', async () => {
@@ -131,7 +202,8 @@ describe('Relatorios', () => {
     ).closest('.report-card') as HTMLElement
     await user.click(within(cardAdocoes).getByRole('button', { name: 'Gerar Relatório' }))
 
-    expect(await screen.findByText(/não é filtrado pelo período selecionado/i)).toBeInTheDocument()
+    expect(await screen.findByText(/não é um histórico por período/i)).toBeInTheDocument()
+    expect(screen.getByText('Posição em 10/09/2026')).toBeInTheDocument()
     expect(screen.getByText('Canino')).toBeInTheDocument()
   })
 
@@ -176,10 +248,10 @@ describe('Relatorios', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Gerar novamente' }))
 
-    // level: 2 para o cabeçalho do painel de preview — distinto do h3 do card
+    // level: 2 para o cabeçalho do painel de preview - distinto do h3 do card
     // e do texto puro da linha do histórico, que também têm o mesmo nome.
     expect(await screen.findByRole('heading', { level: 2, name: 'Relatório de Vacinação' })).toBeInTheDocument()
-    // "487" (vacinas aplicadas) é único na tela — "Antirrábica" aparece duas
+    // "487" (vacinas aplicadas) é único na tela - "Antirrábica" aparece duas
     // vezes (tabela de vacinas e de animais com vacina vencida).
     expect(await screen.findByText('487')).toBeInTheDocument()
   })

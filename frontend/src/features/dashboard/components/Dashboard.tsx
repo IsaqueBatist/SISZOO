@@ -17,7 +17,7 @@ import type { AlertaCritico } from '../types/dashboard.types'
 import './Dashboard.css'
 
 // Lazy: isola o chunk de `recharts` (pesado) do carregamento inicial do
-// dashboard — máquinas do CCZ têm ~2GB RAM.
+// dashboard - máquinas do CCZ têm ~2GB RAM.
 const GraficosDashboard = lazy(() =>
   import('@/features/graficos/components/GraficosDashboard').then((m) => ({ default: m.GraficosDashboard })),
 )
@@ -52,7 +52,7 @@ interface ItemAlertaAchatado {
 }
 
 // Quantos itens nomear na descrição do card antes de resumir o resto em
-// "+N outras" — o card é um resumo compacto, a lista completa está em
+// "+N outras" - o card é um resumo compacto, a lista completa está em
 // /alertas/vacinas.
 const RESUMO_MAX_ITENS = 3
 
@@ -69,7 +69,7 @@ function IconeSeveridadeVacina({ severidade }: { severidade: SeveridadeAlerta })
 }
 
 // Card dedicado pro alerta de vacina (GET /api/alertas/vacinas, com a lista
-// de animais) — os outros 5 tipos do DER §3.7 vêm agregados em
+// de animais) - os outros 5 tipos do DER §3.7 vêm agregados em
 // kpis.alertas (T38) e são renderizados por AlertaCriticoGenerico, abaixo.
 function AlertaCriticoVacinas() {
   const { data, isLoading, isError, refetch } = useAlertasVacinaisQuery()
@@ -84,7 +84,7 @@ function AlertaCriticoVacinas() {
 
   const animais = data ?? []
   // Achata para o nível de vacina (não de animal): a veterinária precisa ver
-  // "Rex — Antirrábica venceu há 2d", não só "Rex" — um animal com 2 vacinas
+  // "Rex - Antirrábica venceu há 2d", não só "Rex" - um animal com 2 vacinas
   // em alerta vira 2 linhas aqui, não 1.
   const itens: ItemAlertaAchatado[] = animais.flatMap((animal) =>
     animal.vacinas.map((vacina) => ({
@@ -114,7 +114,7 @@ function AlertaCriticoVacinas() {
   ].filter((parte) => parte !== null)
 
   // diasRestantes negativo (vencida) sempre fica antes de positivo (a vencer)
-  // numa ordenação ascendente simples — não precisa de critério de severidade
+  // numa ordenação ascendente simples - não precisa de critério de severidade
   // separado, o mais urgente (mais atrasado, ou mais perto de vencer) vem primeiro.
   const itensOrdenados = [...itens].sort((a, b) => a.diasRestantes - b.diasRestantes)
   const excedente = itensOrdenados.length - RESUMO_MAX_ITENS
@@ -149,7 +149,7 @@ function AlertaCriticoVacinas() {
 }
 
 // Processos com contato humano-animal (regra 18, já aplicada 100% no
-// backend) — cada item navega para o detalhe do processo; não há filtro de
+// backend) - cada item navega para o detalhe do processo; não há filtro de
 // servidor ?urgente= hoje (pedido registrado em
 // docs/contratos/processos-filtro-urgente.md), então o "Ver todos" leva à
 // lista completa (o backend já ordena urgente primeiro).
@@ -198,7 +198,7 @@ function AlertaProcessosUrgentes() {
           ))}
           {excedente > 0 && <span> e mais {excedente}</span>}
           {' — '}
-          <Link to="/processos">ver todos →</Link>
+          <Link to="/processos?urgente=1">ver todos →</Link>
         </div>
       </div>
     </div>
@@ -208,12 +208,12 @@ function AlertaProcessosUrgentes() {
 // Os 6 alertas críticos do DER §3.7 chegam todos juntos em kpis.alertas (T38),
 // mas vacina_vencendo/vacina_vencida já têm card dedicado acima
 // (AlertaCriticoVacinas, com a lista de animais via GET /api/alertas/vacinas)
-// — não duplicar aqui, só os outros 5 tipos novos.
+// - não duplicar aqui, só os outros 5 tipos novos.
 const TIPOS_JA_EXIBIDOS_EM_CARD_DEDICADO = new Set(['vacina_vencendo', 'vacina_vencida'])
 
 // Mesmo tom por tipo do protótipo (docs/prototipo/dashboard.html): não deriva
 // de `severidade` (info/atencao/critico) porque o protótipo usa classes mais
-// granulares que a enum do DER — fiel ao visual já validado, em vez de uma
+// granulares que a enum do DER - fiel ao visual já validado, em vez de uma
 // conversão aproximada.
 const TOM_POR_TIPO_DE_ALERTA: Record<string, string> = {
   sem_avaliacao_30d: 'alert-yellow',
@@ -253,7 +253,7 @@ export function Dashboard() {
   const { data: kpis, isLoading: kpisCarregando, isError: kpisComErro, refetch: refazerKpis } = useKpisDashboardQuery()
   const kpisMockados = kpisUsamMock()
   const cards = kpis ? mapearKpisParaCards(kpis, kpisMockados) : []
-  // Só os com total > 0: a seção é "Alertas Críticos", não um inventário —
+  // Só os com total > 0: a seção é "Alertas Críticos", não um inventário -
   // mostrar "0 baia(s) superlotada(s)" não ajuda ninguém a agir.
   const alertasGenericos = (kpis?.alertas ?? []).filter(
     (alerta) => !TIPOS_JA_EXIBIDOS_EM_CARD_DEDICADO.has(alerta.tipo) && alerta.total > 0,

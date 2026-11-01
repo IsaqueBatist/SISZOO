@@ -422,3 +422,34 @@ responde 202 e o envio só aparece como `WARN` no log do backend.
    abaixo do campo, neutra antes de digitar; `helena1` marca "8 caracteres" e "partes do seu nome" em vermelho; ao
    completar `Nova-Senha-2026`, todos ficam verdes. A mesma lista aparece em `/redefinir-senha` (sem os critérios de
    nome) e no modal "Adicionar Usuário" (Admin), reagindo ao e-mail e ao nome completo digitados.
+
+## 8. Filtros de consulta (01/11/2026)
+
+Decisões em `docs/decisoes/filtros-consulta.md`.
+
+### 8.1 Animais [UI]
+
+1. Buscar um nome sem acento ("joao" acha "João"), pelo microchip e pelo número da medalha, que aparece na lista.
+2. Status "Sob custódia": somem adotados, óbitos e transferidos. "Disponível p/ adoção" é o antigo "Disponível".
+3. Em Gestão de Baias, "Ver animais" de uma baia inativa: o filtro mostra "Nome (inativa)". Abrir um animal e voltar
+   mantém busca e página; "Limpar filtros" não volta depois de abrir uma ficha.
+
+### 8.2 Ocorrências e Processos [UI]
+
+1. Ocorrências: "Pendentes" traz abertas e em atendimento. A busca acha endereço e processo vinculado ("PS 012/2026").
+2. Processos: "Em andamento" inclui "Com resultado". A busca acha ocorrência vinculada ("OC 012/2026") e animal da
+   amostra. "Só urgentes" liga e desliga; "ver todos" do alerta no Dashboard abre a lista já filtrada. O período de
+   abertura combina com os demais filtros.
+3. Com o filtro de status ligado, abrir o último item da última página, mudar o status e voltar: a lista cai na última
+   página válida, sem "Nenhuma ocorrência encontrada" falso.
+4. Datas invertidas digitadas à mão mostram o aviso abaixo do período.
+
+### 8.3 Logs, Medicamentos, Alertas e Relatórios [UI]
+
+1. Logs: sem filtro de entidade; ações com nomes como "Entrada no sistema" e "Sessão revogada".
+2. Medicamentos: busca por nome sem acento e filtro por categoria. Alertas de vacina: vencidas primeiro, filtro por
+   situação e busca por animal ou vacina; os totais do resumo não mudam.
+3. Relatórios: Adoções e Ocupação de Baias sem campo de período, com "Posição em dd/mm/aaaa" no cartão, na prévia, no
+   PDF e no CSV. No histórico, os registros antigos desses dois tipos aparecem como "Posição em" a data da geração.
+4. Lotação: uma baia a 100% aparece como "Superlotada" na Gestão de Baias, no Dashboard e no relatório; a 80%, como
+   "Próximo do limite" na tela e no relatório.

@@ -1,9 +1,10 @@
-# Pedido — filtro de data em GET /api/ocorrencias
+# Pedido - filtro de data em GET /api/ocorrencias
 
-Status: **implementado (22/10/2026, alinhamento com o TG — `docs/decisoes/alinhamento-tg.md` AT-11)**.
+Status: **implementado (22/10/2026, alinhamento com o TG - `docs/decisoes/alinhamento-tg.md` AT-11)**.
 `GET /api/ocorrencias?de=AAAA-MM-DD&ate=AAAA-MM-DD` filtra pela `data_abertura` (limites inclusivos; qualquer um dos
 dois pode faltar), combinável com `tipo`, `status` e `q`. A tela de Ocorrências expõe os dois campos de data.
-Teste: `OcorrenciaFiltroDataIT`. O KPI "ocorrências registradas hoje" do dashboard é calculado no backend
+Teste: `OcorrenciaFiltroDataIT`. `status` aceita vários valores separados por vírgula desde
+01/11/2026 (`docs/decisoes/filtros-consulta.md` FC-4). O KPI "ocorrências registradas hoje" do dashboard é calculado no backend
 (`DashboardService`, T38), então o pedido abaixo ficou coberto pelos dois lados. O texto abaixo é o pedido original.
 
 ## Contexto
@@ -18,7 +19,7 @@ Isso tem dois limites: (1) se o CCZ tiver mais ocorrências do que o
 mais dado do que precisa para calcular um número do dia.
 
 (O gráfico "Distribuição de ocorrências por bairro" tem uma limitação
-parecida, mas de volume total, não de data — ver pedido separado em
+parecida, mas de volume total, não de data - ver pedido separado em
 `docs/contratos/distribuicao-ocorrencias-bairro.md`.)
 
 ## Pedido
@@ -30,5 +31,5 @@ GET /api/ocorrencias?dataAbertura=2026-05-20
 ```
 
 ou um intervalo (`?de=2026-05-01&ate=2026-05-20`), o que for mais simples de
-implementar — qualquer um resolve o problema do frontend. Sem o parâmetro,
+implementar - qualquer um resolve o problema do frontend. Sem o parâmetro,
 comportamento atual inalterado (retrocompatível).

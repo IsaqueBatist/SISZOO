@@ -124,7 +124,7 @@ public class RelatorioGeradoService {
         Usuario usuario = usuarioRepository.findById(usuarioId).orElseThrow(UsuarioNaoEncontradoException::new);
 
         // doc_id consumido ANTES do conteudo: o PDF precisa exibi-lo no
-        // cabecalho (mesmo padrao de ProtocoloService — um rollback desfaz o
+        // cabecalho (mesmo padrao de ProtocoloService - um rollback desfaz o
         // incremento, entao nao ha doc_id "perdido" se a geracao falhar depois).
         int numero = protocoloService.proximoNumero(ProtocoloService.Entidade.RELATORIO);
         String docId = String.format("DOC-%d-%04d", Year.now(clock).getValue(), numero);
@@ -141,7 +141,7 @@ public class RelatorioGeradoService {
                     docId,
                     Formatadores.DATA_HORA.format(LocalDateTime.now(clock)),
                     usuario.nomeCompleto(),
-                    Formatadores.DATA.format(periodo.inicio()) + " a " + Formatadores.DATA.format(periodo.fim()));
+                    subtituloPeriodo(tipo, periodo));
             conteudo = pdfRenderer.renderizar(tipo, dadosDoRelatorio(gerador, periodo, veOcorrenciasPorBairro), metadados);
             contentType = "application/pdf";
             extensao = "pdf";
@@ -158,7 +158,7 @@ public class RelatorioGeradoService {
         registro.setTamanhoBytes(conteudo.length);
         relatorioGeradoRepository.save(registro);
 
-        // T43: EXPORTACAO na mesma transacao — se o evento nao for gravado, o
+        // T43: EXPORTACAO na mesma transacao - se o evento nao for gravado, o
         // commit falha antes de o controller montar a resposta e o arquivo
         // nao sai. O payload identifica a exportacao; nunca leva o conteudo.
         Map<String, Object> exportacao = new LinkedHashMap<>();
@@ -171,8 +171,22 @@ public class RelatorioGeradoService {
         auditoriaEventoService.registrar(usuario, AcaoAuditoria.EXPORTACAO, "relatorio_gerado", registro.getId(),
                 null, exportacao);
 
-        String nomeArquivo = tipo.codigo() + "-" + periodo.inicio() + "_" + periodo.fim() + "." + extensao;
+        String nomeArquivo = tipo.codigo() + "-" + referenciaDoArquivo(tipo, periodo) + "." + extensao;
         return new ArquivoRelatorio(conteudo, nomeArquivo, contentType);
+    }
+
+    private static String subtituloPeriodo(TipoRelatorio tipo, PeriodoRelatorio periodo) {
+        if (tipo.filtroEsperado() == TipoRelatorio.FiltroEsperado.POSICAO) {
+            return Formatadores.DATA.format(periodo.inicio());
+        }
+        return Formatadores.DATA.format(periodo.inicio()) + " a " + Formatadores.DATA.format(periodo.fim());
+    }
+
+    private static String referenciaDoArquivo(TipoRelatorio tipo, PeriodoRelatorio periodo) {
+        if (tipo.filtroEsperado() == TipoRelatorio.FiltroEsperado.POSICAO) {
+            return "posicao-" + periodo.inicio();
+        }
+        return periodo.inicio() + "_" + periodo.fim();
     }
 
     @Transactional(readOnly = true)
@@ -203,11 +217,8 @@ public class RelatorioGeradoService {
         if (filtro.ano() != null) {
             parametros.put("ano", filtro.ano());
         }
-        if (filtro.janela() != null) {
-            parametros.put("janela", filtro.janela());
-        }
         // Jackson 3: writeValueAsString lança tools.jackson.core.JacksonException,
-        // unchecked — mesmo padrao de AuditoriaEventoService#serializar.
+        // unchecked - mesmo padrao de AuditoriaEventoService#serializar.
         return objectMapper.writeValueAsString(parametros);
     }
 

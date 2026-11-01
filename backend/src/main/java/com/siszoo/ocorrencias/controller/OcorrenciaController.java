@@ -67,7 +67,7 @@ public class OcorrenciaController {
     public PaginaResponse<OcorrenciaResumoResponse> listar(
             Authentication authentication,
             @RequestParam(required = false) String tipo,
-            @RequestParam(required = false) StatusOcorrencia status,
+            @RequestParam(required = false) List<StatusOcorrencia> status,
             @RequestParam(required = false) String q,
             // F2-010 (RF-E02, Fase 3 do TG): periodo da data de abertura, dias inclusivos
             // (docs/contratos/ocorrencias-filtro-data.md). Sem os parametros, nada muda.

@@ -8,7 +8,7 @@ import {
   resultadoProcessoFixture,
 } from './processosFixtures'
 
-// Handlers de processos (T29) com respostas FIXAS — sem estado e sem regra de
+// Handlers de processos (T29) com respostas FIXAS - sem estado e sem regra de
 // negócio (validação, urgência derivada, vínculo e transições são do
 // backend). O teste que precisa ver o estado depois da ação, ou forçar
 // 403/404/409/422, sobrescreve o handler com `server.use()`.
@@ -31,9 +31,18 @@ export const processosHandlers = [
     const tamanho = Number(url.searchParams.get('tamanho') ?? '20')
     // T45: `urgente` opcional, como o backend (ausente, sem filtro).
     const urgente = url.searchParams.get('urgente')
+    const status = url.searchParams.get('status')?.split(',')
+    const de = url.searchParams.get('de')
+    const ate = url.searchParams.get('ate')
     const itens = processosFixture()
       .map(paraResumoProcesso)
-      .filter((processo) => urgente === null || processo.urgente === (urgente === 'true'))
+      .filter(
+        (processo) =>
+          (urgente === null || processo.urgente === (urgente === 'true')) &&
+          (!status || status.includes(processo.statusProcesso)) &&
+          (!de || processo.dataAbertura >= de) &&
+          (!ate || processo.dataAbertura <= ate),
+      )
     return HttpResponse.json({ itens, pagina, tamanho, totalItens: itens.length, totalPaginas: 1 })
   }),
 
@@ -58,7 +67,7 @@ export const processosHandlers = [
     return HttpResponse.json({ ...processo, statusProcesso: status })
   }),
 
-  // T34 + T37: resposta fixa — o processo "vira" COM_RESULTADO com o
+  // T34 + T37: resposta fixa - o processo "vira" COM_RESULTADO com o
   // resultado enviado, e o histórico ganha um item novo. Testes que
   // precisam do erro (422 fora de AGUARDANDO_RESULTADO, falha de rede)
   // sobrescrevem com `server.use()`.

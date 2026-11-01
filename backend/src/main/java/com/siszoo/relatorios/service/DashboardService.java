@@ -25,6 +25,7 @@ import com.siszoo.animais.clinico.repository.PrescricaoRepository;
 import com.siszoo.animais.clinico.repository.VacinacaoRepository;
 import com.siszoo.animais.entity.Baia;
 import com.siszoo.animais.entity.Especie;
+import com.siszoo.animais.entity.NivelLotacao;
 import com.siszoo.animais.entity.StatusAnimal;
 import com.siszoo.animais.repository.AnimalRepository;
 import com.siszoo.animais.repository.BaiaRepository;
@@ -53,7 +54,7 @@ import com.siszoo.relatorios.dto.ResultadoPorDoencaResponse;
 // persistidos. "Hoje"/"ano corrente" sempre via Clock (ClockConfig,
 // America/Sao_Paulo) para o teste poder controlar a data. Cache de 5 min
 // (CacheConfig) evita recalcular essas agregacoes a cada refresh do
-// dashboard — ver docs/contratos/dashboard-kpis.md para o atraso que isso
+// dashboard - ver docs/contratos/dashboard-kpis.md para o atraso que isso
 // pode introduzir.
 @Service
 public class DashboardService {
@@ -254,8 +255,7 @@ public class DashboardService {
         return alertas;
     }
 
-    // Mesmo criterio de "superlotada" ja usado em
-    // BaiaService#mapearComOcupacao (ocupacaoAtual >= capacidade).
+    // Mesma regra de NivelLotacao usada em BaiaService e no relatorio de ocupacao.
     private long contarBaiasSuperlotadas(Set<String> foraDaCustodia) {
         List<Baia> baiasAtivas = baiaRepository.findByAtivaTrue();
         if (baiasAtivas.isEmpty()) {
@@ -266,7 +266,8 @@ public class DashboardService {
                 .collect(Collectors.toMap(OcupacaoBaiaProjection::getBaiaId, OcupacaoBaiaProjection::getTotal));
 
         return baiasAtivas.stream()
-                .filter(baia -> ocupacaoPorBaia.getOrDefault(baia.getId(), 0L) >= baia.getCapacidade())
+                .filter(baia -> NivelLotacao.de(ocupacaoPorBaia.getOrDefault(baia.getId(), 0L), baia.getCapacidade())
+                        == NivelLotacao.SUPERLOTADA)
                 .count();
     }
 }

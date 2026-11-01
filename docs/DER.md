@@ -810,8 +810,9 @@ Um sintoma aparece no máximo uma vez por amostra (a API ignora códigos repetid
 > gravada quando a exportação (CSV/PDF) termina com sucesso - não há estado
 > intermediário "processando"/"erro" a persistir. (3) `periodo_inicio`/
 > `periodo_fim` são **obrigatórios**: filtros por ano (`anual_processos`) ou
-> por janela relativa (`ocupacao_baias`) são resolvidos para datas concretas
-> antes de salvar. `gerado_em` é `timestamptz`. Fonte: este DER; o DBML do
+> posição (`adocoes` e `ocupacao_baias`, a data da geração nas duas colunas) são
+> resolvidos para datas concretas antes de salvar. Registros antigos desses dois
+> tipos guardam o período ou a `janela` de quando foram gerados. `gerado_em` é `timestamptz`. Fonte: este DER; o DBML do
 > módulo 5 foi realinhado em 25/10/2026.
 
 | Campo               | Tipo         | Obrig. | Observações                                          |
@@ -819,9 +820,9 @@ Um sintoma aparece no máximo uma vez por amostra (a API ignora códigos repetid
 | `id`                | uuid PK      | \*     |                                                       |
 | `doc_id`            | varchar(30)  | \*     | "DOC-2026-0001" - gerado via `ProtocoloService`       |
 | `tipo_relatorio`    | varchar(30)  | \*     | `CHECK`, não FK - ver nota acima                      |
-| `periodo_inicio`    | date         | \*     | resolvido a partir de ano/janela quando aplicável     |
+| `periodo_inicio`    | date         | \*     | resolvido a partir do ano, ou a data da geração       |
 | `periodo_fim`       | date         | \*     | idem                                                  |
-| `parametros_jsonb`  | jsonb        | ?      | filtros brutos aplicados (tipo, ano, janela)          |
+| `parametros_jsonb`  | jsonb        | ?      | filtros brutos aplicados (tipo, ano, período)         |
 | `gerado_por_id`     | FK `usuario` | \*     |                                                       |
 | `gerado_em`         | timestamptz  | \*     |                                                       |
 | `arquivo_url`       | text         | ?      | sempre nulo nesta versão (arquivo não é persistido)   |
@@ -864,7 +865,7 @@ Um sintoma aparece no máximo uma vez por amostra (a API ignora códigos repetid
 
 - `vacina_vencendo`: `vacinacao` vigente (`VacinacaoRepository#findVigentesParaAlertaVacinal`) com `data_aplicacao + vacina.intervalo_meses` entre hoje e hoje + 7d - regras RN-A01… em `docs/regras-negocio-clinico.md`
 - `sem_avaliacao_30d`: `animal WHERE max(procedimento.data) < now() - 30d`
-- `baia_superlotada`: `baia WHERE atual_ocupacao >= capacidade` - mesma regra do indicador `superlotada` da tabela `baia` (`BaiaService`, `estadoLotacao` no front) e do 409 de baia sem vaga (RN-AN02): baia cheia já alerta. Decisão FS-8 em `docs/decisoes/ficha-completa-seed-fuso.md`; o alerta ainda não está implementado.
+- `baia_superlotada`: `baia WHERE atual_ocupacao >= capacidade` - mesma regra (`NivelLotacao`) do indicador `superlotada` da tabela `baia` (`BaiaService`, `estadoLotacao` no front), do relatório de ocupação e do 409 de baia sem vaga (RN-AN02): baia cheia já alerta. Decisão FS-8 em `docs/decisoes/ficha-completa-seed-fuso.md`; o alerta ainda não está implementado.
 - `medicacao_ativa`: `prescricao WHERE status = 'ATIVA' AND data_fim_prevista BETWEEN now() AND now() + 7d`
 - `ficha_incompleta`: `animal WHERE ficha_completa = false`
 - `nao_castrado`: `animal WHERE esterilizado = false AND status = 'disponivel_adocao'` (`NULL`, não informado, não entra)

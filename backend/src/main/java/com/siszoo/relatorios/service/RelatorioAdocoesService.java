@@ -10,17 +10,17 @@ import org.springframework.transaction.annotation.Transactional;
 import com.siszoo.animais.repository.AnimalRepository;
 import com.siszoo.animais.repository.ContagemPorCaracteristicaProjection;
 import com.siszoo.comum.util.BlocoCsv;
+import com.siszoo.comum.util.Formatadores;
 import com.siszoo.relatorios.dto.KpisAdocoesResponse;
 import com.siszoo.relatorios.dto.PeriodoRelatorio;
 import com.siszoo.relatorios.dto.PerfilAdocaoResponse;
 import com.siszoo.relatorios.dto.RelatorioAdocoesResponse;
 import com.siszoo.relatorios.entity.TipoRelatorio;
 
-// "Relatório de Adoções" — VERSAO SIMPLIFICADA (DER §3.2 nao tem tabela
+// "Relatório de Adoções" - VERSAO SIMPLIFICADA (DER §3.2 nao tem tabela
 // `adocao` ainda; ver RelatorioAdocoesResponse para o detalhe da decisao).
-// Snapshot ATUAL de Animal.status = 'adotado': o filtro de periodo da tela
-// e aceito e gravado em relatorio_gerado (consistencia com os demais tipos),
-// mas nao filtra os dados — nao ha campo de data de adocao para filtrar por.
+// Posicao de Animal.status = 'adotado' na data da geracao: nao ha campo de
+// data de adocao, entao nao ha periodo a filtrar.
 @Service
 public class RelatorioAdocoesService implements GeradorRelatorio<RelatorioAdocoesResponse> {
 
@@ -28,8 +28,8 @@ public class RelatorioAdocoesService implements GeradorRelatorio<RelatorioAdocoe
     private static final Map<String, String> ROTULO_PORTE = Map.of(
             "pequeno", "Porte Pequeno", "medio", "Porte Médio", "grande", "Porte Grande");
     private static final String NOTA_LIMITACAO =
-            "Este relatório mostra a quantidade ATUAL de animais com status \"Adotado\" e seu perfil por "
-                    + "espécie/porte — não é filtrado pelo período selecionado. O sistema ainda não registra a "
+            "Posição em %s: quantidade de animais com status \"Adotado\" nessa data e seu perfil por "
+                    + "espécie/porte. Não é um histórico por período: o sistema ainda não registra a "
                     + "data em que a adoção ocorreu, dados do adotante, nem devoluções (não há tabela de adoção "
                     + "implementada); por isso \"Adoções realizadas no período\", \"Tempo médio\", \"Devoluções\" "
                     + "e \"Últimas adoções\" do modelo original deste relatório não estão disponíveis.";
@@ -51,7 +51,8 @@ public class RelatorioAdocoesService implements GeradorRelatorio<RelatorioAdocoe
         long animaisAdotados = animalRepository.countByStatus_Codigo(STATUS_ADOTADO);
         List<PerfilAdocaoResponse> perfil = montarPerfil(animaisAdotados);
         return new RelatorioAdocoesResponse(
-                periodo.inicio(), periodo.fim(), new KpisAdocoesResponse(animaisAdotados), perfil, NOTA_LIMITACAO);
+                periodo.inicio(), periodo.fim(), new KpisAdocoesResponse(animaisAdotados), perfil,
+                NOTA_LIMITACAO.formatted(Formatadores.DATA.format(periodo.inicio())));
     }
 
     @Override
@@ -61,7 +62,7 @@ public class RelatorioAdocoesService implements GeradorRelatorio<RelatorioAdocoe
         List<List<String>> linhas = montarPerfil(animaisAdotados).stream()
                 .map(l -> List.of(l.caracteristica(), String.valueOf(l.quantidade()), l.percentual() + "%"))
                 .toList();
-        return List.of(new BlocoCsv("Perfil dos animais adotados (snapshot atual)",
+        return List.of(new BlocoCsv("Perfil dos animais adotados - Posição em " + Formatadores.DATA.format(periodo.inicio()),
                 List.of("Característica", "Quantidade", "% do total"), linhas));
     }
 

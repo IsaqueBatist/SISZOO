@@ -4,7 +4,11 @@ import './AlertaVacinasDetalhe.css'
 import { useAlertasVacinaisQuery } from '../hooks/useAlertas'
 import type { AlertaVacinalAnimal, AlertaVacinalItem } from '../types/alertas.types'
 import { formatarDataBR } from '@/lib/datas'
+import { normalizarBusca } from '@/lib/texto'
+import { classeDoFiltro, useFiltrosLista } from '@/lib/useFiltrosLista'
 import { formatarSexo } from '@/features/animais/utils/rotulosAnimal'
+
+const FILTROS_PADRAO = { busca: '', situacao: '' }
 
 // dataValidade é LocalDate: `new Date('AAAA-MM-DD')` mostraria o dia
 // anterior em São Paulo (ver lib/datas.ts).
@@ -23,8 +27,19 @@ interface Linha {
 
 export function AlertaVacinasDetalhe() {
   const { data, isLoading, isError } = useAlertasVacinaisQuery()
+  const { filtros, definirFiltros, limparFiltros, filtrosAtivos } = useFiltrosLista('alertas-vacinas', FILTROS_PADRAO)
 
   const linhas: Linha[] = (data ?? []).flatMap((animal) => animal.vacinas.map((item) => ({ animal, item })))
+  const busca = normalizarBusca(filtros.busca)
+  const linhasFiltradas = linhas
+    .filter(
+      ({ animal, item }) =>
+        (!filtros.situacao || item.severidade === filtros.situacao) &&
+        (!busca ||
+          normalizarBusca(animal.animalNome).includes(busca) ||
+          normalizarBusca(item.vacinaNome).includes(busca)),
+    )
+    .sort((a, b) => a.item.diasRestantes - b.item.diasRestantes)
   const vencidas = linhas.filter((linha) => linha.item.severidade === 'VENCIDA')
   const totalVencidas = vencidas.length
   const totalAVencer = linhas.length - totalVencidas
@@ -89,18 +104,56 @@ export function AlertaVacinasDetalhe() {
             </div>
           </div>
 
+          <div className="filter-bar" style={{ marginTop: 'var(--space-4)' }}>
+            <div className="search-input">
+              <Icon name="search" size={14} />
+              <input
+                type="text"
+                placeholder="Buscar por animal ou vacina..."
+                aria-label="Buscar alertas de vacina"
+                value={filtros.busca}
+                onChange={(event) => definirFiltros({ busca: event.target.value })}
+              />
+            </div>
+            <select
+              className={classeDoFiltro(filtros.situacao)}
+              aria-label="Filtrar por situação"
+              value={filtros.situacao}
+              onChange={(event) => definirFiltros({ situacao: event.target.value })}
+            >
+              <option value="">Situação: Todas</option>
+              <option value="VENCIDA">Vencidas</option>
+              <option value="A_VENCER">A vencer</option>
+            </select>
+            {filtrosAtivos && (
+              <button type="button" className="btn btn-ghost btn-sm" onClick={limparFiltros}>
+                Limpar filtros
+              </button>
+            )}
+          </div>
+
           <div className="card" style={{ marginTop: 'var(--space-4)' }}>
             <div className="card-header">
               <h3>Animais afetados</h3>
               <span className="sub">Clique no nome do animal para abrir a ficha</span>
             </div>
             <div className="card-body" style={{ padding: 0 }}>
-              {linhas.length === 0 ? (
+              {linhas.length === 0 && (
                 <div className="empty">
                   <h3>Nenhuma vacina vencendo ou vencida no momento</h3>
                   <p>Quando algum reforço entrar na janela de 7 dias, ele aparece aqui.</p>
                 </div>
-              ) : (
+              )}
+              {linhas.length > 0 && linhasFiltradas.length === 0 && (
+                <div className="empty">
+                  <h3>Nenhum alerta encontrado</h3>
+                  <p>Nenhum resultado com estes filtros.</p>
+                  <button type="button" className="btn btn-outline btn-sm" onClick={limparFiltros}>
+                    Limpar filtros
+                  </button>
+                </div>
+              )}
+              {linhasFiltradas.length > 0 && (
                 <div style={{ overflowX: 'auto' }}>
                   <table className="data">
                     <thead>
@@ -114,7 +167,7 @@ export function AlertaVacinasDetalhe() {
                       </tr>
                     </thead>
                     <tbody>
-                      {linhas.map(({ animal, item }) => (
+                      {linhasFiltradas.map(({ animal, item }) => (
                         <tr key={item.vacinacaoId}>
                           <td>
                             <Link to={`/animais/${animal.animalId}`} style={{ fontWeight: 600 }}>

@@ -9,26 +9,26 @@ import type {
   TipoRelatorioInfo,
 } from '@/features/relatorios/types/relatorios.types'
 
-// Os 6 tipos do catalogo (DER §3.6) — nomes e filtros espelham
+// Os 6 tipos do catalogo (DER §3.6) - nomes e filtros espelham
 // com.siszoo.relatorios.entity.TipoRelatorio.
 export const TIPOS_RELATORIO_FIXTURE: TipoRelatorioInfo[] = [
   { codigo: 'anual_processos', nome: 'Relatório Anual de Processos', filtro: 'ano' },
   { codigo: 'vacinacao', nome: 'Relatório de Vacinação', filtro: 'periodo' },
-  { codigo: 'adocoes', nome: 'Relatório de Adoções', filtro: 'periodo' },
+  { codigo: 'adocoes', nome: 'Relatório de Adoções', filtro: 'posicao' },
   { codigo: 'procedimentos', nome: 'Relatório de Procedimentos', filtro: 'periodo' },
-  { codigo: 'ocupacao_baias', nome: 'Ocupação de Baias', filtro: 'janela' },
+  { codigo: 'ocupacao_baias', nome: 'Ocupação de Baias', filtro: 'posicao' },
   { codigo: 'ocorrencias_bairro', nome: 'Ocorrências por Bairro', filtro: 'periodo' },
 ]
 
 export function previewOcupacaoBaiasFixture(): PreviewOcupacaoBaias {
   return {
-    periodoInicio: '2026-03-10',
+    periodoInicio: '2026-09-10',
     periodoFim: '2026-09-10',
     kpis: { ocupacaoMediaPercentual: 72, baiasSuperlotadas: 1, baiasNoLimite: 1, capacidadeTotal: 18 },
     baias: [
-      { baia: 'Baia 1', capacidade: 6, atual: 5, percentualOcupacao: 83, status: 'normal' },
-      { baia: 'Baia 6', capacidade: 6, atual: 6, percentualOcupacao: 100, status: 'proximo_limite' },
-      { baia: 'Baia 3', capacidade: 6, atual: 8, percentualOcupacao: 133, status: 'superlotada' },
+      { baia: 'Baia 1', capacidade: 6, atual: 3, percentualOcupacao: 50, status: 'normal', rotuloStatus: 'Normal' },
+      { baia: 'Baia 6', capacidade: 6, atual: 5, percentualOcupacao: 83, status: 'proximo_limite', rotuloStatus: 'Próximo do limite' },
+      { baia: 'Baia 3', capacidade: 6, atual: 8, percentualOcupacao: 133, status: 'superlotada', rotuloStatus: 'Superlotada' },
     ],
   }
 }
@@ -104,8 +104,8 @@ export function previewOcorrenciasBairroFixture(): PreviewOcorrenciasBairro {
 
 export function previewAdocoesFixture(): PreviewAdocoes {
   return {
-    periodoInicio: '2026-01-01',
-    periodoFim: '2026-03-31',
+    periodoInicio: '2026-09-10',
+    periodoFim: '2026-09-10',
     kpis: { animaisAdotados: 24 },
     perfil: [
       { caracteristica: 'Canino', quantidade: 17, percentual: 71 },
@@ -113,7 +113,7 @@ export function previewAdocoesFixture(): PreviewAdocoes {
       { caracteristica: 'Porte Pequeno', quantidade: 11, percentual: 46 },
     ],
     notaLimitacao:
-      'Este relatório mostra a quantidade ATUAL de animais com status "Adotado" — não é filtrado pelo período selecionado.',
+      'Posição em 10/09/2026: quantidade de animais com status "Adotado" nessa data. Não é um histórico por período.',
   }
 }
 

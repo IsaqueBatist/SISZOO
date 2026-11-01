@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Icon } from '@/components/layout/Icon'
 import { useMedicamentosAtivosQuery } from '@/features/animais/hooks/useHistoricoAnimal'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
+import { normalizarBusca } from '@/lib/texto'
+import { classeDoFiltro, useFiltrosLista } from '@/lib/useFiltrosLista'
 import {
   useCategoriasFarmacologicasQuery,
   useCriarCategoriaFarmacologicaMutation,
@@ -19,6 +21,7 @@ import {
 
 const MAPA_ERROS_MEDICAMENTO = mapaDeCampos<MedicamentoFormValues>(['nome', 'categoriaId'])
 const MAPA_ERROS_CATEGORIA = mapaDeCampos<CategoriaFormValues>(['nome'])
+const FILTROS_PADRAO = { busca: '', categoria: '' }
 
 // Catálogo usado pela prescrição (modal "Registrar medicamento" da ficha).
 // Leitura: GESTAO_ANIMAIS:leitura (Administrador, Veterinária e Agente).
@@ -30,6 +33,21 @@ export function Medicamentos() {
   const podeEscrever = roleKey === 'admin' || roleKey === 'vet'
 
   const { data: medicamentos, isLoading, isError } = useMedicamentosAtivosQuery()
+  const { filtros, definirFiltros, limparFiltros, filtrosAtivos } = useFiltrosLista('medicamentos', FILTROS_PADRAO)
+
+  const categorias = useMemo(() => {
+    const nomesPorId = new Map((medicamentos ?? []).map((medicamento) => [medicamento.categoriaId, medicamento.categoriaNome]))
+    return [...nomesPorId].sort(([, nomeA], [, nomeB]) => nomeA.localeCompare(nomeB, 'pt-BR'))
+  }, [medicamentos])
+
+  const medicamentosFiltrados = useMemo(() => {
+    const busca = normalizarBusca(filtros.busca)
+    return (medicamentos ?? []).filter(
+      (medicamento) =>
+        (!filtros.categoria || medicamento.categoriaId === filtros.categoria) &&
+        (!busca || normalizarBusca(medicamento.nome).includes(busca)),
+    )
+  }, [medicamentos, filtros.busca, filtros.categoria])
 
   return (
     <>
@@ -43,6 +61,37 @@ export function Medicamentos() {
       </div>
 
       {podeEscrever && <CadastroMedicamento />}
+
+      <div className="filter-bar" style={{ marginBottom: 'var(--space-4)' }}>
+        <div className="search-input">
+          <Icon name="search" size={14} />
+          <input
+            type="text"
+            placeholder="Buscar medicamento pelo nome..."
+            aria-label="Buscar medicamentos"
+            value={filtros.busca}
+            onChange={(event) => definirFiltros({ busca: event.target.value })}
+          />
+        </div>
+        <select
+          className={classeDoFiltro(filtros.categoria)}
+          aria-label="Filtrar por categoria"
+          value={filtros.categoria}
+          onChange={(event) => definirFiltros({ categoria: event.target.value })}
+        >
+          <option value="">Categoria: Todas</option>
+          {categorias.map(([id, nome]) => (
+            <option key={id} value={id}>
+              {nome}
+            </option>
+          ))}
+        </select>
+        {filtrosAtivos && (
+          <button type="button" className="btn btn-ghost btn-sm" onClick={limparFiltros}>
+            Limpar filtros
+          </button>
+        )}
+      </div>
 
       {isLoading && <p className="subtitle">Carregando medicamentos…</p>}
 
@@ -63,7 +112,20 @@ export function Medicamentos() {
         </div>
       )}
 
-      {!isLoading && !isError && medicamentos && medicamentos.length > 0 && (
+      {!isLoading && !isError && medicamentos && medicamentos.length > 0 && medicamentosFiltrados.length === 0 && (
+        <div className="empty">
+          <span className="ico">
+            <Icon name="pill" size={28} />
+          </span>
+          <h3>Nenhum medicamento encontrado</h3>
+          <p>Nenhum resultado com estes filtros.</p>
+          <button type="button" className="btn btn-outline btn-sm" onClick={limparFiltros}>
+            Limpar filtros
+          </button>
+        </div>
+      )}
+
+      {!isLoading && !isError && medicamentosFiltrados.length > 0 && (
         <div className="table-wrap">
           <div style={{ overflowX: 'auto' }}>
             <table className="data">
@@ -74,7 +136,7 @@ export function Medicamentos() {
                 </tr>
               </thead>
               <tbody>
-                {medicamentos.map((medicamento) => (
+                {medicamentosFiltrados.map((medicamento) => (
                   <tr key={medicamento.id}>
                     <td>{medicamento.nome}</td>
                     <td>{medicamento.categoriaNome}</td>
@@ -82,6 +144,11 @@ export function Medicamentos() {
                 ))}
               </tbody>
             </table>
+          </div>
+          <div className="table-footer">
+            <span>
+              Mostrando <strong>{medicamentosFiltrados.length}</strong> de <strong>{medicamentos?.length ?? 0}</strong> medicamentos
+            </span>
           </div>
         </div>
       )}

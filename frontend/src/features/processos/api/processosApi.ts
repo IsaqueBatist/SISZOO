@@ -21,9 +21,11 @@ export async function listarProcessos(filtro: ProcessosFiltro): Promise<PaginaRe
   const { data } = await http.get<PaginaResponse<ProcessoResumo>>('/processos', {
     params: {
       doenca: filtro.doenca,
-      status: filtro.status,
+      status: Array.isArray(filtro.status) ? filtro.status.join(',') : filtro.status,
       urgente: filtro.urgente,
       q: filtro.q,
+      de: filtro.de,
+      ate: filtro.ate,
       pagina: filtro.pagina,
       tamanho: filtro.tamanho,
     },
@@ -70,7 +72,7 @@ export async function vincularOcorrencia(processoId: string, ocorrenciaId: strin
 }
 
 // T34: substitui o avanço provisório só para AGUARDANDO_RESULTADO ->
-// COM_RESULTADO — grava resultado, data e (T37) desfecho do animal. Sem
+// COM_RESULTADO - grava resultado, data e (T37) desfecho do animal. Sem
 // retificaId é o primeiro lançamento (write-once); com ele, corrige o
 // resultado vigente (histórico completo embutido na resposta, campo
 // `resultados`).

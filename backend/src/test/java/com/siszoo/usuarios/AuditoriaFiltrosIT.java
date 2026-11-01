@@ -11,6 +11,7 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.in;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -29,7 +30,7 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
 // F2-027 (Fase 3 do TG): filtros de servidor em GET /api/auditoria (acao,
-// entidade, usuarioEmail, modulo, de/ate), payload antes/depois no DTO e o
+// usuarioEmail, modulo, de/ate), payload antes/depois no DTO e o
 // catalogo GET /api/auditoria/filtros. Contrato: docs/contratos/auditoria-filtros.md.
 class AuditoriaFiltrosIT extends AbstractIntegrationTest {
 
@@ -44,7 +45,7 @@ class AuditoriaFiltrosIT extends AbstractIntegrationTest {
     @BeforeEach
     void preparar() {
         tokenAdmin = fixture.tokenAdmin(EMAIL_ADMIN, "Filtros");
-        // Um evento CRIACAO de baia deste admin, para filtrar por acao/entidade/usuario/modulo.
+        // Um evento CRIACAO de baia deste admin, para filtrar por acao/usuario/modulo.
         baiaId = given().contentType(ContentType.JSON).header("Authorization", "Bearer " + tokenAdmin)
                 .body(new CriarBaiaRequest("Baia Filtro " + System.nanoTime() % 100000, "interna", (short) 3, null, null))
                 .when().post("/api/baias").then().statusCode(200).extract().path("id");
@@ -60,9 +61,9 @@ class AuditoriaFiltrosIT extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("[F2-027] filtro por acao + entidade + usuarioEmail devolve so os eventos correspondentes, com payload")
-    void filtraPorAcaoEntidadeUsuario() {
-        Response r = listar("?acao=CRIACAO&entidade=baia&usuarioEmail=" + EMAIL_ADMIN);
+    @DisplayName("[F2-027] filtro por acao + modulo + usuarioEmail devolve so os eventos correspondentes, com payload")
+    void filtraPorAcaoModuloUsuario() {
+        Response r = listar("?acao=CRIACAO&modulo=GESTAO_ANIMAIS&usuarioEmail=" + EMAIL_ADMIN);
 
         r.then().statusCode(200);
         List<String> acoes = r.path("itens.acao");
@@ -70,7 +71,7 @@ class AuditoriaFiltrosIT extends AbstractIntegrationTest {
         List<String> usuarios = r.path("itens.usuarioEmail");
         assertThat(acoes.size(), greaterThanOrEqualTo(1));
         assertThat(acoes, everyItem(equalTo("CRIACAO")));
-        assertThat(entidades, everyItem(equalTo("baia")));
+        assertThat(entidades, hasItem("baia"));
         assertThat(usuarios, everyItem(equalTo(EMAIL_ADMIN)));
         List<String> ids = r.path("itens.entidadeId");
         assertThat(ids, hasItem(baiaId));
@@ -103,7 +104,7 @@ class AuditoriaFiltrosIT extends AbstractIntegrationTest {
     @DisplayName("[F2-027] filtro por periodo: hoje devolve eventos; periodo passado devolve vazio")
     void filtraPorPeriodo() {
         String hoje = LocalDate.now().toString();
-        Response r = listar("?de=" + hoje + "&ate=" + hoje + "&entidade=baia");
+        Response r = listar("?de=" + hoje + "&ate=" + hoje + "&modulo=GESTAO_ANIMAIS");
         r.then().statusCode(200);
         assertThat(r.path("itens.size()"), greaterThanOrEqualTo(1));
 
@@ -112,12 +113,12 @@ class AuditoriaFiltrosIT extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("[F2-027] GET /api/auditoria/filtros devolve acoes, entidades, usuarios e os 5 modulos")
+    @DisplayName("[F2-027] GET /api/auditoria/filtros devolve acoes, usuarios e os 5 modulos, sem entidades")
     void catalogoDeFiltros() {
         Response r = given().header("Authorization", "Bearer " + tokenAdmin).when().get("/api/auditoria/filtros");
         r.then().statusCode(200);
         assertThat(r.path("acoes"), hasItems("CRIACAO", "LOGIN"));
-        assertThat(r.path("entidades"), hasItems("baia", "usuario"));
+        assertThat(r.path("entidades"), nullValue());
         assertThat(r.path("usuarios"), hasItem(EMAIL_ADMIN));
         assertThat(r.path("modulos"), hasItems("USUARIOS_ACESSO", "GESTAO_ANIMAIS", "OCORRENCIAS_DENUNCIAS",
                 "PROCESSOS_SANITARIOS", "RELATORIOS"));

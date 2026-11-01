@@ -26,7 +26,7 @@ export async function listarOcorrencias(
     signal,
     params: {
       tipo: filtro.tipo,
-      status: filtro.status,
+      status: Array.isArray(filtro.status) ? filtro.status.join(',') : filtro.status,
       q: filtro.q,
       de: filtro.de,
       ate: filtro.ate,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calcularPercentual, estadoLotacao } from './estadoLotacao'
+import { calcularPercentual, estadoLotacao, ROTULO_LOTACAO } from './estadoLotacao'
 
 describe('calcularPercentual', () => {
   it('arredonda a proporção ocupação/capacidade', () => {
@@ -14,6 +14,19 @@ describe('calcularPercentual', () => {
 })
 
 describe('estadoLotacao', () => {
+  it('compara sem arredondar, como NivelLotacao no backend', () => {
+    expect(estadoLotacao(199, 250)).toBe('disponivel')
+    expect(estadoLotacao(249, 250)).toBe('atencao')
+  })
+
+  it('usa os mesmos rótulos do relatório de ocupação', () => {
+    expect(ROTULO_LOTACAO).toEqual({
+      disponivel: 'Normal',
+      atencao: 'Próximo do limite',
+      superlotada: 'Superlotada',
+    })
+  })
+
   it('classifica como disponível abaixo de 80%', () => {
     expect(estadoLotacao(3, 6)).toBe('disponivel')
     expect(estadoLotacao(0, 6)).toBe('disponivel')

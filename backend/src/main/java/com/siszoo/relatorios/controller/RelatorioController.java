@@ -30,7 +30,7 @@ import com.siszoo.relatorios.service.FiltroRelatorioResolver;
 import com.siszoo.relatorios.service.RelatorioGeradoService;
 
 // RELATORIOS:leitura e seedado para os 3 perfis (V3__seed_cargos.sql, mesmo
-// comentario de DashboardController) — o DER modela a capacidade completa do
+// comentario de DashboardController) - o DER modela a capacidade completa do
 // modulo (ver/gerar/exportar relatorios) como "leitura", sem authority de
 // escrita separada.
 @RestController
@@ -67,10 +67,9 @@ public class RelatorioController {
             @RequestParam String tipo,
             @RequestParam(required = false) @DateTimeFormat(iso = ISO.DATE) LocalDate periodoInicio,
             @RequestParam(required = false) @DateTimeFormat(iso = ISO.DATE) LocalDate periodoFim,
-            @RequestParam(required = false) Integer ano,
-            @RequestParam(required = false) String janela) {
+            @RequestParam(required = false) Integer ano) {
         FiltroRelatorioBruto filtro = new FiltroRelatorioBruto(
-                filtroResolver.tipoPorCodigo(tipo), periodoInicio, periodoFim, ano, janela);
+                filtroResolver.tipoPorCodigo(tipo), periodoInicio, periodoFim, ano);
         return relatorioGeradoService.preview(filtro, veOcorrenciasPorBairro(authentication));
     }
 
@@ -79,7 +78,7 @@ public class RelatorioController {
     public ResponseEntity<byte[]> exportar(@RequestBody ExportarRelatorioRequest request, Authentication authentication) {
         FiltroRelatorioBruto filtro = new FiltroRelatorioBruto(
                 filtroResolver.tipoPorCodigo(request.tipo()),
-                request.periodoInicio(), request.periodoFim(), request.ano(), request.janela());
+                request.periodoInicio(), request.periodoFim(), request.ano());
         UUID usuarioId = UsuarioAutenticado.id(authentication);
 
         ArquivoRelatorio arquivo = relatorioGeradoService.exportar(

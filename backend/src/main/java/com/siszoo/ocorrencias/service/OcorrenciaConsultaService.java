@@ -18,6 +18,7 @@ import org.springframework.util.StringUtils;
 
 import com.siszoo.comum.dto.CatalogoItemResponse;
 import com.siszoo.comum.dto.PaginaResponse;
+import com.siszoo.comum.util.BuscaTexto;
 import com.siszoo.comum.util.Paginacao;
 import com.siszoo.ocorrencias.dto.CatalogosOcorrenciaResponse;
 import com.siszoo.ocorrencias.dto.OcorrenciaResponse;
@@ -47,8 +48,9 @@ public class OcorrenciaConsultaService {
     private static final String ENTIDADE_DENUNCIANTE = "denunciante";
 
     // D36: a busca aceita o protocolo com o prefixo de exibicao "OC" (com ou
-    // sem espaco), desde que seguido de numero — "Ocara" continua sendo bairro.
+    // sem espaco), desde que seguido de numero - "Ocara" continua sendo bairro.
     private static final Pattern PREFIXO_PROTOCOLO = Pattern.compile("^\\s*oc\\s*(?=\\d)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern PREFIXO_PROCESSO = Pattern.compile("^\\s*ps\\s*(?=\\d)", Pattern.CASE_INSENSITIVE);
 
     // Ordem padrao da listagem (D31): urgentes primeiro, depois as mais recentes.
     // Desempate pela criacao, nao pelo protocolo: como texto, "999/2026" vem
@@ -110,9 +112,9 @@ public class OcorrenciaConsultaService {
 
     // F2-010 (RF-E02): filtro por periodo da data de abertura (dias inclusivos).
     // readOnly: pagina, denunciantes e processos da pagina lidos na mesma
-    // transacao. Nada aqui grava — a listagem nao gera VISUALIZACAO.
+    // transacao. Nada aqui grava - a listagem nao gera VISUALIZACAO.
     @Transactional(readOnly = true)
-    public PaginaResponse<OcorrenciaResumoResponse> listar(String tipo, StatusOcorrencia status, String q,
+    public PaginaResponse<OcorrenciaResumoResponse> listar(String tipo, List<StatusOcorrencia> status, String q,
             LocalDate de, LocalDate ate, int pagina, int tamanho, PermissoesOcorrencia permissoes) {
         Page<Ocorrencia> paginaOcorrencias = ocorrenciaRepository.findAll(
                 construirFiltro(tipo, status, q, de, ate),
@@ -150,7 +152,7 @@ public class OcorrenciaConsultaService {
                         .map(p -> new CatalogoItemResponse(p.getCodigo(), p.getNome())).toList());
     }
 
-    private Specification<Ocorrencia> construirFiltro(String tipo, StatusOcorrencia status, String q,
+    private Specification<Ocorrencia> construirFiltro(String tipo, List<StatusOcorrencia> status, String q,
             LocalDate de, LocalDate ate) {
         return (root, query, cb) -> {
             List<Predicate> predicados = new ArrayList<>();
@@ -164,11 +166,11 @@ public class OcorrenciaConsultaService {
             if (ate != null) {
                 predicados.add(cb.lessThanOrEqualTo(root.get("dataAbertura"), ate));
             }
-            if (status != null) {
-                predicados.add(cb.equal(root.get("statusOcorrencia"), status));
+            if (status != null && !status.isEmpty()) {
+                predicados.add(root.get("statusOcorrencia").in(status));
             }
             if (StringUtils.hasText(q)) {
-                String termo = "%" + PREFIXO_PROTOCOLO.matcher(q).replaceFirst("").trim().toLowerCase() + "%";
+                String termo = BuscaTexto.padrao(PREFIXO_PROTOCOLO.matcher(q).replaceFirst(""));
 
                 // O nome do denunciante de ocorrencia sigilosa nunca entra na
                 // busca, para nenhum perfil (T26, revisao da D14): a listagem
@@ -177,11 +179,19 @@ public class OcorrenciaConsultaService {
                 Subquery<UUID> porDenunciante = query.subquery(UUID.class);
                 var denunciante = porDenunciante.from(Denunciante.class);
                 porDenunciante.select(denunciante.get("ocorrencia").get("id"))
-                        .where(cb.like(cb.lower(denunciante.get("nome")), termo));
+                        .where(BuscaTexto.contem(cb, denunciante.get("nome"), termo));
+
+                Subquery<UUID> porProcesso = query.subquery(UUID.class);
+                var processo = porProcesso.from(ProcessoSanitario.class);
+                porProcesso.select(processo.get("ocorrencia").get("id"))
+                        .where(BuscaTexto.contem(cb, processo.get("protocolo"),
+                                BuscaTexto.padrao(PREFIXO_PROCESSO.matcher(q).replaceFirst(""))));
 
                 predicados.add(cb.or(
-                        cb.like(cb.lower(root.get("protocolo")), termo),
-                        cb.like(cb.lower(root.get("bairro")), termo),
+                        BuscaTexto.contem(cb, root.get("protocolo"), termo),
+                        BuscaTexto.contem(cb, root.get("bairro"), termo),
+                        BuscaTexto.contem(cb, root.get("endereco"), termo),
+                        root.get("id").in(porProcesso),
                         cb.and(cb.isFalse(root.get("sigilosa")), root.get("id").in(porDenunciante))));
             }
             return cb.and(predicados.toArray(new Predicate[0]));

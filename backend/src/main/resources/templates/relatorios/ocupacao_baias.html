@@ -6,16 +6,16 @@
 <th:block th:replace="~{_fragmentos :: estilo}"></th:block>
 </head>
 <body>
-<div th:replace="~{_fragmentos :: cabecalho('Ocupação de Baias', 'Período: ' + ${meta.subtituloPeriodo})}"></div>
+<div th:replace="~{_fragmentos :: cabecalho('Ocupação de Baias', 'Posição em ' + ${meta.subtituloPeriodo})}"></div>
 
 <div class="kpi-row">
   <div class="kpi"><div class="kpi-box"><div class="l">Ocupação média</div><div class="v" th:text="${d.kpis.ocupacaoMediaPercentual} + '%'">0%</div></div></div>
   <div class="kpi"><div class="kpi-box"><div class="l">Baias superlotadas</div><div class="v" th:text="${d.kpis.baiasSuperlotadas}">0</div></div></div>
-  <div class="kpi"><div class="kpi-box"><div class="l">Baias no limite</div><div class="v" th:text="${d.kpis.baiasNoLimite}">0</div></div></div>
+  <div class="kpi"><div class="kpi-box"><div class="l">Baias próximas do limite</div><div class="v" th:text="${d.kpis.baiasNoLimite}">0</div></div></div>
   <div class="kpi"><div class="kpi-box"><div class="l">Capacidade total</div><div class="v" th:text="${d.kpis.capacidadeTotal}">0</div></div></div>
 </div>
 
-<h2 class="section">Ocupação atual por baia</h2>
+<h2 class="section">Ocupação por baia</h2>
 <table>
   <thead><tr><th>Baia</th><th>Capacidade</th><th>Atual</th><th>% Ocupação</th><th>Status</th></tr></thead>
   <tbody>
@@ -25,11 +25,7 @@
       <td class="mono" th:text="${linha.capacidade}">6</td>
       <td class="mono" th:text="${linha.atual}">5</td>
       <td th:text="${linha.percentualOcupacao} + '%'">83%</td>
-      <td th:switch="${linha.status}">
-        <span th:case="'superlotada'" class="status-superlotada">Superlotada</span>
-        <span th:case="'proximo_limite'" class="status-proximo-limite">Próx. limite</span>
-        <span th:case="*">Normal</span>
-      </td>
+      <td><span th:class="${linha.status == 'superlotada'} ? 'status-superlotada' : (${linha.status == 'proximo_limite'} ? 'status-proximo-limite' : '')" th:text="${linha.rotuloStatus}">Normal</span></td>
     </tr>
   </tbody>
 </table>
