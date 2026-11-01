@@ -15,18 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Verificar se o projeto Maven existe
-        id: check
-        run: |
-          if [ -f "pom.xml" ]; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::backend/pom.xml ainda não existe — job de backend pulado."
-          fi
-
       - uses: actions/setup-java@v4
-        if: steps.check.outputs.exists == 'true'
         with:
           distribution: temurin
           java-version: "21"
@@ -36,7 +25,6 @@ jobs:
       # sem --update-snapshots, ja que nao ha dependencia SNAPSHOT. `sh mvnw`
       # nao depende do bit de execucao (hoje versionado: 100755).
       - name: mvnw verify
-        if: steps.check.outputs.exists == 'true'
         run: sh mvnw --batch-mode verify
 
   frontend:
