@@ -2,11 +2,15 @@ package com.siszoo.seed;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import javax.imageio.ImageIO;
 
 import org.junit.jupiter.api.Test;
 
@@ -61,6 +65,28 @@ class SeedPlanoTest {
                 assertThat(animal.diasCastracao).as(animal.chave()).isLessThanOrEqualTo(animal.diasEntrada);
             }
         }
+    }
+
+    // Fotos reais (CC0) em src/main/resources/seed/fotos: uma por animal, no
+    // formato que o frontend grava (JPEG, lado maior ate 800 px) e leve o
+    // bastante para 32 data URIs nao pesarem no banco nem na listagem.
+    @Test
+    void todoAnimalTemFotoJpegLegivelEDentroDoTamanho() throws Exception {
+        List<String> nomes = new ArrayList<>();
+        for (AnimaisSeed.Animal animal : AnimaisSeed.PLANO) {
+            String nome = animal.foto();
+            assertThat(nome).as(animal.chave()).matches("^\\d{3}-[a-z]+\\.jpg$");
+            assertThat(nomes).as("nome de foto repetido: " + nome).doesNotContain(nome);
+            nomes.add(nome);
+
+            byte[] bytes = ArquivosFicticios.foto(nome);
+            assertThat(bytes.length).as(nome).isBetween(10_000, 200_000);
+            BufferedImage imagem = ImageIO.read(new ByteArrayInputStream(bytes));
+            assertThat(imagem).as(nome).isNotNull();
+            assertThat(Math.max(imagem.getWidth(), imagem.getHeight())).as(nome).isLessThanOrEqualTo(800);
+            assertThat(ArquivosFicticios.fotoDataUri(nome)).startsWith("data:image/jpeg;base64,");
+        }
+        assertThat(ArquivosFicticios.nomeDaFoto(18, "Faísca")).isEqualTo("018-faisca.jpg");
     }
 
     @Test

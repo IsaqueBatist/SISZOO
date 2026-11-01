@@ -59,7 +59,6 @@ class AnimaisSeed {
         String destino;
         String laudo;
         boolean medalha;
-        Integer corFoto;
         String procedencia;
         String observacoes;
 
@@ -78,6 +77,11 @@ class AnimaisSeed {
             return "999000000000" + String.format("%03d", numero);
         }
 
+        // Foto real em src/main/resources/seed/fotos (creditos no CREDITOS.md da pasta).
+        String foto() {
+            return ArquivosFicticios.nomeDaFoto(numero, nome);
+        }
+
         Animal raca(String valor) { raca = valor; return this; }
         Animal cor(String valor) { coloracao = valor; return this; }
         Animal longa() { pelagem = "longa"; return this; }
@@ -93,7 +97,6 @@ class AnimaisSeed {
         Animal destino(String valor) { destino = valor; return this; }
         Animal laudo(String valor) { laudo = valor; return this; }
         Animal medalha() { medalha = true; return this; }
-        Animal foto(int rgb) { corFoto = rgb; return this; }
         Animal procedencia(String valor) { procedencia = valor; return this; }
         Animal obs(String valor) { observacoes = valor; return this; }
     }
@@ -136,10 +139,10 @@ class AnimaisSeed {
                     .laudo("Doença renal crônica em estágio terminal, refratária ao suporte clínico."),
             // Sob custodia.
             canino(12, "Rex", "macho").cor("Preta").porte("medio").idade("6 anos").entrada(420).chip().castrado(400)
-                    .em(BaiasSeed.CANIL_A1).medalha().foto(0x5D4037)
+                    .em(BaiasSeed.CANIL_A1).medalha()
                     .procedencia("Recolhido na Rua das Acácias, Vila Nova"),
             canino(13, "Belinha", "femea").cor("Caramelo").idade("5 anos").entrada(380).chip().castrado(360)
-                    .motivo("abandono").em(BaiasSeed.CANIL_A1).medalha().foto(0xC68642),
+                    .motivo("abandono").em(BaiasSeed.CANIL_A1).medalha(),
             canino(14, "Duque", "macho").raca("Pastor Alemão (mestiço)").cor("Preta e castanha").porte("grande")
                     .idade("2 anos").entrada(45).chip().motivo("resgate").em(BaiasSeed.CANIL_A1),
             canino(15, "Amora", "femea").cor("Preta").idade("8 meses").entrada(30).motivo("abandono")
@@ -157,10 +160,9 @@ class AnimaisSeed {
             canino(20, "Pandora", "femea").cor("Preta").longa().porte("grande").idade("3 anos").entrada(140).chip()
                     .motivo("abandono").em(BaiasSeed.CANIL_EXTERNO_B1),
             felino(21, "Salem", "macho").cor("Preta").idade("4 anos").entrada(210).chip().castrado(190)
-                    .em(BaiasSeed.GATIL_G1).medalha().foto(0x212121),
+                    .em(BaiasSeed.GATIL_G1).medalha(),
             felino(22, "Princesa", "femea").raca("Persa (mestiço)").cor("Branca").longa().idade("6 anos")
-                    .entrada(160).chip().castrado(150).motivo("entrega_voluntaria").em(BaiasSeed.GATIL_G1)
-                    .foto(0xE0E0E0),
+                    .entrada(160).chip().castrado(150).motivo("entrega_voluntaria").em(BaiasSeed.GATIL_G1),
             felino(23, "Nego", "macho").cor("Preta").idade("1 ano").entrada(70).chip().motivo("abandono")
                     .em(BaiasSeed.GATIL_G1),
             felino(24, "Mia", "femea").cor("Cinza").idade("6 meses").entrada(40).motivo("abandono")
@@ -179,7 +181,7 @@ class AnimaisSeed {
             canino(30, "Sol", "femea").cor("Caramelo").idade("2 anos").entrada(3).status("em_quarentena")
                     .obs("Em trânsito: aguardando vaga na quarentena."),
             canino(31, "Paçoca", "macho").cor("Caramelo").porte("medio").idade("3 anos").entrada(130).chip()
-                    .castrado(115).em(BaiasSeed.CANIL_A1).medalha().foto(0xD7A86E),
+                    .castrado(115).em(BaiasSeed.CANIL_A1).medalha(),
             canino(32, "Bela", "femea").cor("Branca e preta").idade("1 ano").entrada(35).chip().castrado(30)
                     .motivo("entrega_voluntaria").em(BaiasSeed.CANIL_A1));
 
@@ -494,7 +496,7 @@ class AnimaisSeed {
                 animal.microchip ? animal.numeroMicrochip() : null,
                 animal.diasCastracao != null, castracao(animal, datas),
                 animal.status, animal.motivo, datas.entradaHa(animal.diasEntrada), baiaId(animal),
-                animal.corFoto == null ? null : ArquivosFicticios.fotoDataUri(animal.corFoto), animal.observacoes,
+                ArquivosFicticios.fotoDataUri(animal.foto()), animal.observacoes,
                 animal.medalha ? "SEED-" + String.format("%04d", animal.numero) : null,
                 animal.medalha && animal.microchip ? datas.diasAtras(animal.diasEntrada) : null,
                 animal.procedencia, null);
@@ -514,7 +516,7 @@ class AnimaisSeed {
                 comMicrochip ? animal.numeroMicrochip() : null,
                 animal.diasCastracao != null, castracao(animal, datas),
                 status, animal.motivo, datas.entradaHa(animal.diasEntrada), desfecho ? null : baiaId(animal),
-                animal.corFoto == null ? null : ArquivosFicticios.fotoDataUri(animal.corFoto), observacoes,
+                ArquivosFicticios.fotoDataUri(animal.foto()), observacoes,
                 animal.medalha ? "SEED-" + String.format("%04d", animal.numero) : null,
                 implantadoAgora ? datas.diasAtras(11)
                         : animal.medalha && animal.microchip ? datas.diasAtras(animal.diasEntrada) : null,

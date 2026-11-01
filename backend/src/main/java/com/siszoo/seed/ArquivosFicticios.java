@@ -6,20 +6,51 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.text.Normalizer;
 import java.util.Base64;
+import java.util.Locale;
 
 import javax.imageio.ImageIO;
 
-// Arquivos gerados em codigo para fotos e anexos do seed: nenhum arquivo
-// binario versionado e nenhuma imagem real. Deterministicos pela cor/texto.
+// Arquivos do seed. As fotos dos animais sao fotografias reais em dominio
+// publico (CC0), versionadas em src/main/resources/seed/fotos e creditadas no
+// CREDITOS.md da pasta (docs/decisoes/seed-dev.md, revisao de 01/11/2026).
+// Anexos (PNG e PDF) continuam gerados em codigo, deterministicos.
 final class ArquivosFicticios {
+
+    static final String PASTA_FOTOS = "/seed/fotos/";
 
     private ArquivosFicticios() {
     }
 
-    // Quadrado colorido com um circulo claro: so para a listagem ter miniatura.
+    // "001-thor.jpg", "018-faisca.jpg": numero com tres digitos e nome sem
+    // acentos, em minusculas.
+    static String nomeDaFoto(int numero, String nome) {
+        String semAcentos = Normalizer.normalize(nome, Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+        return String.format("%03d-%s.jpg", numero, semAcentos.toLowerCase(Locale.ROOT));
+    }
+
+    // Mesmo formato que o frontend grava em animal.foto_url: data URI de um
+    // JPEG com lado maior de ate 800 px. O AnimalService gera a miniatura.
+    static String fotoDataUri(String arquivo) {
+        return "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(foto(arquivo));
+    }
+
+    static byte[] foto(String arquivo) {
+        try (InputStream entrada = ArquivosFicticios.class.getResourceAsStream(PASTA_FOTOS + arquivo)) {
+            if (entrada == null) {
+                throw new IllegalStateException("Seed: foto '" + arquivo + "' nao encontrada em " + PASTA_FOTOS);
+            }
+            return entrada.readAllBytes();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    // Quadrado colorido com um circulo claro: anexo de imagem do animal.
     static byte[] png(int rgb) {
         BufferedImage imagem = new BufferedImage(96, 96, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = imagem.createGraphics();
@@ -39,10 +70,6 @@ final class ArquivosFicticios {
             throw new UncheckedIOException(e);
         }
         return saida.toByteArray();
-    }
-
-    static String fotoDataUri(int rgb) {
-        return "data:image/png;base64," + Base64.getEncoder().encodeToString(png(rgb));
     }
 
     // PDF minimo valido (uma pagina com uma linha de texto ASCII).

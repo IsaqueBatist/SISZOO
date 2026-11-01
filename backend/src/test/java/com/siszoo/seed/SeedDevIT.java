@@ -62,6 +62,9 @@ class SeedDevIT extends AbstractIntegrationTest {
         assertThat(contar("SELECT count(*) FROM medicamento")).isEqualTo(CatalogoClinicoSeed.MEDICAMENTOS.size());
         assertThat(contar("SELECT count(*) FROM baia")).isEqualTo(BaiasSeed.PLANO.size());
         assertThat(contar("SELECT count(*) FROM animal")).isEqualTo(AnimaisSeed.PLANO.size());
+        // Toda ficha sai com a foto real e com a miniatura que o AnimalService gera dela.
+        assertThat(contar("SELECT count(*) FROM animal WHERE foto_url LIKE 'data:image/jpeg;base64,%'"
+                + " AND foto_miniatura LIKE 'data:image/jpeg;base64,%'")).isEqualTo(AnimaisSeed.PLANO.size());
         // +1 em cada: a retificacao e um registro novo.
         assertThat(contar("SELECT count(*) FROM vacinacao")).isEqualTo(AnimaisSeed.VACINAS.size() + 1);
         assertThat(contar("SELECT count(*) FROM procedimento")).isEqualTo(procedimentos + 1);
