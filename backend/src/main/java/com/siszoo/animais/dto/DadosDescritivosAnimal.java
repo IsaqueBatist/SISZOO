@@ -3,6 +3,7 @@ package com.siszoo.animais.dto;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 // Campos da ficha que o cadastro e a edicao gravam do mesmo jeito
 // (CriarAnimalRequest e AtualizarAnimalRequest). Microchip, medalha, laudo,
@@ -38,4 +39,8 @@ public interface DadosDescritivosAnimal {
     LocalDateTime dataEntrada();
 
     String observacoes();
+
+    List<String> condicoes();
+
+    String condicoesOutras();
 }

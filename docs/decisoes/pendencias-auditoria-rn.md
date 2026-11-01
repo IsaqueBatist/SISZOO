@@ -25,10 +25,10 @@ Classificação provisória de cada divergência da seção 11.5 do relatório d
 | D13 | Fonte da correção da V11 | Documentação desatualizada (incompleta) |
 | D14 | DBML do módulo 4 | Documentação desatualizada |
 | N1 | Microchip: maiúsculas e minúsculas | Decisão em aberto |
-| N2 | Microchip em criação simultânea | Decisão em aberto |
-| N3 | Cargos no token | Decisão em aberto |
+| N2 | Microchip em criação simultânea | Fechada em 31/10/2026: mesma mensagem da pré-checagem |
+| N3 | Cargos no token | Fechada em 31/10/2026 (`docs/decisoes/sessao.md`, S-13) |
 | N4 | `VISUALIZACAO` na recarga após mutação | Decisão em aberto |
-| N5 | Baia apagada ao restaurar rascunho (opções de baia tardias) | Erro de implementação + decisão em aberto |
+| N5 | Baia apagada ao restaurar rascunho (opções de baia tardias) | Erro corrigido em 31/10/2026; semântica de restauração em aberto |
 
 ## Divergências da seção 11.5
 
@@ -140,6 +140,7 @@ Classificação provisória de cada divergência da seção 11.5 do relatório d
 - **Impacto.** Desejado: nada muda. Não desejado: o front passa a atualizar o cache só com os campos não pessoais, sem nova leitura.
 
 ### N5 — Baia apagada ao restaurar rascunho quando as opções de baia chegam depois da ficha
+- **Situação (31/10/2026).** Dessincronia corrigida: o select de baia é controlado (`CamposSaudeBaia.tsx`) e, quando a baia atual não está entre as opções, mostra "Baia atual" em vez de "Sem baia". A reprodução da `tmp/reproducao-form-animal` agora faz parte do repositório, invertida para fixar a correção (`AnimalForm.edicaoPerdaDeDados.test.tsx`). Continua em aberto só a semântica de restauração descrita abaixo.
 - **Evidência (testes executados).**
   - Reprodução (branch local `tmp/reproducao-form-animal`, commit `f0d6dd7`, `frontend/src/features/animais/components/AnimalForm.edicaoPerdaDeDados.test.tsx`; não faz parte desta branch nem está publicada — ver "Disponibilidade da evidência" abaixo): cenário 3 — rascunho de edição sem baia, restaurado com as opções de baia carregadas depois da montagem do formulário → o PUT sai sem `baiaId` e a baia é apagada. Cenário 2b — opções chegando depois da ficha → o select mostra "Sem baia (em trânsito)", mas o PUT mantém a baia.
   - Diagnóstico da auditoria de 2026-10-19 (teste temporário, não versionado, rodado sobre o mesmo commit da reprodução): o **mesmo** rascunho do cenário 3, com as opções de baia já presentes antes de o formulário montar → o select fica em "Baia 3" antes e depois de restaurar e **o PUT mantém a baia**. Rascunho com valores não vazios (porte `pequeno`, Gatil A) → os dois valores são aplicados.

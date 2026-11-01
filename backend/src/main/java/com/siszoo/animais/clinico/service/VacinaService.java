@@ -133,10 +133,10 @@ public class VacinaService {
                 .replaceAll("^_+|_+$", "");
 
         if (codigo.isEmpty()) {
-            throw new CampoInvalidoException("nome", "O nome precisa conter letras ou numeros");
+            throw new CampoInvalidoException("nome", "O nome precisa conter letras ou números.");
         }
         if (codigo.length() > TAMANHO_MAXIMO_CODIGO) {
-            throw new CampoInvalidoException("nome", "O nome e longo demais: use no maximo 30 letras ou numeros");
+            throw new CampoInvalidoException("nome", "O nome é longo demais: use no máximo 30 letras ou números.");
         }
         return codigo;
     }

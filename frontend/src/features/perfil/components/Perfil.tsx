@@ -2,8 +2,8 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
+import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
 import { Icon } from '@/components/layout/Icon'
-import { useToast } from '@/components/toast/useToast'
 import { formatarDataBR } from '@/lib/datas'
 import { NAV_ALL, ROLES, isNavGroup, roleKeyFromCargos } from '@/lib/nav'
 import { perfilFormSchema, type PerfilFormValues } from '../schemas/perfilFormSchema'
@@ -19,7 +19,7 @@ export function Perfil() {
   const mutation = useAtualizarTelefoneMutation()
 
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const toast = useToast()
+  const [submitSucesso, setSubmitSucesso] = useState(false)
 
   const {
     register,
@@ -39,7 +39,7 @@ export function Perfil() {
   async function onSubmit(dados: PerfilFormValues) {
     try {
       await mutation.mutateAsync({ telefone: dados.telefone })
-      toast.sucesso('Telefone atualizado.')
+      setSubmitSucesso(true)
     } catch {
       setSubmitError('Não foi possível salvar o telefone. Verifique a conexão e tente novamente.')
     }
@@ -47,6 +47,7 @@ export function Perfil() {
 
   function aoEnviar(event: FormEvent<HTMLFormElement>) {
     setSubmitError(null)
+    setSubmitSucesso(false)
     void handleSubmit(onSubmit)(event)
   }
 
@@ -142,10 +143,11 @@ export function Perfil() {
               <h3>Atualizar telefone</h3>
             </div>
             <div className="card-body">
-              {submitError && (
-                <div className="alert danger" role="alert">
+              <AlertaErroEnvio mensagem={submitError} />
+              {submitSucesso && !submitError && (
+                <div className="alert success" role="status">
                   <span className="bullet" />
-                  <div className="alert-content">{submitError}</div>
+                  <div className="alert-content">Telefone atualizado com sucesso.</div>
                 </div>
               )}
               <form onSubmit={aoEnviar} noValidate>
@@ -157,13 +159,13 @@ export function Perfil() {
                     </span>
                     <input
                       id="telefone"
-                      className={`input${errors.telefone ? ' error' : ''}`}
+                      className={`input${errors.telefone ? ' error' : ''}`} aria-invalid={errors.telefone ? true : undefined} aria-describedby={errors.telefone ? 'telefone-erro' : undefined}
                       type="text"
                       placeholder="(11) 91234-5678"
-                      {...register('telefone')}
+                      {...register('telefone', { onChange: () => setSubmitSucesso(false) })}
                     />
                   </div>
-                  {errors.telefone && <span className="err">{errors.telefone.message}</span>}
+                  {errors.telefone && <span className="err" id="telefone-erro">{errors.telefone.message}</span>}
                 </div>
                 <button type="submit" className="btn btn-primary btn-sm" disabled={mutation.isPending}>
                   {mutation.isPending ? 'Salvando…' : 'Salvar telefone'}

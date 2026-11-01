@@ -1,0 +1,31 @@
+_id: "req_auth_recuperacao_redefinir_410"
+type: "Request"
+parentId: "fld_auth"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/auth/recuperacao/redefinir"
+name: "410 - redefinir senha com token inválido"
+description: "POST /api/auth/recuperacao/redefinir consome o token (uso único) e grava a senha nova; 410 para token inválido, 422 para política de senha ou confirmação divergente."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "token": "token-inexistente",
+      "novaSenha": "Nova-Senha-2026",
+      "confirmarSenha": "Nova-Senha-2026"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication: {}
+metaSortKey: 1000300
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

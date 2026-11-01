@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class TransicaoStatusInvalidaException extends ErroNegocioException {
 
     public TransicaoStatusInvalidaException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Transicao de status nao permitida para a ocorrencia");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "Esta mudança de status não é permitida para a ocorrência.");
     }
 }

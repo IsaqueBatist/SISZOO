@@ -1,5 +1,6 @@
-import { Navigate, Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { RedirecionarSemAcesso } from './RedirecionarSemAcesso'
 
 // OCORRENCIAS_DENUNCIAS:leitura só é concedida a Administrador e Agente
 // Sanitário — o Veterinário não acessa o módulo (V11 zera a linha da V3). O
@@ -7,5 +8,5 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 // direto por URL, como RotaGestaoBaias.
 export function RotaLeituraOcorrencias() {
   const { roleKey } = useAuth()
-  return roleKey === 'admin' || roleKey === 'agente' ? <Outlet /> : <Navigate to="/dashboard" replace />
+  return roleKey === 'admin' || roleKey === 'agente' ? <Outlet /> : <RedirecionarSemAcesso para="/dashboard" />
 }

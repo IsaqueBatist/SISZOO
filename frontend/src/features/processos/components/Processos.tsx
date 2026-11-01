@@ -1,7 +1,8 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { ErroComRetry } from '@/components/layout/ErroComRetry'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useFiltrosLista, useValorComAtraso } from '@/lib/useFiltrosLista'
 import { formatarData } from '@/features/ocorrencias/utils/datas'
 import { formatarProtocoloOcorrencia, formatarProtocoloProcesso } from '@/features/ocorrencias/utils/protocolo'
 import { STATUS_PROCESSO_OPCOES } from '../utils/processosCatalogos'
@@ -12,6 +13,7 @@ import { useCatalogosProcessoQuery, useProcessosQuery } from '../hooks/useProces
 const TAMANHO_PAGINA = 20
 const LINHAS_SKELETON = [0, 1, 2, 3, 4]
 const COLUNAS_TABELA = ['protocolo', 'doenca', 'status', 'data', 'ocorrencia', 'acoes']
+const FILTROS_PADRAO = { busca: '', doenca: '', status: '', urgencia: '' }
 
 function Cabecalho() {
   return (
@@ -33,23 +35,16 @@ export function Processos() {
   // PROCESSOS_SANITARIOS:escrita (V3): os três cargos.
   const podeEscrever = roleKey === 'admin' || roleKey === 'vet' || roleKey === 'agente'
 
-  const [doencaFiltro, setDoencaFiltro] = useState('')
-  const [statusFiltro, setStatusFiltro] = useState('')
-  const [pagina, setPagina] = useState(0)
-  const [filtroAnterior, setFiltroAnterior] = useState({ doenca: '', status: '' })
-
-  // Reset da página ao mudar de filtro, ajustado durante a renderização (em
-  // vez de um efeito) — mesmo padrão de Animais.tsx/Ocorrencias.tsx.
-  const filtroMudou = filtroAnterior.doenca !== doencaFiltro || filtroAnterior.status !== statusFiltro
-  if (filtroMudou) {
-    setFiltroAnterior({ doenca: doencaFiltro, status: statusFiltro })
-    setPagina(0)
-  }
+  const { filtros, pagina, definirFiltros, irParaPagina, limparFiltros, filtrosAtivos } = useFiltrosLista('processos', FILTROS_PADRAO)
+  const { doenca: doencaFiltro, status: statusFiltro, urgencia: urgenciaFiltro } = filtros
+  const buscaDebounced = useValorComAtraso(filtros.busca).trim()
 
   const { data: catalogos } = useCatalogosProcessoQuery()
-  const { data, isLoading, isError } = useProcessosQuery({
+  const { data, isLoading, isError, refetch } = useProcessosQuery({
     doenca: doencaFiltro || undefined,
     status: (statusFiltro || undefined) as StatusProcesso | undefined,
+    urgente: urgenciaFiltro === 'urgentes' ? true : undefined,
+    q: buscaDebounced || undefined,
     pagina,
     tamanho: TAMANHO_PAGINA,
   })
@@ -63,7 +58,7 @@ export function Processos() {
       <div className="page-header">
         <div className="title-block">
           <h1>
-            Processos Sanitários <span className="counter">{data?.totalItens ?? 0} registros</span>
+            Processos Sanitários {data && <span className="counter">{data.totalItens} registros</span>}
           </h1>
           <p className="subtitle">Investigações laboratoriais de zoonoses</p>
         </div>
@@ -78,11 +73,21 @@ export function Processos() {
       </div>
 
       <div className="filter-bar">
+        <div className="search-input">
+          <Icon name="search" size={14} />
+          <input
+            type="text"
+            placeholder="Buscar protocolo, responsável, Nº GAL ou Nº SINAN..."
+            aria-label="Buscar processos"
+            value={filtros.busca}
+            onChange={(event) => definirFiltros({ busca: event.target.value })}
+          />
+        </div>
         <select
           className="filter-select"
           aria-label="Filtrar por doença"
           value={doencaFiltro}
-          onChange={(event) => setDoencaFiltro(event.target.value)}
+          onChange={(event) => definirFiltros({ doenca: event.target.value })}
         >
           <option value="">Doença: Todas</option>
           {catalogos?.doencas.map((opcao) => (
@@ -95,7 +100,7 @@ export function Processos() {
           className="filter-select"
           aria-label="Filtrar por status"
           value={statusFiltro}
-          onChange={(event) => setStatusFiltro(event.target.value)}
+          onChange={(event) => definirFiltros({ status: event.target.value })}
         >
           <option value="">Status: Todos</option>
           {STATUS_PROCESSO_OPCOES.map((opcao) => (
@@ -104,14 +109,23 @@ export function Processos() {
             </option>
           ))}
         </select>
+        <select
+          className="filter-select"
+          aria-label="Filtrar por urgência"
+          value={urgenciaFiltro}
+          onChange={(event) => definirFiltros({ urgencia: event.target.value })}
+        >
+          <option value="">Urgência: Todos</option>
+          <option value="urgentes">Só urgentes</option>
+        </select>
+        {filtrosAtivos && (
+          <button type="button" className="btn btn-ghost btn-sm" onClick={limparFiltros}>
+            Limpar filtros
+          </button>
+        )}
       </div>
 
-      {isError && (
-        <div className="alert danger" role="alert">
-          <span className="bullet" />
-          <div className="alert-content">Não foi possível carregar os processos sanitários. Tente novamente.</div>
-        </div>
-      )}
+      {isError && <ErroComRetry mensagem="Não foi possível carregar os processos sanitários." onTentarNovamente={() => void refetch()} />}
 
       {isLoading && (
         <div className="table-wrap">
@@ -140,7 +154,12 @@ export function Processos() {
             <Icon name="clipboard" size={28} />
           </span>
           <h3>Nenhum processo sanitário encontrado</h3>
-          <p>{doencaFiltro || statusFiltro ? 'Ajuste os filtros de busca.' : 'Nenhum processo foi aberto ainda.'}</p>
+          <p>{filtrosAtivos ? 'Ajuste os filtros de busca.' : 'Nenhum processo foi aberto ainda.'}</p>
+          {filtrosAtivos && (
+            <button type="button" className="btn btn-outline btn-sm" onClick={limparFiltros}>
+              Limpar filtros
+            </button>
+          )}
         </div>
       )}
 
@@ -214,7 +233,7 @@ export function Processos() {
                 type="button"
                 className="btn btn-ghost btn-sm"
                 disabled={pagina === 0}
-                onClick={() => setPagina((paginaAtual) => paginaAtual - 1)}
+                onClick={() => irParaPagina(pagina - 1)}
               >
                 Anterior
               </button>
@@ -225,7 +244,7 @@ export function Processos() {
                 type="button"
                 className="btn btn-outline btn-sm"
                 disabled={pagina >= totalPaginas - 1}
-                onClick={() => setPagina((paginaAtual) => paginaAtual + 1)}
+                onClick={() => irParaPagina(pagina + 1)}
               >
                 Próximo
               </button>

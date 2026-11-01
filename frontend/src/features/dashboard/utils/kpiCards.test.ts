@@ -18,7 +18,7 @@ describe('mapearKpisParaCards', () => {
     const cards = mapearKpisParaCards(kpisBase())
 
     expect(cards).toHaveLength(4)
-    expect(cards[0]).toMatchObject({ label: 'Total de Animais', value: '147', foot: '123 cães · 24 gatos' })
+    expect(cards[0]).toMatchObject({ label: 'Animais sob custódia', value: '147', foot: '123 cães · 24 gatos' })
     expect(cards[1]).toMatchObject({ label: 'Vacinados', value: '84', unit: '%', foot: '123 de 147 animais' })
     expect(cards[2]).toMatchObject({ label: 'Animais Adotados', value: '8', foot: '12 disponíveis para adoção' })
     expect(cards[3]).toMatchObject({ label: 'Ocorrências', value: '4' })

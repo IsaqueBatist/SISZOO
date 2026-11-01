@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Icon } from '@/components/layout/Icon'
-import { useToast } from '@/components/toast/useToast'
+import { toast } from '@/components/toast/toast'
 import type { Medicamento } from '@/features/animais/types/historico.types'
 import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
 import {
@@ -35,7 +35,6 @@ export function MedicamentoFormModal({ medicamento, onFechar }: MedicamentoFormM
   const { data: categorias } = useCategoriasFarmacologicasQuery()
   const criar = useCriarMedicamentoMutation()
   const atualizar = useAtualizarMedicamentoMutation()
-  const toast = useToast()
 
   const {
     register,

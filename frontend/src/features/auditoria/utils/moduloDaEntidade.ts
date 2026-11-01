@@ -8,6 +8,7 @@ export type Modulo = 'USUARIOS_ACESSO' | 'GESTAO_ANIMAIS' | 'OCORRENCIAS_DENUNCI
 const MODULO_POR_ENTIDADE: Record<string, Modulo> = {
   usuario: 'USUARIOS_ACESSO',
   preferencia_usuario: 'USUARIOS_ACESSO',
+  sessao_usuario: 'USUARIOS_ACESSO',
   animal: 'GESTAO_ANIMAIS',
   baia: 'GESTAO_ANIMAIS',
   medicamento: 'GESTAO_ANIMAIS',

@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
+import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
 import { API_BASE_URL } from '@/lib/env'
 import { server } from '@/mocks/server'
@@ -44,7 +44,7 @@ function renderEm(rota: string) {
     cargos: ['Agente Sanitário'],
     senhaAlteradaEm: '2026-01-10T12:00:00Z',
   }
-  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario }))
+  definirSessaoEmMemoria({ token: 'token-existente', usuario })
 
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   return render(
@@ -108,14 +108,14 @@ describe('aviso de anexos pendentes (D15)', () => {
     const user = userEvent.setup()
     server.use(
       http.post(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_ABERTA_ID}/anexos`, () =>
-        HttpResponse.json({ mensagem: 'Anexo deve ser JPG, PNG ou PDF com ate 5 MB' }, { status: 422 }),
+        HttpResponse.json({ mensagem: 'Envie um arquivo JPG, PNG ou PDF com até 5 MB.' }, { status: 422 }),
       ),
     )
     renderEm('/ocorrencias/novo')
 
     await user.click(await screen.findByRole('button', { name: 'Reenviar' }))
 
-    expect(await screen.findByText('b.png: Anexo deve ser JPG, PNG ou PDF com ate 5 MB')).toBeInTheDocument()
+    expect(await screen.findByText('b.png: Envie um arquivo JPG, PNG ou PDF com até 5 MB.')).toBeInTheDocument()
     expect(screen.getByText(/reenviar não vai resolver/)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Reenviar' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Registrar Ocorrência' })).toBeDisabled()

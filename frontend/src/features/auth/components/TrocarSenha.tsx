@@ -1,4 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react'
+import { mensagemDeRegraDaApi } from '@/lib/erroApi'
 import { useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -6,44 +7,48 @@ import { useForm } from 'react-hook-form'
 import { useAuth } from '../hooks/useAuth'
 import { trocarSenha } from '../api/authApi'
 import { criarTrocarSenhaSchema, type TrocarSenhaFormValues } from '../schemas/trocarSenhaSchema'
+import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
 import { Icon } from '@/components/layout/Icon'
+import { useTituloPagina } from '@/lib/useTituloPagina'
+import { CriteriosSenha } from './CriteriosSenha'
 import './Login.css'
 
 export function TrocarSenha() {
   const navigate = useNavigate()
   const { user, marcarSenhaAlterada } = useAuth()
   const [submitError, setSubmitError] = useState<string | null>(null)
+  useTituloPagina('Trocar senha')
 
   const mutation = useMutation({ mutationFn: trocarSenha })
 
   // A rota é protegida (sempre há usuário); a política usa o nome da conta e
   // o nome de exibição de quem troca. O backend aplica a mesma regra.
-  const schema = useMemo(
-    () =>
-      criarTrocarSenhaSchema({
-        email: user?.email ?? '',
-        nomeExibicao: user ? `${user.nome} ${user.sobrenome}` : '',
-      }),
+  const dono = useMemo(
+    () => ({ email: user?.email ?? '', nomeExibicao: user ? `${user.nome} ${user.sobrenome}` : '' }),
     [user],
   )
+  const schema = useMemo(() => criarTrocarSenhaSchema(dono), [dono])
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<TrocarSenhaFormValues>({
     resolver: zodResolver(schema),
     mode: 'onSubmit',
     reValidateMode: 'onSubmit',
+    defaultValues: { novaSenha: '', confirmarSenha: '' },
   })
+  const novaSenha = watch('novaSenha')
 
   async function onSubmit(dados: TrocarSenhaFormValues) {
     try {
       await mutation.mutateAsync({ novaSenha: dados.novaSenha, confirmarSenha: dados.confirmarSenha })
       marcarSenhaAlterada(new Date().toISOString())
       navigate('/dashboard', { replace: true })
-    } catch {
-      setSubmitError('Não foi possível trocar a senha. Tente novamente.')
+    } catch (erro) {
+      setSubmitError(mensagemDeRegraDaApi(erro) ?? 'Não foi possível trocar a senha. Tente novamente.')
     }
   }
 
@@ -62,12 +67,7 @@ export function TrocarSenha() {
           </p>
         </div>
 
-        {submitError && (
-          <div className="alert danger" role="alert">
-            <span className="bullet" />
-            <div className="alert-content">{submitError}</div>
-          </div>
-        )}
+        <AlertaErroEnvio mensagem={submitError} />
 
         <div className="field">
           <label htmlFor="novaSenha">
@@ -79,14 +79,15 @@ export function TrocarSenha() {
             </span>
             <input
               id="novaSenha"
-              className={`input${errors.novaSenha ? ' error' : ''}`}
+              className={`input${errors.novaSenha ? ' error' : ''}`} aria-invalid={errors.novaSenha ? true : undefined} aria-describedby={errors.novaSenha ? 'novaSenha-erro' : undefined}
               type="password"
               placeholder="••••••••"
               autoComplete="new-password"
               {...register('novaSenha')}
             />
           </div>
-          {errors.novaSenha && <span className="err">{errors.novaSenha.message}</span>}
+          {errors.novaSenha && <span className="err" id="novaSenha-erro">{errors.novaSenha.message}</span>}
+          <CriteriosSenha senha={novaSenha} dono={dono} />
         </div>
 
         <div className="field">
@@ -99,14 +100,14 @@ export function TrocarSenha() {
             </span>
             <input
               id="confirmarSenha"
-              className={`input${errors.confirmarSenha ? ' error' : ''}`}
+              className={`input${errors.confirmarSenha ? ' error' : ''}`} aria-invalid={errors.confirmarSenha ? true : undefined} aria-describedby={errors.confirmarSenha ? 'confirmarSenha-erro' : undefined}
               type="password"
               placeholder="••••••••"
               autoComplete="new-password"
               {...register('confirmarSenha')}
             />
           </div>
-          {errors.confirmarSenha && <span className="err">{errors.confirmarSenha.message}</span>}
+          {errors.confirmarSenha && <span className="err" id="confirmarSenha-erro">{errors.confirmarSenha.message}</span>}
         </div>
 
         <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={mutation.isPending}>

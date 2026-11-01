@@ -14,4 +14,9 @@ public final class UsuarioAutenticado {
     public static UUID id(Authentication authentication) {
         return UUID.fromString(authentication.getName());
     }
+
+    // O filtro guarda o id da sessao em details.
+    public static UUID sessao(Authentication authentication) {
+        return UUID.fromString(authentication.getDetails().toString());
+    }
 }

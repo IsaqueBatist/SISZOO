@@ -560,7 +560,7 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
 
         Response acima = anexar(tokenAgente, id, "grande.png", pngComTamanho(5 * 1024 * 1024 + 1));
         acima.then().statusCode(413);
-        assertThat(acima.path("mensagem"), equalTo("Arquivo excede o tamanho maximo de 5 MB"));
+        assertThat(acima.path("mensagem"), equalTo("O arquivo passa do limite de 5 MB. Escolha um arquivo menor."));
         assertThat(detalhe(tokenAgente, id).path("anexos"), hasSize(1));
     }
 

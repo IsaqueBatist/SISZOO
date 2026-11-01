@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class DataColetaFuturaException extends ErroNegocioException {
 
     public DataColetaFuturaException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Data de coleta nao pode ser futura");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "A data de coleta não pode ser futura.");
     }
 }

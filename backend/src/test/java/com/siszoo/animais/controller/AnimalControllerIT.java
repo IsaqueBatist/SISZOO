@@ -1,7 +1,6 @@
 package com.siszoo.animais.controller;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
@@ -132,16 +131,15 @@ class AnimalControllerIT extends AbstractIntegrationTest {
         postarAnimal(request)
                 .then()
                 .statusCode(422)
-                .body("mensagem", equalTo("Data de entrada nao pode ser futura"))
+                .body("mensagem", equalTo("A data de entrada não pode ser futura."))
                 .body("campos[0].campo", equalTo("dataEntrada"));
     }
 
-    // esterilizado era boolean primitivo: sem o campo no JSON, o Jackson
-    // recusava o corpo e o Spring respondia 400 generico, fora do padrao de
-    // campo obrigatorio (Bean Validation -> 422 "Dados invalidos" + campos).
+    // Decisao de 31/10/2026, que supera a FS-6: a resposta de castracao e
+    // opcional, e a ausencia fica como nao informado.
     @Test
-    @DisplayName("cadastro sem esterilizado responde 422 com o campo, como os demais obrigatorios")
-    void deveRetornar422ComCampoQuandoCadastroSemEsterilizado() {
+    @DisplayName("cadastro sem esterilizado e aceito e fica como nao informado")
+    void deveAceitarCadastroSemEsterilizado() {
         given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + tokenAdmin)
@@ -149,14 +147,13 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .when()
                 .post("/api/animais")
                 .then()
-                .statusCode(422)
-                .body("mensagem", equalTo("Dados invalidos"))
-                .body("campos.campo", contains("esterilizado"));
+                .statusCode(200)
+                .body("esterilizado", nullValue());
     }
 
     @Test
-    @DisplayName("edicao sem esterilizado responde 422 com o campo, como os demais obrigatorios")
-    void deveRetornar422ComCampoQuandoEdicaoSemEsterilizado() {
+    @DisplayName("edicao sem esterilizado e aceita e fica como nao informado")
+    void deveAceitarEdicaoSemEsterilizado() {
         String id = criarAnimalViaApi(animalMinimo(null)).path("id");
 
         given()
@@ -166,9 +163,8 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .when()
                 .put("/api/animais/" + id)
                 .then()
-                .statusCode(422)
-                .body("mensagem", equalTo("Dados invalidos"))
-                .body("campos.campo", contains("esterilizado"));
+                .statusCode(200)
+                .body("esterilizado", nullValue());
     }
 
     @Test
@@ -348,7 +344,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .post("/api/animais")
                 .then()
                 .statusCode(409)
-                .body("mensagem", equalTo("Microchip ja cadastrado"));
+                .body("mensagem", equalTo("Este microchip já está cadastrado em outro animal."));
     }
 
     @Test

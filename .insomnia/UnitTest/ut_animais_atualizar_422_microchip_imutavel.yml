@@ -84,7 +84,7 @@ code: |-
 
   const comMicrochipDiferente = await atualizar({ microchip: `CHIP-OUTRO-${Date.now()}` });
   expect(comMicrochipDiferente.status).to.equal(422);
-  expect(JSON.parse(comMicrochipDiferente.body).mensagem).to.equal('Microchip nao pode ser alterado apos definido');
+  expect(JSON.parse(comMicrochipDiferente.body).mensagem).to.equal('O microchip não pode ser alterado depois de definido.');
 
   const comMesmoMicrochip = await atualizar({ microchip: microchipOriginal });
   expect(comMesmoMicrochip.status).to.equal(200);

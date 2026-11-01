@@ -9,8 +9,8 @@ import jakarta.validation.constraints.Size;
 // (confirmarSenha so e comparada com ela).
 public record TrocarSenhaRequest(
         @NotBlank
-        @Size(min = 8, message = "Nova senha deve ter no minimo 8 caracteres")
-        @TamanhoMaximoBytes(value = 72, message = "Nova senha deve ter no maximo 72 bytes (acentos contam 2)")
+        @Size(min = 8, message = "A nova senha deve ter no mínimo 8 caracteres.")
+        @TamanhoMaximoBytes(value = 72, message = "A nova senha deve ter no máximo 72 bytes (letras acentuadas contam como 2).")
         String novaSenha,
 
         @NotBlank

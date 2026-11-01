@@ -51,6 +51,9 @@ class AnimalServiceTest {
     private static final LocalDateTime ENTRADA = HOJE.atTime(9, 30);
 
     @Mock
+    private com.siszoo.animais.repository.CondicaoSaudeRepository condicaoSaudeRepository;
+
+    @Mock
     private AnimalRepository animalRepository;
 
     @Mock
@@ -85,7 +88,8 @@ class AnimalServiceTest {
     void criarService() {
         Clock clock = Clock.fixed(Instant.parse("2026-09-10T15:00:00Z"), ZoneId.of("America/Sao_Paulo"));
         animalService = new AnimalService(animalRepository, baiaRepository, especieRepository, statusAnimalRepository,
-                motivoEntradaRepository, usuarioRepository, animalMapper, fichaCompletaService, auditoriaEventoService,
+                motivoEntradaRepository, condicaoSaudeRepository, usuarioRepository, animalMapper, fichaCompletaService,
+                auditoriaEventoService,
                 new MiniaturaFoto(), clock);
         // RNF10 (F2-078): atualizar() resolve o autor da auditoria; nos testes de
         // regra de baia o usuario e irrelevante, entao o stub e lenient.

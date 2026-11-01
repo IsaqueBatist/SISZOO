@@ -1,10 +1,13 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { HttpResponse, http } from 'msw'
+import { API_BASE_URL } from '@/lib/env'
+import { server } from '@/mocks/server'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
-import { ToastProvider } from '@/components/toast/ToastProvider'
-import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
+import { Toasts } from '@/components/toast/Toasts'
+import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
 import { FichaAnimal } from './FichaAnimal'
 
@@ -21,23 +24,46 @@ function renderFicha(cargos: string[] = ['Veterinário'], animalId = REX_ID) {
     cargos,
     senhaAlteradaEm: '2026-01-10T12:00:00Z',
   }
-  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario }))
+  definirSessaoEmMemoria({ token: 'token-existente', usuario })
 
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[`/animais/${animalId}`]}>
-        <ToastProvider>
           <AuthProvider>
             <Routes>
               <Route path="/animais/:id" element={<FichaAnimal />} />
             </Routes>
           </AuthProvider>
-        </ToastProvider>
       </MemoryRouter>
+      <Toasts />
     </QueryClientProvider>,
   )
 }
+
+describe('FichaAnimal — condições de saúde', () => {
+  it('mostra as condições e as observações, que antes só apareciam na edição', async () => {
+    const rex = await (await fetch(`${API_BASE_URL}/animais/${REX_ID}`)).json()
+    server.use(
+      http.get(`${API_BASE_URL}/animais/${REX_ID}`, () =>
+        HttpResponse.json({
+          ...rex,
+          condicoes: [
+            { codigo: 'epilepsia', nome: 'Epilepsia' },
+            { codigo: 'outras', nome: 'Outras' },
+          ],
+          condicoesOutras: 'Displasia coxofemoral',
+          observacoes: 'Medroso com visitas',
+        }),
+      ),
+    )
+    renderFicha()
+
+    expect(await screen.findByText('Epilepsia')).toBeInTheDocument()
+    expect(screen.getByText('Displasia coxofemoral')).toBeInTheDocument()
+    expect(screen.getByText('Medroso com visitas')).toBeInTheDocument()
+  })
+})
 
 describe('FichaAnimal', () => {
   it('mostra o cabeçalho de identidade com os dados reais do animal', async () => {

@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class VacinaNaoEncontradaException extends ErroNegocioException {
 
     public VacinaNaoEncontradaException() {
-        super(HttpStatus.NOT_FOUND, "Vacina nao encontrada");
+        super(HttpStatus.NOT_FOUND, "Vacina não encontrada.");
     }
 }

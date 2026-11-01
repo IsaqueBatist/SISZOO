@@ -2,9 +2,12 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useState, type FormEvent } from 'react'
 import { FormProvider, useFieldArray, useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
+import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
+import { AvisoEnvioPausado } from '@/components/AvisoEnvioPausado'
 import { BannerRascunho } from '@/components/BannerRascunho'
 import { Stepper } from '@/components/Stepper'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { toast } from '@/components/toast/toast'
 import { camposDoErro, mensagemDeRegraDaApi, statusHttpDoErro } from '@/lib/erroApi'
 import { AmostraAnimalCard, type AmostraErros } from './AmostraAnimalCard'
 import './ProcessoForm.css'
@@ -23,6 +26,8 @@ import { CamposResponsavel } from './CamposResponsavel'
 import { RevisaoProcesso } from './RevisaoProcesso'
 import { SeletorOcorrencia, type OcorrenciaParaVinculo } from './SeletorOcorrencia'
 import { useCatalogosProcessoQuery, useCriarProcessoMutation } from '../hooks/useProcessos'
+import { formatarProtocoloProcesso } from '@/features/ocorrencias/utils/protocolo'
+import type { Denunciante } from '@/features/ocorrencias/types/ocorrencias.types'
 
 // Mensagem do servidor (409/422) com os campos recusados, quando vierem.
 function mensagemDoErro(erro: unknown): string {
@@ -41,9 +46,11 @@ interface ProcessoFormProps {
   // OCORRENCIAS_DENUNCIAS:escrita (D33): Admin e Agente. O Vet cria processo
   // sem vínculo.
   podeVincular: boolean
+  // Só quando a ocorrência não é sigilosa nem anônima (CadastrarProcesso).
+  denuncianteDaOcorrencia?: Denunciante | null
 }
 
-export function ProcessoForm({ ocorrenciaDaUrl, podeVincular }: ProcessoFormProps) {
+export function ProcessoForm({ ocorrenciaDaUrl, podeVincular, denuncianteDaOcorrencia }: ProcessoFormProps) {
   const navigate = useNavigate()
   const { user } = useAuth()
   const chaveRascunho = chaveRascunhoProcesso(user?.id ?? '')
@@ -56,6 +63,7 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular }: ProcessoFormProp
     null,
   )
   const [conflitoRascunho, setConflitoRascunho] = useState(false)
+  const aguardandoEscolha = rascunhoSalvo !== null
   const [prontoParaAutoSalvar, setProntoParaAutoSalvar] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
@@ -86,7 +94,27 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular }: ProcessoFormProp
     setValue('vinculoDecisao', 'vinculado')
     setValue('ocorrenciaId', ocorrenciaDaUrl.id)
     setValue('ocorrenciaResumo', ocorrenciaDaUrl)
+    preencherBairroDaOcorrencia(ocorrenciaDaUrl.bairro)
     setVinculoTravado(true)
+  }
+
+  // O sistema já sabe o bairro. Só preenche o vazio: o que foi digitado fica.
+  function preencherBairroDaOcorrencia(bairro: string) {
+    if (!getValues('responsavel.bairroOcorrencia')) setValue('responsavel.bairroOcorrencia', bairro)
+  }
+
+  // Copia o que a própria pessoa vê na ocorrência, e só a pedido: nunca é
+  // automático, e nunca aparece para ocorrência sigilosa ou anônima.
+  function usarDadosDoDenunciante() {
+    if (!denuncianteDaOcorrencia) return
+    const { nome, cpf, telefone, email, cep, endereco, bairroResidencial } = denuncianteDaOcorrencia
+    setValue('responsavel.nome', nome ?? '')
+    setValue('responsavel.cpf', cpf ?? '')
+    setValue('responsavel.telefone', telefone ?? '')
+    setValue('responsavel.email', email ?? '')
+    setValue('responsavel.cep', cep ?? '')
+    setValue('responsavel.endereco', endereco ?? '')
+    setValue('responsavel.bairroResidencial', bairroResidencial ?? '')
   }
 
   useEffect(() => {
@@ -115,13 +143,14 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular }: ProcessoFormProp
     // termina, senão um callback com closure obsoleto pode sobrescrever um
     // rascunho real (mesmo gate de AnimalForm/OcorrenciaForm).
     // Refeita a cada troca de etapa: o callback grava a etapa em que o
-    // usuário está, não a de quando a assinatura nasceu.
-    if (!prontoParaAutoSalvar) return
+    // usuário está, não a de quando a assinatura nasceu. Com rascunho à espera
+    // de Restaurar ou Descartar, digitar não pode apagá-lo.
+    if (!prontoParaAutoSalvar || aguardandoEscolha) return
     const inscricao = watch((valoresAtuais) => {
       agendarSalvarRascunhoProcesso(chaveRascunho, { etapaAtual: step, valores: valoresAtuais as ProcessoFormValues })
     })
     return () => inscricao.unsubscribe()
-  }, [prontoParaAutoSalvar, watch, chaveRascunho, step])
+  }, [prontoParaAutoSalvar, aguardandoEscolha, watch, chaveRascunho, step])
 
   function handleRestaurarRascunho() {
     if (!rascunhoSalvo) return
@@ -150,6 +179,7 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular }: ProcessoFormProp
     setValue('vinculoDecisao', 'vinculado', { shouldValidate: true })
     setValue('ocorrenciaId', ocorrencia.id, { shouldValidate: true })
     setValue('ocorrenciaResumo', ocorrencia)
+    preencherBairroDaOcorrencia(ocorrencia.bairro)
   }
 
   function handlePularVinculo() {
@@ -165,7 +195,7 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular }: ProcessoFormProp
     const proximo = (step + 1) as 2 | 3 | 4
     setStep(proximo)
     if (step === 1) setVinculoTravado(true)
-    await salvarRascunhoProcesso(chaveRascunho, { etapaAtual: proximo, valores: getValues() })
+    if (!aguardandoEscolha) await salvarRascunhoProcesso(chaveRascunho, { etapaAtual: proximo, valores: getValues() })
   }
 
   function voltar(etapa?: 1 | 2 | 3) {
@@ -176,6 +206,7 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular }: ProcessoFormProp
     try {
       const novo = await mutation.mutateAsync(paraRequisicao(dados))
       await removerRascunhoProcesso(chaveRascunho)
+      toast.sucesso(`Processo ${formatarProtocoloProcesso(novo.protocolo)} registrado.`)
       navigate(`/processos/${novo.id}`)
     } catch (erro) {
       setSubmitError(mensagemDoErro(erro))
@@ -236,12 +267,7 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular }: ProcessoFormProp
         />
       )}
 
-      {submitError && (
-        <div className="alert danger" role="alert">
-          <span className="bullet" />
-          <div className="alert-content">{submitError}</div>
-        </div>
-      )}
+      <AlertaErroEnvio mensagem={submitError} />
 
       <FormProvider {...formulario}>
         <form onSubmit={aoEnviar} noValidate>
@@ -287,6 +313,13 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular }: ProcessoFormProp
               <h3>2. Responsável / munícipe</h3>
             </div>
             <div className="card-body col gap-4">
+              {denuncianteDaOcorrencia && (
+                <div>
+                  <button type="button" className="btn btn-outline btn-sm" onClick={usarDadosDoDenunciante}>
+                    Usar dados do denunciante
+                  </button>
+                </div>
+              )}
               <CamposResponsavel />
               <div className="flex gap-2" style={{ marginLeft: 'auto' }}>
                 <button type="button" className="btn btn-ghost" onClick={() => voltar()}>
@@ -339,12 +372,13 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular }: ProcessoFormProp
             </div>
             <div className="card-body col gap-4">
               <RevisaoProcesso valores={valores} catalogos={catalogos} onEditar={voltar} />
+              <AvisoEnvioPausado pausado={mutation.isPaused} />
               <div className="flex gap-2" style={{ marginLeft: 'auto' }}>
                 <button type="button" className="btn btn-ghost" onClick={() => voltar(3)}>
                   ← Voltar
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={mutation.isPending}>
-                  {mutation.isPending ? 'Registrando…' : 'Registrar Processo Sanitário'}
+                  {mutation.isPaused ? 'Aguardando conexão…' : mutation.isPending ? 'Registrando…' : 'Registrar Processo Sanitário'}
                 </button>
               </div>
             </div>

@@ -32,7 +32,7 @@ export const relatoriosHandlers = [
       case 'anual_processos':
         return HttpResponse.json(previewAnualProcessosFixture())
       default:
-        return HttpResponse.json({ mensagem: 'Tipo de relatório inválido' }, { status: 422 })
+        return HttpResponse.json({ mensagem: 'Tipo de relatório inválido. Selecione um da lista.' }, { status: 422 })
     }
   }),
 

@@ -23,16 +23,31 @@ import { API_BASE_URL } from '../lib/env'
 import { ocorrenciasHandlers } from './ocorrenciasHandlers'
 import { processosHandlers } from './processosHandlers'
 import { relatoriosHandlers } from './relatoriosHandlers'
-import type { CriarUsuarioRequest, UsuarioListItem } from '@/features/usuarios/types/usuarios.types'
+import type { AtualizarUsuarioRequest, CriarUsuarioRequest, UsuarioListItem } from '@/features/usuarios/types/usuarios.types'
 import type { PreferenciaUsuario } from '@/features/configuracoes/types/configuracoes.types'
 
-// Usado só pelos testes automatizados (mocks/server.ts) — o dev browser
+// Usado só pelos testes automatizados (mocks/server.ts) - o dev browser
 // (mocks/browser.ts) não intercepta mais login/senha/usuários, que já existem
 // de verdade no backend (módulo usuarios). Mantido aqui para os componentes
 // não dependerem de um Postgres/Spring de pé para rodar `npm run test`.
 export const CREDENCIAIS_VALIDAS: LoginRequest = {
   email: 'stephanie.lima@itu.sp.gov.br',
   senha: 'senha-de-exemplo',
+}
+
+// Recuperação de senha: o único token que o mock aceita, e o e-mail que
+// simula o limite de tentativas (429) no login e na recuperação.
+export const TOKEN_RECUPERACAO_VALIDO = 'token-recuperacao-valido'
+export const EMAIL_RECUPERACAO_LIMITADO = 'limite.atingido@itu.sp.gov.br'
+// Senha que o mock considera "a atual" do dono do token: cumpre a política do
+// formulário e, por isso, chega à API, que a recusa com 422 por campo.
+export const SENHA_ATUAL_RECUPERACAO = 'Senha-Atual-2026'
+
+function respostaLinkInvalido() {
+  return HttpResponse.json(
+    { mensagem: 'Este link de redefinição de senha é inválido ou já expirou. Solicite um novo link.' },
+    { status: 410 },
+  )
 }
 
 const LOGIN_RESPONSE: LoginResponse = {
@@ -62,6 +77,7 @@ function seedUsuariosMock(): UsuarioMockInterno[] {
       email: 'stephanie.lima@itu.sp.gov.br',
       cargos: ['Veterinário'],
       crmv: 'CRMV-SP 01234',
+      telefone: null,
       senhaAlteradaEm: '2026-01-10T12:00:00',
       ativo: true,
       ultimoAcesso: '2026-05-20T14:32:00',
@@ -75,6 +91,7 @@ function seedUsuariosMock(): UsuarioMockInterno[] {
       email: 'paulo.henriques@itu.sp.gov.br',
       cargos: ['Administrador'],
       crmv: null,
+      telefone: null,
       senhaAlteradaEm: '2024-03-15T09:00:00',
       ativo: true,
       ultimoAcesso: '2026-05-20T14:00:00',
@@ -88,6 +105,7 @@ function seedUsuariosMock(): UsuarioMockInterno[] {
       email: 'carlos.martins@itu.sp.gov.br',
       cargos: ['Veterinário'],
       crmv: 'CRMV-SP 05678',
+      telefone: null,
       senhaAlteradaEm: '2024-05-10T09:00:00',
       ativo: true,
       ultimoAcesso: '2026-05-19T17:02:00',
@@ -101,6 +119,7 @@ function seedUsuariosMock(): UsuarioMockInterno[] {
       email: 'rafael.santos@itu.sp.gov.br',
       cargos: ['Agente Sanitário'],
       crmv: null,
+      telefone: null,
       senhaAlteradaEm: '2024-11-03T09:00:00',
       ativo: true,
       ultimoAcesso: '2026-05-20T12:55:00',
@@ -114,6 +133,7 @@ function seedUsuariosMock(): UsuarioMockInterno[] {
       email: 'marcos.oliveira@itu.sp.gov.br',
       cargos: ['Agente Sanitário'],
       crmv: null,
+      telefone: null,
       senhaAlteradaEm: '2024-12-20T09:00:00',
       ativo: true,
       ultimoAcesso: '2026-05-20T11:08:00',
@@ -127,6 +147,7 @@ function seedUsuariosMock(): UsuarioMockInterno[] {
       email: 'joana.pires@itu.sp.gov.br',
       cargos: ['Veterinário'],
       crmv: 'CRMV-SP 09999',
+      telefone: null,
       senhaAlteradaEm: '2024-09-18T09:00:00',
       ativo: false,
       ultimoAcesso: '2026-02-12T11:00:00',
@@ -142,7 +163,7 @@ export function resetUsuariosMock() {
   usuariosMock = seedUsuariosMock()
 }
 
-// GET/PATCH /usuarios/me e /usuarios/me/preferencias não recebem id — no
+// GET/PATCH /usuarios/me e /usuarios/me/preferencias não recebem id - no
 // backend real o usuário vem do token JWT. Aqui sempre representam o usuário
 // logado nos testes (usuariosMock[0]).
 function seedPreferenciasMock(): PreferenciaUsuario {
@@ -562,6 +583,11 @@ const CATALOGOS_ANIMAIS_MOCK: CatalogosAnimal = {
     { codigo: 'obito_eutanasia', nome: 'Óbito eutanásia' },
     { codigo: 'transferido', nome: 'Transferido' },
   ],
+  condicoesSaude: [
+    { codigo: 'agressividade', nome: 'Agressividade' },
+    { codigo: 'epilepsia', nome: 'Epilepsia' },
+    { codigo: 'outras', nome: 'Outras' },
+  ],
   motivosEntrada: [
     { codigo: 'resgate', nome: 'Resgate' },
     { codigo: 'entrega_voluntaria', nome: 'Entrega voluntária' },
@@ -714,7 +740,7 @@ function fichaCompletaMock(animalId: string, microchip: string | null): boolean 
 }
 
 // Recompõe um `Animal` (resposta) a partir de um `AnimalRequest` (o que o
-// form de T18 envia) — espelha o que o service real faz ao resolver os
+// form de T18 envia) - espelha o que o service real faz ao resolver os
 // códigos de espécie/status/motivo/baia para os nomes exibidos.
 function construirAnimalMock(id: string, body: AnimalRequest, existente: Animal | null): Animal {
   const baia = body.baiaId ? baiasMock.find((item) => item.id === body.baiaId) : undefined
@@ -755,7 +781,7 @@ function construirAnimalMock(id: string, body: AnimalRequest, existente: Animal 
 
 // Registros clínicos: o mock guarda os campos crus +
 // `retificaId`, e deriva `retificadoPorId`/`statusRegistro` do mesmo jeito
-// que o mapper real do backend faz — nunca armazenados diretamente.
+// que o mapper real do backend faz - nunca armazenados diretamente.
 type RegistroClinicoBruto = { id: string; retificaId: string | null }
 
 function derivarStatusRegistro<T extends RegistroClinicoBruto>(
@@ -837,7 +863,7 @@ function seedVacinacoesMock(): VacinacaoMockInterna[] {
       criadoEm: `${addDiasIso(-30)}T09:00:00`,
     },
     // Par retificado: o registro 004 é corrigido pelo 005 (aponta retificaId
-    // de volta para 004) — 004 deve aparecer como "RETIFICADO", 005 "ATIVO".
+    // de volta para 004) - 004 deve aparecer como "RETIFICADO", 005 "ATIVO".
     {
       id: 'd1000000-0000-0000-0000-000000000004',
       animalId: ANIMAL_REX_ID,
@@ -876,7 +902,7 @@ function seedVacinacoesMock(): VacinacaoMockInterna[] {
 }
 
 // Seed V5 do backend: toda vacina do catálogo tem intervalo_meses = 12
-// (provisório, pendente de decisão do CCZ — ver docs/regras-negocio-clinico.md).
+// (provisório, pendente de decisão do CCZ - ver docs/regras-negocio-clinico.md).
 const INTERVALO_MESES_SEED_V5 = 12
 
 // Mesmos códigos de StatusAnimal.CODIGOS_FORA_DA_CUSTODIA (RN-A05).
@@ -1028,7 +1054,7 @@ export function resetPrescricoesMock() {
   prescricoesMock = seedPrescricoesMock()
 }
 
-// Alguns eventos "hoje", alguns "ontem", um mais antigo — exercita o
+// Alguns eventos "hoje", alguns "ontem", um mais antigo - exercita o
 // agrupamento por dia da tela de Logs (agruparPorDia.ts) sem precisar de
 // fixture dedicada em cada teste.
 function seedAuditoriaMock(): EventoAuditoria[] {
@@ -1100,6 +1126,12 @@ export const handlers = [
   http.post(`${API_BASE_URL}/auth/login`, async ({ request }) => {
     const body = (await request.json()) as LoginRequest
 
+    if (body.email === EMAIL_RECUPERACAO_LIMITADO) {
+      return HttpResponse.json(
+        { mensagem: 'Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente.' },
+        { status: 429 },
+      )
+    }
     if (body.email === CREDENCIAIS_VALIDAS.email && body.senha === CREDENCIAIS_VALIDAS.senha) {
       return HttpResponse.json(LOGIN_RESPONSE)
     }
@@ -1125,7 +1157,50 @@ export const handlers = [
     return HttpResponse.json({ mensagem: 'Credenciais inválidas' }, { status: 401 })
   }),
 
+  // Sem cookie de sessão nos testes: a aba que abre sem sessão vai para o login.
+  http.post(`${API_BASE_URL}/auth/renovar`, () => {
+    return HttpResponse.json({ mensagem: 'Sua sessão expirou. Entre novamente para continuar.' }, { status: 401 })
+  }),
+
+  http.post(`${API_BASE_URL}/auth/logout`, () => {
+    return new HttpResponse(null, { status: 204 })
+  }),
+
   http.post(`${API_BASE_URL}/auth/senha`, async () => {
+    return new HttpResponse(null, { status: 204 })
+  }),
+
+  // Recuperação de senha: 202 para qualquer e-mail institucional (a API não
+  // revela se a conta existe); 429 só para o e-mail reservado ao teste do limite.
+  http.post(`${API_BASE_URL}/auth/recuperacao`, async ({ request }) => {
+    const body = (await request.json()) as { email: string }
+    if (body.email === EMAIL_RECUPERACAO_LIMITADO) {
+      return HttpResponse.json(
+        { mensagem: 'Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente.' },
+        { status: 429 },
+      )
+    }
+    return new HttpResponse(null, { status: 202 })
+  }),
+
+  http.post(`${API_BASE_URL}/auth/recuperacao/validar`, async ({ request }) => {
+    const body = (await request.json()) as { token: string }
+    if (body.token !== TOKEN_RECUPERACAO_VALIDO) return respostaLinkInvalido()
+    return new HttpResponse(null, { status: 204 })
+  }),
+
+  http.post(`${API_BASE_URL}/auth/recuperacao/redefinir`, async ({ request }) => {
+    const body = (await request.json()) as { token: string; novaSenha: string; confirmarSenha: string }
+    if (body.token !== TOKEN_RECUPERACAO_VALIDO) return respostaLinkInvalido()
+    if (body.novaSenha === SENHA_ATUAL_RECUPERACAO) {
+      return HttpResponse.json(
+        {
+          mensagem: 'A nova senha precisa ser diferente da senha atual.',
+          campos: [{ campo: 'novaSenha', mensagem: 'A nova senha precisa ser diferente da senha atual.' }],
+        },
+        { status: 422 },
+      )
+    }
     return new HttpResponse(null, { status: 204 })
   }),
 
@@ -1150,6 +1225,7 @@ export const handlers = [
       email: body.email,
       cargos: [body.cargo],
       crmv: body.crmv ?? null,
+          telefone: null,
       senhaAlteradaEm: null,
       ativo: true,
       ultimoAcesso: null,
@@ -1160,6 +1236,20 @@ export const handlers = [
     usuariosMock = [...usuariosMock, novoUsuario]
     return HttpResponse.json(paraUsuarioPublico(novoUsuario), { status: 201 })
   }),
+
+  http.put(`${API_BASE_URL}/usuarios/:id`, async ({ params, request }) => {
+    const body = (await request.json()) as AtualizarUsuarioRequest
+    const usuario = usuariosMock.find((item) => item.id === params.id)
+    if (!usuario) return HttpResponse.json({ mensagem: 'Usuário não encontrado.' }, { status: 404 })
+    usuario.nome = body.nome
+    usuario.sobrenome = body.sobrenome
+    usuario.cargos = [body.cargo]
+    usuario.crmv = body.crmv ?? null
+    usuario.telefone = body.telefone ?? null
+    return HttpResponse.json(paraUsuarioPublico(usuario))
+  }),
+
+  http.post(`${API_BASE_URL}/usuarios/:id/senha`, () => new HttpResponse(null, { status: 204 })),
 
   http.patch(`${API_BASE_URL}/usuarios/:id/status`, async ({ params, request }) => {
     const { ativo } = (await request.json()) as { ativo: boolean }
@@ -1179,7 +1269,7 @@ export const handlers = [
 
   http.patch(`${API_BASE_URL}/usuarios/me`, async () => {
     // O backend real também não devolve `telefone` na resposta (só aceita no
-    // PATCH) — o mock replica essa lacuna de propósito.
+    // PATCH) - o mock replica essa lacuna de propósito.
     return HttpResponse.json(paraUsuarioPublico(usuariosMock[0]))
   }),
 
@@ -1192,7 +1282,7 @@ export const handlers = [
 
     if (body.notifAlertasCriticos === false) {
       return HttpResponse.json(
-        { mensagem: 'Notificacao de alertas criticos nao pode ser desativada' },
+        { mensagem: 'A notificação de alertas críticos não pode ser desativada.' },
         { status: 422 },
       )
     }
@@ -1269,8 +1359,8 @@ export const handlers = [
       return HttpResponse.json(
         {
           mensagem: existente.ativo
-            ? `Ja existe a vacina "${existente.nome}" com o mesmo codigo (${codigo}). Use um nome que as diferencie.`
-            : `A vacina "${existente.nome}" ja existe com o mesmo codigo (${codigo}), mas esta desativada. Reative-a em Vacinas.`,
+            ? `Já existe a vacina "${existente.nome}" com o mesmo código (${codigo}). Use um nome que as diferencie.`
+            : `A vacina "${existente.nome}" já existe com o mesmo código (${codigo}), mas está desativada. Reative-a em Vacinas.`,
         },
         { status: 409 },
       )
@@ -1288,14 +1378,14 @@ export const handlers = [
 
   http.get(`${API_BASE_URL}/vacinas/:id`, ({ params }) => {
     const vacina = vacinasMock.find((item) => item.id === params.id)
-    if (!vacina) return HttpResponse.json({ mensagem: 'Vacina nao encontrada' }, { status: 404 })
+    if (!vacina) return HttpResponse.json({ mensagem: 'Vacina não encontrada.' }, { status: 404 })
     return HttpResponse.json(vacina)
   }),
 
   http.put(`${API_BASE_URL}/vacinas/:id`, async ({ params, request }) => {
     const body = (await request.json()) as { nome?: string; intervaloMeses?: number; ativo?: boolean }
     const vacina = vacinasMock.find((item) => item.id === params.id)
-    if (!vacina) return HttpResponse.json({ mensagem: 'Vacina nao encontrada' }, { status: 404 })
+    if (!vacina) return HttpResponse.json({ mensagem: 'Vacina não encontrada.' }, { status: 404 })
     // O código é imutável: renomear altera só o nome. `ativo: true` é o
     // caminho de reativação.
     vacina.nome = (body.nome ?? vacina.nome).trim()
@@ -1307,7 +1397,7 @@ export const handlers = [
   // Soft-delete: a linha permanece, só sai do catálogo clínico.
   http.delete(`${API_BASE_URL}/vacinas/:id`, ({ params }) => {
     const vacina = vacinasMock.find((item) => item.id === params.id)
-    if (!vacina) return HttpResponse.json({ mensagem: 'Vacina nao encontrada' }, { status: 404 })
+    if (!vacina) return HttpResponse.json({ mensagem: 'Vacina não encontrada.' }, { status: 404 })
     vacina.ativo = false
     return HttpResponse.json(vacina)
   }),
@@ -1328,7 +1418,7 @@ export const handlers = [
     return HttpResponse.json({ itens, pagina, tamanho, totalItens, totalPaginas })
   }),
 
-  // T45: residentes (sob custódia) de todas as baias, como o backend — por nome.
+  // T45: residentes (sob custódia) de todas as baias, como o backend - por nome.
   http.get(`${API_BASE_URL}/baias/residentes`, () => {
     const residentes = animaisMock
       .filter((animal) => animal.baiaId && !STATUS_FORA_DA_CUSTODIA.includes(animal.statusCodigo))
@@ -1341,7 +1431,7 @@ export const handlers = [
     const body = (await request.json()) as BaiaRequest
     const tipo = CATALOGOS_ANIMAIS_MOCK.tiposBaia.find((item) => item.codigo === body.tipoBaia)
     if (!tipo) {
-      return HttpResponse.json({ mensagem: 'Tipo de baia informado nao existe' }, { status: 422 })
+      return HttpResponse.json({ mensagem: 'O tipo de baia informado não existe. Selecione um da lista.' }, { status: 422 })
     }
 
     const novaBaia: Baia = {
@@ -1364,13 +1454,13 @@ export const handlers = [
   http.put(`${API_BASE_URL}/baias/:id`, async ({ params, request }) => {
     const baia = baiasMock.find((item) => item.id === params.id)
     if (!baia) {
-      return HttpResponse.json({ mensagem: 'Baia nao encontrada' }, { status: 404 })
+      return HttpResponse.json({ mensagem: 'Baia não encontrada.' }, { status: 404 })
     }
 
     const body = (await request.json()) as BaiaRequest
     const tipo = CATALOGOS_ANIMAIS_MOCK.tiposBaia.find((item) => item.codigo === body.tipoBaia)
     if (!tipo) {
-      return HttpResponse.json({ mensagem: 'Tipo de baia informado nao existe' }, { status: 422 })
+      return HttpResponse.json({ mensagem: 'O tipo de baia informado não existe. Selecione um da lista.' }, { status: 422 })
     }
 
     const baiaAtualizada: Baia = {
@@ -1390,7 +1480,7 @@ export const handlers = [
   http.delete(`${API_BASE_URL}/baias/:id`, ({ params }) => {
     const baia = baiasMock.find((item) => item.id === params.id)
     if (!baia) {
-      return HttpResponse.json({ mensagem: 'Baia nao encontrada' }, { status: 404 })
+      return HttpResponse.json({ mensagem: 'Baia não encontrada.' }, { status: 404 })
     }
 
     // Espelha o backend real: soft-delete, sempre sucede mesmo com animais
@@ -1403,7 +1493,7 @@ export const handlers = [
   http.patch(`${API_BASE_URL}/baias/:id/status`, async ({ params, request }) => {
     const baia = baiasMock.find((item) => item.id === params.id)
     if (!baia) {
-      return HttpResponse.json({ mensagem: 'Baia nao encontrada' }, { status: 404 })
+      return HttpResponse.json({ mensagem: 'Baia não encontrada.' }, { status: 404 })
     }
 
     const { ativa } = (await request.json()) as { ativa: boolean }
@@ -1415,7 +1505,7 @@ export const handlers = [
   http.get(`${API_BASE_URL}/animais/:id`, ({ params }) => {
     const animal = animaisMock.find((item) => item.id === params.id)
     if (!animal) {
-      return HttpResponse.json({ mensagem: 'Animal nao encontrado' }, { status: 404 })
+      return HttpResponse.json({ mensagem: 'Animal não encontrado.' }, { status: 404 })
     }
     return HttpResponse.json(animal)
   }),
@@ -1424,7 +1514,7 @@ export const handlers = [
     const body = (await request.json()) as AnimalRequest
 
     if (body.microchip && animaisMock.some((item) => item.microchip === body.microchip)) {
-      return HttpResponse.json({ mensagem: 'Microchip ja cadastrado' }, { status: 409 })
+      return HttpResponse.json({ mensagem: 'Este microchip já está cadastrado em outro animal.' }, { status: 409 })
     }
 
     const novoAnimal = construirAnimalMock(crypto.randomUUID(), body, null)
@@ -1435,17 +1525,17 @@ export const handlers = [
   http.put(`${API_BASE_URL}/animais/:id`, async ({ params, request }) => {
     const animal = animaisMock.find((item) => item.id === params.id)
     if (!animal) {
-      return HttpResponse.json({ mensagem: 'Animal nao encontrado' }, { status: 404 })
+      return HttpResponse.json({ mensagem: 'Animal não encontrado.' }, { status: 404 })
     }
 
     const body = (await request.json()) as AnimalRequest
 
     if (animal.microchip && body.microchip && body.microchip !== animal.microchip) {
-      return HttpResponse.json({ mensagem: 'Microchip nao pode ser alterado apos definido' }, { status: 422 })
+      return HttpResponse.json({ mensagem: 'O microchip não pode ser alterado depois de definido.' }, { status: 422 })
     }
 
     if (body.microchip && animaisMock.some((item) => item.id !== animal.id && item.microchip === body.microchip)) {
-      return HttpResponse.json({ mensagem: 'Microchip ja cadastrado' }, { status: 409 })
+      return HttpResponse.json({ mensagem: 'Este microchip já está cadastrado em outro animal.' }, { status: 409 })
     }
 
     const animalAtualizado = construirAnimalMock(animal.id, body, animal)
@@ -1471,12 +1561,12 @@ export const handlers = [
     // Mesmos 422 do backend: Bean Validation (RN-C05) e VacinacaoService (RN-C06).
     if (!body.doseUnidade) {
       return HttpResponse.json(
-        { mensagem: 'Dados invalidos', campos: [{ campo: 'doseUnidade', mensagem: 'não deve ser nulo' }] },
+        { mensagem: 'Não foi possível salvar. Verifique os campos destacados e tente novamente.', campos: [{ campo: 'doseUnidade', mensagem: 'não deve ser nulo' }] },
         { status: 422 },
       )
     }
     if (body.dataAplicacao > hojeEmItu()) {
-      return HttpResponse.json({ mensagem: 'Data de aplicacao nao pode ser futura' }, { status: 422 })
+      return HttpResponse.json({ mensagem: 'A data de aplicação não pode ser futura.' }, { status: 422 })
     }
     const novo: VacinacaoMockInterna = {
       id: crypto.randomUUID(),
@@ -1753,7 +1843,7 @@ export const handlers = [
     const body = (await request.json()) as { nome?: string; categoriaId?: string }
     const categoria = categoriasFarmacologicasMock.find((item) => item.id === body.categoriaId)
     if (!categoria) {
-      return HttpResponse.json({ mensagem: 'Categoria farmacologica informada nao existe' }, { status: 422 })
+      return HttpResponse.json({ mensagem: 'A categoria farmacológica informada não existe. Selecione uma da lista.' }, { status: 422 })
     }
     const medicamento: Medicamento = {
       id: crypto.randomUUID(),
@@ -1777,7 +1867,7 @@ export const handlers = [
   http.post(`${API_BASE_URL}/categorias-farmacologicas`, async ({ request }) => {
     const nome = ((await request.json()) as { nome?: string }).nome?.trim() ?? ''
     if (categoriasFarmacologicasMock.some((item) => item.nome.toLowerCase() === nome.toLowerCase())) {
-      return HttpResponse.json({ mensagem: 'Categoria farmacologica ja cadastrada' }, { status: 409 })
+      return HttpResponse.json({ mensagem: 'Esta categoria farmacológica já está cadastrada.' }, { status: 409 })
     }
     const categoria: CategoriaFarmacologica = { id: crypto.randomUUID(), nome, ativo: true }
     categoriasFarmacologicasMock.push(categoria)

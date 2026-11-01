@@ -1,12 +1,21 @@
 import { Controller, type Control, type Path, type UseFormRegister, type UseFormSetValue, type UseFormWatch } from 'react-hook-form'
-import { Switch } from '@/components/Switch'
+import { AtalhoHoje } from '@/components/AtalhoHoje'
+import { RadioCards } from '@/components/RadioCards'
 import { Icon } from '@/components/layout/Icon'
 import { PELAGEM_OPCOES, SEXO_OPCOES } from '@/features/animais/schemas/animalFormSchema'
 import { useCatalogosAnimaisQuery } from '@/features/animais/hooks/useAnimais'
 import type { Animal } from '@/features/animais/types/animais.types'
 import type { ProcessoFormValues } from '../schemas/processoFormSchema'
 import { useCatalogosProcessoQuery } from '../hooks/useProcessos'
-import { MATERIAL_BIOLOGICO_OPCOES, NIVEL_CONTATO_OPCOES, STATUS_CLINICO_OPCOES, TIPO_ABRIGO_OPCOES } from '../utils/processosCatalogos'
+import {
+  CONTATO_HUMANO_OPCOES,
+  contatoHumanoParaOpcao,
+  MATERIAL_BIOLOGICO_OPCOES,
+  NIVEL_CONTATO_OPCOES,
+  opcaoParaContatoHumano,
+  STATUS_CLINICO_OPCOES,
+  TIPO_ABRIGO_OPCOES,
+} from '../utils/processosCatalogos'
 import { BuscaAnimalCanil } from './BuscaAnimalCanil'
 
 // Tipo mínimo do erro de uma amostra — o RHF não distribui bem FieldErrors
@@ -48,9 +57,11 @@ interface AmostraAnimalCardProps {
   erros?: AmostraErros
   podeRemover: boolean
   onRemover: () => void
+  // Edição de processo registrado: corrige a amostra, sem trocar o animal.
+  identificacaoFixa?: boolean
 }
 
-export function AmostraAnimalCard({ index, numero, control, register, setValue, watch, erros, podeRemover, onRemover }: AmostraAnimalCardProps) {
+export function AmostraAnimalCard({ index, numero, control, register, setValue, watch, erros, podeRemover, onRemover, identificacaoFixa }: AmostraAnimalCardProps) {
   // Os campos de cada modalidade só existem numa das variantes da união; o
   // caminho é montado aqui e o tipo é afrouxado de propósito.
   const campo = (nome: string) => `amostras.${index}.${nome}` as Path<ProcessoFormValues>
@@ -96,14 +107,16 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
           Animal amostrado {numero}
         </span>
         <div className="flex gap-2" style={{ alignItems: 'center' }}>
-          <div className="source-toggle" role="tablist" aria-label="Origem do animal">
-            <button type="button" className={origem === 'canil' ? 'active' : ''} onClick={() => selecionarOrigem('canil')}>
-              Já cadastrado
-            </button>
-            <button type="button" className={origem === 'externo' ? 'active' : ''} onClick={() => selecionarOrigem('externo')}>
-              Animal de campo
-            </button>
-          </div>
+          {!identificacaoFixa && (
+            <div className="source-toggle" role="tablist" aria-label="Origem do animal">
+              <button type="button" className={origem === 'canil' ? 'active' : ''} onClick={() => selecionarOrigem('canil')}>
+                Já cadastrado
+              </button>
+              <button type="button" className={origem === 'externo' ? 'active' : ''} onClick={() => selecionarOrigem('externo')}>
+                Animal de campo
+              </button>
+            </div>
+          )}
           {podeRemover && (
             <button type="button" className="btn btn-ghost btn-sm btn-icon-only" aria-label={`Remover animal ${numero}`} onClick={onRemover}>
               <Icon name="x" size={14} />
@@ -121,11 +134,17 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
               </span>
               <div className="sa-info">
                 <div className="name">{animalDescricao || 'Animal selecionado'}</div>
-                <div className="meta">Espécie, sexo, raça, pelagem, idade e peso são copiados da ficha ao registrar.</div>
+                <div className="meta">
+                  {identificacaoFixa
+                    ? 'A identificação foi copiada da ficha quando a amostra foi registrada.'
+                    : 'Espécie, sexo, raça, pelagem, idade e peso são copiados da ficha ao registrar.'}
+                </div>
               </div>
-              <button type="button" className="btn btn-outline btn-sm" onClick={trocarAnimal}>
-                ← Trocar animal
-              </button>
+              {!identificacaoFixa && (
+                <button type="button" className="btn btn-outline btn-sm" onClick={trocarAnimal}>
+                  ← Trocar animal
+                </button>
+              )}
             </div>
           ) : (
             <BuscaAnimalCanil numero={numero} erro={erros?.animalId?.message} onSelecionar={selecionarAnimal} />
@@ -137,7 +156,7 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
             <label htmlFor={`amostra-${index}-especie`}>
               Espécie <span className="req">*</span>
             </label>
-            <select id={`amostra-${index}-especie`} className={`select${erros?.especie ? ' error' : ''}`} defaultValue="" {...register(campo('especie'))}>
+            <select id={`amostra-${index}-especie`} className={`select${erros?.especie ? ' error' : ''}`} aria-invalid={erros?.especie ? true : undefined} aria-describedby={erros?.especie ? `amostra-${index}-especie-erro` : undefined} defaultValue="" {...register(campo('especie'))}>
               <option value="" disabled>
                 Selecione
               </option>
@@ -147,13 +166,13 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
                 </option>
               ))}
             </select>
-            {erros?.especie && <span className="err">{erros.especie.message}</span>}
+            {erros?.especie && <span className="err" id={`amostra-${index}-especie-erro`}>{erros.especie.message}</span>}
           </div>
           <div className="field">
             <label htmlFor={`amostra-${index}-sexo`}>
               Sexo <span className="req">*</span>
             </label>
-            <select id={`amostra-${index}-sexo`} className={`select${erros?.sexo ? ' error' : ''}`} defaultValue="" {...register(campo('sexo'))}>
+            <select id={`amostra-${index}-sexo`} className={`select${erros?.sexo ? ' error' : ''}`} aria-invalid={erros?.sexo ? true : undefined} aria-describedby={erros?.sexo ? `amostra-${index}-sexo-erro` : undefined} defaultValue="" {...register(campo('sexo'))}>
               <option value="" disabled>
                 Selecione
               </option>
@@ -163,7 +182,7 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
                 </option>
               ))}
             </select>
-            {erros?.sexo && <span className="err">{erros.sexo.message}</span>}
+            {erros?.sexo && <span className="err" id={`amostra-${index}-sexo-erro`}>{erros.sexo.message}</span>}
           </div>
           <div className="field">
             <label htmlFor={`amostra-${index}-raca`}>Raça</label>
@@ -192,12 +211,12 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
             <label htmlFor={`amostra-${index}-peso`}>Peso (kg)</label>
             <input
               id={`amostra-${index}-peso`}
-              className={`input${erros?.pesoKg ? ' error' : ''}`}
+              className={`input${erros?.pesoKg ? ' error' : ''}`} aria-invalid={erros?.pesoKg ? true : undefined} aria-describedby={erros?.pesoKg ? `amostra-${index}-peso-erro` : undefined}
               type="number"
               step="0.01"
               {...register(campo('pesoKg'), { setValueAs: paraNumeroOuIndefinido })}
             />
-            {erros?.pesoKg && <span className="err">{erros.pesoKg.message}</span>}
+            {erros?.pesoKg && <span className="err" id={`amostra-${index}-peso-erro`}>{erros.pesoKg.message}</span>}
           </div>
         </div>
       )}
@@ -209,11 +228,12 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
           </label>
           <input
             id={`amostra-${index}-data-coleta`}
-            className={`input${erros?.dataColeta ? ' error' : ''}`}
+            className={`input${erros?.dataColeta ? ' error' : ''}`} aria-invalid={erros?.dataColeta ? true : undefined} aria-describedby={erros?.dataColeta ? `amostra-${index}-data-coleta-erro` : undefined}
             type="date"
             {...register(campo('dataColeta'))}
           />
-          {erros?.dataColeta && <span className="err">{erros.dataColeta.message}</span>}
+          <AtalhoHoje onEscolher={(hoje) => definir('dataColeta', hoje)} />
+          {erros?.dataColeta && <span className="err" id={`amostra-${index}-data-coleta-erro`}>{erros.dataColeta.message}</span>}
         </div>
         <div className="field">
           <label htmlFor={`amostra-${index}-material`}>
@@ -221,7 +241,7 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
           </label>
           <select
             id={`amostra-${index}-material`}
-            className={`select${erros?.materialBiologico ? ' error' : ''}`}
+            className={`select${erros?.materialBiologico ? ' error' : ''}`} aria-invalid={erros?.materialBiologico ? true : undefined} aria-describedby={erros?.materialBiologico ? `amostra-${index}-material-erro` : undefined}
             defaultValue=""
             {...register(campo('materialBiologico'))}
           >
@@ -234,7 +254,7 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
               </option>
             ))}
           </select>
-          {erros?.materialBiologico && <span className="err">{erros.materialBiologico.message}</span>}
+          {erros?.materialBiologico && <span className="err" id={`amostra-${index}-material-erro`}>{erros.materialBiologico.message}</span>}
         </div>
         <div className="field">
           <label htmlFor={`amostra-${index}-status-clinico`}>
@@ -242,7 +262,7 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
           </label>
           <select
             id={`amostra-${index}-status-clinico`}
-            className={`select${erros?.statusClinico ? ' error' : ''}`}
+            className={`select${erros?.statusClinico ? ' error' : ''}`} aria-invalid={erros?.statusClinico ? true : undefined} aria-describedby={erros?.statusClinico ? `amostra-${index}-status-clinico-erro` : undefined}
             defaultValue=""
             {...register(campo('statusClinico'), {
               // T29-3: sintomas só em amostra sintomática — sair de
@@ -261,7 +281,7 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
               </option>
             ))}
           </select>
-          {erros?.statusClinico && <span className="err">{erros.statusClinico.message}</span>}
+          {erros?.statusClinico && <span className="err" id={`amostra-${index}-status-clinico-erro`}>{erros.statusClinico.message}</span>}
         </div>
         <div className="field">
           <label htmlFor={`amostra-${index}-tipo-abrigo`}>
@@ -269,7 +289,7 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
           </label>
           <select
             id={`amostra-${index}-tipo-abrigo`}
-            className={`select${erros?.tipoAbrigo ? ' error' : ''}`}
+            className={`select${erros?.tipoAbrigo ? ' error' : ''}`} aria-invalid={erros?.tipoAbrigo ? true : undefined} aria-describedby={erros?.tipoAbrigo ? `amostra-${index}-tipo-abrigo-erro` : undefined}
             defaultValue=""
             {...register(campo('tipoAbrigo'))}
           >
@@ -282,7 +302,7 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
               </option>
             ))}
           </select>
-          {erros?.tipoAbrigo && <span className="err">{erros.tipoAbrigo.message}</span>}
+          {erros?.tipoAbrigo && <span className="err" id={`amostra-${index}-tipo-abrigo-erro`}>{erros.tipoAbrigo.message}</span>}
         </div>
         <div className="field full">
           <label htmlFor={`amostra-${index}-alt-comportamental`}>Alteração comportamental</label>
@@ -332,22 +352,25 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
       )}
 
       <div style={{ marginTop: 14 }}>
-        <div className="switch-row">
-          <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Munícipe teve contato físico com o animal</span>
+        <div className="field">
+          <label id={`amostra-${index}-contato-label`}>Munícipe teve contato físico com o animal?</label>
           <Controller
             name={campo('contatoHumano')}
             control={control}
             render={({ field }) => (
-              <Switch
-                checked={Boolean(field.value)}
-                onChange={(marcado) => {
-                  field.onChange(marcado)
-                  if (!marcado) {
+              <RadioCards
+                opcoes={CONTATO_HUMANO_OPCOES}
+                valor={contatoHumanoParaOpcao(field.value as boolean | null | undefined)}
+                onChange={(opcao) => {
+                  const contato = opcaoParaContatoHumano(opcao)
+                  field.onChange(contato)
+                  if (contato !== true) {
                     definir('nivelContato', undefined)
                     definir('agrediuHumano', undefined)
                   }
                 }}
-                aria-label="Contato humano-animal"
+                colunas={3}
+                aria-labelledby={`amostra-${index}-contato-label`}
               />
             )}
           />

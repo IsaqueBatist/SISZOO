@@ -3,6 +3,8 @@ package com.siszoo.animais.entity;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -17,6 +19,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
@@ -91,8 +95,9 @@ public class Animal {
     @Column(name = "laudo_eutanasia", columnDefinition = "text")
     private String laudoEutanasia;
 
-    @Column(nullable = false)
-    private boolean esterilizado = false;
+    // true = castrado, false = nao castrado, null = nao informado (V31).
+    @Column
+    private Boolean esterilizado;
 
     @Column(name = "data_esterilizacao")
     private LocalDate dataEsterilizacao;
@@ -124,6 +129,17 @@ public class Animal {
 
     @Column(columnDefinition = "text")
     private String observacoes;
+
+    // V33: condicoes de saude pre-existentes (pedido da entrevista de 09/01/2026).
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "animal_condicao_saude",
+            joinColumns = @JoinColumn(name = "animal_id"),
+            inverseJoinColumns = @JoinColumn(name = "condicao_saude_id"))
+    private Set<CondicaoSaude> condicoes = new HashSet<>();
+
+    @Column(name = "condicoes_outras", length = 500)
+    private String condicoesOutras;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "criado_por_id", nullable = false)

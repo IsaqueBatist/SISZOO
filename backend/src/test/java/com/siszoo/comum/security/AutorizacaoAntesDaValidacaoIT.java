@@ -53,16 +53,16 @@ class AutorizacaoAntesDaValidacaoIT extends AbstractIntegrationTest {
     void cadastroDeAnimal() {
         comCorpoInvalido(tokenAdmin).post("/api/animais").then()
                 .statusCode(422)
-                .body("mensagem", equalTo("Dados invalidos"));
+                .body("mensagem", equalTo("Não foi possível salvar. Verifique os campos destacados e tente novamente."));
 
         // Agente Sanitario so le GESTAO_ANIMAIS (V3).
         comCorpoInvalido(tokenAgente).post("/api/animais").then()
                 .statusCode(403)
-                .body("mensagem", equalTo("Acesso negado"));
+                .body("mensagem", equalTo("Você não tem permissão para realizar esta ação."));
 
         comCorpoInvalido(null).post("/api/animais").then()
                 .statusCode(401)
-                .body("mensagem", equalTo("Nao autorizado"));
+                .body("mensagem", equalTo("Sua sessão expirou. Entre novamente para continuar."));
     }
 
     @Test
@@ -72,11 +72,11 @@ class AutorizacaoAntesDaValidacaoIT extends AbstractIntegrationTest {
 
         comCorpoInvalido(tokenAgente).put("/api/animais/" + idQualquer).then()
                 .statusCode(403)
-                .body("mensagem", equalTo("Acesso negado"));
+                .body("mensagem", equalTo("Você não tem permissão para realizar esta ação."));
 
         comCorpoInvalido(tokenAdmin).put("/api/animais/" + idQualquer).then()
                 .statusCode(422)
-                .body("mensagem", equalTo("Dados invalidos"));
+                .body("mensagem", equalTo("Não foi possível salvar. Verifique os campos destacados e tente novamente."));
     }
 
     @Test
@@ -84,15 +84,15 @@ class AutorizacaoAntesDaValidacaoIT extends AbstractIntegrationTest {
     void cadastroDeUsuario() {
         comCorpoInvalido(tokenVeterinario).post("/api/usuarios").then()
                 .statusCode(403)
-                .body("mensagem", equalTo("Acesso negado"));
+                .body("mensagem", equalTo("Você não tem permissão para realizar esta ação."));
 
         comCorpoInvalido(tokenAgente).post("/api/usuarios").then()
                 .statusCode(403)
-                .body("mensagem", equalTo("Acesso negado"));
+                .body("mensagem", equalTo("Você não tem permissão para realizar esta ação."));
 
         comCorpoInvalido(tokenAdmin).post("/api/usuarios").then()
                 .statusCode(422)
-                .body("mensagem", equalTo("Dados invalidos"));
+                .body("mensagem", equalTo("Não foi possível salvar. Verifique os campos destacados e tente novamente."));
     }
 
     @Test
@@ -100,10 +100,10 @@ class AutorizacaoAntesDaValidacaoIT extends AbstractIntegrationTest {
     void cadastroDeOcorrencia() {
         comCorpoInvalido(tokenVeterinario).post("/api/ocorrencias").then()
                 .statusCode(403)
-                .body("mensagem", equalTo("Acesso negado"));
+                .body("mensagem", equalTo("Você não tem permissão para realizar esta ação."));
 
         comCorpoInvalido(tokenAgente).post("/api/ocorrencias").then()
                 .statusCode(422)
-                .body("mensagem", equalTo("Dados invalidos"));
+                .body("mensagem", equalTo("Não foi possível salvar. Verifique os campos destacados e tente novamente."));
     }
 }

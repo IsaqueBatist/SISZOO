@@ -60,10 +60,11 @@ public class AmostraProcessoFactory {
         if (amostra.dataColeta().isAfter(hoje)) {
             throw new DataColetaFuturaException();
         }
-        // Contato humano exige nivel e agressao; sem contato, nenhum dos dois.
+        // Contato humano exige nivel e agressao; sem contato ou sem resposta,
+        // nenhum dos dois.
         boolean comDadosDeContato = amostra.nivelContato() != null || amostra.agrediuHumano() != null;
         boolean contatoCompleto = amostra.nivelContato() != null && amostra.agrediuHumano() != null;
-        if (amostra.contatoHumano() ? !contatoCompleto : comDadosDeContato) {
+        if (Boolean.TRUE.equals(amostra.contatoHumano()) ? !contatoCompleto : comDadosDeContato) {
             throw new ContatoHumanoInconsistenteException();
         }
         if (!amostra.sintomasOuVazio().isEmpty() && amostra.statusClinico() != StatusClinicoAmostra.SINTOMATICO) {
@@ -100,15 +101,34 @@ public class AmostraProcessoFactory {
             amostra.setAnimal(animal);
             copiarIdentificacaoDaFicha(amostra, animal);
         } else {
-            amostra.setEspecie(especieRepository.findByCodigo(request.especie())
-                    .orElseThrow(EspecieInvalidaException::new));
-            amostra.setSexo(request.sexo());
-            amostra.setRaca(request.raca());
-            amostra.setColoracao(request.coloracao());
-            amostra.setPelagem(request.pelagem());
-            amostra.setIdadeAprox(request.idadeAprox());
-            amostra.setPesoKg(request.pesoKg());
+            aplicarIdentificacaoDeCampo(amostra, request);
         }
+        aplicarDadosClinicos(amostra, request, sintomas);
+        return amostra;
+    }
+
+    // Edicao pelo Administrador: a identificacao do animal do canil continua
+    // sendo o snapshot da ficha na amostragem.
+    public void corrigir(AnimalAmostrado amostra, AmostraAnimalRequest request, Map<String, Sintoma> sintomas) {
+        if (amostra.getAnimal() == null) {
+            aplicarIdentificacaoDeCampo(amostra, request);
+        }
+        aplicarDadosClinicos(amostra, request, sintomas);
+    }
+
+    private void aplicarIdentificacaoDeCampo(AnimalAmostrado amostra, AmostraAnimalRequest request) {
+        amostra.setEspecie(especieRepository.findByCodigo(request.especie())
+                .orElseThrow(EspecieInvalidaException::new));
+        amostra.setSexo(request.sexo());
+        amostra.setRaca(request.raca());
+        amostra.setColoracao(request.coloracao());
+        amostra.setPelagem(request.pelagem());
+        amostra.setIdadeAprox(request.idadeAprox());
+        amostra.setPesoKg(request.pesoKg());
+    }
+
+    private static void aplicarDadosClinicos(AnimalAmostrado amostra, AmostraAnimalRequest request,
+            Map<String, Sintoma> sintomas) {
         amostra.setStatusClinico(request.statusClinico());
         amostra.setTipoAbrigo(request.tipoAbrigo());
         amostra.setAlteracaoComportamental(request.alteracaoComportamental());
@@ -119,7 +139,6 @@ public class AmostraProcessoFactory {
         amostra.setAgrediuHumano(request.agrediuHumano());
         amostra.setObservacoes(request.observacoes());
         amostra.setSintomas(new HashSet<>(request.sintomasOuVazio().stream().map(sintomas::get).toList()));
-        return amostra;
     }
 
     // Snapshot da identificacao (DER §3.5, DH-5): copiada uma vez, aqui.

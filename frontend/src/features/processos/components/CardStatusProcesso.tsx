@@ -1,8 +1,9 @@
 import { useState } from 'react'
+import { toast } from '@/components/toast/toast'
 import { mensagemDeRegraDaApi } from '@/lib/erroApi'
 import type { Processo } from '../types/processos.types'
 import { useAvancarStatusProcessoMutation } from '../hooks/useProcessos'
-import { labelDe, proximoStatusProcesso, STATUS_PROCESSO_OPCOES } from '../utils/processosCatalogos'
+import { ACAO_DE_AVANCO_PROCESSO, labelDe, proximoStatusProcesso, STATUS_PROCESSO_OPCOES } from '../utils/processosCatalogos'
 
 interface CardStatusProcessoProps {
   processo: Processo
@@ -21,12 +22,14 @@ export function CardStatusProcesso({ processo, podeEscrever }: CardStatusProcess
   const avancar = useAvancarStatusProcessoMutation(processo.id)
   const proximo = proximoStatusProcesso(processo.statusProcesso)
   const avancoPeloResultado = processo.statusProcesso === 'AGUARDANDO_RESULTADO'
+  const acao = ACAO_DE_AVANCO_PROCESSO[processo.statusProcesso]
 
   async function handleAvancar() {
     if (!proximo) return
     setErro(null)
     try {
       await avancar.mutateAsync(proximo)
+      toast.sucesso(`Processo agora está como ${labelDe(STATUS_PROCESSO_OPCOES, proximo)}.`)
     } catch (falha) {
       setErro(mensagemDeRegraDaApi(falha) ?? 'Não foi possível avançar o status do processo. Tente novamente.')
     }
@@ -49,10 +52,15 @@ export function CardStatusProcesso({ processo, podeEscrever }: CardStatusProcess
             Lance o resultado laboratorial no card ao lado para avançar este processo.
           </p>
         )}
-        {podeEscrever && proximo && !avancoPeloResultado && (
+        {processo.statusProcesso === 'ABERTO' && (
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 6 }}>
+            Quando as amostras forem enviadas ao laboratório, marque aqui. O resultado poderá ser lançado em seguida.
+          </p>
+        )}
+        {podeEscrever && proximo && !avancoPeloResultado && acao && (
           <div style={{ marginTop: 10 }}>
             <button type="button" className="btn btn-outline btn-sm" disabled={avancar.isPending} onClick={() => void handleAvancar()}>
-              {avancar.isPending ? 'Avançando…' : 'Avançar status do processo (provisório)'}
+              {avancar.isPending ? 'Salvando…' : acao}
             </button>
           </div>
         )}

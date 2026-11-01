@@ -13,5 +13,7 @@ public enum AcaoAuditoria {
     VISUALIZACAO,
     // T43 (V27): acesso ao denunciante de ocorrencia sigilosa recusado pela
     // regra de sigilo (download 403 ou detalhe entregue mascarado).
-    ACESSO_NEGADO
+    ACESSO_NEGADO,
+    // V29: sessao encerrada pelo sistema por reuso do token de renovacao.
+    SESSAO_REVOGADA
 }

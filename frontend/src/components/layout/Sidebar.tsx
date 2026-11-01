@@ -8,9 +8,12 @@ import { Icon } from './Icon'
 interface SidebarProps {
   collapsed: boolean
   onToggleCollapsed: () => void
+  // Tela estreita: o menu é uma gaveta sobre o conteúdo.
+  menuAberto?: boolean
+  onFecharMenu?: () => void
 }
 
-export function Sidebar({ collapsed, onToggleCollapsed }: SidebarProps) {
+export function Sidebar({ collapsed, onToggleCollapsed, menuAberto = false, onFecharMenu }: SidebarProps) {
   const { user, roleKey } = useAuth()
   const sair = useSair()
   const role = ROLES[roleKey]
@@ -25,7 +28,12 @@ export function Sidebar({ collapsed, onToggleCollapsed }: SidebarProps) {
   const classeOculta = collapsed ? ' visually-hidden' : ''
 
   return (
-    <aside className="sidebar">
+    <aside
+      className={`sidebar${menuAberto ? ' aberta' : ''}`}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') onFecharMenu?.()
+      }}
+    >
       <div className="sidebar-header">
         <NavLink to="/dashboard" className="sidebar-logo" style={{ textDecoration: 'none' }}>
           <div className="wordmark">
@@ -50,7 +58,7 @@ export function Sidebar({ collapsed, onToggleCollapsed }: SidebarProps) {
         </button>
       </div>
 
-      <nav className="sidebar-nav">
+      <nav className="sidebar-nav" aria-label="Menu principal" onClick={onFecharMenu}>
         {nav.map((entry) =>
           isNavGroup(entry) ? (
             <div className={`sidebar-group-label${classeOculta}`} key={entry.group}>
@@ -71,6 +79,7 @@ export function Sidebar({ collapsed, onToggleCollapsed }: SidebarProps) {
                 <span
                   className={`badge-count${classeOculta}`}
                   title={`${contadores[entry.id].total} ${contadores[entry.id].rotulo}`}
+                  aria-label={`${contadores[entry.id].total} ${contadores[entry.id].rotulo}`}
                 >
                   {contadores[entry.id].total}
                 </span>
@@ -88,7 +97,7 @@ export function Sidebar({ collapsed, onToggleCollapsed }: SidebarProps) {
             <div className="user-role">{role.label}</div>
           </div>
         </NavLink>
-        <button type="button" className={`logout-btn${classeOculta}`} title="Sair" onClick={sair}>
+        <button type="button" className={`logout-btn${classeOculta}`} title="Sair" aria-label="Sair" onClick={sair}>
           <Icon name="logout" size={14} />
         </button>
       </div>

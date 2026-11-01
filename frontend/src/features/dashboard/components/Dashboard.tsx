@@ -1,25 +1,47 @@
 import { Suspense, lazy } from 'react'
 import { Link } from 'react-router-dom'
-import { Icon } from '@/components/layout/Icon'
+import { Icon, type IconName } from '@/components/layout/Icon'
 import { ErroComRetry } from '@/components/layout/ErroComRetry'
 import { MontarQuandoVisivel } from '@/components/layout/MontarQuandoVisivel'
 import { Skeleton } from '@/components/layout/Skeleton'
 import { SeloDadosMock } from '@/components/layout/SeloDadosMock'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import type { SeveridadeAlerta } from '@/features/alertas/types/alertas.types'
+import { podeAcessar, type RoleKey } from '@/lib/nav'
 import { useAlertasVacinaisQuery } from '@/features/alertas/hooks/useAlertas'
 import { kpisUsamMock } from '../api/dashboardApi'
 import { useKpisDashboardQuery } from '../hooks/useDashboardKpis'
 import { useProcessosUrgentesQuery } from '../hooks/useAlertaProcessosUrgentes'
-import { tomDoAlerta } from '../utils/tonsDeAlerta'
 import { mapearKpisParaCards } from '../utils/kpiCards'
 import type { AlertaCritico } from '../types/dashboard.types'
 import './Dashboard.css'
 
 // Lazy: isola o chunk de `recharts` (pesado) do carregamento inicial do
-// dashboard — máquinas do CCZ têm ~2GB RAM (ver CLAUDE.md).
+// dashboard — máquinas do CCZ têm ~2GB RAM.
 const GraficosDashboard = lazy(() =>
   import('@/features/graficos/components/GraficosDashboard').then((m) => ({ default: m.GraficosDashboard })),
 )
+
+// O que cada perfil mais faz ao abrir o sistema. Só atalho: quem decide o que
+// pode ser feito continuam sendo as rotas e a API.
+const ATALHOS_POR_PERFIL: Record<RoleKey, { to: string; rotulo: string; icone: IconName }[]> = {
+  admin: [
+    { to: '/ocorrencias/novo', rotulo: 'Registrar Ocorrência', icone: 'plus' },
+    { to: '/animais/novo', rotulo: 'Novo animal', icone: 'plus' },
+    { to: '/usuarios', rotulo: 'Usuários', icone: 'users' },
+  ],
+  vet: [
+    { to: '/animais/novo', rotulo: 'Novo animal', icone: 'plus' },
+    { to: '/processos/novo', rotulo: 'Novo Processo', icone: 'plus' },
+    { to: '/alertas/vacinas', rotulo: 'Vacinas a vencer', icone: 'syringe' },
+  ],
+  agente: [
+    { to: '/ocorrencias/novo', rotulo: 'Registrar Ocorrência', icone: 'plus' },
+    { to: '/processos/novo', rotulo: 'Novo Processo', icone: 'plus' },
+    { to: '/ocorrencias', rotulo: 'Ver ocorrências', icone: 'alert' },
+  ],
+  sem_perfil: [],
+}
 
 interface ItemAlertaAchatado {
   vacinacaoId: string
@@ -189,37 +211,45 @@ function AlertaProcessosUrgentes() {
 // — não duplicar aqui, só os outros 5 tipos novos.
 const TIPOS_JA_EXIBIDOS_EM_CARD_DEDICADO = new Set(['vacina_vencendo', 'vacina_vencida'])
 
-// Rótulo curto para o chip: o título que o backend manda é uma frase inteira
-// ("8 animal(is) sem avaliação clínica há mais de 30 dias"), e no chip só cabe
-// o número + um rótulo. A frase completa fica no `title`, para quem passar o
-// mouse.
-const ROTULO_CURTO_POR_TIPO: Record<string, string> = {
-  sem_avaliacao_30d: 'sem avaliação 30d',
-  baia_superlotada: 'baias superlotadas',
-  medicacao_ativa: 'prescrições terminando',
-  ficha_incompleta: 'fichas incompletas',
-  nao_castrado: 'não castrados',
+// Mesmo tom por tipo do protótipo (docs/prototipo/dashboard.html): não deriva
+// de `severidade` (info/atencao/critico) porque o protótipo usa classes mais
+// granulares que a enum do DER — fiel ao visual já validado, em vez de uma
+// conversão aproximada.
+const TOM_POR_TIPO_DE_ALERTA: Record<string, string> = {
+  sem_avaliacao_30d: 'alert-yellow',
+  baia_superlotada: 'warning',
+  medicacao_ativa: 'info',
+  ficha_incompleta: 'info',
+  nao_castrado: 'danger',
 }
 
-// Sem link "ver detalhes": diferente do alerta de vacina, estes 5 tipos não
-// têm endpoint de lista de itens (só o total agregado) — navegar para uma
-// tela vazia seria pior do que não navegar. Por isso são chips compactos, e
-// não cards: o que eles carregam é um número, não uma lista de providências,
-// e como cards disputavam a grade de três colunas com os dois alertas que
-// trazem itens nomeados.
-function ChipAlerta({ alerta }: { alerta: AlertaCritico }) {
-  // Tipo desconhecido cai no título da API em vez de ficar sem rótulo.
-  const rotulo = ROTULO_CURTO_POR_TIPO[alerta.tipo] ?? alerta.titulo
+// Sem link "ver detalhes" nos que não têm endpoint de lista de itens (só o total
+// agregado): navegar para uma tela sem o recorte seria pior do que não navegar.
+// A exceção é a baia superlotada, que a tela de Baias já mostra destacada.
+function AlertaCriticoGenerico({ alerta, linkBaias }: { alerta: AlertaCritico; linkBaias: boolean }) {
   return (
-    <span className={`alerta-chip ${tomDoAlerta(alerta.tipo, alerta.severidade)}`} title={alerta.descricao}>
-      <span className="bullet" aria-hidden="true" />
-      <strong>{alerta.total}</strong>
-      <span className="alerta-chip-rotulo">{rotulo}</span>
-    </span>
+    <div className={`alert ${TOM_POR_TIPO_DE_ALERTA[alerta.tipo] ?? 'info'}`}>
+      <span className="bullet" />
+      <div className="alert-content">
+        <strong>{alerta.titulo}</strong>
+        <div className="alert-desc">
+          {alerta.descricao}
+          {alerta.tipo === 'baia_superlotada' && linkBaias && (
+            <>
+              {' '}
+              <Link to="/baias">ver baias →</Link>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }
 
 export function Dashboard() {
+  const { roleKey } = useAuth()
+  const atalhos = ATALHOS_POR_PERFIL[roleKey]
+  const linkBaias = podeAcessar(roleKey, 'baias')
   const { data: kpis, isLoading: kpisCarregando, isError: kpisComErro, refetch: refazerKpis } = useKpisDashboardQuery()
   const kpisMockados = kpisUsamMock()
   const cards = kpis ? mapearKpisParaCards(kpis, kpisMockados) : []
@@ -228,6 +258,9 @@ export function Dashboard() {
   const alertasGenericos = (kpis?.alertas ?? []).filter(
     (alerta) => !TIPOS_JA_EXIBIDOS_EM_CARD_DEDICADO.has(alerta.tipo) && alerta.total > 0,
   )
+  // "Crítico" só para o que a API classifica assim: o resto é rotina a acompanhar.
+  const alertasCriticos = alertasGenericos.filter((alerta) => alerta.severidade === 'critico')
+  const avisos = alertasGenericos.filter((alerta) => alerta.severidade !== 'critico')
 
   return (
     <>
@@ -236,6 +269,16 @@ export function Dashboard() {
           <h1>Dashboard Operacional</h1>
           <p className="subtitle">Visão geral do Centro de Controle de Zoonoses</p>
         </div>
+        {atalhos.length > 0 && (
+          <div className="actions">
+            {atalhos.map((atalho, indice) => (
+              <Link key={atalho.to} to={atalho.to} className={`btn ${indice === 0 ? 'btn-primary' : 'btn-outline'}`}>
+                <Icon name={atalho.icone} size={14} />
+                {atalho.rotulo}
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="section-header">
@@ -279,27 +322,28 @@ export function Dashboard() {
           </h2>
           {/* Os alertas genéricos vêm do mesmo GET /dashboard/kpis. */}
           {kpisMockados && <SeloDadosMock />}
-          {alertasGenericos.length > 0 && (
-            <span className="section-contagem">
-              {alertasGenericos.length} alerta{alertasGenericos.length === 1 ? '' : 's'} agregado
-              {alertasGenericos.length === 1 ? '' : 's'}
-            </span>
-          )}
         </div>
         <div className="alerts-grid">
           <AlertaCriticoVacinas />
           <AlertaProcessosUrgentes />
+          {!kpisCarregando &&
+            !kpisComErro &&
+            alertasCriticos.map((alerta) => <AlertaCriticoGenerico key={alerta.tipo} alerta={alerta} linkBaias={linkBaias} />)}
         </div>
-        {/* Chips numa faixa própria, fora da grade dos dois cards: eles não
-            competem mais por coluna nem esticam a altura da linha. */}
-        {!kpisCarregando && !kpisComErro && alertasGenericos.length > 0 && (
-          <div className="alertas-chips">
-            {alertasGenericos.map((alerta) => (
-              <ChipAlerta key={alerta.tipo} alerta={alerta} />
+      </div>
+
+      {!kpisCarregando && !kpisComErro && avisos.length > 0 && (
+        <div style={{ marginTop: 'var(--space-4)' }}>
+          <div className="section-header">
+            <h2>Acompanhamento</h2>
+          </div>
+          <div className="alerts-grid">
+            {avisos.map((alerta) => (
+              <AlertaCriticoGenerico key={alerta.tipo} alerta={alerta} linkBaias={linkBaias} />
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <div style={{ marginTop: 'var(--space-4)' }}>
         {/* T45: os gráficos ficam abaixo de KPIs e alertas; o chunk do recharts

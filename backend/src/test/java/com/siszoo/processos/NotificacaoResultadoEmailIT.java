@@ -88,22 +88,22 @@ class NotificacaoResultadoEmailIT extends AbstractIntegrationTest {
         MimeMessage mensagem = recebidas[0];
         assertThat(((InternetAddress) mensagem.getRecipients(Message.RecipientType.TO)[0]).getAddress(),
                 equalTo(DESTINATARIO));
-        assertThat(mensagem.getSubject(), equalTo("SISZOO — Resultado do processo sanitario " + protocolo));
+        assertThat(mensagem.getSubject(), equalTo("SISZOO — Resultado do processo sanitário " + protocolo));
         assertThat(new jakarta.mail.internet.ContentType(mensagem.getContentType()).match("multipart/alternative"),
                 is(true));
 
         MimeMultipart partes = (MimeMultipart) mensagem.getContent();
         String texto = ((String) partes.getBodyPart(0).getContent()).replace("\r\n", "\n");
         String html = (String) partes.getBodyPart(1).getContent();
-        assertThat(texto, equalTo("Ola, <b>Ana</b> Responsavel.\n\n"
-                + "O resultado laboratorial do processo sanitario " + protocolo
+        assertThat(texto, equalTo("Olá, <b>Ana</b> Responsavel.\n\n"
+                + "O resultado laboratorial do processo sanitário " + protocolo
                 + " foi registrado como positivo pelo Centro de Controle de Zoonoses de Itu.\n"
-                + "Entre em contato com o CCZ para mais informacoes.\n\n"
-                + "CCZ \"Sao Francisco de Assis\"\n"
+                + "Entre em contato com o CCZ para mais informações.\n\n"
+                + "CCZ \"São Francisco de Assis\"\n"
                 + "Avenida Sete Quedas, 1038 - Vila Progresso\n"
                 + "Fone: (11) 4023-1505 / WhatsApp: (11) 93231-9925\n"
-                + "Segunda a sexta, das 8h as 17h\n"));
-        assertThat(html, containsString("Ola, <span>&lt;b&gt;Ana&lt;/b&gt; Responsavel</span>."));
+                + "Segunda a sexta, das 8h às 17h\n"));
+        assertThat(html, containsString("Olá, <span>&lt;b&gt;Ana&lt;/b&gt; Responsavel</span>."));
         assertThat(html, not(containsString("<b>Ana</b>")));
         assertThat(html, containsString("<strong>" + protocolo + "</strong>"));
 

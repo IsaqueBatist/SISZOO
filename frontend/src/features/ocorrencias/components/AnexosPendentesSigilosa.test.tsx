@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
+import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
 import { API_BASE_URL } from '@/lib/env'
 import { ocorrenciaCriadaFixture } from '@/mocks/ocorrenciasFixtures'
@@ -29,7 +29,7 @@ function renderCadastroComo(usuarioId: string) {
     cargos: ['Agente Sanitário'],
     senhaAlteradaEm: '2026-01-10T12:00:00Z',
   }
-  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario }))
+  definirSessaoEmMemoria({ token: 'token-existente', usuario })
 
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   return render(
@@ -65,6 +65,7 @@ describe('ocorrência sigilosa no IndexedDB', () => {
     const { unmount } = renderCadastroComo(USUARIO_A)
 
     await user.click(screen.getByLabelText('Ocorrência sigilosa'))
+    await user.click(screen.getByRole('radio', { name: 'Suspeita de Zoonose' }))
     await user.type(screen.getByLabelText(/Nome completo/i), NOME_DENUNCIANTE)
     await user.type(screen.getByLabelText(/^CPF/i), CPF_DENUNCIANTE)
     await user.type(screen.getByLabelText(/Endereço da ocorrência/i), 'Rua Teste, 10')
@@ -108,6 +109,7 @@ describe('ocorrência sigilosa no IndexedDB', () => {
     const user = userEvent.setup()
     const { unmount } = renderCadastroComo(USUARIO_A)
 
+    await user.click(screen.getByRole('radio', { name: 'Suspeita de Zoonose' }))
     await user.type(screen.getByLabelText(/Nome completo/i), 'Denunciante Comum')
     await user.type(screen.getByLabelText(/^Bairro/i), 'Bairro Teste')
     await user.upload(screen.getByLabelText('Adicionar anexo'), [new File(['conteudo'], 'laudo.png', { type: 'image/png' })])

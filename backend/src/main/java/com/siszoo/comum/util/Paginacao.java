@@ -18,7 +18,7 @@ public final class Paginacao {
 
     public static PageRequest pagina(int pagina, int tamanho, Sort ordem) {
         if (tamanho < 1 || tamanho > TAMANHO_MAXIMO) {
-            throw new CampoInvalidoException("tamanho", "Tamanho de pagina deve estar entre 1 e " + TAMANHO_MAXIMO);
+            throw new CampoInvalidoException("tamanho", "O tamanho da página deve estar entre 1 e " + TAMANHO_MAXIMO + ".");
         }
         return PageRequest.of(pagina, tamanho, ordem);
     }

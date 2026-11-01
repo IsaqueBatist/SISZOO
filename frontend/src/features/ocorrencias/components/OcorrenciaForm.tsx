@@ -2,10 +2,13 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { Controller, FormProvider, useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
+import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
+import { AvisoEnvioPausado } from '@/components/AvisoEnvioPausado'
 import { BannerRascunho } from '@/components/BannerRascunho'
 import { RadioCards } from '@/components/RadioCards'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { toast } from '@/components/toast/toast'
 import { mensagemDeRegraDaApi, statusHttpDoErro } from '@/lib/erroApi'
 import { AnexoInvalidoError, MAXIMO_ANEXOS, validarAnexo } from '../utils/anexoOcorrencia'
 import './OcorrenciaForm.css'
@@ -121,6 +124,7 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
     }
 
     await rascunho.encerrarAposEnvio()
+    toast.sucesso(`Ocorrência ${formatarProtocoloOcorrencia(nova.protocolo)} registrada.`)
 
     if (dados.anexos.length === 0) {
       navigate(`/ocorrencias/${nova.id}`)
@@ -153,6 +157,7 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
       return
     }
     await rascunho.encerrarAposEnvio()
+    toast.sucesso('Alterações salvas.')
     navigate(`/ocorrencias/${original.id}`)
   }
 
@@ -216,12 +221,7 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
         />
       )}
 
-      {submitError && (
-        <div className="alert danger" role="alert">
-          <span className="bullet" />
-          <div className="alert-content">{submitError}</div>
-        </div>
-      )}
+      <AlertaErroEnvio mensagem={submitError} />
 
       <FormProvider {...formulario}>
         <form onSubmit={aoEnviar} noValidate>
@@ -278,6 +278,7 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
               style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}
             >
               {rascunho.mensagem && <span className="hint">{rascunho.mensagem}</span>}
+              <AvisoEnvioPausado pausado={mutation.isPaused || mutationAtualizar.isPaused} />
               <div className="flex gap-2" style={{ marginLeft: 'auto' }}>
                 <Link to={ocorrencia ? `/ocorrencias/${ocorrencia.id}` : '/ocorrencias'} className="btn btn-ghost">
                   Cancelar
@@ -287,7 +288,7 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
                 </button>
                 {emEdicao ? (
                   <button type="submit" className="btn btn-primary" disabled={mutationAtualizar.isPending}>
-                    {mutationAtualizar.isPending ? 'Salvando…' : 'Salvar alterações'}
+                    {mutationAtualizar.isPaused ? 'Aguardando conexão…' : mutationAtualizar.isPending ? 'Salvando…' : 'Salvar alterações'}
                   </button>
                 ) : (
                   <button
@@ -296,7 +297,7 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
                     disabled={mutation.isPending || anexosPendentes.enviando || anexosPendentes.pendencia !== null}
                     title={anexosPendentes.pendencia ? 'Resolva os anexos pendentes antes de registrar outra ocorrência' : undefined}
                   >
-                    {mutation.isPending ? 'Registrando…' : 'Registrar Ocorrência'}
+                    {mutation.isPaused ? 'Aguardando conexão…' : mutation.isPending ? 'Registrando…' : 'Registrar Ocorrência'}
                   </button>
                 )}
               </div>

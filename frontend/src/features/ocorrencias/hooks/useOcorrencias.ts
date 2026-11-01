@@ -8,7 +8,6 @@ import {
   contarOcorrenciasPorBairro,
   criarOcorrencia,
   encerrarOcorrencia,
-  enviarAnexo,
   iniciarAtendimento,
   listarOcorrencias,
 } from '../api/ocorrenciasApi'
@@ -146,15 +145,7 @@ export function useAdicionarNotaMutation(id: string) {
   })
 }
 
-// Anexo e processo devolvem outro recurso: recarregam o detalhe da ocorrência.
-export function useEnviarAnexoMutation(id: string) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (arquivo: File) => enviarAnexo(id, arquivo),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: chaveDetalhe(id) }),
-  })
-}
-
+// O processo vinculado devolve outro recurso: recarrega o detalhe da ocorrência.
 export function useAvancarStatusProcessoMutation(ocorrenciaId: string) {
   const queryClient = useQueryClient()
   return useMutation({

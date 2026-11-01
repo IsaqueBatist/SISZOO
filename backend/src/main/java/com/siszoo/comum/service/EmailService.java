@@ -36,15 +36,15 @@ import jakarta.mail.internet.MimeMultipart;
  * Quem nao precisa do resultado pode ignorar o future. <b>Excecao:</b> se o
  * executor recusar a tarefa (ex.: aplicacao encerrando), a
  * {@link org.springframework.core.task.TaskRejectedException} sobe na propria
- * chamada — o proxy submete na thread de quem chama (Spring 7,
+ * chamada - o proxy submete na thread de quem chama (Spring 7,
  * {@code submitCompletable}; docs/decisoes/T35.md T35-17).
  *
  * <p>Sucesso significa que o servidor SMTP aceitou a mensagem, nao que ela
  * foi entregue ou lida. Nao ha fila nem retentativa.
  *
  * <p>Log (LGPD): destinatario sempre mascarado; nunca assunto, corpo ou
- * credenciais. Na falha, o WARN leva so as classes da excecao — mensagens de
- * erro do SMTP podem repetir o endereco — e o throwable completo vai para o
+ * credenciais. Na falha, o WARN leva so as classes da excecao - mensagens de
+ * erro do SMTP podem repetir o endereco - e o throwable completo vai para o
  * DEBUG, com o mesmo id de envio para correlacionar.
  */
 @Service
@@ -171,7 +171,7 @@ public class EmailService {
      * caractere, {@code *@x.test}; sem {@code @}, sem parte local ou sem
      * dominio, {@code ***}; nulo ou em branco, {@code (vazio)}.
      */
-    static String mascarar(String email) {
+    public static String mascarar(String email) {
         if (!StringUtils.hasText(email)) {
             return "(vazio)";
         }

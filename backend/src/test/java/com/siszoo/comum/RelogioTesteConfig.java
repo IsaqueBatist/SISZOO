@@ -1,6 +1,7 @@
 package com.siszoo.comum;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -35,6 +36,10 @@ public class RelogioTesteConfig {
     @Primary
     Clock relogioFixoDeTeste() {
         return RELOGIO;
+    }
+
+    public static void avancar(Duration tempo) {
+        RELOGIO.atual = Clock.fixed(RELOGIO.instant().plus(tempo), FUSO);
     }
 
     public static void fixarEm(Instant instante) {

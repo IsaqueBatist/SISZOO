@@ -62,6 +62,7 @@ class UsuarioControllerIT extends AbstractIntegrationTest {
             Usuario admin = new Usuario();
             admin.setEmail(EMAIL_ADMIN);
             admin.setSenha(passwordEncoder.encode(SENHA_ADMIN));
+            admin.setSenhaAlteradaEm(java.time.LocalDateTime.now());
             admin.setNome("Admin");
             admin.setSobrenome("Teste");
             usuarioRepository.save(admin);
@@ -154,7 +155,7 @@ class UsuarioControllerIT extends AbstractIntegrationTest {
                     .then()
                     .statusCode(422)
                     .body("campos[0].campo", equalTo("senhaInicial"))
-                    .body("campos[0].mensagem", equalTo("Senha inicial deve ter no maximo 72 bytes (acentos contam 2)"));
+                    .body("campos[0].mensagem", equalTo("A senha inicial deve ter no máximo 72 bytes (letras acentuadas contam como 2)."));
         }
         assertThat(usuarioRepository.findByEmail(email).isPresent(), equalTo(false));
 
@@ -205,6 +206,7 @@ class UsuarioControllerIT extends AbstractIntegrationTest {
         Usuario usuario = new Usuario();
         usuario.setEmail("teste.status@itu.sp.gov.br");
         usuario.setSenha(passwordEncoder.encode("SenhaQualquer123"));
+        usuario.setSenhaAlteradaEm(java.time.LocalDateTime.now());
         usuario.setNome("Status");
         usuario.setSobrenome("Teste");
         usuarioRepository.save(usuario);
@@ -298,6 +300,7 @@ class UsuarioControllerIT extends AbstractIntegrationTest {
         Usuario agente = new Usuario();
         agente.setEmail("teste.agente.sememautoridade@itu.sp.gov.br");
         agente.setSenha(passwordEncoder.encode("SenhaAgente123"));
+        agente.setSenhaAlteradaEm(java.time.LocalDateTime.now());
         agente.setNome("Agente");
         agente.setSobrenome("SemAutoridade");
         usuarioRepository.save(agente);

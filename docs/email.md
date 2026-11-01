@@ -1,8 +1,9 @@
-# E-mail — serviço de envio e templates (T35)
+# E-mail - serviço de envio e templates (T35)
 
-Infraestrutura de envio reutilizável (issue #36). Hoje o único uso é a
-notificação de resultado `positivo` ao munícipe (T36/issue #37,
-`NotificacaoResultadoService`). Decisões e pendências: `docs/decisoes/T35.md`.
+Infraestrutura de envio reutilizável (issue #36). Usos: a notificação de
+resultado ao munícipe (T36/issue #37, `NotificacaoResultadoService`) e o link
+de recuperação de senha (`RecuperacaoSenhaService`, seção no fim). Decisões e
+pendências: `docs/decisoes/T35.md`.
 
 | Peça | Onde | Papel |
 | --- | --- | --- |
@@ -95,7 +96,7 @@ Os testes nunca falam com um SMTP externo:
 Map<String, Object> variaveis = Map.of("nome", nome, "protocolo", protocolo);
 emailService.enviar(
         destinatario,
-        "SISZOO — Assunto",
+        "SISZOO - Assunto",
         emailTemplateService.renderizarHtml("email/meu-template", variaveis),
         emailTemplateService.renderizarTexto("email/meu-template", variaveis)); // opcional
 ```
@@ -140,12 +141,12 @@ emailService.enviar(
     "Enviando a notificação por e-mail ao munícipe…", enquanto a tela consulta
     o processo a cada 2 s por até 20 s (o envio acontece depois do commit);
   - fora disso, ou se o responsável não tem e-mail, o aviso destacado
-    "Munícipe NÃO notificado por e-mail — contatar por outro meio", com um
+    "Munícipe NÃO notificado por e-mail - contatar por outro meio", com um
     botão "Reenviar notificação" para quem pode escrever no processo.
 
 ### Reenvio manual (T35-21)
 
-`POST /api/processos/{id}/notificacoes/reenviar` — mesma autoridade de
+`POST /api/processos/{id}/notificacoes/reenviar` - mesma autoridade de
 `/resultados` (`PROCESSOS_SANITARIOS:escrita`: Administrador, Veterinário e
 Agente Sanitário). Resolve a pendência "reenvio de notificação que falhou":
 cobre só a falha de envio (SMTP indisponível, timeout etc.), nunca a correção
@@ -160,7 +161,7 @@ do resultado.
   SMTP aceitar o reenvio, a data grava normalmente e um novo reenvio passa a
   ser recusado.
 - Continua manual e sem fila: sem retentativa automática, e um reenvio não
-  reagenda outro se também falhar — é preciso clicar de novo.
+  reagenda outro se também falhar - é preciso clicar de novo.
 
 ## Como adicionar um template
 
@@ -211,7 +212,7 @@ comunicação oficial aprovada pelo CCZ.
   garante que a mensagem chegou à caixa de entrada nem que foi lida. Ela ainda
   pode ser recusada depois (bounce), cair no spam ou ser descartada.
 - Não há fila nem garantia de entrega. Uma falha fica no log e, na
-  notificação de resultado, na `data_notificacao_municipe` nula — o reenvio
+  notificação de resultado, na `data_notificacao_municipe` nula - o reenvio
   (T35-21) é manual, pela tela ou pelo endpoint, nunca automático.
 - Os envios em andamento se perdem se o processo for morto (`kill -9`, OOM,
   `docker kill`) ou se passarem do prazo de 20 s no encerramento. Na
@@ -223,14 +224,29 @@ comunicação oficial aprovada pelo CCZ.
   servidor real na porta 465 não foi testado.
 - Os padrões das variáveis estão duplicados entre `application.yml` e
   `docker-compose.yml`. Se mudar um, mude o outro.
-- **Só existe um tipo de e-mail hoje** (resultado positivo ao munícipe). A
-  tela de preferências do protótipo (`configuracoes.html`) e a tabela
-  `preferencia_usuario` já têm campos para outros tipos (vacina vencendo,
-  superlotação, alertas críticos, e-mail diário), mas nenhum deles está
-  implementado nem é lido em lugar nenhum do código — ver pendência em
-  `docs/decisoes/T35.md`.
+- **Existem dois tipos de e-mail** (resultado ao munícipe e link de
+  recuperação de senha, abaixo). A tela de preferências do protótipo
+  (`configuracoes.html`) e a tabela `preferencia_usuario` já têm campos para
+  outros tipos (vacina vencendo, superlotação, alertas críticos, e-mail
+  diário), mas nenhum deles está implementado nem é lido em lugar nenhum do
+  código; ver pendência em `docs/decisoes/T35.md`.
 
-## Revisão de 22/10/2026 — resultado `inconclusivo` também notifica
+## Recuperação de senha (01/11/2026)
+
+Segundo uso do serviço: o link de "Esqueci minha senha" da tela de login
+(`RecuperacaoSenhaService`, decisões em `docs/decisoes/recuperacao-senha.md`).
+
+- Template `email/recuperacao-senha` (HTML e texto), variáveis `nome`, `link`
+  e `validadeMinutos`. Assunto: "SISZOO - Redefinição de senha".
+- O link é `siszoo.app.url` + `/redefinir-senha?token=...`. `SISZOO_APP_URL`
+  só precisa ser definida quando o endereço do frontend não for a origem do
+  CORS (`SISZOO_CORS_ORIGIN`), que é o padrão.
+- O envio sai depois do commit da transação que grava o hash do token; uma
+  falha de SMTP fica só no log, e a pessoa pode pedir outro link (limite de 3
+  por e-mail por hora). O token em si nunca é logado.
+- Teste de ponta a ponta com GreenMail: `RecuperacaoSenhaControllerIT`.
+
+## Revisão de 22/10/2026 - resultado `inconclusivo` também notifica
 
 Com o alinhamento ao TG (`docs/decisoes/alinhamento-tg.md` AT-1), a notificação ao munícipe sai para `positivo` **ou**
 `inconclusivo` (`ResultadosNotificaveis.CODIGOS`). Onde este documento diz "só o resultado `positivo`", leia "resultado

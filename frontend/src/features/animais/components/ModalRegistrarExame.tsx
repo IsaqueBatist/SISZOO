@@ -1,8 +1,11 @@
 import { useState, type FormEvent } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
+import { AvisoEnvioPausado } from '@/components/AvisoEnvioPausado'
+import { toast } from '@/components/toast/toast'
+import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
+import { Modal } from '@/components/Modal'
 import { BannerRascunho } from '@/components/BannerRascunho'
-import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { hojeEmItu } from '@/lib/datas'
 import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
@@ -77,6 +80,7 @@ export function ModalRegistrarExame({ animalId, retifica, onFechar, onSucesso }:
         retificaId: retifica?.id,
       })
       await rascunho.removerAposSucesso()
+      toast.sucesso(retifica ? 'Exame corrigido.' : 'Exame registrado.')
       onSucesso()
     } catch (erro) {
       if (aplicarErrosDeCampo(erro, setError, MAPA_ERROS_SERVIDOR).length > 0) return
@@ -90,125 +94,112 @@ export function ModalRegistrarExame({ animalId, retifica, onFechar, onSucesso }:
   }
 
   return (
-    <div className="modal-overlay" onClick={onFechar}>
-      <div className="modal" onClick={(event) => event.stopPropagation()}>
-        <div className="modal-header">
-          <h3>{retifica ? 'Corrigir exame' : 'Registrar exame'}</h3>
-          <button type="button" className="btn btn-ghost btn-sm btn-icon-only" onClick={onFechar} aria-label="Fechar">
-            <Icon name="x" size={16} />
-          </button>
-        </div>
-
-        <form onSubmit={aoEnviar} noValidate>
-          <div className="modal-body">
-            <div className="form-grid cols-1">
-              {rascunho.rascunhoDisponivel && (
-                <BannerRascunho onRestaurar={rascunho.restaurar} onDescartar={() => void rascunho.descartar()} salvoEm={rascunho.rascunhoSalvoEm} />
-              )}
-              {submitError && (
-                <div className="alert danger" role="alert">
-                  <span className="bullet" />
-                  <div className="alert-content">{submitError}</div>
+    <Modal titulo={retifica ? 'Corrigir exame' : 'Registrar exame'} onFechar={onFechar}>
+      <form onSubmit={aoEnviar} noValidate>
+        <div className="modal-body">
+          <div className="form-grid cols-1">
+            {rascunho.rascunhoDisponivel && (
+              <BannerRascunho onRestaurar={rascunho.restaurar} onDescartar={() => void rascunho.descartar()} salvoEm={rascunho.rascunhoSalvoEm} />
+            )}
+            <AlertaErroEnvio mensagem={submitError} />
+            {retifica && (
+              <div className="alert info" role="alert">
+                <span className="bullet" />
+                <div className="alert-content">
+                  O registro original não será alterado — esta correção cria um novo registro vinculado a ele.
                 </div>
-              )}
-              {retifica && (
-                <div className="alert info" role="alert">
-                  <span className="bullet" />
-                  <div className="alert-content">
-                    O registro original não será alterado — esta correção cria um novo registro vinculado a ele.
-                  </div>
-                </div>
-              )}
+              </div>
+            )}
 
-              <div className="form-grid">
-                <div className="field">
-                  <label htmlFor="exame-tipo">
-                    Tipo de exame <span className="req">*</span>
-                  </label>
-                  <select id="exame-tipo" className={`select${errors.tipoExame ? ' error' : ''}`} {...register('tipoExame')}>
-                    <option value="" disabled>
-                      Selecione…
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="exame-tipo">
+                  Tipo de exame <span className="req">*</span>
+                </label>
+                <select id="exame-tipo" className={`select${errors.tipoExame ? ' error' : ''}`} aria-invalid={errors.tipoExame ? true : undefined} aria-describedby={errors.tipoExame ? 'exame-tipo-erro' : undefined} {...register('tipoExame')}>
+                  <option value="" disabled>
+                    Selecione…
+                  </option>
+                  {(catalogos?.tiposExame ?? []).map((item) => (
+                    <option key={item.codigo} value={item.codigo}>
+                      {item.nome}
                     </option>
-                    {(catalogos?.tiposExame ?? []).map((item) => (
-                      <option key={item.codigo} value={item.codigo}>
-                        {item.nome}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.tipoExame && <span className="err">{errors.tipoExame.message}</span>}
-                </div>
-
-                <div className="field">
-                  <label htmlFor="exame-laboratorio">Laboratório</label>
-                  <select id="exame-laboratorio" className="select" {...register('laboratorio')}>
-                    <option value="">Interno / não informado</option>
-                    {(catalogos?.laboratorios ?? []).map((item) => (
-                      <option key={item.codigo} value={item.codigo}>
-                        {item.nome}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="field">
-                  <label htmlFor="exame-data-solicitacao">
-                    Data da solicitação <span className="req">*</span>
-                  </label>
-                  <input
-                    id="exame-data-solicitacao"
-                    className={`input${errors.dataSolicitacao ? ' error' : ''}`}
-                    type="date"
-                    max={hojeEmItu()}
-                    {...register('dataSolicitacao')}
-                  />
-                  {errors.dataSolicitacao && <span className="err">{errors.dataSolicitacao.message}</span>}
-                </div>
-
-                <div className="field">
-                  <label htmlFor="exame-data-resultado">Data do resultado</label>
-                  <input
-                    id="exame-data-resultado"
-                    className={`input${errors.dataResultado ? ' error' : ''}`}
-                    type="date"
-                    max={hojeEmItu()}
-                    {...register('dataResultado')}
-                  />
-                  {errors.dataResultado && <span className="err">{errors.dataResultado.message}</span>}
-                </div>
+                  ))}
+                </select>
+                {errors.tipoExame && <span className="err" id="exame-tipo-erro">{errors.tipoExame.message}</span>}
               </div>
 
               <div className="field">
-                <label htmlFor="exame-resultado">Resultado / laudo</label>
-                <textarea
-                  id="exame-resultado"
-                  className={`textarea${errors.resultado ? ' error' : ''}`}
-                  rows={3}
-                  {...register('resultado', { setValueAs: semEspacos })}
+                <label htmlFor="exame-laboratorio">Laboratório</label>
+                <select id="exame-laboratorio" className="select" {...register('laboratorio')}>
+                  <option value="">Interno / não informado</option>
+                  {(catalogos?.laboratorios ?? []).map((item) => (
+                    <option key={item.codigo} value={item.codigo}>
+                      {item.nome}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="field">
+                <label htmlFor="exame-data-solicitacao">
+                  Data da solicitação <span className="req">*</span>
+                </label>
+                <input
+                  id="exame-data-solicitacao"
+                  className={`input${errors.dataSolicitacao ? ' error' : ''}`} aria-invalid={errors.dataSolicitacao ? true : undefined} aria-describedby={errors.dataSolicitacao ? 'exame-data-solicitacao-erro' : undefined}
+                  type="date"
+                  max={hojeEmItu()}
+                  {...register('dataSolicitacao')}
                 />
-                {errors.resultado ? (
-                  <span className="err">{errors.resultado.message}</span>
-                ) : (
-                  <span className="hint">Informe junto com a data do resultado; deixe em branco enquanto o exame estiver pendente.</span>
-                )}
+                {errors.dataSolicitacao && <span className="err" id="exame-data-solicitacao-erro">{errors.dataSolicitacao.message}</span>}
               </div>
 
               <div className="field">
-                <label htmlFor="exame-observacoes">Observações</label>
-                <textarea id="exame-observacoes" className="textarea" rows={2} {...register('observacoes', { setValueAs: semEspacos })} />
+                <label htmlFor="exame-data-resultado">Data do resultado</label>
+                <input
+                  id="exame-data-resultado"
+                  className={`input${errors.dataResultado ? ' error' : ''}`} aria-invalid={errors.dataResultado ? true : undefined} aria-describedby={errors.dataResultado ? 'exame-data-resultado-erro' : undefined}
+                  type="date"
+                  max={hojeEmItu()}
+                  {...register('dataResultado')}
+                />
+                {errors.dataResultado && <span className="err" id="exame-data-resultado-erro">{errors.dataResultado.message}</span>}
               </div>
             </div>
-          </div>
 
-          <div className="modal-footer">
-            <button type="button" className="btn btn-ghost" onClick={onFechar}>
-              Cancelar
-            </button>
-            <button type="submit" className="btn btn-primary" disabled={mutation.isPending}>
-              {mutation.isPending ? 'Salvando…' : retifica ? 'Salvar correção' : 'Registrar exame'}
-            </button>
+            <div className="field">
+              <label htmlFor="exame-resultado">Resultado / laudo</label>
+              <textarea
+                id="exame-resultado"
+                className={`textarea${errors.resultado ? ' error' : ''}`} aria-invalid={errors.resultado ? true : undefined} aria-describedby={errors.resultado ? 'exame-resultado-erro' : undefined}
+                rows={3}
+                {...register('resultado', { setValueAs: semEspacos })}
+              />
+              {errors.resultado ? (
+                <span className="err" id="exame-resultado-erro">{errors.resultado.message}</span>
+              ) : (
+                <span className="hint">Informe junto com a data do resultado; deixe em branco enquanto o exame estiver pendente.</span>
+              )}
+            </div>
+
+            <div className="field">
+              <label htmlFor="exame-observacoes">Observações</label>
+              <textarea id="exame-observacoes" className="textarea" rows={2} {...register('observacoes', { setValueAs: semEspacos })} />
+            </div>
           </div>
-        </form>
-      </div>
-    </div>
+        </div>
+
+        <div className="modal-footer">
+          <AvisoEnvioPausado pausado={mutation.isPaused} />
+          <button type="button" className="btn btn-ghost" onClick={onFechar}>
+            Cancelar
+          </button>
+          <button type="submit" className="btn btn-primary" disabled={mutation.isPending}>
+            {mutation.isPaused ? 'Aguardando conexão…' : mutation.isPending ? 'Salvando…' : retifica ? 'Salvar correção' : 'Registrar exame'}
+          </button>
+        </div>
+      </form>
+    </Modal>
   )
 }

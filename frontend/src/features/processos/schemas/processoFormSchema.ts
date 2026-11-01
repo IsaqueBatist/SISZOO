@@ -14,7 +14,7 @@ const STATUS_CLINICO_VALORES = STATUS_CLINICO_OPCOES.map((item) => item.valor) a
 const TIPO_ABRIGO_VALORES = TIPO_ABRIGO_OPCOES.map((item) => item.valor) as [TipoAbrigo, ...TipoAbrigo[]]
 const MATERIAL_BIOLOGICO_VALORES = MATERIAL_BIOLOGICO_OPCOES.map((item) => item.valor) as [MaterialBiologico, ...MaterialBiologico[]]
 
-const responsavelSchema = z.object({
+export const responsavelSchema = z.object({
   nome: z.string().trim().min(1, 'Informe o nome do responsável.').max(150, 'No máximo 150 caracteres.'),
   cpf: z
     .string()
@@ -54,7 +54,7 @@ const amostraClinicaSchema = z.object({
     .min(1, 'Informe a data de coleta.')
     .refine(naoEhFutura, 'A data de coleta não pode ser uma data futura.'),
   materialBiologico: z.enum(MATERIAL_BIOLOGICO_VALORES, { message: 'Selecione o material biológico.' }),
-  contatoHumano: z.boolean(),
+  contatoHumano: z.boolean().nullable(),
   nivelContato: z.enum(['DIRETA', 'INDIRETA']).optional(),
   agrediuHumano: z.boolean().optional(),
   observacoes: z.string().trim().optional(),

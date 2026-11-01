@@ -101,11 +101,14 @@ export function useRascunhoOcorrencia({ chave, usuarioId, watch, reset, getValue
     }
   }, [chave])
 
+  const aguardandoEscolha = rascunhoDisponivel !== null
+
   useEffect(() => {
     // O gate precisa envolver a CRIAÇÃO da assinatura, não só o corpo do
     // callback — senão um stale closure pode sobrescrever um rascunho real com
     // um objeto vazio antes da hidratação terminar.
-    if (!prontoParaAutoSalvar) return
+    // Com rascunho à espera de Restaurar ou Descartar, digitar não pode apagá-lo.
+    if (!prontoParaAutoSalvar || aguardandoEscolha) return
     const inscricao = watch((valoresAtuais) => {
       if (autosaveSuspenso.current) return
       const valores = valoresAtuais as OcorrenciaFormValues
@@ -114,7 +117,7 @@ export function useRascunhoOcorrencia({ chave, usuarioId, watch, reset, getValue
     return () => inscricao.unsubscribe()
     // referenciasDosAnexos só lê uma ref, não precisa recriar a assinatura.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prontoParaAutoSalvar, watch, chave])
+  }, [prontoParaAutoSalvar, aguardandoEscolha, watch, chave])
 
   useEffect(() => {
     if (!mensagem) return

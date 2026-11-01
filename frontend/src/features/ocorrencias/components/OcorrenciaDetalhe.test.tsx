@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
+import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
 import { API_BASE_URL } from '@/lib/env'
 import { server } from '@/mocks/server'
@@ -30,7 +30,7 @@ function renderDetalhe(ocorrenciaId: string, cargos: string[]) {
     cargos,
     senhaAlteradaEm: '2026-01-10T12:00:00Z',
   }
-  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario }))
+  definirSessaoEmMemoria({ token: 'token-existente', usuario })
 
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
@@ -309,7 +309,7 @@ describe('OcorrenciaDetalhe', () => {
       const user = userEvent.setup()
       server.use(
         http.get(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_ENCERRADA_ID}/anexos/${ANEXO_ENCERRADA_ID}`, () =>
-          HttpResponse.json({ mensagem: 'Acesso negado' }, { status: 403 }),
+          HttpResponse.json({ mensagem: 'Você não tem permissão para realizar esta ação.' }, { status: 403 }),
         ),
       )
       renderDetalhe(OCORRENCIA_ENCERRADA_ID, ['Administrador'])

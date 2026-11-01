@@ -19,4 +19,14 @@ public interface GeradorRelatorio<T> {
     T gerarPreview(PeriodoRelatorio periodo);
 
     List<BlocoCsv> blocosCsv(PeriodoRelatorio periodo);
+
+    // Para quem nao tem RELATORIOS:ocorrencias_bairro:leitura (V32). So o relatorio
+    // anual mistura bairros com outras secoes; nos demais nao ha o que tirar.
+    default T gerarPreviewSemBairros(PeriodoRelatorio periodo) {
+        return gerarPreview(periodo);
+    }
+
+    default List<BlocoCsv> blocosCsvSemBairros(PeriodoRelatorio periodo) {
+        return blocosCsv(periodo);
+    }
 }

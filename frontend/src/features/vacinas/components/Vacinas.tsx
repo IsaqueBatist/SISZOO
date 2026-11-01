@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Icon } from '@/components/layout/Icon'
 import { ResumoCatalogo } from '@/components/ResumoCatalogo'
-import { useToast } from '@/components/toast/useToast'
+import { toast } from '@/components/toast/toast'
 import { useAlertasVacinaisQuery } from '@/features/alertas/hooks/useAlertas'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { mensagemDeRegraDaApi } from '@/lib/erroApi'
@@ -242,7 +242,6 @@ function LinhaVacina({
 }) {
   const desativar = useDesativarVacinaMutation()
   const atualizar = useAtualizarVacinaMutation()
-  const toast = useToast()
 
   function handleDesativar() {
     const confirmado = window.confirm(

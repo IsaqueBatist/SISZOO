@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Icon } from '@/components/layout/Icon'
 import { ResumoCatalogo } from '@/components/ResumoCatalogo'
-import { useToast } from '@/components/toast/useToast'
+import { toast } from '@/components/toast/toast'
 import type { Medicamento } from '@/features/animais/types/historico.types'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { mensagemDeRegraDaApi } from '@/lib/erroApi'
@@ -223,7 +223,6 @@ function LinhaMedicamento({
   onEditar: () => void
 }) {
   const desativar = useDesativarMedicamentoMutation()
-  const toast = useToast()
 
   function handleDesativar() {
     // Diferente da vacina, aqui NÃO há volta: AtualizarMedicamentoRequest não

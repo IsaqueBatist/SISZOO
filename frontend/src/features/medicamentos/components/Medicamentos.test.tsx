@@ -1,10 +1,10 @@
-import { ToastProvider } from '@/components/toast/ToastProvider'
+import { Toasts } from '@/components/toast/Toasts'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
+import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
 import { Medicamentos } from './Medicamentos'
 
@@ -17,16 +17,15 @@ function renderComCargo(cargo: string) {
     cargos: [cargo],
     senhaAlteradaEm: '2026-01-10T12:00:00Z',
   }
-  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario }))
+  definirSessaoEmMemoria({ token: 'token-existente', usuario })
   return render(
     <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
       <MemoryRouter>
-        <ToastProvider>
           <AuthProvider>
             <Medicamentos />
           </AuthProvider>
-        </ToastProvider>
       </MemoryRouter>
+      <Toasts />
     </QueryClientProvider>,
   )
 }
@@ -81,7 +80,7 @@ describe('Medicamentos', () => {
     await user.type(within(modal).getByLabelText(/nome da categoria/i), 'antibiótico')
     await user.click(within(modal).getByRole('button', { name: /^cadastrar categoria$/i }))
 
-    expect(await within(modal).findByText('Categoria farmacologica ja cadastrada')).toBeInTheDocument()
+    expect(await within(modal).findByText('Esta categoria farmacológica já está cadastrada.')).toBeInTheDocument()
   })
 
   it('exige nome e categoria antes de enviar', async () => {

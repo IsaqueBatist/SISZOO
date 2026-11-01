@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ErroComRetry } from '@/components/layout/ErroComRetry'
 import { Skeleton } from '@/components/layout/Skeleton'
 import { useTiposRelatorioQuery } from '../hooks/useRelatorios'
@@ -22,6 +22,12 @@ interface GeracaoAtiva {
 export function Relatorios() {
   const tipos = useTiposRelatorioQuery()
   const [geracaoAtiva, setGeracaoAtiva] = useState<GeracaoAtiva | null>(null)
+  const previa = useRef<HTMLDivElement>(null)
+
+  // A prévia aparece abaixo dos cards: sem isto, gerar parece não ter feito nada.
+  useEffect(() => {
+    if (geracaoAtiva) previa.current?.scrollIntoView?.({ block: 'start' })
+  }, [geracaoAtiva])
 
   function gerar(filtro: FiltroRelatorio, nomeExibicao: string) {
     setGeracaoAtiva({ filtro, nomeExibicao })
@@ -57,7 +63,9 @@ export function Relatorios() {
       )}
 
       {geracaoAtiva && (
-        <PainelPreviewRelatorio nomeExibicao={geracaoAtiva.nomeExibicao} filtro={geracaoAtiva.filtro} />
+        <div ref={previa} className="previa-relatorio">
+          <PainelPreviewRelatorio nomeExibicao={geracaoAtiva.nomeExibicao} filtro={geracaoAtiva.filtro} />
+        </div>
       )}
 
       <HistoricoRelatorios onGerarNovamente={gerar} />

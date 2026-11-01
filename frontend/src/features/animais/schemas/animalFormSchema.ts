@@ -27,22 +27,32 @@ export const PELAGEM_OPCOES = [
   { valor: 'longa', label: 'Longa' },
 ] as const
 
-// Os 3 cartões de castração do protótipo colapsam em `esterilizado: boolean`
-// no DTO real — Orquiectomia e OSH viram ambos `esterilizado: true` (só
-// mudam o rótulo por sexo). Não existe coluna própria para essa opção.
-export type CastracaoOpcao = 'nao_castrado' | 'orquiectomia' | 'osh'
+// Os cartões de castração colapsam em `esterilizado: boolean | null` no DTO
+// real — Orquiectomia e OSH viram ambos `esterilizado: true` (só mudam o
+// rótulo por sexo; não existe coluna própria para essa opção). "Não informado"
+// é null: a resposta não é obrigatória e não equivale a "não castrado".
+export type CastracaoOpcao = 'nao_informado' | 'nao_castrado' | 'orquiectomia' | 'osh'
 
 export const CASTRACAO_OPCOES: { valor: CastracaoOpcao; label: string; sub: string }[] = [
+  { valor: 'nao_informado', label: 'Não informado', sub: 'Sem resposta' },
   { valor: 'nao_castrado', label: 'Não castrado', sub: 'A agendar' },
   { valor: 'orquiectomia', label: 'Orquiectomia', sub: 'Macho castrado' },
   { valor: 'osh', label: 'OSH', sub: 'Fêmea castrada' },
 ]
 
-export function castracaoParaEsterilizado(opcao: CastracaoOpcao): boolean {
+export const CONDICAO_OUTRAS = 'outras'
+
+export function animalCastrado(opcao: CastracaoOpcao | undefined): boolean {
+  return opcao === 'orquiectomia' || opcao === 'osh'
+}
+
+export function castracaoParaEsterilizado(opcao: CastracaoOpcao): boolean | null {
+  if (opcao === 'nao_informado') return null
   return opcao !== 'nao_castrado'
 }
 
-export function esterilizadoParaCastracao(esterilizado: boolean, sexo: string): CastracaoOpcao {
+export function esterilizadoParaCastracao(esterilizado: boolean | null, sexo: string): CastracaoOpcao {
+  if (esterilizado === null) return 'nao_informado'
   if (!esterilizado) return 'nao_castrado'
   return sexo === 'femea' ? 'osh' : 'orquiectomia'
 }
@@ -82,7 +92,7 @@ export const animalFormSchema = z.object({
   procedencia: z.string().trim().max(200, 'Máximo de 200 caracteres.').optional(),
   // F2-008 (RF-A05): laudo exigido pelo backend só na transição para eutanásia.
   laudoEutanasia: z.string().trim().max(4000, 'Máximo de 4000 caracteres.').optional(),
-  esterilizado: z.boolean(),
+  esterilizado: z.boolean().nullable(),
   dataEsterilizacao: z
     .string()
     .refine(naoEhFutura, 'A data da castração não pode ser futura.')
@@ -96,22 +106,27 @@ export const animalFormSchema = z.object({
   baiaId: z.string().optional(),
   fotoUrl: z.string().optional(),
   observacoes: z.string().trim().max(2000, 'Máximo de 2000 caracteres.').optional(),
+  condicoes: z.array(z.string()),
+  condicoesOutras: z.string().trim().max(500, 'Máximo de 500 caracteres.').optional(),
 })
 
 export type AnimalFormValues = z.infer<typeof animalFormSchema>
 
-// Schema de UI: troca `esterilizado: boolean` (campo real do DTO) por
-// `castracaoOpcao` (os 3 cartões do protótipo) — a conversão para o DTO
+// Schema de UI: troca `esterilizado` (campo real do DTO) por
+// `castracaoOpcao` (os cartões da tela) — a conversão para o DTO
 // acontece só no submit, via castracaoParaEsterilizado. Mantém o
 // animalFormSchema original intacto (é o contrato espelhado do backend,
 // usado/citado em outros lugares).
 export const animalFormUiSchema = animalFormSchema
   .omit({ esterilizado: true })
   .extend({
-    castracaoOpcao: z.enum(['nao_castrado', 'orquiectomia', 'osh']),
+    castracaoOpcao: z.enum(['nao_informado', 'nao_castrado', 'orquiectomia', 'osh']),
   })
   // Mesma regra do AnimalService: o animal não nasce depois de entrar no CCZ.
   .superRefine((dados, ctx) => {
+    if (dados.condicoes.includes(CONDICAO_OUTRAS) && !dados.condicoesOutras?.trim()) {
+      ctx.addIssue({ code: 'custom', path: ['condicoesOutras'], message: 'Descreva qual é a outra condição.' })
+    }
     if (dados.dataNascimentoAprox && dados.dataEntrada && dados.dataNascimentoAprox > dados.dataEntrada) {
       ctx.addIssue({
         code: 'custom',

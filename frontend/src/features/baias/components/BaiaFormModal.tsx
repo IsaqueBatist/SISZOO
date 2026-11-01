@@ -1,11 +1,13 @@
 import { useState, type FormEvent } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
+import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
+import { Modal } from '@/components/Modal'
 import { BannerRascunho } from '@/components/BannerRascunho'
-import { Icon } from '@/components/layout/Icon'
 import { useAtualizarBaiaMutation, useCatalogosAnimaisQuery, useCriarBaiaMutation } from '@/features/animais/hooks/useAnimais'
 import type { Baia } from '@/features/animais/types/animais.types'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { toast } from '@/components/toast/toast'
 import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
 import { useRascunho } from '@/lib/useRascunho'
 import { baiaFormSchema, type BaiaFormValues } from '../schemas/baiaFormSchema'
@@ -89,6 +91,7 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
         await criarMutation.mutateAsync(payload)
       }
       await rascunho.removerAposSucesso()
+      toast.sucesso(editando ? 'Baia atualizada.' : 'Baia criada.')
       onFechar()
     } catch (erro) {
       if (aplicarErrosDeCampo(erro, setError, MAPA_ERROS_SERVIDOR).length > 0) return
@@ -102,105 +105,91 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
   }
 
   return (
-    <div className="modal-overlay" onClick={onFechar}>
-      <div className="modal" onClick={(event) => event.stopPropagation()}>
-        <div className="modal-header">
-          <h3>{editando ? 'Editar Baia' : 'Adicionar Baia'}</h3>
-          <button type="button" className="btn btn-ghost btn-sm btn-icon-only" onClick={onFechar} aria-label="Fechar">
-            <Icon name="x" size={16} />
-          </button>
-        </div>
+    <Modal titulo={editando ? 'Editar Baia' : 'Adicionar Baia'} onFechar={onFechar}>
+      <form onSubmit={aoEnviar} noValidate>
+        <div className="modal-body">
+          <div className="form-grid cols-1">
+            {rascunho.rascunhoDisponivel && (
+              <BannerRascunho onRestaurar={rascunho.restaurar} onDescartar={() => void rascunho.descartar()} salvoEm={rascunho.rascunhoSalvoEm} />
+            )}
+            <AlertaErroEnvio mensagem={submitError} />
 
-        <form onSubmit={aoEnviar} noValidate>
-          <div className="modal-body">
-            <div className="form-grid cols-1">
-              {rascunho.rascunhoDisponivel && (
-                <BannerRascunho onRestaurar={rascunho.restaurar} onDescartar={() => void rascunho.descartar()} salvoEm={rascunho.rascunhoSalvoEm} />
-              )}
-              {submitError && (
-                <div className="alert danger" role="alert">
-                  <span className="bullet" />
-                  <div className="alert-content">{submitError}</div>
-                </div>
-              )}
+            <div className="field">
+              <label htmlFor="baia-nome">
+                Nome <span className="req">*</span>
+              </label>
+              <input
+                id="baia-nome"
+                className={`input${errors.nome ? ' error' : ''}`} aria-invalid={errors.nome ? true : undefined} aria-describedby={errors.nome ? 'baia-nome-erro' : undefined}
+                type="text"
+                placeholder="Baia 8"
+                {...register('nome')}
+              />
+              {errors.nome && <span className="err" id="baia-nome-erro">{errors.nome.message}</span>}
+            </div>
+
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="baia-tipo">
+                  Tipo <span className="req">*</span>
+                </label>
+                <select id="baia-tipo" className={`select${errors.tipoBaia ? ' error' : ''}`} aria-invalid={errors.tipoBaia ? true : undefined} aria-describedby={errors.tipoBaia ? 'baia-tipo-erro' : undefined} {...register('tipoBaia')}>
+                  <option value="" disabled>
+                    Selecione…
+                  </option>
+                  {catalogos?.tiposBaia.map((tipo) => (
+                    <option key={tipo.codigo} value={tipo.codigo}>
+                      {tipo.nome}
+                    </option>
+                  ))}
+                </select>
+                {errors.tipoBaia && <span className="err" id="baia-tipo-erro">{errors.tipoBaia.message}</span>}
+              </div>
 
               <div className="field">
-                <label htmlFor="baia-nome">
-                  Nome <span className="req">*</span>
+                <label htmlFor="baia-capacidade">
+                  Capacidade <span className="req">*</span>
                 </label>
                 <input
-                  id="baia-nome"
-                  className={`input${errors.nome ? ' error' : ''}`}
-                  type="text"
-                  placeholder="Baia 8"
-                  {...register('nome')}
+                  id="baia-capacidade"
+                  className={`input${errors.capacidade ? ' error' : ''}`} aria-invalid={errors.capacidade ? true : undefined} aria-describedby={errors.capacidade ? 'baia-capacidade-erro' : undefined}
+                  type="number"
+                  min={1}
+                  step={1}
+                  {...register('capacidade', { valueAsNumber: true })}
                 />
-                {errors.nome && <span className="err">{errors.nome.message}</span>}
-              </div>
-
-              <div className="form-grid">
-                <div className="field">
-                  <label htmlFor="baia-tipo">
-                    Tipo <span className="req">*</span>
-                  </label>
-                  <select id="baia-tipo" className={`select${errors.tipoBaia ? ' error' : ''}`} {...register('tipoBaia')}>
-                    <option value="" disabled>
-                      Selecione…
-                    </option>
-                    {catalogos?.tiposBaia.map((tipo) => (
-                      <option key={tipo.codigo} value={tipo.codigo}>
-                        {tipo.nome}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.tipoBaia && <span className="err">{errors.tipoBaia.message}</span>}
-                </div>
-
-                <div className="field">
-                  <label htmlFor="baia-capacidade">
-                    Capacidade <span className="req">*</span>
-                  </label>
-                  <input
-                    id="baia-capacidade"
-                    className={`input${errors.capacidade ? ' error' : ''}`}
-                    type="number"
-                    min={1}
-                    step={1}
-                    {...register('capacidade', { valueAsNumber: true })}
-                  />
-                  {errors.capacidade && <span className="err">{errors.capacidade.message}</span>}
-                </div>
-              </div>
-
-              <div className="field">
-                <label htmlFor="baia-finalidade">Finalidade</label>
-                <input
-                  id="baia-finalidade"
-                  className={`input${errors.finalidade ? ' error' : ''}`}
-                  type="text"
-                  placeholder="Cães porte médio"
-                  {...register('finalidade', { setValueAs: semEspacos })}
-                />
-                {errors.finalidade && <span className="err">{errors.finalidade.message}</span>}
-              </div>
-
-              <div className="field">
-                <label htmlFor="baia-observacoes">Observações</label>
-                <textarea id="baia-observacoes" className="textarea" rows={3} {...register('observacoes', { setValueAs: semEspacos })} />
+                {errors.capacidade && <span className="err" id="baia-capacidade-erro">{errors.capacidade.message}</span>}
               </div>
             </div>
-          </div>
 
-          <div className="modal-footer">
-            <button type="button" className="btn btn-ghost" onClick={onFechar}>
-              Cancelar
-            </button>
-            <button type="submit" className="btn btn-primary" disabled={mutation.isPending}>
-              {mutation.isPending ? 'Salvando…' : editando ? 'Salvar' : 'Criar Baia'}
-            </button>
+            <div className="field">
+              <label htmlFor="baia-finalidade">Finalidade</label>
+              <input
+                id="baia-finalidade"
+                className={`input${errors.finalidade ? ' error' : ''}`} aria-invalid={errors.finalidade ? true : undefined} aria-describedby={errors.finalidade ? 'baia-finalidade-erro' : undefined}
+                type="text"
+                placeholder="Cães porte médio"
+                {...register('finalidade', { setValueAs: semEspacos })}
+              />
+              {errors.finalidade && <span className="err" id="baia-finalidade-erro">{errors.finalidade.message}</span>}
+            </div>
+
+            <div className="field">
+              <label htmlFor="baia-observacoes">Observações</label>
+              <textarea id="baia-observacoes" className="textarea" rows={3} {...register('observacoes', { setValueAs: semEspacos })} />
+            </div>
           </div>
-        </form>
-      </div>
-    </div>
+        </div>
+
+        <div className="modal-footer">
+          <button type="button" className="btn btn-ghost" onClick={onFechar}>
+            Cancelar
+          </button>
+          <button type="submit" className="btn btn-primary" disabled={mutation.isPending}>
+            {mutation.isPending ? 'Salvando…' : editando ? 'Salvar' : 'Criar Baia'}
+          </button>
+        </div>
+      </form>
+    </Modal>
   )
 }

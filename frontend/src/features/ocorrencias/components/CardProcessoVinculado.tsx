@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { mensagemDeRegraDaApi } from '@/lib/erroApi'
+import { ACAO_DE_AVANCO_PROCESSO } from '@/features/processos/utils/processosCatalogos'
 import type { Ocorrencia } from '../types/ocorrencias.types'
 import { useAvancarStatusProcessoMutation } from '../hooks/useOcorrencias'
 import { formatarProtocoloProcesso } from '../utils/protocolo'
@@ -43,6 +44,9 @@ export function CardProcessoVinculado({ ocorrencia, podeAbrir, podeAvancar }: Ca
 
   if (processo) {
     const proximo = proximoStatusProcesso(processo.statusProcesso)
+    // Sem texto de ação: o passo seguinte não é daqui. Com o processo aguardando
+    // resultado, só o lançamento no processo faz o status andar (T37).
+    const acao = ACAO_DE_AVANCO_PROCESSO[processo.statusProcesso]
     return (
       <div className="vinc-card" style={{ display: 'block' }}>
         <h4>Processo Sanitário Vinculado</h4>
@@ -53,7 +57,12 @@ export function CardProcessoVinculado({ ocorrencia, podeAbrir, podeAvancar }: Ca
         <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 6 }}>
           {labelDeStatusProcesso(processo.statusProcesso)}
         </div>
-        {podeAvancar && proximo && (
+        {processo.statusProcesso === 'AGUARDANDO_RESULTADO' && (
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 6 }}>
+            O próximo passo é lançar o resultado no processo.
+          </p>
+        )}
+        {podeAvancar && proximo && acao && (
           <div style={{ marginTop: 10 }}>
             <button
               type="button"
@@ -61,10 +70,10 @@ export function CardProcessoVinculado({ ocorrencia, podeAbrir, podeAvancar }: Ca
               disabled={avancar.isPending}
               onClick={() => void handleAvancar(processo.id, proximo)}
             >
-              Avançar status do processo (provisório)
+              {acao}
             </button>
             <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4 }}>
-              Próximo: {labelDeStatusProcesso(proximo)}. Avança um passo por vez, sem registrar resultado.
+              Depois disso, o processo fica como {labelDeStatusProcesso(proximo)}.
             </p>
           </div>
         )}

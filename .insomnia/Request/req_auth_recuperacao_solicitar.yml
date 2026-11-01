@@ -1,0 +1,29 @@
+_id: "req_auth_recuperacao_solicitar"
+type: "Request"
+parentId: "fld_auth"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/auth/recuperacao"
+name: "202 - solicitar recuperação de senha"
+description: "POST /api/auth/recuperacao responde 202 para qualquer e-mail institucional, cadastrado ou não; o link vai por e-mail (docs/decisoes/recuperacao-senha.md)."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "email": "renato.albuquerque.seed@itu.sp.gov.br"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication: {}
+metaSortKey: 1000100
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

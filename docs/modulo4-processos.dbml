@@ -187,7 +187,7 @@ Table AnimalAmostrado {
   alteracao_comportamental text
   data_coleta              date                 [not null]
   material_biologico       MaterialBiologico    [not null]
-  contato_humano           boolean              [not null]
+  contato_humano           boolean              [note: 'NULL = nao informado (V31)']
   nivel_contato            NivelContato         [note: 'CHECK: presente se e só se contato_humano']
   agrediu_humano           boolean              [note: 'CHECK: presente se e só se contato_humano']
   observacoes              text

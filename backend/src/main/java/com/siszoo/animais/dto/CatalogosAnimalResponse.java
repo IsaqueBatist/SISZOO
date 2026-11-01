@@ -19,5 +19,6 @@ public record CatalogosAnimalResponse(
         // `intervaloMeses`, de que o formulario precisa para prever o proximo
         // reforco. Ver VacinaCatalogoResponse.
         List<VacinaCatalogoResponse> vacinas,
-        List<CatalogoItemResponse> tiposProcedimento) {
+        List<CatalogoItemResponse> tiposProcedimento,
+        List<CatalogoItemResponse> condicoesSaude) {
 }

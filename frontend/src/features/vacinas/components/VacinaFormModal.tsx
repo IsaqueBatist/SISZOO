@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Icon } from '@/components/layout/Icon'
-import { useToast } from '@/components/toast/useToast'
+import { toast } from '@/components/toast/toast'
 import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
 import { useAtualizarVacinaMutation, useCriarVacinaMutation } from '../hooks/useVacinas'
 import { vacinaFormSchema, type VacinaFormValues } from '../schemas/vacinaFormSchema'
@@ -23,7 +23,6 @@ export function VacinaFormModal({ vacina, onFechar }: VacinaFormModalProps) {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const criar = useCriarVacinaMutation()
   const atualizar = useAtualizarVacinaMutation()
-  const toast = useToast()
 
   const {
     register,

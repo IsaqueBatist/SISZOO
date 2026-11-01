@@ -36,7 +36,7 @@ export function PreviewAnualProcessos({ dados }: { dados: DadosAnualProcessos })
           </div>
           <div className="kpi-value">{dados.kpis.comContatoHumano}</div>
           <div className="kpi-foot">
-            <span>Processos urgentes no ano</span>
+            <span>{dados.kpis.contatoNaoInformado} não informado(s)</span>
           </div>
         </div>
         <div className="kpi">
@@ -154,6 +154,8 @@ export function PreviewAnualProcessos({ dados }: { dados: DadosAnualProcessos })
         </table>
       </div>
 
+      {dados.bairros && (
+      <>
       <div className="section-header" style={{ marginTop: 'var(--space-4)' }}>
         <h2>5. Bairros com mais ocorrências</h2>
       </div>
@@ -179,6 +181,8 @@ export function PreviewAnualProcessos({ dados }: { dados: DadosAnualProcessos })
           </tbody>
         </table>
       </div>
+      </>
+      )}
 
       <div className="section-header" style={{ marginTop: 'var(--space-4)' }}>
         <h2>6. Laboratórios utilizados</h2>

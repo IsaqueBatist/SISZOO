@@ -1,0 +1,29 @@
+_id: "req_auth_recuperacao_validar_410"
+type: "Request"
+parentId: "fld_auth"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/auth/recuperacao/validar"
+name: "410 - validar token de recuperação inválido"
+description: "POST /api/auth/recuperacao/validar responde 204 para um link ainda válido e 410 para token desconhecido, vencido, usado ou invalidado."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "token": "token-inexistente"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication: {}
+metaSortKey: 1000200
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"

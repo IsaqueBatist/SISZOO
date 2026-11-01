@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class DoencaInvalidaException extends ErroNegocioException {
 
     public DoencaInvalidaException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Doenca invalida");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "A doença informada não está disponível. Selecione outra da lista.");
     }
 }

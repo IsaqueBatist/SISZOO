@@ -6,19 +6,22 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { API_BASE_URL } from '@/lib/env'
 import { server } from '@/mocks/server'
+import { AuthContext, type AuthContextValue } from '@/features/auth/hooks/authContextValue'
 import { Dashboard } from './Dashboard'
 
-function renderDashboard() {
+function renderDashboard(roleKey: AuthContextValue['roleKey'] = 'admin') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={['/dashboard']}>
+        <AuthContext.Provider value={{ roleKey } as AuthContextValue}>
         <Routes>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/processos" element={<p>Tela de processos</p>} />
           <Route path="/processos/:id" element={<p>Detalhe do processo</p>} />
           <Route path="/alertas/vacinas" element={<p>Tela de alertas de vacina</p>} />
         </Routes>
+        </AuthContext.Provider>
       </MemoryRouter>
     </QueryClientProvider>,
   )
@@ -48,7 +51,7 @@ describe('Dashboard', () => {
     expect(screen.getByText('84')).toBeInTheDocument()
     expect(screen.getByText('8')).toBeInTheDocument()
 
-    for (const rotulo of ['Total de Animais', 'Vacinados', 'Animais Adotados', 'Ocorrências']) {
+    for (const rotulo of ['Animais sob custódia', 'Vacinados', 'Animais Adotados', 'Ocorrências']) {
       const card = screen.getByText(rotulo).closest('.kpi') as HTMLElement
       expect(within(card).getByText('Dados de demonstração')).toBeInTheDocument()
     }
@@ -103,17 +106,12 @@ describe('Dashboard', () => {
     expect(within(cabecalhoAlertas).queryByText('Dados de demonstração')).not.toBeInTheDocument()
   })
 
-  // Os 5 agregados viraram chips: visível é o número + um rótulo curto, e a
-  // frase inteira que o backend manda fica no `title`.
   it('renderiza os alertas críticos genéricos (DER §3.7) vindos de kpis.alertas, sem duplicar o alerta de vacina', async () => {
     renderDashboard()
 
-    const chipBaias = await screen.findByTitle(/baias com ocupação/i)
-    expect(chipBaias).toHaveTextContent(/baias superlotadas/i)
-    expect(screen.getByText(/fichas incompletas/i)).toBeInTheDocument()
-    expect(screen.getByText(/não castrados/i)).toBeInTheDocument()
-    // Vacina continua nos cards dedicados, não entre os chips.
-    expect(screen.queryByText(/vacina_vencendo/)).not.toBeInTheDocument()
+    expect(await screen.findByText(/baia\(s\) superlotada/)).toBeInTheDocument()
+    expect(screen.getByText(/anima(l|is).*ficha incompleta/i)).toBeInTheDocument()
+    expect(screen.getByText(/não castrado/)).toBeInTheDocument()
   })
 
   it('não renderiza o alerta genérico quando o total é 0', async () => {

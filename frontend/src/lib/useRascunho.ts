@@ -21,6 +21,8 @@ interface OpcoesRascunho<TForm extends FieldValues, TSalvo> {
 //   restaurar ou descartar (o formulário não é preenchido sozinho);
 // - só começa a salvar depois dessa checagem — senão um rascunho vazio
 //   gravaria por cima do verdadeiro antes de ele ser lido;
+// - com rascunho à espera de Restaurar ou Descartar, não salva: digitar sem
+//   escolher não pode apagar o que estava guardado;
 // - salva a cada alteração, com o debounce do armazenamento;
 // - depois do envio com sucesso, cancela o salvamento pendente e remove.
 export function useRascunho<TForm extends FieldValues, TSalvo = TForm>({
@@ -67,15 +69,17 @@ export function useRascunho<TForm extends FieldValues, TSalvo = TForm>({
     }
   }, [chave])
 
+  const aguardandoEscolha = rascunhoDisponivel !== null
+
   useEffect(() => {
     // O gate envolve a CRIAÇÃO da assinatura, não só o corpo do callback:
     // checar a flag dentro do callback seria um stale closure.
-    if (!prontoParaAutoSalvar) return
+    if (!prontoParaAutoSalvar || aguardandoEscolha) return
     const inscricao = watch((valoresAtuais) => {
       conversoes.current.armazenamento.agendarSalvar(chave, converterParaRascunho(valoresAtuais as TForm))
     })
     return () => inscricao.unsubscribe()
-  }, [prontoParaAutoSalvar, chave, watch, converterParaRascunho])
+  }, [prontoParaAutoSalvar, aguardandoEscolha, chave, watch, converterParaRascunho])
 
   function restaurar() {
     if (rascunhoDisponivel) {

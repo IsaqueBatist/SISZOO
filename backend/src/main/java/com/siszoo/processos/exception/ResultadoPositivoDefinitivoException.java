@@ -8,6 +8,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class ResultadoPositivoDefinitivoException extends ErroNegocioException {
 
     public ResultadoPositivoDefinitivoException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Resultado positivo e definitivo e nao pode ser corrigido");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "Resultado positivo é definitivo e não pode ser corrigido.");
     }
 }

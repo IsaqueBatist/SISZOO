@@ -124,7 +124,7 @@ public class NotificacaoResultadoService {
         try {
             envio = emailService.enviar(
                     responsavel.getEmail(),
-                    "SISZOO — Resultado do processo sanitario " + protocolo,
+                    "SISZOO — Resultado do processo sanitário " + protocolo,
                     emailTemplateService.renderizarHtml(TEMPLATE_EMAIL, variaveis),
                     emailTemplateService.renderizarTexto(TEMPLATE_EMAIL, variaveis));
         } catch (TaskRejectedException ex) {

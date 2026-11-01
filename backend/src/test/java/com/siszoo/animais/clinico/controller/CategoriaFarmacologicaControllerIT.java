@@ -82,7 +82,7 @@ class CategoriaFarmacologicaControllerIT extends AbstractIntegrationTest {
         postar(tokenAdmin, nome.toUpperCase())
                 .then()
                 .statusCode(409)
-                .body("mensagem", equalTo("Categoria farmacologica ja cadastrada"));
+                .body("mensagem", equalTo("Esta categoria farmacológica já está cadastrada."));
     }
 
     @Test

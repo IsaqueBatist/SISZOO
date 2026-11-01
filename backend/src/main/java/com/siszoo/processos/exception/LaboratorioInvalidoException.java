@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class LaboratorioInvalidoException extends ErroNegocioException {
 
     public LaboratorioInvalidoException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Laboratorio invalido");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "O laboratório informado não está disponível. Selecione outro da lista.");
     }
 }

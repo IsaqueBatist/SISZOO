@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class ContatoHumanoInconsistenteException extends ErroNegocioException {
 
     public ContatoHumanoInconsistenteException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Nivel de contato e agressao sao obrigatorios com contato humano e proibidos sem ele");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "Informe o nível de contato e a agressão somente quando houver contato humano.");
     }
 }

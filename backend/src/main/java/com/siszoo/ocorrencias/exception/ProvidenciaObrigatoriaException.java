@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class ProvidenciaObrigatoriaException extends ErroNegocioException {
 
     public ProvidenciaObrigatoriaException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Providencia tomada e obrigatoria no encerramento");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "Informe a providência tomada para encerrar a ocorrência.");
     }
 }

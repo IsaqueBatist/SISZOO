@@ -3,8 +3,8 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { ToastProvider } from '@/components/toast/ToastProvider'
-import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
+import { Toasts } from '@/components/toast/Toasts'
+import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
 import { Vacinas } from './Vacinas'
 
@@ -17,19 +17,18 @@ function renderVacinas(cargos: string[] = ['Administrador']) {
     cargos,
     senhaAlteradaEm: '2026-01-10T12:00:00Z',
   }
-  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario }))
+  definirSessaoEmMemoria({ token: 'token-existente', usuario })
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={['/vacinas']}>
-        <ToastProvider>
           <AuthProvider>
             <Routes>
               <Route path="/vacinas" element={<Vacinas />} />
             </Routes>
           </AuthProvider>
-        </ToastProvider>
       </MemoryRouter>
+      <Toasts />
     </QueryClientProvider>,
   )
 }
@@ -107,7 +106,7 @@ describe('Vacinas', () => {
     await user.type(within(modal).getByLabelText(/^nome/i), 'antirrabica')
     await user.click(within(modal).getByRole('button', { name: /^cadastrar vacina$/i }))
 
-    expect(await within(modal).findByText(/Ja existe a vacina "Antirrábica"/)).toBeInTheDocument()
+    expect(await within(modal).findByText(/Já existe a vacina "Antirrábica"/)).toBeInTheDocument()
   })
 
   it('renomeia uma vacina sem alterar o código', async () => {

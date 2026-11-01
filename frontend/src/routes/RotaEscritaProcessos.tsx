@@ -1,5 +1,6 @@
-import { Navigate, Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { RedirecionarSemAcesso } from './RedirecionarSemAcesso'
 
 // PROCESSOS_SANITARIOS:escrita (V3__seed_cargos.sql) é concedida aos 3
 // perfis (Administrador, Veterinário e Agente Sanitário) — só a exclusão é
@@ -9,5 +10,5 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 // se um perfil futuro sem essa permissão for adicionado.
 export function RotaEscritaProcessos() {
   const { roleKey } = useAuth()
-  return roleKey === 'admin' || roleKey === 'vet' || roleKey === 'agente' ? <Outlet /> : <Navigate to="/processos" replace />
+  return roleKey === 'admin' || roleKey === 'vet' || roleKey === 'agente' ? <Outlet /> : <RedirecionarSemAcesso para="/processos" />
 }

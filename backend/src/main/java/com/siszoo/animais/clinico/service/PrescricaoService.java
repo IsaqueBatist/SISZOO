@@ -150,13 +150,13 @@ public class PrescricaoService {
     private void validarDatas(CriarPrescricaoRequest request) {
         LocalDate inicio = request.dataInicio();
         if (request.dataFimPrevista() != null && request.dataFimPrevista().isBefore(inicio)) {
-            throw new CampoInvalidoException("dataFimPrevista", "Termino previsto nao pode ser anterior ao inicio");
+            throw new CampoInvalidoException("dataFimPrevista", "O término previsto não pode ser anterior ao início.");
         }
         if (request.dataFimReal() != null && request.dataFimReal().isBefore(inicio)) {
-            throw new CampoInvalidoException("dataFimReal", "Termino real nao pode ser anterior ao inicio");
+            throw new CampoInvalidoException("dataFimReal", "O término real não pode ser anterior ao início.");
         }
         if (request.status() == StatusPrescricao.CONCLUIDA && request.dataFimReal() == null) {
-            throw new CampoInvalidoException("dataFimReal", "Prescricao concluida exige a data de termino real");
+            throw new CampoInvalidoException("dataFimReal", "Informe a data de término real para concluir a prescrição.");
         }
     }
 

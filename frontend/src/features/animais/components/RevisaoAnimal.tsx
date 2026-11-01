@@ -1,7 +1,7 @@
 import { useFormContext, useWatch } from 'react-hook-form'
 import { formatarDataBR } from '@/lib/datas'
 import { useBaiasAtivasQuery, useCatalogosAnimaisQuery } from '../hooks/useAnimais'
-import { CASTRACAO_OPCOES, PELAGEM_OPCOES, PORTE_OPCOES, SEXO_OPCOES, type AnimalFormUiValues } from '../schemas/animalFormSchema'
+import { CASTRACAO_OPCOES, CONDICAO_OUTRAS, PELAGEM_OPCOES, PORTE_OPCOES, SEXO_OPCOES, type AnimalFormUiValues } from '../schemas/animalFormSchema'
 import type { CatalogoItem } from '../types/animais.types'
 
 function nomeCatalogo(itens: CatalogoItem[] | undefined, codigo: string): string {
@@ -67,6 +67,18 @@ export function RevisaoAnimal() {
           </span>
         </div>
         <div className="review-row">
+          <span className="k">Peso</span>
+          <span className="v">{typeof valores.pesoKg === 'number' && !Number.isNaN(valores.pesoKg) ? `${valores.pesoKg} kg` : '—'}</span>
+        </div>
+        <div className="review-row">
+          <span className="k">Idade aproximada</span>
+          <span className="v">{valores.idadeAprox || '—'}</span>
+        </div>
+        <div className="review-row">
+          <span className="k">Data de entrada</span>
+          <span className="v">{formatarDataBR(valores.dataEntrada)}</span>
+        </div>
+        <div className="review-row">
           <span className="k">Motivo de entrada</span>
           <span className="v">{nomeCatalogo(catalogos?.motivosEntrada, valores.motivoEntrada ?? '')}</span>
         </div>
@@ -79,9 +91,31 @@ export function RevisaoAnimal() {
           <span className="v">{nomeCatalogo(catalogos?.status, valores.status ?? '')}</span>
         </div>
         <div className="review-row">
+          <span className="k">Condições de saúde</span>
+          <span className="v">
+            {valores.condicoes?.length
+              ? valores.condicoes
+                  .map((codigo) => (codigo === CONDICAO_OUTRAS ? valores.condicoesOutras : nomeCatalogo(catalogos?.condicoesSaude, codigo)))
+                  .join(', ')
+              : '—'}
+          </span>
+        </div>
+        <div className="review-row">
           <span className="k">Castração</span>
           <span className="v">{CASTRACAO_OPCOES.find((opcao) => opcao.valor === valores.castracaoOpcao)?.label}</span>
         </div>
+        {valores.dataEsterilizacao && (
+          <div className="review-row">
+            <span className="k">Data da castração</span>
+            <span className="v">{formatarDataBR(valores.dataEsterilizacao)}</span>
+          </div>
+        )}
+        {valores.laudoEutanasia && (
+          <div className="review-row" style={{ gridColumn: '1 / -1' }}>
+            <span className="k">Laudo de eutanásia</span>
+            <span className="v">{valores.laudoEutanasia}</span>
+          </div>
+        )}
         <div className="review-row" style={{ gridColumn: '1 / -1' }}>
           <span className="k">Observações</span>
           <span className="v">{valores.observacoes || '—'}</span>

@@ -1,4 +1,4 @@
-/* SISZOO — Components */
+/* SISZOO - Components */
 
 /* ===== Buttons ===== */
 .btn {
@@ -20,14 +20,14 @@
 .btn:hover { transform: translateY(-1px); text-decoration: none; }
 .btn .icon { width: 16px; height: 16px; }
 /* Sem isso, um botão `disabled` (ex.: "Vincular processo selecionado" antes
-   de selecionar uma linha) fica visualmente idêntico a um habilitado — o
+   de selecionar uma linha) fica visualmente idêntico a um habilitado - o
    usuário clica, nada acontece, e parece bug em vez de "ainda não
    selecionou nada". */
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn:disabled:hover { transform: none; box-shadow: none; }
 
-.btn-primary { background: var(--color-primary); color: #fff; }
-.btn-primary:hover { background: var(--color-primary-hover); box-shadow: var(--shadow-sm); color: #fff; }
+.btn-primary { background: var(--color-primary); color: var(--color-on-primary); }
+.btn-primary:hover { background: var(--color-primary-hover); box-shadow: var(--shadow-sm); color: var(--color-on-primary); }
 
 .btn-secondary {
   background: transparent;
@@ -36,7 +36,7 @@
 }
 .btn-secondary:hover { background: var(--color-primary-light); color: var(--color-primary); }
 
-.btn-danger { background: var(--color-danger); color: #fff; }
+.btn-danger { background: var(--color-danger); color: var(--color-on-primary); }
 .btn-danger:hover { background: #B71C1C; color: #fff; }
 
 .btn-ghost {
@@ -159,6 +159,12 @@
 .kpi-delta.neutral { color: var(--color-text-secondary); }
 
 /* ===== Alert Banner ===== */
+.carregando-sessao {
+  padding: 48px 16px;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
 .alert {
   display: flex; gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
@@ -318,8 +324,8 @@ a.dd-notif-item.urgent:hover { background: color-mix(in srgb, var(--color-danger
 .badge-available .badge-dot { background: #2E7D32; }
 .badge-treatment { background: #E3F2FD; color: #1565C0; }
 .badge-treatment .badge-dot { background: #1565C0; }
-.badge-quarantine { background: #FFF3E0; color: #E65100; }
-.badge-quarantine .badge-dot { background: #E65100; }
+.badge-quarantine { background: #FFF3E0; color: #B84300; }
+.badge-quarantine .badge-dot { background: #B84300; }
 .badge-adopted { background: #F3E5F5; color: #6A1B9A; }
 .badge-adopted .badge-dot { background: #6A1B9A; }
 .badge-deceased { background: #ECEFF1; color: #424242; }
@@ -334,7 +340,7 @@ a.dd-notif-item.urgent:hover { background: color-mix(in srgb, var(--color-danger
 .badge-positive { background: #FFEBEE; color: #C62828; }
 .badge-negative { background: #E8F5E9; color: #2E7D32; }
 .badge-awaiting { background: #ECEFF1; color: #455A64; }
-.badge-inconclusive { background: #FFFDE7; color: #F57F17; }
+.badge-inconclusive { background: #FFFDE7; color: #8A5200; }
 .badge-neutral { background: var(--color-bg); color: var(--color-text-secondary); border: 1px solid var(--color-border); }
 
 /* ===== Gráficos do mural (T40) ===== */
@@ -397,14 +403,14 @@ a.dd-notif-item.urgent:hover { background: color-mix(in srgb, var(--color-danger
 
 /* Process status */
 .badge-process-open { background: #E3F2FD; color: #1565C0; }
-.badge-process-awaiting { background: #FFF3E0; color: #E65100; }
+.badge-process-awaiting { background: #FFF3E0; color: #B84300; }
 .badge-process-result { background: #E8F5E9; color: #2E7D32; }
 .badge-process-closed { background: #ECEFF1; color: #424242; }
 
 /* Disease badges */
 .badge-disease { color: #fff; font-weight: 700; letter-spacing: 0.05em; }
 .badge-disease.raiva { background: var(--disease-raiva); }
-.badge-disease.leishmaniose { background: var(--disease-leishmaniose); }
+.badge-disease.leishmaniose { background: var(--disease-leishmaniose); color: #3A2400; }
 .badge-disease.leptospirose { background: var(--disease-leptospirose); }
 .badge-disease.esporotricose { background: var(--disease-esporotricose); }
 .badge-disease.febre-maculosa { background: var(--disease-febre-maculosa); }
@@ -518,6 +524,13 @@ table.data .row-num { color: var(--color-text-muted); font-size: 11px; font-fami
   display: inline-flex; align-items: center; gap: 4px;
 }
 .field label .req { color: var(--color-danger); }
+.field legend {
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  display: inline-flex; align-items: center; gap: 4px;
+}
 .field .hint { font-size: 11px; color: var(--color-text-secondary); }
 .field .err { font-size: 11px; color: var(--color-danger); }
 
@@ -665,6 +678,7 @@ table.data .row-num { color: var(--color-text-muted); font-size: 11px; font-fami
 .filter-bar .search-input input {
   width: 100%;
   height: 36px;
+  color: var(--color-text-primary);
   padding: 0 14px 0 36px;
   border: 1px solid var(--color-border);
   border-radius: 7px;
@@ -684,6 +698,7 @@ table.data .row-num { color: var(--color-text-muted); font-size: 11px; font-fami
   background-repeat: no-repeat;
   background-position: right 10px center;
   appearance: none;
+  color: var(--color-text-primary);
   font-size: 12px;
   font-family: var(--font-body);
   cursor: pointer;
@@ -939,8 +954,8 @@ table.data .row-num { color: var(--color-text-muted); font-size: 11px; font-fami
 /* .toast-sucesso usa o verde já definido em .toast (padrão do design system). */
 .toast-erro { border-left-color: var(--color-danger); }
 .toast-erro .ico { background: var(--color-danger-bg); color: var(--color-danger); }
-.toast-info { border-left-color: var(--color-info); }
-.toast-info .ico { background: var(--color-info-bg); color: var(--color-info); }
+.toast-atencao { border-left-color: var(--color-info); }
+.toast-atencao .ico { background: var(--color-info-bg); color: var(--color-info); }
 @keyframes toastIn {
   from { opacity: 0; transform: translateX(20px); }
   to { opacity: 1; transform: translateX(0); }
@@ -1045,7 +1060,7 @@ table.data .row-num { color: var(--color-text-muted); font-size: 11px; font-fami
 .kv-list .kv-row:first-child { padding-top: 0; }
 .tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
 
-/* Layout de detalhe (coluna principal + coluna lateral) — usado por
+/* Layout de detalhe (coluna principal + coluna lateral) - usado por
    OcorrenciaDetalhe.tsx e ProcessoDetalhe.tsx, promovido de
    OcorrenciaDetalhe.css para cá quando passou a ser compartilhado. */
 .det-grid {
@@ -1150,3 +1165,181 @@ table.data .row-num { color: var(--color-text-muted); font-size: 11px; font-fami
 .legend .leg-row { display: flex; align-items: center; gap: 8px; }
 .legend .leg-row .swatch { width: 10px; height: 10px; border-radius: 3px; }
 .legend .leg-row .leg-num { font-weight: 600; font-family: var(--font-mono); margin-left: auto; }
+
+/* ===== Foco e leitura por teclado ===== */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.page:focus, .modal:focus, .alert:focus { outline: none; }
+.skip-link {
+  position: absolute;
+  left: var(--space-3);
+  top: -60px;
+  z-index: 300;
+  background: var(--color-surface);
+  color: var(--color-primary);
+  padding: 8px 14px;
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  font-weight: 600;
+}
+.skip-link:focus { top: var(--space-3); }
+.alert { scroll-margin-top: calc(var(--topbar-height) + 16px); }
+
+/* ===== Avisos de resultado ===== */
+.toast-area {
+  position: fixed;
+  right: var(--space-5);
+  bottom: var(--space-5);
+  z-index: 300;
+  display: flex; flex-direction: column; gap: var(--space-2);
+  max-width: min(420px, calc(100vw - 32px));
+  pointer-events: none;
+}
+.toast { position: static; pointer-events: auto; }
+.toast .title { flex: 1; }
+.toast.erro { border-left-color: var(--color-danger); }
+.toast.erro .ico { background: var(--color-danger-bg); color: var(--color-danger); }
+.toast.atencao { border-left-color: var(--color-warning); }
+.toast.atencao .ico { background: var(--color-warning-bg); color: var(--color-warning); }
+
+/* ===== Estados de envio ===== */
+.banner-conexao {
+  position: sticky;
+  top: calc(var(--topbar-height) + 8px);
+  z-index: 40;
+}
+.envio-pausado { color: var(--color-warning); font-size: 12px; font-weight: 600; }
+.atalho-data {
+  align-self: flex-start;
+  background: none;
+  border: 0;
+  padding: 2px 0;
+  color: var(--color-primary);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.modal > form { display: flex; flex-direction: column; min-height: 0; }
+.modal-footer { flex-wrap: wrap; align-items: center; }
+.step-botao { background: none; border: 0; padding: 0; font-family: var(--font-body); cursor: pointer; }
+.senha-temporaria {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+}
+.senha-temporaria code { font-size: 15px; overflow-wrap: anywhere; }
+.secao-recolhivel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+}
+.secao-recolhivel > summary { cursor: pointer; font-weight: 600; font-size: 13px; }
+.secao-recolhivel[open] > summary { margin-bottom: var(--space-3); }
+.menu-btn { display: none; }
+
+/* ===== Larguras menores ===== */
+@media (max-width: 1100px) {
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .page { padding: var(--space-5); }
+}
+
+/* O menu vira gaveta: o conteúdo fica com a largura inteira da tela. Mesmo
+   limite de lib/useTelaEstreita.ts. */
+@media (max-width: 768px) {
+  .app-shell, .app-shell.collapsed { display: block; }
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0;
+    width: min(280px, 85vw);
+    height: 100dvh;
+    z-index: 120;
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform 160ms ease-out, visibility 160ms;
+  }
+  .sidebar.aberta { transform: none; visibility: visible; }
+  .sidebar-fundo { position: fixed; inset: 0; z-index: 110; background: rgba(0,0,0,0.45); }
+  .menu-btn { display: inline-flex; flex-shrink: 0; }
+  .topbar { padding: 0 var(--space-3); gap: var(--space-2); }
+  .role-pill { display: none; }
+  .page { padding: var(--space-4) var(--space-3); gap: var(--space-4); }
+  h1 { font-size: var(--text-xl); }
+  .page-header { flex-direction: column; align-items: stretch; gap: var(--space-3); }
+  .page-header .actions { flex-wrap: wrap; }
+  .form-grid, .form-grid.cols-3, .review-grid, .grid-2, .grid-3, .grid-4, .grid-5 { grid-template-columns: minmax(0, 1fr); }
+  .filter-bar .search-input { flex-basis: 100%; min-width: 0; }
+  .filter-bar .filter-select { flex: 1 1 140px; min-width: 0; }
+  .stepper { padding: var(--space-3); }
+  .stepper .arrow { margin: 0 6px; }
+  .stepper .step:not(.active) span:last-child { display: none; }
+  .table-footer { flex-wrap: wrap; gap: var(--space-2); }
+  .card-header { flex-wrap: wrap; gap: var(--space-2); }
+  .tabs { overflow-x: auto; }
+  .btn { white-space: normal; height: auto; min-height: 38px; padding-top: 6px; padding-bottom: 6px; }
+  .btn-icon-only { min-height: 0; }
+  .modal-overlay { padding: var(--space-2); }
+  .modal { max-height: 100%; }
+  .toast-area { left: var(--space-3); right: var(--space-3); bottom: var(--space-3); max-width: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* ===== Tema escuro: o que não passa pelos tokens ===== */
+:root[data-tema='escuro'] { color-scheme: dark; }
+:root[data-tema='escuro'] table.data tbody tr:hover td { background: #243246; }
+:root[data-tema='escuro'] .skel { background: linear-gradient(90deg, #212C3D 25%, #2C3A4E 50%, #212C3D 75%); background-size: 400% 100%; }
+:root[data-tema='escuro'] .btn-danger:hover { background: #E57373; color: var(--color-on-primary); }
+:root[data-tema='escuro'] .badge-available,
+:root[data-tema='escuro'] .badge-process-result,
+:root[data-tema='escuro'] .badge-negative,
+:root[data-tema='escuro'] .badge-role-agent { background: #1F3A2A; color: #C8E6C9; }
+:root[data-tema='escuro'] .badge-treatment,
+:root[data-tema='escuro'] .badge-process-open,
+:root[data-tema='escuro'] .badge-role-vet { background: #1C3148; color: #90CAF9; }
+:root[data-tema='escuro'] .badge-quarantine,
+:root[data-tema='escuro'] .badge-process-awaiting,
+:root[data-tema='escuro'] .badge-inconclusive { background: #2B2A24; color: #FFB74D; }
+:root[data-tema='escuro'] .badge-adopted { background: #31243C; color: #CE93D8; }
+:root[data-tema='escuro'] .badge-deceased,
+:root[data-tema='escuro'] .badge-awaiting,
+:root[data-tema='escuro'] .badge-process-closed { background: #2C3A4E; color: #CFD8DC; }
+:root[data-tema='escuro'] .badge-positive,
+:root[data-tema='escuro'] .badge-role-admin { background: #3A2329; color: #EF9A9A; }
+:root[data-tema='escuro'] .badge-dot { background: currentColor; }
+:root[data-tema='escuro'] .sidebar-item .badge-count,
+:root[data-tema='escuro'] .badge-urgent { color: var(--color-on-primary); }
+:root[data-tema='escuro'] .alert-desc-item.severidade-vencida { color: #FF9E9B; }
+
+/* ===== Critérios de senha (CriteriosSenha) ===== */
+.criterios-senha {
+  margin-top: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted, var(--color-surface));
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.criterios-senha-titulo { margin: 0 0 6px; font-weight: 600; color: var(--color-text-primary); }
+.criterios-senha ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.criterios-senha .criterio { display: flex; align-items: flex-start; gap: 6px; }
+.criterios-senha .criterio.ok { color: var(--color-success); }
+.criterios-senha .criterio.falha { color: var(--color-danger); }
+.criterios-senha .criterio.pendente { color: var(--color-text-secondary); }
+.criterios-senha .criterio.pendente .criterios-senha-icone { opacity: 0.35; }
+.criterios-senha-icone { display: inline-flex; flex-shrink: 0; margin-top: 2px; }
+.criterios-senha .criterio-texto { flex: 1; }
+.criterios-senha-contagem { font-weight: 400; }
+.criterios-senha-tipos { margin-top: 4px !important; padding-left: 2px !important; gap: 2px !important; }
+.criterios-senha-tipos li { display: flex; align-items: center; gap: 6px; color: var(--color-text-secondary); }
+.criterios-senha-tipos li .criterios-senha-icone { margin-top: 0; opacity: 0.3; }
+.criterios-senha-tipos li.presente { color: var(--color-success); }
+.criterios-senha-tipos li.presente .criterios-senha-icone { opacity: 1; }
+.criterios-senha .hint { margin: 8px 0 0; }

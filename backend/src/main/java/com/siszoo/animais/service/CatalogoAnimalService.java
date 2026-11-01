@@ -15,10 +15,12 @@ import com.siszoo.animais.clinico.repository.TipoProcedimentoRepository;
 import com.siszoo.animais.clinico.repository.VacinaRepository;
 import com.siszoo.animais.dto.CatalogosAnimalResponse;
 import com.siszoo.animais.dto.VacinaCatalogoResponse;
+import com.siszoo.animais.entity.CondicaoSaude;
 import com.siszoo.animais.entity.Especie;
 import com.siszoo.animais.entity.MotivoEntrada;
 import com.siszoo.animais.entity.StatusAnimal;
 import com.siszoo.animais.entity.TipoBaia;
+import com.siszoo.animais.repository.CondicaoSaudeRepository;
 import com.siszoo.animais.repository.EspecieRepository;
 import com.siszoo.animais.repository.MotivoEntradaRepository;
 import com.siszoo.animais.repository.StatusAnimalRepository;
@@ -43,7 +45,8 @@ public class CatalogoAnimalService {
             TipoExameRepository tipoExameRepository,
             LaboratorioRepository laboratorioRepository,
             VacinaRepository vacinaRepository,
-            TipoProcedimentoRepository tipoProcedimentoRepository) {
+            TipoProcedimentoRepository tipoProcedimentoRepository,
+            CondicaoSaudeRepository condicaoSaudeRepository) {
         this.especieRepository = especieRepository;
         this.statusAnimalRepository = statusAnimalRepository;
         this.motivoEntradaRepository = motivoEntradaRepository;
@@ -52,6 +55,7 @@ public class CatalogoAnimalService {
         this.laboratorioRepository = laboratorioRepository;
         this.vacinaRepository = vacinaRepository;
         this.tipoProcedimentoRepository = tipoProcedimentoRepository;
+        this.condicaoSaudeRepository = condicaoSaudeRepository;
     }
 
     // F2-007 / RF-A04: catalogos do registro de exame.
@@ -60,6 +64,7 @@ public class CatalogoAnimalService {
     // Registro de vacinacao e de procedimento (seed da V5).
     private final VacinaRepository vacinaRepository;
     private final TipoProcedimentoRepository tipoProcedimentoRepository;
+    private final CondicaoSaudeRepository condicaoSaudeRepository;
 
     @Transactional(readOnly = true)
     public CatalogosAnimalResponse listar() {
@@ -72,7 +77,9 @@ public class CatalogoAnimalService {
                 mapear(laboratorioRepository.findByAtivoTrueOrderByNomeAsc(), Laboratorio::getCodigo, Laboratorio::getNome),
                 mapearVacinas(vacinaRepository.findByAtivoTrueOrderByNomeAsc()),
                 mapear(tipoProcedimentoRepository.findByAtivoTrueOrderByNomeAsc(),
-                        TipoProcedimento::getCodigo, TipoProcedimento::getNome));
+                        TipoProcedimento::getCodigo, TipoProcedimento::getNome),
+                mapear(condicaoSaudeRepository.findByAtivoTrueOrderByNomeAsc(),
+                        CondicaoSaude::getCodigo, CondicaoSaude::getNome));
     }
 
     // Mesma ordenacao por nome do `mapear`, mas leva o intervalo de reforco

@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
-import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
+import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
 import { API_BASE_URL } from '@/lib/env'
 import { server } from '@/mocks/server'
@@ -26,7 +26,7 @@ function renderLista(cargos: string[]) {
     cargos,
     senhaAlteradaEm: '2026-01-10T12:00:00Z',
   }
-  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario }))
+  definirSessaoEmMemoria({ token: 'token-existente', usuario })
 
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
@@ -79,8 +79,8 @@ describe('Ocorrencias', () => {
 
     const linhas = screen.getAllByRole('row').slice(1)
     expect(within(linhas[0]).getByText('OC 092/2026')).toBeInTheDocument()
-    expect(within(linhas[0]).getByLabelText('Urgente')).toBeInTheDocument()
-    expect(screen.getAllByLabelText('Urgente')).toHaveLength(1)
+    expect(within(linhas[0]).getByText('Urgente')).toBeInTheDocument()
+    expect(screen.getAllByText('Urgente')).toHaveLength(1)
   })
 
   it('filtra por tipo enviando o parâmetro `tipo`', async () => {
@@ -193,7 +193,7 @@ describe('Ocorrencias', () => {
     server.use(http.get(`${API_BASE_URL}/ocorrencias`, () => HttpResponse.json({}, { status: 500 })))
     renderLista(['Administrador'])
 
-    expect(await screen.findByText('Não foi possível carregar as ocorrências. Tente novamente.')).toBeInTheDocument()
+    expect(await screen.findByText('Não foi possível carregar as ocorrências.')).toBeInTheDocument()
   })
 
   it('não mostra o botão "Registrar Ocorrência" para o perfil Veterinário', async () => {

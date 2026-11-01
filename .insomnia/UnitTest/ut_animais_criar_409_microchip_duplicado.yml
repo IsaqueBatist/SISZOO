@@ -71,6 +71,6 @@ code: |-
 
   const segundo = await criarAnimal(adminToken, { nome: 'Bidu', microchip });
   expect(segundo.status).to.equal(409);
-  expect(JSON.parse(segundo.body).mensagem).to.equal('Microchip ja cadastrado');
+  expect(JSON.parse(segundo.body).mensagem).to.equal('Este microchip já está cadastrado em outro animal.');
 
 metaSortKey: 29000000

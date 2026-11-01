@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class DescricaoEncerramentoObrigatoriaException extends ErroNegocioException {
 
     public DescricaoEncerramentoObrigatoriaException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Descricao do encerramento e obrigatoria quando a providencia e Outro");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "Descreva o encerramento quando a providência for \"Outro\".");
     }
 }

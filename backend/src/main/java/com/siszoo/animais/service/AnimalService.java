@@ -4,8 +4,10 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -22,6 +24,7 @@ import com.siszoo.animais.dto.CriarAnimalRequest;
 import com.siszoo.animais.dto.DadosDescritivosAnimal;
 import com.siszoo.animais.entity.Animal;
 import com.siszoo.animais.entity.Baia;
+import com.siszoo.animais.entity.CondicaoSaude;
 import com.siszoo.animais.entity.Especie;
 import com.siszoo.animais.entity.MotivoEntrada;
 import com.siszoo.animais.entity.StatusAnimal;
@@ -36,6 +39,7 @@ import com.siszoo.animais.exception.StatusAnimalInvalidoException;
 import com.siszoo.animais.mapper.AnimalMapper;
 import com.siszoo.animais.repository.AnimalRepository;
 import com.siszoo.animais.repository.BaiaRepository;
+import com.siszoo.animais.repository.CondicaoSaudeRepository;
 import com.siszoo.animais.repository.EspecieRepository;
 import com.siszoo.animais.repository.MotivoEntradaRepository;
 import com.siszoo.animais.repository.StatusAnimalRepository;
@@ -60,6 +64,7 @@ public class AnimalService {
     private final EspecieRepository especieRepository;
     private final StatusAnimalRepository statusAnimalRepository;
     private final MotivoEntradaRepository motivoEntradaRepository;
+    private final CondicaoSaudeRepository condicaoSaudeRepository;
     private final UsuarioRepository usuarioRepository;
     private final AnimalMapper animalMapper;
     private final FichaCompletaService fichaCompletaService;
@@ -77,6 +82,7 @@ public class AnimalService {
             EspecieRepository especieRepository,
             StatusAnimalRepository statusAnimalRepository,
             MotivoEntradaRepository motivoEntradaRepository,
+            CondicaoSaudeRepository condicaoSaudeRepository,
             UsuarioRepository usuarioRepository,
             AnimalMapper animalMapper,
             FichaCompletaService fichaCompletaService,
@@ -88,6 +94,7 @@ public class AnimalService {
         this.especieRepository = especieRepository;
         this.statusAnimalRepository = statusAnimalRepository;
         this.motivoEntradaRepository = motivoEntradaRepository;
+        this.condicaoSaudeRepository = condicaoSaudeRepository;
         this.usuarioRepository = usuarioRepository;
         this.animalMapper = animalMapper;
         this.fichaCompletaService = fichaCompletaService;
@@ -221,6 +228,23 @@ public class AnimalService {
         animal.setDataEntrada(dados.dataEntrada());
         animal.setBaia(baia);
         animal.setObservacoes(dados.observacoes());
+        aplicarCondicoes(animal, dados);
+    }
+
+    private void aplicarCondicoes(Animal animal, DadosDescritivosAnimal dados) {
+        Set<String> codigos = dados.condicoes() == null ? Set.of() : new HashSet<>(dados.condicoes());
+        List<CondicaoSaude> condicoes = codigos.isEmpty() ? List.of() : condicaoSaudeRepository.findByCodigoIn(codigos)
+                .stream().filter(CondicaoSaude::isAtivo).toList();
+        if (condicoes.size() != codigos.size()) {
+            throw new CampoInvalidoException("condicoes", "Selecione apenas condições da lista.");
+        }
+        String outras = StringUtils.hasText(dados.condicoesOutras()) ? dados.condicoesOutras().trim() : null;
+        boolean marcouOutras = codigos.contains(CondicaoSaude.CODIGO_OUTRAS);
+        if (marcouOutras && outras == null) {
+            throw new CampoInvalidoException("condicoesOutras", "Descreva qual é a outra condição.");
+        }
+        animal.setCondicoes(new HashSet<>(condicoes));
+        animal.setCondicoesOutras(marcouOutras ? outras : null);
     }
 
     // Microchip e o identificador fisico implantado no animal: uma vez definido, e
@@ -344,7 +368,7 @@ public class AnimalService {
         animalRepository.findByNumeroMedalha(numeroMedalha)
                 .filter(outro -> animalIdAtual == null || !outro.getId().equals(animalIdAtual))
                 .ifPresent(outro -> {
-                    throw new CampoInvalidoException("numeroMedalha", "Numero de medalha ja cadastrado para outro animal");
+                    throw new CampoInvalidoException("numeroMedalha", "Este número de medalha já está cadastrado em outro animal.");
                 });
     }
 
@@ -356,10 +380,10 @@ public class AnimalService {
         }
         if (!StringUtils.hasText(microchip)) {
             throw new CampoInvalidoException("dataImplantacaoChip",
-                    "Data de implantacao so pode ser informada junto com o microchip");
+                    "Informe a data de implantação apenas junto com o microchip.");
         }
         if (dataImplantacao.isAfter(LocalDate.now(clock))) {
-            throw new CampoInvalidoException("dataImplantacaoChip", "Data de implantacao nao pode ser futura");
+            throw new CampoInvalidoException("dataImplantacaoChip", "A data de implantação não pode ser futura.");
         }
     }
 
@@ -371,7 +395,7 @@ public class AnimalService {
                 && (statusAnterior == null || !STATUS_OBITO_EUTANASIA.equals(statusAnterior.getCodigo()));
         if (entrandoEmEutanasia && laudo == null) {
             throw new CampoInvalidoException("laudoEutanasia",
-                    "Informe o laudo do responsavel tecnico que justifica a eutanasia");
+                    "Informe o laudo do responsável técnico que justifica a eutanásia.");
         }
     }
 
@@ -380,28 +404,28 @@ public class AnimalService {
     // do RN-C06 em VacinacaoService). A coerencia da castracao vale para os
     // dois caminhos (cadastro e edicao).
     private void validarDatas(
-            LocalDateTime dataEntrada, LocalDate dataNascimento, boolean esterilizado, LocalDate dataEsterilizacao) {
+            LocalDateTime dataEntrada, LocalDate dataNascimento, Boolean esterilizado, LocalDate dataEsterilizacao) {
         LocalDate hoje = LocalDate.now(clock);
 
         if (dataEntrada != null && dataEntrada.toLocalDate().isAfter(hoje)) {
-            throw new CampoInvalidoException("dataEntrada", "Data de entrada nao pode ser futura");
+            throw new CampoInvalidoException("dataEntrada", "A data de entrada não pode ser futura.");
         }
         if (dataNascimento != null) {
             if (dataNascimento.isAfter(hoje)) {
-                throw new CampoInvalidoException("dataNascimentoAprox", "Data de nascimento nao pode ser futura");
+                throw new CampoInvalidoException("dataNascimentoAprox", "A data de nascimento não pode ser futura.");
             }
             if (dataEntrada != null && dataNascimento.isAfter(dataEntrada.toLocalDate())) {
                 throw new CampoInvalidoException("dataNascimentoAprox",
-                        "Data de nascimento nao pode ser posterior a data de entrada");
+                        "A data de nascimento não pode ser posterior à data de entrada.");
             }
         }
         if (dataEsterilizacao != null) {
-            if (!esterilizado) {
+            if (!Boolean.TRUE.equals(esterilizado)) {
                 throw new CampoInvalidoException("dataEsterilizacao",
-                        "Data da castracao so pode ser informada para animal castrado");
+                        "Informe a data da castração apenas para animal castrado.");
             }
             if (dataEsterilizacao.isAfter(hoje)) {
-                throw new CampoInvalidoException("dataEsterilizacao", "Data da castracao nao pode ser futura");
+                throw new CampoInvalidoException("dataEsterilizacao", "A data da castração não pode ser futura.");
             }
         }
     }

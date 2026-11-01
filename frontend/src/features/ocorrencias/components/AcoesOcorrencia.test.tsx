@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
-import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
+import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
 import { API_BASE_URL } from '@/lib/env'
 import { server } from '@/mocks/server'
@@ -34,7 +34,7 @@ function renderDetalhe(ocorrenciaId: string, cargos: string[]) {
     cargos,
     senhaAlteradaEm: '2026-01-10T12:00:00Z',
   }
-  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario }))
+  definirSessaoEmMemoria({ token: 'token-existente', usuario })
 
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   return render(
@@ -126,7 +126,7 @@ describe('nota interna (D37)', () => {
     const user = userEvent.setup()
     server.use(
       http.post(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_ABERTA_ID}/notas`, () =>
-        HttpResponse.json({ mensagem: 'Ocorrencia encerrada nao pode ser alterada' }, { status: 422 }),
+        HttpResponse.json({ mensagem: 'Uma ocorrência encerrada não pode ser alterada.' }, { status: 422 }),
       ),
     )
     renderDetalhe(OCORRENCIA_ABERTA_ID, ADMIN)
@@ -135,7 +135,7 @@ describe('nota interna (D37)', () => {
     await user.type(screen.getByLabelText('Nova nota interna'), 'Nota qualquer.')
     await user.click(screen.getByRole('button', { name: 'Adicionar nota' }))
 
-    expect(await screen.findByText('Ocorrencia encerrada nao pode ser alterada')).toBeInTheDocument()
+    expect(await screen.findByText('Uma ocorrência encerrada não pode ser alterada.')).toBeInTheDocument()
   })
 
   it('não mostra o formulário de nota para o Veterinário', async () => {
@@ -201,7 +201,7 @@ describe('abrir processo (D33, T29)', () => {
   })
 })
 
-describe('avançar status do processo (provisório, D40)', () => {
+describe('avançar o processo pela ocorrência', () => {
   it.each([
     ['Administrador', ADMIN],
     ['Agente Sanitário', AGENTE],
@@ -214,20 +214,33 @@ describe('avançar status do processo (provisório, D40)', () => {
       http.patch(`${API_BASE_URL}/processos/${PROCESSO_PENDENTE_ID}/status`, async ({ request }) => {
         corpos.push(await request.json())
         avancou = true
-        return HttpResponse.json({ ...PROCESSO_CRIADO_FIXTURE, id: PROCESSO_PENDENTE_ID, statusProcesso: 'COM_RESULTADO' })
+        return HttpResponse.json({ ...PROCESSO_CRIADO_FIXTURE, id: PROCESSO_PENDENTE_ID, statusProcesso: 'AGUARDANDO_RESULTADO' })
       }),
       http.get(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_PROCESSO_PENDENTE_ID}`, () =>
-        HttpResponse.json(comStatusProcesso(avancou ? 'COM_RESULTADO' : 'AGUARDANDO_RESULTADO')),
+        HttpResponse.json(comStatusProcesso(avancou ? 'AGUARDANDO_RESULTADO' : 'ABERTO')),
       ),
     )
     renderDetalhe(OCORRENCIA_PROCESSO_PENDENTE_ID, cargos)
     await esperarDetalhe('092/2026')
-    expect(screen.getByText('Aguardando resultado')).toBeInTheDocument()
+    expect(screen.getByText('Aberto')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Avançar status do processo (provisório)' }))
+    await user.click(screen.getByRole('button', { name: 'Marcar amostras como enviadas' }))
 
-    expect(await screen.findByText('Com resultado')).toBeInTheDocument()
-    expect(corpos).toEqual([{ status: 'COM_RESULTADO' }])
+    expect(await screen.findByText('Aguardando resultado')).toBeInTheDocument()
+    expect(corpos).toEqual([{ status: 'AGUARDANDO_RESULTADO' }])
+  })
+
+  it('aguardando resultado: não oferece um avanço que o backend recusaria e diz o próximo passo', async () => {
+    server.use(
+      http.get(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_PROCESSO_PENDENTE_ID}`, () =>
+        HttpResponse.json(comStatusProcesso('AGUARDANDO_RESULTADO')),
+      ),
+    )
+    renderDetalhe(OCORRENCIA_PROCESSO_PENDENTE_ID, ADMIN)
+    await esperarDetalhe('092/2026')
+
+    expect(screen.queryByRole('button', { name: 'Marcar amostras como enviadas' })).not.toBeInTheDocument()
+    expect(screen.getByText('O próximo passo é lançar o resultado no processo.')).toBeInTheDocument()
   })
 
   it('não mostra o botão quando o processo já está concluído', async () => {
@@ -240,7 +253,7 @@ describe('avançar status do processo (provisório, D40)', () => {
     await esperarDetalhe('092/2026')
 
     expect(screen.getByText('Concluído')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Avançar status do processo (provisório)' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Concluir processo' })).not.toBeInTheDocument()
   })
 
   it('processo concluído libera o encerramento (D12)', async () => {
@@ -261,11 +274,12 @@ describe('avançar status do processo (provisório, D40)', () => {
       http.patch(`${API_BASE_URL}/processos/${PROCESSO_PENDENTE_ID}/status`, () =>
         HttpResponse.json({ mensagem: 'Transicao de status do processo invalida' }, { status: 422 }),
       ),
+      http.get(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_PROCESSO_PENDENTE_ID}`, () => HttpResponse.json(comStatusProcesso('ABERTO'))),
     )
     renderDetalhe(OCORRENCIA_PROCESSO_PENDENTE_ID, VET)
     await esperarDetalhe('092/2026')
 
-    await user.click(screen.getByRole('button', { name: 'Avançar status do processo (provisório)' }))
+    await user.click(screen.getByRole('button', { name: 'Marcar amostras como enviadas' }))
 
     await waitFor(() => expect(screen.getByText('Transicao de status do processo invalida')).toBeInTheDocument())
   })

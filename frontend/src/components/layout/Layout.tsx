@@ -1,20 +1,29 @@
 import { useEffect, useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import { BannerOffline } from '@/components/BannerOffline'
+import { tituloDaRota } from '@/lib/nav'
 import { limparRascunhosExpirados } from '@/lib/rascunhoDb'
+import { useTelaEstreita } from '@/lib/useTelaEstreita'
+import { useTituloPagina } from '@/lib/useTituloPagina'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 
 const CHAVE_SIDEBAR_COLAPSADA = 'siszoo:sidebar-collapsed'
 
+// Em telas médias o menu começa recolhido para dar espaço às tabelas. A escolha
+// feita pela pessoa sempre vale mais.
+const CONSULTA_MENU_RECOLHIDO = '(max-width: 1100px)'
+
 // localStorage pode estar indisponível (modo privado, quota, navegador
 // restrito) — nunca pode quebrar a tela, só perde a preferência.
 function lerCollapsedInicial(): boolean {
   try {
-    return localStorage.getItem(CHAVE_SIDEBAR_COLAPSADA) === 'true'
+    const salvo = localStorage.getItem(CHAVE_SIDEBAR_COLAPSADA)
+    if (salvo !== null) return salvo === 'true'
   } catch {
-    return false
+    // Segue para o padrão da largura da tela.
   }
+  return window.matchMedia?.(CONSULTA_MENU_RECOLHIDO).matches ?? false
 }
 
 function salvarCollapsed(valor: boolean) {
@@ -27,6 +36,11 @@ function salvarCollapsed(valor: boolean) {
 
 export function Layout() {
   const [collapsed, setCollapsed] = useState(lerCollapsedInicial)
+  const [menuAberto, setMenuAberto] = useState(false)
+  const telaEstreita = useTelaEstreita()
+  const { pathname } = useLocation()
+
+  useTituloPagina(tituloDaRota(pathname))
 
   // Manutenção do IndexedDB uma vez por carga da aplicação: rascunho vencido
   // (7 dias) e arquivo órfão saem do disco da máquina compartilhada. É
@@ -36,6 +50,10 @@ export function Layout() {
   }, [])
 
   function alternarCollapsed() {
+    if (telaEstreita) {
+      setMenuAberto(false)
+      return
+    }
     setCollapsed((valorAnterior) => {
       const novoValor = !valorAnterior
       salvarCollapsed(novoValor)
@@ -43,12 +61,24 @@ export function Layout() {
     })
   }
 
+  // Na gaveta o menu aparece sempre com os rótulos, seja qual for a preferência.
+  const recolhido = collapsed && !telaEstreita
+
   return (
-    <div className={`app-shell${collapsed ? ' collapsed' : ''}`}>
-      <Sidebar collapsed={collapsed} onToggleCollapsed={alternarCollapsed} />
+    <div className={`app-shell${recolhido ? ' collapsed' : ''}`}>
+      <a href="#conteudo" className="skip-link">
+        Ir para o conteúdo
+      </a>
+      <Sidebar
+        collapsed={recolhido}
+        onToggleCollapsed={alternarCollapsed}
+        menuAberto={menuAberto}
+        onFecharMenu={() => setMenuAberto(false)}
+      />
+      {menuAberto && <div className="sidebar-fundo" onClick={() => setMenuAberto(false)} />}
       <div className="main">
-        <Topbar />
-        <main className="page">
+        <Topbar onAbrirMenu={() => setMenuAberto(true)} />
+        <main className="page" id="conteudo" tabIndex={-1}>
           <BannerOffline />
           <Outlet />
         </main>

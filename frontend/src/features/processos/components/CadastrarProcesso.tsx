@@ -82,6 +82,7 @@ export function CadastrarProcesso() {
         bairro: ocorrencia.bairro,
       }}
       podeVincular={podeVincular}
+      denuncianteDaOcorrencia={ocorrencia.sigilosa || ocorrencia.anonima ? null : ocorrencia.denunciante}
     />
   )
 }

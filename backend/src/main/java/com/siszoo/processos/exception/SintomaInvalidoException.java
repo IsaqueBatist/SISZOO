@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class SintomaInvalidoException extends ErroNegocioException {
 
     public SintomaInvalidoException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Sintoma invalido");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "Um dos sintomas informados não está disponível. Selecione os sintomas da lista.");
     }
 }

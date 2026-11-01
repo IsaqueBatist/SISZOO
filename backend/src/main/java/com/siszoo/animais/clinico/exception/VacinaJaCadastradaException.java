@@ -19,10 +19,10 @@ public class VacinaJaCadastradaException extends ErroNegocioException {
 
     private static String montarMensagem(String nomeExistente, String codigo, boolean existenteInativa) {
         if (existenteInativa) {
-            return "A vacina \"%s\" ja existe com o mesmo codigo (%s), mas esta desativada. Reative-a em Vacinas."
+            return "A vacina \"%s\" já existe com o mesmo código (%s), mas está desativada. Reative-a em Vacinas."
                     .formatted(nomeExistente, codigo);
         }
-        return "Ja existe a vacina \"%s\" com o mesmo codigo (%s). Use um nome que as diferencie."
+        return "Já existe a vacina \"%s\" com o mesmo código (%s). Use um nome que as diferencie."
                 .formatted(nomeExistente, codigo);
     }
 }

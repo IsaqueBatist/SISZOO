@@ -1,9 +1,13 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
+import { AtalhoHoje } from '@/components/AtalhoHoje'
+import { AvisoEnvioPausado } from '@/components/AvisoEnvioPausado'
+import { toast } from '@/components/toast/toast'
+import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
+import { Modal } from '@/components/Modal'
 import { BannerRascunho } from '@/components/BannerRascunho'
 import { Icon } from '@/components/layout/Icon'
-import { useToast } from '@/components/toast/useToast'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { adicionarMesesIso, formatarDataBR } from '@/lib/datas'
 import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
@@ -55,7 +59,6 @@ export function ModalRegistrarVacina({
 
   const mutation = useCriarVacinacaoMutation(animalId)
   const catalogos = useCatalogosAnimaisQuery()
-  const toast = useToast()
 
   const { user } = useAuth()
 
@@ -63,10 +66,10 @@ export function ModalRegistrarVacina({
     register,
     handleSubmit,
     setError,
-    setValue,
     watch,
     reset,
     getValues,
+    setValue,
     formState: { errors },
   } = useForm<VacinacaoFormValues>({
     resolver: zodResolver(vacinacaoFormSchema),
@@ -109,7 +112,7 @@ export function ModalRegistrarVacina({
         retificaId: retifica?.id,
       })
       await rascunho.removerAposSucesso()
-      toast.sucesso(retifica ? 'Correção da vacinação registrada.' : reforco ? 'Reforço registrado.' : 'Vacinação registrada.')
+      toast.sucesso(retifica ? 'Vacinação corrigida.' : reforco ? 'Reforço registrado.' : 'Vacina registrada.')
       onSucesso()
     } catch (erro) {
       if (aplicarErrosDeCampo(erro, setError, MAPA_ERROS_SERVIDOR).length > 0) return
@@ -120,6 +123,10 @@ export function ModalRegistrarVacina({
     }
   }
 
+  function aoEnviar(event: FormEvent<HTMLFormElement>) {
+    setSubmitError(null)
+    void handleSubmit(onSubmit)(event)
+  }
 
   // Previsão do próximo reforço, ao vivo: é o que explica de onde sai o alerta
   // de vacina vencendo. Usa a mesma aritmética de meses do servidor —
@@ -140,7 +147,6 @@ export function ModalRegistrarVacina({
   // não-controlado (`register`), e a `<option>` nova só existe depois de o
   // catálogo ser invalidado, refazer a consulta E o React re-renderizar. Um
   // `setValue` antes disso é descartado pelo DOM, que cai na primeira opção.
-  // Por isso a escolha espera a opção aparecer.
   useEffect(() => {
     if (!codigoRecemCadastrado) return
     if (!catalogos.data?.vacinas.some((item) => item.codigo === codigoRecemCadastrado)) return
@@ -153,213 +159,200 @@ export function ModalRegistrarVacina({
     setCadastrandoVacina(false)
     toast.sucesso('Vacina cadastrada e selecionada.')
   }
-  function aoEnviar(event: FormEvent<HTMLFormElement>) {
-    setSubmitError(null)
-    void handleSubmit(onSubmit)(event)
-  }
 
   return (
-    <div className="modal-overlay" onClick={onFechar}>
-      <div className="modal" onClick={(event) => event.stopPropagation()}>
-        <div className="modal-header">
-          <h3>{retifica ? 'Corrigir vacinação' : reforco ? 'Registrar reforço' : 'Registrar vacina'}</h3>
-          <button type="button" className="btn btn-ghost btn-sm btn-icon-only" onClick={onFechar} aria-label="Fechar">
-            <Icon name="x" size={16} />
-          </button>
-        </div>
-
-        <form onSubmit={aoEnviar} noValidate>
-          <div className="modal-body">
-            <div className="form-grid cols-1">
-              {rascunho.rascunhoDisponivel && (
-                <BannerRascunho onRestaurar={rascunho.restaurar} onDescartar={() => void rascunho.descartar()} salvoEm={rascunho.rascunhoSalvoEm} />
-              )}
-              {submitError && (
-                <div className="alert danger" role="alert">
-                  <span className="bullet" />
-                  <div className="alert-content">{submitError}</div>
-                </div>
-              )}
-              {reforco && (
-                <div className="alert info" role="status">
-                  <span className="bullet" />
-                  <div className="alert-content">
-                    Nova aplicação desta vacina.
-                    <div className="alert-desc">
-                      A aplicação anterior continua no histórico; esta passa a ser a vigente, e o alerta de
-                      reforço é recalculado a partir dela.
-                    </div>
+    <Modal
+      titulo={retifica ? 'Corrigir vacinação' : reforco ? 'Registrar reforço' : 'Registrar vacina'}
+      onFechar={onFechar}
+    >
+      <form onSubmit={aoEnviar} noValidate>
+        <div className="modal-body">
+          <div className="form-grid cols-1">
+            {rascunho.rascunhoDisponivel && (
+              <BannerRascunho onRestaurar={rascunho.restaurar} onDescartar={() => void rascunho.descartar()} salvoEm={rascunho.rascunhoSalvoEm} />
+            )}
+            <AlertaErroEnvio mensagem={submitError} />
+            {reforco && (
+              <div className="alert info" role="status">
+                <span className="bullet" />
+                <div className="alert-content">
+                  Nova aplicação desta vacina.
+                  <div className="alert-desc">
+                    A aplicação anterior continua no histórico; esta passa a ser a vigente, e o alerta de
+                    reforço é recalculado a partir dela.
                   </div>
                 </div>
-              )}
-              {retifica && (
-                <div className="alert info" role="alert">
-                  <span className="bullet" />
-                  <div className="alert-content">
-                    O registro original não será alterado — esta correção cria um novo registro vinculado a ele.
-                    <div className="alert-desc">
-                      Use isto só para consertar um dado errado: a aplicação original passa a constar como
-                      retificada. Para lançar uma <strong>nova aplicação</strong>, feche e use "Registrar reforço".
-                    </div>
+              </div>
+            )}
+            {retifica && (
+              <div className="alert info" role="alert">
+                <span className="bullet" />
+                <div className="alert-content">
+                  O registro original não será alterado — esta correção cria um novo registro vinculado a ele.
+                  <div className="alert-desc">
+                    Use isto só para consertar um dado errado: a aplicação original passa a constar como
+                    retificada. Para lançar uma <strong>nova aplicação</strong>, feche e use "Registrar reforço".
                   </div>
                 </div>
-              )}
+              </div>
+            )}
 
-              <div className="form-grid">
-                <div className="field">
-                  <label htmlFor="vac-vacina">
-                    Vacina <span className="req">*</span>
-                  </label>
-                  {/* O "+" fica ao lado do select, não substitui o componente:
-                      SelectCatalogoClinico é quem trata carregando/erro/vazio
-                      e só monta com as opções prontas. */}
-                  <div className="flex gap-2">
-                    <div style={{ flex: 1 }}>
-                      <SelectCatalogoClinico
-                        id="vac-vacina"
-                        itens={catalogos.data?.vacinas}
-                        carregando={catalogos.isLoading}
-                        comErro={catalogos.isError}
-                        onTentarNovamente={() => void catalogos.refetch()}
-                        registro={register('vacina')}
-                        temErro={Boolean(errors.vacina)}
-                      />
-                    </div>
-                    {/* Sem checagem de papel aqui: a aba só oferece o caminho
-                        para este modal a quem tem escrita (Admin e Vet), e o
-                        backend recusa o POST de qualquer outro. */}
-                    {!cadastrandoVacina && (
-                      <button
-                        type="button"
-                        className="btn btn-secondary btn-sm btn-icon-only"
-                        title="Cadastrar nova vacina"
-                        aria-label="Cadastrar nova vacina"
-                        onClick={() => setCadastrandoVacina(true)}
-                      >
-                        <Icon name="plus" size={16} />
-                      </button>
-                    )}
-                  </div>
-                  {errors.vacina && <span className="err">{errors.vacina.message}</span>}
-                  {/* Explica de onde vem o alerta de reforço, com a data já
-                      calculada. Só aparece com vacina e data escolhidas. */}
-                  {previsaoReforco && (
-                    <span className="hint">
-                      Próximo reforço: {formatarDataBR(previsaoReforco)} (intervalo de{' '}
-                      {vacinaEscolhida?.intervaloMeses} meses)
-                    </span>
-                  )}
-                  {vacinaEscolhida && !vacinaEscolhida.intervaloMeses && (
-                    <span className="hint">Esta vacina não tem intervalo de reforço: não gera alerta.</span>
-                  )}
-                </div>
-
-                {cadastrandoVacina && (
-                  <div className="field full">
-                    <CadastroRapidoVacina
-                      onCadastrada={aoCadastrarVacina}
-                      onCancelar={() => setCadastrandoVacina(false)}
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="vac-vacina">
+                  Vacina <span className="req">*</span>
+                </label>
+                {/* O "+" fica ao lado do select, não substitui o componente:
+                    SelectCatalogoClinico é quem trata carregando/erro/vazio
+                    e só monta com as opções prontas. */}
+                <div className="flex gap-2">
+                  <div style={{ flex: 1 }}>
+                    <SelectCatalogoClinico
+                      id="vac-vacina"
+                      itens={catalogos.data?.vacinas}
+                      carregando={catalogos.isLoading}
+                      comErro={catalogos.isError}
+                      onTentarNovamente={() => void catalogos.refetch()}
+                      registro={register('vacina')}
+                      temErro={Boolean(errors.vacina)}
                     />
                   </div>
+                  {/* Sem checagem de papel: a aba só oferece o caminho para
+                      este modal a quem tem escrita, e o backend recusa o POST
+                      de qualquer outro. */}
+                  {!cadastrandoVacina && (
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm btn-icon-only"
+                      title="Cadastrar nova vacina"
+                      aria-label="Cadastrar nova vacina"
+                      onClick={() => setCadastrandoVacina(true)}
+                    >
+                      <Icon name="plus" size={16} />
+                    </button>
+                  )}
+                </div>
+                {errors.vacina && <span className="err">{errors.vacina.message}</span>}
+                {/* Explica de onde vem o alerta de reforço, com a data já
+                    calculada. Só aparece com vacina e data escolhidas. */}
+                {previsaoReforco && (
+                  <span className="hint">
+                    Próximo reforço: {formatarDataBR(previsaoReforco)} (intervalo de{' '}
+                    {vacinaEscolhida?.intervaloMeses} meses)
+                  </span>
                 )}
-
-                <div className="field">
-                  <label htmlFor="vac-data">
-                    Data de aplicação <span className="req">*</span>
-                  </label>
-                  <input
-                    id="vac-data"
-                    className={`input${errors.dataAplicacao ? ' error' : ''}`}
-                    type="date"
-                    max={hojeEmItu()}
-                    {...register('dataAplicacao')}
-                  />
-                  {errors.dataAplicacao && <span className="err">{errors.dataAplicacao.message}</span>}
-                </div>
+                {vacinaEscolhida && !vacinaEscolhida.intervaloMeses && (
+                  <span className="hint">Esta vacina não tem intervalo de reforço: não gera alerta.</span>
+                )}
               </div>
 
-              <div className="form-grid">
-                <div className="field">
-                  <label htmlFor="vac-numero-dose">Número da dose</label>
-                  <input
-                    id="vac-numero-dose"
-                    className="input"
-                    type="number"
-                    min={1}
-                    step={1}
-                    {...register('numeroDose', { setValueAs: (v) => (v === '' ? undefined : Number(v)) })}
+              {cadastrandoVacina && (
+                <div className="field full">
+                  <CadastroRapidoVacina
+                    onCadastrada={aoCadastrarVacina}
+                    onCancelar={() => setCadastrandoVacina(false)}
                   />
                 </div>
-                <div className="field">
-                  <label htmlFor="vac-dose-quantidade">
-                    Quantidade da dose <span className="req">*</span>
-                  </label>
-                  <input
-                    id="vac-dose-quantidade"
-                    className={`input${errors.doseQuantidade ? ' error' : ''}`}
-                    type="number"
-                    min={0}
-                    step="0.001"
-                    {...register('doseQuantidade', { valueAsNumber: true })}
-                  />
-                  {errors.doseQuantidade && <span className="err">{errors.doseQuantidade.message}</span>}
-                </div>
-                <div className="field">
-                  <label htmlFor="vac-dose-unidade">
-                    Unidade <span className="req">*</span>
-                  </label>
-                  <select
-                    id="vac-dose-unidade"
-                    className={`select${errors.doseUnidade ? ' error' : ''}`}
-                    {...register('doseUnidade', { setValueAs: (v) => (v === '' ? undefined : v) })}
-                  >
-                    <option value="">—</option>
-                    {(Object.keys(LABELS_UNIDADE_DOSE) as (keyof typeof LABELS_UNIDADE_DOSE)[]).map((unidade) => (
-                      <option key={unidade} value={unidade}>
-                        {LABELS_UNIDADE_DOSE[unidade]}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.doseUnidade && <span className="err">{errors.doseUnidade.message}</span>}
-                </div>
-              </div>
+              )}
 
               <div className="field">
-                <label htmlFor="vac-lote">Lote</label>
+                <label htmlFor="vac-data">
+                  Data de aplicação <span className="req">*</span>
+                </label>
                 <input
-                  id="vac-lote"
-                  className="input"
-                  type="text"
-                  {...register('lote', { setValueAs: (v: string) => (v.trim() ? v : undefined) })}
+                  id="vac-data"
+                  className={`input${errors.dataAplicacao ? ' error' : ''}`} aria-invalid={errors.dataAplicacao ? true : undefined} aria-describedby={errors.dataAplicacao ? 'vac-data-erro' : undefined}
+                  type="date"
+                  max={hojeEmItu()}
+                  {...register('dataAplicacao')}
                 />
-              </div>
-
-              <div className="field">
-                <label htmlFor="vac-observacoes">Observações</label>
-                <textarea
-                  id="vac-observacoes"
-                  className="textarea"
-                  rows={3}
-                  {...register('observacoes', { setValueAs: (v: string) => (v.trim() ? v : undefined) })}
-                />
+                <AtalhoHoje onEscolher={(hoje) => setValue('dataAplicacao', hoje, { shouldDirty: true })} />
+                {errors.dataAplicacao && <span className="err" id="vac-data-erro">{errors.dataAplicacao.message}</span>}
               </div>
             </div>
-          </div>
 
-          <div className="modal-footer">
-            <button type="button" className="btn btn-ghost" onClick={onFechar}>
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={mutation.isPending || !catalogos.data?.vacinas.length}
-            >
-              {mutation.isPending ? 'Salvando…' : retifica ? 'Salvar correção' : 'Registrar vacina'}
-            </button>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="vac-numero-dose">Número da dose</label>
+                <input
+                  id="vac-numero-dose"
+                  className="input"
+                  type="number"
+                  min={1}
+                  step={1}
+                  {...register('numeroDose', { setValueAs: (v) => (v === '' ? undefined : Number(v)) })}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="vac-dose-quantidade">
+                  Quantidade da dose <span className="req">*</span>
+                </label>
+                <input
+                  id="vac-dose-quantidade"
+                  className={`input${errors.doseQuantidade ? ' error' : ''}`} aria-invalid={errors.doseQuantidade ? true : undefined} aria-describedby={errors.doseQuantidade ? 'vac-dose-quantidade-erro' : undefined}
+                  type="number"
+                  min={0}
+                  step="0.001"
+                  {...register('doseQuantidade', { valueAsNumber: true })}
+                />
+                {errors.doseQuantidade && <span className="err" id="vac-dose-quantidade-erro">{errors.doseQuantidade.message}</span>}
+              </div>
+              <div className="field">
+                <label htmlFor="vac-dose-unidade">
+                  Unidade <span className="req">*</span>
+                </label>
+                <select
+                  id="vac-dose-unidade"
+                  className={`select${errors.doseUnidade ? ' error' : ''}`} aria-invalid={errors.doseUnidade ? true : undefined} aria-describedby={errors.doseUnidade ? 'vac-dose-unidade-erro' : undefined}
+                  {...register('doseUnidade', { setValueAs: (v) => (v === '' ? undefined : v) })}
+                >
+                  <option value="">—</option>
+                  {(Object.keys(LABELS_UNIDADE_DOSE) as (keyof typeof LABELS_UNIDADE_DOSE)[]).map((unidade) => (
+                    <option key={unidade} value={unidade}>
+                      {LABELS_UNIDADE_DOSE[unidade]}
+                    </option>
+                  ))}
+                </select>
+                {errors.doseUnidade && <span className="err" id="vac-dose-unidade-erro">{errors.doseUnidade.message}</span>}
+              </div>
+            </div>
+
+            <div className="field">
+              <label htmlFor="vac-lote">Lote</label>
+              <input
+                id="vac-lote"
+                className="input"
+                type="text"
+                {...register('lote', { setValueAs: (v: string) => (v.trim() ? v : undefined) })}
+              />
+            </div>
+
+            <div className="field">
+              <label htmlFor="vac-observacoes">Observações</label>
+              <textarea
+                id="vac-observacoes"
+                className="textarea"
+                rows={3}
+                {...register('observacoes', { setValueAs: (v: string) => (v.trim() ? v : undefined) })}
+              />
+            </div>
           </div>
-        </form>
-      </div>
-    </div>
+        </div>
+
+        <div className="modal-footer">
+          <AvisoEnvioPausado pausado={mutation.isPaused} />
+          <button type="button" className="btn btn-ghost" onClick={onFechar}>
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={mutation.isPending || !catalogos.data?.vacinas.length}
+          >
+            {mutation.isPaused ? 'Aguardando conexão…' : mutation.isPending ? 'Salvando…' : retifica ? 'Salvar correção' : 'Registrar vacina'}
+          </button>
+        </div>
+      </form>
+    </Modal>
   )
 }

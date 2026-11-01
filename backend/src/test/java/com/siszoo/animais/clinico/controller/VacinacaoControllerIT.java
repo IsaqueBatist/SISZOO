@@ -130,7 +130,7 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
                 .post("/api/vacinacoes")
                 .then()
                 .statusCode(422)
-                .body("mensagem", equalTo("Vacina informada nao existe"));
+                .body("mensagem", equalTo("A vacina informada não existe. Selecione uma da lista."));
     }
 
     // RN-C09: vacina desativada no catalogo (DELETE /api/vacinas/{id}) nao
@@ -154,7 +154,7 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
                 .post("/api/vacinacoes")
                 .then()
                 .statusCode(422)
-                .body("mensagem", equalTo("Vacina informada nao existe"));
+                .body("mensagem", equalTo("A vacina informada não existe. Selecione uma da lista."));
     }
 
     // RN06: registro clinico so se corrige por um POST novo com retificaId.
@@ -338,7 +338,7 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
         fixture.postarVacinacao(tokenAdmin, outroAnimalId, HOJE, UnidadeDose.MILILITRO, idVacinacao)
                 .then()
                 .statusCode(422)
-                .body("mensagem", equalTo("Registro retificado pertence a outro animal"));
+                .body("mensagem", equalTo("O registro a corrigir pertence a outro animal."));
     }
 
     @Test
@@ -351,7 +351,7 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
         fixture.postarVacinacao(tokenAdmin, animalId, HOJE, UnidadeDose.MILILITRO, idOriginal)
                 .then()
                 .statusCode(409)
-                .body("mensagem", equalTo("Registro ja foi retificado por outro"));
+                .body("mensagem", equalTo("Este registro já foi corrigido. Atualize a página para ver a versão atual."));
     }
 
     // Corrida real, sem mock: uma transacao paralela insere a retificacao e
@@ -387,7 +387,7 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
             requisicao.get(30, TimeUnit.SECONDS)
                     .then()
                     .statusCode(409)
-                    .body("mensagem", equalTo("Registro ja foi retificado por outro"));
+                    .body("mensagem", equalTo("Este registro já foi corrigido. Atualize a página para ver a versão atual."));
         }
     }
 
@@ -437,7 +437,7 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
                         tokenAdmin, fixture.criarAnimal(tokenAdmin), HOJE.plusDays(1), UnidadeDose.MILILITRO, null)
                 .then()
                 .statusCode(422)
-                .body("mensagem", equalTo("Data de aplicacao nao pode ser futura"));
+                .body("mensagem", equalTo("A data de aplicação não pode ser futura."));
     }
 
     @Test
@@ -449,7 +449,7 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
         fixture.postarVacinacao(tokenAdmin, animalId, HOJE.plusDays(1), UnidadeDose.MILILITRO, idOriginal)
                 .then()
                 .statusCode(422)
-                .body("mensagem", equalTo("Data de aplicacao nao pode ser futura"));
+                .body("mensagem", equalTo("A data de aplicação não pode ser futura."));
 
         assertThat(vacinacaoRepository.existsByRetificaId(UUID.fromString(idOriginal)), equalTo(false));
     }
@@ -462,7 +462,7 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
         fixture.postarVacinacao(tokenAdmin, fixture.criarAnimal(tokenAdmin), HOJE, null, null)
                 .then()
                 .statusCode(422)
-                .body("mensagem", equalTo("Dados invalidos"))
+                .body("mensagem", equalTo("Não foi possível salvar. Verifique os campos destacados e tente novamente."))
                 .body("campos.campo", contains("doseUnidade"));
     }
 

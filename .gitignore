@@ -45,6 +45,10 @@ Thumbs.db
 *.log
 logs/
 
+# Python (scripts de análise do TG)
+__pycache__/
+*.pyc
+
 # Documento do TG: binários ficam fora do git (ver docs/tg/README.md)
 docs/tg/**/*.docx
 docs/tg/**/*.pdf

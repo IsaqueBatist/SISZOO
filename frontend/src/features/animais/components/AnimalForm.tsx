@@ -2,7 +2,9 @@ import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'r
 import { Link, useNavigate } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormProvider, useForm, type FieldErrors as RhfFieldErrors } from 'react-hook-form'
+import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { toast } from '@/components/toast/toast'
 import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
 import type { Animal } from '../types/animais.types'
 import { animalFormUiSchema, type AnimalFormUiValues } from '../schemas/animalFormSchema'
@@ -23,6 +25,7 @@ import {
   removerRascunhoAnimal,
   salvarRascunhoAnimal,
 } from '../storage/rascunhoAnimalStorage'
+import { AvisoEnvioPausado } from '@/components/AvisoEnvioPausado'
 import { BannerRascunho } from '@/components/BannerRascunho'
 import { Stepper } from '@/components/Stepper'
 import {
@@ -45,9 +48,11 @@ interface AnimalFormProps {
 
 const CAMPOS_STEP: Record<1 | 2 | 3, (keyof AnimalFormUiValues)[]> = {
   1: ['nome', 'especie', 'sexo', 'raca', 'coloracao', 'pelagem', 'porte', 'pesoKg', 'idadeAprox', 'dataNascimentoAprox', 'microchip', 'numeroMedalha', 'dataImplantacaoChip'],
-  2: ['status', 'motivoEntrada', 'dataEntrada', 'baiaId', 'dataEsterilizacao', 'procedencia', 'laudoEutanasia'],
+  2: ['status', 'motivoEntrada', 'dataEntrada', 'baiaId', 'dataEsterilizacao', 'procedencia', 'laudoEutanasia', 'condicoes', 'condicoesOutras'],
   3: [],
 }
+
+const ETAPAS = ['Dados Básicos', 'Saúde & Baia', 'Foto & Revisão'] as const
 
 const CAMPOS_COM_ERRO = new Set<string>([...CAMPOS_STEP[1], ...CAMPOS_STEP[2]])
 
@@ -92,6 +97,9 @@ export function AnimalForm({ animal }: AnimalFormProps) {
   const criarMutation = useCriarAnimalMutation()
   const atualizarMutation = useAtualizarAnimalMutation()
   const salvando = criarMutation.isPending || atualizarMutation.isPending
+  const envioPausado = criarMutation.isPaused || atualizarMutation.isPaused
+  // Voltar da edição é voltar à ficha: é de lá que a pessoa veio.
+  const destinoVoltar = animal ? `/animais/${animal.id}` : '/animais'
 
   const formulario = useForm<AnimalFormUiValues>({
     resolver: zodResolver(animalFormUiSchema),
@@ -101,7 +109,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
     // F2-004/F2-008 — sem eles o PUT da edição apagava o que estava salvo.
     defaultValues: rascunhoParaValores(iniciais, iniciais.fotoUrl),
   })
-  const { handleSubmit, watch, setValue, setError, getValues, reset } = formulario
+  const { handleSubmit, watch, setValue, setError, getValues, reset, trigger } = formulario
   const fotoUrl = watch('fotoUrl')
 
   // Carrega uma vez ao montar, só então começa a salvar (debounce de 800 ms),
@@ -206,14 +214,17 @@ export function AnimalForm({ animal }: AnimalFormProps) {
   async function onSubmit(dados: AnimalFormUiValues) {
     const payload = paraAnimalRequest(dados, animal?.dataEntrada)
     try {
+      let idSalvo: string
       if (animal) {
         await atualizarMutation.mutateAsync({ id: animal.id, payload })
+        idSalvo = animal.id
       } else {
-        await criarMutation.mutateAsync(payload)
+        idSalvo = (await criarMutation.mutateAsync(payload)).id
       }
       await rascunho.removerAposSucesso()
       await removerArquivosDoRascunho(donoDosArquivos)
-      navigate('/animais')
+      toast.sucesso(animal ? 'Alterações salvas.' : `${dados.nome} cadastrado(a).`)
+      navigate(`/animais/${idSalvo}`)
     } catch (erro) {
       tratarErroSubmit(erro)
     }
@@ -232,16 +243,22 @@ export function AnimalForm({ animal }: AnimalFormProps) {
     void handleSubmit(onSubmit, onInvalid)(event)
   }
 
+  // Valida a etapa ao sair dela: o erro aparece onde a pessoa está, não três
+  // telas depois.
+  async function avancarDaEtapa(atual: 1 | 2) {
+    if (await trigger(CAMPOS_STEP[atual])) setStep((atual + 1) as 2 | 3)
+  }
+
   return (
     <div className="wizard-shell">
       <div className="page-header">
         <div className="title-block">
-          <Link to="/animais" className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}>
-            ← Voltar para Animais
+          <Link to={destinoVoltar} className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}>
+            {animal ? '← Voltar para a ficha' : '← Voltar para Animais'}
           </Link>
           <h1>{animal ? `Editar ${animal.nome}` : 'Cadastrar Novo Animal'}</h1>
           <p className="subtitle">
-            {animal ? 'Atualize os dados do animal em 3 etapas.' : 'Preencha as informações em 3 etapas. Você poderá editar depois.'}
+            {animal ? 'Altere o que precisar e salve de qualquer etapa.' : 'Preencha as informações em 3 etapas. Você poderá editar depois.'}
           </p>
         </div>
       </div>
@@ -254,16 +271,11 @@ export function AnimalForm({ animal }: AnimalFormProps) {
         />
       )}
 
-      <Stepper etapas={['Dados Básicos', 'Saúde & Baia', 'Foto & Revisão']} atual={step} />
+      <Stepper etapas={ETAPAS} atual={step} onIrPara={animal ? (numero) => setStep(numero as 1 | 2 | 3) : undefined} />
 
       <FormProvider {...formulario}>
         <form onSubmit={aoEnviar} noValidate>
-          {submitError && (
-            <div className="alert danger" role="alert" style={{ marginBottom: 'var(--space-4)' }}>
-              <span className="bullet" />
-              <div className="alert-content">{submitError}</div>
-            </div>
-          )}
+          <AlertaErroEnvio mensagem={submitError} />
 
           <div className={`card step-pane${step === 1 ? ' active' : ''}`}>
             <div className="card-header">
@@ -279,10 +291,15 @@ export function AnimalForm({ animal }: AnimalFormProps) {
               className="card-header"
               style={{ borderTop: '1px solid var(--color-border)', borderBottom: 'none', justifyContent: 'flex-end' }}
             >
-              <Link to="/animais" className="btn btn-ghost">
+              <Link to={destinoVoltar} className="btn btn-ghost">
                 Cancelar
               </Link>
-              <button type="button" className="btn btn-primary" onClick={() => setStep(2)}>
+              {animal && (
+                <button type="submit" className="btn btn-outline" disabled={salvando}>
+                  Salvar alterações
+                </button>
+              )}
+              <button type="button" className="btn btn-primary" onClick={() => void avancarDaEtapa(1)}>
                 Próximo: Saúde &amp; Baia →
               </button>
             </div>
@@ -302,9 +319,16 @@ export function AnimalForm({ animal }: AnimalFormProps) {
               <button type="button" className="btn btn-ghost" onClick={() => setStep(1)}>
                 ← Anterior
               </button>
-              <button type="button" className="btn btn-primary" onClick={() => setStep(3)}>
-                Próximo: Foto &amp; Revisão →
-              </button>
+              <div className="flex gap-2">
+                {animal && (
+                  <button type="submit" className="btn btn-outline" disabled={salvando}>
+                    Salvar alterações
+                  </button>
+                )}
+                <button type="button" className="btn btn-primary" onClick={() => void avancarDaEtapa(2)}>
+                  Próximo: Foto &amp; Revisão →
+                </button>
+              </div>
             </div>
           </div>
 
@@ -331,11 +355,12 @@ export function AnimalForm({ animal }: AnimalFormProps) {
               </button>
               <div className="flex gap-2" style={{ alignItems: 'center' }}>
                 {rascunhoMensagem && <span className="hint">{rascunhoMensagem}</span>}
+                <AvisoEnvioPausado pausado={envioPausado} />
                 <button type="button" className="btn btn-outline" onClick={() => void handleSalvarRascunhoAgora()}>
                   Salvar como rascunho
                 </button>
                 <button type="submit" className="btn btn-primary btn-lg" disabled={salvando}>
-                  {salvando ? 'Salvando…' : animal ? 'Salvar alterações' : 'Cadastrar animal'}
+                  {envioPausado ? 'Aguardando conexão…' : salvando ? 'Salvando…' : animal ? 'Salvar alterações' : 'Cadastrar animal'}
                 </button>
               </div>
             </div>

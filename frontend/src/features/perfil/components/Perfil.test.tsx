@@ -1,4 +1,4 @@
-import { ToastProvider } from '@/components/toast/ToastProvider'
+import { Toasts } from '@/components/toast/Toasts'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
@@ -14,10 +14,9 @@ function renderPerfil() {
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter>
-        <ToastProvider>
           <Perfil />
-        </ToastProvider>
       </MemoryRouter>
+      <Toasts />
     </QueryClientProvider>,
   )
 }
@@ -28,7 +27,7 @@ describe('Perfil', () => {
 
     expect(await screen.findByText('Stéphanie Lima')).toBeInTheDocument()
     expect(screen.getAllByText('stephanie.lima@itu.sp.gov.br').length).toBeGreaterThan(0)
-    expect(screen.getByText('VETERINÁRIA')).toBeInTheDocument()
+    expect(screen.getByText('VETERINÁRIO(A)')).toBeInTheDocument()
   })
 
   it('lista as permissões do perfil, incluindo as negadas', async () => {

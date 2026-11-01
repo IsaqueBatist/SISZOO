@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { HttpResponse, http } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { AuthProvider, SESSION_STORAGE_KEY } from '@/features/auth/hooks/AuthContext'
+import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
 import { API_BASE_URL } from '@/lib/env'
 import { server } from '@/mocks/server'
@@ -36,7 +36,7 @@ function autenticar() {
     cargos: ['Administrador'],
     senhaAlteradaEm: '2026-01-10T12:00:00Z',
   }
-  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: 'token-existente', usuario }))
+  definirSessaoEmMemoria({ token: 'token-existente', usuario })
 }
 
 function renderCadastrar() {
@@ -49,6 +49,7 @@ function renderCadastrar() {
           <Routes>
             <Route path="/animais" element={<div>Lista de animais</div>} />
             <Route path="/animais/novo" element={<CadastrarAnimal />} />
+            <Route path="/animais/:id" element={<div>Ficha do animal</div>} />
           </Routes>
         </AuthProvider>
       </MemoryRouter>
@@ -66,6 +67,7 @@ function renderEditar(id: string) {
           <Routes>
             <Route path="/animais" element={<div>Lista de animais</div>} />
             <Route path="/animais/:id/editar" element={<EditarAnimal />} />
+            <Route path="/animais/:id" element={<div>Ficha do animal</div>} />
           </Routes>
         </AuthProvider>
       </MemoryRouter>
@@ -118,15 +120,15 @@ describe('AnimalForm — cadastro', () => {
       status: 'disponivel_adocao',
       motivoEntrada: 'resgate',
     })
-    // esterilizado é obrigatório no backend (422 sem ele, FS-6): o formulário
-    // sempre o envia, mesmo sem o usuário mexer nos cartões de castração.
-    expect(typeof (corpoCapturado as AnimalRequest | null)?.esterilizado).toBe('boolean')
+    // Sem mexer nos cartões de castração, a resposta é "não informado": null,
+    // nunca false (decisão de 31/10/2026).
+    expect((corpoCapturado as AnimalRequest | null)?.esterilizado).toBeNull()
     // Nomes de resposta (com sufixo) nunca devem ser reenviados no request.
     expect(corpoCapturado).not.toHaveProperty('especieNome')
     expect(corpoCapturado).not.toHaveProperty('statusNome')
     expect(corpoCapturado).not.toHaveProperty('motivoEntradaNome')
 
-    expect(await screen.findByText('Lista de animais')).toBeInTheDocument()
+    expect(await screen.findByText('Ficha do animal')).toBeInTheDocument()
   })
 
   it('campo obrigatório vazio impede o submit e não chama a API', async () => {
@@ -152,7 +154,7 @@ describe('AnimalForm — cadastro', () => {
   it('409 de microchip duplicado exibe a mensagem no campo microchip, sem limpar o formulário', async () => {
     const user = userEvent.setup()
     server.use(
-      http.post(`${API_BASE_URL}/animais`, () => HttpResponse.json({ mensagem: 'Microchip ja cadastrado' }, { status: 409 })),
+      http.post(`${API_BASE_URL}/animais`, () => HttpResponse.json({ mensagem: 'Este microchip já está cadastrado em outro animal.' }, { status: 409 })),
     )
 
     renderCadastrar()
@@ -163,7 +165,7 @@ describe('AnimalForm — cadastro', () => {
 
     const campoMicrochip = screen.getByLabelText(/microchip/i).closest('.field')
     expect(campoMicrochip).not.toBeNull()
-    expect(await within(campoMicrochip as HTMLElement).findByText('Microchip ja cadastrado')).toBeInTheDocument()
+    expect(await within(campoMicrochip as HTMLElement).findByText('Este microchip já está cadastrado em outro animal.')).toBeInTheDocument()
     // O nome preenchido continua lá — reenvio sem perda de dados.
     expect(screen.getByLabelText(/nome do animal/i)).toHaveValue('Rex Teste')
   })
@@ -208,7 +210,7 @@ describe('AnimalForm — edição', () => {
     expect(screen.getByLabelText(/microchip/i)).toBeDisabled()
 
     await avancarParaRevisao(user)
-    await user.click(screen.getByRole('button', { name: /salvar alterações/i }))
+    await user.click(screen.getAllByRole('button', { name: /salvar alterações/i }).at(-1) as HTMLElement)
 
     await waitFor(() => expect(corpoCapturado).not.toBeNull())
     expect(corpoCapturado).toMatchObject({
@@ -220,7 +222,7 @@ describe('AnimalForm — edição', () => {
       esterilizado: true,
     })
 
-    expect(await screen.findByText('Lista de animais')).toBeInTheDocument()
+    expect(await screen.findByText('Ficha do animal')).toBeInTheDocument()
   })
 
   // O PUT substitui a ficha (AnimalService.atualizar grava o que recebe):
@@ -273,7 +275,7 @@ describe('AnimalForm — edição', () => {
     async function salvarSemAlterar(user: ReturnType<typeof userEvent.setup>) {
       await user.click(screen.getByRole('button', { name: /próximo: saúde/i }))
       await user.click(screen.getByRole('button', { name: /próximo: foto/i }))
-      await user.click(screen.getByRole('button', { name: /salvar alterações/i }))
+      await user.click(screen.getAllByRole('button', { name: /salvar alterações/i }).at(-1) as HTMLElement)
     }
 
     function capturarPut(animal: ReturnType<typeof animalDoGet>) {
@@ -321,5 +323,57 @@ describe('AnimalForm — edição', () => {
       await waitFor(() => expect(put.corpo).not.toBeNull())
       expect(put.corpo).toMatchObject({ status: 'obito_eutanasia', laudoEutanasia: laudo })
     })
+  })
+})
+
+describe('AnimalForm — edição com catálogo lento', () => {
+  it('o status do animal aparece certo mesmo com o catálogo chegando depois da ficha', async () => {
+    const catalogos = await (await fetch(`${API_BASE_URL}/animais/catalogos`)).json()
+    let liberar: () => void = () => {}
+    const atraso = new Promise<void>((resolve) => {
+      liberar = resolve
+    })
+    server.use(
+      http.get(`${API_BASE_URL}/animais/catalogos`, async () => {
+        await atraso
+        return HttpResponse.json(catalogos)
+      }),
+    )
+    const user = userEvent.setup()
+    renderEditar('b2c3d4e5-0000-0000-0000-000000000001')
+
+    expect(await screen.findByText('Carregando animal…')).toBeInTheDocument()
+    liberar()
+    await user.click(await screen.findByRole('button', { name: /próximo: saúde/i }))
+
+    expect(((screen.getByLabelText(/^status/i) as HTMLSelectElement).value)).toBe('disponivel_adocao')
+  })
+})
+
+describe('AnimalForm — condições de saúde', () => {
+  it('oferece as condições na etapa de saúde e exige descrever "Outras"', async () => {
+    const user = userEvent.setup()
+    renderCadastrar()
+
+    await preencherDadosBasicosObrigatorios(user)
+    await user.click(screen.getByRole('button', { name: /próximo: saúde/i }))
+
+    const grupo = await screen.findByRole('group', { name: 'Condições de saúde pré-existentes' })
+    await user.click(await within(grupo).findByLabelText('Epilepsia'))
+    await user.click(within(grupo).getByLabelText(/outras/i))
+
+    expect(screen.getByLabelText(/qual é a outra condição/i)).toBeInTheDocument()
+  })
+})
+
+describe('AnimalForm — etapas', () => {
+  it('Próximo valida a etapa e mantém a pessoa nela, com o erro na tela', async () => {
+    const user = userEvent.setup()
+    renderCadastrar()
+
+    await user.click(await screen.findByRole('button', { name: /Próximo: Saúde/ }))
+
+    expect(await screen.findByText('Informe o nome do animal.')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Dados Básicos' }).closest('.step-pane')).toHaveClass('active')
   })
 })

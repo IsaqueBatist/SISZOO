@@ -1,8 +1,10 @@
-import { Suspense, lazy, useEffect, useState } from 'react'
+import { Suspense, lazy, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { ErroComRetry } from '@/components/layout/ErroComRetry'
 import { Icon } from '@/components/layout/Icon'
 import { Skeleton } from '@/components/layout/Skeleton'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useFiltrosLista, useValorComAtraso } from '@/lib/useFiltrosLista'
 import type { OcorrenciaResumo, StatusOcorrencia, TipoOcorrencia } from '../types/ocorrencias.types'
 import { badgeDeStatus, iconeDeTipo, labelDeTipo } from '../utils/statusBadge'
 import { formatarData } from '../utils/datas'
@@ -10,7 +12,8 @@ import { formatarProtocoloOcorrencia, formatarProtocoloProcesso } from '../utils
 import { useOcorrenciasQuery } from '../hooks/useOcorrencias'
 
 // Lazy: isola o chunk do Recharts do carregamento inicial da tela de
-// Ocorrências — máquinas do CCZ têm ~2GB RAM (ver CLAUDE.md).
+// Ocorrências, e só é pedido quando a pessoa abre o gráfico: a tabela é o que
+// o trabalho diário usa, e as máquinas do CCZ têm ~2GB RAM.
 const GraficoOcorrenciasPorBairro = lazy(() =>
   import('./GraficoOcorrenciasPorBairro').then((m) => ({ default: m.GraficoOcorrenciasPorBairro })),
 )
@@ -21,6 +24,7 @@ const COLUNAS_TABELA = ['protocolo', 'data', 'tipo', 'bairro', 'denunciante', 's
 
 const TIPOS_OCORRENCIA: TipoOcorrencia[] = ['zoonose', 'morcegos', 'irregular', 'agressivo', 'outros']
 const STATUS_OCORRENCIA: StatusOcorrencia[] = ['ABERTA', 'EM_ATENDIMENTO', 'ENCERRADA']
+const FILTROS_PADRAO = { busca: '', tipo: '', status: '', de: '', ate: '' }
 
 // A anônima não tem denunciante para ninguém (D32). Na sigilosa, a listagem
 // não traz o nome para nenhum perfil (T26, revisão da D14) — mesmo quem tem
@@ -36,35 +40,13 @@ export function Ocorrencias() {
   const { roleKey } = useAuth()
   const podeEscrever = roleKey === 'admin' || roleKey === 'agente'
 
-  const [busca, setBusca] = useState('')
-  const [buscaDebounced, setBuscaDebounced] = useState('')
-  const [tipoFiltro, setTipoFiltro] = useState('')
-  const [statusFiltro, setStatusFiltro] = useState('')
+  const { filtros, pagina, definirFiltros, irParaPagina, limparFiltros, filtrosAtivos } = useFiltrosLista('ocorrencias', FILTROS_PADRAO)
+  const buscaDebounced = useValorComAtraso(filtros.busca).trim()
   // F2-010 (RF-E02): período da data de abertura, aplicado no servidor.
-  const [deFiltro, setDeFiltro] = useState('')
-  const [ateFiltro, setAteFiltro] = useState('')
-  const [pagina, setPagina] = useState(0)
-  const [filtroAnterior, setFiltroAnterior] = useState({ busca: '', tipo: '', status: '', de: '', ate: '' })
+  const { tipo: tipoFiltro, status: statusFiltro, de: deFiltro, ate: ateFiltro } = filtros
+  const [graficoAberto, setGraficoAberto] = useState(false)
 
-  useEffect(() => {
-    const timeout = setTimeout(() => setBuscaDebounced(busca.trim()), 300)
-    return () => clearTimeout(timeout)
-  }, [busca])
-
-  // Reset da página ao mudar de filtro, ajustado durante a renderização (em
-  // vez de um efeito) — mesmo padrão de Animais.tsx.
-  const filtroMudou =
-    filtroAnterior.busca !== buscaDebounced ||
-    filtroAnterior.tipo !== tipoFiltro ||
-    filtroAnterior.status !== statusFiltro ||
-    filtroAnterior.de !== deFiltro ||
-    filtroAnterior.ate !== ateFiltro
-  if (filtroMudou) {
-    setFiltroAnterior({ busca: buscaDebounced, tipo: tipoFiltro, status: statusFiltro, de: deFiltro, ate: ateFiltro })
-    setPagina(0)
-  }
-
-  const { data, isLoading, isError } = useOcorrenciasQuery({
+  const { data, isLoading, isError, refetch } = useOcorrenciasQuery({
     tipo: (tipoFiltro || undefined) as TipoOcorrencia | undefined,
     status: (statusFiltro || undefined) as StatusOcorrencia | undefined,
     q: buscaDebounced || undefined,
@@ -83,7 +65,7 @@ export function Ocorrencias() {
       <div className="page-header">
         <div className="title-block">
           <h1>
-            Ocorrências <span className="counter">{data?.totalItens ?? 0} registros</span>
+            Ocorrências {data && <span className="counter">{data.totalItens} registros</span>}
           </h1>
           <p className="subtitle">Denúncias e demandas recebidas de munícipes</p>
         </div>
@@ -97,25 +79,22 @@ export function Ocorrencias() {
         )}
       </div>
 
-      <Suspense fallback={<Skeleton width="100%" height={220} />}>
-        <GraficoOcorrenciasPorBairro />
-      </Suspense>
-
       <div className="filter-bar">
         <div className="search-input">
           <Icon name="search" size={14} />
           <input
             type="text"
             placeholder="Buscar protocolo, denunciante ou bairro..."
-            value={busca}
-            onChange={(event) => setBusca(event.target.value)}
+            aria-label="Buscar ocorrências"
+            value={filtros.busca}
+            onChange={(event) => definirFiltros({ busca: event.target.value })}
           />
         </div>
         <select
           className="filter-select"
           aria-label="Filtrar por tipo"
           value={tipoFiltro}
-          onChange={(event) => setTipoFiltro(event.target.value)}
+          onChange={(event) => definirFiltros({ tipo: event.target.value })}
         >
           <option value="">Tipo: Todos</option>
           {TIPOS_OCORRENCIA.map((tipo) => (
@@ -128,7 +107,7 @@ export function Ocorrencias() {
           className="filter-select"
           aria-label="Filtrar por status"
           value={statusFiltro}
-          onChange={(event) => setStatusFiltro(event.target.value)}
+          onChange={(event) => definirFiltros({ status: event.target.value })}
         >
           <option value="">Status: Todos</option>
           {STATUS_OCORRENCIA.map((status) => (
@@ -144,7 +123,7 @@ export function Ocorrencias() {
           title="Abertura a partir de"
           value={deFiltro}
           max={ateFiltro || undefined}
-          onChange={(event) => setDeFiltro(event.target.value)}
+          onChange={(event) => definirFiltros({ de: event.target.value })}
         />
         <input
           className="filter-select"
@@ -153,16 +132,16 @@ export function Ocorrencias() {
           title="Abertura até"
           value={ateFiltro}
           min={deFiltro || undefined}
-          onChange={(event) => setAteFiltro(event.target.value)}
+          onChange={(event) => definirFiltros({ ate: event.target.value })}
         />
+        {filtrosAtivos && (
+          <button type="button" className="btn btn-ghost btn-sm" onClick={limparFiltros}>
+            Limpar filtros
+          </button>
+        )}
       </div>
 
-      {isError && (
-        <div className="alert danger" role="alert">
-          <span className="bullet" />
-          <div className="alert-content">Não foi possível carregar as ocorrências. Tente novamente.</div>
-        </div>
-      )}
+      {isError && <ErroComRetry mensagem="Não foi possível carregar as ocorrências." onTentarNovamente={() => void refetch()} />}
 
       {isLoading && (
         <div className="table-wrap">
@@ -202,7 +181,12 @@ export function Ocorrencias() {
             <Icon name="alert" size={28} />
           </span>
           <h3>Nenhuma ocorrência encontrada</h3>
-          <p>Ajuste os filtros de busca.</p>
+          <p>{filtrosAtivos ? 'Nenhum resultado com estes filtros.' : 'Ainda não há ocorrências registradas.'}</p>
+          {filtrosAtivos && (
+            <button type="button" className="btn btn-outline btn-sm" onClick={limparFiltros}>
+              Limpar filtros
+            </button>
+          )}
         </div>
       )}
 
@@ -232,8 +216,8 @@ export function Ocorrencias() {
                           {formatarProtocoloOcorrencia(ocorrencia.protocolo)}
                         </span>
                         {ocorrencia.urgente && (
-                          <span className="badge badge-urgent" style={{ marginLeft: 6 }} title="Urgente" aria-label="Urgente">
-                            🚨
+                          <span className="badge badge-urgent" style={{ marginLeft: 6, gap: 4 }}>
+                            <Icon name="alert" size={10} /> Urgente
                           </span>
                         )}
                       </td>
@@ -256,8 +240,7 @@ export function Ocorrencias() {
                         <span className={`badge ${statusBadge.classe}`}>{statusBadge.label}</span>
                       </td>
                       <td>
-                        {/* Sem link: a tela de processos ainda é de demonstração (D40). */}
-                        {ocorrencia.processoProtocolo ? (
+                                                {ocorrencia.processoProtocolo ? (
                           <span className="mono" style={{ fontWeight: 600 }}>
                             {formatarProtocoloProcesso(ocorrencia.processoProtocolo)}
                           </span>
@@ -294,7 +277,7 @@ export function Ocorrencias() {
                 type="button"
                 className="btn btn-ghost btn-sm"
                 disabled={pagina === 0}
-                onClick={() => setPagina((paginaAtual) => paginaAtual - 1)}
+                onClick={() => irParaPagina(pagina - 1)}
               >
                 Anterior
               </button>
@@ -305,7 +288,7 @@ export function Ocorrencias() {
                 type="button"
                 className="btn btn-outline btn-sm"
                 disabled={pagina >= totalPaginas - 1}
-                onClick={() => setPagina((paginaAtual) => paginaAtual + 1)}
+                onClick={() => irParaPagina(pagina + 1)}
               >
                 Próximo
               </button>
@@ -313,6 +296,15 @@ export function Ocorrencias() {
           </div>
         </div>
       )}
+
+      <details className="secao-recolhivel" onToggle={(event) => setGraficoAberto(event.currentTarget.open)}>
+        <summary>Distribuição por bairro</summary>
+        {graficoAberto && (
+          <Suspense fallback={<Skeleton width="100%" height={220} />}>
+            <GraficoOcorrenciasPorBairro />
+          </Suspense>
+        )}
+      </details>
     </>
   )
 }

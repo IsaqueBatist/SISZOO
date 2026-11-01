@@ -15,9 +15,11 @@ import com.siszoo.usuarios.dto.LoginRequest;
 import com.siszoo.usuarios.dto.LoginResponse;
 import com.siszoo.usuarios.dto.TrocarSenhaRequest;
 import com.siszoo.usuarios.entity.AcaoAuditoria;
+import com.siszoo.usuarios.entity.MotivoEncerramentoSessao;
 import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.exception.CredencialInvalidaException;
 import com.siszoo.usuarios.exception.SenhasDivergentesException;
+import com.siszoo.usuarios.exception.SessaoExpiradaException;
 import com.siszoo.usuarios.mapper.UsuarioMapper;
 import com.siszoo.usuarios.repository.UsuarioRepository;
 
@@ -29,7 +31,14 @@ public class AuthService {
     private final JwtService jwtService;
     private final UsuarioMapper usuarioMapper;
     private final AuditoriaEventoService auditoriaEventoService;
+    private final SessaoService sessaoService;
+    private final RecuperacaoSenhaService recuperacaoSenhaService;
+    private final LimitadorLogin limitadorLogin;
     private final Clock clock;
+
+    // tokenRenovacao vai so no cookie httpOnly; nulo quando o cookie nao muda.
+    public record SessaoAutenticada(LoginResponse resposta, String tokenRenovacao) {
+    }
 
     public AuthService(
             UsuarioRepository usuarioRepository,
@@ -37,30 +46,66 @@ public class AuthService {
             JwtService jwtService,
             UsuarioMapper usuarioMapper,
             AuditoriaEventoService auditoriaEventoService,
+            SessaoService sessaoService,
+            RecuperacaoSenhaService recuperacaoSenhaService,
+            LimitadorLogin limitadorLogin,
             Clock clock) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.usuarioMapper = usuarioMapper;
         this.auditoriaEventoService = auditoriaEventoService;
+        this.sessaoService = sessaoService;
+        this.recuperacaoSenhaService = recuperacaoSenhaService;
+        this.limitadorLogin = limitadorLogin;
         this.clock = clock;
     }
 
+    // Limite de tentativas antes de conferir a senha (PS-8): dentro da janela,
+    // a resposta e 429 mesmo para a senha certa. Login recusado continua sem
+    // evento de auditoria (T43-5); so a falha conta no limitador.
     @Transactional
-    public LoginResponse login(LoginRequest request) {
+    public SessaoAutenticada login(LoginRequest request, String ip, String userAgent) {
+        limitadorLogin.exigirPermitido(request.email(), ip);
         Usuario usuario = usuarioRepository.findByEmail(request.email())
                 .filter(Usuario::isAtivo)
                 .filter(candidato -> passwordEncoder.matches(request.senha(), candidato.getSenha()))
-                .orElseThrow(CredencialInvalidaException::new);
+                .orElseThrow(() -> {
+                    limitadorLogin.registrarFalha(request.email(), ip);
+                    return new CredencialInvalidaException();
+                });
+        limitadorLogin.registrarSucesso(request.email());
 
+        usuario.setUltimoAcesso(LocalDateTime.now(clock));
         auditoriaEventoService.registrar(usuario, AcaoAuditoria.LOGIN, "usuario", usuario.getId(), null, null);
 
-        String token = jwtService.gerarToken(usuario);
-        return new LoginResponse(token, usuarioMapper.toResponse(usuario));
+        return respostaDe(sessaoService.criar(usuario, ip, userAgent));
+    }
+
+    // noRollbackFor acompanha o do SessaoService: sem ele, a recusa desfaria o
+    // encerramento da sessao gravado na mesma transacao.
+    @Transactional(noRollbackFor = SessaoExpiradaException.class)
+    public SessaoAutenticada renovar(String tokenRenovacao, boolean houveAtividade) {
+        return respostaDe(sessaoService.renovar(tokenRenovacao, houveAtividade));
     }
 
     @Transactional
-    public void trocarSenha(UUID usuarioId, TrocarSenhaRequest request) {
+    public void logout(String tokenRenovacao) {
+        sessaoService.encerrarPeloToken(tokenRenovacao).ifPresent(usuario -> auditoriaEventoService.registrar(
+                usuario, AcaoAuditoria.LOGOUT, "usuario", usuario.getId(), null, null));
+    }
+
+    // Cargos relidos do banco a cada emissao: mudanca de cargo vale no maximo
+    // na proxima renovacao, nao so no proximo login.
+    private SessaoAutenticada respostaDe(SessaoService.SessaoRenovada sessao) {
+        Usuario usuario = sessao.sessao().getUsuario();
+        String token = jwtService.gerarToken(usuario, sessao.sessao().getId());
+        return new SessaoAutenticada(new LoginResponse(token, usuarioMapper.toResponse(usuario)),
+                sessao.tokenRenovacao());
+    }
+
+    @Transactional
+    public void trocarSenha(UUID usuarioId, UUID sessaoAtual, TrocarSenhaRequest request) {
         if (!request.novaSenha().equals(request.confirmarSenha())) {
             throw new SenhasDivergentesException();
         }
@@ -71,6 +116,10 @@ public class AuthService {
                 .ifPresent(mensagem -> {
                     throw new CampoInvalidoException("novaSenha", mensagem);
                 });
+        // Quem recebeu uma senha temporaria nao pode ficar com ela.
+        if (passwordEncoder.matches(request.novaSenha(), usuario.getSenha())) {
+            throw new CampoInvalidoException("novaSenha", "A nova senha precisa ser diferente da senha atual.");
+        }
 
         // T43: o evento registra so a data da troca, nunca senha nem hash. A
         // data vai truncada em microssegundos, a precisao do timestamp do
@@ -81,6 +130,9 @@ public class AuthService {
         usuario.setSenha(passwordEncoder.encode(request.novaSenha()));
         usuario.setSenhaAlteradaEm(alteradaAgora);
         usuarioRepository.save(usuario);
+        sessaoService.encerrarDoUsuario(usuario.getId(), MotivoEncerramentoSessao.SENHA_ALTERADA, sessaoAtual);
+        // Um link de recuperacao pedido antes da troca nao pode valer depois dela.
+        recuperacaoSenhaService.invalidarPendentes(usuario.getId());
 
         auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "usuario", usuario.getId(),
                 Collections.singletonMap("senhaAlteradaEm", alteradaAntes),

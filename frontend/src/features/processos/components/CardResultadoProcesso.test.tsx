@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
@@ -54,6 +54,7 @@ async function lancarPositivo() {
   const user = userEvent.setup()
   await screen.findByRole('option', { name: 'Positivo' })
   await user.selectOptions(screen.getByLabelText('Resultado laboratorial'), 'positivo')
+  await user.click(screen.getByRole('button', { name: 'Preencher com a data de hoje' }))
   await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
   await user.click(await screen.findByRole('checkbox', { name: 'Entendo que o resultado positivo não poderá ser corrigido' }))
   await user.click(screen.getByRole('button', { name: 'Confirmar' }))
@@ -74,6 +75,7 @@ describe('CardResultadoProcesso — confirmação do positivo definitivo (T35-15
     renderCard()
     await screen.findByRole('option', { name: 'Positivo' })
     await user.selectOptions(screen.getByLabelText('Resultado laboratorial'), 'positivo')
+    await user.click(screen.getByRole('button', { name: 'Preencher com a data de hoje' }))
     await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
 
     expect(await screen.findByText('O resultado positivo é definitivo:')).toBeInTheDocument()
@@ -107,6 +109,7 @@ describe('CardResultadoProcesso — confirmação do positivo definitivo (T35-15
     renderCard()
     await screen.findByRole('option', { name: 'Positivo' })
     await user.selectOptions(screen.getByLabelText('Resultado laboratorial'), 'positivo')
+    await user.click(screen.getByRole('button', { name: 'Preencher com a data de hoje' }))
     await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
     await user.click(await screen.findByRole('checkbox', { name: 'Entendo que o resultado positivo não poderá ser corrigido' }))
     await user.click(screen.getByRole('button', { name: 'Cancelar' }))
@@ -125,6 +128,7 @@ describe('CardResultadoProcesso — confirmação do positivo definitivo (T35-15
     renderCard()
     await screen.findByRole('option', { name: 'Negativo' })
     await user.selectOptions(screen.getByLabelText('Resultado laboratorial'), 'negativo')
+    await user.click(screen.getByRole('button', { name: 'Preencher com a data de hoje' }))
     await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
 
     expect(screen.queryByText('O resultado positivo é definitivo:')).not.toBeInTheDocument()
@@ -196,5 +200,89 @@ describe('CardResultadoProcesso — notificação ao munícipe (T35-16, #37)', (
     expect(await screen.findByText('Negativo', { selector: 'span' })).toBeInTheDocument()
     expect(screen.queryByText(NAO_NOTIFICADO)).not.toBeInTheDocument()
     expect(screen.queryByText(/Munícipe notificado/)).not.toBeInTheDocument()
+  })
+})
+
+describe('CardResultadoProcesso — honestidade e correção', () => {
+  it('a data do resultado não vem preenchida, e o atalho usa hoje', async () => {
+    servirProcesso(processoFixture(), () => processoComResultadoFixture())
+    const user = userEvent.setup()
+    renderCard()
+    await screen.findByRole('option', { name: 'Positivo' })
+
+    const data = screen.getByLabelText('Data do resultado') as HTMLInputElement
+    expect(data.value).toBe('')
+    await user.click(screen.getByRole('button', { name: 'Preencher com a data de hoje' }))
+    expect(data.value).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+  })
+
+  it('antes de registrar, avisa o que acontece com o e-mail do resultado que notifica', async () => {
+    servirProcesso(processoFixture(), () => processoComResultadoFixture())
+    const user = userEvent.setup()
+    renderCard()
+    await screen.findByRole('option', { name: 'Inconclusivo' })
+
+    await user.selectOptions(screen.getByLabelText('Resultado laboratorial'), 'inconclusivo')
+
+    expect(screen.getByRole('status')).toHaveTextContent(/enviará um e-mail para|não tem e-mail cadastrado/)
+  })
+
+  it('o positivo diz que a Vigilância não é avisada pelo sistema', async () => {
+    servirProcesso(processoComResultadoFixture(), () => processoComResultadoFixture())
+    renderCard()
+
+    expect(await screen.findByText(/A Vigilância Epidemiológica de Itu não é avisada pelo SISZOO/)).toBeInTheDocument()
+  })
+
+  it('positivo não oferece correção', async () => {
+    servirProcesso(processoComResultadoFixture({ statusProcesso: 'COM_RESULTADO' }), () => processoComResultadoFixture())
+    renderCard()
+
+    await screen.findByText('Histórico')
+    expect(screen.queryByRole('button', { name: 'Corrigir resultado' })).not.toBeInTheDocument()
+  })
+
+  it('corrige resultado não definitivo exigindo motivo e apontando para o registro corrigido', async () => {
+    const vigente = {
+      id: 'r1000000-0000-0000-0000-000000000001',
+      resultado: { codigo: 'negativo', nome: 'Negativo' },
+      dataResultado: '2026-10-01',
+      observacoes: null,
+      retificaId: null,
+      registradoPorId: 'u1',
+      registradoPorNome: 'Ana Silva',
+      registradoEm: '2026-10-01T10:00:00',
+    }
+    const negativo = processoComResultadoFixture({
+      statusProcesso: 'COM_RESULTADO',
+      resultado: vigente.resultado,
+      resultados: [vigente],
+      dataNotificacaoMunicipe: null,
+    })
+    const corpos: unknown[] = []
+    server.use(
+      http.get(`${API_BASE_URL}/processos/:id`, ({ params }) => (params.id === 'catalogos' ? undefined : HttpResponse.json(negativo))),
+      http.post(`${API_BASE_URL}/processos/:id/resultados`, async ({ request }) => {
+        corpos.push(await request.json())
+        return HttpResponse.json(negativo)
+      }),
+    )
+    const user = userEvent.setup()
+    renderCard()
+
+    await user.click(await screen.findByRole('button', { name: 'Corrigir resultado' }))
+    await screen.findByRole('option', { name: 'Inconclusivo' })
+    await user.selectOptions(screen.getByLabelText('Resultado laboratorial'), 'inconclusivo')
+    await user.click(screen.getByRole('button', { name: 'Preencher com a data de hoje' }))
+    await user.click(screen.getByRole('button', { name: 'Salvar correção' }))
+
+    expect(await screen.findByText('Informe o motivo da correção.')).toBeInTheDocument()
+    expect(corpos).toHaveLength(0)
+
+    await user.type(screen.getByLabelText(/Motivo da correção/), 'Digitado errado')
+    await user.click(screen.getByRole('button', { name: 'Salvar correção' }))
+
+    await waitFor(() => expect(corpos).toHaveLength(1))
+    expect(corpos[0]).toMatchObject({ retificaId: vigente.id, observacoes: 'Digitado errado' })
   })
 })

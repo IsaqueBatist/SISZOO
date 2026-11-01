@@ -67,7 +67,7 @@ code: |-
   // Regra 24 do DER (UsuarioService#alterarStatus): ninguém desativa o
   // próprio usuário.
   expect(autodesativar.status).to.equal(422);
-  expect(JSON.parse(autodesativar.body).mensagem).to.equal('Nao e permitido desativar o proprio usuario');
+  expect(JSON.parse(autodesativar.body).mensagem).to.equal('Você não pode desativar o seu próprio usuário.');
 
   // Continua ativo: o login do Administrador temporário ainda funciona.
   const tokenDepois = await login(email, '{{ _.senha_teste_padrao }}');

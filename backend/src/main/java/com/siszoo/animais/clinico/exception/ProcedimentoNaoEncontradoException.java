@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class ProcedimentoNaoEncontradoException extends ErroNegocioException {
 
     public ProcedimentoNaoEncontradoException() {
-        super(HttpStatus.NOT_FOUND, "Procedimento nao encontrado");
+        super(HttpStatus.NOT_FOUND, "Procedimento não encontrado.");
     }
 }

@@ -1,18 +1,16 @@
-import { ToastProvider } from '@/components/toast/ToastProvider'
+import { Toasts } from '@/components/toast/Toasts'
 import { AuthProvider } from '@/features/auth/hooks/AuthContext'
 import { AppRoutes } from './routes/AppRoutes'
 
-// ToastProvider por fora do AuthProvider, de propósito: cobre /login e
-// /trocar-senha (que ficam fora do Layout) e deixa o próprio AuthProvider
-// poder avisar o usuário no futuro — um "sua sessão expirou" no tratamento do
-// 401. O inverso tornaria isso impossível.
+// Os avisos ficam na raiz, e não dentro do Layout: /login e /trocar-senha
+// estão fora do Layout, e tanto o guarda de rota quanto o aviso de
+// inatividade podem disparar ali.
 function App() {
   return (
-    <ToastProvider>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </ToastProvider>
+    <AuthProvider>
+      <AppRoutes />
+      <Toasts />
+    </AuthProvider>
   )
 }
 

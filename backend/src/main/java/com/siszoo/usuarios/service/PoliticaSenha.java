@@ -36,19 +36,19 @@ public final class PoliticaSenha {
 
         String conta = email == null ? "" : email.substring(0, Math.max(email.indexOf('@'), 0));
         if (conta.length() >= TAMANHO_MINIMO_PARTE && senhaMinuscula.contains(minusculas(conta))) {
-            return Optional.of("Senha nao pode conter o nome da conta (parte do e-mail antes do @)");
+            return Optional.of("A senha não pode conter o nome da conta (a parte do e-mail antes do @).");
         }
 
         String nomeExibicao = (nome == null ? "" : nome) + " " + (sobrenome == null ? "" : sobrenome);
         for (String parte : DELIMITADORES_NOME.split(nomeExibicao)) {
             if (parte.length() >= TAMANHO_MINIMO_PARTE && senhaMinuscula.contains(minusculas(parte))) {
-                return Optional.of("Senha nao pode conter partes do nome do usuario");
+                return Optional.of("A senha não pode conter partes do nome do usuário.");
             }
         }
 
         if (categorias(senha) < CATEGORIAS_EXIGIDAS) {
-            return Optional.of("Senha deve combinar ao menos 3 tipos de caractere: letras maiusculas, letras minusculas,"
-                    + " digitos e simbolos");
+            return Optional.of("A senha deve combinar ao menos 3 tipos de caractere: letras maiúsculas, letras minúsculas,"
+                    + " números e símbolos.");
         }
         return Optional.empty();
     }

@@ -47,7 +47,7 @@ interface AmostraClinicaRequest {
   alteracaoComportamental?: string
   dataColeta: string
   materialBiologico: MaterialBiologico
-  contatoHumano: boolean
+  contatoHumano: boolean | null
   nivelContato?: NivelContato // obrigatório se, e somente se, houve contato
   agrediuHumano?: boolean // idem
   observacoes?: string
@@ -114,11 +114,25 @@ export interface AmostraAnimal {
   alteracaoComportamental: string | null
   dataColeta: string
   materialBiologico: MaterialBiologico
-  contatoHumano: boolean
+  contatoHumano: boolean | null
   nivelContato: NivelContato | null
   agrediuHumano: boolean | null
   observacoes: string | null
   sintomas: CatalogoItem[]
+}
+
+export type AmostraEditada = { id: string; dados: AmostraAnimalRequest }
+
+// PUT /api/processos/{id}: só o Administrador (decisão de 31/10/2026).
+export interface EditarProcessoRequest {
+  doenca: string
+  laboratorio: string
+  galNumero?: string
+  sinanNumero?: string
+  observacoes?: string
+  responsavel: CriarProcessoRequest['responsavel']
+  amostras: AmostraEditada[]
+  justificativa: string
 }
 
 // Um lançamento do histórico de resultado (original ou correção) — T34,
@@ -194,6 +208,8 @@ export interface ProcessosFiltro {
   status?: StatusProcesso
   // T45 (docs/contratos/processos-filtro-urgente.md): ausente = sem filtro.
   urgente?: boolean
+  // Protocolo, nome do responsável, Nº GAL ou Nº SINAN.
+  q?: string
   pagina: number
   tamanho: number
 }

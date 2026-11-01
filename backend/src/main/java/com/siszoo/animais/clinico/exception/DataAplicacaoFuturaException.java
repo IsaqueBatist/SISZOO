@@ -7,6 +7,6 @@ import com.siszoo.comum.exception.ErroNegocioException;
 public class DataAplicacaoFuturaException extends ErroNegocioException {
 
     public DataAplicacaoFuturaException() {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, "Data de aplicacao nao pode ser futura");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, "A data de aplicação não pode ser futura.");
     }
 }

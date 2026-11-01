@@ -18,7 +18,7 @@ function buscarFixture(id: string) {
 }
 
 function naoEncontrado() {
-  return HttpResponse.json({ mensagem: 'Processo sanitario nao encontrado' }, { status: 404 })
+  return HttpResponse.json({ mensagem: 'Processo sanitário não encontrado.' }, { status: 404 })
 }
 
 export const processosHandlers = [
@@ -43,6 +43,13 @@ export const processosHandlers = [
   }),
 
   http.post(`${API_BASE_URL}/processos`, () => HttpResponse.json(processoCriadoFixture())),
+
+  http.get(`${API_BASE_URL}/processos/:id/alteracoes`, () => HttpResponse.json([])),
+
+  http.put(`${API_BASE_URL}/processos/:id`, ({ params }) => {
+    const processo = buscarFixture(params.id as string)
+    return processo ? HttpResponse.json(processo) : naoEncontrado()
+  }),
 
   http.patch(`${API_BASE_URL}/processos/:id/status`, async ({ params, request }) => {
     const processo = buscarFixture(params.id as string)

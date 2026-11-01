@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { hojeEmItu } from '@/lib/datas'
 import { cepValido, cpfValido, emailValido, telefoneValido } from '@/lib/mascaras'
 import { MAXIMO_ANEXOS } from '../utils/anexoOcorrencia'
 import type { TipoOcorrencia } from '../types/ocorrencias.types'
@@ -54,7 +55,10 @@ export const ocorrenciaFormSchema = z
     tipoOcorrencia: z.enum(TIPOS_OCORRENCIA_VALORES as [string, ...string[]], {
       message: 'Selecione o tipo da ocorrência.',
     }),
-    dataAbertura: z.string().min(1, 'Informe a data de abertura.'),
+    dataAbertura: z
+      .string()
+      .min(1, 'Informe a data de abertura.')
+      .refine((data) => data <= hojeEmItu(), 'A data de abertura não pode ser futura.'),
     horaAbertura: z.string().trim().optional(),
     endereco: z.string().trim().min(1, 'Informe o endereço da ocorrência.'),
     bairro: z.string().trim().min(1, 'Informe o bairro.'),

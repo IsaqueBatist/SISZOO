@@ -1,7 +1,12 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { ModalConfirmacao } from '@/components/ModalConfirmacao'
+import { ErroComRetry } from '@/components/layout/ErroComRetry'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { toast } from '@/components/toast/toast'
+import { mensagemDeRegraDaApi } from '@/lib/erroApi'
+import { useFiltrosLista } from '@/lib/useFiltrosLista'
 import {
   useAlterarStatusBaiaMutation,
   useBaiasQuery,
@@ -17,6 +22,8 @@ import './GestaoBaias.css'
 
 type FiltroLotacao = '' | EstadoLotacao
 type FiltroStatus = 'ativas' | 'inativas' | 'todas'
+
+const FILTROS_PADRAO = { busca: '', tipo: '', lotacao: '', status: 'ativas' }
 
 const LABEL_LOTACAO: Record<EstadoLotacao, string> = {
   disponivel: 'Disponível',
@@ -48,7 +55,7 @@ export function GestaoBaias() {
   const podeEscrever = roleKey === 'admin' || roleKey === 'vet'
   const podeExcluir = roleKey === 'admin'
 
-  const { data: baias, isLoading, isError } = useBaiasQuery()
+  const { data: baias, isLoading, isError, refetch } = useBaiasQuery()
   const { data: catalogos } = useCatalogosAnimaisQuery()
   // T45: o backend já devolve só quem está sob custódia (mesma regra da
   // ocupação), com nome e miniatura; aqui só se agrupa por baia.
@@ -66,11 +73,12 @@ export function GestaoBaias() {
     return mapa
   }, [residentes])
 
-  const [busca, setBusca] = useState('')
-  const [tipoFiltro, setTipoFiltro] = useState('')
-  const [lotacaoFiltro, setLotacaoFiltro] = useState<FiltroLotacao>('')
-  const [statusFiltro, setStatusFiltro] = useState<FiltroStatus>('ativas')
+  const { filtros, definirFiltros, limparFiltros, filtrosAtivos } = useFiltrosLista('baias', FILTROS_PADRAO)
+  const { busca, tipo: tipoFiltro } = filtros
+  const lotacaoFiltro = filtros.lotacao as FiltroLotacao
+  const statusFiltro = filtros.status as FiltroStatus
   const [baiaEmEdicao, setBaiaEmEdicao] = useState<Baia | 'nova' | null>(null)
+  const [confirmacao, setConfirmacao] = useState<{ baia: Baia; acao: 'excluir' | 'reativar' } | null>(null)
 
   const totais = useMemo(() => {
     const ativas = (baias ?? []).filter((baia) => baia.ativa)
@@ -116,22 +124,16 @@ export function GestaoBaias() {
     })
   }, [baiasFiltradas, catalogos])
 
-  function handleExcluir(baia: Baia) {
-    // A confirmação é a única proteção contra excluir uma baia ocupada: o
-    // backend faz soft-delete sem bloquear, mesmo com animais alocados.
-    const aviso =
-      baia.ocupacaoAtual > 0
-        ? ` Esta baia tem ${baia.ocupacaoAtual} animal(is) alocado(s). Os registros desses animais continuarão referenciando esta baia mesmo após a exclusão.`
-        : ''
-    const confirmado = window.confirm(`Tem certeza que deseja excluir a baia ${baia.nome}?${aviso}`)
-    if (!confirmado) return
-    excluirMutation.mutate(baia.id)
-  }
-
-  function handleReativar(baia: Baia) {
-    const confirmado = window.confirm(`Tem certeza que deseja reativar a baia ${baia.nome}?`)
-    if (!confirmado) return
-    alterarStatusMutation.mutate({ id: baia.id, ativa: true })
+  async function confirmarAcao({ baia, acao }: { baia: Baia; acao: 'excluir' | 'reativar' }) {
+    try {
+      if (acao === 'excluir') await excluirMutation.mutateAsync(baia.id)
+      else await alterarStatusMutation.mutateAsync({ id: baia.id, ativa: true })
+      toast.sucesso(acao === 'excluir' ? `Baia ${baia.nome} excluída.` : `Baia ${baia.nome} reativada.`)
+    } catch (erro) {
+      toast.erro(mensagemDeRegraDaApi(erro) ?? `Não foi possível ${acao} a baia ${baia.nome}. Nada foi mudado.`)
+    } finally {
+      setConfirmacao(null)
+    }
   }
 
   return (
@@ -180,15 +182,16 @@ export function GestaoBaias() {
           <input
             type="text"
             placeholder="Buscar por nome da baia..."
+            aria-label="Buscar baias"
             value={busca}
-            onChange={(event) => setBusca(event.target.value)}
+            onChange={(event) => definirFiltros({ busca: event.target.value })}
           />
         </div>
         <select
           className="filter-select"
           aria-label="Filtrar por tipo"
           value={tipoFiltro}
-          onChange={(event) => setTipoFiltro(event.target.value)}
+          onChange={(event) => definirFiltros({ tipo: event.target.value })}
         >
           <option value="">Tipo: Todos</option>
           {catalogos?.tiposBaia.map((tipo) => (
@@ -201,7 +204,7 @@ export function GestaoBaias() {
           className="filter-select"
           aria-label="Filtrar por lotação"
           value={lotacaoFiltro}
-          onChange={(event) => setLotacaoFiltro(event.target.value as FiltroLotacao)}
+          onChange={(event) => definirFiltros({ lotacao: event.target.value })}
         >
           <option value="">Lotação: Todas</option>
           <option value="disponivel">Disponível</option>
@@ -212,20 +215,20 @@ export function GestaoBaias() {
           className="filter-select"
           aria-label="Filtrar por status"
           value={statusFiltro}
-          onChange={(event) => setStatusFiltro(event.target.value as FiltroStatus)}
+          onChange={(event) => definirFiltros({ status: event.target.value })}
         >
           <option value="ativas">Status: Ativas</option>
           <option value="inativas">Inativas</option>
           <option value="todas">Todas</option>
         </select>
+        {filtrosAtivos && (
+          <button type="button" className="btn btn-ghost btn-sm" onClick={limparFiltros}>
+            Limpar filtros
+          </button>
+        )}
       </div>
 
-      {isError && (
-        <div className="alert danger" role="alert">
-          <span className="bullet" />
-          <div className="alert-content">Não foi possível carregar as baias. Tente novamente.</div>
-        </div>
-      )}
+      {isError && <ErroComRetry mensagem="Não foi possível carregar as baias." onTentarNovamente={() => void refetch()} />}
 
       {isLoading && <p className="subtitle">Carregando baias…</p>}
 
@@ -292,7 +295,7 @@ export function GestaoBaias() {
                               <button
                                 type="button"
                                 className="btn btn-ghost btn-sm"
-                                onClick={() => handleExcluir(baia)}
+                                onClick={() => setConfirmacao({ baia, acao: 'excluir' })}
                               >
                                 Excluir
                               </button>
@@ -303,7 +306,7 @@ export function GestaoBaias() {
                             <button
                               type="button"
                               className="btn btn-ghost btn-sm"
-                              onClick={() => handleReativar(baia)}
+                              onClick={() => setConfirmacao({ baia, acao: 'reativar' })}
                             >
                               Reativar
                             </button>
@@ -323,6 +326,28 @@ export function GestaoBaias() {
           baia={baiaEmEdicao === 'nova' ? undefined : baiaEmEdicao}
           onFechar={() => setBaiaEmEdicao(null)}
         />
+      )}
+
+      {confirmacao && (
+        <ModalConfirmacao
+          titulo={confirmacao.acao === 'excluir' ? 'Excluir baia' : 'Reativar baia'}
+          rotuloConfirmar={confirmacao.acao === 'excluir' ? 'Excluir' : 'Reativar'}
+          perigo={confirmacao.acao === 'excluir'}
+          processando={excluirMutation.isPending || alterarStatusMutation.isPending}
+          onConfirmar={() => void confirmarAcao(confirmacao)}
+          onFechar={() => setConfirmacao(null)}
+        >
+          {/* A confirmação é a única proteção contra excluir uma baia ocupada: o
+              backend faz soft-delete sem bloquear, mesmo com animais alocados. */}
+          <p>
+            {confirmacao.acao === 'excluir'
+              ? `Excluir a baia ${confirmacao.baia.nome}?`
+              : `Reativar a baia ${confirmacao.baia.nome}?`}
+            {confirmacao.acao === 'excluir' && confirmacao.baia.ocupacaoAtual > 0
+              ? ` Esta baia tem ${confirmacao.baia.ocupacaoAtual} animal(is) alocado(s). Os registros desses animais continuarão referenciando esta baia mesmo após a exclusão.`
+              : ''}
+          </p>
+        </ModalConfirmacao>
       )}
     </>
   )
