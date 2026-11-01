@@ -138,10 +138,23 @@ describe('Medicamentos', () => {
     await user.selectOptions(screen.getByLabelText(/filtrar por categoria/i), 'Anticonvulsivante')
     expect(screen.getByText('Fenobarbital 30mg')).toBeInTheDocument()
     expect(screen.queryByText('Amoxicilina 250mg')).not.toBeInTheDocument()
+    expect(screen.getByText('Mostrando', { exact: false })).toHaveTextContent('Mostrando 1 de')
 
     await user.selectOptions(screen.getByLabelText(/filtrar por categoria/i), '')
     await user.type(screen.getByLabelText(/buscar por nome do medicamento/i), 'zzz')
     expect(await screen.findByText('Nenhum medicamento encontrado')).toBeInTheDocument()
+  })
+
+  // Quem digita "antibiotico" sem acento precisa achar "Antibiótico": a busca
+  // usa normalizarBusca dos dois lados.
+  it('a busca ignora acento', async () => {
+    const user = userEvent.setup()
+    renderComCargo('Administrador')
+    await screen.findByText('Amoxicilina 250mg')
+
+    await user.type(screen.getByLabelText(/buscar por nome do medicamento/i), 'AMOXICILINA')
+    expect(screen.getByText('Amoxicilina 250mg')).toBeInTheDocument()
+    expect(screen.queryByText('Fenobarbital 30mg')).not.toBeInTheDocument()
   })
 
   it('Agente Sanitário vê o catálogo, sem cadastrar, editar ou desativar', async () => {

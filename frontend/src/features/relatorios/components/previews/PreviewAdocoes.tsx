@@ -1,11 +1,16 @@
+import { formatarDataBR } from '@/lib/datas'
 import type { PreviewAdocoes as DadosAdocoes } from '../../types/relatorios.types'
 
 // Versão simplificada (ver backend com.siszoo.relatorios.dto.RelatorioAdocoesResponse):
-// sem tabela `adocao` no schema hoje, o relatório mostra um retrato ATUAL
-// (não filtrado pelo período da tela) — a nota de limitação explica isso.
+// sem tabela `adocao` no schema hoje, o relatório mostra a posição na data da
+// geração - a nota de limitação explica isso.
 export function PreviewAdocoes({ dados }: { dados: DadosAdocoes }) {
   return (
     <>
+      <p className="subtitle" style={{ padding: '0 var(--space-4)' }}>
+        Posição em {formatarDataBR(dados.periodoFim)}
+      </p>
+
       <div className="alert warning" role="note">
         <span className="bullet" />
         <div className="alert-content">{dados.notaLimitacao}</div>
@@ -14,7 +19,7 @@ export function PreviewAdocoes({ dados }: { dados: DadosAdocoes }) {
       <div className="kpi-grid" style={{ marginTop: 'var(--space-4)' }}>
         <div className="kpi">
           <div className="kpi-head">
-            <span className="kpi-label">Animais adotados (total atual)</span>
+            <span className="kpi-label">Animais adotados</span>
           </div>
           <div className="kpi-value">{dados.kpis.animaisAdotados}</div>
         </div>

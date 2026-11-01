@@ -9,11 +9,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.siszoo.animais.entity.Baia;
+import com.siszoo.animais.entity.NivelLotacao;
 import com.siszoo.animais.entity.StatusAnimal;
 import com.siszoo.animais.repository.AnimalRepository;
 import com.siszoo.animais.repository.BaiaRepository;
 import com.siszoo.animais.repository.OcupacaoBaiaProjection;
 import com.siszoo.comum.util.BlocoCsv;
+import com.siszoo.comum.util.Formatadores;
 import com.siszoo.relatorios.dto.KpisOcupacaoBaiasResponse;
 import com.siszoo.relatorios.dto.LinhaOcupacaoBaiaResponse;
 import com.siszoo.relatorios.dto.PeriodoRelatorio;
@@ -22,11 +24,10 @@ import com.siszoo.relatorios.entity.TipoRelatorio;
 
 // "Ocupação de Baias" (DER §3.6 / docs/prototipo/relatorio-ocupacao.html): o
 // unico dos 6 tipos sem lista longa (numero de baias e pequeno e fixo), entao
-// preview e CSV reaproveitam a mesma consulta — nao ha "top N + Outros" aqui.
-// A ocupacao e sempre o estado ATUAL (mesma base de AlertaCriticoResponse
-// "baia_superlotada" do dashboard): o filtro de periodo/janela da tela so
-// rotula o cabecalho do relatorio, nao filtra uma janela historica (o schema
-// nao guarda snapshot diario de ocupacao).
+// preview e CSV reaproveitam a mesma consulta - nao ha "top N + Outros" aqui.
+// E sempre a posicao na data da geracao (mesma base de AlertaCriticoResponse
+// "baia_superlotada" do dashboard): o schema nao guarda snapshot diario de
+// ocupacao, entao nao ha periodo a filtrar.
 @Service
 public class RelatorioOcupacaoBaiasService implements GeradorRelatorio<RelatorioOcupacaoBaiasResponse> {
 
@@ -61,9 +62,10 @@ public class RelatorioOcupacaoBaiasService implements GeradorRelatorio<Relatorio
                         String.valueOf(linha.capacidade()),
                         String.valueOf(linha.atual()),
                         linha.percentualOcupacao() + "%",
-                        rotuloStatus(linha.status())))
+                        linha.rotuloStatus()))
                 .toList();
-        return List.of(new BlocoCsv("Ocupação atual por baia", CABECALHO_CSV, linhas));
+        String titulo = "Ocupação por baia - Posição em " + Formatadores.DATA.format(periodo.inicio());
+        return List.of(new BlocoCsv(titulo, CABECALHO_CSV, linhas));
     }
 
     // Mesma fonte de dados de DashboardService#contarBaiasSuperlotadas
@@ -84,8 +86,9 @@ public class RelatorioOcupacaoBaiasService implements GeradorRelatorio<Relatorio
                     long atual = ocupacaoPorBaia.getOrDefault(baia.getId(), 0L);
                     int capacidade = baia.getCapacidade();
                     int percentual = capacidade == 0 ? 0 : (int) Math.round(atual * 100.0 / capacidade);
-                    String status = atual > capacidade ? "superlotada" : atual == capacidade ? "proximo_limite" : "normal";
-                    return new LinhaOcupacaoBaiaResponse(baia.getNome(), capacidade, atual, percentual, status);
+                    NivelLotacao nivel = NivelLotacao.de(atual, capacidade);
+                    return new LinhaOcupacaoBaiaResponse(
+                            baia.getNome(), capacidade, atual, percentual, nivel.codigo(), nivel.rotulo());
                 })
                 .toList();
     }
@@ -94,16 +97,8 @@ public class RelatorioOcupacaoBaiasService implements GeradorRelatorio<Relatorio
         long capacidadeTotal = linhas.stream().mapToLong(LinhaOcupacaoBaiaResponse::capacidade).sum();
         long atualTotal = linhas.stream().mapToLong(LinhaOcupacaoBaiaResponse::atual).sum();
         int ocupacaoMedia = capacidadeTotal == 0 ? 0 : (int) Math.round(atualTotal * 100.0 / capacidadeTotal);
-        long superlotadas = linhas.stream().filter(linha -> "superlotada".equals(linha.status())).count();
-        long noLimite = linhas.stream().filter(linha -> "proximo_limite".equals(linha.status())).count();
+        long superlotadas = linhas.stream().filter(linha -> NivelLotacao.SUPERLOTADA.codigo().equals(linha.status())).count();
+        long noLimite = linhas.stream().filter(linha -> NivelLotacao.PROXIMO_LIMITE.codigo().equals(linha.status())).count();
         return new KpisOcupacaoBaiasResponse(ocupacaoMedia, superlotadas, noLimite, (int) capacidadeTotal);
-    }
-
-    private String rotuloStatus(String status) {
-        return switch (status) {
-            case "superlotada" -> "Superlotada";
-            case "proximo_limite" -> "Próx. limite";
-            default -> "Normal";
-        };
     }
 }

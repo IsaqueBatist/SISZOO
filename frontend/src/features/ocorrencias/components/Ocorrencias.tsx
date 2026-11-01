@@ -1,15 +1,16 @@
 import { Suspense, lazy, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErroComRetry } from '@/components/layout/ErroComRetry'
+import { FiltroPeriodo } from '@/components/FiltroPeriodo'
 import { Icon } from '@/components/layout/Icon'
 import { Skeleton } from '@/components/layout/Skeleton'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { useFiltrosLista, useValorComAtraso } from '@/lib/useFiltrosLista'
+import { classeDoFiltro, useFiltrosLista, useManterPaginaNoIntervalo, useValorComAtraso } from '@/lib/useFiltrosLista'
 import type { OcorrenciaResumo, StatusOcorrencia, TipoOcorrencia } from '../types/ocorrencias.types'
-import { badgeDeStatus, iconeDeTipo, labelDeTipo } from '../utils/statusBadge'
+import { badgeDeStatus, iconeDeTipo } from '../utils/statusBadge'
 import { formatarData } from '../utils/datas'
 import { formatarProtocoloOcorrencia, formatarProtocoloProcesso } from '../utils/protocolo'
-import { useOcorrenciasQuery } from '../hooks/useOcorrencias'
+import { useCatalogosOcorrenciaQuery, useOcorrenciasQuery } from '../hooks/useOcorrencias'
 
 // Lazy: isola o chunk do Recharts do carregamento inicial da tela de
 // Ocorrências, e só é pedido quando a pessoa abre o gráfico: a tabela é o que
@@ -22,12 +23,14 @@ const TAMANHO_PAGINA = 20
 const LINHAS_SKELETON = [0, 1, 2, 3, 4]
 const COLUNAS_TABELA = ['protocolo', 'data', 'tipo', 'bairro', 'denunciante', 'status', 'processo', 'acoes']
 
-const TIPOS_OCORRENCIA: TipoOcorrencia[] = ['zoonose', 'morcegos', 'irregular', 'agressivo', 'outros']
 const STATUS_OCORRENCIA: StatusOcorrencia[] = ['ABERTA', 'EM_ATENDIMENTO', 'ENCERRADA']
 const FILTROS_PADRAO = { busca: '', tipo: '', status: '', de: '', ate: '' }
 
+const STATUS_PENDENTES = 'PENDENTES'
+const STATUS_NAO_ENCERRADOS: StatusOcorrencia[] = ['ABERTA', 'EM_ATENDIMENTO']
+
 // A anônima não tem denunciante para ninguém (D32). Na sigilosa, a listagem
-// não traz o nome para nenhum perfil (T26, revisão da D14) — mesmo quem tem
+// não traz o nome para nenhum perfil (T26, revisão da D14): mesmo quem tem
 // permissão só o vê no detalhe, onde o acesso é auditado.
 function ColunaDenunciante({ ocorrencia }: { ocorrencia: OcorrenciaResumo }) {
   const textoMudo = { fontStyle: 'italic', color: 'var(--color-text-muted)' } as const
@@ -44,17 +47,22 @@ export function Ocorrencias() {
   const buscaDebounced = useValorComAtraso(filtros.busca).trim()
   // F2-010 (RF-E02): período da data de abertura, aplicado no servidor.
   const { tipo: tipoFiltro, status: statusFiltro, de: deFiltro, ate: ateFiltro } = filtros
+  const deDebounced = useValorComAtraso(deFiltro)
+  const ateDebounced = useValorComAtraso(ateFiltro)
   const [graficoAberto, setGraficoAberto] = useState(false)
 
+  const { data: catalogos } = useCatalogosOcorrenciaQuery()
   const { data, isLoading, isError, refetch } = useOcorrenciasQuery({
     tipo: (tipoFiltro || undefined) as TipoOcorrencia | undefined,
-    status: (statusFiltro || undefined) as StatusOcorrencia | undefined,
+    status: statusFiltro === STATUS_PENDENTES ? STATUS_NAO_ENCERRADOS : ((statusFiltro || undefined) as StatusOcorrencia | undefined),
     q: buscaDebounced || undefined,
-    de: deFiltro || undefined,
-    ate: ateFiltro || undefined,
+    de: deDebounced || undefined,
+    ate: ateDebounced || undefined,
     pagina,
     tamanho: TAMANHO_PAGINA,
   })
+
+  useManterPaginaNoIntervalo(pagina, data?.totalPaginas, irParaPagina)
 
   const totalPaginas = Math.max(data?.totalPaginas ?? 1, 1)
   const primeiroItem = data && data.totalItens > 0 ? pagina * TAMANHO_PAGINA + 1 : 0
@@ -84,56 +92,40 @@ export function Ocorrencias() {
           <Icon name="search" size={14} />
           <input
             type="text"
-            placeholder="Buscar protocolo, denunciante ou bairro..."
+            placeholder="Buscar protocolo, denunciante, bairro, endereço ou processo..."
             aria-label="Buscar ocorrências"
             value={filtros.busca}
             onChange={(event) => definirFiltros({ busca: event.target.value })}
           />
         </div>
         <select
-          className="filter-select"
-          aria-label="Filtrar por tipo"
-          value={tipoFiltro}
-          onChange={(event) => definirFiltros({ tipo: event.target.value })}
-        >
-          <option value="">Tipo: Todos</option>
-          {TIPOS_OCORRENCIA.map((tipo) => (
-            <option key={tipo} value={tipo}>
-              {labelDeTipo(tipo)}
-            </option>
-          ))}
-        </select>
-        <select
-          className="filter-select"
+          className={classeDoFiltro(statusFiltro)}
           aria-label="Filtrar por status"
           value={statusFiltro}
           onChange={(event) => definirFiltros({ status: event.target.value })}
         >
           <option value="">Status: Todos</option>
+          <option value={STATUS_PENDENTES}>Pendentes</option>
           {STATUS_OCORRENCIA.map((status) => (
             <option key={status} value={status}>
               {badgeDeStatus(status).label}
             </option>
           ))}
         </select>
-        <input
-          className="filter-select"
-          type="date"
-          aria-label="Abertura a partir de"
-          title="Abertura a partir de"
-          value={deFiltro}
-          max={ateFiltro || undefined}
-          onChange={(event) => definirFiltros({ de: event.target.value })}
-        />
-        <input
-          className="filter-select"
-          type="date"
-          aria-label="Abertura até"
-          title="Abertura até"
-          value={ateFiltro}
-          min={deFiltro || undefined}
-          onChange={(event) => definirFiltros({ ate: event.target.value })}
-        />
+        <select
+          className={classeDoFiltro(tipoFiltro)}
+          aria-label="Filtrar por tipo"
+          value={tipoFiltro}
+          onChange={(event) => definirFiltros({ tipo: event.target.value })}
+        >
+          <option value="">Tipo: Todos</option>
+          {catalogos?.tiposOcorrencia.map((tipo) => (
+            <option key={tipo.codigo} value={tipo.codigo}>
+              {tipo.nome}
+            </option>
+          ))}
+        </select>
+        <FiltroPeriodo rotulo="Abertura" de={deFiltro} ate={ateFiltro} onAlterar={definirFiltros} />
         {filtrosAtivos && (
           <button type="button" className="btn btn-ghost btn-sm" onClick={limparFiltros}>
             Limpar filtros
@@ -175,7 +167,7 @@ export function Ocorrencias() {
         </div>
       )}
 
-      {!isLoading && !isError && data && data.itens.length === 0 && (
+      {!isLoading && !isError && data && data.totalItens === 0 && (
         <div className="empty">
           <span className="ico">
             <Icon name="alert" size={28} />

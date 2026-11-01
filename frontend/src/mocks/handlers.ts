@@ -4,6 +4,8 @@ import type { Animal, AnimalRequest, AnexoAnimal, Baia, BaiaRequest, CatalogosAn
 import type { CriarExameRequest, Exame } from '@/features/animais/types/historico.types'
 import type { Vacina } from '@/features/vacinas/types/vacinas.types'
 import { DIAS_ANTECEDENCIA_ALERTA_VACINA, diasAteVencimento, hojeEmItu } from '@/features/animais/utils/regrasVacina'
+import { animalSobCustodia } from '@/features/animais/utils/statusCustodia'
+import { moduloDaEntidade } from '@/features/auditoria/utils/moduloDaEntidade'
 import { adicionarDiasIso, adicionarMesesIso, agoraEmItu } from '@/lib/datas'
 import type {
   CategoriaFarmacologica,
@@ -1294,6 +1296,7 @@ export const handlers = [
   http.get(`${API_BASE_URL}/animais`, ({ request }) => {
     const url = new URL(request.url)
     const status = url.searchParams.get('status')
+    const custodia = url.searchParams.get('custodia') === 'true'
     const especie = url.searchParams.get('especie')
     const baiaId = url.searchParams.get('baiaId')
     const q = url.searchParams.get('q')?.trim().toLowerCase()
@@ -1302,11 +1305,15 @@ export const handlers = [
 
     const filtrados = animaisMock.filter((animal) => {
       const combinaStatus = !status || animal.statusCodigo === status
+      const combinaCustodia = !custodia || animalSobCustodia(animal)
       const combinaEspecie = !especie || animal.especieCodigo === especie
       const combinaBaia = !baiaId || animal.baiaId === baiaId
       const combinaBusca =
-        !q || animal.nome.toLowerCase().includes(q) || (animal.microchip ?? '').toLowerCase().includes(q)
-      return combinaStatus && combinaEspecie && combinaBaia && combinaBusca
+        !q ||
+        animal.nome.toLowerCase().includes(q) ||
+        (animal.microchip ?? '').toLowerCase().includes(q) ||
+        (animal.numeroMedalha ?? '').toLowerCase().includes(q)
+      return combinaStatus && combinaCustodia && combinaEspecie && combinaBaia && combinaBusca
     })
 
     const totalItens = filtrados.length
@@ -1783,7 +1790,6 @@ export const handlers = [
   http.get(`${API_BASE_URL}/auditoria/filtros`, () =>
     HttpResponse.json({
       acoes: [...new Set(auditoriaMock.map((e) => e.acao))].sort(),
-      entidades: [...new Set(auditoriaMock.map((e) => e.entidade))].sort(),
       usuarios: [...new Set(auditoriaMock.map((e) => e.usuarioEmail).filter((e): e is string => Boolean(e)))].sort(),
       modulos: ['USUARIOS_ACESSO', 'GESTAO_ANIMAIS', 'OCORRENCIAS_DENUNCIAS', 'PROCESSOS_SANITARIOS', 'RELATORIOS'],
     }),
@@ -1794,10 +1800,13 @@ export const handlers = [
     const pagina = Number(url.searchParams.get('pagina') ?? '0')
     const tamanho = Number(url.searchParams.get('tamanho') ?? '20')
     const acao = url.searchParams.get('acao')
-    const entidade = url.searchParams.get('entidade')
+    const modulo = url.searchParams.get('modulo')
     const usuarioEmail = url.searchParams.get('usuarioEmail')
     const filtrados = auditoriaMock.filter(
-      (e) => (!acao || e.acao === acao) && (!entidade || e.entidade === entidade) && (!usuarioEmail || e.usuarioEmail === usuarioEmail),
+      (e) =>
+        (!acao || e.acao === acao) &&
+        (!modulo || moduloDaEntidade(e.entidade) === modulo) &&
+        (!usuarioEmail || e.usuarioEmail === usuarioEmail),
     )
     return HttpResponse.json(paginar(filtrados, pagina, tamanho))
   }),

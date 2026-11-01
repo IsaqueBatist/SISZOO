@@ -6,7 +6,8 @@ import { Icon } from '@/components/layout/Icon'
 import { toast } from '@/components/toast/toast'
 import { formatarDataBR, formatarDataHoraBR } from '@/lib/datas'
 import { mensagemDeRegraDaApi } from '@/lib/erroApi'
-import { useFiltrosLista } from '@/lib/useFiltrosLista'
+import { normalizarBusca } from '@/lib/texto'
+import { classeDoFiltro, useFiltrosLista } from '@/lib/useFiltrosLista'
 import { ROLES, roleKeyFromCargos } from '@/lib/nav'
 import { useAlterarStatusUsuarioMutation, useUsuariosQuery } from '../hooks/useUsuarios'
 import { PERFIS_USUARIO, type PerfilUsuario, type UsuarioListItem } from '../types/usuarios.types'
@@ -63,14 +64,14 @@ export function Usuarios() {
 
   const usuariosFiltrados = useMemo(() => {
     if (!usuarios) return []
-    const buscaNormalizada = busca.trim().toLowerCase()
+    const buscaNormalizada = normalizarBusca(busca)
 
     return usuarios.filter((usuario) => {
-      const nomeCompleto = `${usuario.nome} ${usuario.sobrenome}`.toLowerCase()
+      const nomeCompleto = normalizarBusca(`${usuario.nome} ${usuario.sobrenome}`)
       const combinaBusca =
         !buscaNormalizada ||
         nomeCompleto.includes(buscaNormalizada) ||
-        usuario.email.toLowerCase().includes(buscaNormalizada)
+        normalizarBusca(usuario.email).includes(buscaNormalizada)
       const combinaPerfil = perfilFiltro === 'Todos' || usuario.cargos.includes(perfilFiltro)
       const combinaStatus =
         statusFiltro === 'Todos' ||
@@ -142,7 +143,7 @@ export function Usuarios() {
           />
         </div>
         <select
-          className="filter-select"
+          className={classeDoFiltro(perfilFiltro, FILTROS_PADRAO.perfil)}
           aria-label="Filtrar por perfil"
           value={perfilFiltro}
           onChange={(event) => definirFiltros({ perfil: event.target.value })}
@@ -155,7 +156,7 @@ export function Usuarios() {
           ))}
         </select>
         <select
-          className="filter-select"
+          className={classeDoFiltro(statusFiltro, FILTROS_PADRAO.status)}
           aria-label="Filtrar por status"
           value={statusFiltro}
           onChange={(event) => definirFiltros({ status: event.target.value })}
@@ -182,6 +183,11 @@ export function Usuarios() {
           </span>
           <h3>Nenhum usuário encontrado</h3>
           <p>Ajuste os filtros ou cadastre um novo usuário.</p>
+          {filtrosAtivos && (
+            <button type="button" className="btn btn-outline btn-sm" onClick={limparFiltros}>
+              Limpar filtros
+            </button>
+          )}
         </div>
       )}
 

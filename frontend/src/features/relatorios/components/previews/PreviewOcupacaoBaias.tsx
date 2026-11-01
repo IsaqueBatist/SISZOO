@@ -1,11 +1,6 @@
 import { Icon } from '@/components/layout/Icon'
+import { formatarDataBR } from '@/lib/datas'
 import type { PreviewOcupacaoBaias as DadosOcupacaoBaias, StatusOcupacaoBaia } from '../../types/relatorios.types'
-
-const ROTULO_STATUS: Record<StatusOcupacaoBaia, string> = {
-  normal: 'Normal',
-  proximo_limite: 'Próx. limite',
-  superlotada: 'Superlotada',
-}
 
 const CLASSE_STATUS: Record<StatusOcupacaoBaia, string> = {
   normal: 'badge-available',
@@ -28,6 +23,10 @@ export function PreviewOcupacaoBaias({ dados }: { dados: DadosOcupacaoBaias }) {
 
   return (
     <>
+      <p className="subtitle" style={{ padding: '0 var(--space-4)' }}>
+        Posição em {formatarDataBR(dados.periodoFim)}
+      </p>
+
       <div className="kpi-grid">
         <div className="kpi">
           <div className="kpi-head">
@@ -46,7 +45,7 @@ export function PreviewOcupacaoBaias({ dados }: { dados: DadosOcupacaoBaias }) {
         </div>
         <div className="kpi">
           <div className="kpi-head">
-            <span className="kpi-label">Baias no limite</span>
+            <span className="kpi-label">Baias próximas do limite</span>
           </div>
           <div className="kpi-value">{dados.kpis.baiasNoLimite}</div>
         </div>
@@ -77,7 +76,7 @@ export function PreviewOcupacaoBaias({ dados }: { dados: DadosOcupacaoBaias }) {
                 <td className="mono">{linha.atual}</td>
                 <td>{linha.percentualOcupacao}%</td>
                 <td>
-                  <span className={`badge ${CLASSE_STATUS[linha.status]}`}>{ROTULO_STATUS[linha.status]}</span>
+                  <span className={`badge ${CLASSE_STATUS[linha.status]}`}>{linha.rotuloStatus}</span>
                 </td>
               </tr>
             ))}

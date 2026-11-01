@@ -5,7 +5,8 @@ import { toast } from '@/components/toast/toast'
 import type { Medicamento } from '@/features/animais/types/historico.types'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { mensagemDeRegraDaApi } from '@/lib/erroApi'
-import { useFiltrosLista } from '@/lib/useFiltrosLista'
+import { normalizarBusca } from '@/lib/texto'
+import { classeDoFiltro, useFiltrosLista } from '@/lib/useFiltrosLista'
 import {
   useCategoriasFarmacologicasQuery,
   useDesativarMedicamentoMutation,
@@ -46,12 +47,12 @@ export function Medicamentos() {
   const { data: categorias } = useCategoriasFarmacologicasQuery()
 
   const filtrados = useMemo(() => {
-    const termo = busca.trim().toLowerCase()
+    const termo = normalizarBusca(busca)
     return (medicamentos ?? []).filter((medicamento) => {
       if (situacao === 'ativos' && !medicamento.ativo) return false
       if (situacao === 'inativos' && medicamento.ativo) return false
       if (categoriaId !== '' && medicamento.categoriaId !== categoriaId) return false
-      return termo === '' || medicamento.nome.toLowerCase().includes(termo)
+      return termo === '' || normalizarBusca(medicamento.nome).includes(termo)
     })
   }, [medicamentos, busca, situacao, categoriaId])
 
@@ -106,7 +107,7 @@ export function Medicamentos() {
           />
         </div>
         <select
-          className="filter-select"
+          className={classeDoFiltro(categoriaId)}
           aria-label="Filtrar por categoria"
           value={categoriaId}
           onChange={(evento) => definirFiltros({ categoriaId: evento.target.value })}
@@ -119,7 +120,7 @@ export function Medicamentos() {
           ))}
         </select>
         <select
-          className="filter-select"
+          className={classeDoFiltro(situacao, 'ativos')}
           aria-label="Filtrar por situação"
           value={situacao}
           onChange={(evento) => definirFiltros({ situacao: evento.target.value })}

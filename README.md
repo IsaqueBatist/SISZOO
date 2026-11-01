@@ -227,8 +227,9 @@ Exemplos em [`.env.example`](.env.example) (raiz, usado pelo `docker-compose.yml
 
 ## Limitações conhecidas
 
-- **Adoções:** o dashboard e o relatório mostram o retrato atual (animais adotados e disponíveis). Não há "adoções no
-  mês" nem meta mensal, porque a tabela `adocao` do DER não foi implementada.
+- **Adoções:** o dashboard e o relatório mostram a posição na data da consulta (animais adotados e disponíveis). Não há
+  "adoções no mês" nem meta mensal, porque a tabela `adocao` do DER não foi implementada.
+- **Ocupação de Baias:** o relatório mostra a posição na data da geração; não há histórico diário de ocupação.
 - **Busca global:** não há busca global no topo das telas; cada listagem tem os próprios filtros.
 - **Catálogos:** vacinas, tipos de procedimento e de exame, doenças, laboratórios e demais catálogos vêm das migrations;
   não há tela de cadastro deles.

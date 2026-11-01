@@ -2,7 +2,6 @@ package com.siszoo.relatorios.service;
 
 import java.time.Clock;
 import java.time.LocalDate;
-import java.util.Locale;
 
 import org.springframework.stereotype.Service;
 
@@ -11,19 +10,14 @@ import com.siszoo.relatorios.dto.FiltroRelatorioBruto;
 import com.siszoo.relatorios.dto.PeriodoRelatorio;
 import com.siszoo.relatorios.entity.TipoRelatorio;
 
-// Cada um dos 6 tipos usa um filtro de tela diferente (DER §3.6, protótipos
-// docs/prototipo/relatorios.html): anual_processos usa "ano"; ocupacao_baias
-// usa "janela" (ultimos_6_meses | ultimos_12_meses | custom); os demais usam
-// periodo explicito. Este resolver traduz qualquer um desses formatos para um
-// PeriodoRelatorio sempre concreto ANTES de qualquer agregacao ou gravacao em
-// relatorio_gerado (periodo_inicio/periodo_fim sao NOT NULL, V20) — "hoje"
-// sempre via Clock, nunca LocalDate.now() direto.
+// Cada tipo usa um filtro de tela (TipoRelatorio.FiltroEsperado): anual_processos
+// usa "ano"; adocoes e ocupacao_baias sao a posicao na data da geracao, sem
+// filtro; os demais usam periodo explicito. Este resolver traduz qualquer um
+// desses formatos para um PeriodoRelatorio sempre concreto ANTES de qualquer
+// agregacao ou gravacao em relatorio_gerado (periodo_inicio/periodo_fim sao NOT
+// NULL, V20) - "hoje" sempre via Clock, nunca LocalDate.now() direto.
 @Service
 public class FiltroRelatorioResolver {
-
-    public static final String JANELA_ULTIMOS_6_MESES = "ultimos_6_meses";
-    public static final String JANELA_ULTIMOS_12_MESES = "ultimos_12_meses";
-    public static final String JANELA_CUSTOM = "custom";
 
     private final Clock clock;
 
@@ -45,12 +39,12 @@ public class FiltroRelatorioResolver {
         }
         return switch (filtro.tipo()) {
             case ANUAL_PROCESSOS -> resolverPorAno(filtro);
-            case OCUPACAO_BAIAS -> resolverPorJanela(filtro);
-            case VACINACAO, ADOCOES, PROCEDIMENTOS, OCORRENCIAS_BAIRRO -> resolverPorPeriodoExplicito(filtro);
+            case ADOCOES, OCUPACAO_BAIAS -> posicaoDeHoje();
+            case VACINACAO, PROCEDIMENTOS, OCORRENCIAS_BAIRRO -> resolverPorPeriodoExplicito(filtro);
         };
     }
 
-    // anual_processos: so aceita "ano" — periodo explicito junto seria
+    // anual_processos: so aceita "ano" - periodo explicito junto seria
     // ambiguidade de integracao do front, por isso e rejeitado (nao ignorado
     // em silencio).
     private PeriodoRelatorio resolverPorAno(FiltroRelatorioBruto filtro) {
@@ -65,21 +59,9 @@ public class FiltroRelatorioResolver {
         return new PeriodoRelatorio(LocalDate.of(ano, 1, 1), LocalDate.of(ano, 12, 31));
     }
 
-    // ocupacao_baias: janela relativa a hoje (Clock), ou periodo explicito
-    // quando "custom".
-    private PeriodoRelatorio resolverPorJanela(FiltroRelatorioBruto filtro) {
-        if (filtro.janela() == null) {
-            throw new CampoInvalidoException("janela", "Selecione o período do relatório de ocupação de baias.");
-        }
-        String janela = filtro.janela().toLowerCase(Locale.ROOT);
+    private PeriodoRelatorio posicaoDeHoje() {
         LocalDate hoje = LocalDate.now(clock);
-        return switch (janela) {
-            case JANELA_ULTIMOS_6_MESES -> new PeriodoRelatorio(hoje.minusMonths(6), hoje);
-            case JANELA_ULTIMOS_12_MESES -> new PeriodoRelatorio(hoje.minusMonths(12), hoje);
-            case JANELA_CUSTOM -> resolverPorPeriodoExplicito(filtro);
-            default -> throw new CampoInvalidoException("janela",
-                    "Período inválido. Escolha os últimos 6 meses, os últimos 12 meses ou um período personalizado.");
-        };
+        return new PeriodoRelatorio(hoje, hoje);
     }
 
     private PeriodoRelatorio resolverPorPeriodoExplicito(FiltroRelatorioBruto filtro) {

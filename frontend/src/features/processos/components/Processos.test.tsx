@@ -11,7 +11,7 @@ import { server } from '@/mocks/server'
 import { PROCESSO_PENDENTE_ID } from '@/mocks/processosFixtures'
 import { Processos } from './Processos'
 
-function renderProcessos(cargos = ['Administrador']) {
+function renderProcessos(cargos = ['Administrador'], entrada = '/processos') {
   const usuario: Usuario = {
     id: 'a1b2c3d4-0000-0000-0000-000000000099',
     nome: 'Ana',
@@ -24,7 +24,7 @@ function renderProcessos(cargos = ['Administrador']) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[entrada]}>
         <AuthProvider>
           <Processos />
         </AuthProvider>
@@ -45,6 +45,54 @@ function capturarListagens(totalPaginas = 1) {
   )
   return chamadas
 }
+
+describe('Processos - filtros', () => {
+  it('"Em andamento" envia todos os status menos Concluído', async () => {
+    const user = userEvent.setup()
+    const chamadas = capturarListagens()
+    renderProcessos()
+
+    await user.selectOptions(await screen.findByLabelText('Filtrar por status'), 'Em andamento')
+
+    await waitFor(() => expect(chamadas.at(-1)?.get('status')).toBe('ABERTO,AGUARDANDO_RESULTADO,COM_RESULTADO'))
+  })
+
+  it('envia o período de abertura ao servidor', async () => {
+    const user = userEvent.setup()
+    const chamadas = capturarListagens()
+    renderProcessos()
+
+    await user.type(await screen.findByLabelText('Abertura a partir de'), '2026-05-01')
+    await user.type(screen.getByLabelText('Abertura até'), '2026-05-31')
+
+    await waitFor(() => expect(chamadas.at(-1)?.get('ate')).toBe('2026-05-31'))
+    expect(chamadas.at(-1)?.get('de')).toBe('2026-05-01')
+  })
+
+  it('"Só urgentes" liga e desliga com um clique', async () => {
+    const user = userEvent.setup()
+    const chamadas = capturarListagens()
+    renderProcessos()
+
+    const botao = await screen.findByRole('button', { name: 'Só urgentes' })
+    expect(botao).toHaveAttribute('aria-pressed', 'false')
+
+    await user.click(botao)
+    await waitFor(() => expect(chamadas.at(-1)?.get('urgente')).toBe('true'))
+    expect(botao).toHaveAttribute('aria-pressed', 'true')
+
+    await user.click(botao)
+    await waitFor(() => expect(chamadas.at(-1)?.has('urgente')).toBe(false))
+  })
+
+  it('o link do alerta do Dashboard abre só os urgentes', async () => {
+    const chamadas = capturarListagens()
+    renderProcessos(['Administrador'], '/processos?urgente=1')
+
+    expect(await screen.findByRole('button', { name: 'Só urgentes' })).toHaveAttribute('aria-pressed', 'true')
+    await waitFor(() => expect(chamadas.at(0)?.get('urgente')).toBe('true'))
+  })
+})
 
 describe('Processos — listagem', () => {
   it('mostra os processos da API: protocolo, doença, status, data sem deslocamento de fuso e ocorrência vinculada', async () => {

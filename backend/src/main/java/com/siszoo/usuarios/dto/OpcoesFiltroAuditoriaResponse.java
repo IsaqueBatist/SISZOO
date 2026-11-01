@@ -9,7 +9,6 @@ import com.siszoo.usuarios.entity.Modulo;
 // calculados no servidor sobre toda a trilha (nao so sobre a pagina atual).
 public record OpcoesFiltroAuditoriaResponse(
         List<AcaoAuditoria> acoes,
-        List<String> entidades,
         List<String> usuarios,
         List<Modulo> modulos) {
 }

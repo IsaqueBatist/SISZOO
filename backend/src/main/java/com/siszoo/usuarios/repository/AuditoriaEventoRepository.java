@@ -27,9 +27,6 @@ public interface AuditoriaEventoRepository extends JpaRepository<AuditoriaEvento
     @Query("select distinct e.acao from AuditoriaEvento e order by e.acao")
     List<AcaoAuditoria> acoesDistintas();
 
-    @Query("select distinct e.entidade from AuditoriaEvento e order by e.entidade")
-    List<String> entidadesDistintas();
-
     @Query("select distinct u.email from AuditoriaEvento e join e.usuario u order by u.email")
     List<String> usuariosDistintos();
 

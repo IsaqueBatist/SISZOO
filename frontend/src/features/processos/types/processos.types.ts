@@ -71,7 +71,7 @@ export type AmostraCampoRequest = AmostraClinicaRequest & {
 
 export type AmostraAnimalRequest = AmostraCanilRequest | AmostraCampoRequest
 
-// POST /api/processos — processo completo numa requisição. `urgente` não é
+// POST /api/processos - processo completo numa requisição. `urgente` não é
 // enviado: o servidor deriva das amostras (regra 18).
 export interface CriarProcessoRequest {
   dataAbertura: string
@@ -135,7 +135,7 @@ export interface EditarProcessoRequest {
   justificativa: string
 }
 
-// Um lançamento do histórico de resultado (original ou correção) — T34,
+// Um lançamento do histórico de resultado (original ou correção) - T34,
 // tabela resultado_processo, imutável. Sem retificaId = original.
 export interface ResultadoProcessoItem {
   id: string
@@ -151,7 +151,7 @@ export interface ResultadoProcessoItem {
 // GET /api/processos/{id} (ProcessoSanitarioResponse). resultado/dataResultado
 // são o vigente (nulos até o primeiro lançamento). resultados é o histórico
 // completo, do original até a última correção (T34). desfechoAnimal (T37)
-// não faz parte do histórico imutável — é só do processo.
+// não faz parte do histórico imutável - é só do processo.
 export interface Processo {
   id: string
   protocolo: string
@@ -205,15 +205,17 @@ export interface ProcessoResumo {
 
 export interface ProcessosFiltro {
   doenca?: string
-  status?: StatusProcesso
+  status?: StatusProcesso | StatusProcesso[]
   // T45 (docs/contratos/processos-filtro-urgente.md): ausente = sem filtro.
   urgente?: boolean
-  // Protocolo, nome do responsável, Nº GAL ou Nº SINAN.
+  // Protocolo, ocorrência vinculada, animal amostrado, responsável, Nº GAL ou Nº SINAN.
   q?: string
+  de?: string
+  ate?: string
   pagina: number
   tamanho: number
 }
 
 // Decisão da etapa 1 do wizard: "" = nenhuma decisão ainda. Não é campo da
-// API — o vínculo em si é o `ocorrenciaId` opcional.
+// API - o vínculo em si é o `ocorrenciaId` opcional.
 export type VinculoDecisao = 'vinculado' | 'sem_vinculo' | ''

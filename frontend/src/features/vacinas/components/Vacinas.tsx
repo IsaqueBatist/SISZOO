@@ -5,7 +5,8 @@ import { toast } from '@/components/toast/toast'
 import { useAlertasVacinaisQuery } from '@/features/alertas/hooks/useAlertas'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { mensagemDeRegraDaApi } from '@/lib/erroApi'
-import { useFiltrosLista } from '@/lib/useFiltrosLista'
+import { normalizarBusca } from '@/lib/texto'
+import { classeDoFiltro, useFiltrosLista } from '@/lib/useFiltrosLista'
 import { useAtualizarVacinaMutation, useDesativarVacinaMutation, useVacinasQuery } from '../hooks/useVacinas'
 import type { Vacina } from '../types/vacinas.types'
 import { VacinaFormModal } from './VacinaFormModal'
@@ -68,11 +69,11 @@ export function Vacinas() {
   }, [alertas])
 
   const filtradas = useMemo(() => {
-    const termo = busca.trim().toLowerCase()
+    const termo = normalizarBusca(busca)
     return (vacinas ?? []).filter((vacina) => {
       if (situacao === 'ativas' && !vacina.ativo) return false
       if (situacao === 'inativas' && vacina.ativo) return false
-      return termo === '' || vacina.nome.toLowerCase().includes(termo)
+      return termo === '' || normalizarBusca(vacina.nome).includes(termo)
     })
   }, [vacinas, busca, situacao])
 
@@ -129,7 +130,7 @@ export function Vacinas() {
           />
         </div>
         <select
-          className="filter-select"
+          className={classeDoFiltro(situacao, 'ativas')}
           aria-label="Filtrar por situação"
           value={situacao}
           onChange={(evento) => definirFiltros({ situacao: evento.target.value })}

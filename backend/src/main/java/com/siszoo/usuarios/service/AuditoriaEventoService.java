@@ -36,6 +36,8 @@ import tools.jackson.databind.ObjectMapper;
 @Service
 public class AuditoriaEventoService {
 
+    private static final Sort ORDEM_LISTAGEM = Sort.by(Sort.Direction.DESC, "ocorreuEm", "id");
+
     private final AuditoriaEventoRepository auditoriaEventoRepository;
     private final AuditoriaEventoMapper auditoriaEventoMapper;
     private final ObjectMapper objectMapper;
@@ -120,9 +122,6 @@ public class AuditoriaEventoService {
             if (filtro.acao() != null) {
                 p.add(cb.equal(root.get("acao"), filtro.acao()));
             }
-            if (StringUtils.hasText(filtro.entidade())) {
-                p.add(cb.equal(root.get("entidade"), filtro.entidade().trim()));
-            }
             if (StringUtils.hasText(filtro.usuarioEmail())) {
                 p.add(cb.equal(root.join("usuario", JoinType.LEFT).get("email"), filtro.usuarioEmail().trim()));
             }
@@ -138,7 +137,7 @@ public class AuditoriaEventoService {
             return cb.and(p.toArray(Predicate[]::new));
         };
         Page<AuditoriaEvento> page = auditoriaEventoRepository.findAll(spec,
-                Paginacao.pagina(pagina, tamanho, Sort.by(Sort.Direction.DESC, "ocorreuEm")));
+                Paginacao.pagina(pagina, tamanho, ORDEM_LISTAGEM));
         return PaginaResponse.de(page.map(auditoriaEventoMapper::toResponse));
     }
 
@@ -146,14 +145,13 @@ public class AuditoriaEventoService {
     public OpcoesFiltroAuditoriaResponse opcoesFiltro() {
         return new OpcoesFiltroAuditoriaResponse(
                 auditoriaEventoRepository.acoesDistintas(),
-                auditoriaEventoRepository.entidadesDistintas(),
                 auditoriaEventoRepository.usuariosDistintos(),
                 List.of(Modulo.values()));
     }
 
     // Filtro da listagem (todos opcionais). `de`/`ate` sao dias inclusivos no fuso do sistema.
-    public record FiltroAuditoria(AcaoAuditoria acao, String entidade, String usuarioEmail, Modulo modulo, LocalDate de, LocalDate ate) {
-        static final FiltroAuditoria VAZIO = new FiltroAuditoria(null, null, null, null, null, null);
+    public record FiltroAuditoria(AcaoAuditoria acao, String usuarioEmail, Modulo modulo, LocalDate de, LocalDate ate) {
+        static final FiltroAuditoria VAZIO = new FiltroAuditoria(null, null, null, null, null);
     }
 
     // Nomes de entidade usados nas chamadas de registrar(...) em cada modulo
@@ -173,7 +171,7 @@ public class AuditoriaEventoService {
     }
 
     // T37: mini trilha de auditoria de uma entidade especifica (ex.: um
-    // processo sanitario), sem paginacao — volume pequeno por entidade. Usado
+    // processo sanitario), sem paginacao - volume pequeno por entidade. Usado
     // por modulos que nao tem USUARIOS_ACESSO:leitura (so o Administrador
     // tem), protegidos pela propria autorizacao do modulo chamador.
     @Transactional(readOnly = true)
@@ -185,7 +183,7 @@ public class AuditoriaEventoService {
 
     private String serializar(Object payload) {
         // Jackson 3: writeValueAsString lança tools.jackson.core.JacksonException,
-        // que é unchecked (extends RuntimeException) — nao precisa de try/catch.
+        // que é unchecked (extends RuntimeException) - nao precisa de try/catch.
         return payload == null ? null : objectMapper.writeValueAsString(payload);
     }
 }

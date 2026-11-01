@@ -1,24 +1,25 @@
-# Pedido — filtros de servidor em GET /api/auditoria
+# Pedido - filtros de servidor em GET /api/auditoria
 
-Status: **implementado (22/10/2026, alinhamento com o TG — `docs/decisoes/alinhamento-tg.md` AT-9)**.
-`GET /api/auditoria` aceita `acao`, `entidade`, `usuarioEmail`, `modulo`, `de` e `ate` (datas ISO, dias inclusivos),
+Status: **implementado (22/10/2026, alinhamento com o TG - `docs/decisoes/alinhamento-tg.md` AT-9; revisto em
+01/11/2026, `docs/decisoes/filtros-consulta.md` FC-10)**.
+`GET /api/auditoria` aceita `acao`, `usuarioEmail`, `modulo`, `de` e `ate` (datas ISO, dias inclusivos),
 combináveis, via `Specification` (`AuditoriaEventoService.listar`); `GET /api/auditoria/filtros` devolve as opções
-distintas (ações, entidades, usuários) para montar os seletores. O filtro por `modulo` usa o mapa
-`ENTIDADES_POR_MODULO` do serviço. A tela de Logs envia os filtros ao servidor e informa "N evento(s) encontrado(s),
-M nesta página". Teste: `AuditoriaFiltrosIT`. O texto abaixo é o pedido original.
+distintas (ações, usuários) e os módulos para montar os seletores. O filtro por `modulo` usa o mapa
+`ENTIDADES_POR_MODULO` do serviço. O filtro por `entidade` foi removido na revisão. A tela de Logs envia os filtros ao
+servidor e informa o total encontrado na trilha. Teste: `AuditoriaFiltrosIT`. O texto abaixo é o pedido original.
 
 ## Contexto
 
 A tela de Logs (`frontend/src/features/auditoria/components/Logs.tsx`, rota
 `/logs`, só Admin) consome `GET /api/auditoria?pagina=&tamanho=`
-(`AuditoriaController.java`), que já existe e funciona — só pagina, sem
+(`AuditoriaController.java`), que já existe e funciona - só pagina, sem
 filtrar por `acao`/`entidade`/`usuarioId`/data.
 
 Hoje os filtros da tela (ação, entidade, usuário) atuam **só sobre a página
-já carregada** — cada opção de filtro é montada a partir dos próprios
+já carregada** - cada opção de filtro é montada a partir dos próprios
 eventos da página atual, não de um catálogo completo. Isso fica visível na
 UI: quando algum filtro está ativo, a tela mostra "Filtro aplicado aos N
-eventos desta página (de X no total)" — não finge que o filtro cobre todo o
+eventos desta página (de X no total)" - não finge que o filtro cobre todo o
 histórico.
 
 ## Pedido
@@ -37,13 +38,13 @@ Também seria útil um parâmetro `modulo` (`USUARIOS_ACESSO`, `GESTAO_ANIMAIS`,
 `OCORRENCIAS_DENUNCIAS`, `PROCESSOS_SANITARIOS`, `RELATORIOS`). Hoje a tela
 agrupa visualmente por módulo inferindo-o no frontend a partir da string
 livre `entidade` (`frontend/src/features/auditoria/utils/moduloDaEntidade.ts`),
-porque `auditoria_evento` não guarda módulo — só funciona enquanto as
+porque `auditoria_evento` não guarda módulo - só funciona enquanto as
 strings de entidade usadas pelo backend não mudarem.
 
-## Pedido adicional — valor antes/depois do evento
+## Pedido adicional - valor antes/depois do evento
 
 `auditoria_evento` já tem as colunas `payload_antes`/`payload_depois`, mas
-`AuditoriaEventoResponse` (DTO) não as expõe — a tela de Logs não tem acesso
+`AuditoriaEventoResponse` (DTO) não as expõe - a tela de Logs não tem acesso
 a esse dado hoje, mesmo que quisesse mostrá-lo. Pedido: incluir
 `payloadAntes`/`payloadDepois` (ou nomes equivalentes) em
 `AuditoriaEventoResponse`, para permitir mostrar o valor antes/depois de cada

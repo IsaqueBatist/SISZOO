@@ -1,9 +1,9 @@
 // ══════════════════════════════════════════════════════
-// MÓDULO 05 — DASHBOARD E RELATÓRIOS
+// MÓDULO 05 - DASHBOARD E RELATÓRIOS
 // Espelha a migration V20 (T41). Revisão de 25/10/2026.
 // Tabelas: RelatorioGerado (histórico de exportações).
 // O dashboard (KPIs, alertas, gráficos) é computado por consultas
-// agregadas com cache de 5 minutos — não tem tabela.
+// agregadas com cache de 5 minutos - não tem tabela.
 // Geração SÍNCRONA (RN11): não há status, URL com expiração nem
 // binário armazenado; cada exportação CSV/PDF bem-sucedida grava uma linha.
 // Dependência externa: Usuario (módulo 01); numeração via
@@ -27,9 +27,9 @@ Table RelatorioGerado {
   id               uuid          [pk, not null, default: `gen_random_uuid()`]
   doc_id           varchar(30)   [not null, unique, note: 'DOC-AAAA-NNNN via ProtocoloService']
   tipo_relatorio   TipoRelatorio [not null, note: 'varchar(30) + CHECK dos 6 códigos (não é FK)']
-  periodo_inicio   date          [not null, note: 'ano/janela resolvidos para datas antes de gravar']
+  periodo_inicio   date          [not null, note: 'ano resolvido para datas antes de gravar; nos relatórios de posição, a data da geração']
   periodo_fim      date          [not null, note: 'CHECK periodo_inicio <= periodo_fim']
-  parametros_jsonb jsonb         [note: 'filtros brutos (tipo, ano, janela)']
+  parametros_jsonb jsonb         [note: 'filtros brutos (tipo, ano, período)']
   gerado_por_id    uuid          [not null, ref: > Usuario.id]
   gerado_em        timestamptz   [not null]
   arquivo_url      text          [note: 'sempre nulo nesta versão: o arquivo não é persistido']

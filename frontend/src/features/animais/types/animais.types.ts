@@ -76,7 +76,7 @@ export interface CatalogosAnimal {
   condicoesSaude: CatalogoItem[]
 }
 
-// F2-007 / RF-A04 — espelha com.siszoo.animais.dto.AnexoAnimalResponse.
+// F2-007 / RF-A04 - espelha com.siszoo.animais.dto.AnexoAnimalResponse.
 export interface AnexoAnimal {
   id: string
   animalId: string
@@ -115,6 +115,7 @@ export interface BaiaRequest {
 
 export interface AnimaisFiltro {
   status?: string
+  custodia?: boolean
   especie?: string
   baiaId?: string
   q?: string
@@ -126,7 +127,7 @@ export interface AnimaisFiltro {
 // do backend (os dois DTOs têm campos idênticos). Ao contrário de `Animal`
 // (resposta), aqui espécie/status/motivo de entrada vão como código puro
 // (`especie`, `status`, `motivoEntrada`), sem o sufixo `Codigo` nem os `*Nome`
-// — nunca reenviar `especieNome`/`statusNome`/`motivoEntradaNome`.
+// - nunca reenviar `especieNome`/`statusNome`/`motivoEntradaNome`.
 export interface AnimalRequest {
   nome: string
   especie: string

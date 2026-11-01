@@ -4,19 +4,19 @@ import java.util.Locale;
 
 // Os 6 tipos de relatorio (DER §3.6), fixos: cada um exige uma classe de
 // agregacao propria no backend, entao uma tabela catalogo so para isso seria
-// sobre-engenharia (divergencia documentada no DER). Nomes de exibicao e tipo
-// de filtro vem do prototipo (docs/prototipo/relatorios.html). "codigo" e a
+// sobre-engenharia (divergencia documentada no DER). Nomes de exibicao vem do
+// prototipo (docs/prototipo/relatorios.html). "codigo" e a
 // forma lowercase usada na API e no catalogo tipo_relatorio do DER
 // (ex.: "ocupacao_baias"); o nome do enum e so uso interno Java.
 public enum TipoRelatorio {
     ANUAL_PROCESSOS("Relatório Anual de Processos", FiltroEsperado.ANO),
     VACINACAO("Relatório de Vacinação", FiltroEsperado.PERIODO),
-    ADOCOES("Relatório de Adoções", FiltroEsperado.PERIODO),
+    ADOCOES("Relatório de Adoções", FiltroEsperado.POSICAO),
     PROCEDIMENTOS("Relatório de Procedimentos", FiltroEsperado.PERIODO),
-    OCUPACAO_BAIAS("Ocupação de Baias", FiltroEsperado.JANELA),
+    OCUPACAO_BAIAS("Ocupação de Baias", FiltroEsperado.POSICAO),
     OCORRENCIAS_BAIRRO("Ocorrências por Bairro", FiltroEsperado.PERIODO);
 
-    public enum FiltroEsperado { ANO, JANELA, PERIODO }
+    public enum FiltroEsperado { ANO, POSICAO, PERIODO }
 
     private final String nomeExibicao;
     private final FiltroEsperado filtroEsperado;
