@@ -4,9 +4,11 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 
 import java.util.UUID;
@@ -548,6 +550,21 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                         "antirrabica", "v10", "v8", "v4_felinos", "giardia", "gripe_canina", "felv", "leishmaniose"))
                 .body("tiposProcedimento.codigo", containsInAnyOrder(
                         "atendimento_clinico", "castracao", "cirurgia_maior", "vacinacao"));
+    }
+
+    // O catalogo leva o intervalo de reforco adiante (VacinaCatalogoResponse)
+    // para o formulario de vacinacao conseguir prever a proxima aplicacao sem
+    // uma segunda consulta. Seed da V5: 12 meses para todas.
+    @Test
+    void catalogoDeVacinasLevaOIntervaloDeReforco() {
+        given()
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .when()
+                .get("/api/animais/catalogos")
+                .then()
+                .statusCode(200)
+                .body("vacinas.find { it.codigo == 'antirrabica' }.intervaloMeses", equalTo(12))
+                .body("vacinas.intervaloMeses", everyItem(notNullValue()));
     }
 
     private CriarAnimalRequest animalMinimo(String microchip) {

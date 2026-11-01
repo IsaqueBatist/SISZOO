@@ -14,6 +14,7 @@ import com.siszoo.animais.clinico.repository.TipoExameRepository;
 import com.siszoo.animais.clinico.repository.TipoProcedimentoRepository;
 import com.siszoo.animais.clinico.repository.VacinaRepository;
 import com.siszoo.animais.dto.CatalogosAnimalResponse;
+import com.siszoo.animais.dto.VacinaCatalogoResponse;
 import com.siszoo.animais.entity.Especie;
 import com.siszoo.animais.entity.MotivoEntrada;
 import com.siszoo.animais.entity.StatusAnimal;
@@ -69,9 +70,18 @@ public class CatalogoAnimalService {
                 mapear(tipoBaiaRepository.findAll(), TipoBaia::getCodigo, TipoBaia::getNome),
                 mapear(tipoExameRepository.findByAtivoTrueOrderByNomeAsc(), TipoExame::getCodigo, TipoExame::getNome),
                 mapear(laboratorioRepository.findByAtivoTrueOrderByNomeAsc(), Laboratorio::getCodigo, Laboratorio::getNome),
-                mapear(vacinaRepository.findByAtivoTrueOrderByNomeAsc(), Vacina::getCodigo, Vacina::getNome),
+                mapearVacinas(vacinaRepository.findByAtivoTrueOrderByNomeAsc()),
                 mapear(tipoProcedimentoRepository.findByAtivoTrueOrderByNomeAsc(),
                         TipoProcedimento::getCodigo, TipoProcedimento::getNome));
+    }
+
+    // Mesma ordenacao por nome do `mapear`, mas leva o intervalo de reforco
+    // adiante (VacinaCatalogoResponse).
+    private List<VacinaCatalogoResponse> mapearVacinas(List<Vacina> vacinas) {
+        return vacinas.stream()
+                .map(vacina -> new VacinaCatalogoResponse(vacina.getCodigo(), vacina.getNome(), vacina.getIntervaloMeses()))
+                .sorted(Comparator.comparing(VacinaCatalogoResponse::nome))
+                .toList();
     }
 
     private <T> List<CatalogoItemResponse> mapear(List<T> entidades, Function<T, String> codigo, Function<T, String> nome) {

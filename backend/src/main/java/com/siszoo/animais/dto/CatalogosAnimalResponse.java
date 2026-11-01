@@ -14,6 +14,10 @@ public record CatalogosAnimalResponse(
         List<CatalogoItemResponse> laboratorios,
         // Catalogos do registro de vacinacao e de procedimento (V5): antes
         // copiados no front (catalogoClinico.ts, FIXME(T22)).
-        List<CatalogoItemResponse> vacinas,
+        //
+        // `vacinas` usa um record proprio porque leva tambem o
+        // `intervaloMeses`, de que o formulario precisa para prever o proximo
+        // reforco. Ver VacinaCatalogoResponse.
+        List<VacinaCatalogoResponse> vacinas,
         List<CatalogoItemResponse> tiposProcedimento) {
 }
