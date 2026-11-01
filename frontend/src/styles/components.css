@@ -689,6 +689,38 @@ table.data .row-num { color: var(--color-text-muted); font-size: 11px; font-fami
   cursor: pointer;
 }
 
+
+/* ===== Faixa de resumo de catálogo ===== */
+/* Número + rótulo + descrição, em cima de uma lista administrativa. Mesma
+   forma do `.role-card` de features/usuarios (portado de usuarios.html); aqui
+   fica no design system porque duas telas de catálogo o usam. Convergir o
+   `.role-card` com este é trabalho à parte, para não arrastar a tela de
+   Usuários junto. */
+.resumo-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+.resumo-card .num {
+  width: 40px; height: 40px;
+  flex-shrink: 0;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+/* Tom de atenção quando o número pede ação (animais em alerta). */
+.resumo-card.alerta .num { background: var(--color-danger-bg); color: var(--color-danger); }
+.resumo-card .rotulo { font-size: 13px; font-weight: 600; }
+.resumo-card .desc { font-size: 11px; color: var(--color-text-secondary); }
+
 /* ===== Tabs ===== */
 .tabs {
   display: flex;

@@ -19,6 +19,7 @@ import {
   resetProcedimentosMock,
   resetUsuariosMock,
   resetVacinacoesMock,
+  resetVacinasMock,
   resetExamesEAnexosMock,
 } from '../mocks/handlers'
 
@@ -47,6 +48,7 @@ afterEach(() => {
   resetAnimaisMock()
   resetBaiasMock()
   resetVacinacoesMock()
+  resetVacinasMock()
   resetProcedimentosMock()
   resetPrescricoesMock()
   resetMedicamentosMock()
