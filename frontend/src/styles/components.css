@@ -775,19 +775,32 @@ table.data .row-num { color: var(--color-text-muted); font-size: 11px; font-fami
 }
 
 /* ===== Toast ===== */
-.toast {
+/* Escala de z-index do app: 2 · 20 · 50 (topbar, base.css) · 100 · 200
+   (.modal-overlay) · 300 (.toast-stack). O aviso precisa aparecer ACIMA do
+   modal que o originou — é justamente dentro dos modais que faltava
+   confirmação de que a ação deu certo. */
+.toast-stack {
   position: fixed;
   bottom: var(--space-6);
   right: var(--space-6);
+  z-index: 300;
+  display: flex; flex-direction: column; gap: var(--space-2);
+  max-width: min(360px, calc(100vw - 2 * var(--space-6)));
+  /* O container fica sempre montado (as regiões live não podem nascer junto
+     com o conteúdo); sem isto ele capturaria cliques da tela mesmo vazio. */
+  pointer-events: none;
+}
+.toast-regiao { display: flex; flex-direction: column; gap: var(--space-2); }
+.toast {
   background: var(--color-surface);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   padding: var(--space-3) var(--space-4);
   display: flex; align-items: center; gap: var(--space-3);
   border-left: 4px solid var(--color-success);
-  z-index: 100;
   animation: toastIn 300ms ease-out;
   min-width: 260px;
+  pointer-events: auto;
 }
 .toast .ico {
   width: 24px; height: 24px;
@@ -799,9 +812,26 @@ table.data .row-num { color: var(--color-text-muted); font-size: 11px; font-fami
 }
 .toast .title { font-weight: 600; font-size: 13px; }
 .toast .desc { font-size: 12px; color: var(--color-text-secondary); }
+.toast-texto { flex: 1; min-width: 0; }
+.toast-fechar {
+  background: none; border: 0; padding: 2px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.toast-fechar:hover { color: var(--color-text-primary); }
+/* .toast-sucesso usa o verde já definido em .toast (padrão do design system). */
+.toast-erro { border-left-color: var(--color-danger); }
+.toast-erro .ico { background: var(--color-danger-bg); color: var(--color-danger); }
+.toast-info { border-left-color: var(--color-info); }
+.toast-info .ico { background: var(--color-info-bg); color: var(--color-info); }
 @keyframes toastIn {
   from { opacity: 0; transform: translateX(20px); }
   to { opacity: 1; transform: translateX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast { animation: none; }
 }
 
 /* ===== Empty state ===== */
