@@ -181,3 +181,32 @@ era em boa parte consequência de elas fazerem pouco. Nenhum endpoint foi criado
 - **CV-44** `.table-toolbar` (CSS órfão que serviria de barra de ações dentro do `.table-wrap`) foi
   **considerado e descartado**: a `.filter-bar` acima da tabela já resolve e é o que as outras seis telas
   usam. Consistência vale mais do que adotar um órfão só porque ele existe.
+
+## Integração com a `main` depois do PR #119 (01/11/2026)
+
+A branch de UX entrou na `main` trazendo fundações compartilhadas que não existiam quando este trabalho
+começou. O merge foi resolvido adotando-as.
+
+- **CV-45** `Modal`, `AlertaErroEnvio` e o par `aria-invalid`/`aria-describedby` da `main` substituem o
+  esqueleto de modal feito à mão e os `alert danger` crus. Motivo: o `Modal` tem `role="dialog"`,
+  `aria-modal`, foco preso, Esc e devolução de foco, e não fecha por clique fora — nada disso existia nos
+  sete modais copiados. Os dois modais clínicos partem da versão da `main`, com o cadastro rápido e a
+  previsão de reforço reaplicados por cima.
+- **CV-46** O **Dashboard fica inteiro com a `main`, e os chips saem.** Motivo: além do link "ver baias", a
+  `main` separou os alertas por severidade em "Alertas Críticos" e "Acompanhamento" — isso resolve a
+  aglomeração que motivou os chips usando um critério que significa algo, e os cards preservam a descrição
+  completa, que o chip jogava para o `title`.
+- **CV-47** **Um mecanismo de feedback só, com as funcionalidades do toast sobre a arquitetura do
+  `avisar()`.** A `main` tinha `Avisos` + store de módulo; este trabalho tinha um `ToastProvider` com
+  Context. Trocar um pelo outro não servia:
+  - o Context quebrou **377 testes em 46 arquivos**, porque `useToast` lança fora do provider e o
+    `AuthContext` passou a consumi-lo — toda árvore de teste que monta o `AuthProvider` teria de montar um
+    provider de UI só para não quebrar;
+  - o store de módulo não tinha pausa no hover/foco, limite de fila nem região `assertive` separada.
+
+  O resultado é `components/toast/`: store de módulo com `useSyncExternalStore` (chamável de fora do React,
+  sobrevive à navegação, dedupe de texto igual) desenhado por um `<Toasts />` montado na raiz, que mantém a
+  pausa no hover e no foco, o teto de 3 avisos e o `prefers-reduced-motion`. Erro leva `role="alert"` no
+  próprio item — o contêiner de erros não tem `aria-live`, que duplicaria o anúncio.
+- **CV-48** As mensagens das exceções de vacina passam ao padrão que a `main` adotou em `433be7c`:
+  acentuadas, frase completa, com ponto final.
