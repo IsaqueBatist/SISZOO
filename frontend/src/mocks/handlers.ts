@@ -1715,10 +1715,38 @@ export const handlers = [
   http.get(`${API_BASE_URL}/medicamentos`, ({ request }) => {
     const url = new URL(request.url)
     const ativoParam = url.searchParams.get('ativo')
+    const categoriaIdParam = url.searchParams.get('categoriaId')
     const pagina = Number(url.searchParams.get('pagina') ?? '0')
     const tamanho = Number(url.searchParams.get('tamanho') ?? '20')
-    const filtrados = medicamentosMock.filter((item) => ativoParam === null || item.ativo === (ativoParam === 'true'))
+    const filtrados = medicamentosMock
+      .filter((item) => ativoParam === null || item.ativo === (ativoParam === 'true'))
+      .filter((item) => categoriaIdParam === null || item.categoriaId === categoriaIdParam)
+      .toSorted((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
     return HttpResponse.json(paginar(filtrados, pagina, tamanho))
+  }),
+
+  http.put(`${API_BASE_URL}/medicamentos/:id`, async ({ params, request }) => {
+    const body = (await request.json()) as { nome?: string; categoriaId?: string }
+    const medicamento = medicamentosMock.find((item) => item.id === params.id)
+    if (!medicamento) return HttpResponse.json({ mensagem: 'Medicamento nao encontrado' }, { status: 404 })
+    const categoria = categoriasFarmacologicasMock.find((item) => item.id === body.categoriaId)
+    if (!categoria) {
+      return HttpResponse.json({ mensagem: 'Categoria farmacologica informada nao existe' }, { status: 422 })
+    }
+    // Sem `ativo` no corpo, espelhando AtualizarMedicamentoRequest: o
+    // medicamento não tem caminho de reativação.
+    medicamento.nome = (body.nome ?? medicamento.nome).trim()
+    medicamento.categoriaId = categoria.id
+    medicamento.categoriaNome = categoria.nome
+    return HttpResponse.json(medicamento)
+  }),
+
+  // Soft-delete, 200 com corpo. Definitivo: não há PUT que devolva ativo=true.
+  http.delete(`${API_BASE_URL}/medicamentos/:id`, ({ params }) => {
+    const medicamento = medicamentosMock.find((item) => item.id === params.id)
+    if (!medicamento) return HttpResponse.json({ mensagem: 'Medicamento nao encontrado' }, { status: 404 })
+    medicamento.ativo = false
+    return HttpResponse.json(medicamento)
   }),
 
   http.post(`${API_BASE_URL}/medicamentos`, async ({ request }) => {
