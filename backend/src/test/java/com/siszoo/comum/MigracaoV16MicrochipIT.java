@@ -102,8 +102,8 @@ class MigracaoV16MicrochipIT extends AbstractIntegrationTest {
         assertThat(erro.getMessage(), containsString(segundo.toString()));
         assertThat(microchipDe(primeiro), equalTo("985"));
         assertThat(microchipDe(segundo), equalTo(" 98 5"));
-        // A V16 nao ficou aplicada (as anteriores, inclusive uma V15 quando
-        // existir, podem ter sido aplicadas antes dela na mesma chamada).
+        // A V16 nao ficou aplicada (as anteriores, inclusive a V15, podem ter
+        // sido aplicadas antes dela na mesma chamada).
         assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM " + S + "flyway_schema_history"
                 + " WHERE success AND version::int >= 16", Integer.class), equalTo(0));
     }
@@ -122,8 +122,6 @@ class MigracaoV16MicrochipIT extends AbstractIntegrationTest {
         assertThat(erro == null ? null : erro.getSQLState(), equalTo("23505"));
         assertThat(erro.getMessage(), containsString("uq_animal_microchip"));
     }
-
-    // ── Apoio ──
 
     private MigrateResult migrarAte(String versao) {
         return Flyway.configure()

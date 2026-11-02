@@ -121,7 +121,7 @@ describe('AnimalForm — cadastro', () => {
       motivoEntrada: 'resgate',
     })
     // Sem mexer nos cartões de castração, a resposta é "não informado": null,
-    // nunca false (decisão de 31/10/2026).
+    // nunca false.
     expect((corpoCapturado as AnimalRequest | null)?.esterilizado).toBeNull()
     // Nomes de resposta (com sufixo) nunca devem ser reenviados no request.
     expect(corpoCapturado).not.toHaveProperty('especieNome')
@@ -166,13 +166,13 @@ describe('AnimalForm — cadastro', () => {
     const campoMicrochip = screen.getByLabelText(/microchip/i).closest('.field')
     expect(campoMicrochip).not.toBeNull()
     expect(await within(campoMicrochip as HTMLElement).findByText('Este microchip já está cadastrado em outro animal.')).toBeInTheDocument()
-    // O nome preenchido continua lá — reenvio sem perda de dados.
+    // O nome preenchido continua lá: reenvio sem perda de dados.
     expect(screen.getByLabelText(/nome do animal/i)).toHaveValue('Rex Teste')
   })
 
   it('preview de foto aparece após a seleção de um arquivo', async () => {
     const user = userEvent.setup()
-    // A foto usa alt="" (decorativa, o nome já aparece em outro campo) — por
+    // A foto usa alt="" (decorativa, o nome já aparece em outro campo), por
     // isso não tem role="img" acessível, e o teste busca via querySelector.
     const { container } = renderCadastrar()
 
@@ -218,7 +218,7 @@ describe('AnimalForm — edição', () => {
       especie: 'canino',
       microchip: '985121234567890',
       // O PUT substitui a ficha: o esterilizado do animal (Rex é castrado no
-      // mock) tem de voltar no corpo, senão o backend responde 422 (FS-6).
+      // mock) tem de voltar no corpo, senão a ficha perde o dado.
       esterilizado: true,
     })
 

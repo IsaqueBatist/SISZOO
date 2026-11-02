@@ -16,7 +16,7 @@ import com.siszoo.usuarios.exception.LimiteTentativasException;
 // - solicitacoes por IP: freia a varredura de e-mails a partir de um ponto;
 // - consumo (validar/redefinir) por IP: freia a adivinhacao de tokens, que ja
 //   e inviavel pelos 256 bits de entropia.
-// O IP e o do socket (getRemoteAddr), como na auditoria (T43); atras de um
+// O IP e o do socket (getRemoteAddr), como na auditoria; atras de um
 // proxy todos os clientes compartilham o mesmo limite.
 @Component
 public class LimitadorRecuperacaoSenha {

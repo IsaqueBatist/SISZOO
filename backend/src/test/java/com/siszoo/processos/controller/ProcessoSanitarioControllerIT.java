@@ -59,7 +59,7 @@ import com.siszoo.processos.repository.ProcessoSanitarioRepository;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-// Processo sanitario completo (T29) pela API: criacao com responsavel e
+// Processo sanitario completo pela API: criacao com responsavel e
 // amostras, as duas modalidades de amostra, independencia da ficha, urgencia
 // derivada, vinculo imutavel, catalogos, rollback e auditoria sem dado pessoal.
 @Import(RelogioTesteConfig.class)
@@ -96,13 +96,11 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
     }
 
     // Segunda barreira (a primeira e o finally de cada teste): nenhum teste
-    // seguinte herda o relogio de um ano isolado (T30).
+    // seguinte herda o relogio de um ano isolado.
     @AfterEach
     void restaurarRelogio() {
         RelogioTesteConfig.restaurar();
     }
-
-    // ── Criacao e consulta ───────────────────────────────
 
     @Test
     @DisplayName("[T29] cria processo completo: protocolo, catalogos, CID, responsavel e amostra de campo; GET devolve o mesmo")
@@ -214,8 +212,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
                 .then().statusCode(200);
     }
 
-    // ── Animal do canil: snapshot e independencia da ficha ──
-
     @Test
     @DisplayName("[DH-5] amostra do canil copia a identificacao da ficha; alterar a ficha depois nao muda a amostra")
     void amostraDoCanilEhSnapshotIndependente() {
@@ -270,8 +266,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
             fixture.postarProcesso(tokenAgente, comAmostraDoCanil(animalId, Map.of())).then().statusCode(200);
         }
     }
-
-    // ── Urgencia, CID e vinculo ──────────────────────────
 
     @Test
     @DisplayName("[DER 18] contato humano em qualquer amostra torna o processo e a ocorrencia vinculada urgentes")
@@ -418,8 +412,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         assertThat(buscar(tokenAgente, processoId).path("ocorrenciaId"), equalTo(ocorrenciaId));
     }
 
-    // ── Transacao e auditoria ────────────────────────────
-
     @Test
     @DisplayName("[T29] falha na segunda amostra desfaz tudo: sem processo, responsavel, amostra nem protocolo consumido")
     void falhaNaSegundaAmostraDesfazTudo() {
@@ -464,8 +456,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
             assertThat(payload, payload, not(containsString(pessoal)));
         }
     }
-
-    // ── Listagem ─────────────────────────────────────────
 
     @Test
     @DisplayName("[T29] listagem paginada com filtros de doenca e status e protocolo da ocorrencia vinculada")
@@ -577,7 +567,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         assertThat(gravado.get("protocolo"), equalTo(protocolo));
     }
 
-    // ── Concorrencia do protocolo pela API (T30) ─────────
     // 6 criacoes: mais de uma para disputar a linha (PROCESSO, ano) de
     // protocolo_sequencia, com folga no pool padrao do Hikari (10; o
     // application.yml nao o configura): 6 transacoes da aplicacao + 1 conexao
@@ -586,7 +575,7 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
     private static final int CRIACOES_CONCORRENTES = 6;
     private static final long TIMEOUT_SEGUNDOS = 30;
     // Datas de negocio fixas e no passado em relacao ao relogio ajustado: o ano
-    // do protocolo vem do Clock, nao da data de abertura (D21), e as linhas
+    // do protocolo vem do Clock, nao da data de abertura, e as linhas
     // criadas aqui nao sobem para o topo das listagens dos outros testes, que
     // usam o mesmo banco sem rollback.
     private static final String DATA_ANTIGA = "2026-01-01";
@@ -645,8 +634,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
             RelogioTesteConfig.restaurar();
         }
     }
-
-    // ── Resultado laboratorial e maquina de status (T34) ─
 
     @ParameterizedTest(name = "[T34] resultado {0}: AGUARDANDO_RESULTADO -> COM_RESULTADO no POST, no GET e no banco")
     @ValueSource(strings = {"positivo", "negativo", "inconclusivo", "material_inadequado", "nao_realizado"})
@@ -723,7 +710,7 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         assertVigenteCoerente(processoId);
     }
 
-    // Processo nao e sigiloso (o sigilo e da ocorrencia, T26): a resposta do
+    // Processo nao e sigiloso (o sigilo e da ocorrencia): a resposta do
     // processo, inclusive com resultado e historico, nao traz o denunciante
     // da ocorrencia vinculada, e a consulta nao gera VISUALIZACAO.
     @Test
@@ -822,8 +809,8 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         assertVigenteCoerente(processoId);
     }
 
-    // Estado legado: COM_RESULTADO sem resultado, como o PATCH provisorio da
-    // D18 deixava antes da T34 (montado via SQL, depois da V15).
+    // Estado legado: COM_RESULTADO sem resultado, como um PATCH provisorio
+    // deixava (montado via SQL, depois da V15).
     @Test
     @DisplayName("[T34] COM_RESULTADO sem resultado vigente: PATCH CONCLUIDO 422, sem gravar nem auditar")
     void concluirSemResultadoVigenteRecusado() {
@@ -851,7 +838,7 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         assertVigenteCoerente(processoId);
         Map<String, Object> originalGravado = linhaDoResultado(originalId);
 
-        // T35-15: a cadeia termina no positivo, que e definitivo (corrigi-lo e
+        // A cadeia termina no positivo, que e definitivo (corrigi-lo e
         // recusado, positivoEDefinitivo).
         Response primeira = lancarResultado(tokenVet, processoId, corpoResultado("inconclusivo", HOJE.minusDays(1), originalId));
         primeira.then().statusCode(200);
@@ -903,7 +890,7 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         assertThat(eventos.get(2).get("status"), equalTo("COM_RESULTADO"));
     }
 
-    // T35-15 (#37): o positivo e definitivo — nenhuma correcao dele, nem para
+    // O positivo e definitivo: nenhuma correcao dele, nem para
     // outro resultado nem para positivo de novo (que reenviaria o e-mail). O
     // positivo continua vigente, sem registro novo. Negativo -> positivo,
     // por correcao, continua valendo (correcaoPorNovoRegistro).
@@ -978,7 +965,7 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         assertThat(eventosDeAtualizacao(processoId), equalTo(eventosAntes));
     }
 
-    // 6 lancamentos do primeiro resultado no mesmo processo, no padrao da T30:
+    // 6 lancamentos do primeiro resultado no mesmo processo:
     // uma conexao do teste trava a linha do processo (FOR UPDATE, sem commit);
     // so quando pg_stat_activity mostra as 6 transacoes esperando por ela o
     // teste libera (rollback). Pool: 6 + bloqueadora + polling = 8 de 10.
@@ -1114,8 +1101,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
                 .then().statusCode(404);
     }
 
-    // ── Catalogos e acesso ───────────────────────────────
-
     @Test
     @DisplayName("[T29] catalogos com os valores do DER; sem token 401; Vet le (PROCESSOS_SANITARIOS:leitura)")
     void catalogos() {
@@ -1139,8 +1124,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
     void processoInexistente() {
         buscar(tokenAgente, UUID.randomUUID().toString()).then().statusCode(404);
     }
-
-    // ── Apoio ────────────────────────────────────────────
 
     private static final LocalDate HOJE = RelogioTesteConfig.HOJE;
 

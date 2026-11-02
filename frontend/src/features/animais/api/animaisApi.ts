@@ -12,8 +12,8 @@ import type {
 } from '../types/animais.types'
 
 // A tela de Animais só usa a lista de baias para popular o filtro (sem
-// paginação própria) — pedimos uma página grande o bastante para cobrir as
-// baias ativas do CCZ. A tela de gestão de baias (T19) usa `listarBaias`
+// paginação própria): pedimos uma página grande o bastante para cobrir as
+// baias ativas do CCZ. A tela de gestão de baias usa `listarBaias`
 // abaixo, que traz ativas e inativas.
 const TAMANHO_PAGINA_SEM_UI_DE_PAGINACAO = 100
 
@@ -46,7 +46,7 @@ export function atualizarAnimal(id: string, payload: AnimalRequest): Promise<Ani
 // Sem `ativa` (diferente de `listarBaiasAtivas`): a tela de gestão precisa
 // ver e filtrar também as baias inativas, então traz tudo numa página só e
 // filtra por status em memória, junto com tipo/lotação/busca.
-// F2-007 / RF-A04: anexos do animal (mesmo contrato dos anexos de ocorrência).
+// RF-A04: anexos do animal (mesmo contrato dos anexos de ocorrência).
 export function listarAnexosAnimal(animalId: string): Promise<AnexoAnimal[]> {
   return http.get<AnexoAnimal[]>(`/animais/${animalId}/anexos`).then((response) => response.data)
 }
@@ -71,8 +71,8 @@ export function listarBaias(): Promise<Baia[]> {
     .then((response) => response.data.itens)
 }
 
-// T45: residentes (sob custódia) de todas as baias, só nome e miniatura —
-// antes a Gestão de Baias baixava GET /animais?tamanho=500 com as fotos.
+// Residentes (sob custódia) de todas as baias, só nome e miniatura: a Gestão
+// de Baias não precisa baixar as fotos de GET /animais.
 export function listarResidentesDeBaias(): Promise<ResidenteBaia[]> {
   return http.get<ResidenteBaia[]>('/baias/residentes').then((response) => response.data)
 }

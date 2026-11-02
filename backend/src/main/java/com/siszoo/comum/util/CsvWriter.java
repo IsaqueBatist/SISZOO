@@ -6,9 +6,9 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-// CSV dos relatorios (T41): BOM UTF-8 + separador ";" para abrir corretamente
+// CSV dos relatorios: BOM UTF-8 + separador ";" para abrir corretamente
 // no Excel em pt-BR. Sem lib externa (Apache Commons CSV): o formato e simples
-// o bastante para StringBuilder, e o jar fica menor (CLAUDE.md: maquinas com
+// o bastante para StringBuilder, e o jar fica menor (maquinas com
 // ~2GB RAM). Escapa por RFC 4180 adaptado ao separador ";" (campo entre aspas
 // quando contem ";", aspas ou quebra de linha; aspas internas dobradas). Um
 // relatorio com mais de uma secao tabular (a maioria dos 6 tipos) gera varios

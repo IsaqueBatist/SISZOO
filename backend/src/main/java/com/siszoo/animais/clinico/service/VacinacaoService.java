@@ -157,9 +157,9 @@ public class VacinacaoService {
 
     /**
      * Resolve a vacina pelo codigo do catalogo. Vacina inativa nao aceita
-     * registro NOVO (RN-C09) — mesmo idioma de
-     * {@code ExameService.resolverTipoExame} e da decisao DH-22 da T37:
-     * catalogo inativo e invalido para registro novo.
+     * registro NOVO (RN-C09), mesmo idioma de
+     * {@code ExameService.resolverTipoExame}: catalogo inativo e invalido
+     * para registro novo.
      *
      * <p>A excecao e a retificacao da MESMA vacina do registro original: um
      * registro clinico so se corrige por um POST novo com {@code retificaId}

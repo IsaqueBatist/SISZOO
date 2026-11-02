@@ -6,11 +6,10 @@ import java.util.function.Supplier;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-// Regra de anexo comum a ocorrencias (T25) e animais (F2-007): JPG, PNG ou
+// Regra de anexo comum a ocorrencias e animais: JPG, PNG ou
 // PDF, ate 5 MB, com o tipo detectado pelos bytes iniciais e nao pelo
 // Content-Type informado pelo cliente (que so reflete a extensao do arquivo).
-// Antes era a mesma logica copiada nos dois services; cada modulo continua
-// lancando a propria excecao (e com a propria mensagem) via `invalido`.
+// Cada modulo lanca a propria excecao (e com a propria mensagem) via `invalido`.
 public final class ConteudoAnexo {
 
     public static final int TAMANHO_MAXIMO = 5 * 1024 * 1024;

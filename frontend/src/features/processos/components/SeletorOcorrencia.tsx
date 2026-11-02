@@ -17,12 +17,12 @@ export interface OcorrenciaParaVinculo {
 }
 
 // Ocorrência só pode receber processo se ainda não tem um (0..1) e não está
-// encerrada (D20) — o backend recusa os dois casos com 409/422.
+// encerrada: o backend recusa os dois casos com 409/422.
 function disponivelParaVinculo(ocorrencia: OcorrenciaResumo): boolean {
   return ocorrencia.processoProtocolo === null && ocorrencia.statusOcorrencia !== 'ENCERRADA'
 }
 
-// T26-9/T26-12: na listagem, o nome do denunciante de ocorrência sigilosa
+// Na listagem, o nome do denunciante de ocorrência sigilosa
 // vem nulo para todos; mostra "Sigiloso"/"Anônima" no lugar.
 function denuncianteExibido(ocorrencia: OcorrenciaResumo): string | null {
   if (ocorrencia.anonima) return 'Anônima'
@@ -80,8 +80,8 @@ function ListaOcorrencias({
   textoBotaoPular = 'Pular esta etapa',
 }: SeletorOcorrenciaProps) {
   const [busca, setBusca] = useState('')
-  // T45: debounce de 300 ms, como na tela de Ocorrências (antes, uma
-  // requisição por tecla).
+  // Debounce de 300 ms, como na tela de Ocorrências, para não fazer uma
+  // requisição por tecla.
   const [buscaDebounced, setBuscaDebounced] = useState('')
   useEffect(() => {
     const timeout = setTimeout(() => setBuscaDebounced(busca.trim()), 300)

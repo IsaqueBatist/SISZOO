@@ -7,13 +7,13 @@ import type { OcorrenciaFormValues } from '../schemas/ocorrenciaFormSchema'
 import { DENUNCIANTE_VAZIO } from '../utils/ocorrenciaFormMapeamento'
 
 interface SecaoDenuncianteProps {
-  // Sigilosa sem permissão: o denunciante não aparece nem é editável (D10).
+  // Sigilosa sem permissão: o denunciante não aparece nem é editável.
   mascarado: boolean
   podeAlterarSigilo: boolean
-  // Só no cadastro: a edição não marca anonimato (D32, anônima só vira identificada).
+  // Só no cadastro: a edição não marca anonimato (anônima só vira identificada).
   mostrarAnonimo: boolean
   podeIdentificar: boolean
-  // Marcar o sigilo tira os anexos já guardados do disco (T42).
+  // Marcar o sigilo tira os anexos já guardados do disco.
   onSigilosaMarcada: () => void
 }
 
@@ -37,7 +37,7 @@ export function SecaoDenunciante({
 
   // Não dispara em ocorrência sigilosa: dado do denunciante não pode ir a um
   // serviço de terceiro (ViaCEP) nesse caso. Só preenche endereço/bairro se
-  // ainda estiverem vazios — nunca sobrescreve o que o usuário já digitou.
+  // ainda estiverem vazios: nunca sobrescreve o que o usuário já digitou.
   async function aoMudarCep(valorDigitado: string) {
     if (getValues('sigilosa')) return
     const digitos = valorDigitado.replace(/\D/g, '')
@@ -128,7 +128,7 @@ export function SecaoDenunciante({
               Denúncia anônima: nenhum dado do denunciante é registrado.
             </p>
             {podeIdentificar && (
-              // D32: só o caminho anônima -> identificada existe na interface.
+              // Só o caminho anônima -> identificada existe na interface.
               <button
                 type="button"
                 className="btn btn-outline btn-sm"

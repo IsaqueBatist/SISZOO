@@ -10,9 +10,9 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-// Processo completo numa unica requisicao (T29, DH-2): as etapas do wizard
+// Processo completo numa unica requisicao: as etapas do wizard
 // sao da interface; o servidor nao guarda rascunho. Doenca e laboratorio sao
-// codigos de catalogo. `urgente` nao e mais informado: deriva das amostras
+// codigos de catalogo. `urgente` nao e informado: deriva das amostras
 // (DER regra 18). ocorrenciaId e o vinculo da etapa 1 (opcional).
 public record CriarProcessoRequest(
         @NotNull
@@ -35,7 +35,7 @@ public record CriarProcessoRequest(
 
         String observacoes,
 
-        // F2-012 (Fase 3 do TG, RF-B01 / limitacao 3.5.2): numeros dos sistemas
+        // RF-B01 / limitacao 3.5.2: numeros dos sistemas
         // estaduais, registrados manualmente (sem integracao). Opcionais.
         @Size(max = 40)
         String galNumero,
@@ -43,7 +43,7 @@ public record CriarProcessoRequest(
         @Size(max = 40)
         String sinanNumero) {
 
-    // Compatibilidade com chamadas anteriores a F2-012 (testes).
+    // Para as chamadas que nao informam GAL/SINAN (testes).
     public CriarProcessoRequest(LocalDate dataAbertura, String doenca, String laboratorio, UUID ocorrenciaId,
             ResponsavelProcessoRequest responsavel, List<AmostraAnimalRequest> amostras, String observacoes) {
         this(dataAbertura, doenca, laboratorio, ocorrenciaId, responsavel, amostras, observacoes, null, null);

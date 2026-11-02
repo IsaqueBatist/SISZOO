@@ -36,7 +36,7 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
 // Capacidade da baia sob cadastros simultaneos (DER §3.2: baia_id so em baia
-// com ocupacao < capacidade). Mesma tecnica de OcorrenciaTransacaoIT (T30):
+// com ocupacao < capacidade). Mesma tecnica de OcorrenciaTransacaoIT:
 // uma conexao do teste trava a linha da baia (FOR UPDATE) e so a libera
 // quando pg_stat_activity mostra as N requisicoes esperando por ela ao mesmo
 // tempo. Sem trava no servico, cada requisicao ja contou a ocupacao e para

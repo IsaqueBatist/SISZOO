@@ -22,7 +22,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-// Resultado laboratorial do processo (T34, V14): registro critico imutavel.
+// Resultado laboratorial do processo (V14): registro critico imutavel.
 // Sem setters e com todas as colunas fora do UPDATE; a correcao e outra linha,
 // criada por retificar, com `retifica` apontando para esta. O banco recusa
 // UPDATE e DELETE (trigger da V14).

@@ -18,9 +18,9 @@ import javax.imageio.stream.MemoryCacheImageOutputStream;
 
 import org.springframework.stereotype.Component;
 
-// Miniatura da foto do animal para as listagens (T45, V28). A foto chega do
-// frontend como data URI (JPEG ou PNG, lado maior ate 800 px, ~60-120 KB) e
-// era devolvida inteira em cada linha de GET /api/animais so para virar um
+// Miniatura da foto do animal para as listagens (V28). A foto chega do
+// frontend como data URI (JPEG ou PNG, lado maior ate 800 px, ~60-120 KB),
+// pesada demais para cada linha de GET /api/animais, onde so vira um
 // avatar de ~40 px. Aqui vira um JPEG de lado maior LADO_MAXIMO, poucos KB.
 //
 // So ImageIO do JDK, sem dependencia nova. Valor que nao e data URI (uma URL

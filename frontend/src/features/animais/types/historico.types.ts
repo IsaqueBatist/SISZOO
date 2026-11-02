@@ -1,12 +1,12 @@
 // Espelha os records de com.siszoo.animais.clinico.dto/entity do backend
-// (Vacinacao, Procedimento, Prescricao, Medicamento — módulo "clinico").
+// (Vacinacao, Procedimento, Prescricao, Medicamento - módulo "clinico").
 
 export type UnidadeDose = 'MILIGRAMA' | 'MICROGRAMA' | 'GRAMA' | 'MILILITRO' | 'UNIDADE_INTERNACIONAL'
 export type UnidadeFrequencia = 'HORAS' | 'DIAS'
 export type ViaAdministracao = 'ORAL' | 'INTRAVENOSA' | 'INTRAMUSCULAR' | 'SUBCUTANEA' | 'TOPICA'
 export type StatusPrescricao = 'ATIVA' | 'CONCLUIDA' | 'SUSPENSA' | 'CANCELADA'
 
-// "ATIVO" | "RETIFICADO" — calculado no mapper do backend a partir de
+// "ATIVO" | "RETIFICADO": calculado no mapper do backend a partir de
 // `retificadoPorId`, nunca persistido.
 export type StatusRegistroClinico = 'ATIVO' | 'RETIFICADO'
 
@@ -71,7 +71,7 @@ export interface CriarProcedimentoRequest {
   retificaId?: string
 }
 
-// F2-007 / RF-A04 — espelha com.siszoo.animais.clinico.dto.ExameResponse.
+// RF-A04: espelha com.siszoo.animais.clinico.dto.ExameResponse.
 export interface Exame {
   id: string
   animalId: string
@@ -142,7 +142,7 @@ export interface CriarPrescricaoRequest {
   retificaId?: string
 }
 
-// Espelha com.siszoo.animais.clinico.dto.MedicamentoResponse (catálogo —
+// Espelha com.siszoo.animais.clinico.dto.MedicamentoResponse (catálogo:
 // tem GET próprio, ao contrário de Vacina/TipoProcedimento).
 export interface Medicamento {
   id: string

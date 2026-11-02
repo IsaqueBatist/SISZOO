@@ -202,7 +202,7 @@ describe('Dashboard', () => {
   })
 
   it('card de processos urgentes some (estado vazio) quando não há nenhum urgente', async () => {
-    // Como o backend: com ?urgente=true (T45), o único processo, não urgente,
+    // Como o backend: com ?urgente=true, o único processo, não urgente,
     // fica de fora.
     server.use(
       http.get(`${API_BASE_URL}/processos`, ({ request }) => {

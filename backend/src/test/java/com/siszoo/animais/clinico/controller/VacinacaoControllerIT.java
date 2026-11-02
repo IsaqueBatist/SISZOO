@@ -194,7 +194,7 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
                 .statusCode(200);
     }
 
-    // Idempotente: o banco e compartilhado, e `codigo` tem UNIQUE — numa
+    // Idempotente: o banco e compartilhado, e `codigo` tem UNIQUE; numa
     // segunda execucao o insert falharia.
     private Vacina vacinaDeTeste(String codigo, String nome) {
         return vacinaRepository.findByCodigo(codigo).orElseGet(() -> {

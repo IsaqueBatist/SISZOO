@@ -1,6 +1,6 @@
-/* Portado do <style> inline de docs/prototipo/cadastrar-ocorrencia.html.
+/* Baseado no <style> inline de docs/prototipo/cadastrar-ocorrencia.html.
    Classes já compartilhadas pelo design system (.card, .radio-cards,
-   .switch, .form-grid, .alert) ficam em components.css — não duplicadas
+   .switch, .form-grid, .alert) ficam em components.css, não duplicadas
    aqui. */
 
 .form-shell {

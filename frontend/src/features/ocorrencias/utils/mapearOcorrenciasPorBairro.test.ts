@@ -62,7 +62,7 @@ describe('mapearOcorrenciasPorBairro', () => {
   })
 })
 
-// T45: o backend devolve uma linha por grafia já contada.
+// O backend devolve uma linha por grafia já contada.
 describe('mapearOcorrenciasPorBairro com contagens do backend', () => {
   it('soma as quantidades das grafias do mesmo bairro e rotula pela de maior quantidade', () => {
     const resultado = mapearOcorrenciasPorBairro([

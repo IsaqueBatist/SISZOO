@@ -62,9 +62,9 @@ public class Vacinacao {
     @Column(name = "dose_quantidade", nullable = false, precision = 8, scale = 3)
     private BigDecimal doseQuantidade;
 
-    // Sem nullable=false de proposito: registros legados (anteriores a T24)
-    // podem nao ter unidade (V7, CHECK NOT VALID). Todo registro novo e
-    // obrigado a ter — @NotNull em CriarVacinacaoRequest e o CHECK do banco.
+    // Sem nullable=false de proposito: registros legados podem nao ter
+    // unidade (V7, CHECK NOT VALID). Todo registro novo e obrigado a ter:
+    // @NotNull em CriarVacinacaoRequest e o CHECK do banco.
     @Enumerated(EnumType.STRING)
     @Column(name = "dose_unidade", length = 30)
     private UnidadeDose doseUnidade;
@@ -86,9 +86,9 @@ public class Vacinacao {
     private LocalDateTime criadoEm;
 
     // DER.md: data_validade = data_aplicacao + intervalo da vacina (RN-A01).
-    // Fonte unica da regra para ficha, alerta vacinal, dashboard e relatorio
-    // (antes, 4 copias). Nao e coluna persistida (um campo derivado ficaria
-    // desatualizado); null se a vacina ainda nao tiver intervalo_meses.
+    // Fonte unica da regra para ficha, alerta vacinal, dashboard e relatorio.
+    // Nao e coluna persistida (um campo derivado ficaria desatualizado); null
+    // se a vacina ainda nao tiver intervalo_meses.
     public LocalDate calcularDataValidade() {
         if (vacina == null || vacina.getIntervaloMeses() == null || dataAplicacao == null) {
             return null;

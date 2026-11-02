@@ -91,12 +91,10 @@ class AnimalServiceTest {
                 motivoEntradaRepository, condicaoSaudeRepository, usuarioRepository, animalMapper, fichaCompletaService,
                 auditoriaEventoService,
                 new MiniaturaFoto(), clock);
-        // RNF10 (F2-078): atualizar() resolve o autor da auditoria; nos testes de
+        // RNF10: atualizar() resolve o autor da auditoria; nos testes de
         // regra de baia o usuario e irrelevante, entao o stub e lenient.
         lenient().when(usuarioRepository.findById(usuarioComId().getId())).thenReturn(Optional.of(usuarioComId()));
     }
-
-    // --- Datas ---
 
     @Test
     void deveRecusarDataDeEntradaFutura() {
@@ -136,8 +134,6 @@ class AnimalServiceTest {
 
         verify(animalRepository).save(any(Animal.class));
     }
-
-    // --- Baia ---
 
     @Test
     void deveRecusarBaiaInativaNoCadastro() {
@@ -237,8 +233,6 @@ class AnimalServiceTest {
                 .isInstanceOf(BaiaIndisponivelException.class);
     }
 
-    // --- Ficha completa ---
-
     @Test
     void fichaCompletaVemDoFichaCompletaService() {
         prepararCatalogos("em_tratamento");
@@ -248,8 +242,6 @@ class AnimalServiceTest {
 
         verify(animalRepository).save(org.mockito.ArgumentMatchers.argThat(Animal::isFichaCompleta));
     }
-
-    // --- Apoio ---
 
     private void assertRecusaCampo(CriarAnimalRequest request, String campo) {
         assertThatThrownBy(() -> animalService.criar(request, UUID.randomUUID()))

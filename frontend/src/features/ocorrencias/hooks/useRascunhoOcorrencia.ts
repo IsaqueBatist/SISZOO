@@ -27,11 +27,11 @@ type RascunhoOcorrenciaValores = Omit<OcorrenciaFormValues, 'anexos'> & {
   anexos: ReferenciaArquivoRascunho[]
 }
 
-// T42: os dados do denunciante PASSAM a ser persistidos, inclusive em
-// ocorrência sigilosa — decisão dos dois autores, revertendo a "rev. 12 item 3"
-// (ver docs/decisoes/T42.md). Motivo: não perder o que foi digitado numa queda
-// de rede. Risco aceito: o dado fica em claro no disco de uma máquina
-// compartilhada até a submissão, o descarte, o logout ou a expiração de 7 dias.
+// Os dados do denunciante são persistidos, inclusive em ocorrência sigilosa:
+// decisão dos dois autores (ver docs/decisoes/T42.md). Motivo: não perder o
+// que foi digitado numa queda de rede. Risco aceito: o dado fica em claro no
+// disco de uma máquina compartilhada até a submissão, o descarte, o logout ou
+// a expiração de 7 dias.
 // Em denúncia anônima não há o que guardar: o próprio formulário limpa os
 // campos ao marcar a opção.
 function paraRascunho(valores: OcorrenciaFormValues, anexos: ReferenciaArquivoRascunho[]): RascunhoOcorrenciaValores {
@@ -47,8 +47,8 @@ interface OpcoesRascunhoOcorrencia {
 }
 
 // Rascunho do formulário de ocorrência, com os anexos guardados à parte na
-// store 'arquivos' (T42). Mesmas regras de useRascunho — confere uma vez ao
-// montar, só então salva, com debounce — mais as dos anexos: cada arquivo é
+// store 'arquivos'. Mesmas regras de useRascunho (confere uma vez ao
+// montar, só então salva, com debounce) mais as dos anexos: cada arquivo é
 // gravado uma vez, fora do debounce; ocorrência sigilosa não grava arquivo em
 // disco; e o autosave fica suspenso depois do envio, para limpar o formulário
 // não recriar o rascunho de uma ocorrência que já existe no backend. Fica fora
@@ -78,7 +78,7 @@ export function useRascunhoOcorrencia({ chave, usuarioId, watch, reset, getValue
 
   // O autosave disparado pelo `watch` calcula as referências no instante do
   // evento, e a gravação do arquivo só termina depois dele. Sem reagendar, o
-  // salvamento pendente levaria a lista de referências de antes — por isso
+  // salvamento pendente levaria a lista de referências de antes, por isso
   // quem mexe nos arquivos chama isto ao terminar (o agendamento substitui o
   // anterior da mesma chave).
   function reagendar() {
@@ -105,7 +105,7 @@ export function useRascunhoOcorrencia({ chave, usuarioId, watch, reset, getValue
 
   useEffect(() => {
     // O gate precisa envolver a CRIAÇÃO da assinatura, não só o corpo do
-    // callback — senão um stale closure pode sobrescrever um rascunho real com
+    // callback, senão um stale closure pode sobrescrever um rascunho real com
     // um objeto vazio antes da hidratação terminar.
     // Com rascunho à espera de Restaurar ou Descartar, digitar não pode apagá-lo.
     if (!prontoParaAutoSalvar || aguardandoEscolha) return
@@ -162,8 +162,8 @@ export function useRascunhoOcorrencia({ chave, usuarioId, watch, reset, getValue
     setMensagem('Rascunho salvo.')
   }
 
-  // Grava cada anexo UMA vez, aqui — fora do debounce do rascunho de texto.
-  // Ocorrência sigilosa não grava nada em disco (decisão da T42): o anexo pode
+  // Grava cada anexo UMA vez, aqui, fora do debounce do rascunho de texto.
+  // Ocorrência sigilosa não grava nada em disco: o anexo pode
   // ser a foto do local ou um documento do denunciante protegido.
   async function guardarAnexos(arquivos: File[]) {
     if (getValues('sigilosa')) {
@@ -201,7 +201,7 @@ export function useRascunhoOcorrencia({ chave, usuarioId, watch, reset, getValue
   }
 
   // Depois do envio com sucesso: daqui para frente quem guarda os anexos que
-  // ainda não subiram é a pendência de anexos da D15, com outro ciclo de vida.
+  // ainda não subiram é a pendência de anexos, com outro ciclo de vida.
   // O autosave fica suspenso até retomarAutosave.
   async function encerrarAposEnvio() {
     autosaveSuspenso.current = true

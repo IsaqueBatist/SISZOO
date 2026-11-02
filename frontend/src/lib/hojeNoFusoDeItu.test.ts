@@ -3,7 +3,7 @@ import { procedimentoFormSchema, vacinacaoFormSchema } from '@/features/animais/
 import { processoFormSchema } from '@/features/processos/schemas/processoFormSchema'
 import { hojeEmItu } from './datas'
 
-// "Hoje" do formulário na virada do dia UTC x Itu (DER §5 regra 4; AC-1):
+// "Hoje" do formulário na virada do dia UTC x Itu (DER §5 regra 4):
 // entre 21:00 e 23:59 em Itu o dia UTC já é o seguinte. Só o Date é
 // congelado, num instante de 2030/2031 que nunca coincide com o dia real,
 // então o resultado não depende da hora nem do fuso da máquina que roda a

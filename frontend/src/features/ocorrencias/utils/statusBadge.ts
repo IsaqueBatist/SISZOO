@@ -7,7 +7,7 @@ export interface Badge {
 }
 
 // Chaves em maiúsculas (códigos da API, StatusOcorrencia). O mock de
-// processos (D40) ainda usa minúsculas nas ocorrências de demonstração — a
+// processos ainda usa minúsculas nas ocorrências de demonstração: a
 // busca normaliza para servir os dois.
 const STATUS_BADGE_MAP: Record<string, Badge> = {
   ABERTA: { classe: 'badge-process-open', label: 'Aberta' },

@@ -25,7 +25,7 @@ import lombok.Setter;
 
 // Historico da ocorrencia: so INSERT, nunca UPDATE/DELETE (o repositorio nao
 // expoe outra escrita). `data` e data de negocio, gravada pelo service com o
-// Clock do projeto (D39); `criadoEm` e o carimbo tecnico.
+// Clock do projeto; `criadoEm` e o carimbo tecnico.
 @Entity
 @Table(name = "movimentacao_ocorrencia")
 @Getter

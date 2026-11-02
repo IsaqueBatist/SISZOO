@@ -18,7 +18,7 @@ public record UsuarioResponse(
         String telefone) {
 
     // Para o evento de CRIACAO: a auditoria e imutavel e o telefone nao entra
-    // nela (T43).
+    // nela.
     public UsuarioResponse semTelefone() {
         return new UsuarioResponse(id, email, nome, sobrenome, crmv, cargos, ativo, ultimoAcesso, criadoEm,
                 senhaAlteradaEm, null);

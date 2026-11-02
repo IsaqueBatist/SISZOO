@@ -18,7 +18,7 @@ import {
 } from '../utils/processosCatalogos'
 import { BuscaAnimalCanil } from './BuscaAnimalCanil'
 
-// Tipo mínimo do erro de uma amostra — o RHF não distribui bem FieldErrors
+// Tipo mínimo do erro de uma amostra: o RHF não distribui bem FieldErrors
 // sobre a união discriminada em arrays.
 export interface AmostraErros {
   sexo?: { message?: string }
@@ -42,7 +42,7 @@ function paraNumeroOuIndefinido(valor: unknown): number | undefined {
 }
 
 // Texto do animal escolhido no cartão e na revisão: a identificação gravada
-// na amostra é copiada da ficha pelo servidor (DH-5), não por aqui.
+// na amostra é copiada da ficha pelo servidor, não por aqui.
 function descricaoDoAnimal(animal: Animal): string {
   return [animal.nome, animal.especieNome, animal.microchip ?? 'sem microchip'].join(' · ')
 }
@@ -265,7 +265,7 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
             className={`select${erros?.statusClinico ? ' error' : ''}`} aria-invalid={erros?.statusClinico ? true : undefined} aria-describedby={erros?.statusClinico ? `amostra-${index}-status-clinico-erro` : undefined}
             defaultValue=""
             {...register(campo('statusClinico'), {
-              // T29-3: sintomas só em amostra sintomática — sair de
+              // Sintomas só em amostra sintomática: sair de
               // SINTOMATICO descarta os já marcados.
               onChange: (event) => {
                 if (event.target.value !== 'SINTOMATICO') definir('sintomas', [])

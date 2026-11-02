@@ -4,10 +4,10 @@ import { Skeleton } from '@/components/layout/Skeleton'
 import { useContagemPorBairroQuery } from '../hooks/useOcorrencias'
 import { mapearOcorrenciasPorBairro, type BairroDatum } from '../utils/mapearOcorrenciasPorBairro'
 
-const COR_BARRA = '#1565C0' // --color-info — métrica única, não categoria por cor
+const COR_BARRA = '#1565C0' // --color-info - métrica única, não categoria por cor
 
-// Contagem de todo o histórico agregada no backend (T45,
-// docs/contratos/distribuicao-ocorrencias-bairro.md); aqui só se juntam as
+// Contagem de todo o histórico agregada no backend
+// (docs/contratos/distribuicao-ocorrencias-bairro.md); aqui só se juntam as
 // grafias do mesmo bairro e se aplica o Top N.
 export function GraficoOcorrenciasPorBairro() {
   const { data, isLoading, isError, refetch } = useContagemPorBairroQuery(mapearOcorrenciasPorBairro)

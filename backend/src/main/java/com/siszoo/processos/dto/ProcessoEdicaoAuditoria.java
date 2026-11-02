@@ -1,7 +1,7 @@
 package com.siszoo.processos.dto;
 
 // Evento da edicao pelo Administrador: o snapshot do processo mais o que ele nao
-// leva. Excecao a D23, aprovada em 31/10/2026: corrigir um dado do responsavel
+// leva. Excecao a regra de auditoria sem dado pessoal: corrigir um dado do responsavel
 // nao pode apagar o valor anterior, e o evento so e consultado por quem edita
 // (GET /api/processos/{id}/alteracoes e tela de Logs). Os demais eventos do
 // processo seguem sem dado pessoal. justificativa so existe no estado depois.

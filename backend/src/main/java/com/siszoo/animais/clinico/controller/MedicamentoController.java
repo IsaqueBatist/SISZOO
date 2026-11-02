@@ -62,8 +62,8 @@ public class MedicamentoController {
     /**
      * Executa soft-delete: marca o medicamento como inativo ({@code ativo=false}).
      * A linha nunca e removida fisicamente (mesmo padrao de
-     * {@code BaiaController#desativar}). Diferente de Baia, esta versao nao tem
-     * endpoint de reativacao — ver "Registro" no relatorio desta tarefa.
+     * {@code BaiaController#desativar}). Diferente de Baia, nao ha endpoint de
+     * reativacao.
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('GESTAO_ANIMAIS:exclusao')")

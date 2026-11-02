@@ -2,7 +2,7 @@
 // (America/Sao_Paulo): `LocalDate` "2026-10-11" ou `LocalDateTime`
 // "2026-10-11T19:28:59.97". `new Date("2026-10-11")` é lido como meia-noite
 // UTC (regra do ECMAScript para data sem hora) e, formatado em São Paulo,
-// mostra o dia anterior — por isso a formatação separa a string em vez de
+// mostra o dia anterior - por isso a formatação separa a string em vez de
 // passar por `Date`.
 const FUSO_ITU = 'America/Sao_Paulo'
 
@@ -59,7 +59,7 @@ export function formatarDataHoraBR(iso: string | null | undefined): string {
 // Instante local (Date.now(), do próprio navegador) -> "24/10/2026, 19:42" no
 // fuso do CCZ. Diferente de formatarDataHoraBR, que recebe o LocalDateTime em
 // string que a API devolve: aqui a origem é um timestamp epoch gravado pelo
-// front (o `salvoEm` do rascunho, T42), que precisa passar por Date.
+// front (o `salvoEm` do rascunho), que precisa passar por Date.
 export function formatarInstanteBR(ms: number): string {
   const partes = Object.fromEntries(
     new Intl.DateTimeFormat('en-CA', {

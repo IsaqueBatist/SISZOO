@@ -23,13 +23,13 @@ public interface BaiaRepository extends JpaRepository<Baia, UUID>, JpaSpecificat
     @Query("SELECT b FROM Baia b WHERE b.id = :id")
     Optional<Baia> findByIdForUpdate(@Param("id") UUID id);
 
-    // Alerta "baia_superlotada" (com.siszoo.relatorios, T38): base para o
+    // Alerta "baia_superlotada" (com.siszoo.relatorios): base para o
     // service comparar ocupacao (AnimalRepository#contarOcupacaoPorBaia) com
-    // capacidade — so baias ativas entram na contagem, mesmo criterio de
+    // capacidade. So baias ativas entram na contagem, mesmo criterio de
     // "superlotada" ja usado em BaiaService#mapearComOcupacao (>= capacidade).
     List<Baia> findByAtivaTrue();
 
-    // Relatorio de ocupacao de baias (T41): ordem estavel para a tabela do
+    // Relatorio de ocupacao de baias: ordem estavel para a tabela do
     // preview/CSV/PDF nao variar a cada chamada.
     List<Baia> findByAtivaTrueOrderByNomeAsc();
 }

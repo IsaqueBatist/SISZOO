@@ -46,8 +46,8 @@ import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 
-// T35: EmailService no contexto real (application.yml, AsyncConfig, mail e
-// Thymeleaf auto-configurados) contra o SMTP falso do GreenMail — nenhum
+// EmailService no contexto real (application.yml, AsyncConfig, mail e
+// Thymeleaf auto-configurados) contra o SMTP falso do GreenMail: nenhum
 // servidor externo, nenhum endereco real (so .test). O GreenMail sobe uma vez
 // por classe numa porta livre (dynamicPort), antes do contexto Spring, que le
 // a porta pelo @DynamicPropertySource; reiniciar por metodo trocaria a porta
@@ -122,7 +122,7 @@ class EmailServiceIT extends AbstractIntegrationTest {
         assertTexto(recebida, "text/html", "<p>Conteúdo em HTML</p>");
     }
 
-    // Template da notificacao de resultado (T36) com dado dinamico hostil: o
+    // Template da notificacao de resultado com dado dinamico hostil: o
     // HTML chega escapado; o texto puro leva o valor literal (nao e HTML).
     @Test
     @DisplayName("[T35] template Thymeleaf: dados dinamicos renderizados e HTML escapado")

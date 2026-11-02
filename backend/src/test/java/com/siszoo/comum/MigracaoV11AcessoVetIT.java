@@ -99,8 +99,6 @@ class MigracaoV11AcessoVetIT extends AbstractIntegrationTest {
         assertThat(jdbcTemplate.queryForList(MATRIZ), equalTo(antes));
     }
 
-    // ── Apoio ──
-
     private MigrateResult migrarAte(String versao) {
         return Flyway.configure()
                 .dataSource(dataSource)

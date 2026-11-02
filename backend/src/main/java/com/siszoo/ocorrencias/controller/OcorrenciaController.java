@@ -44,9 +44,9 @@ import com.siszoo.ocorrencias.service.PermissoesOcorrencia;
 
 import jakarta.validation.Valid;
 
-// Sem @DeleteMapping de proposito: nao ha exclusao de ocorrencia (D8); o
+// Sem @DeleteMapping de proposito: nao ha exclusao de ocorrencia; o
 // Spring MVC responde 405 para DELETE nesta rota. Sem @Transactional: cada
-// service abre a transacao mais externa (T43-6, baixarAnexo).
+// service abre a transacao mais externa (ver baixarAnexo).
 @RestController
 @RequestMapping("/api/ocorrencias")
 public class OcorrenciaController {
@@ -69,8 +69,8 @@ public class OcorrenciaController {
             @RequestParam(required = false) String tipo,
             @RequestParam(required = false) List<StatusOcorrencia> status,
             @RequestParam(required = false) String q,
-            // F2-010 (RF-E02, Fase 3 do TG): periodo da data de abertura, dias inclusivos
-            // (docs/contratos/ocorrencias-filtro-data.md). Sem os parametros, nada muda.
+            // RF-E02: periodo da data de abertura, dias inclusivos
+            // (docs/contratos/ocorrencias-filtro-data.md). Sem os parametros, nao ha filtro.
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate de,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate ate,
             @RequestParam(defaultValue = "0") int pagina,
@@ -84,7 +84,7 @@ public class OcorrenciaController {
         return consultaService.catalogos();
     }
 
-    // T45: mesma autorizacao da listagem, que ja mostra o bairro de toda
+    // Mesma autorizacao da listagem, que ja mostra o bairro de toda
     // ocorrencia (inclusive sigilosa) a quem tem leitura do modulo.
     @GetMapping("/estatisticas/bairro")
     @PreAuthorize("hasAuthority('OCORRENCIAS_DENUNCIAS:leitura')")

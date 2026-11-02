@@ -15,7 +15,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// Conteudo do anexo do animal em tabela propria (V26, D9): so e lido no download.
+// Conteudo do anexo do animal em tabela propria (V26): so e lido no download.
 @Entity
 @Table(name = "anexo_animal_conteudo")
 @Getter

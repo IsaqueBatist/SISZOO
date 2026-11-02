@@ -1,4 +1,4 @@
-/* SISZOO — Base styles */
+/* SISZOO - Base styles */
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 body {
@@ -35,7 +35,7 @@ a:hover { text-decoration: underline; }
   color: var(--color-text-secondary);
 }
 
-/* Esconde visualmente mas mantém no nome acessível (leitor de tela) — ao
+/* Esconde visualmente mas mantém no nome acessível (leitor de tela), ao
    contrário de display:none, que também tira o elemento da árvore de
    acessibilidade. Usado na sidebar colapsada. */
 .visually-hidden {
@@ -209,7 +209,7 @@ a:hover { text-decoration: underline; }
 .breadcrumb .crumb { color: var(--color-text-secondary); }
 .breadcrumb .crumb.current { color: var(--color-text-primary); font-weight: 600; }
 
-/* Sem busca global (era um campo sem ação): as ações ficam à direita. */
+/* Sem busca global: as ações ficam à direita. */
 .topbar-actions { display: flex; align-items: center; gap: var(--space-3); margin-left: auto; }
 .icon-btn {
   width: 38px; height: 38px;

@@ -39,7 +39,6 @@ public record AnimalResponse(
         String criadoPorNome,
         LocalDateTime criadoEm,
         LocalDateTime atualizadoEm,
-        // F2-004 / F2-008 (Fase 3 do TG)
         String numeroMedalha,
         LocalDate dataImplantacaoChip,
         String procedencia,

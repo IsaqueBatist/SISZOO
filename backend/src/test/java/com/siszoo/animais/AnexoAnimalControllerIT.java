@@ -24,7 +24,7 @@ import com.siszoo.comum.ApiTesteFixture;
 
 import io.restassured.response.Response;
 
-// F2-007 / RF-A04 (Fase 3 do TG): anexos do animal (V26) — upload JPG/PNG/PDF
+// RF-A04: anexos do animal (V26) - upload JPG/PNG/PDF
 // ate 5 MB, download com Content-Disposition, limite por animal e auditoria.
 class AnexoAnimalControllerIT extends AbstractIntegrationTest {
 

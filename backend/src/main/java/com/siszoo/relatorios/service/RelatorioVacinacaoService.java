@@ -29,11 +29,11 @@ import com.siszoo.relatorios.entity.TipoRelatorio;
 // "Vacinas aplicadas" e "Aplicações por..." sao contagem de ATIVIDADE no
 // periodo filtrado (todo evento, mesmo um depois retificado); "% Animais
 // vacinados", "Vencidas" e "A vencer em 30 dias" sao o estado de vigencia
-// ATUAL (snapshot de hoje via Clock), igual ao KPI do dashboard — o periodo da
+// ATUAL (snapshot de hoje via Clock), igual ao KPI do dashboard - o periodo da
 // tela so filtra as secoes de atividade, nao a vigencia (nao ha como filtrar
 // "vigencia como estava em uma data passada" sem historico de snapshot).
 // IMPORTANTE: 30 dias aqui, nao os 7 do alerta do sistema (DER regra 22 e
-// deliberadamente diferente de CLAUDE.md "alerta de reforço: 7 dias").
+// deliberadamente diferente do alerta de reforço de 7 dias).
 @Service
 public class RelatorioVacinacaoService implements GeradorRelatorio<RelatorioVacinacaoResponse> {
 
@@ -92,8 +92,8 @@ public class RelatorioVacinacaoService implements GeradorRelatorio<RelatorioVaci
                 .toList();
 
         // CSV exporta a lista COMPLETA de animais com vacina vencida, sem o
-        // corte de top N do preview/PDF (decisao validada com o usuario).
-        // List.of recusa elemento nulo — microchip/baia podem ser null.
+        // corte de top N do preview/PDF.
+        // List.of recusa elemento nulo - microchip/baia podem ser null.
         List<List<String>> linhasVencidas = montarVencidas(vigentes, hoje).stream()
                 .map(l -> List.of(l.animal(), valorOuTraco(l.microchip()), valorOuTraco(l.baia()), l.vacina(),
                         String.valueOf(l.diasAtraso())))
@@ -161,7 +161,7 @@ public class RelatorioVacinacaoService implements GeradorRelatorio<RelatorioVaci
                 .toList();
     }
 
-    // Maior atraso primeiro — mesma ordem do protótipo (Pingo/42d no topo).
+    // Maior atraso primeiro - mesma ordem do protótipo (Pingo/42d no topo).
     private List<AnimalVacinaVencidaResponse> montarVencidas(List<Vacinacao> vigentes, LocalDate hoje) {
         List<AnimalVacinaVencidaResponse> vencidas = new ArrayList<>();
         for (Vacinacao v : vigentes) {

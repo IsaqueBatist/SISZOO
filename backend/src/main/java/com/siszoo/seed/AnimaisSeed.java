@@ -37,8 +37,6 @@ class AnimaisSeed {
 
     static final String GESTAO_ESCRITA = "GESTAO_ANIMAIS:escrita";
 
-    // ── Plano dos animais ──────────────────────────────────────────────
-
     static final class Animal {
         final int numero;
         final String nome;
@@ -185,8 +183,6 @@ class AnimaisSeed {
             canino(32, "Bela", "femea").cor("Branca e preta").idade("1 ano").entrada(35).chip().castrado(30)
                     .motivo("entrega_voluntaria").em(BaiasSeed.CANIL_A1));
 
-    // ── Plano do historico clinico ──────────────────────────────────────
-
     // dias > 0: aplicada ha `dias`; validadeEm != null: aplicada para vencer
     // em hoje + validadeEm (negativo = ja vencida).
     record Vacina(int animal, int ordem, String vacina, int dias, Integer validadeEm, String lote) {
@@ -323,8 +319,6 @@ class AnimaisSeed {
             new Anexo(12, "foto-entrada.png", "Foto de entrada", false),
             new Anexo(18, "raio-x-membro.png", "Radiografia do membro anterior", false),
             new Anexo(10, "laudo-eutanasia.pdf", "Laudo do responsável técnico", true));
-
-    // ── Execucao ────────────────────────────────────────────────────────
 
     private final SeedExecutor executor;
     private final AnimalService animalService;

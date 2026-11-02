@@ -113,8 +113,6 @@ class MigracaoV17RegistrosCriticosIT extends AbstractIntegrationTest {
                 "UPDATE " + S + "processo_sanitario SET status_processo = 'AGUARDANDO_RESULTADO'"), nullValue());
     }
 
-    // ── Apoio ──
-
     private record Registros(UUID animal, UUID processo) {
     }
 

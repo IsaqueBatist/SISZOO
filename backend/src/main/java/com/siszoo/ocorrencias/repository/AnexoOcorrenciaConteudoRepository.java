@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.siszoo.ocorrencias.entity.AnexoOcorrenciaConteudo;
 
-// Unico caminho ate o bytea do anexo; usado so no upload e no download (D9).
+// Unico caminho ate o bytea do anexo; usado so no upload e no download.
 public interface AnexoOcorrenciaConteudoRepository extends JpaRepository<AnexoOcorrenciaConteudo, UUID> {
 }

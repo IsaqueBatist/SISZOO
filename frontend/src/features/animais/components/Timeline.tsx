@@ -17,7 +17,7 @@ const LABEL_EVENTO: Record<TipoEventoTimeline, string> = {
   entrada: 'Entrada',
 }
 
-// Não existe ícone de "admissão/entrada" no design system — `home` é o mais
+// Não existe ícone de "admissão/entrada" no design system: `home` é o mais
 // próximo semanticamente (chegada ao CCZ) e já está portado em Icon.tsx.
 const ICONE_EVENTO: Record<TipoEventoTimeline, IconName> = {
   vacina: 'syringe',
@@ -27,10 +27,9 @@ const ICONE_EVENTO: Record<TipoEventoTimeline, IconName> = {
 }
 
 // `.timeline-item.{classe}` só define cor de bullet para vacina/exame/
-// cirurgia/medicamento/entrada (components.css) — não existe uma classe
-// própria para "procedimento" porque a ficha não separa mais Cirurgias de
-// Procedimentos (ver "Contexto" do plano de T22), então reaproveita a cor
-// de "cirurgia" para esse tipo.
+// cirurgia/medicamento/entrada (components.css). Não existe uma classe
+// própria para "procedimento" porque a ficha não separa Cirurgias de
+// Procedimentos, então reaproveita a cor de "cirurgia" para esse tipo.
 function classeCss(tipo: TipoEventoTimeline): string {
   return tipo === 'procedimento' ? 'cirurgia' : tipo
 }

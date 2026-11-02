@@ -51,14 +51,14 @@ public class MontadorRespostaOcorrencia {
     }
 
     // Criacao: devolve o denunciante como o detalhe (sem mascara para quem tem
-    // a feature) e sem VISUALIZACAO — e o que o proprio autor acabou de
-    // enviar, e era assim antes desta classe existir. Nao esta na lista da
-    // A04 abaixo; se deve passar a mascarar e decisao em aberto do time.
+    // a feature) e sem VISUALIZACAO - e o que o proprio autor acabou de
+    // enviar. Nao esta na lista de paraMutacao; se deve passar a mascarar e
+    // decisao em aberto do time.
     public OcorrenciaResponse paraCriacao(Ocorrencia ocorrencia, PermissoesOcorrencia permissoes) {
         return montar(ocorrencia, denuncianteDe(ocorrencia), permissoes, true);
     }
 
-    // A04: edicao, status, encerramento, notas e vinculo devolvem o
+    // Edicao, status, encerramento, notas e vinculo devolvem o
     // denunciante de ocorrencia sigilosa sempre mascarado, para qualquer
     // perfil. O dado completo so sai pelo detalhe e pelo download de anexo,
     // os dois caminhos que registram VISUALIZACAO.

@@ -22,7 +22,7 @@ class VacinacaoValidadeTest {
     @Test
     void validadeEAAplicacaoMaisOIntervaloEmMeses() {
         assertThat(vacinacao(LocalDate.of(2026, 3, 10), 12).calcularDataValidade()).isEqualTo(LocalDate.of(2027, 3, 10));
-        // Fim de mes: segue LocalDate.plusMonths, como antes nas quatro copias.
+        // Fim de mes: segue LocalDate.plusMonths.
         assertThat(vacinacao(LocalDate.of(2026, 1, 31), 1).calcularDataValidade()).isEqualTo(LocalDate.of(2026, 2, 28));
     }
 

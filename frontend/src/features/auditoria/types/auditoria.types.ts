@@ -23,12 +23,12 @@ export interface EventoAuditoria {
   entidadeId: string | null
   ocorreuEm: string
   ip?: string | null
-  // F2-027: estado antes/depois (JSON serializado pelo backend); opcionais.
+  // Estado antes/depois (JSON serializado pelo backend); opcionais.
   payloadAntes?: string | null
   payloadDepois?: string | null
 }
 
-// F2-027: filtros aplicados no servidor (GET /api/auditoria?acao=&usuarioEmail=&modulo=&de=&ate=).
+// Filtros aplicados no servidor (GET /api/auditoria?acao=&usuarioEmail=&modulo=&de=&ate=).
 export interface FiltrosAuditoria {
   acao?: string
   usuarioEmail?: string

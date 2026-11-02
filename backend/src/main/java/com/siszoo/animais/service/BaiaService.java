@@ -51,7 +51,7 @@ public class BaiaService {
     // os mesmos que o tiram da custódia do CCZ (fonte única em StatusAnimal).
     private static final Set<String> STATUS_FORA_DA_OCUPACAO = StatusAnimal.CODIGOS_FORA_DA_CUSTODIA;
 
-    // RNF10 (F2-078): baia e cadastro critico (define a ocupacao do canil):
+    // RNF10: baia e cadastro critico (define a ocupacao do canil):
     // criacao, edicao, (des)ativacao e exclusao logica geram AuditoriaEvento.
     private static final String ENTIDADE_AUDITORIA = "baia";
 
@@ -166,7 +166,7 @@ public class BaiaService {
                 }));
     }
 
-    // T45: residentes (sob custodia, mesmo criterio da ocupacao) de todas as
+    // Residentes (sob custodia, mesmo criterio da ocupacao) de todas as
     // baias, por nome, numa consulta so de colunas leves.
     @Transactional(readOnly = true)
     public List<ResidenteBaiaResponse> listarResidentes() {

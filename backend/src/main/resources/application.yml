@@ -5,7 +5,7 @@ spring:
   web:
     locale: pt_BR
     locale-resolver: fixed
-  # Anexos de ocorrencia (T25): ate 5 MB por arquivo, um arquivo por requisicao.
+  # Anexos: ate 5 MB por arquivo, um arquivo por requisicao.
   servlet:
     multipart:
       max-file-size: 5MB
@@ -16,8 +16,8 @@ spring:
   # ao gravar (09:30 virava 06:30 com a JVM em UTC). O fuso do sistema e
   # fixado na JVM (SiszooBackendApplication, TZ do Dockerfile) e no Clock
   # (ClockConfig). Ver FusoHorarioPersistenciaIT.
-  # SMTP do EmailService (T35; usado pela notificacao de resultado positivo
-  # da T37). Sem SMTP real configurado, o envio falha ao conectar: a falha
+  # SMTP do EmailService (usado pela notificacao de resultado).
+  # Sem SMTP real configurado, o envio falha ao conectar: a falha
   # so e logada pelo EmailService e nunca bloqueia quem chamou. Timeouts
   # curtos para a thread assincrona nao ficar presa. Variaveis e sandbox de
   # desenvolvimento: docs/email.md.
@@ -52,7 +52,7 @@ spring:
       shutdown:
         await-termination: true
         await-termination-period: 20s
-  # Cache das agregacoes do dashboard (com.siszoo.relatorios, T38): TTL curto
+  # Cache das agregacoes do dashboard (com.siszoo.relatorios): TTL curto
   # para nao recalcular a cada refresh/polling em maquinas com ~2GB RAM. Sem
   # @CacheEvict - ver docs/contratos/dashboard-kpis.md para o atraso que isso
   # pode introduzir. Desligado no perfil de teste (abaixo).
@@ -61,8 +61,8 @@ spring:
     caffeine:
       spec: expireAfterWrite=5m,maximumSize=10
 
-# T45: o navegador chama a API direto (VITE_API_BASE_URL, sem o nginx no
-# meio), e as respostas JSON trafegavam sem compressao. So JSON e so a partir
+# O navegador chama a API direto (VITE_API_BASE_URL, sem o nginx no meio):
+# sem isto, as respostas JSON trafegariam sem compressao. So JSON e so a partir
 # de 1 KB (respostas pequenas nao compensam). BREACH (compressao + TLS) exige
 # segredo e texto escolhido pelo atacante na mesma resposta: o unico segredo
 # no corpo e o token de acesso do login e da renovacao, cuja resposta (token +
@@ -93,7 +93,7 @@ siszoo:
   # aplicacao exatamente de onde a API a aceita.
   app:
     url: ${SISZOO_APP_URL:${SISZOO_CORS_ORIGIN:http://localhost:5173}}
-  # Limite de tentativas do login (LimitadorLogin, PS-8): so as falhas contam,
+  # Limite de tentativas do login (LimitadorLogin): so as falhas contam,
   # em janela fixa, por e-mail e por IP. Atingido, 429 ate a janela vencer.
   login:
     limite:
@@ -199,7 +199,7 @@ spring:
             required: false
           ssl:
             enable: false
-  # Cache do dashboard desligado nos testes (T38): o banco de teste é
+  # Cache do dashboard desligado nos testes: o banco de teste é
   # compartilhado entre métodos sem rollback (AbstractIntegrationTest), e um
   # TTL de 5 min faria um teste ler o resultado cacheado de outro.
   cache:

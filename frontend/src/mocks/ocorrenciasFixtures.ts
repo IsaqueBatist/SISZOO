@@ -7,7 +7,7 @@ import type {
   ProcessoSanitario,
 } from '@/features/ocorrencias/types/ocorrencias.types'
 
-// Fixtures FIXAS da API de ocorrências, só para os testes (T25, PR2). Os dados
+// Fixtures FIXAS da API de ocorrências, só para os testes. Os dados
 // são fictícios. Nenhuma regra de negócio é simulada aqui: a máscara de
 // sigilo, as transições e o protocolo são do backend (e testados lá). Cada
 // cenário traz `podeVerDenunciante` e os campos já como o backend os
@@ -339,8 +339,8 @@ export function ocorrenciaAbertaFixture(): Ocorrencia {
 }
 
 // Projeção campo a campo do detalhe para a linha da listagem, como o backend
-// a monta: `denuncianteNome` é nulo em toda sigilosa, para qualquer perfil
-// (T26, revisão da D14), e na anônima (não há denunciante).
+// a monta: `denuncianteNome` é nulo em toda sigilosa, para qualquer perfil,
+// e na anônima (não há denunciante).
 export function paraResumoFixture(ocorrencia: Ocorrencia): OcorrenciaResumo {
   return {
     id: ocorrencia.id,
@@ -359,7 +359,7 @@ export function paraResumoFixture(ocorrencia: Ocorrencia): OcorrenciaResumo {
   }
 }
 
-// Ordem fixa, já como o backend devolveria (urgentes primeiro, D31).
+// Ordem fixa, já como o backend devolveria (urgentes primeiro).
 export function resumosFixture(): OcorrenciaResumo[] {
   const [aberta, sigilosa, anonima, pendente, encerrada] = ocorrenciasFixture()
   return [pendente, sigilosa, aberta, anonima, encerrada].map(paraResumoFixture)

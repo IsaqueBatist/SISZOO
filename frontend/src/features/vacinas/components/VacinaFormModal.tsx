@@ -45,7 +45,7 @@ export function VacinaFormModal({ vacina, onFechar }: VacinaFormModalProps) {
   // A validade de uma vacinação não é persistida: sai de
   // `data_aplicacao + intervalo_meses` toda vez que é lida. Mudar o intervalo
   // aqui portanto reescreve a data de reforço de todas as aplicações já
-  // lançadas desta vacina — a regra que a interface não contava.
+  // lançadas desta vacina.
   const intervaloDigitado = watch('intervaloMeses')
   const intervaloMudou = editando && (intervaloDigitado ?? null) !== (vacina.intervaloMeses ?? null)
 
@@ -113,9 +113,8 @@ export function VacinaFormModal({ vacina, onFechar }: VacinaFormModalProps) {
                 {errors.nome && <span className="err">{errors.nome.message}</span>}
               </div>
 
-              {/* O código nunca aparecia na interface, mas é ele que a mensagem
-                  de conflito cita ("mesmo codigo (v4_felinos)"). Mostrado só na
-                  edição, onde já existe. */}
+              {/* É o código que a mensagem de conflito cita ("mesmo codigo
+                  (v4_felinos)"). Mostrado só na edição, onde já existe. */}
               {editando && (
                 <div className="field">
                   <label htmlFor="vacina-codigo">Código</label>

@@ -14,7 +14,7 @@ import type {
   StatusProcesso,
 } from '../types/ocorrencias.types'
 
-// API real de ocorrências (T25). Sem perfil no front: sigilo e permissões
+// API real de ocorrências. Sem perfil no front: sigilo e permissões
 // são decididos pelo backend, que devolve `podeVerDenunciante` e responde
 // 403/422 quando a ação não é permitida.
 
@@ -37,8 +37,8 @@ export async function listarOcorrencias(
   return data
 }
 
-// T45: contagem por bairro de todo o histórico, para o gráfico e as sugestões
-// de bairro (antes, 500 ocorrências baixadas só para contar no cliente).
+// Contagem por bairro de todo o histórico, para o gráfico e as sugestões
+// de bairro, sem baixar ocorrências só para contar no cliente.
 export async function contarOcorrenciasPorBairro(): Promise<QuantidadePorBairro[]> {
   const { data } = await http.get<QuantidadePorBairro[]>('/ocorrencias/estatisticas/bairro')
   return data
@@ -64,7 +64,7 @@ export async function atualizarOcorrencia(id: string, payload: AtualizarOcorrenc
   return data
 }
 
-// D5: por este endpoint só ABERTA -> EM_ATENDIMENTO.
+// Por este endpoint só ABERTA -> EM_ATENDIMENTO.
 export async function iniciarAtendimento(id: string): Promise<Ocorrencia> {
   const { data } = await http.patch<Ocorrencia>(`/ocorrencias/${id}/status`, { status: 'EM_ATENDIMENTO' })
   return data
@@ -94,9 +94,9 @@ export async function baixarAnexo(id: string, anexoId: string): Promise<Blob> {
   return data
 }
 
-// D40: o status do processo vinculado é avançado pela tela da ocorrência. A
-// abertura do processo saiu daqui na T29 (o backend passou a exigir o processo
-// completo) e volta pelo wizard de processos (T32/T33).
+// O status do processo vinculado é avançado pela tela da ocorrência. A
+// abertura do processo não passa por aqui: o backend exige o processo
+// completo, que vem pelo wizard de processos.
 export async function avancarStatusProcesso(processoId: string, status: StatusProcesso): Promise<ProcessoSanitario> {
   const { data } = await http.patch<ProcessoSanitario>(`/processos/${processoId}/status`, { status })
   return data

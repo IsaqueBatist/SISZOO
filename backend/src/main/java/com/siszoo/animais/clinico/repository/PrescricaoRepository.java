@@ -35,7 +35,7 @@ public interface PrescricaoRepository extends JpaRepository<Prescricao, UUID>, J
 
     // Alerta "medicacao_ativa" (DER §3.7): prescricao ATIVA com fim previsto
     // dentro da janela de 7 dias, so para animais sob custodia. Prescricao
-    // sem dataFimPrevista (em aberto) nao entra — segue o texto literal do
+    // sem dataFimPrevista (em aberto) nao entra: segue o texto literal do
     // DER (BETWEEN hoje e hoje+7d).
     long countByStatusAndDataFimPrevistaBetweenAndAnimal_Status_CodigoNotIn(
             StatusPrescricao status,
@@ -43,7 +43,7 @@ public interface PrescricaoRepository extends JpaRepository<Prescricao, UUID>, J
             LocalDate fimJanela,
             Collection<String> codigosForaDaCustodia);
 
-    // "Medicações" no relatorio de procedimentos (T41): prescricoes iniciadas
+    // "Medicações" no relatorio de procedimentos: prescricoes iniciadas
     // no periodo.
     long countByDataInicioBetween(LocalDate inicio, LocalDate fim);
 }

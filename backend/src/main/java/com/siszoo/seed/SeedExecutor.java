@@ -18,8 +18,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 
-// Idempotencia do seed (docs/decisoes/seed-dev.md, SD-2): cada passo — uma
-// chamada de service, como uma requisicao da API — tem uma chave estavel
+// Idempotencia do seed (docs/decisoes/seed-dev.md): cada passo - uma
+// chamada de service, como uma requisicao da API - tem uma chave estavel
 // ("animal:017", "processo:12:resultado"...) gravada em seed_controle na MESMA
 // transacao em que o service real grava o registro e a auditoria. Um passo por
 // transacao, como na API: duas chamadas no mesmo contexto de persistencia
@@ -91,8 +91,8 @@ class SeedExecutor {
     }
 
     // `existente` adota um registro ja gravado pela chave natural (e-mail,
-    // microchip, nome da categoria) quando falta a linha de controle — so
-    // acontece se alguem apagou seed_controle a mao (SD-3).
+    // microchip, nome da categoria) quando falta a linha de controle - so
+    // acontece se alguem apagou seed_controle a mao.
     UUID garantir(String chave, String entidade, Supplier<Optional<UUID>> existente, Supplier<UUID> criar) {
         try {
             return transacao.execute(status -> {

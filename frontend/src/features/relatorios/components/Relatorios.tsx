@@ -13,12 +13,12 @@ interface GeracaoAtiva {
   nomeExibicao: string
 }
 
-// Tela de Relatórios (T41, docs/prototipo/relatorios.html): 6 cards (um por
+// Tela de Relatórios (docs/prototipo/relatorios.html): 6 cards (um por
 // tipo do catálogo, DER §3.6) + seção "Relatórios recentes". O preview do
-// relatório gerado aparece abaixo da grade de cards, não dentro do card — o
+// relatório gerado aparece abaixo da grade de cards, não dentro do card: o
 // card só guarda o filtro escolhido; `geracaoAtiva` nunca é limpo por um erro
 // de preview/exportação, então uma falha de rede não perde o que o usuário
-// já escolheu (internet instável, CLAUDE.md).
+// já escolheu (internet instável).
 export function Relatorios() {
   const tipos = useTiposRelatorioQuery()
   const [geracaoAtiva, setGeracaoAtiva] = useState<GeracaoAtiva | null>(null)

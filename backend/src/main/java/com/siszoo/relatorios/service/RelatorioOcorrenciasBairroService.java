@@ -29,9 +29,8 @@ import com.siszoo.relatorios.entity.TipoRelatorio;
 // Exclui ocorrencias com providencia 'registro_indevido' de toda contagem,
 // mesma regra ja aplicada ao KPI do dashboard (OcorrenciaRepository#contarRegistradasEm).
 // "Tempo médio (h)" é registro -> encerramento (criadoEm -> encerradaEm), não
-// "registro -> atendimento" como o rótulo do protótipo sugere — decisão
-// validada com o usuário (horaAbertura é opcional e nem toda ocorrência passa
-// por EM_ATENDIMENTO).
+// "registro -> atendimento" como o rótulo do protótipo sugere (horaAbertura é
+// opcional e nem toda ocorrência passa por EM_ATENDIMENTO).
 @Service
 public class RelatorioOcorrenciasBairroService implements GeradorRelatorio<RelatorioOcorrenciasBairroResponse> {
 
@@ -128,7 +127,7 @@ public class RelatorioOcorrenciasBairroService implements GeradorRelatorio<Relat
     }
 
     // Top N (ordem ja vem desc do repository) + 1 linha agregada "Outros (N
-    // bairros)" com o restante — mesmo padrao das demais listas longas.
+    // bairros)" com o restante - mesmo padrao das demais listas longas.
     private List<LinhaBairroOcorrenciaResponse> aplicarTopNComOutros(List<LinhaBairroOcorrenciaResponse> todos) {
         if (todos.size() <= TOP_N_BAIRROS) {
             return todos;

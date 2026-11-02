@@ -92,7 +92,7 @@ export function Logs() {
   const deDebounced = useValorComAtraso(deFiltro)
   const ateDebounced = useValorComAtraso(ateFiltro)
 
-  // F2-027 (Fase 3 do TG): os filtros vão ao servidor (GET /api/auditoria com
+  // Os filtros vão ao servidor (GET /api/auditoria com
   // acao/usuarioEmail/modulo/de/ate) e valem para toda a trilha, não só para
   // a página carregada. Trocar um filtro volta à primeira página.
   const filtros = useMemo(
@@ -109,7 +109,7 @@ export function Logs() {
   // pelos useMemo abaixo.
   const itens = useMemo(() => data?.itens ?? [], [data])
   // Opções: catálogo do servidor (toda a trilha); enquanto não carrega, os
-  // valores da página atual (mesmo comportamento anterior).
+  // valores da página atual.
   const acoesDisponiveis = useMemo(() => opcoes?.acoes ?? valoresUnicos(itens.map((e) => e.acao)), [opcoes, itens])
   const usuariosDisponiveis = useMemo(
     () => opcoes?.usuarios ?? valoresUnicos(itens.map((e) => e.usuarioEmail).filter((email): email is string => Boolean(email))),

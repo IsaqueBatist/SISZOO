@@ -46,7 +46,7 @@ public class BaiaController {
         return baiaService.listar(ativa, pagina, tamanho);
     }
 
-    // T45: residentes de todas as baias de uma vez para a Gestao de Baias,
+    // Residentes de todas as baias de uma vez para a Gestao de Baias,
     // em vez de GET /api/animais?tamanho=500 com fotos. Mesma autorizacao das
     // listagens de baias e de animais.
     @GetMapping("/residentes")

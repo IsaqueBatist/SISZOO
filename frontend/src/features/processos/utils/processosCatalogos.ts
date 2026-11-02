@@ -1,6 +1,6 @@
 import type { MaterialBiologico, NivelContato, StatusClinicoAmostra, StatusProcesso, TipoAbrigo } from '../types/processos.types'
 
-// Rótulos dos enums da amostra e do status (valores do backend, D38). Doença,
+// Rótulos dos enums da amostra e do status (valores do backend). Doença,
 // laboratório e sintoma são catálogos e vêm de GET /api/processos/catalogos.
 
 export const STATUS_CLINICO_OPCOES: { valor: StatusClinicoAmostra; label: string }[] = [
@@ -56,7 +56,7 @@ export const STATUS_PROCESSO_OPCOES: { valor: StatusProcesso; label: string }[] 
 ]
 
 // O ato real por trás de cada avanço manual. Sem entrada para
-// AGUARDANDO_RESULTADO: esse passo só acontece ao lançar o resultado (T37).
+// AGUARDANDO_RESULTADO: esse passo só acontece ao lançar o resultado.
 export const ACAO_DE_AVANCO_PROCESSO: Partial<Record<StatusProcesso, string>> = {
   ABERTO: 'Marcar amostras como enviadas',
   COM_RESULTADO: 'Concluir processo',
@@ -67,7 +67,7 @@ export function labelDe<T extends string>(opcoes: readonly { valor: T; label: st
   return opcoes.find((opcao) => opcao.valor === valor)?.label ?? valor
 }
 
-// D18: o status só avança um passo por vez; CONCLUIDO é o último.
+// O status só avança um passo por vez; CONCLUIDO é o último.
 export function proximoStatusProcesso(status: StatusProcesso): StatusProcesso | null {
   const indice = STATUS_PROCESSO_OPCOES.findIndex((opcao) => opcao.valor === status)
   return indice >= 0 && indice < STATUS_PROCESSO_OPCOES.length - 1 ? STATUS_PROCESSO_OPCOES[indice + 1].valor : null

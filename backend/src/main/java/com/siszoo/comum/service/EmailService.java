@@ -25,7 +25,7 @@ import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 
 /**
- * Envio de e-mail do sistema (T35): ponto unico que fala com o SMTP
+ * Envio de e-mail do sistema: ponto unico que fala com o SMTP
  * configurado em {@code spring.mail.*} (docs/email.md). O corpo vem pronto
  * de quem chama, normalmente de {@link EmailTemplateService}.
  *
@@ -37,7 +37,7 @@ import jakarta.mail.internet.MimeMultipart;
  * executor recusar a tarefa (ex.: aplicacao encerrando), a
  * {@link org.springframework.core.task.TaskRejectedException} sobe na propria
  * chamada - o proxy submete na thread de quem chama (Spring 7,
- * {@code submitCompletable}; docs/decisoes/T35.md T35-17).
+ * {@code submitCompletable}; docs/decisoes/T35.md).
  *
  * <p>Sucesso significa que o servidor SMTP aceitou a mensagem, nao que ela
  * foi entregue ou lida. Nao ha fila nem retentativa.

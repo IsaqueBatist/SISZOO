@@ -27,11 +27,11 @@ import com.siszoo.usuarios.exception.UsuarioNaoEncontradoException;
 import com.siszoo.usuarios.repository.UsuarioRepository;
 import com.siszoo.usuarios.service.AuditoriaEventoService;
 
-// F2-007 / RF-A04 (Fase 3 do TG): documentos e fotos anexados ao animal
+// RF-A04: documentos e fotos anexados ao animal
 // (Quadro 69). Mesmas regras dos anexos de ocorrencia (AnexoOcorrenciaService,
 // conteudo e nome em ConteudoAnexo):
 // JPG/PNG/PDF detectados pelos bytes, ate 5 MB, ate 10 por animal, conteudo em
-// tabela propria (D9) e auditoria CRIACAO. Anexo nao se altera nem se exclui
+// tabela propria e auditoria CRIACAO. Anexo nao se altera nem se exclui
 // (RN06: faz parte do historico do animal).
 @Service
 public class AnexoAnimalService {

@@ -306,7 +306,7 @@ class DashboardServiceTest {
         verify(processoSanitarioRepository).contarPorDoenca(2026);
     }
 
-    // Virada do dia UTC x Itu (FS-P7, mesmos instantes de
+    // Virada do dia UTC x Itu (mesmos instantes de
     // RegrasDeDataNaViradaDoDiaTest): o dia, a hora e as janelas do dashboard
     // sao os de Itu, com o fuso do Clock de producao (ClockConfig). As consultas
     // so comparam colunas de data com esses parametros (sem CURRENT_DATE).

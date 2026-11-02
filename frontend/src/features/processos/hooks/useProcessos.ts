@@ -77,8 +77,8 @@ export function useCatalogosProcessoQuery() {
 
 // O detalhe recebe a resposta gravada pelo servidor; listagens de processos e
 // listagem e detalhes de ocorrências são invalidados (a ocorrência vinculada
-// ganha o processo e pode passar a urgente, D31). Catálogos (staleTime
-// Infinity) e a contagem por bairro não mudam com processo e ficam de fora (T45).
+// ganha o processo e pode passar a urgente). Catálogos (staleTime
+// Infinity) e a contagem por bairro não mudam com processo e ficam de fora.
 function invalidarOcorrenciasAfetadas(queryClient: QueryClient) {
   void queryClient.invalidateQueries({ queryKey: ['ocorrencias', 'lista'] })
   void queryClient.invalidateQueries({ queryKey: ['ocorrencias', 'detalhe'] })
@@ -109,7 +109,7 @@ export function useAvancarStatusProcessoMutation(id: string) {
   })
 }
 
-// T34 + T37: substitui o avanço provisório só para AGUARDANDO_RESULTADO ->
+// Substitui o avanço provisório só para AGUARDANDO_RESULTADO ->
 // COM_RESULTADO (lançamento) ou corrige o vigente (com retificaId). A
 // resposta já traz o histórico completo em `resultados`.
 export function useRegistrarResultadoMutation(id: string) {
@@ -120,9 +120,9 @@ export function useRegistrarResultadoMutation(id: string) {
   })
 }
 
-// T35 (pendência): reenvio manual quando o primeiro envio falhou. A resposta
-// ainda traz dataNotificacaoMunicipe nula (o envio é assíncrono) — a tela
-// volta a acompanhar o processo como no lançamento inicial do positivo.
+// Reenvio manual quando o primeiro envio falhou. A resposta
+// ainda traz dataNotificacaoMunicipe nula (o envio é assíncrono): a tela
+// volta a acompanhar o processo como no lançamento inicial.
 export function useReenviarNotificacaoMutation(id: string) {
   const atualizarCache = useAtualizarCacheDoProcesso()
   return useMutation({

@@ -139,7 +139,7 @@ class UsuarioControllerIT extends AbstractIntegrationTest {
         assertThat(usuarioRepository.findByEmail(email).isPresent(), equalTo(false));
     }
 
-    // Teto do BCrypt: mais de 72 bytes UTF-8 (antes, 500 no encode) => 422 em
+    // Teto do BCrypt: mais de 72 bytes UTF-8 => 422 em
     // senhaInicial e nada e criado. 72 bytes exatos continuam aceitos.
     @Test
     @DisplayName("[senha] senha inicial acima de 72 bytes: 422 em senhaInicial; 72 bytes: criado")

@@ -11,10 +11,10 @@ interface CardStatusProcessoProps {
   podeEscrever: boolean
 }
 
-// D18: PATCH /api/processos/{id}/status provisório — avança um passo por vez,
-// sem registrar resultado nem notificar. T37: a transição
-// AGUARDANDO_RESULTADO -> COM_RESULTADO saiu daqui (o backend passou a
-// recusá-la neste endpoint) — agora só acontece pelo lançamento do
+// PATCH /api/processos/{id}/status provisório: avança um passo por vez,
+// sem registrar resultado nem notificar. A transição
+// AGUARDANDO_RESULTADO -> COM_RESULTADO não passa por aqui (o backend a
+// recusa neste endpoint): só acontece pelo lançamento do
 // resultado (CardResultadoProcesso), que grava resultado e desfecho na
 // mesma escrita.
 export function CardStatusProcesso({ processo, podeEscrever }: CardStatusProcessoProps) {

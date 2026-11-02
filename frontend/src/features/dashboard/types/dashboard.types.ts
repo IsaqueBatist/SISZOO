@@ -1,9 +1,9 @@
-// Espelha com.siszoo.relatorios.dto do backend (T38) — ver
+// Espelha com.siszoo.relatorios.dto do backend - ver
 // docs/contratos/dashboard-kpis.md para o contrato completo.
 //
 // Sem campos de variação semanal: o backend não guarda nenhum snapshot
 // histórico de contagem, então não há como calcular um delta real vs. 7 dias
-// atrás (decisão registrada no contrato). Fica para uma tarefa futura.
+// atrás (decisão registrada no contrato).
 
 export interface KpiAnimais {
   total: number
@@ -17,7 +17,7 @@ export interface KpiVacinacao {
   total: number
 }
 
-// mediaPorHora null (não 0) na virada do dia — o card esconde a média
+// mediaPorHora null (não 0) na virada do dia: o card esconde a média
 // nesse caso, em vez de mostrar uma conta falsa de "X/0".
 export interface KpiOcorrencias {
   registradasHoje: number
@@ -26,7 +26,7 @@ export interface KpiOcorrencias {
 
 // Snapshot pelo status atual do animal (mesma fonte do Relatório de Adoções):
 // o DER documenta uma tabela `adocao` (com `data_adocao`) que nunca foi
-// implementada, então não há "adoções no mês" nem meta mensal — ver
+// implementada, então não há "adoções no mês" nem meta mensal - ver
 // docs/contratos/dashboard-kpis.md.
 export interface KpiAdocoes {
   adotados: number
@@ -35,7 +35,7 @@ export interface KpiAdocoes {
 
 export type SeveridadeAlertaCritico = 'info' | 'atencao' | 'critico'
 
-// Um dos 6 alertas críticos do DER §3.7 — vacina_vencendo/vacina_vencida
+// Um dos 6 alertas críticos do DER §3.7 - vacina_vencendo/vacina_vencida
 // contam como 2 entradas separadas (mesma severidade do alerta de vacina já
 // existente, com.siszoo.alertas), totalizando 7 no array.
 export interface AlertaCritico {

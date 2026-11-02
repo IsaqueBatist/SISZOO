@@ -28,8 +28,8 @@ import com.siszoo.processos.exception.SintomaInvalidoException;
 import com.siszoo.processos.exception.SintomaSemStatusSintomaticoException;
 import com.siszoo.processos.repository.SintomaRepository;
 
-// Regras da amostra na criacao do processo (T29, DER §3.5): com animalId, a
-// identificacao e copiada da ficha do animal neste momento (snapshot, DH-5) e
+// Regras da amostra na criacao do processo (DER §3.5): com animalId, a
+// identificacao e copiada da ficha do animal neste momento (snapshot) e
 // nunca mais relida; sem ele, vem do request. Os campos clinicos vem sempre do
 // request. Nao ha sincronizacao com a ficha (DER regra 17). Sem
 // @Transactional: participa da transacao de ProcessoSanitarioService.criar.
@@ -94,7 +94,7 @@ public class AmostraProcessoFactory {
         AnimalAmostrado amostra = new AnimalAmostrado();
         amostra.setProcesso(processo);
         if (request.animalId() != null) {
-            // Qualquer status do animal pode ser amostrado na T29 (ponto a
+            // Qualquer status do animal pode ser amostrado (ponto a
             // confirmar com o CCZ, docs/decisoes/T29.md).
             Animal animal = animalRepository.findById(request.animalId())
                     .orElseThrow(AnimalNaoEncontradoException::new);
@@ -141,7 +141,7 @@ public class AmostraProcessoFactory {
         amostra.setSintomas(new HashSet<>(request.sintomasOuVazio().stream().map(sintomas::get).toList()));
     }
 
-    // Snapshot da identificacao (DER §3.5, DH-5): copiada uma vez, aqui.
+    // Snapshot da identificacao (DER §3.5): copiada uma vez, aqui.
     // Mudancas posteriores na ficha nao alteram a amostra.
     private static void copiarIdentificacaoDaFicha(AnimalAmostrado amostra, Animal animal) {
         amostra.setEspecie(animal.getEspecie());

@@ -7,7 +7,7 @@ import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/Auth
 import type { Usuario } from '@/features/auth/types/auth.types'
 import { CadastrarProcesso } from './CadastrarProcesso'
 
-// jsdom não implementa IndexedDB — mesmo padrão de
+// jsdom não implementa IndexedDB - mesmo padrão de
 // AnimalForm.autosave.test.tsx / OcorrenciaForm.autosave.test.tsx: mocka o
 // módulo de storage para testar QUANDO ele é chamado (gate de hidratação,
 // troca de etapa), não a mecânica de IndexedDB em si.
@@ -127,7 +127,7 @@ describe('ProcessoForm — autosave do rascunho', () => {
 
   function rascunhoComVinculo() {
     return {
-      // T42: o instante do salvamento acompanha o rascunho, para o aviso dizer
+      // O instante do salvamento acompanha o rascunho, para o aviso dizer
       // de quando ele é.
       salvoEm: Date.now(),
       etapaAtual: 3 as const,

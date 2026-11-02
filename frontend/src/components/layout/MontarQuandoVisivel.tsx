@@ -8,10 +8,10 @@ interface MontarQuandoVisivelProps {
 
 const MARGEM_ANTECIPADA = '200px'
 
-// T45: só monta os filhos quando o bloco se aproxima da área visível. Usado
+// Só monta os filhos quando o bloco se aproxima da área visível. Usado
 // nos gráficos do Dashboard (recharts, o maior chunk do front): quem não rola
 // até eles não baixa nem executa a biblioteca. Sem IntersectionObserver
-// (navegador antigo, jsdom), monta na hora — o comportamento de antes.
+// (navegador antigo, jsdom), monta na hora.
 export function MontarQuandoVisivel({ children, alturaReservada }: MontarQuandoVisivelProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [visivel, setVisivel] = useState(() => typeof IntersectionObserver === 'undefined')

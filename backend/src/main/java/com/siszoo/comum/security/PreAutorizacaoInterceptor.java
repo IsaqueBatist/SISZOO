@@ -20,7 +20,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 // O @Valid do @RequestBody e avaliado na resolucao dos argumentos, antes do
 // @PreAuthorize do metodo: um perfil sem permissao que mandasse corpo invalido
-// recebia 422 em vez de 403 (pendencia FS-P1). Este interceptor roda depois de
+// receberia 422 em vez de 403. Este interceptor roda depois de
 // achar o endpoint e antes de ler o corpo, avalia o mesmo @PreAuthorize com o
 // gerente do @EnableMethodSecurity e lanca AccessDeniedException, tratada como
 // sempre pelo ExceptionTranslationFilter -> JwtAccessDeniedHandler (403).

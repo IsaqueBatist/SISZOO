@@ -36,7 +36,7 @@ function formatarPelagem(pelagem: Pelagem | null): string {
 export function Animais() {
   const { roleKey } = useAuth()
   const podeEscrever = roleKey === 'admin' || roleKey === 'vet'
-  // Um card de baia (T19) linka para cá com `?baiaId=`: esse filtro vale mais
+  // Um card de baia linka para cá com `?baiaId=`: esse filtro vale mais
   // que o guardado da última visita.
   const baiaDaUrl = useFiltroDeLink('baiaId')
   const { filtros, pagina, definirFiltros, irParaPagina, limparFiltros, filtrosAtivos } = useFiltrosLista(

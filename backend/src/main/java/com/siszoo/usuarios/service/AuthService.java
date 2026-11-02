@@ -61,9 +61,9 @@ public class AuthService {
         this.clock = clock;
     }
 
-    // Limite de tentativas antes de conferir a senha (PS-8): dentro da janela,
-    // a resposta e 429 mesmo para a senha certa. Login recusado continua sem
-    // evento de auditoria (T43-5); so a falha conta no limitador.
+    // Limite de tentativas antes de conferir a senha: dentro da janela,
+    // a resposta e 429 mesmo para a senha certa. Login recusado nao gera
+    // evento de auditoria; so a falha conta no limitador.
     @Transactional
     public SessaoAutenticada login(LoginRequest request, String ip, String userAgent) {
         limitadorLogin.exigirPermitido(request.email(), ip);
@@ -121,7 +121,7 @@ public class AuthService {
             throw new CampoInvalidoException("novaSenha", "A nova senha precisa ser diferente da senha atual.");
         }
 
-        // T43: o evento registra so a data da troca, nunca senha nem hash. A
+        // O evento registra so a data da troca, nunca senha nem hash. A
         // data vai truncada em microssegundos, a precisao do timestamp do
         // PostgreSQL (que arredondaria os nanossegundos): assim o payload_depois
         // e o valor gravado, nao uma aproximacao dele.

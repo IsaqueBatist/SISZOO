@@ -1,7 +1,7 @@
-// Contrato da API de processos sanitários (T29, com.siszoo.processos.dto).
+// Contrato da API de processos sanitários (com.siszoo.processos.dto).
 // Catálogos (doença, laboratório, sintoma, espécie) vão e voltam pelo
-// `codigo`; enums da amostra em maiúsculas (D38). Sexo e pelagem usam o
-// domínio de `animal`, em minúsculas (DH-9).
+// `codigo`; enums da amostra em maiúsculas. Sexo e pelagem usam o
+// domínio de `animal`, em minúsculas.
 
 import type { Pelagem, Sexo } from '@/features/animais/types/animais.types'
 
@@ -55,7 +55,7 @@ interface AmostraClinicaRequest {
 }
 
 // Animal do canil: só o animalId; a identificação vem da ficha no servidor
-// (snapshot, DH-5) e não pode ser enviada.
+// (snapshot) e não pode ser enviada.
 export type AmostraCanilRequest = AmostraClinicaRequest & { animalId: string }
 
 // Animal de campo: espécie e sexo obrigatórios.
@@ -81,7 +81,7 @@ export interface CriarProcessoRequest {
   responsavel: ResponsavelProcessoRequest
   amostras: AmostraAnimalRequest[]
   observacoes?: string
-  // F2-012: números dos sistemas estaduais, registrados manualmente (RF-B01).
+  // RF-B01: números dos sistemas estaduais, registrados manualmente.
   galNumero?: string
   sinanNumero?: string
 }
@@ -123,7 +123,7 @@ export interface AmostraAnimal {
 
 export type AmostraEditada = { id: string; dados: AmostraAnimalRequest }
 
-// PUT /api/processos/{id}: só o Administrador (decisão de 31/10/2026).
+// PUT /api/processos/{id}: só o Administrador.
 export interface EditarProcessoRequest {
   doenca: string
   laboratorio: string
@@ -135,7 +135,7 @@ export interface EditarProcessoRequest {
   justificativa: string
 }
 
-// Um lançamento do histórico de resultado (original ou correção) - T34,
+// Um lançamento do histórico de resultado (original ou correção), na
 // tabela resultado_processo, imutável. Sem retificaId = original.
 export interface ResultadoProcessoItem {
   id: string
@@ -150,7 +150,7 @@ export interface ResultadoProcessoItem {
 
 // GET /api/processos/{id} (ProcessoSanitarioResponse). resultado/dataResultado
 // são o vigente (nulos até o primeiro lançamento). resultados é o histórico
-// completo, do original até a última correção (T34). desfechoAnimal (T37)
+// completo, do original até a última correção. desfechoAnimal
 // não faz parte do histórico imutável - é só do processo.
 export interface Processo {
   id: string
@@ -171,15 +171,15 @@ export interface Processo {
   dataResultado: string | null
   desfechoAnimal: CatalogoItem | null
   resultados: ResultadoProcessoItem[]
-  // T35-16 (#37): quando o SMTP aceitou o e-mail de resultado positivo ao
-  // munícipe (LocalDateTime de Itu, sem fuso). Nulo: sem envio aceito.
+  // Quando o SMTP aceitou o e-mail de resultado ao munícipe
+  // (LocalDateTime de Itu, sem fuso). Nulo: sem envio aceito.
   dataNotificacaoMunicipe: string | null
-  // F2-012 (opcionais no tipo para não quebrar fixtures antigas)
+  // Opcionais no tipo para não quebrar fixtures antigas
   galNumero?: string | null
   sinanNumero?: string | null
 }
 
-// POST /api/processos/{id}/resultados (T34 + T37). resultado e desfechoAnimal
+// POST /api/processos/{id}/resultados. resultado e desfechoAnimal
 // são códigos de catálogo ("aguardando" não é aceito como resultado).
 // retificaId só na correção de um resultado já lançado (write-once: sem ele,
 // só funciona com o processo em AGUARDANDO_RESULTADO).
@@ -206,7 +206,7 @@ export interface ProcessoResumo {
 export interface ProcessosFiltro {
   doenca?: string
   status?: StatusProcesso | StatusProcesso[]
-  // T45 (docs/contratos/processos-filtro-urgente.md): ausente = sem filtro.
+  // docs/contratos/processos-filtro-urgente.md: ausente = sem filtro.
   urgente?: boolean
   // Protocolo, ocorrência vinculada, animal amostrado, responsável, Nº GAL ou Nº SINAN.
   q?: string

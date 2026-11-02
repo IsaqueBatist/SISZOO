@@ -18,7 +18,7 @@ import io.restassured.http.ContentType;
 // roda com o fuso da maquina (America/Sao_Paulo no desenvolvimento) e em UTC
 // no CI (ubuntu-latest); os testes nao passam pelo main(), que fixa o fuso em
 // producao. Com hibernate.jdbc.time_zone=America/Sao_Paulo e a JVM em UTC, o
-// LocalDateTime era gravado 3 h antes (09:30 virava 06:30).
+// LocalDateTime seria gravado 3 h antes (09:30 viraria 06:30).
 class FusoHorarioPersistenciaIT extends AbstractIntegrationTest {
 
     @Autowired

@@ -12,7 +12,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-// Gera a miniatura (V28, T45) das fotos gravadas antes dela existir. Roda uma
+// Gera a miniatura (V28) das fotos gravadas antes dela existir. Roda uma
 // vez a cada subida, em segundo plano (executor do @EnableAsync), para nao
 // atrasar o startup; ate terminar, a listagem mostra o avatar sem foto desses
 // animais. Idempotente: so toca linhas com foto e sem miniatura, e o UPDATE

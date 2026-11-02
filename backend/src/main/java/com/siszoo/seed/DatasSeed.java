@@ -9,7 +9,7 @@ import java.time.LocalTime;
 // fixo de RelogioTesteConfig nos testes), nunca futuras para fatos ocorridos.
 // Os services carimbam com a hora real o que eles mesmos gravam (criado_em,
 // encerramento, movimentacoes, auditoria): so as datas de negocio vem daqui
-// (docs/decisoes/seed-dev.md, SD-5).
+// (docs/decisoes/seed-dev.md).
 final class DatasSeed {
 
     private final LocalDate hoje;

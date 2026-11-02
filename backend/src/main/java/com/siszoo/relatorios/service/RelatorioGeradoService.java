@@ -38,7 +38,7 @@ import com.siszoo.usuarios.service.AuditoriaEventoService;
 
 import tools.jackson.databind.ObjectMapper;
 
-// Orquestra os 4 endpoints de relatorios (T41): despacha para o
+// Orquestra os 4 endpoints de relatorios: despacha para o
 // GeradorRelatorio do tipo pedido, gera CSV/PDF e, so em caso de sucesso,
 // grava relatorio_gerado na mesma transacao (doc_id consumido via
 // ProtocoloService ANTES da geracao do conteudo, para o PDF poder exibi-lo no
@@ -158,7 +158,7 @@ public class RelatorioGeradoService {
         registro.setTamanhoBytes(conteudo.length);
         relatorioGeradoRepository.save(registro);
 
-        // T43: EXPORTACAO na mesma transacao - se o evento nao for gravado, o
+        // EXPORTACAO na mesma transacao - se o evento nao for gravado, o
         // commit falha antes de o controller montar a resposta e o arquivo
         // nao sai. O payload identifica a exportacao; nunca leva o conteudo.
         Map<String, Object> exportacao = new LinkedHashMap<>();

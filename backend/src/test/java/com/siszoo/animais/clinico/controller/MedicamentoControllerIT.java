@@ -168,7 +168,7 @@ class MedicamentoControllerIT extends AbstractIntegrationTest {
         assertThat(medicamentoDesativado.isAtivo(), equalTo(false));
 
         // Prova de soft-delete: o registro continua existindo e acessivel via GET,
-        // so com ativo=false — nunca ha DELETE fisico na tabela.
+        // so com ativo=false: nunca ha DELETE fisico na tabela.
         given()
                 .header("Authorization", "Bearer " + tokenAdmin)
                 .when()

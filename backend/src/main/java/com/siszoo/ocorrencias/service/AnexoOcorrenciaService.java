@@ -27,9 +27,9 @@ import com.siszoo.usuarios.exception.UsuarioNaoEncontradoException;
 import com.siszoo.usuarios.repository.UsuarioRepository;
 import com.siszoo.usuarios.service.AuditoriaEventoService;
 
-// Anexos da ocorrencia (T25, D9/D24): JPG/PNG/PDF ate 5 MB (ConteudoAnexo),
+// Anexos da ocorrencia: JPG/PNG/PDF ate 5 MB (ConteudoAnexo),
 // ate 5 por ocorrencia, conteudo em tabela propria. O download de ocorrencia
-// sigilosa segue a regra de sigilo do denunciante (D14/D30, T26/T43).
+// sigilosa segue a regra de sigilo do denunciante.
 @Service
 public class AnexoOcorrenciaService {
 
@@ -63,7 +63,7 @@ public class AnexoOcorrenciaService {
 
     @Transactional
     public AnexoOcorrenciaResponse adicionarAnexo(UUID id, MultipartFile arquivo, PermissoesOcorrencia permissoes) {
-        // D24: o lock vem antes da contagem, serializando uploads concorrentes.
+        // O lock vem antes da contagem, serializando uploads concorrentes.
         Ocorrencia ocorrencia = ocorrenciaRepository.findByIdForUpdate(id)
                 .orElseThrow(OcorrenciaNaoEncontradaException::new);
         ocorrencia.exigirAberta();
@@ -93,14 +93,14 @@ public class AnexoOcorrenciaService {
         return response;
     }
 
-    // D14/D30: em ocorrencia sigilosa (avaliado agora, no download), o
-    // conteudo so sai para quem tem denunciante_sigiloso — e cada entrega gera
-    // VISUALIZACAO (T26). Sem readOnly: numa transacao readOnly o INSERT da
+    // Em ocorrencia sigilosa (avaliado agora, no download), o
+    // conteudo so sai para quem tem denunciante_sigiloso - e cada entrega gera
+    // VISUALIZACAO. Sem readOnly: numa transacao readOnly o INSERT da
     // auditoria (REQUIRED, participa desta) seria descartado sem erro
     // (FlushMode.MANUAL) ou recusado pelo PostgreSQL (25006). Na mesma
     // transacao, falha da auditoria desfaz tudo e o arquivo nao sai.
     //
-    // T43: a recusa pelo sigilo grava ACESSO_NEGADO e so entao lanca o 403;
+    // A recusa pelo sigilo grava ACESSO_NEGADO e so entao lanca o 403;
     // noRollbackFor mantem o evento (ate ali a transacao so leu). Vale porque
     // esta e a transacao mais externa (so o controller chama, sem
     // @Transactional, open-in-view desligado) e porque o 403 e lancado aqui,

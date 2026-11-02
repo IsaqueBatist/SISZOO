@@ -63,8 +63,8 @@ const MAPA_ERROS_SERVIDOR: Record<string, keyof AnimalFormUiValues> = {
   esterilizado: 'castracaoOpcao',
 }
 
-// Pelas funções de rascunhoAnimalStorage (store 'animais', chave e formato
-// inalterados), não direto pelo banco.
+// Pelas funções de rascunhoAnimalStorage (store 'animais'), não direto pelo
+// banco.
 const ARMAZENAMENTO_RASCUNHO_ANIMAL: ArmazenamentoRascunho<RascunhoAnimalValores> = {
   carregar: (chave) => carregarRascunhoAnimal<RascunhoAnimalValores>(chave),
   agendarSalvar: (chave, valores) => agendarSalvarRascunhoAnimal(chave, valores),
@@ -89,8 +89,8 @@ export function AnimalForm({ animal }: AnimalFormProps) {
   const [fotoCarregando, setFotoCarregando] = useState(false)
   const [rascunhoMensagem, setRascunhoMensagem] = useState<string | null>(null)
 
-  // T42: id da foto na store 'arquivos'. Em ref, não em estado, porque só
-  // alimenta o que é gravado no rascunho — mudar não precisa redesenhar a tela.
+  // Id da foto na store 'arquivos'. Em ref, não em estado, porque só
+  // alimenta o que é gravado no rascunho: mudar não precisa redesenhar a tela.
   const fotoArquivoId = useRef<string | null>(null)
   const donoDosArquivos: DonoArquivoRascunho = { store: 'animais', chave: chaveRascunho }
 
@@ -105,8 +105,8 @@ export function AnimalForm({ animal }: AnimalFormProps) {
     resolver: zodResolver(animalFormUiSchema),
     mode: 'onSubmit',
     reValidateMode: 'onSubmit',
-    // Mesma conversão do rascunho: cobre todos os campos, inclusive os
-    // F2-004/F2-008 — sem eles o PUT da edição apagava o que estava salvo.
+    // Mesma conversão do rascunho: cobre todos os campos, porque o PUT da
+    // edição apaga o que estiver salvo em campo que não vier.
     defaultValues: rascunhoParaValores(iniciais, iniciais.fotoUrl),
   })
   const { handleSubmit, watch, setValue, setError, getValues, reset, trigger } = formulario
@@ -136,7 +136,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
   }
 
   // A foto do rascunho vem da store de arquivos, o que é assíncrono e não cabe
-  // na conversão síncrona do `deRascunho` — por isso o restaurar é envolvido
+  // na conversão síncrona do `deRascunho`, por isso o restaurar é envolvido
   // aqui, lendo o id antes de o aviso ser fechado.
   async function handleRestaurarRascunho() {
     const id = rascunho.rascunhoDisponivel?.fotoArquivoId ?? null
@@ -172,7 +172,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
     }
   }
 
-  // Grava a imagem comprimida como Blob, UMA vez, aqui — fora do debounce do
+  // Grava a imagem comprimida como Blob, UMA vez, aqui, fora do debounce do
   // rascunho de texto, que guarda só o id. A foto anterior sai antes, para o
   // rascunho não acumular arquivos trocados.
   async function guardarFotoNoRascunho(dataUri: string) {

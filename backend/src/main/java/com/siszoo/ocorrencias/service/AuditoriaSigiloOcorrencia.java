@@ -28,15 +28,15 @@ public class AuditoriaSigiloOcorrencia {
         this.usuarioRepository = usuarioRepository;
     }
 
-    // T26: acesso autorizado a dado de denunciante sigiloso. O payload so leva
-    // o id da ocorrencia — nenhum dado pessoal (D23).
+    // Acesso autorizado a dado de denunciante sigiloso. O payload so leva
+    // o id da ocorrencia - nenhum dado pessoal.
     public void registrarVisualizacao(PermissoesOcorrencia permissoes, String entidade, UUID entidadeId,
             UUID ocorrenciaId) {
         auditoriaEventoService.registrar(autor(permissoes), AcaoAuditoria.VISUALIZACAO,
                 entidade, entidadeId, null, Map.of("ocorrenciaId", ocorrenciaId));
     }
 
-    // T43: acesso ao dado de denunciante sigiloso recusado pela regra de
+    // Acesso ao dado de denunciante sigiloso recusado pela regra de
     // sigilo. Mesmo payload da VISUALIZACAO (so o id da ocorrencia). Gravado
     // com flush antes da resposta: falha vira 500, nunca 409 nem entrega.
     public void registrarAcessoNegado(PermissoesOcorrencia permissoes, String entidade, UUID entidadeId,

@@ -21,7 +21,7 @@ import { formatarProtocoloOcorrencia } from '../utils/protocolo'
 import { useIniciarAtendimentoMutation, useOcorrenciaQuery } from '../hooks/useOcorrencias'
 import { useAnexosPendentes } from '../hooks/useAnexosPendentes'
 
-// D15: anexos que não subiram no cadastro desta ocorrência (ficaram no
+// Anexos que não subiram no cadastro desta ocorrência (ficaram no
 // IndexedDB deste navegador) podem ser reenviados daqui também.
 function AnexosPendentesDaOcorrencia({ ocorrenciaId }: { ocorrenciaId: string }) {
   const queryClient = useQueryClient()
@@ -48,7 +48,7 @@ function AnexosPendentesDaOcorrencia({ ocorrenciaId }: { ocorrenciaId: string })
 }
 
 // Botão próprio (não inline em OcorrenciaDetalhe) porque a mutation só pode
-// ser chamada depois que `ocorrencia` já existe — mesmo motivo de
+// ser chamada depois que `ocorrencia` já existe, mesmo motivo de
 // CardEncerramento ser um componente à parte: chamar o hook direto em
 // OcorrenciaDetalhe violaria a regra dos hooks (ele fica depois do
 // early-return de loading/erro).

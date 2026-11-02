@@ -33,7 +33,7 @@ services:
       # Cookie da sessao (docs/decisoes/sessao.md); em HTTPS, Secure=true.
       SISZOO_COOKIE_SECURE: ${SISZOO_COOKIE_SECURE:-false}
       SISZOO_COOKIE_SAMESITE: ${SISZOO_COOKIE_SAMESITE:-Strict}
-      # SMTP do EmailService (T35). Mesmos padroes do application.yml: uma
+      # SMTP do EmailService. Mesmos padroes do application.yml: uma
       # variavel vazia aqui chegaria como "" e anularia o padrao do Spring.
       SMTP_HOST: ${SMTP_HOST:-localhost}
       SMTP_PORT: ${SMTP_PORT:-25}

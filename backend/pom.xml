@@ -29,8 +29,8 @@
 	<properties>
 		<java.version>21</java.version>
 		<!-- Sem isto, javac usa o encoding da plataforma (Cp1252 no Windows) pra
-		     ler os .java, que ja estao em UTF-8 — qualquer literal acentuado
-		     (ex.: titulo/descricao de alerta do dashboard, T38) vira mojibake no
+		     ler os .java, que ja estao em UTF-8 - qualquer literal acentuado
+		     (ex.: titulo/descricao de alerta do dashboard) vira mojibake no
 		     .class, mesmo a fonte estando correta no disco. CI Linux nao muda de
 		     comportamento (default ja e UTF-8 la). -->
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -81,13 +81,12 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-thymeleaf</artifactId>
 		</dependency>
-		<!-- PDF dos relatorios (T41): Flying Saucer renderiza HTML/CSS 2.1 para
-		     PDF via OpenPDF (LGPL). Escolhida sobre openhtmltopdf por instrucao
-		     explicita do enunciado da T41 na ausencia de ganho concreto entre as
-		     duas — ambas estao sem release ha anos (Flying Saucer 9.3.2 e de
-		     dez/2023; openhtmltopdf, sob o groupId real com.openhtmltopdf, nao
-		     io.github.openhtmltopdf, esta parado na 1.0.10 desde set/2021),
-		     confirmado direto na API do Maven Central. -->
+		<!-- PDF dos relatorios: Flying Saucer renderiza HTML/CSS 2.1 para
+		     PDF via OpenPDF (LGPL). Escolhida sobre openhtmltopdf na ausencia
+		     de ganho concreto entre as duas - ambas estao sem release ha anos
+		     (Flying Saucer 9.3.2 e de dez/2023; openhtmltopdf, sob o groupId
+		     real com.openhtmltopdf, nao io.github.openhtmltopdf, esta parado
+		     na 1.0.10 desde set/2021, segundo o Maven Central). -->
 		<dependency>
 			<groupId>org.xhtmlrenderer</groupId>
 			<artifactId>flying-saucer-pdf-openpdf</artifactId>
@@ -172,7 +171,7 @@
 			<version>${rest-assured.version}</version>
 			<scope>test</scope>
 		</dependency>
-		<!-- SMTP falso dos testes de e-mail (T35). Fora do gerenciamento do
+		<!-- SMTP falso dos testes de e-mail. Fora do gerenciamento do
 		     Boot; a 2.1.14 usa as mesmas jakarta.mail-api/Angus do Boot 4.1.1.
 		     Exclusoes: JUnit 4 (compile no greenmail) e o jar agregado
 		     jakarta.mail, que duplica as classes do angus-mail do starter. -->
@@ -203,7 +202,7 @@
 			</plugin>
 			<!-- Testes sempre em pt-BR: mensagens padrao do Bean Validation e
 			     rotulos do driver do PostgreSQL seguem o locale da JVM, e o
-			     runner do CI (en_US) dava texto diferente das maquinas locais. -->
+			     runner do CI (en_US) daria texto diferente das maquinas locais. -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
@@ -229,8 +228,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<!-- No nivel do plugin vale para compile e testCompile (antes era
-				     repetido em cada execucao). -->
+				<!-- No nivel do plugin vale para compile e testCompile. -->
 				<configuration>
 					<annotationProcessorPaths>
 						<path>

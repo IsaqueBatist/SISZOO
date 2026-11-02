@@ -140,7 +140,7 @@ class SeedPlanoTest {
                 case VINCULADA_PENDENTE -> assertThat(processo.status()).isNotEqualTo(StatusProcesso.CONCLUIDO);
                 default -> assertThat(processo).as(ocorrencia.chave()).isNull();
             }
-            // D32: anonima nao tem denunciante; identificada exige o nome (D19).
+            // Anonima nao tem denunciante; identificada exige o nome.
             switch (ocorrencia.sigilo()) {
                 case ANONIMA -> assertThat(ocorrencia.denunciante()).isNull();
                 case IDENTIFICADA, SIGILOSA -> assertThat(ocorrencia.denunciante()).isNotBlank();

@@ -47,12 +47,11 @@ import com.siszoo.processos.repository.ResponsavelProcessoRepository;
 
 import ch.qos.logback.classic.Level;
 
-// T37: NotificacaoResultadoService roda fora da transacao de escrita (chamado
+// NotificacaoResultadoService roda fora da transacao de escrita (chamado
 // so pelo NotificacaoResultadoListener, AFTER_COMMIT). Aqui, testes diretos
-// do servico — sem Spring, sem @Async — so a logica de melhor esforco. Desde
-// a T35 o envio passa pelo EmailService (envio real e template:
-// EmailServiceIT); aqui ele e um mock. Futures ja concluidos: o callback roda
-// na hora, na thread do teste.
+// do servico, sem Spring e sem @Async: so a logica de melhor esforco. O envio
+// passa pelo EmailService (envio real e template: EmailServiceIT); aqui ele e
+// um mock. Futures ja concluidos: o callback roda na hora, na thread do teste.
 @ExtendWith(MockitoExtension.class)
 class NotificacaoResultadoServiceTest {
 
@@ -99,7 +98,7 @@ class NotificacaoResultadoServiceTest {
                 equalTo(Map.of("nome", "Maria Responsavel", "protocolo", "045/2026", "resultado", "registrado")));
     }
 
-    // T35-16: aceite do SMTP grava a data/hora com o relogio do projeto
+    // Aceite do SMTP grava a data/hora com o relogio do projeto
     // (America/Sao_Paulo: 15:30Z = 12:30 local).
     @Test
     void envioAceitoRegistraADataComORelogioDoProjeto() {
@@ -146,7 +145,7 @@ class NotificacaoResultadoServiceTest {
         verify(processoSanitarioService, never()).registrarNotificacaoMunicipe(any(), any());
     }
 
-    // T35-17: a recusa do executor sobe na chamada, nao no future.
+    // A recusa do executor sobe na chamada, nao no future.
     @Test
     void recusaDoExecutorNaoPropagaNemRegistraEnvio() {
         processoComResponsavel("maria@exemplo.com");

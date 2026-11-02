@@ -37,7 +37,7 @@ export interface Animal {
   criadoPorNome: string
   criadoEm: string
   atualizadoEm: string
-  // F2-004 / F2-008 (Fase 3 do TG): opcionais no tipo para não quebrar fixtures antigas
+  // Opcionais no tipo para não quebrar fixtures antigas
   numeroMedalha?: string | null
   dataImplantacaoChip?: string | null
   procedencia?: string | null
@@ -56,7 +56,7 @@ export interface CatalogoItem {
 //
 // `intervaloMeses` nulo = vacina sem reforço definido, que não gera alerta
 // (RN-A03). A validade de uma vacinação já gravada continua vindo de
-// `Vacinacao.dataValidade` — não recalcular a partir daqui.
+// `Vacinacao.dataValidade`: não recalcular a partir daqui.
 export interface VacinaCatalogo extends CatalogoItem {
   intervaloMeses: number | null
 }
@@ -67,7 +67,7 @@ export interface CatalogosAnimal {
   status: CatalogoItem[]
   motivosEntrada: CatalogoItem[]
   tiposBaia: CatalogoItem[]
-  // F2-007 / RF-A04: catálogos do registro de exame (aditivos; opcionais para fixtures antigas)
+  // RF-A04: catálogos do registro de exame (aditivos; opcionais para fixtures antigas)
   tiposExame?: CatalogoItem[]
   laboratorios?: CatalogoItem[]
   // Registro de vacinação e de procedimento (seed da V5).
@@ -76,7 +76,7 @@ export interface CatalogosAnimal {
   condicoesSaude: CatalogoItem[]
 }
 
-// F2-007 / RF-A04 - espelha com.siszoo.animais.dto.AnexoAnimalResponse.
+// RF-A04: espelha com.siszoo.animais.dto.AnexoAnimalResponse.
 export interface AnexoAnimal {
   id: string
   animalId: string
@@ -156,7 +156,7 @@ export interface AnimalRequest {
   laudoEutanasia?: string
 }
 
-// GET /baias/residentes (T45): o mínimo do card de residentes da Gestão de
+// GET /baias/residentes: o mínimo do card de residentes da Gestão de
 // Baias. `fotoUrl` é a miniatura (avatar), como na listagem de animais.
 export interface ResidenteBaia {
   baiaId: string

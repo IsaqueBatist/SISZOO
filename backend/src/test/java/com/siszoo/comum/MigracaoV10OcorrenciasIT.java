@@ -31,7 +31,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-// Exercita a V10 (T25 — ocorrências) num schema proprio do mesmo PostgreSQL de
+// Exercita a V10 (ocorrências) num schema proprio do mesmo PostgreSQL de
 // teste, migrado por API ate a V10, no padrao de MigracaoV7RegistroClinicoIT.
 // Os casos gravam direto em SQL, sem a API: o objetivo e provar que as
 // constraints barram o dado invalido mesmo que o service seja contornado.
@@ -84,7 +84,7 @@ class MigracaoV10OcorrenciasIT extends AbstractIntegrationTest {
         assertThat(resultadoMigracao.targetSchemaVersion, equalTo("10"));
     }
 
-    // ── D25/D29: campos de encerramento existem se, e somente se, ENCERRADA ──
+    // Campos de encerramento existem se, e somente se, ENCERRADA.
 
     static Stream<Arguments> casosEncerramento() {
         String ck = "ck_ocorrencia_encerramento";
@@ -115,7 +115,7 @@ class MigracaoV10OcorrenciasIT extends AbstractIntegrationTest {
                 status, providencia, encerradaEm, encerradaPor, descricaoEncerramento, false, false, null, null));
     }
 
-    // ── D32: anonima e sigilosa sao excludentes ──
+    // Anonima e sigilosa sao excludentes.
 
     static Stream<Arguments> casosAnonimaSigilosa() {
         return Stream.of(
@@ -132,7 +132,7 @@ class MigracaoV10OcorrenciasIT extends AbstractIntegrationTest {
                 "ABERTA", false, false, false, false, anonima, sigilosa, null, null));
     }
 
-    // ── Faixas geograficas (nulos permitidos) ──
+    // Faixas geograficas: nulos permitidos.
 
     static Stream<Arguments> casosCoordenadas() {
         return Stream.of(
@@ -153,7 +153,7 @@ class MigracaoV10OcorrenciasIT extends AbstractIntegrationTest {
                 "ABERTA", false, false, false, false, false, false, latitude, longitude));
     }
 
-    // ── D4/D5/D37: movimentacao amarrada a transicao e nota com descricao ──
+    // Movimentacao amarrada a transicao e nota com descricao.
 
     static Stream<Arguments> casosMovimentacao() {
         String transicao = "ck_movimentacao_ocorrencia_transicao";
@@ -186,7 +186,7 @@ class MigracaoV10OcorrenciasIT extends AbstractIntegrationTest {
                 ocorrenciaBaseId, usuarioId, tipo, statusAnterior, statusNovo, descricao));
     }
 
-    // ── D13: sequencia de protocolo por entidade e ano ──
+    // Sequencia de protocolo por entidade e ano.
 
     @Test
     @DisplayName("[D13] protocolo_sequencia recusa entidade fora da lista")
@@ -204,7 +204,7 @@ class MigracaoV10OcorrenciasIT extends AbstractIntegrationTest {
         assertThat(proximoProtocolo("OCORRENCIA", 2031), equalTo(1));
     }
 
-    // ── D2: vinculo unico processo-ocorrencia e status do processo ──
+    // Vinculo unico processo-ocorrencia e status do processo.
 
     @Test
     @DisplayName("[D2] uma ocorrencia so pode ter um processo vinculado")
@@ -228,8 +228,6 @@ class MigracaoV10OcorrenciasIT extends AbstractIntegrationTest {
         verificar("ck_processo_sanitario_status", () -> inserirProcesso(null, "aberto"));
     }
 
-    // ── D9: anexos ──
-
     static Stream<Arguments> casosAnexo() {
         return Stream.of(
                 Arguments.of("PDF de 5 MB", "application/pdf", 5_242_880, null),
@@ -245,8 +243,6 @@ class MigracaoV10OcorrenciasIT extends AbstractIntegrationTest {
                 + " (ocorrencia_id, nome, mime_type, tamanho, criado_por_id) VALUES (?, 'arquivo', ?, ?, ?)",
                 ocorrenciaBaseId, mimeType, tamanho, usuarioId));
     }
-
-    // ── Seeds ──
 
     @Test
     @DisplayName("[D1] seed de tipo_ocorrencia segue DER §6")
@@ -304,8 +300,6 @@ class MigracaoV10OcorrenciasIT extends AbstractIntegrationTest {
         assertThat(contar("providencia_tomada"), equalTo(providencias));
         assertThat(contar("cargo_permissao"), equalTo(permissoes));
     }
-
-    // ── Apoio ──
 
     private void verificar(String constraintEsperada, Runnable insercao) {
         if (constraintEsperada == null) {

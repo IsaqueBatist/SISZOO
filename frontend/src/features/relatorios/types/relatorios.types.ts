@@ -1,4 +1,4 @@
-// Espelha com.siszoo.relatorios.entity.TipoRelatorio / dto do backend (T41).
+// Espelha com.siszoo.relatorios.entity.TipoRelatorio / dto do backend.
 // Os 6 codigos vem do catalogo do DER §3.6 - nao inventar outro aqui.
 export type TipoRelatorioCodigo =
   | 'anual_processos'
@@ -90,8 +90,6 @@ export interface PreviewVacinacao {
   animaisVencidosExcedente: number
 }
 
-// --- Procedimentos ---
-
 export interface KpisProcedimentos {
   totalProcedimentos: number
   castracoes: number
@@ -134,8 +132,6 @@ export interface PreviewProcedimentos {
   cirurgiasExcedente: number
 }
 
-// --- Ocorrências por Bairro ---
-
 export interface LinhaBairroOcorrencia {
   bairro: string
   ocorrencias: number
@@ -165,8 +161,7 @@ export interface PreviewOcorrenciasBairro {
   notaFocoGeografico: string
 }
 
-// --- Adoções (versão simplificada - ver backend RelatorioAdocoesResponse) ---
-
+// Adoções: versão simplificada (ver backend RelatorioAdocoesResponse).
 export interface PerfilAdocao {
   caracteristica: string
   quantidade: number
@@ -184,8 +179,6 @@ export interface PreviewAdocoes {
   perfil: PerfilAdocao[]
   notaLimitacao: string
 }
-
-// --- Relatório Anual de Processos ---
 
 export interface KpisAnualProcessos {
   processosAbertos: number

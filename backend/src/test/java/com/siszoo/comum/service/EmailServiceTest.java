@@ -39,7 +39,7 @@ import ch.qos.logback.classic.Level;
 import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
 
-// T35: ramos do EmailService chamados direto, sem Spring e sem proxy @Async
+// Ramos do EmailService chamados direto, sem Spring e sem proxy @Async
 // (o envio real, o template e a thread assincrona estao no EmailServiceIT;
 // a falha real de SMTP, no EmailServiceFalhaSmtpIT). Endereco so em .test.
 @ExtendWith(MockitoExtension.class)
@@ -126,9 +126,9 @@ class EmailServiceTest {
         assertThat(log.textos(Level.INFO), empty());
     }
 
-    // T35-17: pelo proxy assincrono (o mesmo interceptor do @EnableAsync), a
+    // Pelo proxy assincrono (o mesmo interceptor do @EnableAsync), a
     // tarefa e submetida na thread de quem chama. Executor encerrado recusa,
-    // e a TaskRejectedException sobe na propria chamada — nao no future.
+    // e a TaskRejectedException sobe na propria chamada, nao no future.
     @Test
     void recusaDoExecutorSobeNaPropriaChamadaSemTentarEnviar() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();

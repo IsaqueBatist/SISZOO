@@ -6,7 +6,7 @@ import type { TipoOcorrencia } from '../types/ocorrencias.types'
 
 export const TIPOS_OCORRENCIA_VALORES: TipoOcorrencia[] = ['zoonose', 'morcegos', 'irregular', 'agressivo', 'outros']
 
-// Campos opcionais: a validação de formato só roda quando preenchidos — um
+// Campos opcionais: a validação de formato só roda quando preenchidos: um
 // campo vazio continua válido. Os valores viajam MASCARADOS até a API (ver
 // frontend/src/lib/mascaras.ts).
 const campoCpf = z
@@ -49,7 +49,7 @@ const denunciadoSchema = z.object({
 })
 
 // Campos espelham CriarOcorrenciaRequest (ocorrencias.types.ts). Anexos ficam
-// no form mas vão por multipart depois do cadastro (D15).
+// no form mas vão por multipart depois do cadastro.
 export const ocorrenciaFormSchema = z
   .object({
     tipoOcorrencia: z.enum(TIPOS_OCORRENCIA_VALORES as [string, ...string[]], {
@@ -75,7 +75,7 @@ export const ocorrenciaFormSchema = z
   .superRefine((dados, ctx) => {
     // As mesmas regras são validadas no backend (422); aqui só antecipam o
     // erro na tela.
-    // D32: anônima e sigilosa são excludentes, e anônima não guarda nenhum
+    // Anônima e sigilosa são excludentes, e anônima não guarda nenhum
     // dado do denunciante.
     if (dados.anonima && dados.sigilosa) {
       ctx.addIssue({
@@ -91,7 +91,7 @@ export const ocorrenciaFormSchema = z
         message: 'Denúncia anônima não aceita dados do denunciante.',
       })
     }
-    // D19: nome obrigatório quando a ocorrência não é sigilosa nem anônima.
+    // Nome obrigatório quando a ocorrência não é sigilosa nem anônima.
     if (!dados.sigilosa && !dados.anonima && !dados.denunciante.nome) {
       ctx.addIssue({
         code: 'custom',

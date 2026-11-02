@@ -36,7 +36,7 @@ export function valoresVazios(): OcorrenciaFormValues {
 
 // Edição: valores iniciais a partir da ocorrência devolvida pelo backend.
 // Denunciante mascarado (sigilosa sem permissão) entra vazio e não é editável
-// nem enviado — os null da máscara apagariam os dados reais (D10).
+// nem enviado: os null da máscara apagariam os dados reais.
 export function valoresDaOcorrencia(ocorrencia: Ocorrencia, mascarado: boolean): OcorrenciaFormValues {
   const denunciante = ocorrencia.denunciante
   const denunciado = ocorrencia.denunciado
@@ -75,10 +75,10 @@ export function valoresDaOcorrencia(ocorrencia: Ocorrencia, mascarado: boolean):
   }
 }
 
-// Monta o payload real a partir dos valores do form — strings vazias viram
+// Monta o payload real a partir dos valores do form: strings vazias viram
 // `undefined` (campo opcional ausente), nunca enviadas como "". Anexos não
-// vão no JSON: cada arquivo é um POST multipart depois do cadastro (D15).
-// Anônima nunca manda o bloco (D32); sigilosa sem nenhum dado também não.
+// vão no JSON: cada arquivo é um POST multipart depois do cadastro.
+// Anônima nunca manda o bloco; sigilosa sem nenhum dado também não.
 function paraDenuncianteRequest(valores: OcorrenciaFormValues): DenuncianteRequest | undefined {
   if (valores.anonima) return undefined
   const bloco: DenuncianteRequest = {
@@ -120,7 +120,7 @@ export function paraRequisicao(valores: OcorrenciaFormValues): CriarOcorrenciaRe
   }
 }
 
-// PUT (D10): as flags vão sempre; cada bloco só quando o usuário mexeu nele
+// PUT: as flags vão sempre; cada bloco só quando o usuário mexeu nele
 // (ausente = sem alteração; presente = substitui o bloco inteiro). Desligar
 // "existe denunciado" manda o bloco vazio, que limpa os dados. Identificar
 // uma anônima manda `anonima: false` junto com o bloco do denunciante.

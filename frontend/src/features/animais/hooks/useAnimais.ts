@@ -74,7 +74,7 @@ export function useAtualizarAnimalMutation() {
 // A ocupação das baias é calculada a partir dos animais: cadastro, troca de
 // baia ou de status mudam o "x/capacidade" das telas de baia e do select.
 // Catálogos (staleTime Infinity) e anexos não mudam com o cadastro do animal
-// e ficam de fora (T45: antes cada gravação os recarregava).
+// e ficam de fora, para cada gravação não os recarregar.
 function invalidarAnimaisEBaias(queryClient: QueryClient) {
   return Promise.all([
     queryClient.invalidateQueries({
@@ -85,11 +85,11 @@ function invalidarAnimaisEBaias(queryClient: QueryClient) {
   ])
 }
 
-// Traz ativas e inativas — usado pela tela de gestão (T19), que filtra por
+// Traz ativas e inativas: usado pela tela de gestão, que filtra por
 // status em memória. Key própria, distinta de `['baias', { ativa: true }]`
 // (dropdown de filtro em /animais), mas invalidada junto por compartilhar o
 // prefixo `['baias']`.
-// F2-007 / RF-A04: anexos do animal.
+// RF-A04: anexos do animal.
 export function useAnexosAnimalQuery(animalId: string) {
   return useQuery({
     queryKey: ['animais', 'anexos', animalId],
@@ -113,7 +113,7 @@ export function useBaiasQuery() {
   })
 }
 
-// T45: sob o prefixo `['baias']`, então é recarregada junto com as baias e
+// Sob o prefixo `['baias']`, então é recarregada junto com as baias e
 // sempre que um animal muda (invalidarAnimaisEBaias).
 export function useResidentesDeBaiasQuery() {
   return useQuery({

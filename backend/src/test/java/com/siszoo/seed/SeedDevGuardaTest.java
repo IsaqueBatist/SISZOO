@@ -10,7 +10,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.mock.env.MockEnvironment;
 
-// Guarda de ambiente do seed (SD-1) e o portao unico de ativacao, sem banco.
+// Guarda de ambiente do seed e o portao unico de ativacao, sem banco.
 class SeedDevGuardaTest {
 
     private static MockEnvironment comPerfis(String... perfis) {

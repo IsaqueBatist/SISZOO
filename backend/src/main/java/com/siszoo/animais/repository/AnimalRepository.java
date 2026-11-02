@@ -26,9 +26,8 @@ public interface AnimalRepository extends JpaRepository<Animal, UUID>, JpaSpecif
     @EntityGraph(attributePaths = {"especie", "status", "motivoEntrada", "baia", "baia.tipoBaia", "criadoPor"})
     Page<Animal> findAll(Specification<Animal> spec, Pageable pageable);
 
-    // Residentes de cada baia na Gestao de Baias (T45): so o que o card mostra
-    // (nome e avatar), sem carregar a foto inteira nem as demais colunas — a
-    // tela baixava GET /api/animais?tamanho=500 com fotos so para agrupar.
+    // Residentes de cada baia na Gestao de Baias: so o que o card mostra
+    // (nome e avatar), sem carregar a foto inteira nem as demais colunas.
     // Mesmo criterio de ocupacao de contarOcupacaoPorBaia (sob custodia).
     @Query("SELECT a.baia.id AS baiaId, a.id AS id, a.nome AS nome, a.fotoMiniatura AS fotoMiniatura FROM Animal a "
             + "WHERE a.baia IS NOT NULL AND a.status.codigo NOT IN :codigosForaDaCustodia ORDER BY a.nome, a.id")
@@ -37,7 +36,7 @@ public interface AnimalRepository extends JpaRepository<Animal, UUID>, JpaSpecif
 
     Optional<Animal> findByMicrochip(String microchip);
 
-    // F2-004: medalha única quando informada (uq_animal_numero_medalha, V23).
+    // Medalha única quando informada (uq_animal_numero_medalha, V23).
     Optional<Animal> findByNumeroMedalha(String numeroMedalha);
 
     long countByBaia_IdAndStatus_CodigoNotIn(UUID baiaId, Collection<String> codigosExcluidos);
@@ -52,8 +51,8 @@ public interface AnimalRepository extends JpaRepository<Animal, UUID>, JpaSpecif
             @Param("baiaIds") Collection<UUID> baiaIds,
             @Param("codigosExcluidos") Collection<String> codigosExcluidos);
 
-    // KPI "animais" do dashboard (com.siszoo.relatorios, T38): total sob
-    // custodia e subtotal por especie numa unica query agregada — o service
+    // KPI "animais" do dashboard (com.siszoo.relatorios): total sob
+    // custodia e subtotal por especie numa unica query agregada: o service
     // soma os totais para "total" e le "canino"/"felino" do mapa para os
     // subtotais, em vez de uma query por especie.
     @Query("SELECT a.especie.codigo AS especieCodigo, COUNT(a) AS total FROM Animal a "
@@ -62,18 +61,18 @@ public interface AnimalRepository extends JpaRepository<Animal, UUID>, JpaSpecif
             @Param("codigosForaDaCustodia") Collection<String> codigosForaDaCustodia);
 
     // Alerta "ficha_incompleta" (DER §3.7). ficha_completa e mantido por
-    // FichaCompletaService a cada cadastro/edicao/vacinacao — aqui e so um
+    // FichaCompletaService a cada cadastro/edicao/vacinacao; aqui e so um
     // COUNT direto, sem recalcular nada.
     long countByFichaCompletaFalseAndStatus_CodigoNotIn(Collection<String> codigosForaDaCustodia);
 
     // Alerta "nao_castrado" (DER §3.7): so quem esta disponivel para adocao
-    // (os demais status sob custodia — em tratamento/quarentena — nao entram
+    // (os demais status sob custodia, em tratamento/quarentena, nao entram
     // nessa regra).
     long countByEsterilizadoFalseAndStatus_Codigo(String statusCodigo);
 
     // Alerta "sem_avaliacao_30d" (DER §3.7): animal sob custodia sem nenhum
-    // procedimento (vigente, isto e, nao retificado) nos ultimos 30 dias —
-    // inclui quem nunca teve procedimento algum, porque o NOT EXISTS nao
+    // procedimento (vigente, isto e, nao retificado) nos ultimos 30 dias.
+    // Inclui quem nunca teve procedimento algum, porque o NOT EXISTS nao
     // encontra nenhuma linha para esses casos. Mesmo padrao de "vigente" de
     // VacinacaoRepository#findVigentesParaAlertaVacinal, aplicado a Procedimento.
     @Query("""
@@ -90,15 +89,14 @@ public interface AnimalRepository extends JpaRepository<Animal, UUID>, JpaSpecif
             @Param("codigosForaDaCustodia") Collection<String> codigosForaDaCustodia,
             @Param("dataLimite") LocalDate dataLimite);
 
-    // Denominador de "% Animais vacinados" no relatorio de vacinacao (T41):
+    // Denominador de "% Animais vacinados" no relatorio de vacinacao:
     // total sob custodia, sem quebra por especie (ao contrario de
     // contarSobCustodiaPorEspecie, usado pelo KPI do dashboard).
     long countByStatus_CodigoNotIn(Collection<String> codigosForaDaCustodia);
 
-    // Relatorio de adocoes (T41): snapshot ATUAL (status = 'adotado'), nao
-    // filtrado por periodo — nao ha campo de data de adocao no schema hoje
+    // Relatorio de adocoes: snapshot ATUAL (status = 'adotado'), nao
+    // filtrado por periodo: nao ha campo de data de adocao no schema hoje
     // (sem tabela `adocao`, DER §3.2 modelo-alvo ainda nao implementado).
-    // Decisao de simplificacao validada com o usuario.
     long countByStatus_Codigo(String codigoStatus);
 
     @Query("SELECT a.especie.nome AS caracteristica, COUNT(a) AS quantidade FROM Animal a "

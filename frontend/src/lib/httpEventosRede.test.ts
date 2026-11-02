@@ -4,7 +4,7 @@ import { server } from '@/mocks/server'
 import { API_BASE_URL } from './env'
 import { EVENTO_REDE_FALHA, EVENTO_REDE_OK, http } from './http'
 
-// O banner de conexão (T42) depende destes eventos: o interceptor é o único
+// O banner de conexão depende destes eventos: o interceptor é o único
 // lugar que sabe se uma requisição chegou ao servidor.
 function espiarEventos() {
   const falhas = vi.fn()

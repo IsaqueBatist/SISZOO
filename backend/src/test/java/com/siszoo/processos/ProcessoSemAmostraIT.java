@@ -24,7 +24,7 @@ import com.siszoo.processos.repository.AnimalAmostradoRepository;
 
 import io.restassured.response.Response;
 
-// Ultima barreira da regra "processo tem >= 1 amostra" (DH-2). O DTO e o
+// Ultima barreira da regra "processo tem >= 1 amostra". O DTO e o
 // service ja recusam um processo sem amostras; aqui o repositorio de amostras
 // e trocado por um mock que nao grava nada, para o processo chegar ao banco
 // sem amostra. A constraint trigger adiavel da V13 so dispararia no COMMIT,

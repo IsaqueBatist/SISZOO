@@ -94,7 +94,7 @@ describe('AuthContext', () => {
     expect(await screen.findByText('Tela de login')).toBeInTheDocument()
   })
 
-  // T45: o AuthProvider re-renderiza a cada navegação (useNavigate); com o
+  // O AuthProvider re-renderiza a cada navegação (useNavigate); com o
   // value memoizado, quem só lê o contexto não re-renderiza junto.
   it('não re-renderiza quem lê o contexto quando só a rota muda', async () => {
     definirSessaoEmMemoria({ token: 'token-existente', usuario: USUARIO_EXEMPLO })

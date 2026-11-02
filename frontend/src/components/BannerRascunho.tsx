@@ -3,8 +3,8 @@ import { formatarInstanteBR } from '@/lib/datas'
 interface BannerRascunhoProps {
   onRestaurar: () => void
   onDescartar: () => void
-  // Instante do último salvamento. null em rascunho gravado antes da T42, que
-  // não tem a data registrada — nesse caso o aviso sai sem ela.
+  // Instante do último salvamento. null em rascunho antigo, que não tem a
+  // data registrada: nesse caso o aviso sai sem ela.
   salvoEm?: number | null
 }
 

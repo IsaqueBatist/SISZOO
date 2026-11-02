@@ -11,11 +11,10 @@ import { server } from '@/mocks/server'
 import { EditarAnimal } from './EditarAnimal'
 import type { AnimalRequest } from '../types/animais.types'
 
-// Auditoria de regras de negócio, itens I1 e N5: o PUT do animal substitui a
-// ficha inteira, então um campo que o formulário envia vazio é apagado no
-// servidor. Estes testes capturam o payload do PUT em três situações de edição
-// em que a ficha do Rex (mock) tem porte "grande" e a baia "Baia 3". Nasceram
-// como reprodução (tmp/reproducao-form-animal, f0d6dd7) e agora fixam a correção.
+// O PUT do animal substitui a ficha inteira, então um campo que o formulário
+// envia vazio é apagado no servidor. Estes testes capturam o payload do PUT em
+// três situações de edição em que a ficha do Rex (mock) tem porte "grande" e a
+// baia "Baia 3".
 
 // O rascunho é controlado pelo teste (sem IndexedDB): por padrão, nenhum.
 vi.mock('../storage/rascunhoAnimalStorage', async () => {
@@ -212,7 +211,7 @@ describe('edição do animal — porte e baia existentes no PUT (I1, N5)', () =>
   })
 
   // Se o rascunho deve prevalecer sobre a ficha atual segue como decisão de
-  // produto (N5). Aqui só se fixa que a ordem de carregamento das opções não
+  // produto. Aqui só se fixa que a ordem de carregamento das opções não
   // apaga a baia: o campo vazio do rascunho mantém o valor da ficha.
   it('cenário 3: restaurar um rascunho antigo sem baia mantém a baia no PUT', async () => {
     const user = userEvent.setup()

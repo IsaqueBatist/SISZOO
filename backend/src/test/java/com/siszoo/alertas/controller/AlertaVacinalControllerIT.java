@@ -150,7 +150,7 @@ class AlertaVacinalControllerIT extends AbstractIntegrationTest {
     void deveDevolverUmSoItemQuandoDuasAplicacoesIndependentesTemAMesmaDataAplicacao() {
         String animalId = fixture.criarAnimal(tokenAdmin);
         // Duas vacinacoes independentes (sem retificacao entre elas) para o
-        // mesmo animal+vacina, com a mesma dataAplicacao — a query precisa
+        // mesmo animal+vacina, com a mesma dataAplicacao: a query precisa
         // desempatar (por criadoEm, o registro mais recente) e devolver 1 so.
         fixture.criarVacinacao(tokenAdmin, animalId, APLICACAO_VENCIDA_HA_UM_DIA, null);
         fixture.criarVacinacao(tokenAdmin, animalId, APLICACAO_VENCIDA_HA_UM_DIA, null);

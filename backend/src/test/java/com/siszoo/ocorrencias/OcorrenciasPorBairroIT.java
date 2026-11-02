@@ -24,9 +24,9 @@ import com.siszoo.comum.ApiTesteFixture;
 import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 
-// T45 (docs/contratos/distribuicao-ocorrencias-bairro.md): contagem por
-// bairro agregada no banco, para o grafico e as sugestoes de bairro da tela de
-// ocorrencias. So bairro e quantidade saem no corpo; ocorrencia sigilosa conta
+// Contagem por bairro agregada no banco, para o grafico e as sugestoes de
+// bairro da tela de ocorrencias (docs/contratos/distribuicao-ocorrencias-bairro.md).
+// So bairro e quantidade saem no corpo; ocorrencia sigilosa conta
 // como as demais (a listagem ja mostra o bairro dela), sem dado de denunciante.
 class OcorrenciasPorBairroIT extends AbstractIntegrationTest {
 

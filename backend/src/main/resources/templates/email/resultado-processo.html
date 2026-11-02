@@ -1,17 +1,14 @@
 <!DOCTYPE html>
 <!--/*
-  T35: modelo do e-mail da notificacao de resultado positivo (T36, issue
-  #37; NotificacaoResultadoService). Redesenhado com as cores e a
-  tipografia do design system do SISZOO (docs/prototipo/design-system.html
-  e tokens.css). NAO e comunicacao oficial aprovada pelo CCZ.
-  "Positivo" esta fixo no texto (nao e variavel): regra 19 do DER so
-  dispara esta notificacao quando o resultado vigente e positivo
-  (RESULTADO_QUE_NOTIFICA em ProcessoSanitarioService/NotificacaoResultadoService),
-  entao o template nunca precisa descrever outro resultado. A cor do card
+  Modelo do e-mail da notificacao de resultado (NotificacaoResultadoService),
+  com as cores e a tipografia do design system do SISZOO
+  (docs/prototipo/design-system.html e tokens.css). NAO e comunicacao oficial
+  aprovada pelo CCZ. A variavel resultado traz "positivo" ou "inconclusivo",
+  os resultados que disparam esta notificacao (RN10). A cor do card
   do protocolo usa a mesma paleta do badge "positivo" do app (vermelho/danger,
   components.css .badge-positive), nao a verde: verde no design system
   identifica "negativo".
-  Variaveis: nome, protocolo, resultado. th:text escapa HTML — os elementos que
+  Variaveis: nome, protocolo, resultado. th:text escapa HTML - os elementos que
   recebem nome/protocolo nao levam nenhum outro atributo, de proposito:
   EmailServiceIT e NotificacaoResultadoEmailIT conferem o HTML escapado
   por essas tags exatas ("Ola, <span>...</span>." e "<strong>...</strong>").

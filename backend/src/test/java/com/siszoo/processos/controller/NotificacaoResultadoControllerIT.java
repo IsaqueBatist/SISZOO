@@ -48,12 +48,11 @@ import com.siszoo.comum.service.EmailService;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-// T37 — o que a arquitetura de resultado da T34 (resultado_processo,
-// retificação) não tinha: desfecho do animal no mesmo lançamento e
-// notificação assíncrona ao município quando o vigente passa a "positivo"
-// (RN10 do TG, F2-014 de 22/10/2026 — Positivo e Inconclusivo notificam).
+// Desfecho do animal no mesmo lançamento do resultado e notificação assíncrona
+// ao município quando o vigente passa a "positivo" (RN10 do TG: Positivo e
+// Inconclusivo notificam).
 //
-// EmailService (T35) mockado na classe inteira: o envio é @Async, então mesmo
+// EmailService mockado na classe inteira: o envio é @Async, então mesmo
 // os testes que não verificam notificação não podem deixar uma tentativa real
 // de SMTP vazando para outra thread. O envio real fica no EmailServiceIT.
 @Import(RelogioTesteConfig.class)
@@ -93,11 +92,11 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
         semEnvio();
     }
 
-    // DH-21 (docs/decisoes/T37.md): o desfecho e do processo e pode vir em
+    // O desfecho e do processo (docs/decisoes/T37.md) e pode vir em
     // qualquer lancamento (original ou correcao), fora do historico imutavel.
     // A troca fica registrada na auditoria ATUALIZACAO de processo_sanitario
     // (antes e depois), nao em resultado_processo. Correcao SEM desfecho (manter
-    // ou limpar o anterior) nao tem regra decidida e nao e testada aqui (T34-11).
+    // ou limpar o anterior) nao tem regra decidida e nao e testada aqui.
     @Test
     @DisplayName("[T37/T34-11] desfecho no lancamento e na correcao: processo sobrescrito, auditoria com antes e depois")
     void desfechoNaCorrecaoSobrescritoEAuditado() {
@@ -146,7 +145,7 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
         envioAoMunicipe(processoId);
     }
 
-    // T35-16/#37: aceite do SMTP (aqui, future concluido do mock) grava a
+    // Aceite do SMTP (aqui, future concluido do mock) grava a
     // data/hora no processo, com um evento de auditoria de sistema: sem
     // usuario, payload so com a data (nenhum dado pessoal).
     @Test
@@ -176,7 +175,7 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
         assertThat(LocalDateTime.parse(buscar(processoId).path("dataNotificacaoMunicipe")), equalTo(gravada));
     }
 
-    // T35-15 (#37, "uma vez"): depois de notificado, o positivo nao se corrige
+    // Depois de notificado, o positivo nao se corrige
     // (422), entao nao ha segunda notificacao nem a data muda.
     @Test
     @DisplayName("[T35-15] positivo notificado: correcao recusada, uma unica notificacao e data mantida")
@@ -197,7 +196,7 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
         assertThat(dataNotificacao(processoId), equalTo(gravada));
     }
 
-    // RN10 do TG (F2-014, 22/10/2026): Positivo e Inconclusivo notificam; os
+    // RN10 do TG: Positivo e Inconclusivo notificam; os
     // demais resultados nao.
     @Test
     @DisplayName("[F2-014/RN10] resultado inconclusivo notifica o municipe e grava a data do envio")
@@ -222,7 +221,7 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
     }
 
     // Inconclusivo nao e definitivo: a correcao para positivo e um novo
-    // lancamento notificavel — segundo e-mail e nova data de envio.
+    // lancamento notificavel, com segundo e-mail e nova data de envio.
     @Test
     @DisplayName("[F2-014/RN10] correcao de inconclusivo para positivo notifica de novo e regrava a data")
     void correcaoDeInconclusivoParaPositivoNotificaDeNovo() {
@@ -274,7 +273,7 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
         assertThat(aguardarDataNotificacao(processoId), notNullValue());
     }
 
-    // Desde a T35, a falha de SMTP chega como future falho (o EmailService
+    // A falha de SMTP chega como future falho (o EmailService
     // loga e nunca lanca); o lancamento do resultado nao depende dela.
     @Test
     @DisplayName("[T37] e-mail indisponivel: resultado e salvo mesmo assim, e a tentativa de envio aconteceu")
@@ -288,7 +287,7 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
         resposta.then().statusCode(200);
         assertThat(resposta.path("resultado.codigo"), equalTo("positivo"));
         envioAoMunicipe(processoId);
-        // T35-16: so o aceite do SMTP grava a data; na falha, fica nula.
+        // So o aceite do SMTP grava a data; na falha, fica nula.
         dataNotificacaoContinuaNula(processoId);
         assertThat(buscar(processoId).path("dataNotificacaoMunicipe"), nullValue());
     }
@@ -308,7 +307,7 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
                 .body("dataNotificacaoMunicipe", nullValue());
     }
 
-    // T35 (pendencia): reenvio manual quando o primeiro envio falhou —
+    // Reenvio manual quando o primeiro envio falhou:
     // segunda tentativa real pelo EmailService, e so essa segunda grava a data.
     @Test
     @DisplayName("[T35] reenvio apos falha de SMTP: tenta de novo e grava a data no segundo aceite")
@@ -328,7 +327,7 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
         assertThat(aguardarDataNotificacao(processoId), notNullValue());
     }
 
-    // T35-16: ja confirmado pelo SMTP, o reenvio e recusado — sem segunda
+    // Ja confirmado pelo SMTP, o reenvio e recusado, sem segunda
     // mensagem nem mudanca na data gravada.
     @Test
     @DisplayName("[T35] reenvio com notificacao ja confirmada: 422, sem segundo envio")
@@ -355,8 +354,6 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
 
         semEnvio();
     }
-
-    // ── Apoio ────────────────────────────────────────────
 
     private Response reenviar(String processoId) {
         return given().header("Authorization", "Bearer " + tokenAgente)

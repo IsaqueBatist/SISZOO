@@ -38,7 +38,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           # Major fixa dentro de frontend/package.json "engines" (jsdom dos
-          # testes exige 22.22.2+, 24.15+ ou 26+); "lts/*" mudava sozinho.
+          # testes exige 22.22.2+, 24.15+ ou 26+); "lts/*" mudaria sozinho.
           node-version: "24"
           cache: npm
           cache-dependency-path: frontend/package-lock.json

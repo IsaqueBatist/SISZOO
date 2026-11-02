@@ -29,11 +29,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// Modelo-alvo do DER §3.5 (T29, V13). Responsavel e amostras ficam fora da
+// Modelo-alvo do DER §3.5 (V13). Responsavel e amostras ficam fora da
 // entidade (sem colecao nem cascade), gravados pelo service na mesma transacao,
 // como denunciante e anexos na ocorrencia. O resultado vigente e sua data vem
-// do registro de resultado (T34, historico em ResultadoProcesso); desfecho,
-// GAL/SINAN e datas de envio sao preenchidos por tasks seguintes.
+// do registro de resultado (historico em ResultadoProcesso).
 @Entity
 @Table(name = "processo_sanitario")
 @Getter
@@ -92,7 +91,7 @@ public class ProcessoSanitario {
     @Column(name = "previsao_retorno")
     private LocalDate previsaoRetorno;
 
-    // Resultado vigente (T34): copia do ultimo registro nao retificado de
+    // Resultado vigente: copia do ultimo registro nao retificado de
     // resultado_processo, gravada so por aplicarResultadoVigente.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "resultado_laboratorial_id")
@@ -110,8 +109,8 @@ public class ProcessoSanitario {
     @Column(columnDefinition = "text")
     private String observacoes;
 
-    // T35/#37 (V21): quando o SMTP aceitou o e-mail de resultado positivo ao
-    // municipe. Gravada uma vez so, por registrarNotificacaoMunicipe.
+    // V21: quando o SMTP aceitou o e-mail de resultado ao municipe. Gravada por
+    // registrarNotificacaoMunicipe; novo lancamento notificavel a zera.
     @Column(name = "data_notificacao_municipe")
     @Setter(AccessLevel.NONE)
     private LocalDateTime dataNotificacaoMunicipe;
@@ -135,7 +134,7 @@ public class ProcessoSanitario {
         this.ocorrencia = ocorrencia;
     }
 
-    // O service valida a transicao antes (StatusProcesso, T34): o primeiro
+    // O service valida a transicao antes (StatusProcesso): o primeiro
     // resultado leva AGUARDANDO_RESULTADO a COM_RESULTADO; a correcao so
     // acontece em COM_RESULTADO e mantem o status.
     public void aplicarResultadoVigente(ResultadoProcesso registro) {
@@ -154,8 +153,8 @@ public class ProcessoSanitario {
         return true;
     }
 
-    // RN10 (F2-014): um novo lancamento notificavel (ex.: inconclusivo corrigido
-    // para positivo) e uma nova notificacao — a data do envio anterior deixa de
+    // RN10: um novo lancamento notificavel (ex.: inconclusivo corrigido
+    // para positivo) e uma nova notificacao - a data do envio anterior deixa de
     // valer ate o SMTP aceitar o novo e-mail.
     public void reiniciarNotificacaoMunicipe() {
         this.dataNotificacaoMunicipe = null;

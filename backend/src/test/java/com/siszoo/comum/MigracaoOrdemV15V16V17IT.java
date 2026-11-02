@@ -26,9 +26,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-// Ordem das migrations V15 (T34 follow-up, PR #98) -> V16 e V17 (auditoria
-// de regras de negocio; docs/decisoes/auditoria-rn.md, AR-8), num schema
-// proprio do PostgreSQL de teste:
+// Ordem das migrations V15 -> V16 e V17 (auditoria de regras de negocio;
+// docs/decisoes/auditoria-rn.md), num schema proprio do PostgreSQL de teste:
 //   - banco limpo: V1..V17 aplicadas em ordem, sem lacuna;
 //   - atualizacao: banco parado na V15 com dados de todos os modulos tocados
 //     (animais com microchip, registros clinicos, processo com responsavel,
@@ -36,8 +35,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 //   - atualizacao recusada: duplicata de microchip na V15 para a V16 sem
 //     tocar nos dados e sem aplicar a V17.
 // A base da atualizacao e um schema migrado ate a V15 pelas proprias
-// migrations: o banco de desenvolvimento esta na V12 com processo minimo da
-// T25, que a V13 recusa por decisao (DH-3).
+// migrations: o banco de desenvolvimento esta na V12 com processo minimo,
+// que a V13 recusa por decisao.
 class MigracaoOrdemV15V16V17IT extends AbstractIntegrationTest {
 
     private static final String SCHEMA = "migracao_ordem_v17";
@@ -133,8 +132,6 @@ class MigracaoOrdemV15V16V17IT extends AbstractIntegrationTest {
                 + " JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = ?"
                 + " AND t.tgname LIKE '%_sem_exclusao'", Integer.class, SCHEMA), equalTo(0));
     }
-
-    // ── Apoio ──
 
     private record Dados(UUID usuario, UUID comEspacos, UUID soEspacos, UUID normal, UUID semMicrochip, UUID processo) {
     }

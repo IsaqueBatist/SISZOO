@@ -1,9 +1,9 @@
 import { http } from '@/lib/http'
 import type { AtualizarUsuarioRequest, CriarUsuarioRequest, PaginaResponse, UsuarioListItem } from '../types/usuarios.types'
 
-// A tela de Usuários ainda não tem paginação própria (lista tudo e filtra no
-// cliente) — pedimos uma página grande o bastante para cobrir o quadro de
-// funcionários do CCZ. Paginação real de UI fica para uma tarefa futura.
+// A tela de Usuários não tem paginação própria (lista tudo e filtra no
+// cliente): pedimos uma página grande o bastante para cobrir o quadro de
+// funcionários do CCZ.
 const TAMANHO_PAGINA_SEM_UI_DE_PAGINACAO = 100
 
 export function listarUsuarios(): Promise<UsuarioListItem[]> {

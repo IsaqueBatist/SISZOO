@@ -267,7 +267,7 @@ class BaiaControllerIT extends AbstractIntegrationTest {
     }
 
     private void criarAnimalNaBaia(String baiaId, String statusCodigo) {
-        // F2-008: o destino obito_eutanasia exige o laudo do responsavel tecnico.
+        // O destino obito_eutanasia exige o laudo do responsavel tecnico.
         String laudo = "obito_eutanasia".equals(statusCodigo) ? "Laudo de teste: quadro irreversivel" : null;
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Animal Teste", "canino", "macho", null, null, null, null, null, null, null,

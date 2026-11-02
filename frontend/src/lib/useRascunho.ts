@@ -15,11 +15,10 @@ interface OpcoesRascunho<TForm extends FieldValues, TSalvo> {
 }
 
 // Rascunho automático de formulário react-hook-form em IndexedDB (rede do
-// CCZ é instável: o que foi digitado não pode se perder). Regras, as mesmas
-// que o cadastro de animal já seguia:
+// CCZ é instável: o que foi digitado não pode se perder). Regras:
 // - confere UMA vez, ao montar, se há rascunho salvo; se houver, oferece
 //   restaurar ou descartar (o formulário não é preenchido sozinho);
-// - só começa a salvar depois dessa checagem — senão um rascunho vazio
+// - só começa a salvar depois dessa checagem, senão um rascunho vazio
 //   gravaria por cima do verdadeiro antes de ele ser lido;
 // - com rascunho à espera de Restaurar ou Descartar, não salva: digitar sem
 //   escolher não pode apagar o que estava guardado;
@@ -36,7 +35,7 @@ export function useRascunho<TForm extends FieldValues, TSalvo = TForm>({
 }: OpcoesRascunho<TForm, TSalvo>) {
   const [rascunhoDisponivel, setRascunhoDisponivel] = useState<TSalvo | null>(null)
   // Instante do último salvamento, para o aviso dizer de quando é o rascunho.
-  // null também em rascunho gravado antes da T42, que não tem o instante.
+  // null também em rascunho antigo, que não tem o instante.
   const [rascunhoSalvoEm, setRascunhoSalvoEm] = useState<number | null>(null)
   const [prontoParaAutoSalvar, setProntoParaAutoSalvar] = useState(false)
 

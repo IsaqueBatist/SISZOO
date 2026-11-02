@@ -22,7 +22,7 @@ import org.postgresql.util.PSQLException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-// Exercita a V22 (T35-19: codigo de resultado_laboratorial imutavel) num
+// Exercita a V22 (codigo de resultado_laboratorial imutavel) num
 // schema proprio, no padrao de MigracaoV21PositivoDefinitivoIT. Sem a V22,
 // renomear "positivo" por SQL contornaria o trigger da V21.
 class MigracaoV22CatalogoResultadoIT extends AbstractIntegrationTest {
@@ -93,8 +93,6 @@ class MigracaoV22CatalogoResultadoIT extends AbstractIntegrationTest {
         assertThat(transacao("UPDATE " + S + "resultado_laboratorial SET codigo = 'positivo_antigo'"
                 + " WHERE codigo = 'positivo'"), nullValue());
     }
-
-    // ── Apoio (como em MigracaoV21PositivoDefinitivoIT) ──
 
     private MigrateResult migrarAte(String versao) {
         return Flyway.configure()

@@ -29,10 +29,8 @@ import com.siszoo.comum.ApiTesteFixture;
 
 import io.restassured.http.ContentType;
 
-// RNF10 / F2-078 e F2-029 (Fase 3 do TG): o cadastro do animal e o da baia sao
-// alteracoes criticas — cada escrita gera AuditoriaEvento com usuario,
-// entidade_id e payload antes/depois. Ate a Fase 2, AnimalService e
-// BaiaService nao auditavam nada (unico modulo sem trilha).
+// RNF10: o cadastro do animal e o da baia sao alteracoes criticas - cada
+// escrita gera AuditoriaEvento com usuario, entidade_id e payload antes/depois.
 class AuditoriaAnimaisBaiasIT extends AbstractIntegrationTest {
 
     private static final String EMAIL_ADMIN = "teste.admin.auditoria.animais@itu.sp.gov.br";

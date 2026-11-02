@@ -32,8 +32,8 @@ interface OcorrenciaFormProps {
   ocorrencia?: Ocorrencia
 }
 
-// Cadastro e edição de ocorrência: o envio (POST com anexos em duas fases,
-// D15; PUT por blocos, D10) e o rascunho. Cada card do formulário é uma seção
+// Cadastro e edição de ocorrência: o envio (POST com anexos em duas fases;
+// PUT por blocos) e o rascunho. Cada card do formulário é uma seção
 // que lê o formulário pelo FormProvider.
 export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
   const navigate = useNavigate()
@@ -108,8 +108,8 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
     await rascunho.removerAnexoGuardado(removido)
   }
 
-  // D15, fase 1: um único POST /ocorrencias. Daqui em diante a ocorrência
-  // existe; o rascunho do form sai e só os anexos ficam pendentes (fase 2).
+  // Primeira fase: um único POST /ocorrencias. Daqui em diante a ocorrência
+  // existe; o rascunho do form sai e só os anexos ficam pendentes (segunda fase).
   async function onSubmit(dados: OcorrenciaFormValues) {
     if (ocorrencia) {
       await salvarEdicao(dados, ocorrencia)

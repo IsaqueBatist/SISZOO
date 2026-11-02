@@ -61,7 +61,7 @@ class RelatorioOcorrenciasBairroServiceTest {
         assertThat(resposta.bairros()).hasSize(1);
         assertThat(resposta.bairros().get(0).tipoPredominante()).isEqualTo("Infestação de Morcegos");
         assertThat(resposta.bairros().get(0).tempoMedioHoras()).isEqualTo(2.8);
-        // T45: KPIs e linhas por bairro usam a mesma consulta de tempos.
+        // KPIs e linhas por bairro usam a mesma consulta de tempos.
         verify(ocorrenciaRepository, times(1)).listarTemposDeAtendimento(any(), any());
     }
 

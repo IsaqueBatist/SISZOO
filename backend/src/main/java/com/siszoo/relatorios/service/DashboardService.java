@@ -187,8 +187,7 @@ public class DashboardService {
         return new KpiVacinacaoResponse(percentual, vacinados, totalSobCustodia);
     }
 
-    // Denominador de mediaPorHora = hora atual em America/Sao_Paulo (0-23),
-    // mesmo criterio do calculo hoje no frontend (dashboardApi.ts::horaAtualEmSaoPaulo).
+    // Denominador de mediaPorHora = hora atual em America/Sao_Paulo (0-23).
     // mediaPorHora omitido (null) na virada do dia (hora 0), para nao mostrar
     // uma media falsa de "X/0".
     private KpiOcorrenciasResponse calcularKpiOcorrencias(LocalDate hoje) {

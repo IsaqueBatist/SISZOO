@@ -8,11 +8,10 @@ import type { Usuario } from '@/features/auth/types/auth.types'
 import { CadastrarOcorrencia } from './CadastrarOcorrencia'
 
 // jsdom não implementa IndexedDB, então o módulo de rascunho é mockado
-// diretamente — mesmo padrão de AnimalForm.autosave.test.tsx. Testa QUANDO
+// diretamente, mesmo padrão de AnimalForm.autosave.test.tsx. Testa QUANDO
 // agendarSalvarRascunhoOcorrencia é chamado (gate de hidratação) e COM QUE
 // FORMA (campos do denunciante redigidos quando sigilosa), não a mecânica de
-// IndexedDB em si (responsabilidade de rascunhoOcorrenciaStorage.ts,
-// inalterada aqui).
+// IndexedDB em si (responsabilidade de rascunhoOcorrenciaStorage.ts).
 vi.mock('../storage/rascunhoOcorrenciaStorage', async () => {
   const real =
     await vi.importActual<typeof import('../storage/rascunhoOcorrenciaStorage')>('../storage/rascunhoOcorrenciaStorage')
@@ -109,11 +108,11 @@ describe('OcorrenciaForm — autosave do rascunho', () => {
     )
   })
 
-  // T42: decisão dos dois autores, revertendo a "rev. 12 item 3" — o rascunho
-  // passa a guardar o denunciante mesmo em ocorrência sigilosa, para não perder
-  // o que foi digitado numa queda de rede. O risco aceito (dado em claro no
-  // disco de uma máquina compartilhada até a submissão, o descarte, o logout ou
-  // a expiração) está registrado em docs/decisoes/T42.md.
+  // Decisão dos dois autores: o rascunho guarda o denunciante mesmo em
+  // ocorrência sigilosa, para não perder o que foi digitado numa queda de rede.
+  // O risco aceito (dado em claro no disco de uma máquina compartilhada até a
+  // submissão, o descarte, o logout ou a expiração) está registrado em
+  // docs/decisoes/T42.md.
   it('persiste os dados do denunciante no rascunho mesmo com a ocorrência sigilosa', async () => {
     vi.mocked(carregarRascunhoOcorrencia).mockResolvedValue(null)
 

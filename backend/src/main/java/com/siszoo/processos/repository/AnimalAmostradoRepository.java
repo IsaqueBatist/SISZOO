@@ -18,10 +18,10 @@ public interface AnimalAmostradoRepository extends JpaRepository<AnimalAmostrado
     @EntityGraph(attributePaths = {"especie", "animal", "sintomas"})
     List<AnimalAmostrado> findByProcessoIdOrderByCriadoEmAscIdAsc(UUID processoId);
 
-    // Grafico "Raiva por Especie" (com.siszoo.relatorios, T38): mantem
+    // Grafico "Raiva por Especie" (com.siszoo.relatorios): mantem
     // "processo = 1 caso" (mesma leitura de
     // ProcessoSanitarioRepository#contarPorDoenca), mas aqui a granularidade
-    // da amostra importa — um processo com amostras de especies diferentes
+    // da amostra importa - um processo com amostras de especies diferentes
     // conta uma vez EM CADA especie (a soma pode exceder o total de
     // processos de raiva no ano). COUNT(DISTINCT processo) evita contar o
     // mesmo processo duas vezes quando ele tem 2+ amostras da MESMA especie.
@@ -37,10 +37,9 @@ public interface AnimalAmostradoRepository extends JpaRepository<AnimalAmostrado
             + "GROUP BY a.especie.codigo, a.especie.nome")
     List<ContagemCatalogoProjection> contarRaivaPorEspecieEntre(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
-    // ── Relatorio Anual de Processos (T41) ──────────────────────────────
-
-    // "Com contato humano" (KPI do topo): mesmo padrao "processo = 1 caso"
-    // de contarRaivaPorEspecie, mas por QUALQUER doenca e por periodo (nao ano).
+    // "Com contato humano" (KPI do topo do Relatorio Anual de Processos): mesmo
+    // padrao "processo = 1 caso" de contarRaivaPorEspecie, mas por QUALQUER
+    // doenca e por periodo (nao ano).
     @Query("SELECT COUNT(DISTINCT a.processo) FROM AnimalAmostrado a "
             + "WHERE a.contatoHumano = true AND a.processo.dataAbertura BETWEEN :inicio AND :fim")
     long contarProcessosComContatoHumano(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
@@ -51,16 +50,16 @@ public interface AnimalAmostradoRepository extends JpaRepository<AnimalAmostrado
             + "WHERE a.contatoHumano IS NULL AND a.processo.dataAbertura BETWEEN :inicio AND :fim")
     long contarProcessosComContatoNaoInformado(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
-    // "Distribuição por Espécie" (secao 4): mesmo padrao de contarRaivaPorEspecie,
-    // mas sem o filtro de doenca = 'raiva' (todas as doencas do periodo).
+    // "Distribuição por Espécie" (secao 4 do relatorio): mesmo padrao de
+    // contarRaivaPorEspecie, mas sem o filtro de doenca = 'raiva' (todas as doencas do periodo).
     @Query("SELECT a.especie.codigo AS codigo, a.especie.nome AS nome, "
             + "COUNT(DISTINCT a.processo) AS quantidade "
             + "FROM AnimalAmostrado a WHERE a.processo.dataAbertura BETWEEN :inicio AND :fim "
             + "GROUP BY a.especie.codigo, a.especie.nome")
     List<ContagemCatalogoProjection> contarPorEspecieNoPeriodo(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
-    // "Laboratórios utilizados" (secao 6): "Amostras" conta linhas de
-    // animal_amostrado (nao processos) — um processo com 2 amostras conta 2
+    // "Laboratórios utilizados" (secao 6 do relatorio): "Amostras" conta linhas de
+    // animal_amostrado (nao processos) - um processo com 2 amostras conta 2
     // vezes, ja que o laboratorio e do processo mas a unidade exibida e a amostra.
     @Query("SELECT a.processo.laboratorio.codigo AS codigo, a.processo.laboratorio.nome AS nome, COUNT(a) AS quantidade "
             + "FROM AnimalAmostrado a WHERE a.processo.dataAbertura BETWEEN :inicio AND :fim "

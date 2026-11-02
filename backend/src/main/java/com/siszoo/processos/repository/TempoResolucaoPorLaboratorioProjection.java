@@ -2,11 +2,10 @@ package com.siszoo.processos.repository;
 
 import java.time.LocalDate;
 
-// Relatorio Anual de Processos (T41), coluna "Tempo médio (dias)" de
+// Relatorio Anual de Processos, coluna "Tempo médio (dias)" de
 // "Laboratórios utilizados": dataEnvioAmostras nunca e preenchida por nenhum
 // fluxo hoje (ver ProcessoSanitarioResponse), entao usamos
-// dataAbertura -> dataResultado como proxy, agrupado por laboratorio —
-// decisao validada com o usuario, documentada tambem no PR.
+// dataAbertura -> dataResultado como proxy, agrupado por laboratorio.
 public interface TempoResolucaoPorLaboratorioProjection {
 
     String getLaboratorioCodigo();

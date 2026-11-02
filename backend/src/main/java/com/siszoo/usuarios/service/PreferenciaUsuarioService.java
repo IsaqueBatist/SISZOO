@@ -49,7 +49,7 @@ public class PreferenciaUsuarioService {
             throw new NotificacaoCriticaObrigatoriaException();
         }
 
-        // T43: o "antes" so existe se a linha ja estava gravada. Sem linha, ela
+        // O "antes" so existe se a linha ja estava gravada. Sem linha, ela
         // nasce nesta requisicao (defaults + valores do pedido) e o evento e
         // CRIACAO: montar um "antes" com os defaults recem-criados fingiria um
         // estado que nunca esteve no banco.

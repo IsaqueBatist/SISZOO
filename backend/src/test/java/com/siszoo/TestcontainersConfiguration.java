@@ -12,21 +12,20 @@ import org.springframework.context.annotation.Bean;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
-// Um PostgreSQL por JVM e um database novo por contexto Spring. Antes, o
-// container era um @Bean e cada contexto distinto em cache (15 na suite)
-// subia o seu, todos vivos ate o fim da JVM. Agora o container sobe uma vez e
-// cada contexto recebe um database vazio, que o Flyway da aplicacao migra do
-// zero (V1..Vn) como antes: o isolamento entre contextos e o mesmo, so sem os
-// containers repetidos. O Ryuk do Testcontainers remove o container no fim.
+// Um PostgreSQL por JVM e um database novo por contexto Spring: o container
+// sobe uma vez e cada contexto em cache recebe um database vazio, que o Flyway
+// da aplicacao migra do zero (V1..Vn). Os contextos ficam isolados entre si
+// sem um container para cada um, que ficaria vivo ate o fim da JVM. O Ryuk do
+// Testcontainers remove o container no fim.
 //
 // max_connections: cada contexto em cache mantem o proprio pool Hikari (ate 10
 // conexoes, o padrao, que os testes de concorrencia usam) ate o fim da JVM,
-// agora todos no mesmo servidor; com os 100 do padrao do PostgreSQL, o 11o
-// contexto falhava com "too many clients already".
+// todos no mesmo servidor; com os 100 do padrao do PostgreSQL, o 11o contexto
+// falharia com "too many clients already".
 //
 // fsync/synchronous_commit/full_page_writes desligados: o banco e descartavel
 // e nenhum teste exercita queda do servidor. Com um servidor so, o WAL dos 12
-// contextos (cada um migrando V1..Vn) se acumula e os checkpoints caiam no
+// contextos (cada um migrando V1..Vn) se acumula e os checkpoints cairiam no
 // meio dos testes de migracao. Transacoes, locks, constraints e triggers nao
 // mudam: so a garantia de persistir em disco antes de responder ao commit.
 @TestConfiguration(proxyBeanMethods = false)

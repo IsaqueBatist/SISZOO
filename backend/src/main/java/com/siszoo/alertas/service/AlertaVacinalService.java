@@ -22,8 +22,7 @@ import com.siszoo.animais.entity.Animal;
 import com.siszoo.animais.entity.StatusAnimal;
 
 // Ponto de extensao: listarAlertasVacinais() nao depende de nada da camada
-// HTTP, entao um futuro @Scheduled pode chama-la diretamente. Nao ha
-// @EnableScheduling no projeto hoje, entao a anotacao nao foi adicionada.
+// HTTP, entao um futuro @Scheduled pode chama-la diretamente.
 @Service
 public class AlertaVacinalService {
 
@@ -47,7 +46,7 @@ public class AlertaVacinalService {
 
         // A exclusao de retificados e a escolha da aplicacao vigente de cada
         // par (animal, vacina) ja vem resolvida pela query (ver comentario em
-        // VacinacaoRepository.findVigentesParaAlertaVacinal) — aqui so falta
+        // VacinacaoRepository.findVigentesParaAlertaVacinal); aqui so falta
         // calcular data_validade/dias restantes/severidade e filtrar a janela.
         List<Vacinacao> vigentes =
                 vacinacaoRepository.findVigentesParaAlertaVacinal(StatusAnimal.CODIGOS_FORA_DA_CUSTODIA);

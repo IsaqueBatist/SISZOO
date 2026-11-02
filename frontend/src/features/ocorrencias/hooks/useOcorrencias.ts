@@ -42,7 +42,7 @@ export function useOcorrenciasAbertasCount(habilitado: boolean) {
   })
 }
 
-// T45: gráfico de distribuição e sugestões de bairro leem a mesma contagem
+// Gráfico de distribuição e sugestões de bairro leem a mesma contagem
 // (mesma chave, uma requisição só, cada um com o próprio `select`). Criar ou
 // editar ocorrência invalida a contagem (useAtualizarCacheDaOcorrencia e
 // useRecarregarOcorrencia); o staleTime só segura o refetch a cada montagem.
@@ -92,7 +92,7 @@ function useAtualizarCacheDaOcorrencia() {
 }
 
 // Edição, status, encerramento e nota devolvem o denunciante de ocorrência
-// sigilosa sempre mascarado (A04): a resposta não pode ir para o cache do
+// sigilosa sempre mascarado: a resposta não pode ir para o cache do
 // detalhe, ou quem tem acesso veria o bloco vazio. O detalhe é recarregado
 // pelo GET, que entrega o dado a quem tem a permissão e registra o acesso.
 function useRecarregarOcorrencia(id: string) {

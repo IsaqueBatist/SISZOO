@@ -10,9 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import io.restassured.config.DecoderConfig;
 import io.restassured.config.RestAssuredConfig;
 
-// T45: o navegador chama a API direto (sem o nginx no meio), e o JSON
-// trafegava sem compressao. server.compression: JSON a partir de 1 KB sai em
-// gzip para quem aceita; resposta pequena e cliente sem Accept-Encoding nao.
+// O navegador chama a API direto (sem o nginx no meio). server.compression:
+// JSON a partir de 1 KB sai em gzip para quem aceita; resposta pequena e
+// cliente sem Accept-Encoding nao.
 class CompressaoRespostasIT extends AbstractIntegrationTest {
 
     @Autowired

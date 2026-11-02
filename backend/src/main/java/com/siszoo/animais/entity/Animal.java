@@ -78,7 +78,7 @@ public class Animal {
     @Column(unique = true, nullable = true, length = 30)
     private String microchip;
 
-    // F2-004 (V23): identificação complementar — RF-A01/RN01. Medalha única
+    // V23: identificação complementar (RF-A01/RN01). Medalha única
     // quando informada (índice parcial uq_animal_numero_medalha); data de
     // implantação exige microchip (CHECK + AnimalService).
     @Column(name = "numero_medalha", length = 30)
@@ -90,7 +90,7 @@ public class Animal {
     @Column(length = 200)
     private String procedencia;
 
-    // F2-008 (V24): laudo do responsável técnico, exigido pelo AnimalService só
+    // V24: laudo do responsável técnico, exigido pelo AnimalService só
     // na transição para o status obito_eutanasia (RF-A05, Lei nº 14.228/2021).
     @Column(name = "laudo_eutanasia", columnDefinition = "text")
     private String laudoEutanasia;
@@ -123,7 +123,7 @@ public class Animal {
     @Column(name = "foto_url", columnDefinition = "text")
     private String fotoUrl;
 
-    // T45 (V28): avatar das listagens, derivado de fotoUrl por MiniaturaFoto.
+    // V28: avatar das listagens, derivado de fotoUrl por MiniaturaFoto.
     @Column(name = "foto_miniatura", columnDefinition = "text")
     private String fotoMiniatura;
 

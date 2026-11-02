@@ -1,16 +1,15 @@
 // Banco IndexedDB único dos rascunhos de formulário (rede do CCZ é instável:
 // formulário longo não pode perder dados numa queda de conexão).
 //
-// Por que um módulo só: animais, ocorrências e processos abriam o mesmo banco
-// 'siszoo-rascunhos' na versão 1, cada um criando a PRÓPRIA store no upgrade.
-// Esse evento só dispara quando a versão sobe — então, no navegador real, só a
-// store do primeiro formulário aberto existia e os outros rascunhos falhavam
-// em silêncio. O upgrade cria todas as stores que faltam de uma vez e nunca
-// apaga as existentes; para incluir uma store nova, acrescente o nome em
+// Por que um módulo só: o evento de upgrade só dispara quando a versão sobe.
+// Com cada formulário criando a PRÓPRIA store nele, só a store do primeiro
+// formulário aberto existiria e os outros rascunhos falhariam em silêncio. O
+// upgrade cria todas as stores que faltam de uma vez e nunca apaga as
+// existentes; para incluir uma store nova, acrescente o nome em
 // STORES_RASCUNHO e suba VERSAO_BANCO.
 // Versão 3: store 'clinico' (modais de vacina, procedimento, prescrição e de
-// baia). Versão 4 (T42): store 'arquivos', um registro por arquivo anexado,
-// com o Blob gravado direto — nunca base64. Quem vem de uma versão anterior
+// baia). Versão 4: store 'arquivos', um registro por arquivo anexado,
+// com o Blob gravado direto, nunca base64. Quem vem de uma versão anterior
 // mantém todos os rascunhos que já tinha.
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
 
@@ -21,13 +20,13 @@ const VERSAO_BANCO = 4
 const STORES_TEXTO = ['animais', 'ocorrencias', 'processos', 'clinico'] as const
 export type StoreRascunho = (typeof STORES_TEXTO)[number]
 
-// Store dos arquivos anexados aos rascunhos (T42). Separada das de texto
+// Store dos arquivos anexados aos rascunhos. Separada das de texto
 // porque o ciclo de vida é por arquivo, não por formulário.
 export const STORE_ARQUIVOS = 'arquivos'
 
 export const STORES_RASCUNHO = [...STORES_TEXTO, STORE_ARQUIVOS] as const
 
-// T42: rascunho esquecido não fica indefinidamente no disco de uma máquina
+// Rascunho esquecido não fica indefinidamente no disco de uma máquina
 // compartilhada. Para mudar o prazo, altere SÓ esta constante.
 export const VALIDADE_RASCUNHO_MS = 7 * 24 * 60 * 60 * 1000
 
@@ -35,7 +34,7 @@ export const VALIDADE_RASCUNHO_MS = 7 * 24 * 60 * 60 * 1000
 // instante do salvamento, que alimenta o aviso de restauração e a expiração.
 export interface RegistroRascunho<T> {
   dados: T
-  // null = rascunho gravado antes da T42, sem instante registrado. Continua
+  // null = rascunho antigo, sem instante registrado. Continua
   // restaurável (só sem data na tela) e não é tratado como expirado; na
   // primeira regravação ele passa a ter instante como qualquer outro.
   salvoEm: number | null
@@ -50,7 +49,7 @@ export interface ReferenciaArquivoRascunho {
 }
 
 // Rascunho a que um arquivo pertence, para apagar em bloco e para a varredura
-// de órfãos — sem precisar decifrar a chave.
+// de órfãos, sem precisar decifrar a chave.
 export interface DonoArquivoRascunho {
   store: StoreRascunho
   chave: string
@@ -84,14 +83,14 @@ export function chaveComEscopo(usuarioId: string, chave: string): string {
 
 // Uma conexão só, reaproveitada por todas as operações.
 //
-// Por que não abrir e fechar a cada operação, como a versão anterior fazia: a
+// Por que não abrir e fechar a cada operação: a
 // idb cria a promessa `done` de TODA transação que embrulha, inclusive as de
 // leitura (cacheDonePromiseForTransaction), e essa promessa rejeita se a
 // transação abortar. Numa leitura, o `await` do get resolve quando a
-// REQUISIÇÃO termina, não quando a transação fecha — então um close() logo
-// depois abortava uma transação ainda em curso, e a rejeição do `done`, que
-// ninguém espera em leitura, virava erro não tratado. Só aparecia sob disputa
-// de CPU, que é o caso do CI: a suíte passava inteira e o processo saía com 1.
+// REQUISIÇÃO termina, não quando a transação fecha: um close() logo
+// depois abortaria uma transação ainda em curso, e a rejeição do `done`, que
+// ninguém espera em leitura, viraria erro não tratado. Só aparece sob disputa
+// de CPU, que é o caso do CI: a suíte passa inteira e o processo sai com 1.
 let bancoAberto: Promise<IDBPDatabase<SchemaRascunhos>> | null = null
 
 export function abrirBancoRascunhos(): Promise<IDBPDatabase<SchemaRascunhos>> {
@@ -124,13 +123,13 @@ export function abrirBancoRascunhos(): Promise<IDBPDatabase<SchemaRascunhos>> {
 // Descarta a conexão em cache sem fechá-la. Existe para os testes, em que cada
 // um instala uma fábrica de IndexedDB nova e a conexão guardada apontaria para
 // o banco do teste anterior. Não fecha de propósito: fechar é exatamente o que
-// abortava transação em curso.
+// aborta transação em curso.
 export function esquecerBancoRascunhos(): void {
   bancoAberto = null
 }
 
 // Rascunho é melhor esforço: falha de IndexedDB (modo privado, quota,
-// navegador sem suporte) nunca deve quebrar o formulário — por isso todas as
+// navegador sem suporte) nunca deve quebrar o formulário, por isso todas as
 // operações engolem o erro. A exceção é salvarArquivoRascunho, que precisa
 // avisar a tela quando o arquivo não couber.
 async function comBanco<T>(operacao: (banco: IDBPDatabase<SchemaRascunhos>) => Promise<T>, aoFalhar: T): Promise<T> {
@@ -147,7 +146,7 @@ function expirou(salvoEm: number | null): boolean {
   return Date.now() - salvoEm > VALIDADE_RASCUNHO_MS
 }
 
-// Um registro gravado antes da T42 não tem `salvoEm` e vem como os próprios
+// Um registro antigo não tem `salvoEm` e vem como os próprios
 // valores do formulário; o envelope é reconhecido por esse campo.
 function desembrulhar<T>(bruto: unknown): RegistroRascunho<T> | null {
   if (bruto === null || bruto === undefined) return null
@@ -228,21 +227,17 @@ export async function limparRascunhos(): Promise<void> {
     const transacao = banco.transaction([...STORES_RASCUNHO], 'readwrite')
     // allSettled e o catch no `done`, não Promise.all: com o all, a primeira
     // rejeição abandona as outras promessas, que rejeitam depois sem ninguém
-    // escutando — e uma transação abortada viraria erro não tratado.
+    // escutando, e uma transação abortada viraria erro não tratado.
     await Promise.allSettled(STORES_RASCUNHO.map((store) => transacao.objectStore(store).clear()))
     await transacao.done.catch(() => undefined)
   }, undefined)
 }
 
-// ---------------------------------------------------------------------------
-// Arquivos anexados ao rascunho (T42)
-// ---------------------------------------------------------------------------
-
 function chaveArquivo(usuarioId: string, id: string): string {
   return chaveComEscopo(usuarioId, `arquivo:${id}`)
 }
 
-// Grava o arquivo UMA vez, no momento em que ele é anexado — fora do debounce
+// Grava o arquivo UMA vez, no momento em que ele é anexado, fora do debounce
 // do rascunho de texto, que continua guardando só a referência devolvida aqui.
 // Devolve null quando não foi possível gravar (cota, modo privado, navegador
 // sem IndexedDB): quem chama avisa a tela, e o arquivo segue no formulário em
@@ -295,15 +290,15 @@ export function removerArquivosDoRascunho(dono: DonoArquivoRascunho): Promise<vo
 }
 
 // Varredura de manutenção, disparada uma vez ao abrir o sistema: apaga
-// rascunhos e arquivos vencidos e também arquivos órfãos — aqueles cujo
+// rascunhos e arquivos vencidos e também arquivos órfãos: aqueles cujo
 // rascunho não existe mais, o que acontece se o navegador cair entre a
 // gravação do arquivo e a do rascunho de texto.
 export async function limparRascunhosExpirados(): Promise<void> {
   await comBanco(async (banco) => {
     // Uma transação explícita com o `done` escutado desde a criação (mesmo
-    // motivo de limparRascunhos): os atalhos banco.get/delete abriam uma
+    // motivo de limparRascunhos): os atalhos banco.get/delete abrem uma
     // transação por chamada, e a de uma varredura interrompida (aba fechada,
-    // ambiente de teste desmontado no meio) rejeitava sem ninguém escutando.
+    // ambiente de teste desmontado no meio) rejeitaria sem ninguém escutando.
     const transacao = banco.transaction([...STORES_RASCUNHO], 'readwrite')
     const concluida = transacao.done.catch(() => undefined)
     const chavesVivas = new Map<StoreRascunho, Set<IDBValidKey>>()

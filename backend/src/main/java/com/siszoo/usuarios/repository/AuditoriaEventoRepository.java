@@ -23,14 +23,14 @@ public interface AuditoriaEventoRepository extends JpaRepository<AuditoriaEvento
     @EntityGraph(attributePaths = "usuario")
     Page<AuditoriaEvento> findAll(Specification<AuditoriaEvento> spec, Pageable pageable);
 
-    // F2-027: valores distintos para os filtros da tela de Logs (toda a trilha).
+    // Valores distintos para os filtros da tela de Logs (toda a trilha).
     @Query("select distinct e.acao from AuditoriaEvento e order by e.acao")
     List<AcaoAuditoria> acoesDistintas();
 
     @Query("select distinct u.email from AuditoriaEvento e join e.usuario u order by u.email")
     List<String> usuariosDistintos();
 
-    // T37: mini trilha de auditoria de uma entidade especifica (ex.: um
+    // Mini trilha de auditoria de uma entidade especifica (ex.: um
     // processo sanitario), para quem so tem permissao de leitura do proprio
     // modulo (nao USUARIOS_ACESSO:leitura, que e so do Administrador).
     List<AuditoriaEvento> findByEntidadeAndEntidadeIdOrderByOcorreuEmAsc(String entidade, UUID entidadeId);

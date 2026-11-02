@@ -24,7 +24,7 @@ import org.postgresql.util.PSQLException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-// Exercita a V21 (T35-15/T35-16: positivo definitivo e data do envio da
+// Exercita a V21 (positivo definitivo e data do envio da
 // notificacao) num schema proprio, no padrao de MigracaoV15ResultadoProcessoIT:
 // coluna nova e nula, trigger que recusa a correcao de um positivo por SQL
 // direto (o service recusa antes, com 422) e dados anteriores intactos.
@@ -111,8 +111,6 @@ class MigracaoV21PositivoDefinitivoIT extends AbstractIntegrationTest {
         assertThat(jdbcTemplate.queryForObject("SELECT data_notificacao_municipe FROM " + S + "processo_sanitario"
                 + " WHERE id = ?", Object.class, processo), nullValue());
     }
-
-    // ── Apoio (como em MigracaoV15ResultadoProcessoIT) ──
 
     private MigrateResult migrarAte(String versao) {
         return Flyway.configure()

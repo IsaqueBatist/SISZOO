@@ -40,9 +40,9 @@ public interface ProcessoSanitarioRepository
     @Query("SELECT p FROM ProcessoSanitario p WHERE p.id = :id")
     Optional<ProcessoSanitario> findByIdForUpdate(@Param("id") UUID id);
 
-    // Grafico "Casos Suspeitos" / doenca (com.siszoo.relatorios, T38): 1
+    // Grafico "Casos Suspeitos" / doenca (com.siszoo.relatorios): 1
     // processo = 1 caso, por ano de abertura (decisao registrada em
-    // docs/contratos/dashboard-graficos.md — doenca vive direto no processo,
+    // docs/contratos/dashboard-graficos.md - doenca vive direto no processo,
     // nao na amostra). O service preenche com quantidade:0 as doencas do
     // catalogo sem nenhuma linha aqui. O ano vira intervalo de datas (e nao
     // YEAR(col) = :ano) para o filtro usar o indice de data_abertura.
@@ -55,9 +55,9 @@ public interface ProcessoSanitarioRepository
             + "GROUP BY p.doenca.codigo, p.doenca.nome")
     List<ContagemCatalogoProjection> contarPorDoencaEntre(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
-    // Grafico "Resultados Laboratoriais" (com.siszoo.relatorios, T38): so
+    // Grafico "Resultados Laboratoriais" (com.siszoo.relatorios): so
     // positivo/negativo do RESULTADO VIGENTE do processo (campo
-    // resultadoLaboratorial, nao o historico de ResultadoProcesso) —
+    // resultadoLaboratorial, nao o historico de ResultadoProcesso) -
     // aguardando/inconclusivo/material_inadequado/nao_realizado nunca contam
     // como positivo nem negativo. Ano = ano em que o resultado foi lancado
     // (dataResultado), nao o ano de abertura do processo. Lista dinamica por
@@ -75,10 +75,9 @@ public interface ProcessoSanitarioRepository
     List<ResultadoCatalogoProjection> contarResultadosPorDoencaEntre(
             @Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
-    // ── Relatorio Anual de Processos (T41) ──────────────────────────────
-    // Universo sempre "processos ABERTOS no periodo" (dataAbertura), nao
-    // "resultados lancados no periodo" como os metodos do dashboard acima —
-    // por isso novas queries em vez de reaproveitar as de cima (so
+    // Relatorio Anual de Processos: universo sempre "processos ABERTOS no periodo"
+    // (dataAbertura), nao "resultados lancados no periodo" como os metodos do
+    // dashboard acima - por isso novas queries em vez de reaproveitar as de cima (so
     // contarPorDoenca(ano) e reaproveitado, ja que tem exatamente o mesmo escopo).
 
     long countByDataAberturaBetween(LocalDate inicio, LocalDate fim);

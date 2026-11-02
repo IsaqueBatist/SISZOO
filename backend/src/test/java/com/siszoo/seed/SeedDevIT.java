@@ -120,7 +120,7 @@ class SeedDevIT extends AbstractIntegrationTest {
         assertThat(jdbcTemplate.queryForObject("SELECT ativo FROM usuario WHERE email = ?", Boolean.class,
                 "sergio.lacerda" + UsuariosSeed.SUFIXO_EMAIL)).isFalse();
 
-        // SD-4: nenhum processo notificavel tem e-mail do responsavel, e nenhuma
+        // Nenhum processo notificavel tem e-mail do responsavel, e nenhuma
         // notificacao foi registrada como enviada.
         for (ProcessosSeed.Processo processo : ProcessosSeed.PLANO) {
             if (processo.notificavel()) {
@@ -133,7 +133,7 @@ class SeedDevIT extends AbstractIntegrationTest {
                 .isZero();
 
         // Os 4 status de processo, positivo nunca retificado, ocorrencia vinculada
-        // encerrada so depois do processo concluido (D12).
+        // encerrada so depois do processo concluido.
         assertThat(jdbcTemplate.queryForList("SELECT DISTINCT status_processo FROM processo_sanitario", String.class))
                 .containsExactlyInAnyOrder("ABERTO", "AGUARDANDO_RESULTADO", "COM_RESULTADO", "CONCLUIDO");
         assertThat(contar("SELECT count(*) FROM resultado_processo r JOIN resultado_laboratorial l"

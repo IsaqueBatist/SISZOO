@@ -17,8 +17,8 @@ import javax.imageio.ImageIO;
 
 // Arquivos do seed. As fotos dos animais sao fotografias reais em dominio
 // publico (CC0), versionadas em src/main/resources/seed/fotos e creditadas no
-// CREDITOS.md da pasta (docs/decisoes/seed-dev.md, revisao de 01/11/2026).
-// Anexos (PNG e PDF) continuam gerados em codigo, deterministicos.
+// CREDITOS.md da pasta (docs/decisoes/seed-dev.md).
+// Anexos (PNG e PDF) sao gerados em codigo, deterministicos.
 final class ArquivosFicticios {
 
     static final String PASTA_FOTOS = "/seed/fotos/";

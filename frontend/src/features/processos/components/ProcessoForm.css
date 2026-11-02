@@ -1,7 +1,7 @@
-/* Portado dos <style> inline de docs/prototipo/cadastrar-processo.html e
+/* Baseado nos <style> inline de docs/prototipo/cadastrar-processo.html e
    docs/prototipo/processo.html. Classes já compartilhadas pelo design
    system (.card, .stepper, .alert, .form-grid, .badge, .radio-cards) ficam
-   em components.css — não duplicadas aqui. */
+   em components.css, não duplicadas aqui. */
 
 .wizard-shell {
   max-width: 960px;
@@ -12,8 +12,8 @@
   gap: var(--space-5);
 }
 
-/* Estilos de .occur-, .vinculo-display e .empty-search moveram para
-   SeletorVinculo.css (importado por SeletorOcorrencia.tsx diretamente) —
+/* Estilos de .occur-, .vinculo-display e .empty-search ficam em
+   SeletorVinculo.css (importado por SeletorOcorrencia.tsx diretamente):
    esse componente também é usado fora do wizard, então o import precisa
    morar no componente, não aqui. */
 
@@ -158,7 +158,7 @@
   margin-top: 4px;
 }
 
-/* Portado de docs/prototipo/processo.html — aviso de urgência (RN4) e flags
+/* Baseado em docs/prototipo/processo.html: aviso de urgência (RN4) e flags
    de contato humano dentro do card de amostra. */
 .urgency-banner {
   background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);

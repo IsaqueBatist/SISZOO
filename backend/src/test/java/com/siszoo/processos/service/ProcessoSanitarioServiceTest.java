@@ -138,8 +138,8 @@ class ProcessoSanitarioServiceTest {
         lenient().when(usuarioRepository.findById(usuarioId)).thenReturn(Optional.of(new Usuario()));
     }
 
-    // T34: AGUARDANDO_RESULTADO -> COM_RESULTADO deixou de ser avanco manual
-    // (substitui a D18): so pelo registro do resultado.
+    // AGUARDANDO_RESULTADO -> COM_RESULTADO nao e avanco manual: so pelo
+    // registro do resultado.
     static Stream<Arguments> transicoes() {
         Class<? extends Throwable> invalida = TransicaoStatusProcessoInvalidaException.class;
         return Stream.of(
@@ -182,8 +182,8 @@ class ProcessoSanitarioServiceTest {
         }
     }
 
-    // Processo que chegou a COM_RESULTADO sem resultado (PATCH provisorio da
-    // D18, antes da T34): CONCLUIDO exige o vigente.
+    // Processo que chegou a COM_RESULTADO sem resultado (PATCH provisorio
+    // legado): CONCLUIDO exige o vigente.
     @Test
     void concluirSemResultadoVigenteRecusado() {
         ProcessoSanitario processo = processoEm(StatusProcesso.COM_RESULTADO);
@@ -196,7 +196,7 @@ class ProcessoSanitarioServiceTest {
         verifyNoInteractions(auditoriaEventoService);
     }
 
-    // Matriz completa 4x4 da maquina de estados (T34): so o proximo passo.
+    // Matriz completa 4x4 da maquina de estados: so o proximo passo.
     static Stream<Arguments> matrizDeTransicoes() {
         Set<String> validas = Set.of("ABERTO>AGUARDANDO_RESULTADO", "AGUARDANDO_RESULTADO>COM_RESULTADO",
                 "COM_RESULTADO>CONCLUIDO");
@@ -210,8 +210,6 @@ class ProcessoSanitarioServiceTest {
         assertThat(atual.podeTransicionarPara(destino)).isEqualTo(esperado);
         assertThat(destino.exigeResultado()).isEqualTo(destino == StatusProcesso.COM_RESULTADO);
     }
-
-    // ── Resultado (T34) ──────────────────────────────────
 
     static Stream<Arguments> registroPorStatus() {
         return Stream.of(
@@ -271,8 +269,8 @@ class ProcessoSanitarioServiceTest {
         verify(resultadoProcessoRepository, never()).saveAndFlush(any());
     }
 
-    // DH-21 (docs/decisoes/T37.md): desfecho de catalogo inexistente ou
-    // INATIVO -> 422; o caso inativo nao tinha teste (o seed so tem ativos).
+    // Desfecho de catalogo inexistente ou INATIVO -> 422 (docs/decisoes/T37.md);
+    // o seed so tem ativos.
     @Test
     void desfechoInativoRecusadoSemGravar() {
         ProcessoSanitario processo = processoEm(StatusProcesso.AGUARDANDO_RESULTADO);
@@ -394,7 +392,7 @@ class ProcessoSanitarioServiceTest {
         verify(resultadoProcessoRepository, never()).saveAndFlush(any());
     }
 
-    // T35-15: positivo e definitivo. Corrigir um positivo e recusado para
+    // Positivo e definitivo. Corrigir um positivo e recusado para
     // qualquer resultado novo (inclusive outro positivo, que reenviaria o
     // e-mail), sem gravar registro, sem mexer no vigente e sem notificar.
     @ParameterizedTest(name = "[T35-15] corrigir positivo para {0}: 422")
@@ -415,7 +413,7 @@ class ProcessoSanitarioServiceTest {
         verifyNoInteractions(eventPublisher, auditoriaEventoService);
     }
 
-    // T35-16: data/hora do aceite do SMTP com um evento de auditoria de
+    // Data/hora do aceite do SMTP com um evento de auditoria de
     // sistema (sem usuario, so a data); a segunda chamada nao muda nada.
     @Test
     void registroDaNotificacaoGravaUmaVezEAuditaSemUsuario() {
@@ -456,7 +454,7 @@ class ProcessoSanitarioServiceTest {
         verify(protocoloService, never()).proximo(any());
     }
 
-    // ── Regras da amostra: recusadas antes de qualquer acesso ao banco ──
+    // Regras da amostra: recusadas antes de qualquer acesso ao banco.
 
     static Stream<Arguments> amostrasInvalidas() {
         return Stream.of(
@@ -502,7 +500,7 @@ class ProcessoSanitarioServiceTest {
         verifyNoInteractions(protocoloService, processoRepository, doencaRepository, ocorrenciaService);
     }
 
-    // ── Urgencia derivada das amostras (DER regra 18) ────
+    // Urgencia derivada das amostras (DER regra 18).
 
     static Stream<Arguments> contatosDasAmostras() {
         return Stream.of(
@@ -532,8 +530,6 @@ class ProcessoSanitarioServiceTest {
 
         assertThat(urgenteNoSave.get()).isEqualTo(esperado);
     }
-
-    // ── Apoio ────────────────────────────────────────────
 
     private PermissoesOcorrencia agente() {
         return new PermissoesOcorrencia(usuarioId, true, true);

@@ -26,7 +26,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 
-// Exercita a V27 (T43) num schema proprio do mesmo PostgreSQL de teste, no
+// Exercita a V27 num schema proprio do mesmo PostgreSQL de teste, no
 // padrao de MigracaoV12AuditoriaIT e MigracaoV17RegistrosCriticosIT: acao
 // ACESSO_NEGADO no CHECK e auditoria_evento imutavel (UPDATE/DELETE/TRUNCATE
 // recusados com 23514), com a unica excecao do ON DELETE SET NULL da FK do
@@ -50,8 +50,6 @@ class MigracaoV27AuditoriaIT extends AbstractIntegrationTest {
     void removerSchemaDoTeste() {
         jdbcTemplate.execute("DROP SCHEMA IF EXISTS " + SCHEMA + " CASCADE");
     }
-
-    // ── Acao ACESSO_NEGADO ───────────────────────────────
 
     @Test
     @DisplayName("[T43] V27 aplica do zero sobre V1-V26 e aceita ACESSO_NEGADO")
@@ -107,8 +105,6 @@ class MigracaoV27AuditoriaIT extends AbstractIntegrationTest {
         }
     }
 
-    // ── Imutabilidade ────────────────────────────────────
-
     @Test
     @DisplayName("[T43] V27 cria os triggers de UPDATE/DELETE (linha) e TRUNCATE (comando) em auditoria_evento")
     void v27CriaOsTriggers() {
@@ -143,7 +139,7 @@ class MigracaoV27AuditoriaIT extends AbstractIntegrationTest {
         assertThat(linha(evento), equalTo(original));
     }
 
-    // Caso (a): o usuario ainda existe — falham a checagem de existencia e a
+    // Caso (a): o usuario ainda existe, e falham a checagem de existencia e a
     // de profundidade (UPDATE direto tem pg_trigger_depth() = 1).
     @Test
     @DisplayName("[T43] (a) usuario_id -> NULL por SQL direto e recusado, sozinho ou com outra coluna, com o usuario existente")
@@ -164,8 +160,8 @@ class MigracaoV27AuditoriaIT extends AbstractIntegrationTest {
     // replica, que desliga os triggers da FK e os da V27 so nesse comando
     // (exige superusuario, o usuario do PostgreSQL de teste); o evento fica
     // apontando para um usuario inexistente. De volta ao modo normal, o
-    // UPDATE direto satisfaz todas as condicoes da excecao menos uma — a
-    // profundidade — e tem de ser recusado. Tudo numa transacao: a recusa
+    // UPDATE direto satisfaz todas as condicoes da excecao menos uma (a
+    // profundidade) e tem de ser recusado. Tudo numa transacao: a recusa
     // desfaz tambem a exclusao.
     @Test
     @DisplayName("[T43] (b) usuario_id -> NULL por SQL direto e recusado mesmo com o usuario ja excluido (fora da cascata)")
@@ -247,8 +243,6 @@ class MigracaoV27AuditoriaIT extends AbstractIntegrationTest {
         assertThat(contarEventos(), equalTo(1));
         assertThat(usuarioDoEvento(evento), equalTo(usuario));
     }
-
-    // ── Apoio ────────────────────────────────────────────
 
     private MigrateResult migrarAte(String versao) {
         return migrarAte(MigrationVersion.fromVersion(versao));

@@ -43,7 +43,7 @@ function mensagemDoErro(erro: unknown): string {
 interface ProcessoFormProps {
   // Etapa 1 pré-preenchida e travada (entrada pelo detalhe da ocorrência).
   ocorrenciaDaUrl: OcorrenciaParaVinculo | null
-  // OCORRENCIAS_DENUNCIAS:escrita (D33): Admin e Agente. O Vet cria processo
+  // OCORRENCIAS_DENUNCIAS:escrita: Admin e Agente. O Vet cria processo
   // sem vínculo.
   podeVincular: boolean
   // Só quando a ocorrência não é sigilosa nem anônima (CadastrarProcesso).
@@ -154,7 +154,7 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular, denuncianteDaOcorr
 
   function handleRestaurarRascunho() {
     if (!rascunhoSalvo) return
-    // Um rascunho com vínculo não serve a quem não pode vincular (D33).
+    // Um rascunho com vínculo não serve a quem não pode vincular.
     const valoresRestaurados =
       !podeVincular && rascunhoSalvo.valores.vinculoDecisao === 'vinculado'
         ? { ...rascunhoSalvo.valores, vinculoDecisao: '' as never, ocorrenciaId: null, ocorrenciaResumo: null }

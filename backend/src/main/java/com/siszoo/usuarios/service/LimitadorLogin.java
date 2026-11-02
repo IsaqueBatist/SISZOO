@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import com.siszoo.comum.service.EmailService;
 import com.siszoo.usuarios.exception.LimiteTentativasException;
 
-// Freio contra forca bruta no login (docs/decisoes/politica-senha.md, PS-8):
+// Freio contra forca bruta no login (docs/decisoes/politica-senha.md):
 // so as falhas contam, em janela fixa, por e-mail e por IP. Dentro da janela,
 // atingido um dos limites, o login responde 429 antes de conferir a senha,
 // mesmo que ela esteja certa; um login correto antes disso zera o contador do

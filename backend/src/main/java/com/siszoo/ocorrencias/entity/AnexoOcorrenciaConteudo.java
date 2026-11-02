@@ -15,7 +15,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// Conteudo do anexo em tabela propria (D9): so e lido no download.
+// Conteudo do anexo em tabela propria: so e lido no download.
 @Entity
 @Table(name = "anexo_ocorrencia_conteudo")
 @Getter

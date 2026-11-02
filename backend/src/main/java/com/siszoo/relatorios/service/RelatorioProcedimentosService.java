@@ -30,7 +30,7 @@ import com.siszoo.relatorios.entity.TipoRelatorio;
 // "Relatório de Procedimentos" (DER §3.6 / docs/prototipo/relatorio-procedimentos.html).
 // "Procedimentos" aqui e um conceito amplo (igual ao bar chart do prototipo:
 // Vacinações + Atendimentos clínicos + Castrações + Medicações + Cirurgias
-// maiores = Total), nao so a tabela `procedimento` — Vacinações vem de
+// maiores = Total), nao so a tabela `procedimento` - Vacinações vem de
 // Vacinacao e Medicações vem de Prescricao, fontes separadas na modelagem
 // clinica (ver RelatorioVacinacaoService, mesmo padrao de "atividade no
 // periodo" por dataAplicacao/dataInicio).
@@ -117,13 +117,12 @@ public class RelatorioProcedimentosService implements GeradorRelatorio<Relatorio
     }
 
     // Contagens do periodo usadas tanto pelos KPIs quanto pelo grafico por
-    // tipo: consultadas uma vez por requisicao (antes contarPorTipo rodava 3x
-    // e as contagens de vacinacao/medicacao 2x no mesmo preview).
+    // tipo: consultadas uma vez por requisicao.
     private record ContagensDoPeriodo(List<ContagemCatalogoProjection> porTipo, long vacinacoes, long medicacoes) {
     }
 
     // Exclui 'vacinacao' do catalogo tipo_procedimento (nunca usado pelo fluxo
-    // real de criacao) — Vacinações entra no relatorio via Vacinacao, nao Procedimento.
+    // real de criacao) - Vacinações entra no relatorio via Vacinacao, nao Procedimento.
     private ContagensDoPeriodo contar(LocalDate inicio, LocalDate fim) {
         List<ContagemCatalogoProjection> porTipo = procedimentoRepository.contarPorTipo(inicio, fim).stream()
                 .filter(linha -> !VACINACAO_CODIGO_NAO_USADO_EM_PROCEDIMENTO.equals(linha.getCodigo()))

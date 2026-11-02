@@ -1,6 +1,6 @@
-/* Portado do <style> inline de docs/prototipo/ocorrencia.html. Classes já
+/* Baseado no <style> inline de docs/prototipo/ocorrencia.html. Classes já
    compartilhadas pelo design system (.card, .badge, .timeline/.timeline-item,
-   .form-grid, .kv-list, .det-grid) ficam em components.css — não duplicadas
+   .form-grid, .kv-list, .det-grid) ficam em components.css, não duplicadas
    aqui. */
 
 .vinc-card {

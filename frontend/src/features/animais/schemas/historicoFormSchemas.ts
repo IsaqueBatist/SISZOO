@@ -13,7 +13,7 @@ export const vacinacaoFormSchema = z.object({
     .refine((data) => data <= hojeEmItu(), 'A data de aplicação não pode ser futura.'),
   numeroDose: z.number().int().positive('Deve ser maior que zero.').optional(),
   doseQuantidade: z.number({ message: 'Informe a quantidade da dose.' }).positive('A dose deve ser maior que zero.'),
-  // Obrigatória desde a T24 (RN-C05, @NotNull no backend) — mesma regra e
+  // Obrigatória (RN-C05, @NotNull no backend): mesma regra e
   // mensagem da prescrição.
   doseUnidade: z.enum(['MILIGRAMA', 'MICROGRAMA', 'GRAMA', 'MILILITRO', 'UNIDADE_INTERNACIONAL'], {
     message: 'Selecione a unidade da dose.',
@@ -38,7 +38,7 @@ export const procedimentoFormSchema = z.object({
 
 export type ProcedimentoFormValues = z.infer<typeof procedimentoFormSchema>
 
-// F2-007 / RF-A04 — espelha com.siszoo.animais.clinico.dto.CriarExameRequest. Regras
+// RF-A04: espelha com.siszoo.animais.clinico.dto.CriarExameRequest. Regras
 // entre campos (resultado ⇄ data do resultado; resultado ≥ solicitação) também
 // valem no ExameService, que devolve 422 por campo.
 export const exameFormSchema = z

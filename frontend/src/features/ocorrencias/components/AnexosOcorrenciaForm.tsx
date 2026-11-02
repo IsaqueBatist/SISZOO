@@ -11,7 +11,7 @@ interface AnexosOcorrenciaFormProps {
 }
 
 // Card 5 do cadastro de ocorrência: os anexos escolhidos, que sobem depois do
-// POST (D15). A validação e o rascunho dos arquivos ficam em quem usa.
+// POST. A validação e o rascunho dos arquivos ficam em quem usa.
 export function AnexosOcorrenciaForm({ anexos, erro, aviso, onAdicionar, onRemover }: AnexosOcorrenciaFormProps) {
   return (
     <div className="card">

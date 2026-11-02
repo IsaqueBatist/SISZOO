@@ -4,7 +4,7 @@ import type { AtualizarVacinaRequest } from '../types/vacinas.types'
 
 const VACINAS_QUERY_KEY = ['vacinas']
 
-// A tela de catálogo também lista as inativas, para permitir reativar — sem
+// A tela de catálogo também lista as inativas, para permitir reativar: sem
 // isso, recadastrar uma vacina desativada daria 409 sem saída.
 export function useVacinasQuery(incluirInativas: boolean) {
   return useQuery({
@@ -19,7 +19,7 @@ export function useVacinasQuery(incluirInativas: boolean) {
 //
 // A segunda invalidação não é redundante nem defensiva: `useCatalogosAnimaisQuery`
 // tem `staleTime: Infinity`, e `invalidarAnimaisEBaias` exclui `'catalogos'` do
-// predicate de propósito (T45 — antes cada gravação de animal recarregava os
+// predicate de propósito (senão cada gravação de animal recarregaria os
 // catálogos). Sem invalidar aqui, a vacina recém-cadastrada não apareceria no
 // select até a página ser recarregada, e o "+" pareceria não ter funcionado.
 function useInvalidarVacinas() {

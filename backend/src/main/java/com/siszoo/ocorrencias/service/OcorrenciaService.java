@@ -61,16 +61,16 @@ import com.siszoo.usuarios.repository.UsuarioRepository;
 import com.siszoo.usuarios.service.AuditoriaEventoService;
 
 /**
- * Ciclo de vida da ocorrencia (T25): cadastro, edicao, status, notas e vinculo
+ * Ciclo de vida da ocorrencia: cadastro, edicao, status, notas e vinculo
  * com processo. Leituras em {@link OcorrenciaConsultaService}; anexos em
  * {@link AnexoOcorrenciaService}.
  *
  * <p>Status: so muda por {@link #alterarStatus} e {@link #encerrar}, que aplicam
- * a matriz D5 na entidade e gravam a {@code movimentacao_ocorrencia}
- * correspondente na mesma transacao (D4). Nao ha exclusao (D8).
+ * a matriz de transicoes na entidade e gravam a {@code movimentacao_ocorrencia}
+ * correspondente na mesma transacao. Nao ha exclusao.
  *
  * <p>Ordem global de locks (anti-deadlock): todo caminho que trava ocorrencia e
- * processo trava primeiro a <b>ocorrencia</b> e depois o <b>processo</b> —
+ * processo trava primeiro a <b>ocorrencia</b> e depois o <b>processo</b> -
  * {@link #vincularProcesso} e {@code ProcessoSanitarioService.criar} com
  * {@code ocorrenciaId}. {@code AnexoOcorrenciaService.adicionarAnexo} trava so
  * a ocorrencia. Um caminho novo que inverta essa ordem reabre o risco de
@@ -129,8 +129,6 @@ public class OcorrenciaService {
         this.clock = clock;
     }
 
-    // ── Cadastro e edicao ────────────────────────────────
-
     @Transactional
     public OcorrenciaResponse criar(CriarOcorrenciaRequest request, PermissoesOcorrencia permissoes) {
         validarDataAbertura(request.dataAbertura());
@@ -173,7 +171,7 @@ public class OcorrenciaService {
         return montadorResposta.paraCriacao(ocorrencia, permissoes);
     }
 
-    // D10: edita campos descritivos ate o encerramento; grava so auditoria
+    // Edita campos descritivos ate o encerramento; grava so auditoria
     // (sem movimentacao). Blocos denunciante/denunciado: ausente = sem
     // alteracao; presente = substitui o bloco inteiro.
     @Transactional
@@ -228,7 +226,7 @@ public class OcorrenciaService {
         return montadorResposta.paraMutacao(ocorrencia, permissoes);
     }
 
-    // D31: o processo vinculado pode marcar a urgencia; o PUT nao pode
+    // O processo vinculado pode marcar a urgencia; o PUT nao pode
     // desmarcar o que o processo marcou.
     private void validarUrgenciaDoProcesso(Ocorrencia ocorrencia, boolean urgente) {
         if (ocorrencia.isUrgente() && !urgente) {
@@ -245,12 +243,12 @@ public class OcorrenciaService {
     // antes de qualquer escrita.
     private void validarSigiloEAnonimato(Ocorrencia ocorrencia, AtualizarOcorrenciaRequest request,
             PermissoesOcorrencia permissoes) {
-        // D10: sigilo so muda com a feature denunciante_sigiloso.
+        // Sigilo so muda com a feature denunciante_sigiloso.
         if (ocorrencia.isSigilosa() != request.sigilosa() && !permissoes.podeVerSigilo()) {
             throw new AccessDeniedException("Alterar o sigilo exige denunciante_sigiloso");
         }
 
-        // D32: anonimato so vai de anonima para identificada, por quem tem a
+        // Anonimato so vai de anonima para identificada, por quem tem a
         // feature e junto com os dados do denunciante.
         boolean identificando = ocorrencia.isAnonima() && !request.anonima();
         if (!ocorrencia.isAnonima() && request.anonima()) {
@@ -263,7 +261,7 @@ public class OcorrenciaService {
         validarAnonimato(request.anonima(), request.sigilosa(), bloco);
 
         // Quem recebe o denunciante mascarado nao pode reenvia-lo: os null da
-        // mascara apagariam os dados reais (D10).
+        // mascara apagariam os dados reais.
         if (bloco != null && !request.anonima() && ocorrencia.isSigilosa() && !permissoes.podeVerSigilo()) {
             throw new AccessDeniedException("Alterar denunciante sigiloso exige denunciante_sigiloso");
         }
@@ -272,9 +270,7 @@ public class OcorrenciaService {
         }
     }
 
-    // ── Status ───────────────────────────────────────────
-
-    // D5: por este caminho so ABERTA -> EM_ATENDIMENTO; o encerramento tem
+    // Por este caminho so ABERTA -> EM_ATENDIMENTO; o encerramento tem
     // endpoint proprio (providencia obrigatoria).
     @Transactional
     public OcorrenciaResponse alterarStatus(UUID id, AlterarStatusOcorrenciaRequest request, PermissoesOcorrencia permissoes) {
@@ -313,7 +309,7 @@ public class OcorrenciaService {
         if (ProvidenciaTomada.CODIGO_OUTRO.equals(providencia.getCodigo()) && descricao == null) {
             throw new DescricaoEncerramentoObrigatoriaException();
         }
-        // D12: nao encerra enquanto o processo vinculado nao estiver concluido.
+        // Nao encerra enquanto o processo vinculado nao estiver concluido.
         processoRepository.findByOcorrenciaId(id)
                 .filter(p -> p.getStatusProcesso() != StatusProcesso.CONCLUIDO)
                 .ifPresent(p -> {
@@ -333,7 +329,7 @@ public class OcorrenciaService {
         return montadorResposta.paraMutacao(ocorrencia, permissoes);
     }
 
-    // D37: nota interna na timeline, sem mudanca de status. T43: a nota gera
+    // Nota interna na timeline, sem mudanca de status. A nota gera
     // CRIACAO da movimentacao; o texto nao entra no payload (texto livre, que
     // pode citar dado pessoal, e ja fica imutavel na propria movimentacao).
     @Transactional
@@ -348,9 +344,7 @@ public class OcorrenciaService {
         return montadorResposta.paraMutacao(ocorrencia, permissoes);
     }
 
-    // ── Vinculo com processo ─────────────────────────────
-
-    // D33: vincular altera a ocorrencia (movimentacao, urgencia), entao exige
+    // Vincular altera a ocorrencia (movimentacao, urgencia), entao exige
     // escrita em ocorrencias alem do acesso ao endpoint.
     @Transactional
     public OcorrenciaResponse vincularProcesso(UUID ocorrenciaId, UUID processoId, PermissoesOcorrencia permissoes) {
@@ -389,13 +383,13 @@ public class OcorrenciaService {
     // vinculo e o banco recusa troca ou remocao (V13). Ponto unico dos dois
     // caminhos de vinculo (POST /api/processos com ocorrenciaId e
     // POST /{id}/processo): a auditoria ATUALIZACAO registra antes/depois da
-    // urgencia (D31).
+    // urgencia.
     @Transactional
     public void vincular(Ocorrencia ocorrencia, ProcessoSanitario processo, Usuario autor) {
         var antes = ocorrenciaMapper.toSnapshot(ocorrencia, false);
         processo.vincularOcorrencia(ocorrencia);
         processoRepository.saveAndFlush(processo);
-        // D31: o vinculo pode marcar a urgencia, nunca desmarcar.
+        // O vinculo pode marcar a urgencia, nunca desmarcar.
         if (processo.isUrgente()) {
             ocorrencia.setUrgente(true);
         }
@@ -405,8 +399,6 @@ public class OcorrenciaService {
         auditoriaEventoService.registrar(autor, AcaoAuditoria.ATUALIZACAO, ENTIDADE_AUDITORIA, ocorrencia.getId(),
                 antes, ocorrenciaMapper.toSnapshot(ocorrencia, false));
     }
-
-    // ── Apoio ────────────────────────────────────────────
 
     private MovimentacaoOcorrencia registrarMovimentacao(Ocorrencia ocorrencia, Usuario autor,
             TipoMovimentacaoOcorrencia tipo, StatusOcorrencia anterior, StatusOcorrencia novo, String descricao) {
@@ -435,14 +427,14 @@ public class OcorrenciaService {
                 .orElseThrow(TipoOcorrenciaInvalidoException::new);
     }
 
-    // D21: com o Clock do projeto, nao com @PastOrPresent.
+    // Com o Clock do projeto, nao com @PastOrPresent.
     private void validarDataAbertura(LocalDate dataAbertura) {
         if (dataAbertura.isAfter(LocalDate.now(clock))) {
             throw new DataAberturaFuturaException();
         }
     }
 
-    // D32: anonima e sigilosa sao excludentes, e anonima nao aceita nenhum dado
+    // Anonima e sigilosa sao excludentes, e anonima nao aceita nenhum dado
     // do denunciante (nem telefone de retorno).
     private void validarAnonimato(boolean anonima, boolean sigilosa, DenuncianteRequest denunciante) {
         if (anonima && sigilosa) {
@@ -453,7 +445,7 @@ public class OcorrenciaService {
         }
     }
 
-    // D19: nome obrigatorio so quando a denuncia nao e anonima nem sigilosa.
+    // Nome obrigatorio so quando a denuncia nao e anonima nem sigilosa.
     private void validarNomeDenunciante(boolean anonima, boolean sigilosa, String nome) {
         if (!anonima && !sigilosa && !StringUtils.hasText(nome)) {
             throw new NomeDenuncianteObrigatorioException();

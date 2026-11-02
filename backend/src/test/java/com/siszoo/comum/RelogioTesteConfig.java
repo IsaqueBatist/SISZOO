@@ -18,7 +18,7 @@ import org.springframework.context.annotation.Primary;
 // O JwtService valida expiracao com este mesmo Clock, entao tokens emitidos
 // "em 2026-09-10" continuam validos mesmo com a data real posterior.
 //
-// T30: o instante pode ser trocado (fixarEm) para os testes de concorrencia
+// O instante pode ser trocado (fixarEm) para os testes de concorrencia
 // pela API isolarem um ano de protocolo com sequencia vazia. Os *IT rodam em
 // sequencia (failsafe sem configuracao de paralelismo), e quem troca restaura
 // (restaurar) no finally e no @AfterEach da classe; fora disso, o instante e

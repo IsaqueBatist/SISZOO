@@ -1,8 +1,8 @@
 // Rascunho local do wizard de processo sanitário em IndexedDB nativo (banco
-// compartilhado com os outros rascunhos, lib/rascunhoDb.ts) — exigência de
+// compartilhado com os outros rascunhos, lib/rascunhoDb.ts): exigência de
 // negócio para formulários longos ("wizard de processo"), já que a rede do
-// CCZ é instável. Não há edição de processo existente, então há uma única
-// chave por usuário ('<usuarioId>:novo'), igual ao rascunho de ocorrência.
+// CCZ é instável. A edição de processo existente não usa rascunho, então há
+// uma única chave por usuário ('<usuarioId>:novo'), igual ao rascunho de ocorrência.
 //
 // O objeto salvo também guarda `etapaAtual` para que o rascunho restaurado
 // reabra na etapa certa e com o vínculo da RN2 respeitado.
@@ -11,7 +11,7 @@ import { agendarSalvarRascunho, carregarRascunho, chaveComEscopo, removerRascunh
 const STORE = 'processos'
 const DEBOUNCE_MS = 800
 
-// T29: o formulário passou a usar o contrato da API real (enums em
+// O formulário usa o contrato da API real (enums em
 // maiúsculas, espécie por código, amostra do canil só com animalId). Um
 // rascunho de versão anterior (o do mock) não é restaurado: os valores seriam
 // recusados pelo backend.
@@ -38,7 +38,7 @@ export function salvarRascunhoProcesso<T>(chave: string, rascunho: RascunhoProce
   return salvarRascunho(STORE, chave, comVersao(rascunho))
 }
 
-// Devolve também o instante do salvamento (T42), para o aviso de restauração.
+// Devolve também o instante do salvamento, para o aviso de restauração.
 export async function carregarRascunhoProcesso<T>(
   chave: string,
 ): Promise<(RascunhoProcesso<T> & { salvoEm: number | null }) | null> {

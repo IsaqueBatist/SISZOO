@@ -36,7 +36,7 @@ import com.siszoo.comum.ApiTesteFixture;
 import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 
-// T45 (V28): as listagens de animais devolvem em fotoUrl a miniatura da foto
+// V28: as listagens de animais devolvem em fotoUrl a miniatura da foto
 // (avatar), e o detalhe continua com a foto inteira; a Gestao de Baias le os
 // residentes de GET /api/baias/residentes, sem a listagem de 500 animais.
 class FotoMiniaturaIT extends AbstractIntegrationTest {

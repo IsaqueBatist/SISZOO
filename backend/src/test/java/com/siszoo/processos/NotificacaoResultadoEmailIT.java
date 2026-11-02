@@ -37,11 +37,11 @@ import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 
-// T35 (auditoria): a notificacao da T36 de ponta a ponta, sem mock no envio —
+// A notificacao de resultado de ponta a ponta, sem mock no envio:
 // POST do resultado positivo -> commit -> listener AFTER_COMMIT ->
 // NotificacaoResultadoService -> templates reais -> EmailService -> SMTP falso
-// do GreenMail -> data/hora gravada no processo (T35-16). E o positivo
-// definitivo (T35-15): a tentativa de corrigir nao gera segunda mensagem.
+// do GreenMail -> data/hora gravada no processo. E o positivo
+// definitivo: a tentativa de corrigir nao gera segunda mensagem.
 class NotificacaoResultadoEmailIT extends AbstractIntegrationTest {
 
     @RegisterExtension
@@ -127,8 +127,6 @@ class NotificacaoResultadoEmailIT extends AbstractIntegrationTest {
         assertThat(GREEN_MAIL.getReceivedMessages(), arrayWithSize(1));
         assertThat(dataNotificacao(processoId), equalTo(gravada));
     }
-
-    // ── Apoio ────────────────────────────────────────────
 
     private String processoAguardandoResultado(String nomeResponsavel) {
         Map<String, Object> corpo = fixture.corpoProcesso(null, false);

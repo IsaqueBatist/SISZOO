@@ -92,10 +92,10 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Subquery;
 
 /**
- * Processo sanitario (T29, DER §3.5): criacao completa - processo, responsavel
- * e pelo menos uma amostra numa unica transacao -, consulta, listagem (T32),
+ * Processo sanitario (DER §3.5): criacao completa - processo, responsavel
+ * e pelo menos uma amostra numa unica transacao -, consulta, listagem,
  * catalogos, o avanco de status e o registro do resultado laboratorial com
- * desfecho e notificacao (T34 + T37). As regras de cada amostra ficam em
+ * desfecho e notificacao. As regras de cada amostra ficam em
  * {@link AmostraProcessoFactory}; o mapeamento, em {@link ProcessoSanitarioMapper}.
  *
  * <p>Amostras na resposta e na auditoria: lidas uma vez por requisicao, depois
@@ -110,19 +110,19 @@ public class ProcessoSanitarioService {
 
     private static final String ENTIDADE_AUDITORIA = "processo_sanitario";
 
-    // R1 (T29): "sem resultado" e o vigente nulo; o codigo aguardando do
+    // "Sem resultado" e o vigente nulo; o codigo aguardando do
     // catalogo nao e um resultado lancavel.
     private static final String RESULTADO_SEM_RESULTADO = "aguardando";
 
-    // Resultado definitivo, que nao se corrige (T35-15, trigger V21). A
-    // notificacao ao municipe e criterio separado (RN10, F2-014: positivo e
+    // Resultado definitivo, que nao se corrige (trigger V21). A
+    // notificacao ao municipe e criterio separado (RN10: positivo e
     // inconclusivo) - ver ResultadosNotificaveis.
     private static final String RESULTADO_DEFINITIVO = "positivo";
 
-    // Unico campo do evento de auditoria do envio da notificacao (T35-16).
+    // Unico campo do evento de auditoria do envio da notificacao.
     private static final String CAMPO_NOTIFICACAO_AUDITORIA = "dataNotificacaoMunicipe";
 
-    // RN3 do front (T32), mesma regra da listagem de ocorrencias (D31):
+    // RN3 do front, mesma regra da listagem de ocorrencias:
     // urgentes primeiro, depois os mais recentes. Desempate pela criacao, nao
     // pelo protocolo: como texto, "999/2026" vem antes de "1000/2026".
     private static final Sort ORDEM_LISTAGEM = Sort.by(
@@ -190,14 +190,12 @@ public class ProcessoSanitarioService {
         this.clock = clock;
     }
 
-    // ── Criacao ──────────────────────────────────────────
-
     @Transactional
     public ProcessoSanitarioResponse criar(CriarProcessoRequest request, PermissoesOcorrencia permissoes) {
         // Regras que nao dependem do banco vem primeiro: um request invalido
         // nao consome protocolo nem trava a ocorrencia.
         LocalDate hoje = LocalDate.now(clock);
-        // Mesma regra da ocorrencia (D21): com o Clock do projeto, nao com @PastOrPresent.
+        // Mesma regra da ocorrencia: com o Clock do projeto, nao com @PastOrPresent.
         if (request.dataAbertura().isAfter(hoje)) {
             throw new DataAberturaFuturaException();
         }
@@ -212,7 +210,7 @@ public class ProcessoSanitarioService {
                 .orElseThrow(LaboratorioInvalidoException::new);
         Map<String, Sintoma> sintomas = amostraFactory.resolverSintomas(request.amostras());
 
-        // D33: com ocorrenciaId, a escrita em ocorrencias e checada ANTES de
+        // Com ocorrenciaId, a escrita em ocorrencias e checada ANTES de
         // inserir o processo - sem ela, nada e criado. A ocorrencia e travada
         // antes do processo existir (ordem global de locks, ver OcorrenciaService).
         Ocorrencia ocorrencia = null;
@@ -228,7 +226,7 @@ public class ProcessoSanitarioService {
         processo.setCid(doenca.getCid());
         processo.setLaboratorio(laboratorio);
         processo.setObservacoes(request.observacoes());
-        // F2-012: numeros GAL/SINAN registrados manualmente (RF-B01; sem integracao, 3.5.2).
+        // Numeros GAL/SINAN registrados manualmente (RF-B01; sem integracao, 3.5.2).
         processo.setGalNumero(Textos.normalizar(request.galNumero()));
         processo.setSinanNumero(Textos.normalizar(request.sinanNumero()));
         // DER regra 18: contato humano em qualquer amostra torna o processo urgente.
@@ -381,11 +379,9 @@ public class ProcessoSanitarioService {
         responsavel.setBairroOcorrencia(request.bairroOcorrencia());
     }
 
-    // ── Consulta, listagem e catalogos ───────────────────
-
     // Filtros por codigo de doenca, status, urgencia, periodo de abertura (dias
-    // inclusivos) e busca, urgentes primeiro (ORDEM_LISTAGEM). `urgente` (T45,
-    // docs/contratos/processos-filtro-urgente.md) e opcional: ausente, a
+    // inclusivos) e busca, urgentes primeiro (ORDEM_LISTAGEM). `urgente`
+    // (docs/contratos/processos-filtro-urgente.md) e opcional: ausente, a
     // listagem e a de sempre; presente, so os processos com aquele valor.
     @Transactional(readOnly = true)
     public PaginaResponse<ProcessoResumoResponse> listar(String doenca, List<StatusProcesso> status, Boolean urgente,
@@ -460,11 +456,9 @@ public class ProcessoSanitarioService {
                         .map(d -> new CatalogoItemResponse(d.getCodigo(), d.getNome())).toList());
     }
 
-    // ── Status e resultado (T34 + T37) ───────────────────
-
     // Avanco manual de um passo (StatusProcesso): ABERTO -> AGUARDANDO_RESULTADO
     // e COM_RESULTADO -> CONCLUIDO. COM_RESULTADO so pelo registro do
-    // resultado (registrarResultado), que substitui o placeholder da D18.
+    // resultado (registrarResultado).
     @Transactional
     public ProcessoSanitarioResponse alterarStatus(UUID id, AlterarStatusProcessoRequest request, UUID usuarioId) {
         ProcessoSanitario processo = travar(id);
@@ -476,7 +470,7 @@ public class ProcessoSanitarioService {
             throw new ResultadoObrigatorioException();
         }
         // CONCLUIDO exige o vigente (DER §3.5): protege processos que chegaram a
-        // COM_RESULTADO sem resultado pelo PATCH provisorio da D18.
+        // COM_RESULTADO sem resultado, quando o PATCH de status levava a esse passo.
         if (destino == StatusProcesso.CONCLUIDO && processo.getResultadoLaboratorial() == null) {
             throw new ConclusaoSemResultadoException();
         }
@@ -498,7 +492,7 @@ public class ProcessoSanitarioService {
     // corrigido fica preservado. O registro, o vigente em processo_sanitario e
     // a auditoria entram na mesma transacao, sob o lock do processo, que
     // serializa lancamentos concorrentes no mesmo processo. Desfecho do
-    // animal (T37) nao faz parte do historico imutavel - e so do processo, e
+    // animal nao faz parte do historico imutavel - e so do processo, e
     // pode vir em qualquer lancamento (original ou correcao).
     @Transactional
     public ProcessoSanitarioResponse registrarResultado(UUID id, RegistrarResultadoRequest request, UUID usuarioId) {
@@ -540,7 +534,7 @@ public class ProcessoSanitarioService {
         if (desfecho != null) {
             processo.setDesfechoAnimal(desfecho);
         }
-        // RN10 (F2-014): positivo e inconclusivo notificam o municipe. Um novo
+        // RN10: positivo e inconclusivo notificam o municipe. Um novo
         // lancamento notificavel (ex.: inconclusivo corrigido para positivo) e
         // uma nova notificacao: a data do envio anterior e zerada para que o
         // aceite deste envio seja gravado (registrarNotificacaoMunicipe e
@@ -556,7 +550,7 @@ public class ProcessoSanitarioService {
                 antes.comAmostras(amostras), processoMapper.toSnapshot(processo, amostras));
         // Ponto unico de gravacao do resultado. O envio roda fora desta
         // transacao, depois do commit (NotificacaoResultadoListener). O envio
-        // de um mesmo lancamento nao se repete (#37); a Vigilancia
+        // de um mesmo lancamento nao se repete; a Vigilancia
         // Epidemiologica continua mockada (pendencia documentada no TG).
         if (notifica) {
             eventPublisher.publishEvent(new ResultadoLancadoEvent(id));
@@ -576,7 +570,7 @@ public class ProcessoSanitarioService {
     }
 
     // Como RN-C02: so o vigente (ainda nao corrigido) do mesmo processo.
-    // T35-15: positivo e definitivo - nao se corrige (422), para nenhum
+    // Positivo e definitivo - nao se corrige (422), para nenhum
     // resultado; o trigger da V21 recusa o mesmo no banco.
     private ResultadoProcesso resultadoACorrigir(ProcessoSanitario processo, UUID retificaId) {
         if (processo.getStatusProcesso() != StatusProcesso.COM_RESULTADO) {
@@ -594,7 +588,7 @@ public class ProcessoSanitarioService {
         return anterior;
     }
 
-    // T35-16/#37: data/hora em que o SMTP aceitou a notificacao ao municipe.
+    // Data/hora em que o SMTP aceitou a notificacao ao municipe.
     // Chamado pelo callback do envio, depois do commit do resultado (o envio
     // e AFTER_COMMIT). REQUIRES_NEW: o callback pode rodar na thread do
     // listener, dentro da transacao readOnly de NotificacaoResultadoService
@@ -612,8 +606,6 @@ public class ProcessoSanitarioService {
                 Collections.singletonMap(CAMPO_NOTIFICACAO_AUDITORIA, null),
                 Map.of(CAMPO_NOTIFICACAO_AUDITORIA, aceitoEm));
     }
-
-    // ── Apoio ────────────────────────────────────────────
 
     private ProcessoSanitario travar(UUID id) {
         return processoRepository.findByIdForUpdate(id).orElseThrow(ProcessoNaoEncontradoException::new);

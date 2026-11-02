@@ -13,7 +13,7 @@ import { CadastrarOcorrencia } from './CadastrarOcorrencia'
 import { OcorrenciaDetalhe } from './OcorrenciaDetalhe'
 
 // jsdom não implementa IndexedDB: a pendência gravada numa sessão anterior
-// (D15) é simulada mockando o storage — mesmo padrão de
+// é simulada mockando o storage, mesmo padrão de
 // OcorrenciaForm.autosave.test.tsx.
 vi.mock('../storage/rascunhoOcorrenciaStorage', async () => {
   const real =

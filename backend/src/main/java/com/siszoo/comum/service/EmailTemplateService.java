@@ -8,7 +8,7 @@ import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.context.Context;
 
 /**
- * Renderiza os templates de e-mail (T35) de {@code src/main/resources/templates/}.
+ * Renderiza os templates de e-mail de{@code src/main/resources/templates/}.
  * O HTML usa o resolver do Boot ({@code <nome>.html}, modo HTML: {@code th:text}
  * escapa o conteudo); o texto puro, o resolver de {@code EmailTemplateConfig}
  * ({@code <nome>.txt}, modo TEXT). Separado do {@link EmailService} de

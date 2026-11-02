@@ -23,7 +23,7 @@ import com.siszoo.animais.service.AnexoAnimalService;
 import com.siszoo.comum.dto.ArquivoAnexo;
 import com.siszoo.comum.security.UsuarioAutenticado;
 
-// F2-007 / RF-A04: anexos do animal (fotos, laudos, documentos). Sem exclusao
+// RF-A04: anexos do animal (fotos, laudos, documentos). Sem exclusao
 // (historico imutavel). Mesmo contrato dos anexos de ocorrencia.
 @RestController
 @RequestMapping("/api/animais/{animalId}/anexos")

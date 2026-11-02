@@ -48,9 +48,9 @@ import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.repository.UsuarioRepository;
 import com.siszoo.usuarios.service.AuditoriaEventoService;
 
-// Defesa em profundidade das regras de sigilo (D10/D14/D32/D33). Pela matriz
-// atual da V3/V10, quem escreve em ocorrencias sempre tem a feature de sigilo
-// — por isso estes casos so sao alcancaveis em teste unitario, simulando um
+// Defesa em profundidade das regras de sigilo. Pela matriz
+// atual da V3/V10, quem escreve em ocorrencias sempre tem a feature de sigilo;
+// por isso estes casos so sao alcancaveis em teste unitario, simulando um
 // usuario com escrita e sem a feature.
 @ExtendWith(MockitoExtension.class)
 class OcorrenciaServiceTest {

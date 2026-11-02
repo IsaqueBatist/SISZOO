@@ -76,7 +76,7 @@ public class AnimalService {
     private final MiniaturaFoto miniaturaFoto;
     private final Clock clock;
 
-    // RNF10 (F2-078/F2-029): o cadastro do animal e alteracao critica - cada
+    // RNF10: o cadastro do animal e alteracao critica - cada
     // criacao e edicao gera AuditoriaEvento com o estado antes/depois.
     private static final String ENTIDADE_AUDITORIA = "animal";
 
@@ -113,7 +113,7 @@ public class AnimalService {
                 request.esterilizado(), request.dataEsterilizacao());
         String microchip = normalizarMicrochip(request.microchip());
         verificarMicrochipDisponivel(microchip, null);
-        // F2-004 / F2-008: identificacao complementar e laudo de eutanasia.
+        // Identificacao complementar e laudo de eutanasia.
         String numeroMedalha = Textos.normalizar(request.numeroMedalha());
         verificarMedalhaDisponivel(numeroMedalha, null);
         validarDataImplantacaoChip(request.dataImplantacaoChip(), microchip);
@@ -163,11 +163,11 @@ public class AnimalService {
 
         aplicarMicrochipNaAtualizacao(animal, request.microchip());
 
-        // F2-004: medalha unica; data de implantacao exige microchip (ja aplicado acima).
+        // Medalha unica; data de implantacao exige microchip (ja aplicado acima).
         String numeroMedalha = Textos.normalizar(request.numeroMedalha());
         verificarMedalhaDisponivel(numeroMedalha, animal.getId());
         validarDataImplantacaoChip(request.dataImplantacaoChip(), animal.getMicrochip());
-        // F2-008: laudo obrigatorio so na TRANSICAO para obito_eutanasia; quem ja
+        // Laudo obrigatorio so na TRANSICAO para obito_eutanasia; quem ja
         // estava em eutanasia (inclusive registros anteriores a V24) segue
         // editavel, e um laudo ja gravado e mantido se o request vier vazio.
         String laudoEutanasia = Textos.normalizar(request.laudoEutanasia());
@@ -207,7 +207,7 @@ public class AnimalService {
             String status, Boolean custodia, String especie, UUID baiaId, String q, int pagina, int tamanho) {
         Specification<Animal> filtro = construirFiltro(status, custodia, especie, baiaId, q);
         Page<Animal> paginaAnimais = animalRepository.findAll(filtro, Paginacao.pagina(pagina, tamanho, ORDEM_LISTAGEM));
-        // T45: na listagem, fotoUrl e a miniatura (avatar); a foto inteira fica no detalhe.
+        // Na listagem, fotoUrl e a miniatura (avatar); a foto inteira fica no detalhe.
         return PaginaResponse.de(paginaAnimais.map(animalMapper::toResponseListagem));
     }
 
@@ -349,8 +349,6 @@ public class AnimalService {
     private boolean ocupaBaia(StatusAnimal status) {
         return status != null && !StatusAnimal.CODIGOS_FORA_DA_CUSTODIA.contains(status.getCodigo());
     }
-
-    // ── F2-004 / F2-008 (Fase 3 do TG) ───────────────────
 
     private static final String STATUS_OBITO_EUTANASIA = "obito_eutanasia";
 

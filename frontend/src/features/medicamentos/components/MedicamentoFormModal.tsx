@@ -79,7 +79,7 @@ export function MedicamentoFormModal({ medicamento, onFechar }: MedicamentoFormM
     void handleSubmit(salvar)(event)
   }
 
-  // A categoria recém-criada já fica escolhida, como a tela fazia antes.
+  // A categoria recém-criada já fica escolhida.
   function aoCadastrarCategoria(id: string, nome: string) {
     setValue('categoriaId', id, { shouldValidate: true })
     setCadastrandoCategoria(false)
@@ -219,7 +219,7 @@ function CadastroCategoria({
   }
 
   // `div` e não `form`: este bloco vive dentro do `form` do medicamento, e
-  // formulário aninhado é HTML inválido — o submit de um dispararia o outro.
+  // formulário aninhado é HTML inválido: o submit de um dispararia o outro.
   function aoEnviar(event: FormEvent<HTMLButtonElement>) {
     event.preventDefault()
     setErro(null)

@@ -21,8 +21,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// So metadados (V26, F2-007 / RF-A04). O conteudo (bytea) fica em
-// AnexoAnimalConteudo, como nos anexos de ocorrencia (D9).
+// So metadados (V26, RF-A04). O conteudo (bytea) fica em
+// AnexoAnimalConteudo, como nos anexos de ocorrencia.
 @Entity
 @Table(name = "anexo_animal")
 @Getter

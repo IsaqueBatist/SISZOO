@@ -70,7 +70,7 @@ public interface ProcessoSanitarioMapper {
                 ocorrenciaProtocoloDe(processo));
     }
 
-    // Sem o responsavel: nenhum dado pessoal no evento (como a D23).
+    // Sem o responsavel: nenhum dado pessoal no evento.
     default ProcessoAuditoriaSnapshot toSnapshot(ProcessoSanitario processo, List<AmostraAnimalResponse> amostras) {
         return new ProcessoAuditoriaSnapshot(
                 processo.getId(),

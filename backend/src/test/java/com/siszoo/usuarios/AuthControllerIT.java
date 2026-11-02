@@ -279,8 +279,8 @@ class AuthControllerIT extends AbstractIntegrationTest {
         assertThat(atual.getSenhaAlteradaEm(), nullValue());
     }
 
-    // O BCrypt recusa mais de 72 bytes (antes: IllegalArgumentException no
-    // encode, resposta 500). O teto e em bytes UTF-8: 40 "é" sao 40
+    // O BCrypt recusa mais de 72 bytes (IllegalArgumentException no encode).
+    // O teto e em bytes UTF-8: 40 "é" sao 40
     // caracteres, mas 80 bytes. Exatamente 72 bytes continua aceito.
     @Test
     void deveRetornar422QuandoNovaSenhaPassaDe72BytesEAceitar72() {

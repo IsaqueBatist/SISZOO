@@ -11,7 +11,7 @@ import com.siszoo.comum.security.UsuarioAutenticado;
 
 // Usuario autenticado e as autoridades que mudam o comportamento do service
 // (nao so o acesso ao endpoint, que fica nas @PreAuthorize). As regras de
-// sigilo dependem da permissao, nunca do nome do cargo (D6/D14).
+// sigilo dependem da permissao, nunca do nome do cargo.
 public record PermissoesOcorrencia(UUID usuarioId, boolean podeVerSigilo, boolean podeEscreverOcorrencias) {
 
     public static final String SIGILO = "OCORRENCIAS_DENUNCIAS:denunciante_sigiloso:leitura";

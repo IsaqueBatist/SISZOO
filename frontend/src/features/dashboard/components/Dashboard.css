@@ -1,6 +1,5 @@
 /* Portado do <style> inline de docs/prototipo/dashboard.html (grid de Alertas
-   Críticos — os gráficos completos ficam para uma tarefa futura). A grade de
-   KPIs (.kpi-grid) é global, em styles/components.css, porque as pré-visualizações
+   Críticos). A grade de KPIs (.kpi-grid) é global, em styles/components.css, porque as pré-visualizações
    de relatórios também a usam. */
 
 .alerts-grid {

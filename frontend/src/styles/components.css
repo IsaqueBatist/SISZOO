@@ -79,7 +79,7 @@
 /* ===== KPI Card ===== */
 /* Grade de KPIs: global porque é usada pelo Dashboard e pelas pré-visualizações
    de relatórios (ao abrir /relatorios diretamente, o CSS do Dashboard não está
-   carregado e os cartões ficavam empilhados). */
+   carregado e os cartões ficariam empilhados). */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -335,7 +335,7 @@ a.dd-notif-item.urgent:hover { background: color-mix(in srgb, var(--color-danger
 .badge-inconclusive { background: #FFFDE7; color: #8A5200; }
 .badge-neutral { background: var(--color-bg); color: var(--color-text-secondary); border: 1px solid var(--color-border); }
 
-/* ===== Gráficos do mural (T40) ===== */
+/* ===== Gráficos do mural ===== */
 .charts-row {
   display: grid;
   grid-template-columns: 1.1fr 1fr 1.1fr;
@@ -865,8 +865,8 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
 /* O conteúdo precisa poder ENCOLHER para o rodapé caber. Sem isto, o <form>
    (filho flex do .modal, com `min-height: auto` por padrão) cresce até a
    altura do conteúdo, o .modal corta o excesso com `overflow: hidden` e o
-   botão de salvar fica inalcançável — o `overflow-y: auto` do .modal-body não
-   rola nada porque ele nunca recebe altura limitada. Hoje os 7 modais usam
+   botão de salvar fica inalcançável: o `overflow-y: auto` do .modal-body não
+   rola nada porque ele nunca recebe altura limitada. Os modais de formulário usam
    .modal > form > (.modal-body + .modal-footer); a regra no .modal-body cobre
    também um corpo solto, se algum modal futuro dispensar o form. */
 .modal > form {
@@ -901,8 +901,8 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
 /* ===== Toast ===== */
 /* Escala de z-index do app: 2 · 20 · 50 (topbar, base.css) · 100 · 200
    (.modal-overlay) · 300 (.toast-stack). O aviso precisa aparecer ACIMA do
-   modal que o originou — é justamente dentro dos modais que faltava
-   confirmação de que a ação deu certo. */
+   modal que o originou: é ali que a pessoa espera a confirmação de que a
+   ação deu certo. */
 .toast-stack {
   position: fixed;
   bottom: var(--space-6);
@@ -1053,8 +1053,7 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
 .kv-list .kv-row:first-child { padding-top: 0; }
 
 /* Layout de detalhe (coluna principal + coluna lateral) - usado por
-   OcorrenciaDetalhe.tsx e ProcessoDetalhe.tsx, promovido de
-   OcorrenciaDetalhe.css para cá quando passou a ser compartilhado. */
+   OcorrenciaDetalhe.tsx e ProcessoDetalhe.tsx. */
 .det-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;

@@ -24,7 +24,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// Registro clinico imutavel (RN06; V25, F2-007 / RF-A04): ver Vacinacao para o
+// Registro clinico imutavel (RN06; V25, RF-A04): ver Vacinacao para o
 // mecanismo de retificacao (nova linha + `retifica`, nunca UPDATE na original).
 @Entity
 @Table(name = "exame")

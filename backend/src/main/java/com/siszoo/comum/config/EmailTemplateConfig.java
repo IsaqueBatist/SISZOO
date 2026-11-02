@@ -7,9 +7,9 @@ import org.springframework.context.annotation.Configuration;
 import org.thymeleaf.spring6.templateresolver.SpringResourceTemplateResolver;
 import org.thymeleaf.templatemode.TemplateMode;
 
-// T35: versao em texto puro dos e-mails (EmailTemplateService.renderizarTexto).
+// Versao em texto puro dos e-mails (EmailTemplateService.renderizarTexto).
 // O resolver do Boot (defaultTemplateResolver, so modo HTML e sufixo .html)
-// continua ativo — ele so sai com outro bean de mesmo nome — e o
+// continua ativo (ele so sai com outro bean de mesmo nome) e o
 // TemplateEngine usa os dois. Este responde so a email/*.txt e, se o arquivo
 // nao existir, passa adiante.
 @Configuration

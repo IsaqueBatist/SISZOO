@@ -100,7 +100,7 @@ describe('ModalRegistrarVacina — validação', () => {
     expect(within(modal).getByLabelText(/^unidade/i)).toHaveClass('error')
     expect(corposEnviados).toHaveLength(0)
 
-    // Controle: só a unidade faltava — com ela o mesmo formulário é enviado.
+    // Controle: só a unidade faltava; com ela o mesmo formulário é enviado.
     await user.selectOptions(within(modal).getByLabelText(/^unidade/i), 'MILILITRO')
     await user.click(within(modal).getByRole('button', { name: /^registrar vacina$/i }))
 
@@ -334,9 +334,9 @@ describe('ModalRegistrarVacina — cadastro rápido pelo "+"', () => {
 })
 
 describe('AbaVacinas — registrar reforço', () => {
-  // Antes, a única ação na linha era "Corrigir": usá-la para lançar o reforço
-  // criava uma RETIFICAÇÃO, e a aplicação anterior passava a constar como se
-  // nunca tivesse valido. O alerta sumia e escondia o estrago.
+  // "Corrigir" não serve para lançar o reforço: criaria uma RETIFICAÇÃO, e a
+  // aplicação anterior passaria a constar como se nunca tivesse valido. O
+  // alerta sumiria e esconderia o estrago.
   it('oferece o reforço nas linhas vencida e a vencer, e não na que está em dia', async () => {
     renderAba()
 
@@ -372,7 +372,7 @@ describe('AbaVacinas — registrar reforço', () => {
     await user.click(within(modal).getByRole('button', { name: /^registrar vacina$/i }))
 
     // Registro independente: o reforço sucede a aplicação anterior, não a
-    // corrige — por isso sem `retificaId`.
+    // corrige, por isso sem `retificaId`.
     await waitFor(() => expect(corpos).toHaveLength(1))
     expect(corpos[0]).toMatchObject({ vacina: 'v10', dataAplicacao: hojeEmItu() })
     expect(corpos[0]).not.toHaveProperty('retificaId', expect.anything())

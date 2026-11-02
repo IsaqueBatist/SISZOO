@@ -8,15 +8,14 @@ import java.util.UUID;
 import com.siszoo.comum.dto.CatalogoItemResponse;
 import com.siszoo.processos.entity.StatusProcesso;
 
-// Os campos da versao minima (T25) continuam com os mesmos nomes; os da T29
-// e da T34 sao aditivos. ocorrenciaProtocolo (T32) permite exibir o vinculo
-// sem buscar a ocorrencia (que exige acesso ao modulo e audita o sigilo,
-// T26). resultado/dataResultado sao o vigente (nulos sem resultado);
-// resultados e o historico, do original a ultima correcao (T34).
-// desfechoAnimal (T37) nao entra no historico imutavel — e so do processo.
-// dataNotificacaoMunicipe (T35-16, #37): quando o SMTP aceitou o e-mail de
-// resultado positivo ao municipe; nula quando nao houve envio aceito.
-// galNumero/sinanNumero (F2-012, Fase 3 do TG): numeros dos sistemas estaduais
+// ocorrenciaProtocolo permite exibir o vinculo
+// sem buscar a ocorrencia (que exige acesso ao modulo e audita o sigilo).
+// resultado/dataResultado sao o vigente (nulos sem resultado);
+// resultados e o historico, do original a ultima correcao.
+// desfechoAnimal nao entra no historico imutavel - e so do processo.
+// dataNotificacaoMunicipe: quando o SMTP aceitou o e-mail de
+// resultado ao municipe; nula quando nao houve envio aceito.
+// galNumero/sinanNumero: numeros dos sistemas estaduais
 // informados manualmente na abertura (RF-B01; sem integracao, 3.5.2).
 // dataEnvioAmostras/previsaoRetorno continuam fora: nenhum fluxo os preenche.
 public record ProcessoSanitarioResponse(

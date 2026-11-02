@@ -22,8 +22,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 // Exercita a V7 isoladamente num schema proprio do mesmo PostgreSQL de teste:
 // o Flyway da aplicacao ja migrou o schema public ate a ultima versao, entao
-// aqui as migrations sao aplicadas de novo, por API, num schema descartavel —
-// primeiro ate a V6 (estado anterior a T24), depois a V7.
+// aqui as migrations sao aplicadas de novo, por API, num schema descartavel:
+// primeiro ate a V6, depois a V7.
 class MigracaoV7RegistroClinicoIT extends AbstractIntegrationTest {
 
     private static final String SCHEMA = "migracao_v7";
@@ -48,8 +48,8 @@ class MigracaoV7RegistroClinicoIT extends AbstractIntegrationTest {
         assertThat(resultado.targetSchemaVersion, equalTo("7"));
     }
 
-    // Banco com vacinacao legada sem unidade (o formulario anterior a T24
-    // permitia): a V7 nao pode abortar nem inventar unidade clinica — o
+    // Banco com vacinacao legada sem unidade (o formulario antigo
+    // permitia): a V7 nao pode abortar nem inventar unidade clinica; o
     // registro legado fica nulo e so linhas novas passam a exigir unidade.
     @Test
     @DisplayName("[RN-C05] V7 preserva vacinacao legada sem unidade e passa a exigir unidade em linha nova")

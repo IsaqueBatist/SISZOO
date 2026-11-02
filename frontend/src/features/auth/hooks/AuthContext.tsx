@@ -62,8 +62,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // O cache do React Query some nos dois casos (o próximo usuário não pode
   // ver dados do anterior). Rascunhos e anexos pendentes só no logout manual:
   // quando a sessão expira (401) no meio de um formulário, o mesmo usuário
-  // entra de novo e retoma o rascunho — que tem escopo por usuário, então
-  // ninguém mais o vê.
+  // entra de novo e retoma o rascunho, que tem escopo por usuário: ninguém
+  // mais o vê.
   const encerrarSessao = useCallback(
     ({ apagarRascunhos }: { apagarRascunhos: boolean }) => {
       // Antes de tudo: limparRascunhos cancela já, de forma síncrona, os
@@ -164,9 +164,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('auth:unauthorized', expirarPorRecusa)
   }, [expirarPorRecusa])
 
-  // T45: o AuthProvider re-renderiza a cada navegação (useNavigate); com o
+  // O AuthProvider re-renderiza a cada navegação (useNavigate); com o
   // value recriado a cada render, toda a árvore que lê o contexto (Sidebar,
-  // Topbar, guardas de rota, página) re-renderizava junto. Memoizado, só
+  // Topbar, guardas de rota, página) re-renderizaria junto. Memoizado, só
   // muda quando a sessão ou o estado do login mudam.
   const { isPending, error } = mutation
   const value: AuthContextValue = useMemo(

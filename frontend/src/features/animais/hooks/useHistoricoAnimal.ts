@@ -12,12 +12,12 @@ import {
 } from '../api/historicoApi'
 import type { CriarExameRequest, CriarPrescricaoRequest, CriarProcedimentoRequest, CriarVacinacaoRequest } from '../types/historico.types'
 
-// Tamanho de página padrão das abas Vacinas/Procedimentos/Medicamentos —
+// Tamanho de página padrão das abas Vacinas/Procedimentos/Medicamentos,
 // também usado pelo merge k-way de `useTimelineAnimal` para reaproveitar as
 // mesmas query keys (e, portanto, o mesmo cache).
 export const TAMANHO_PAGINA_HISTORICO = 20
 
-// Chaves em array — o prefixo `['vacinacoes', animalId]` é compartilhado
+// Chaves em array: o prefixo `['vacinacoes', animalId]` é compartilhado
 // entre a query paginada da aba e a leitura avulsa feita pelo merge da
 // timeline, então uma única invalidação (nas mutations abaixo) alcança as
 // duas sem precisar de coordenação manual.
@@ -60,7 +60,6 @@ export function usePrescricoesQuery(animalId: string, pagina: number, tamanho: n
   })
 }
 
-// F2-007 / RF-A04
 function chaveExames(animalId: string, pagina: number) {
   return ['exames', animalId, 'pagina', pagina] as const
 }

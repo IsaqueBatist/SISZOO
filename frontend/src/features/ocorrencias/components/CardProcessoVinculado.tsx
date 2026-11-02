@@ -9,18 +9,18 @@ import { labelDeStatusProcesso, proximoStatusProcesso } from '../utils/statusBad
 
 interface CardProcessoVinculadoProps {
   ocorrencia: Ocorrencia
-  // D33: abrir processo altera a ocorrência — só Admin/Agente.
+  // Abrir processo altera a ocorrência: só Admin/Agente.
   podeAbrir: boolean
   // PROCESSOS_SANITARIOS:escrita (V3): Admin, Agente e Veterinário.
   podeAvancar: boolean
 }
 
-// D40: o status do processo vinculado é avançado por aqui, pela API real.
-// T29: o processo é aberto pelo wizard real (/processos/novo?ocorrencia=<id>),
-// com a etapa 1 pré-preenchida e travada nesta ocorrência (DER §3.5) — o
+// O status do processo vinculado é avançado por aqui, pela API real.
+// O processo é aberto pelo wizard real (/processos/novo?ocorrencia=<id>),
+// com a etapa 1 pré-preenchida e travada nesta ocorrência (DER §3.5): o
 // backend exige o processo completo (doença, laboratório, responsável e
-// amostras), que só o wizard coleta. Abrir exige escrita em ocorrências (D33)
-// e só é oferecido a ocorrência aberta e sem processo (0..1, D20).
+// amostras), que só o wizard coleta. Abrir exige escrita em ocorrências
+// e só é oferecido a ocorrência aberta e sem processo (0..1).
 export function CardProcessoVinculado({ ocorrencia, podeAbrir, podeAvancar }: CardProcessoVinculadoProps) {
   const [erro, setErro] = useState<string | null>(null)
   const avancar = useAvancarStatusProcessoMutation(ocorrencia.id)
@@ -45,7 +45,7 @@ export function CardProcessoVinculado({ ocorrencia, podeAbrir, podeAvancar }: Ca
   if (processo) {
     const proximo = proximoStatusProcesso(processo.statusProcesso)
     // Sem texto de ação: o passo seguinte não é daqui. Com o processo aguardando
-    // resultado, só o lançamento no processo faz o status andar (T37).
+    // resultado, só o lançamento no processo faz o status andar.
     const acao = ACAO_DE_AVANCO_PROCESSO[processo.statusProcesso]
     return (
       <div className="vinc-card" style={{ display: 'block' }}>

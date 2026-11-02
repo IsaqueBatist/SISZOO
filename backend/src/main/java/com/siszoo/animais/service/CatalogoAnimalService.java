@@ -58,7 +58,7 @@ public class CatalogoAnimalService {
         this.condicaoSaudeRepository = condicaoSaudeRepository;
     }
 
-    // F2-007 / RF-A04: catalogos do registro de exame.
+    // RF-A04: catalogos do registro de exame.
     private final TipoExameRepository tipoExameRepository;
     private final LaboratorioRepository laboratorioRepository;
     // Registro de vacinacao e de procedimento (seed da V5).

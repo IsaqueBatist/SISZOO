@@ -23,10 +23,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-// Exercita a V15 (integridade do resultado do processo, follow-up da T34) num
-// schema proprio, no padrao de MigracaoV14ResultadoProcessoIT: do zero, a
-// reconciliacao do legado da D18 por atualizacao a partir da V14, o indice
-// por processo, a recusa da linha auto-retificada e do TRUNCATE.
+// Exercita a V15 (integridade do resultado do processo) num schema proprio, no
+// padrao de MigracaoV14ResultadoProcessoIT: do zero, a reconciliacao do legado
+// por atualizacao a partir da V14, o indice por processo, a recusa da linha
+// auto-retificada e do TRUNCATE.
 class MigracaoV15ResultadoProcessoIT extends AbstractIntegrationTest {
 
     private static final String SCHEMA = "migracao_v15";
@@ -43,8 +43,6 @@ class MigracaoV15ResultadoProcessoIT extends AbstractIntegrationTest {
         jdbcTemplate.execute("DROP SCHEMA IF EXISTS " + SCHEMA + " CASCADE");
     }
 
-    // ── Aplicacao da migration ───────────────────────────
-
     @Test
     @DisplayName("[T34] V15 aplica do zero sobre V1-V14 e cria o indice por processo")
     void v15DeveAplicarDoZero() {
@@ -56,8 +54,6 @@ class MigracaoV15ResultadoProcessoIT extends AbstractIntegrationTest {
                 + " AND indexname = 'ix_resultado_processo_processo_id'", String.class, SCHEMA),
                 containsString("(processo_id)"));
     }
-
-    // ── Reconciliacao do legado (D18) ────────────────────
 
     @Test
     @DisplayName("[T34] V15 volta COM_RESULTADO sem resultado para AGUARDANDO_RESULTADO; o resto fica intocado")
@@ -86,9 +82,7 @@ class MigracaoV15ResultadoProcessoIT extends AbstractIntegrationTest {
         assertThat(statusDe(aguardando), equalTo("AGUARDANDO_RESULTADO"));
     }
 
-    // ── Linha auto-retificada ────────────────────────────
-
-    // Lacuna da V14 apontada na revisao: a FK composta auto-referente enxerga a
+    // Lacuna da V14: a FK composta auto-referente enxerga a
     // propria linha no INSERT e aceita retifica_id = id.
     @Test
     @DisplayName("[T34] na V14 a linha que corrige a si mesma passava pela FK composta")
@@ -101,8 +95,8 @@ class MigracaoV15ResultadoProcessoIT extends AbstractIntegrationTest {
         assertThat(transacao(resultado(propria, processo, propria, "negativo", usuario)), nullValue());
     }
 
-    // Pre-condicao da V15 (T34-8): com uma linha auto-retificada ja gravada, a
-    // V15 para com mensagem propria antes de mudar qualquer coisa — sem a
+    // Pre-condicao da V15: com uma linha auto-retificada ja gravada, a
+    // V15 para com mensagem propria antes de mudar qualquer coisa, sem a
     // reconciliacao, sem o indice, e o schema continua na V14.
     @Test
     @DisplayName("[T34] V15 sobre banco com linha auto-retificada falha antes de mudar qualquer coisa")
@@ -142,8 +136,6 @@ class MigracaoV15ResultadoProcessoIT extends AbstractIntegrationTest {
         assertThat(contarResultados(), equalTo(2));
     }
 
-    // ── TRUNCATE ─────────────────────────────────────────
-
     @Test
     @DisplayName("[T34] V15 recusa TRUNCATE do historico, direto ou em cascata a partir do processo")
     void v15RecusaTruncate() throws Exception {
@@ -158,8 +150,6 @@ class MigracaoV15ResultadoProcessoIT extends AbstractIntegrationTest {
         assertThat(contarResultados(), equalTo(1));
         assertThat(statusDe(processo), equalTo("AGUARDANDO_RESULTADO"));
     }
-
-    // ── Apoio ──
 
     private MigrateResult migrarAte(String versao) {
         return Flyway.configure()

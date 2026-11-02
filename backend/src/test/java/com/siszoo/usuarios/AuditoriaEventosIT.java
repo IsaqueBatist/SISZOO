@@ -35,7 +35,7 @@ import io.restassured.specification.RequestSpecification;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
-// T43: camada de auditoria de eventos (DER §3.8). Toda verificacao le
+// Camada de auditoria de eventos (DER §3.8). Toda verificacao le
 // auditoria_evento por SQL depois da requisicao HTTP real (RestAssured, porta
 // aleatoria): a transacao do servidor ja terminou, entao a linha lida e a que
 // foi commitada. Os payloads sao comparados com a linha do negocio lida do
@@ -63,8 +63,6 @@ class AuditoriaEventosIT extends AbstractIntegrationTest {
         tokenAdmin = fixture.tokenAdmin(EMAIL_ADMIN, "Eventos");
         adminId = usuarioId(EMAIL_ADMIN);
     }
-
-    // ── CRIACAO / ATUALIZACAO / DESATIVACAO ──────────────
 
     @Test
     @DisplayName("[T43] criar, editar e excluir (soft-delete) baia: um evento por operacao, com autor, IP e o estado do banco")
@@ -120,8 +118,6 @@ class AuditoriaEventosIT extends AbstractIntegrationTest {
         assertThat(baiaNoBanco(baiaId), equalTo(antes));
     }
 
-    // ── IP ───────────────────────────────────────────────
-
     @Test
     @DisplayName("[T43] IP do evento e o do socket: X-Forwarded-For enviado pelo cliente e ignorado")
     void ipIgnoraXForwardedFor() {
@@ -133,8 +129,6 @@ class AuditoriaEventosIT extends AbstractIntegrationTest {
         assertThat(eventos, hasSize(1));
         assertThat((String) eventos.get(0).get("ip"), in(IPS_LOOPBACK));
     }
-
-    // ── Estado anterior em DESATIVACAO/REATIVACAO e ATUALIZACAO ──
 
     @Test
     @DisplayName("[T43] desativar e reativar usuario registram ativo antes/depois, com o admin como autor")
@@ -251,8 +245,6 @@ class AuditoriaEventosIT extends AbstractIntegrationTest {
         }
     }
 
-    // ── LOGIN ────────────────────────────────────────────
-
     @Test
     @DisplayName("[T43] login bem-sucedido gera exatamente um LOGIN, com IP e sem senha, hash nem token")
     void loginUmEventoSemSegredos() {
@@ -292,8 +284,6 @@ class AuditoriaEventosIT extends AbstractIntegrationTest {
 
         assertThat(eventos("usuario", usuario.getId().toString()), hasSize(0));
     }
-
-    // ── EXPORTACAO ───────────────────────────────────────
 
     @Test
     @DisplayName("[T43] exportar CSV e PDF gera EXPORTACAO ligada ao relatorio_gerado, com o contexto e sem o conteudo")
@@ -374,8 +364,6 @@ class AuditoriaEventosIT extends AbstractIntegrationTest {
         assertThat(relatoriosDe(usuarioId), equalTo(relatoriosAntes));
         assertThat(exportacoesDe(usuarioId), equalTo(0L));
     }
-
-    // ── Apoio ────────────────────────────────────────────
 
     private static String marcador() {
         return UUID.randomUUID().toString().substring(0, 8);

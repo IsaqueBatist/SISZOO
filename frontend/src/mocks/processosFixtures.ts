@@ -7,7 +7,7 @@ import type {
 } from '../features/processos/types/processos.types'
 import { OCORRENCIA_PROCESSO_PENDENTE_ID, PROCESSO_PENDENTE_ID } from './ocorrenciasFixtures'
 
-// Fixtures no formato da API de processos (T29) — só para os testes
+// Fixtures no formato da API de processos, só para os testes
 // automatizados (mocks/server.ts). O processo pendente é o mesmo vinculado à
 // ocorrência 092/2026 das fixtures de ocorrência.
 
@@ -108,7 +108,7 @@ export function processoFixture(sobrescrever: Partial<Processo> = {}): Processo 
   }
 }
 
-// T34: um lançamento do histórico (original ou correção, via retificaId).
+// Um lançamento do histórico (original ou correção, via retificaId).
 export function resultadoProcessoFixture(sobrescrever: Partial<ResultadoProcessoItem> = {}): ResultadoProcessoItem {
   return {
     id: 'h8000000-0000-0000-0000-000000000001',
@@ -123,9 +123,9 @@ export function resultadoProcessoFixture(sobrescrever: Partial<ResultadoProcesso
   }
 }
 
-// T34 + T37: processo com resultado já lançado (write-once) — para os testes
+// Processo com resultado já lançado (write-once), para os testes
 // do modo somente-leitura/histórico do CardResultadoProcesso. Positivo já
-// notificado (T35-16): o SMTP aceitou o e-mail logo depois do lançamento.
+// notificado: o SMTP aceitou o e-mail logo depois do lançamento.
 export function processoComResultadoFixture(sobrescrever: Partial<Processo> = {}): Processo {
   return processoFixture({
     statusProcesso: 'COM_RESULTADO',

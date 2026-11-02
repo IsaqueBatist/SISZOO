@@ -26,18 +26,13 @@ import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
-// Caracterizacao do GlobalExceptionHandler (T45, D1), gravada contra o codigo
-// ANTES da consolidacao dos handlers e mantida sem alteracao depois dela.
-//
 // Para cada excecao que o handler trata hoje (76 de dominio e 3 do framework,
 // com os ramos por nome de constraint e a subclasse DuplicateKeyException), e
 // para as que ele NAO trata (acesso negado, corpo ilegivel, metodo nao
-// suportado, erro inesperado — que nao podem passar a ser capturadas), fixa:
+// suportado, erro inesperado, que nao podem passar a ser capturadas), fixa:
 // status, Content-Type, corpo completo e o log do GlobalExceptionHandler
 // (nivel, mensagem e excecao anexada). A referencia esta em
-// src/test/resources/caracterizacao/global-exception-handler.json. Na revisao de
-// mensagens de 31/10/2026 a referencia mudou so nos textos e ganhou `mensagem`
-// nos erros do /error; status, Content-Type e demais campos sao os mesmos.
+// src/test/resources/caracterizacao/global-exception-handler.json.
 class GlobalExceptionHandlerCaracterizacaoIT extends AbstractIntegrationTest {
 
     static final String REFERENCIA = "/caracterizacao/global-exception-handler.json";

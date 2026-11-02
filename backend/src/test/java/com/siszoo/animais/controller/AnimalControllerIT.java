@@ -135,7 +135,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .body("campos[0].campo", equalTo("dataEntrada"));
     }
 
-    // Decisao de 31/10/2026, que supera a FS-6: a resposta de castracao e
+    // Decisao de 31/10/2026: a resposta de castracao e
     // opcional, e a ausencia fica como nao informado.
     @Test
     @DisplayName("cadastro sem esterilizado e aceito e fica como nao informado")
@@ -325,8 +325,6 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .body("pagina", equalTo(0))
                 .body("tamanho", equalTo(20));
     }
-
-    // ── Normalizacao do microchip (RN01) ─────────────────
 
     @Test
     @DisplayName("[RN01] microchip com espacos e gravado sem eles e colide com o mesmo numero sem espacos (409)")
@@ -530,14 +528,14 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .body("tiposBaia.size()", equalTo(3));
     }
 
-    // Os codigos sao os do seed da V5 — os mesmos que o front grava nos
+    // Os codigos sao os do seed da V5, os mesmos que o front grava nos
     // rascunhos dos modais de vacina/procedimento.
     //
-    // `hasItems` e nao `containsInAnyOrder` para as vacinas: desde que existe
-    // POST /api/vacinas, outros ITs cadastram vacinas no mesmo banco (a JVM
+    // `hasItems` e nao `containsInAnyOrder` para as vacinas: outros ITs
+    // cadastram vacinas por POST /api/vacinas no mesmo banco (a JVM
     // compartilha o Postgres do Testcontainers, sem rollback). Exigir conjunto
     // exato tornaria este teste dependente da ordem de execucao. O que ele
-    // afirma — que o seed da V5 esta exposto no catalogo — continua intacto.
+    // afirma e que o seed da V5 esta exposto no catalogo.
     // Tipos de procedimento seguem exatos: nada na aplicacao os cria.
     @Test
     void deveListarVacinasETiposDeProcedimentoDaV5() {

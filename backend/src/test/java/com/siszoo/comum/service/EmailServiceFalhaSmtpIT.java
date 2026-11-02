@@ -27,7 +27,7 @@ import com.siszoo.comum.AbstractIntegrationTest;
 
 import ch.qos.logback.classic.Level;
 
-// T35: falha REAL de SMTP (nao um mock que lanca) — o JavaMailSender do
+// Falha REAL de SMTP (nao um mock que lanca): o JavaMailSender do
 // contexto aponta para uma porta local que acabou de ser liberada, onde nada
 // escuta, e a conexao e recusada. Classe propria porque a porta muda a chave
 // do contexto Spring. A janela entre fechar o ServerSocket e o teste conectar

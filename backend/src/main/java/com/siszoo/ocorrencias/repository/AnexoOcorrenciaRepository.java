@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.siszoo.ocorrencias.entity.AnexoOcorrencia;
 
-// So metadados: nenhuma consulta daqui toca anexo_ocorrencia_conteudo (D9).
+// So metadados: nenhuma consulta daqui toca anexo_ocorrencia_conteudo.
 public interface AnexoOcorrenciaRepository extends JpaRepository<AnexoOcorrencia, UUID> {
 
     List<AnexoOcorrencia> findByOcorrenciaIdOrderByCriadoEmAsc(UUID ocorrenciaId);

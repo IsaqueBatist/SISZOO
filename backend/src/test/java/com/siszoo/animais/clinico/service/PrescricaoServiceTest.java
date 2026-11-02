@@ -44,7 +44,7 @@ import com.siszoo.usuarios.service.AuditoriaEventoService;
 class PrescricaoServiceTest {
 
     // Data fixa (nao LocalDate.now()): o service nao le relogio, a data e so
-    // dado do request — fixa-la deixa o teste deterministico.
+    // dado do request; fixa-la deixa o teste deterministico.
     private static final LocalDate HOJE = LocalDate.of(2026, 9, 10);
 
     @Mock

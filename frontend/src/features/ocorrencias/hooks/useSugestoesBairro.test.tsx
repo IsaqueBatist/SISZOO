@@ -33,7 +33,6 @@ describe('useSugestoesBairroQuery', () => {
     expect(result.current.data).toEqual(['Centro', 'Vila Nova'])
   })
 
-  // T45: antes eram duas chaves e duas listagens de 500 ocorrências.
   it('compartilha uma única requisição com o gráfico de distribuição', async () => {
     const requisicoes = vi.fn()
     server.use(

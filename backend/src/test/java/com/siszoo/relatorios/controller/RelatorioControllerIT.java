@@ -22,9 +22,8 @@ import com.siszoo.comum.ApiTesteFixture;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-// Endpoints de relatorios (T41): GET /tipos, GET /preview, POST /exportar,
-// GET /historico. Os 6 tipos do catalogo estao implementados (PR1: ocupacao_baias
-// e vacinacao; PR2: anual_processos, adocoes, procedimentos, ocorrencias_bairro).
+// Endpoints de relatorios: GET /tipos, GET /preview, POST /exportar,
+// GET /historico.
 class RelatorioControllerIT extends AbstractIntegrationTest {
 
     private static final String ROTA = "/api/relatorios";

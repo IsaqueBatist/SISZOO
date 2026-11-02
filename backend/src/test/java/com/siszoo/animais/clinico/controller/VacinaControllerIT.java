@@ -28,7 +28,7 @@ import io.restassured.response.Response;
  * IMPORTANTE: nenhum teste daqui pode desativar uma vacina do seed da V5.
  * {@code ApiTesteFixture.postarVacinacao} usa o codigo "antirrabica" fixo e e
  * compartilhada por varios ITs; como o banco e o mesmo para toda a JVM e
- * vacina inativa passou a recusar vacinacao nova, desativar uma do seed
+ * vacina inativa recusa vacinacao nova, desativar uma do seed
  * quebraria esses testes conforme a ordem de execucao. Cada teste cria a sua,
  * com nome unico.
  */

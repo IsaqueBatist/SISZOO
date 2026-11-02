@@ -29,7 +29,7 @@ import com.siszoo.comum.util.BlocoCsv;
 import com.siszoo.relatorios.dto.PeriodoRelatorio;
 import com.siszoo.relatorios.dto.RelatorioVacinacaoResponse;
 
-// "Relatório de Vacinação" (T41, regra 22 do DER: 30 dias, nao os 7 do alerta
+// "Relatório de Vacinação" (regra 22 do DER: 30 dias, nao os 7 do alerta
 // do sistema). HOJE fixo via Clock.fixed para "vencida"/"a vencer" serem
 // deterministicos (sem depender da data real da execucao).
 @ExtendWith(MockitoExtension.class)

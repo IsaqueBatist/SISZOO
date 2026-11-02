@@ -32,7 +32,7 @@ import jakarta.mail.Message;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 
-// T35-20: SMTPS (TLS implicito, porta 465 em producao) com o GreenMail em
+// SMTPS (TLS implicito, porta 465 em producao) com o GreenMail em
 // SMTPS. So o servidor SMTPS do GreenMail esta no ar: uma mensagem recebida
 // prova que a conexao foi TLS desde o inicio (sem STARTTLS).
 //

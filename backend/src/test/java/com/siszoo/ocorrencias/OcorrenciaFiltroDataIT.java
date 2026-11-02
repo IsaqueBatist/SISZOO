@@ -21,7 +21,7 @@ import com.siszoo.comum.ApiTesteFixture;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-// F2-010 / RF-E02 (Fase 3 do TG): filtro por periodo da data de abertura em
+// RF-E02: filtro por periodo da data de abertura em
 // GET /api/ocorrencias (docs/contratos/ocorrencias-filtro-data.md).
 class OcorrenciaFiltroDataIT extends AbstractIntegrationTest {
 

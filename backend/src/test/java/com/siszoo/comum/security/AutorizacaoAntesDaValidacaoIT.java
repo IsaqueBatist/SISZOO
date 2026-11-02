@@ -16,8 +16,8 @@ import com.siszoo.comum.ApiTesteFixture;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 
-// Pendencia FS-P1: corpo invalido enviado por um perfil sem permissao recebia
-// 422 (o @Valid roda antes do @PreAuthorize do metodo). A ordem esperada e:
+// O @Valid roda antes do @PreAuthorize do metodo, e corpo invalido enviado por
+// um perfil sem permissao nao pode receber 422. A ordem esperada e:
 // sem autenticacao -> 401; autenticado sem permissao -> 403, qualquer que
 // seja o corpo; com permissao e corpo invalido -> 422 no formato padrao.
 class AutorizacaoAntesDaValidacaoIT extends AbstractIntegrationTest {

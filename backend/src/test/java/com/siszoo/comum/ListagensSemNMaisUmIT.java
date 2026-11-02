@@ -20,9 +20,9 @@ import com.siszoo.ocorrencias.SqlCapturado;
 import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 
-// T45: as listagens de animais e de auditoria carregam as relacoes que o
+// As listagens de animais e de auditoria carregam as relacoes que o
 // mapper le numa consulta so (EntityGraph). Sem isso, cada autor/especie
-// distinto da pagina custava uma consulta a mais (N+1). O teste compara o
+// distinto da pagina custaria uma consulta a mais (N+1). O teste compara o
 // numero de comandos SQL de uma pagina com 1 linha e de uma com varias linhas
 // de autores (e especies) diferentes: tem de ser o mesmo.
 // Mesmas anotacoes de AnexoOcorrenciaQueriesIT/AuditoriaSigiloSqlIT para

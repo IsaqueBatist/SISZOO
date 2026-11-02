@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-// Exercita a V14 (resultado do processo sanitario, T34) num schema proprio do
+// Exercita a V14 (resultado do processo sanitario) num schema proprio do
 // mesmo PostgreSQL de teste, no padrao de MigracaoV13ProcessosIT: do zero, por
 // atualizacao a partir da V13 com processos existentes, e as garantias do
 // banco (original unico, correcao unica e do mesmo processo, imutabilidade).
@@ -43,8 +43,6 @@ class MigracaoV14ResultadoProcessoIT extends AbstractIntegrationTest {
     void removerSchemaDoTeste() {
         jdbcTemplate.execute("DROP SCHEMA IF EXISTS " + SCHEMA + " CASCADE");
     }
-
-    // ── Aplicacao da migration ───────────────────────────
 
     @Test
     @DisplayName("[T34] V14 aplica do zero sobre V1-V13 e cria resultado_processo vazia")
@@ -73,8 +71,6 @@ class MigracaoV14ResultadoProcessoIT extends AbstractIntegrationTest {
         assertThat(gravado.get("status_processo"), equalTo("ABERTO"));
         assertThat(gravado.get("resultado_laboratorial_id"), nullValue());
     }
-
-    // ── Cadeia de correcoes ─────────────────────────────
 
     @Test
     @DisplayName("[T34] um so original por processo; cada resultado corrigido uma vez; cadeia de correcoes aceita")
@@ -117,8 +113,6 @@ class MigracaoV14ResultadoProcessoIT extends AbstractIntegrationTest {
         assertViolacao(transacao(resultado(UUID.randomUUID(), processo, UUID.randomUUID(), "positivo", usuario)),
                 "23503", "fk_resultado_processo_retifica");
     }
-
-    // ── Imutabilidade ───────────────────────────────────
 
     @Test
     @DisplayName("[T34] resultado imutavel: UPDATE de qualquer coluna e DELETE recusados, linha intacta")
@@ -164,8 +158,6 @@ class MigracaoV14ResultadoProcessoIT extends AbstractIntegrationTest {
         assertViolacao(transacao(resultado(UUID.randomUUID(), processo, null, "negativo", UUID.randomUUID())),
                 "23503", "fk_resultado_processo_registrado_por");
     }
-
-    // ── Apoio ──
 
     private MigrateResult migrarAte(String versao) {
         return Flyway.configure()

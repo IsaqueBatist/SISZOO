@@ -609,7 +609,7 @@ const CATALOGOS_ANIMAIS_MOCK: CatalogosAnimal = {
     { codigo: 'gatil', nome: 'Gatil' },
   ],
   // Mesmos códigos do seed da V5 (o backend devolve todos em /animais/catalogos),
-  // com o `intervaloMeses` que o seed grava (12 para todas) — o modal de
+  // com o `intervaloMeses` que o seed grava (12 para todas): o modal de
   // vacinação o usa para prever o próximo reforço.
   vacinas: [
     { codigo: 'antirrabica', nome: 'Antirrábica', intervaloMeses: 12 },
@@ -631,7 +631,7 @@ const CATALOGOS_ANIMAIS_MOCK: CatalogosAnimal = {
 
 // IDs alinhados aos baiaId/baiaNome já usados em seedAnimaisMock (Rex, Luna,
 // Bidu, Bob), mais uma baia inativa para exercitar o filtro de status e uma
-// superlotada/em atenção para exercitar o destaque visual da T19.
+// superlotada/em atenção para exercitar o destaque visual.
 function seedBaiasMock(): Baia[] {
   return [
     {
@@ -742,7 +742,7 @@ function fichaCompletaMock(animalId: string, microchip: string | null): boolean 
 }
 
 // Recompõe um `Animal` (resposta) a partir de um `AnimalRequest` (o que o
-// form de T18 envia) - espelha o que o service real faz ao resolver os
+// form envia) - espelha o que o service real faz ao resolver os
 // códigos de espécie/status/motivo/baia para os nomes exibidos.
 function construirAnimalMock(id: string, body: AnimalRequest, existente: Animal | null): Animal {
   const baia = body.baiaId ? baiasMock.find((item) => item.id === body.baiaId) : undefined
@@ -802,7 +802,7 @@ function derivarStatusRegistro<T extends RegistroClinicoBruto>(
 const ANIMAL_REX_ID = 'b2c3d4e5-0000-0000-0000-000000000001'
 
 // Datas civis relativas ao dia de Itu (o handler de alertas compara com
-// hojeEmItu, como o backend). Partir do dia UTC deslocava tudo em 1 dia entre
+// hojeEmItu, como o backend). Partir do dia UTC deslocaria tudo em 1 dia entre
 // 21:00 e 23:59 em Itu (datasMock.test.ts).
 function addDiasIso(dias: number): string {
   return adicionarDiasIso(hojeEmItu(), dias)
@@ -918,8 +918,8 @@ export function resetVacinacoesMock() {
 }
 
 // Catálogo de vacinas (GET/POST/PUT/DELETE /api/vacinas). O estado parte do
-// mesmo CATALOGOS_ANIMAIS_MOCK que /animais/catalogos devolve — não de uma
-// segunda lista copiada —, para a tela de catálogo e o select do modal nunca
+// mesmo CATALOGOS_ANIMAIS_MOCK que /animais/catalogos devolve, não de uma
+// segunda lista copiada, para a tela de catálogo e o select do modal nunca
 // discordarem no mock. O `id` é derivado do código: estável entre reseeds, o
 // que mantém os testes legíveis.
 function seedVacinasMock(): Vacina[] {
@@ -984,7 +984,7 @@ function seedProcedimentosMock(): ProcedimentoMockInterno[] {
 
 let procedimentosMock: ProcedimentoMockInterno[] = seedProcedimentosMock()
 
-// F2-007 / RF-A04: exames e anexos do animal (vazios por padrão; os testes semeiam o que precisam).
+// RF-A04: exames e anexos do animal (vazios por padrão; os testes semeiam o que precisam).
 type ExameMockInterno = Omit<Exame, 'retificadoPorId' | 'statusRegistro'>
 let examesMock: ExameMockInterno[] = []
 let anexosAnimalMock: AnexoAnimal[] = []
@@ -1354,7 +1354,7 @@ export const handlers = [
     const nome = (body.nome ?? '').trim()
     const codigo = derivarCodigoVacina(nome)
     // Mesmas recusas do VacinaService: nome que não produz código válido, ou
-    // longo demais para a coluna varchar(30), é 422 — nunca truncado.
+    // longo demais para a coluna varchar(30), é 422, nunca truncado.
     if (!codigo || codigo.length > 30) {
       return HttpResponse.json(
         { mensagem: 'Dados invalidos', campos: [{ campo: 'nome', mensagem: 'Nome invalido' }] },
@@ -1425,7 +1425,7 @@ export const handlers = [
     return HttpResponse.json({ itens, pagina, tamanho, totalItens, totalPaginas })
   }),
 
-  // T45: residentes (sob custódia) de todas as baias, como o backend - por nome.
+  // Residentes (sob custódia) de todas as baias, como o backend - por nome.
   http.get(`${API_BASE_URL}/baias/residentes`, () => {
     const residentes = animaisMock
       .filter((animal) => animal.baiaId && !STATUS_FORA_DA_CUSTODIA.includes(animal.statusCodigo))
@@ -1665,7 +1665,7 @@ export const handlers = [
     return HttpResponse.json(paginar(filtrados, pagina, tamanho))
   }),
 
-  // F2-007 / RF-A04: exames (registro imutável, correção por retificaId).
+  // RF-A04: exames (registro imutável, correção por retificaId).
   http.get(`${API_BASE_URL}/exames`, ({ request }) => {
     const url = new URL(request.url)
     const animalId = url.searchParams.get('animalId')
@@ -1698,7 +1698,7 @@ export const handlers = [
     return HttpResponse.json(comStatus, { status: 201 })
   }),
 
-  // F2-007 / RF-A04: anexos do animal (metadados; download devolve bytes).
+  // RF-A04: anexos do animal (metadados; download devolve bytes).
   http.get(`${API_BASE_URL}/animais/:id/anexos`, ({ params }) => {
     return HttpResponse.json(anexosAnimalMock.filter((a) => a.animalId === params.id))
   }),
@@ -1786,7 +1786,7 @@ export const handlers = [
     return HttpResponse.json(comStatus, { status: 201 })
   }),
 
-  // F2-027: catálogo de filtros (toda a trilha) e filtros de servidor na listagem.
+  // Catálogo de filtros (toda a trilha) e filtros de servidor na listagem.
   http.get(`${API_BASE_URL}/auditoria/filtros`, () =>
     HttpResponse.json({
       acoes: [...new Set(auditoriaMock.map((e) => e.acao))].sort(),

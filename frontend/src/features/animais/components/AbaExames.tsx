@@ -5,9 +5,9 @@ import { useExamesQuery } from '../hooks/useHistoricoAnimal'
 import type { Exame } from '../types/historico.types'
 import { formatarDataBR } from '@/lib/datas'
 
-// F2-007 / RF-A04 (Fase 3 do TG): aba de exames real (antes placeholder), no
-// mesmo padrão de AbaProcedimentos — listagem paginada, registro e correção
-// (registro clínico imutável: correção cria novo registro vinculado).
+// RF-A04: aba de exames, no mesmo padrão de AbaProcedimentos: listagem
+// paginada, registro e correção (registro clínico imutável: correção cria novo
+// registro vinculado).
 interface AbaExamesProps {
   animalId: string
   onRegistroCriado: () => void

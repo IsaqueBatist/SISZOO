@@ -13,7 +13,7 @@ import { RotaProtegida } from './RotaProtegida'
 import { RouteErrorBoundary } from './RouteErrorBoundary'
 
 // Code-splitting por rota (máquinas do CCZ têm ~2GB RAM): todas as telas,
-// carregadas sob demanda. T45: o Login também - eager, ele levava zod,
+// carregadas sob demanda. O Login também: eager, ele levaria zod,
 // react-hook-form e o resolver (~48 KB gzip, cerca de 1/3 do carregamento
 // inicial) para toda recarga de tela já autenticada, que nunca o mostra. Na
 // primeira visita custa só mais um arquivo, baixado junto com o resto.

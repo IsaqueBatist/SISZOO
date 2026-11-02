@@ -5,7 +5,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-// SCAFFOLD T24: existe so em src/test. Provoca uma violacao REAL de
+// SCAFFOLD: existe so em src/test. Provoca uma violacao REAL de
 // constraint no banco (UNIQUE uq_status_animal_codigo, V4) de forma
 // deterministica, para provar por HTTP o tratamento de
 // DataIntegrityViolationException em GlobalExceptionHandler. Os caminhos de

@@ -20,8 +20,8 @@ export function BuscaAnimalCanil({ numero, erro, onSelecionar }: BuscaAnimalCani
   const [ativa, setAtiva] = useState(-1)
   const idLista = useId()
 
-  // T45: busca com o mesmo debounce de 300 ms da tela de Animais (antes, uma
-  // requisição por tecla).
+  // Busca com o mesmo debounce de 300 ms da tela de Animais, para não fazer
+  // uma requisição por tecla.
   const [buscaDebounced, setBuscaDebounced] = useState('')
   useEffect(() => {
     const timeout = setTimeout(() => setBuscaDebounced(busca.trim()), 300)

@@ -6,8 +6,8 @@ import type { IconName } from '../components/layout/Icon'
 // Medicamentos e Configurações também são usados por quem não administra.
 
 // 'sem_perfil': cargo que não corresponde a nenhum perfil conhecido (ou
-// sessão sem cargos). Não vê nenhum módulo. Antes caía em 'agente' e o menu
-// mostrava telas que o backend recusaria com 403.
+// sessão sem cargos). Não vê nenhum módulo: cair em 'agente' faria o menu
+// mostrar telas que o backend recusa com 403.
 export type RoleKey = 'admin' | 'vet' | 'agente' | 'sem_perfil'
 
 export interface Role {
@@ -33,7 +33,7 @@ export const ROLES: Record<RoleKey, Role> = {
   // 'medicamentos' e 'vacinas' (fora do protótipo): o Agente tem
   // GESTAO_ANIMAIS:leitura, então vê os dois catálogos; cadastrar exige
   // escrita (Admin e Vet) e desativar exige :exclusao (só Admin). Divergência
-  // deliberada do shell.js — ver docs/decisoes/catalogo-vacina.md.
+  // deliberada do shell.js - ver docs/decisoes/catalogo-vacina.md.
   agente: {
     label: 'Agente Sanitário',
     short: 'AGENTE',

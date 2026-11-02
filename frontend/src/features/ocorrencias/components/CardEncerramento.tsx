@@ -83,7 +83,7 @@ export function CardEncerramento({ ocorrencia, podeEncerrar }: CardEncerramentoP
     )
   }
 
-  // D12: processo vinculado ainda não concluído bloqueia o encerramento (o
+  // Processo vinculado ainda não concluído bloqueia o encerramento (o
   // backend também recusa com 422).
   const processoPendente =
     ocorrencia.processoVinculado !== null && ocorrencia.processoVinculado.statusProcesso !== 'CONCLUIDO'

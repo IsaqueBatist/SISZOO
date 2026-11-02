@@ -32,7 +32,7 @@ import lombok.Setter;
 
 // Animal amostrado (DER §3.5). animal nulo = animal de campo, com dados
 // proprios; preenchido = animal do canil, com a identificacao copiada da ficha
-// na criacao (snapshot, DH-5). Os campos clinicos sao sempre da amostra: nada
+// na criacao (snapshot). Os campos clinicos sao sempre da amostra: nada
 // aqui e relido de Animal, que so e referenciado.
 @Entity
 @Table(name = "animal_amostrado")
@@ -55,13 +55,11 @@ public class AnimalAmostrado {
     @JoinColumn(name = "animal_id", updatable = false)
     private Animal animal;
 
-    // ── Identificacao (snapshot no modo canil) ──
-
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "especie_id", nullable = false)
     private Especie especie;
 
-    // Mesmo dominio de animal.sexo/pelagem (V4, minusculas, DH-9).
+    // Mesmo dominio de animal.sexo/pelagem (V4, minusculas).
     @Column(nullable = false, length = 20)
     private String sexo;
 
@@ -79,8 +77,6 @@ public class AnimalAmostrado {
 
     @Column(name = "peso_kg", precision = 5, scale = 2)
     private BigDecimal pesoKg;
-
-    // ── Campos clinicos da amostragem ──
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status_clinico", nullable = false, length = 20)

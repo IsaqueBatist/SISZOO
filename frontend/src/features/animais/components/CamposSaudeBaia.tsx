@@ -28,8 +28,8 @@ export function CamposSaudeBaia({ baiaAtualId }: CamposSaudeBaiaProps) {
     <div className="form-grid">
       <div className="field">
         <label htmlFor="baiaId">Baia atual</label>
-        {/* Controlado: com register, opções que chegam depois da ficha deixavam
-            o select vazio no DOM e o reset do rascunho apagava a baia (N5). */}
+        {/* Controlado: com register, opções que chegam depois da ficha deixariam
+            o select vazio no DOM e o reset do rascunho apagaria a baia. */}
         <Controller
           control={control}
           name="baiaId"
@@ -197,7 +197,7 @@ export function CamposSaudeBaia({ baiaAtualId }: CamposSaudeBaiaProps) {
         )}
       </div>
 
-      {/* F2-008: o laudo só aparece (e só é exigido) quando o destino é eutanásia. */}
+      {/* O laudo só aparece (e só é exigido) quando o destino é eutanásia. */}
       {status === 'obito_eutanasia' && (
         <div className="field full">
           <label htmlFor="laudoEutanasia">

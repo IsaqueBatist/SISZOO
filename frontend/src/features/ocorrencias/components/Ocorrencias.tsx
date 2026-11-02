@@ -29,8 +29,8 @@ const FILTROS_PADRAO = { busca: '', tipo: '', status: '', de: '', ate: '' }
 const STATUS_PENDENTES = 'PENDENTES'
 const STATUS_NAO_ENCERRADOS: StatusOcorrencia[] = ['ABERTA', 'EM_ATENDIMENTO']
 
-// A anônima não tem denunciante para ninguém (D32). Na sigilosa, a listagem
-// não traz o nome para nenhum perfil (T26, revisão da D14): mesmo quem tem
+// A anônima não tem denunciante para ninguém. Na sigilosa, a listagem
+// não traz o nome para nenhum perfil: mesmo quem tem
 // permissão só o vê no detalhe, onde o acesso é auditado.
 function ColunaDenunciante({ ocorrencia }: { ocorrencia: OcorrenciaResumo }) {
   const textoMudo = { fontStyle: 'italic', color: 'var(--color-text-muted)' } as const
@@ -45,7 +45,7 @@ export function Ocorrencias() {
 
   const { filtros, pagina, definirFiltros, irParaPagina, limparFiltros, filtrosAtivos } = useFiltrosLista('ocorrencias', FILTROS_PADRAO)
   const buscaDebounced = useValorComAtraso(filtros.busca).trim()
-  // F2-010 (RF-E02): período da data de abertura, aplicado no servidor.
+  // RF-E02: período da data de abertura, aplicado no servidor.
   const { tipo: tipoFiltro, status: statusFiltro, de: deFiltro, ate: ateFiltro } = filtros
   const deDebounced = useValorComAtraso(deFiltro)
   const ateDebounced = useValorComAtraso(ateFiltro)

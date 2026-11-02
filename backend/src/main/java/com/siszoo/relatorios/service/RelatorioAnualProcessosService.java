@@ -33,15 +33,15 @@ import com.siszoo.relatorios.entity.TipoRelatorio;
 
 // "Relatório Anual de Processos Sanitários" (DER §3.6 / docs/prototipo/relatorio-anual.html).
 // Universo sempre "processos ABERTOS no ano" (dataAbertura), nao "resultados
-// lancados no ano" como os graficos do dashboard (DashboardService) — so
+// lancados no ano" como os graficos do dashboard (DashboardService) - so
 // contarPorDoenca(ano) tem exatamente o mesmo escopo e e reaproveitado; as
-// demais secoes usam queries novas (ver ProcessoSanitarioRepository/AnimalAmostradoRepository).
+// demais secoes usam queries proprias (ver ProcessoSanitarioRepository/AnimalAmostradoRepository).
 // "Tempo médio (dias)" de "Laboratórios utilizados" e proxy (dataAbertura ->
-// dataResultado, nao envio->retorno de amostra — campo nunca preenchido) e a
+// dataResultado, nao envio->retorno de amostra - campo nunca preenchido) e a
 // secao "Bairros" so considera processos com ocorrencia vinculada (o vinculo
-// e opcional) — ambas decisoes validadas com o usuario. Sem secao de
-// assinatura/recomendacao (regras 20/21 do DER) e sem comparacao com ano
-// anterior/benchmarks externos (dado que o prototipo usa mas o sistema nao tem).
+// e opcional). Sem secao de assinatura/recomendacao (regras 20/21 do DER) e sem
+// comparacao com ano anterior/benchmarks externos (dado que o prototipo usa mas
+// o sistema nao tem).
 @Service
 public class RelatorioAnualProcessosService implements GeradorRelatorio<RelatorioAnualProcessosResponse> {
 
@@ -218,7 +218,7 @@ public class RelatorioAnualProcessosService implements GeradorRelatorio<Relatori
     }
 
     // Lista completa de bairros com processos vinculados (sem top N, sem "Sem
-    // ocorrência vinculada") — usada tanto pelo CSV quanto como base do preview.
+    // ocorrência vinculada") - usada tanto pelo CSV quanto como base do preview.
     private List<BairroProcessoResponse> montarBairrosCompleto(LocalDate inicio, LocalDate fim) {
         List<BairroProcessoProjection> contagens = processoSanitarioRepository.contarPorBairro(inicio, fim);
 

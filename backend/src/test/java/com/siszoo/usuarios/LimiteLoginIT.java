@@ -22,7 +22,7 @@ import com.siszoo.usuarios.repository.AuditoriaEventoRepository;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-// Limite de tentativas do login (PS-8) com valores baixos num contexto
+// Limite de tentativas do login com valores baixos num contexto
 // proprio: o contexto compartilhado dos demais *IT usa limites altos, porque
 // todos chegam de 127.0.0.1.
 class LimiteLoginIT extends AbstractIntegrationTest {

@@ -2,7 +2,7 @@
 // localStorage: é só um instante, sem segredo. Requisição não conta como
 // atividade, então uma aba esquecida com polling não prolonga a sessão.
 
-// Decisão funcional de 31/10/2026 (docs/decisoes/sessao.md). O servidor aplica o
+// Decisão funcional (docs/decisoes/sessao.md). O servidor aplica o
 // mesmo limite (siszoo.sessao.inatividade-minutos).
 export const LIMITE_INATIVIDADE_MS = 60 * 60 * 1000
 export const ANTECEDENCIA_AVISO_MS = 5 * 60 * 1000

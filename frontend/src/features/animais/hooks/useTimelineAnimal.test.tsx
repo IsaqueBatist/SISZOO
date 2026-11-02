@@ -11,16 +11,15 @@ import type { Prescricao, Procedimento, Vacinacao } from '../types/historico.typ
 const ANIMAL_ID = 'timeline-teste-0000-0000-000000000001'
 
 // Âncora fixa: o hook só compara datas entre si (não lê "hoje"), então
-// qualquer dia serve — fixo deixa o cenário determinístico.
+// qualquer dia serve; fixo deixa o cenário determinístico.
 const HOJE = '2026-09-10'
 const CRIADO_EM = `${HOJE}T15:00:00.000Z`
 
 // 25 vacinas (mais que uma página de 20) com datas estritamente decrescentes
 // (-1 a -25 dias) e 2 procedimentos cujas datas caem perto da fronteira
-// entre a 1ª e a 2ª página de vacinas (-20 e -21) — o cenário exato descrito
-// na revisão do plano de T22: uma abordagem ingênua ("buscar as N mais
-// recentes de cada fonte e mesclar") cortaria essas vacinas mais antigas ou
-// posicionaria mal os procedimentos perto do corte.
+// entre a 1ª e a 2ª página de vacinas (-20 e -21): uma abordagem ingênua
+// ("buscar as N mais recentes de cada fonte e mesclar") cortaria essas vacinas
+// mais antigas ou posicionaria mal os procedimentos perto do corte.
 function seedVacinasGrandes(): Vacinacao[] {
   return Array.from({ length: 25 }, (_, indice) => {
     const dias = indice + 1
@@ -144,7 +143,7 @@ describe('useTimelineAnimal (merge k-way de fontes paginadas)', () => {
     expect(result.current.eventos).toHaveLength(27)
     expect(result.current.eventos.map((e) => ({ tipo: e.tipo, data: e.data }))).toEqual(sequenciaEsperada)
 
-    // A vacina mais antiga (dia -25, na 2ª página) precisa estar presente —
+    // A vacina mais antiga (dia -25, na 2ª página) precisa estar presente:
     // é justamente o item que uma abordagem "top-N de cada fonte" perderia.
     expect(result.current.eventos.some((e) => e.titulo.includes('V25'))).toBe(true)
   })

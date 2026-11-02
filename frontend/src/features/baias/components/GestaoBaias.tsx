@@ -52,7 +52,7 @@ export function GestaoBaias() {
 
   const { data: baias, isLoading, isError, refetch } = useBaiasQuery()
   const { data: catalogos } = useCatalogosAnimaisQuery()
-  // T45: o backend já devolve só quem está sob custódia (mesma regra da
+  // O backend já devolve só quem está sob custódia (mesma regra da
   // ocupação), com nome e miniatura; aqui só se agrupa por baia.
   const { data: residentes } = useResidentesDeBaiasQuery()
   const excluirMutation = useExcluirBaiaMutation()

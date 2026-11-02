@@ -14,7 +14,7 @@ import { API_BASE_URL } from '@/lib/env'
 import { server } from '@/mocks/server'
 
 // Datas com hora da API (criadoEm, ultimoAcesso, atualizadoEm) são
-// LocalDateTime sem fuso, já no horário de Itu (AC-1). Lidas com
+// LocalDateTime sem fuso, já no horário de Itu. Lidas com
 // `new Date(iso)`, viram horário do navegador: fora de São Paulo a tela
 // mostrava outro dia perto da meia-noite. Cada caso roda com o processo em UTC
 // (navegador fora de Itu) e em America/Sao_Paulo, e o resultado tem de ser o

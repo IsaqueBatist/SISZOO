@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-// Exercita a V28 (miniatura da foto do animal, T45) num schema proprio do
+// Exercita a V28 (miniatura da foto do animal) num schema proprio do
 // mesmo PostgreSQL de teste, no padrao de MigracaoV16MicrochipIT: do zero e por
 // atualizacao a partir da V27 com um animal com foto, que nao muda.
 class MigracaoV28FotoMiniaturaIT extends AbstractIntegrationTest {

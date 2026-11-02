@@ -48,7 +48,7 @@ import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.repository.UsuarioRepository;
 import com.siszoo.usuarios.service.AuditoriaEventoService;
 
-// Datas de negocio na virada do dia UTC x Itu (DER §5 regra 4; AC-1/AC-2):
+// Datas de negocio na virada do dia UTC x Itu (DER §5 regra 4):
 // entre 21:00 e 23:59 em Sao Paulo o dia UTC ja e o seguinte. Cada caso fixa
 // o instante com o fuso do Clock de PRODUCAO (ClockConfig), nao com um fuso
 // escrito no teste: trocar a zona de ClockConfig (ou um servico ler o relogio
@@ -174,7 +174,7 @@ class RegrasDeDataNaViradaDoDiaTest {
                 animalId, "antirrabica", dataAplicacao, 1, new BigDecimal("1.000"), UnidadeDose.MILILITRO, "LOTE1", null, null);
     }
 
-    // Reforco anual: validade = aplicacao + 12 meses (AlertaVacinalService#calcularDataValidade).
+    // Reforco anual: validade = aplicacao + 12 meses (Vacinacao#calcularDataValidade).
     private static Vacinacao vacinacaoComValidade(LocalDate validade) {
         Vacina vacina = new Vacina();
         vacina.setIntervaloMeses(12);

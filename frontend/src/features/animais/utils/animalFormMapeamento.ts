@@ -25,7 +25,7 @@ export interface RascunhoAnimalValores {
   dataNascimentoAprox: string
   microchip: string
   castracaoOpcao: CastracaoOpcao
-  // F2-004 / F2-008: opcionais no rascunho (rascunhos antigos não os têm)
+  // Opcionais no rascunho (rascunhos antigos não os têm)
   numeroMedalha?: string
   dataImplantacaoChip?: string
   procedencia?: string
@@ -35,9 +35,9 @@ export interface RascunhoAnimalValores {
   motivoEntrada: string
   dataEntrada: string
   baiaId: string
-  // T42: a foto NÃO vai mais aqui como data URI. O rascunho guarda só o id do
+  // A foto NÃO vai aqui como data URI. O rascunho guarda só o id do
   // arquivo na store 'arquivos', onde a imagem comprimida fica como Blob.
-  // Rascunhos gravados antes da T42 ainda têm `fotoUrl` preenchido; ele é
+  // Rascunhos no formato antigo ainda têm `fotoUrl` preenchido; ele é
   // ignorado na restauração (ver rascunhoParaValores).
   fotoArquivoId?: string
   observacoes: string
@@ -111,7 +111,7 @@ export function valoresDeAnimal(animal: Animal): ValoresIniciaisAnimal {
 
 // Converte o valor do formulário (RHF, com número/undefined) para o formato
 // persistido em IndexedDB (RascunhoAnimalValores, todo em string). A foto entra
-// como id do arquivo na store 'arquivos' — nunca o data URI (T42).
+// como id do arquivo na store 'arquivos', nunca o data URI.
 export function valoresParaRascunho(valores: AnimalFormUiValues, fotoArquivoId: string | null): RascunhoAnimalValores {
   return {
     nome: valores.nome,
@@ -143,8 +143,8 @@ export function valoresParaRascunho(valores: AnimalFormUiValues, fotoArquivoId: 
 }
 
 // Inverso: um rascunho carregado do IndexedDB (todo string) vira valores do
-// formulário RHF. Aceita também um rascunho salvo antes da T42 — o `fotoUrl`
-// que ele traz é ignorado, porque a foto do rascunho agora vem da store de
+// formulário RHF. Aceita também um rascunho no formato antigo: o `fotoUrl`
+// que ele traz é ignorado, porque a foto do rascunho vem da store de
 // arquivos, de forma assíncrona. `fotoUrlAtual` preserva o que já está na
 // tela, que na edição é a foto do próprio animal. Também converte os valores
 // iniciais da edição (ValoresIniciaisAnimal tem o mesmo formato).
@@ -180,7 +180,7 @@ export function rascunhoParaValores(rascunho: RascunhoAnimalValores, fotoUrlAtua
 
 // dataEntrada é LocalDateTime: o formulário só edita o dia. Se o dia não
 // mudou na edição, reenvia o valor original completo para não zerar a hora;
-// dia novo (ou cadastro) vai como meia-noite, como antes.
+// dia novo (ou cadastro) vai como meia-noite.
 function dataEntradaParaEnvio(dataDoForm: string, original?: string): string {
   if (original && original.slice(0, 10) === dataDoForm) return original
   return `${dataDoForm}T00:00:00`
@@ -220,7 +220,7 @@ export function paraAnimalRequest(dados: AnimalFormUiValues, dataEntradaOriginal
 
 // setValueAs dos campos: roda tanto sobre o valor digitado (string, do DOM)
 // quanto sobre o valor inicial vindo de defaultValues/reset/setValue
-// diretamente — que pode já chegar como number/undefined, não só string.
+// diretamente, que pode já chegar como number/undefined, não só string.
 export const semVazio = (v: unknown) => (typeof v === 'string' ? v || undefined : v)
 export const paraNumeroOuIndefinido = (v: unknown) => {
   if (typeof v === 'number') return Number.isFinite(v) ? v : undefined

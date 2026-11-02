@@ -23,9 +23,9 @@ import com.siszoo.comum.ApiTesteFixture;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-// F2-004 (numero_medalha, data_implantacao_chip, procedencia — V23) e F2-008
-// (laudo_eutanasia — V24), Fase 3 do TG (22/10/2026). As validacoes ficam no
-// AnimalService e respondem 422 com o nome do campo (CampoInvalidoException).
+// numero_medalha, data_implantacao_chip e procedencia (V23) e laudo_eutanasia
+// (V24). As validacoes ficam no AnimalService e respondem 422 com o nome do
+// campo (CampoInvalidoException).
 class AnimalIdentificacaoLaudoIT extends AbstractIntegrationTest {
 
     private static final String EMAIL_ADMIN = "teste.admin.identificacao@itu.sp.gov.br";
@@ -126,8 +126,6 @@ class AnimalIdentificacaoLaudoIT extends AbstractIntegrationTest {
         atualizar(id, corpoAtualizar("Mantem", microchip, "obito_eutanasia", null))
                 .then().statusCode(200).body("laudoEutanasia", equalTo("Laudo original"));
     }
-
-    // ── Apoio ────────────────────────────────────────────
 
     private Response criar(CriarAnimalRequest corpo) {
         return given().contentType(ContentType.JSON).header("Authorization", "Bearer " + tokenAdmin)

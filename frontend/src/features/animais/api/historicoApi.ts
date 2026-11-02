@@ -32,7 +32,7 @@ export function criarProcedimento(payload: CriarProcedimentoRequest): Promise<Pr
   return http.post<Procedimento>('/procedimentos', payload).then((response) => response.data)
 }
 
-// F2-007 / RF-A04: exames (GET/POST /api/exames; registro imutável, correção por retificaId).
+// RF-A04: exames (GET/POST /api/exames; registro imutável, correção por retificaId).
 export function listarExames(animalId: string, pagina: number, tamanho: number): Promise<PaginaResponse<Exame>> {
   return http.get<PaginaResponse<Exame>>('/exames', { params: { animalId, pagina, tamanho } }).then((response) => response.data)
 }

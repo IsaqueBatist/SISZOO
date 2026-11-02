@@ -3,9 +3,6 @@ interface ErroComRetryProps {
   onTentarNovamente: () => void
 }
 
-// Primeiro botão de retry do projeto — até aqui todo erro era texto estático
-// sem ação (ex. ProcessoDetalhe.tsx). Reaproveita as classes .alert/.btn já
-// existentes no design system.
 export function ErroComRetry({ mensagem, onTentarNovamente }: ErroComRetryProps) {
   return (
     <div className="alert danger" role="alert">

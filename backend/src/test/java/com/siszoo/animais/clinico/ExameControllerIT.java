@@ -23,7 +23,7 @@ import com.siszoo.comum.ApiTesteFixture;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-// F2-007 / RF-A04 (Fase 3 do TG): exame como registro clinico imutavel (V25),
+// RF-A04: exame como registro clinico imutavel (V25),
 // no mesmo contrato de vacinacoes/procedimentos (retificacao por novo POST).
 class ExameControllerIT extends AbstractIntegrationTest {
 

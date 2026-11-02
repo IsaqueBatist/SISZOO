@@ -13,7 +13,7 @@ import com.siszoo.processos.event.ResultadoLancadoEvent;
  * aqui de proposito: a partir do Spring Framework 6.1, um metodo com
  * {@code @TransactionalEventListener} e {@code @Transactional} juntos exige
  * {@code propagation = REQUIRES_NEW}/{@code NOT_SUPPORTED} ou a aplicacao
- * nao sobe — mais simples delegar a leitura (ja numa transacao propria,
+ * nao sobe - mais simples delegar a leitura (ja numa transacao propria,
  * {@code readOnly}) para {@link NotificacaoResultadoService}.
  */
 @Component

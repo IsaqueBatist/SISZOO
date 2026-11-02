@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.siszoo.processos.entity.ResultadoProcesso;
 
-// Resultado e imutavel (T34): so finders declarados aqui. O banco recusa
+// Resultado e imutavel: so finders declarados aqui. O banco recusa
 // UPDATE e DELETE (trigger da V14).
 public interface ResultadoProcessoRepository extends JpaRepository<ResultadoProcesso, UUID> {
 

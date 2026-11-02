@@ -84,8 +84,8 @@ public class SeedDev {
         return resumo;
     }
 
-    // Guarda de banco (SD-1), antes de qualquer escrita: num banco sem
-    // seed_controle, so roda se nao houver dado de dominio — nada alem do
+    // Guarda de banco, antes de qualquer escrita: num banco sem
+    // seed_controle, so roda se nao houver dado de dominio - nada alem do
     // admin bootstrap. Assim o seed nunca mistura registros ficticios com
     // dados de quem ja usa o banco. E o inverso: seed_controle existe mas
     // esta vazia enquanto ha usuarios do seed (tabela limpa a mao).

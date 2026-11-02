@@ -7,7 +7,7 @@ import org.springframework.util.StringUtils;
 import jakarta.validation.constraints.Size;
 
 // Todos opcionais no formato; o nome e exigido pelo service quando a
-// ocorrencia nao e sigilosa nem anonima (D19).
+// ocorrencia nao e sigilosa nem anonima.
 public record DenuncianteRequest(
         @Size(max = 150) String nome,
         @Size(max = 14) String cpf,

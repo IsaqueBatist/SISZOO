@@ -6,8 +6,7 @@ import java.util.List;
 // `bairros` no preview/PDF já vem com o top 9 + 1 linha agregada "Outros (N
 // bairros)" (quando ha mais de 9) e, quando existem, com uma linha final
 // "Sem ocorrência vinculada" para processos sem denúncia prévia (o vínculo é
-// opcional, DER regra 15) — decisões validadas com o usuário. O CSV usa a
-// lista completa, sem essas agregações.
+// opcional, DER regra 15). O CSV usa a lista completa, sem essas agregações.
 public record RelatorioAnualProcessosResponse(
         int ano,
         LocalDate periodoInicio,

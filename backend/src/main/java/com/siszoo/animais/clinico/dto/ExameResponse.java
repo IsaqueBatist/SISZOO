@@ -4,7 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-// F2-007 / RF-A04. Mesmo contrato de status dos demais registros clinicos:
+// RF-A04. Mesmo contrato de status dos demais registros clinicos:
 // statusRegistro ATIVO (vigente) ou RETIFICADO (corrigido por retificadoPorId).
 public record ExameResponse(
         UUID id,

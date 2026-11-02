@@ -17,7 +17,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-// Duas modalidades (DH-5), decididas pelo service:
+// Duas modalidades, decididas pelo service:
 //   - animalId preenchido: animal do canil; a identificacao (especie ate
 //     pesoKg) vem da ficha e NAO pode ser enviada (422);
 //   - animalId nulo: animal de campo; especie e sexo sao obrigatorios.
@@ -60,7 +60,7 @@ public record AmostraAnimalRequest(
         @NotNull
         MaterialBiologico materialBiologico,
 
-        // Opcional (decisao de 31/10/2026): null = nao informado, nunca "nao".
+        // Opcional: null = nao informado, nunca "nao".
         Boolean contatoHumano,
 
         NivelContato nivelContato,

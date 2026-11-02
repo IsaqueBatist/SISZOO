@@ -3,9 +3,9 @@ import type { PaginaResponse } from '@/features/usuarios/types/usuarios.types'
 import type { EventoAuditoria, FiltrosAuditoria, OpcoesFiltroAuditoria } from '../types/auditoria.types'
 
 // GET /api/auditoria (AuditoriaController) - protegido por USUARIOS_ACESSO:leitura,
-// exclusivo do Admin (V3__seed_cargos.sql). F2-027 (Fase 3 do TG): os filtros por
+// exclusivo do Admin (V3__seed_cargos.sql). Os filtros por
 // ação/usuário/módulo/período são aplicados no SERVIDOR (contrato
-// docs/contratos/auditoria-filtros.md atendido); parâmetros vazios são omitidos.
+// docs/contratos/auditoria-filtros.md); parâmetros vazios são omitidos.
 export function listarEventosAuditoria(
   pagina: number,
   tamanho: number,

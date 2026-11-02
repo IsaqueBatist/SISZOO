@@ -257,7 +257,7 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(UsuarioNaoEncontradoException::new);
 
-        // NOTA: impede usuario de desativar a si mesmo (DER §3.1, adicionado nesta tarefa).
+        // Impede usuario de desativar a si mesmo (DER §3.1).
         if (!Boolean.TRUE.equals(request.ativo()) && id.equals(usuarioAutenticadoId)) {
             throw new UsuarioNaoPodeDesativarASiMesmoException();
         }
@@ -275,7 +275,7 @@ public class UsuarioService {
             sessaoService.encerrarDoUsuario(usuario.getId(), MotivoEncerramentoSessao.USUARIO_DESATIVADO, null);
         }
 
-        // T43: so o estado alterado (ativo), sem os dados pessoais do usuario.
+        // So o estado alterado (ativo), sem os dados pessoais do usuario.
         AcaoAuditoria acao = ativar ? AcaoAuditoria.REATIVACAO : AcaoAuditoria.DESATIVACAO;
         auditoriaEventoService.registrar(buscarAutor(usuarioAutenticadoId), acao, "usuario", usuario.getId(),
                 Map.of("ativo", ativoAntes), Map.of("ativo", ativar));
@@ -304,9 +304,9 @@ public class UsuarioService {
         usuario.setTelefone(telefoneNovo);
         usuarioRepository.save(usuario);
 
-        // T43/LGPD: auditoria_evento e imutavel e sem expurgo, entao o telefone
+        // LGPD: auditoria_evento e imutavel e sem expurgo, entao o telefone
         // nao entra no evento - so se mudou, no padrao do denuncianteAlterado
-        // da ocorrencia (D23).
+        // da ocorrencia.
         boolean telefoneAlterado = !Objects.equals(telefoneAnterior, telefoneNovo);
         auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "usuario", usuario.getId(),
                 Map.of("telefoneAlterado", false), Map.of("telefoneAlterado", telefoneAlterado));

@@ -28,9 +28,9 @@ import com.siszoo.processos.service.ProcessoSanitarioService;
 // laboratorios, raiva em cao, gato e morcego (grafico por especie) e febre
 // amarela em primata. Positivo nunca e retificado (V21).
 //
-// E-mail ao municipe (SD-4): processo com resultado notificavel (positivo ou
+// E-mail ao municipe: processo com resultado notificavel (positivo ou
 // inconclusivo, inclusive o que e retificado depois) tem o responsavel SEM
-// e-mail — NotificacaoResultadoService nao envia nada e o REQUIRES_NEW de
+// e-mail - NotificacaoResultadoService nao envia nada e o REQUIRES_NEW de
 // registrarNotificacaoMunicipe nunca roda. Os demais usam exemplo.test.
 class ProcessosSeed {
 
@@ -207,7 +207,7 @@ class ProcessosSeed {
     void executar(UsuariosSeed.Atores atores) {
         DatasSeed datas = new DatasSeed(clock);
         for (Processo processo : PLANO) {
-            // Vincular a ocorrencia exige OCORRENCIAS_DENUNCIAS:escrita (D33):
+            // Vincular a ocorrencia exige OCORRENCIAS_DENUNCIAS:escrita:
             // quem abre o processo vinculado e o agente; os demais, o veterinario.
             SeedAtor autor = processo.ocorrencia() != null
                     ? atores.agente(processo.numero())
@@ -281,7 +281,7 @@ class ProcessosSeed {
                         id, executor.valido(new AlterarStatusProcessoRequest(destino)), veterinario.id()).id()));
     }
 
-    // Sem e-mail quando ha resultado notificavel (SD-4) ou o responsavel e o
+    // Sem e-mail quando ha resultado notificavel ou o responsavel e o
     // proprio servico publico.
     static ResponsavelProcessoRequest responsavel(Processo plano) {
         String email = plano.notificavel() || plano.responsavel().startsWith("CCZ")

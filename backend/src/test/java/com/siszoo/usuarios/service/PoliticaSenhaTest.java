@@ -22,8 +22,6 @@ class PoliticaSenhaTest {
         return PoliticaSenha.violacao(senha, EMAIL, NOME, SOBRENOME);
     }
 
-    // ── Categorias ───────────────────────────────────────
-
     @ParameterizedTest
     @ValueSource(strings = {
             "Abcdefgh1",      // maiuscula + minuscula + digito
@@ -64,8 +62,6 @@ class PoliticaSenhaTest {
         }
     }
 
-    // ── Nome da conta (parte local do e-mail) ────────────
-
     @Test
     @DisplayName("recusa a parte local do e-mail inteira, sem diferenciar maiusculas")
     void nomeDaConta() {
@@ -78,8 +74,6 @@ class PoliticaSenhaTest {
     void nomeDaContaCurto() {
         assertThat(PoliticaSenha.violacao("Xy1!xyZw", "xy@itu.sp.gov.br", "Ana", "Lu")).isEmpty();
     }
-
-    // ── Nome de exibicao ─────────────────────────────────
 
     @Test
     @DisplayName("exemplo da politica: 'Erin M. Hagens' recusa 'erin' e 'hagens'; 'M' e ignorado")

@@ -31,8 +31,8 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
 // Preparacao de cenario compartilhada pelos *IT (usuario + login, animal,
-// vacinacao e processo sanitario via API). Toda data vem do Clock do contexto — o fixo de
-// RelogioTesteConfig quando a classe o importa, o de ClockConfig nos demais —
+// vacinacao e processo sanitario via API). Toda data vem do Clock do contexto (o fixo de
+// RelogioTesteConfig quando a classe o importa, o de ClockConfig nos demais)
 // para "hoje" do cenario ser o mesmo "hoje" das regras sob teste.
 @TestComponent
 public class ApiTesteFixture {
@@ -42,7 +42,7 @@ public class ApiTesteFixture {
     public static final UUID CARGO_AGENTE_SANITARIO_ID = UUID.fromString("00000000-0000-4000-8000-000000000003");
     // Cargo que so existe nos testes: le ocorrencias sem denunciante_sigiloso.
     // Nenhum cargo real tem esse perfil desde a V11 (o Veterinario perdeu o
-    // acesso ao modulo); ele mantem a cobertura da mascara do denunciante (D14).
+    // acesso ao modulo); ele mantem a cobertura da mascara do denunciante.
     public static final UUID CARGO_LEITOR_OCORRENCIAS_ID = UUID.fromString("00000000-0000-4000-8000-0000000000f1");
     private static final String SENHA_PADRAO = "SenhaTeste123";
 
@@ -125,7 +125,7 @@ public class ApiTesteFixture {
     }
 
     public String criarAnimal(String token, String status) {
-        // F2-008: o destino obito_eutanasia exige o laudo do responsavel tecnico.
+        // O destino obito_eutanasia exige o laudo do responsavel tecnico.
         String laudo = "obito_eutanasia".equals(status) ? "Laudo de teste: quadro irreversivel" : null;
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Animal de Teste", "canino", "macho", null, null, null, null, null, null, null,
@@ -167,7 +167,7 @@ public class ApiTesteFixture {
                 .path("id");
     }
 
-    // Corpo do menor processo completo valido (T29): doenca, laboratorio,
+    // Corpo do menor processo completo valido: doenca, laboratorio,
     // responsavel e uma amostra de animal de campo coletada hoje. contatoHumano
     // decide a urgencia do processo (DER regra 18). Mutavel, para o chamador
     // variar um campo.
@@ -207,13 +207,12 @@ public class ApiTesteFixture {
                 .post("/api/processos");
     }
 
-    // Helper unico para criar processo completo nos *IT (substitui o processo
-    // minimo da T25, que a V13 deixou de aceitar).
+    // Helper unico para criar processo completo nos *IT.
     public Response postarProcesso(String token, String ocorrenciaId, boolean contatoHumano) {
         return postarProcesso(token, corpoProcesso(ocorrenciaId, contatoHumano));
     }
 
-    // GET /api/alertas/vacinas (exige 200) filtrado pelo animal do cenario —
+    // GET /api/alertas/vacinas (exige 200) filtrado pelo animal do cenario:
     // o banco e compartilhado, entao o alerta traz animais de outros testes.
     public Optional<Map<String, Object>> buscarAnimalNoAlertaVacinal(String token, String animalId) {
         List<Map<String, Object>> resposta = given()
@@ -229,7 +228,7 @@ public class ApiTesteFixture {
         return resposta.stream().filter(item -> animalId.equals(item.get("animalId"))).findFirst();
     }
 
-    // Senha explicita para usuarios criados fora do fixture — o AuthControllerIT
+    // Senha explicita para usuarios criados fora do fixture: o AuthControllerIT
     // controla a senha de proposito, porque ela e o objeto do teste.
     public String login(String email, String senha) {
         return given()

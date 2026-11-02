@@ -78,7 +78,7 @@ class AuditoriaEventoServiceIT extends AbstractIntegrationTest {
         assertThat(evento.getAcao(), equalTo(AcaoAuditoria.ATUALIZACAO));
         assertThat(evento.getEntidade(), equalTo("usuario"));
         // Compara pelo conteúdo (via árvore JSON), não pela formatação exata da
-        // string — o ObjectMapper pode variar espaçamento entre versões/config.
+        // string: o ObjectMapper pode variar espaçamento entre versões/config.
         assertThat(objectMapper.readTree(evento.getPayloadAntes()), equalTo(objectMapper.readTree("{\"ativo\":true}")));
         assertThat(objectMapper.readTree(evento.getPayloadDepois()), equalTo(objectMapper.readTree("{\"ativo\":false}")));
         assertThat(evento.getOcorreuEm(), notNullValue());
@@ -134,7 +134,7 @@ class AuditoriaEventoServiceIT extends AbstractIntegrationTest {
     @Test
     void deveLerEventoLegadoComEntidadeIdNulo() {
         // Simula linha anterior a V9: INSERT sem entidade_id. O payload traz um
-        // id, mas nao ha backfill — entidade_id continua nulo.
+        // id, mas nao ha backfill: entidade_id continua nulo.
         UUID idLegado = UUID.randomUUID();
         jdbcTemplate.update(
                 "INSERT INTO auditoria_evento (id, acao, entidade, payload_depois) VALUES (?, 'CRIACAO', 'vacinacao', ?::jsonb)",

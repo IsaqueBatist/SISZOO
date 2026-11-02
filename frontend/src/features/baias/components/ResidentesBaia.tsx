@@ -4,7 +4,7 @@ import { Icon } from '@/components/layout/Icon'
 import type { Animal } from '@/features/animais/types/animais.types'
 
 // Só o que o avatar usa: serve tanto para Animal quanto para ResidenteBaia
-// (GET /baias/residentes, T45).
+// (GET /baias/residentes).
 type Residente = Pick<Animal, 'id' | 'nome' | 'fotoUrl'>
 
 interface ResidentesBaiaProps {
@@ -29,7 +29,7 @@ function AvatarResidente({ animal }: { animal: Residente }) {
 }
 
 // Fallback de ícone de pata quando não há fotoUrl ou a imagem falha ao
-// carregar (internet instável do CCZ) — nunca deixa o avatar quebrado.
+// carregar (internet instável do CCZ): nunca deixa o avatar quebrado.
 export function ResidentesBaia({ animais }: ResidentesBaiaProps) {
   if (animais.length === 0) {
     return <span className="resi-empty">Vazia</span>

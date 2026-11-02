@@ -162,7 +162,7 @@ public class RecuperacaoSenhaService {
 
         token.setUsadoEm(alteradaAgora);
         tokenRepository.invalidarOutrosPendentesDoUsuario(usuario.getId(), token.getId(), alteradaAgora);
-        // A credencial mudou fora de qualquer sessao: nenhuma sobrevive (S-12).
+        // A credencial mudou fora de qualquer sessao: nenhuma sobrevive.
         sessaoService.encerrarDoUsuario(usuario.getId(), MotivoEncerramentoSessao.SENHA_ALTERADA, null);
 
         auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "usuario", usuario.getId(),
@@ -208,7 +208,7 @@ public class RecuperacaoSenhaService {
             log.info("Link de recuperacao de senha enviado para {}", destinoMascarado);
         } catch (TaskRejectedException ex) {
             // Recusa do executor (ex.: aplicacao encerrando) sobe na propria
-            // chamada (T35-17). O token gravado vence sozinho.
+            // chamada. O token gravado vence sozinho.
             log.warn("Link de recuperacao de senha para {} nao submetido: executor recusou a tarefa", destinoMascarado);
             log.debug("Detalhes da recusa do envio do link de recuperacao", ex);
         }

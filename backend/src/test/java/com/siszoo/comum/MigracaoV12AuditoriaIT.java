@@ -21,7 +21,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 
-// Exercita a V12 (acao VISUALIZACAO, T26) num schema proprio do mesmo
+// Exercita a V12 (acao VISUALIZACAO) num schema proprio do mesmo
 // PostgreSQL de teste, no padrao de MigracaoV7RegistroClinicoIT: do zero e
 // por atualizacao a partir da V11, com eventos das acoes anteriores.
 class MigracaoV12AuditoriaIT extends AbstractIntegrationTest {

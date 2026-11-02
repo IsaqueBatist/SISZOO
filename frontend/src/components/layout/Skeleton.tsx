@@ -3,8 +3,7 @@ interface SkeletonProps {
   height: string | number
 }
 
-// Encapsula a classe .skel já existente em styles/components.css (hoje sem
-// nenhum uso em .tsx).
+// Encapsula a classe .skel de styles/components.css.
 export function Skeleton({ width, height }: SkeletonProps) {
   return <span className="skel" style={{ display: 'block', width, height }} aria-hidden="true" />
 }

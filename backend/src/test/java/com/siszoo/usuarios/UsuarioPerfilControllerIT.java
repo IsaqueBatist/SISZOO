@@ -82,7 +82,7 @@ class UsuarioPerfilControllerIT extends AbstractIntegrationTest {
 
     // Cria (se ainda não existir) um usuário via Admin e retorna o token dele.
     // Cada teste que precisa de estado "intocado" (ex.: preferências default)
-    // deve pedir seu próprio e-mail aqui, em vez de reaproveitar EMAIL_USUARIO —
+    // deve pedir seu próprio e-mail aqui, em vez de reaproveitar EMAIL_USUARIO:
     // o Postgres do Testcontainers é compartilhado por toda a classe de teste,
     // então mutações de um teste (ex.: trocar o tema) vazam para os outros.
     private String criarUsuarioEObterToken(String email, String senhaInicial) {
@@ -113,9 +113,9 @@ class UsuarioPerfilControllerIT extends AbstractIntegrationTest {
 
     // Mimetiza exatamente o DataSeeder (admin do bootstrap do Docker): grava
     // usuario + usuario_cargo diretamente, sem passar por UsuarioService.criar(),
-    // que é o único lugar que hoje cria a linha de preferencia_usuario. Antes
-    // da correção, GET/PATCH /me/preferencias para esse tipo de usuário
-    // respondia 404 "Usuário não encontrado." mesmo o usuário existindo.
+    // que é o único lugar que hoje cria a linha de preferencia_usuario. Sem
+    // tratamento, GET/PATCH /me/preferencias para esse tipo de usuário
+    // responderia 404 "Usuário não encontrado." mesmo o usuário existindo.
     private String criarUsuarioSemPreferenciasEObterToken(String email, String senha) {
         Usuario usuario = new Usuario();
         usuario.setEmail(email);

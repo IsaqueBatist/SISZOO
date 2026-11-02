@@ -34,11 +34,11 @@ import com.siszoo.usuarios.dto.AuditoriaEventoResponse;
 
 import jakarta.validation.Valid;
 
-// Processo sanitario (T25 + T29 + T32 + T34 + T37): criacao completa,
+// Processo sanitario: criacao completa,
 // listagem, detalhe, catalogos, avanco de status e registro do resultado
 // laboratorial (com desfecho do animal e notificacao ao municipe). Com
 // ocorrenciaId, o POST tambem exige OCORRENCIAS_DENUNCIAS:escrita, checado no
-// service (D33). Resultado e imutavel: sem PUT/PATCH/DELETE em /resultados;
+// service. Resultado e imutavel: sem PUT/PATCH/DELETE em /resultados;
 // a correcao e um novo POST com retificaId. O historico completo (original +
 // correcoes) vem embutido em GET /{id} (ProcessoSanitarioResponse.resultados).
 @RestController
@@ -115,8 +115,8 @@ public class ProcessoSanitarioController {
         return processoService.registrarResultado(id, request, UsuarioAutenticado.id(authentication));
     }
 
-    // Reenvio manual da notificacao ao municipe (pendencia da T35): so com
-    // resultado positivo vigente e sem data de notificacao ainda gravada
+    // Reenvio manual da notificacao ao municipe: so com
+    // resultado notificavel vigente e sem data de notificacao ainda gravada
     // (422 nos dois casos - NotificacaoResultadoService). O envio continua
     // assincrono; a resposta reflete o processo no instante da chamada.
     @PostMapping("/{id}/notificacoes/reenviar")

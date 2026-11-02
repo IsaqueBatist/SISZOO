@@ -32,7 +32,7 @@ public class GlobalExceptionHandler {
             "uq_vacinacao_retifica_id", "uq_procedimento_retifica_id", "uq_prescricao_retifica_id",
             "uq_resultado_processo_retifica_id");
 
-    // T43: a causa (SQL do INSERT do evento, so ids) vai so para o log; o
+    // A causa (SQL do INSERT do evento, so ids) vai so para o log; o
     // cliente recebe uma orientacao, sem nenhum dado da requisicao.
     @ExceptionHandler(FalhaAuditoriaException.class)
     public ResponseEntity<ErroResponse> handleFalhaAuditoria(FalhaAuditoriaException ex) {
@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
                 .body(new ErroResponse("Não foi possível concluir a operação. Tente novamente em instantes."));
     }
 
-    // Toda regra de negocio com status e mensagem fixos (T45, D1): cada
+    // Toda regra de negocio com status e mensagem fixos: cada
     // excecao declara os seus em ErroNegocioException. Os handlers que fazem
     // algo alem disso (log, `campos`, constraint do banco) continuam abaixo.
     @ExceptionHandler(ErroNegocioException.class)
@@ -50,7 +50,7 @@ public class GlobalExceptionHandler {
     }
 
     // `campos` lista cada campo rejeitado (ordenado pelo nome, para o corpo ser
-    // deterministico) — o cliente sabe o que corrigir sem depender do texto.
+    // deterministico): o cliente sabe o que corrigir sem depender do texto.
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErroResponse> handleValidacao(MethodArgumentNotValidException ex) {
         List<ErroResponse.CampoInvalido> campos = ex.getBindingResult().getFieldErrors().stream()
@@ -62,7 +62,7 @@ public class GlobalExceptionHandler {
     }
 
     // Ultima barreira: uma constraint do banco (NOT NULL, UNIQUE, FK, CHECK)
-    // barrou a escrita. O corpo e generico de proposito — a mensagem da
+    // barrou a escrita. O corpo e generico de proposito: a mensagem da
     // excecao traz SQL, nomes de tabela/constraint e valores da linha. Por
     // isso o WARN leva so constraint e SQLState: o "Failing row contains (...)"
     // e o "Key (...)=(...)" do PostgreSQL podem trazer CPF, telefone, e-mail ou
@@ -116,8 +116,8 @@ public class GlobalExceptionHandler {
                         List.of(new ErroResponse.CampoInvalido(ex.getCampo(), ex.getMessage()))));
     }
 
-    // Upload acima de spring.servlet.multipart.max-file-size (5 MB, anexos de
-    // ocorrencia): o Spring recusa antes de chegar ao service.
+    // Upload acima de spring.servlet.multipart.max-file-size (5 MB, anexos):
+    // o Spring recusa antes de chegar ao service.
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ErroResponse> handleMaxUploadSizeExceeded() {
         return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)

@@ -30,9 +30,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-// Exercita a V13 (processos sanitarios, T29) num schema proprio do mesmo
+// Exercita a V13 (processos sanitarios) num schema proprio do mesmo
 // PostgreSQL de teste, no padrao de MigracaoV12AuditoriaIT: do zero, por
-// atualizacao a partir da V12 e recusada com processo minimo legado (DH-3).
+// atualizacao a partir da V12 e recusada com processo minimo legado.
 //
 // As constraint triggers adiaveis disparam no COMMIT, entao as transacoes
 // usam conexoes JDBC proprias (autocommit desligado), sem o Spring no meio.
@@ -54,8 +54,6 @@ class MigracaoV13ProcessosIT extends AbstractIntegrationTest {
     void removerSchemaDoTeste() {
         jdbcTemplate.execute("DROP SCHEMA IF EXISTS " + SCHEMA + " CASCADE");
     }
-
-    // ── Aplicacao da migration ───────────────────────────
 
     @Test
     @DisplayName("[T29] V13 aplica do zero sobre V1-V12 e semeia os catalogos do DER")
@@ -109,8 +107,6 @@ class MigracaoV13ProcessosIT extends AbstractIntegrationTest {
         assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM " + S + "processo_sanitario", Integer.class),
                 equalTo(1));
     }
-
-    // ── 1 responsavel e >= 1 amostra (DH-2) ─────────────
 
     @Test
     @DisplayName("[DH-2] processo completo e aceito; sem amostra ou sem responsavel falha no COMMIT")
@@ -205,8 +201,6 @@ class MigracaoV13ProcessosIT extends AbstractIntegrationTest {
                 Integer.class, processo), equalTo(1));
     }
 
-    // ── Vinculo imutavel (DER regra 15) ─────────────────
-
     @Test
     @DisplayName("[DER 15] vinculo: vazio -> ocorrencia aceito; trocar ou remover recusado; atualizar o resto aceito")
     void vinculoImutavel() throws Exception {
@@ -231,8 +225,6 @@ class MigracaoV13ProcessosIT extends AbstractIntegrationTest {
         assertThat(jdbcTemplate.queryForObject("SELECT ocorrencia_id FROM " + S + "processo_sanitario" + onde, UUID.class),
                 equalTo(ocorrencia));
     }
-
-    // ── CHECKs, UNIQUE e PK ─────────────────────────────
 
     @Test
     @DisplayName("[T29] CHECKs da amostra e do responsavel, responsavel unico por processo e sintoma unico por amostra")
@@ -278,8 +270,6 @@ class MigracaoV13ProcessosIT extends AbstractIntegrationTest {
         verificar("fk_animal_amostrado_animal", () -> jdbcTemplate.update(
                 "UPDATE " + S + "animal_amostrado SET animal_id = ? WHERE id = ?", UUID.randomUUID(), amostra));
     }
-
-    // ── Apoio ──
 
     private MigrateResult migrarAte(String versao) {
         return Flyway.configure()

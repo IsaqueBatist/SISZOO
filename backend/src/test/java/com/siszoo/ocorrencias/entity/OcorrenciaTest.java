@@ -15,7 +15,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import com.siszoo.ocorrencias.exception.TransicaoStatusInvalidaException;
 import com.siszoo.usuarios.entity.Usuario;
 
-// Matriz de transicoes D5, aplicada pela propria entidade.
+// Matriz de transicoes, aplicada pela propria entidade.
 class OcorrenciaTest {
 
     private static final LocalDateTime AGORA = LocalDateTime.of(2026, 9, 10, 12, 0);

@@ -128,7 +128,7 @@ class RelatorioAnualProcessosServiceTest {
     }
 
     // lenient: cada teste usa so um subconjunto (blocosCsv nao chama os
-    // metodos de KPI, por exemplo) — stub nao usado aqui e esperado, nao um
+    // metodos de KPI, por exemplo); stub nao usado aqui e esperado, nao um
     // erro de teste (ao contrario do UnnecessaryStubbingException padrao).
     private void stubsBasicosVazios() {
         org.mockito.Mockito.lenient().when(processoSanitarioRepository.countByDataAberturaBetween(any(), any())).thenReturn(0L);

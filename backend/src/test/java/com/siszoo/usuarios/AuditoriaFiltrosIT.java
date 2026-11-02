@@ -29,7 +29,7 @@ import com.siszoo.comum.ApiTesteFixture;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-// F2-027 (Fase 3 do TG): filtros de servidor em GET /api/auditoria (acao,
+// Filtros de servidor em GET /api/auditoria (acao,
 // usuarioEmail, modulo, de/ate), payload antes/depois no DTO e o
 // catalogo GET /api/auditoria/filtros. Contrato: docs/contratos/auditoria-filtros.md.
 class AuditoriaFiltrosIT extends AbstractIntegrationTest {

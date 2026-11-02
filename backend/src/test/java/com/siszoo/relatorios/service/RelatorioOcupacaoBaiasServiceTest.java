@@ -22,7 +22,7 @@ import com.siszoo.relatorios.dto.LinhaOcupacaoBaiaResponse;
 import com.siszoo.relatorios.dto.PeriodoRelatorio;
 import com.siszoo.relatorios.dto.RelatorioOcupacaoBaiasResponse;
 
-// "Ocupação de Baias" (T41): a mesma regra da tela de baias e do Dashboard
+// "Ocupação de Baias": a mesma regra da tela de baias e do Dashboard
 // (NivelLotacao): abaixo de 80% normal, de 80% a 99% proximo_limite, 100% ou
 // mais superlotada. Difere do prototipo, que marcava 100% como "Próx. limite".
 @ExtendWith(MockitoExtension.class)

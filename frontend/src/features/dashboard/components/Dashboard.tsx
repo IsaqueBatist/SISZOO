@@ -70,7 +70,7 @@ function IconeSeveridadeVacina({ severidade }: { severidade: SeveridadeAlerta })
 
 // Card dedicado pro alerta de vacina (GET /api/alertas/vacinas, com a lista
 // de animais) - os outros 5 tipos do DER §3.7 vêm agregados em
-// kpis.alertas (T38) e são renderizados por AlertaCriticoGenerico, abaixo.
+// kpis.alertas e são renderizados por AlertaCriticoGenerico, abaixo.
 function AlertaCriticoVacinas() {
   const { data, isLoading, isError, refetch } = useAlertasVacinaisQuery()
 
@@ -149,10 +149,8 @@ function AlertaCriticoVacinas() {
 }
 
 // Processos com contato humano-animal (regra 18, já aplicada 100% no
-// backend) - cada item navega para o detalhe do processo; não há filtro de
-// servidor ?urgente= hoje (pedido registrado em
-// docs/contratos/processos-filtro-urgente.md), então o "Ver todos" leva à
-// lista completa (o backend já ordena urgente primeiro).
+// backend) - cada item navega para o detalhe do processo; o "ver todos" leva
+// à lista com o filtro de urgentes (docs/contratos/processos-filtro-urgente.md).
 function AlertaProcessosUrgentes() {
   const { data, isLoading, isError, refetch } = useProcessosUrgentesQuery()
 
@@ -205,10 +203,10 @@ function AlertaProcessosUrgentes() {
   )
 }
 
-// Os 6 alertas críticos do DER §3.7 chegam todos juntos em kpis.alertas (T38),
+// Os 6 alertas críticos do DER §3.7 chegam todos juntos em kpis.alertas,
 // mas vacina_vencendo/vacina_vencida já têm card dedicado acima
 // (AlertaCriticoVacinas, com a lista de animais via GET /api/alertas/vacinas)
-// - não duplicar aqui, só os outros 5 tipos novos.
+// - não duplicar aqui, só os outros 5 tipos.
 const TIPOS_JA_EXIBIDOS_EM_CARD_DEDICADO = new Set(['vacina_vencendo', 'vacina_vencida'])
 
 // Mesmo tom por tipo do protótipo (docs/prototipo/dashboard.html): não deriva
@@ -346,7 +344,7 @@ export function Dashboard() {
       )}
 
       <div style={{ marginTop: 'var(--space-4)' }}>
-        {/* T45: os gráficos ficam abaixo de KPIs e alertas; o chunk do recharts
+        {/* Os gráficos ficam abaixo de KPIs e alertas; o chunk do recharts
             só é baixado quando o usuário chega perto deles. */}
         <MontarQuandoVisivel alturaReservada={220}>
           <Suspense fallback={<Skeleton width="100%" height={220} />}>

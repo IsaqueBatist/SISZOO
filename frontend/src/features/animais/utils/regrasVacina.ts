@@ -1,14 +1,13 @@
 // Alerta de reforço vacinal: 7 dias de antecedência. Valor consistente em
-// toda fonte do projeto que o menciona — regra de negócio crítica,
+// toda fonte do projeto que o menciona: regra de negócio crítica,
 // docs/entrevista_09jan2026.md ("alertas de vacina com 7 dias") e os
 // protótipos configuracoes.html/dashboard.html/design-system.html. Hoje já
 // existe GET /api/alertas/vacinas (com.siszoo.alertas) para o alerta
-// agregado (ver features/alertas/) — mas essa função continua em uso aqui
+// agregado (ver features/alertas/), mas essa função continua em uso aqui
 // porque AbaVacinas.tsx precisa do status "em dia" linha a linha (fora da
 // janela de alerta), que o endpoint não devolve por design.
 import { hojeEmItu } from '@/lib/datas'
 
-// Reexport: hojeEmItu morava aqui antes de ir para lib/datas.ts.
 export { hojeEmItu }
 
 export const DIAS_ANTECEDENCIA_ALERTA_VACINA = 7
@@ -52,7 +51,7 @@ export function badgeReforcoVacina(dataValidade: string | null, hoje: string = h
       status: 'a_vencer',
       classeLinha: 'reforco-soon',
       // `badge-alert` não existe em components.css (o protótipo só o usa com
-      // estilo inline ad-hoc) — `badge-inconclusive` já é exatamente a mesma
+      // estilo inline ad-hoc); `badge-inconclusive` já é exatamente a mesma
       // cor amarela (--color-alert-bg/--color-alert), então reaproveita em
       // vez de inventar uma classe nova no design system compartilhado.
       classeBadge: 'badge-inconclusive',

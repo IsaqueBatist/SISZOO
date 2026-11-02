@@ -18,9 +18,9 @@ import {
 const USUARIO = 'a1b2c3d4-0000-0000-0000-00000000000a'
 const NOME_BANCO = 'siszoo-rascunhos'
 
-// Cria o banco numa versão ANTERIOR, com só parte das stores — o cenário real
-// do defeito corrigido na versão 2: o primeiro formulário aberto criava a sua
-// store e as outras nunca eram criadas.
+// Cria o banco numa versão ANTERIOR, com só parte das stores: o cenário de um
+// navegador em que o upgrade criou a store do primeiro formulário aberto e
+// nenhuma das outras.
 async function bancoAntigo(versao: number, stores: string[], semear?: (banco: Awaited<ReturnType<typeof openDB>>) => Promise<unknown>) {
   const banco = await openDB(NOME_BANCO, versao, {
     upgrade(db) {

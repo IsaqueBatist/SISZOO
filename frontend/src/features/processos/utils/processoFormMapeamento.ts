@@ -65,7 +65,7 @@ function textoOuIndefinido(valor: string | undefined): string | undefined {
 
 // Payload de POST /api/processos. Whitelist por modalidade: a amostra do
 // canil leva só o animalId (o servidor copia a identificação da ficha e
-// recusa com 422 se ela vier junto, DH-5); a de campo leva a identificação.
+// recusa com 422 se ela vier junto); a de campo leva a identificação.
 // Nível de contato e agressão só com contato; sintomas só em SINTOMATICO.
 function paraAmostraRequisicao(amostra: ProcessoFormValues['amostras'][number]): AmostraAnimalRequest {
   const clinico = {

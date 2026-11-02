@@ -140,7 +140,7 @@ describe('OcorrenciaDetalhe', () => {
     expect(screen.getByText('12/05/2026 · 13:00')).toBeInTheDocument()
   })
 
-  // A04: depois da mutação a tela recarrega o detalhe pelo GET; o handler do
+  // Depois da mutação a tela recarrega o detalhe pelo GET; o handler do
   // GET devolve o estado que a mutação gravou, como o backend.
   it('encerra a ocorrência: envia a providência e mostra o estado recarregado do backend', async () => {
     const user = userEvent.setup()

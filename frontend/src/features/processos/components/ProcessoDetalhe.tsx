@@ -24,7 +24,7 @@ function Campo({ rotulo, valor, mono, full }: { rotulo: string; valor: string | 
   )
 }
 
-// A identificação exibida é a gravada na amostra (snapshot, DH-5), não a ficha
+// A identificação exibida é a gravada na amostra (snapshot), não a ficha
 // atual do animal; o link leva à ficha só como referência.
 function CardAmostra({ amostra, indice }: { amostra: AmostraAnimal; indice: number }) {
   return (
@@ -80,8 +80,8 @@ function CardAmostra({ amostra, indice }: { amostra: AmostraAnimal; indice: numb
   )
 }
 
-// Vínculo posterior (emenda 2026-10-03): só enquanto o processo não tem
-// ocorrência, e só para quem escreve em ocorrências (D33 — Admin e Agente).
+// Vínculo posterior: só enquanto o processo não tem
+// ocorrência, e só para quem escreve em ocorrências (Admin e Agente).
 // Componente próprio porque a mutation precisa do processo já carregado.
 function CardVincularOcorrencia({ processo }: { processo: Processo }) {
   const [aberto, setAberto] = useState(false)
@@ -137,7 +137,7 @@ export function ProcessoDetalhe() {
   const { roleKey } = useAuth()
   // PROCESSOS_SANITARIOS:escrita (V3): os três cargos.
   const podeEscrever = roleKey === 'admin' || roleKey === 'vet' || roleKey === 'agente'
-  // OCORRENCIAS_DENUNCIAS (V11/D33): só Admin e Agente leem e vinculam.
+  // OCORRENCIAS_DENUNCIAS (V11): só Admin e Agente leem e vinculam.
   const acessaOcorrencias = roleKey === 'admin' || roleKey === 'agente'
   // Edição do registro e histórico: só o Administrador (V30).
   const podeEditarRegistro = roleKey === 'admin'

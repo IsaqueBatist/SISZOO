@@ -16,8 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 // Exercita a V18 (backfill de ficha_completa) num schema proprio, no padrao
-// das outras MigracaoV*IT: dados legados gravados em SQL na V15 (ultima da
-// main quando a V18 foi escrita) e a V18 aplicada por cima.
+// das outras MigracaoV*IT: dados legados gravados em SQL na V15 e a V18
+// aplicada por cima.
 class MigracaoV18FichaCompletaIT extends AbstractIntegrationTest {
 
     private static final String SCHEMA = "migracao_v18";
@@ -70,8 +70,7 @@ class MigracaoV18FichaCompletaIT extends AbstractIntegrationTest {
         assertThat(fichaCompleta(chipEmBranco), equalTo(false));
         assertThat(fichaCompleta(chipComRetificacao), equalTo(true));
         // So a coluna ficha_completa muda. (O microchip em branco nao e
-        // conferido aqui: a V16 da fix/auditoria-rn, quando estiver na
-        // sequencia, o normaliza para NULL antes da V18.)
+        // conferido aqui: a V16 o normaliza para NULL antes da V18.)
         assertThat(atualizadoEm(chipSemVacina), equalTo(atualizadoAntes));
         assertThat(jdbcTemplate.queryForObject("SELECT microchip FROM " + S + "animal WHERE id = ?", String.class,
                 chipSemVacina), equalTo("985000000000001"));

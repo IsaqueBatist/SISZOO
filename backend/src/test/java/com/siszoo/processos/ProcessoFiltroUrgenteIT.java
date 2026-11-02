@@ -20,10 +20,10 @@ import com.siszoo.comum.ApiTesteFixture;
 
 import io.restassured.path.json.JsonPath;
 
-// T45 (docs/contratos/processos-filtro-urgente.md): GET /api/processos aceita
-// `urgente` opcional. O card de urgentes do dashboard deixa de baixar 50
-// processos para filtrar no cliente, e passa a ter o total exato (antes, mais
-// de 50 urgentes sumiam do card sem aviso). Sem o parametro, nada muda.
+// GET /api/processos aceita `urgente` opcional
+// (docs/contratos/processos-filtro-urgente.md). O card de urgentes do dashboard
+// tem o total exato, sem baixar 50 processos para filtrar no cliente. Sem o
+// parametro, nada muda.
 class ProcessoFiltroUrgenteIT extends AbstractIntegrationTest {
 
     @Autowired

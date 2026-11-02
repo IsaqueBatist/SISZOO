@@ -23,7 +23,7 @@ import lombok.Setter;
 
 // So metadados. O conteudo (bytea) fica em AnexoOcorrenciaConteudo, que aponta
 // para ca; nao ha associacao no sentido inverso, entao nenhuma consulta de
-// anexo chega ao conteudo sem passar pelo repositorio dele (D9).
+// anexo chega ao conteudo sem passar pelo repositorio dele.
 @Entity
 @Table(name = "anexo_ocorrencia")
 @Getter

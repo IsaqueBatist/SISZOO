@@ -42,7 +42,7 @@ import com.siszoo.usuarios.service.AuditoriaEventoService;
 
 import jakarta.persistence.criteria.Predicate;
 
-// F2-007 / RF-A04 (Fase 3 do TG). Sem metodo atualizar/excluir: registro clinico
+// RF-A04. Sem metodo atualizar/excluir: registro clinico
 // imutavel (RN06). Correcao = novo POST com `retificaId` (ver ProcedimentoService).
 @Service
 public class ExameService {

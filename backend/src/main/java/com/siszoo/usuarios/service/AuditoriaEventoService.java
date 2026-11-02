@@ -57,7 +57,7 @@ public class AuditoriaEventoService {
         auditoriaEventoRepository.save(novoEvento(usuario, acao, entidade, entidadeId, payloadAntes, payloadDepois));
     }
 
-    // T43: grava o evento ja (flush), para quem lanca uma excecao logo depois
+    // Grava o evento ja (flush), para quem lanca uma excecao logo depois
     // com noRollbackFor (ACESSO_NEGADO antes do 403). No registrar(), o INSERT
     // so sai no commit; se falhasse ali, a excecao do commit substituiria a do
     // chamador e uma violacao de integridade viraria 409. Aqui a falha sai
@@ -88,7 +88,7 @@ public class AuditoriaEventoService {
         return evento;
     }
 
-    // T43: endereco do socket da requisicao HTTP em curso. O navegador fala
+    // Endereco do socket da requisicao HTTP em curso. O navegador fala
     // direto com o backend (porta 8080 publicada; o nginx do front so serve o
     // SPA) e nao ha server.forward-headers-strategy: X-Forwarded-For e
     // definido pelo cliente e nao e lido, para o IP nao poder ser forjado.
@@ -107,9 +107,9 @@ public class AuditoriaEventoService {
         return zona < 0 ? ip : ip.substring(0, zona);
     }
 
-    // F2-027 (Fase 3 do TG): filtros de servidor para a tela de Logs. Sem
-    // parametros, comportamento anterior (so paginacao). `modulo` e derivado da
-    // entidade (auditoria_evento nao guarda modulo): ver MODULO_POR_ENTIDADE.
+    // Filtros de servidor para a tela de Logs. Sem parametros, so paginacao.
+    // `modulo` e derivado da entidade (auditoria_evento nao guarda modulo): ver
+    // MODULO_POR_ENTIDADE.
     @Transactional(readOnly = true)
     public PaginaResponse<AuditoriaEventoResponse> listar(FiltroAuditoria filtro, int pagina, int tamanho) {
         Specification<AuditoriaEvento> spec = (root, query, cb) -> {
@@ -164,7 +164,7 @@ public class AuditoriaEventoService {
         return ENTIDADES_POR_MODULO.getOrDefault(modulo, List.of("__nenhuma__"));
     }
 
-    // T37: mini trilha de auditoria de uma entidade especifica (ex.: um
+    // Mini trilha de auditoria de uma entidade especifica (ex.: um
     // processo sanitario), sem paginacao - volume pequeno por entidade. Usado
     // por modulos que nao tem USUARIOS_ACESSO:leitura (so o Administrador
     // tem), protegidos pela propria autorizacao do modulo chamador.

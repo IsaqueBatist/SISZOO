@@ -13,12 +13,12 @@ import { instalarIndexedDbEmMemoria } from '@/test/indexedDbEmMemoria'
 import { CadastrarAnimal } from './CadastrarAnimal'
 
 // IndexedDB de verdade (fake-indexeddb), sem mock do módulo de rascunho: o que
-// está sob teste é o ciclo de vida da store 'arquivos' da T42 — a foto vai
+// está sob teste é o ciclo de vida da store 'arquivos' - a foto vai
 // como Blob, volta na restauração e sai quando o cadastro dá certo.
 const DATA_URI_FOTO = 'data:image/jpeg;base64,ZmFrZS1jb21wcmltaWRh'
 
 // jsdom não renderiza canvas, então a compressão real nunca funcionaria aqui;
-// mesmo padrão de AnimalForm.test.tsx. As conversões data URI <-> Blob da T42
+// mesmo padrão de AnimalForm.test.tsx. As conversões data URI <-> Blob
 // continuam reais (vêm do importActual).
 vi.mock('../utils/comprimirImagem', async () => {
   const real = await vi.importActual<typeof import('../utils/comprimirImagem')>('../utils/comprimirImagem')
@@ -117,7 +117,7 @@ describe('AnimalForm — foto no rascunho (T42)', () => {
     const { container } = renderCadastrar()
     await user.click(await screen.findByRole('button', { name: /restaurar rascunho/i }))
 
-    // A pré-visualização tem alt="" (decorativa), então não expõe role="img" —
+    // A pré-visualização tem alt="" (decorativa), então não expõe role="img":
     // mesma consulta que AnimalForm.test.tsx já usa.
     await waitFor(() => expect(container.querySelector('img')).not.toBeNull())
     expect((container.querySelector('img') as HTMLImageElement).src).toBe(DATA_URI_FOTO)

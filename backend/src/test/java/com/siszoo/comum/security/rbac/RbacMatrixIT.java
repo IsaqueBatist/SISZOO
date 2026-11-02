@@ -22,7 +22,7 @@ import com.siszoo.comum.ApiTesteFixture;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-// T13: prova por HTTP real (token JWT emitido pelo login de produção, nunca fabricado
+// Prova por HTTP real (token JWT emitido pelo login de produção, nunca fabricado
 // manualmente) que cada perfil só acessa os endpoints permitidos pela matriz de cargos
 // semeada em V3__seed_cargos.sql. Cada caso-âncora afirma tanto o 200 do perfil
 // autorizado quanto o 403 dos demais.
@@ -71,7 +71,7 @@ class RbacMatrixIT extends AbstractIntegrationTest {
                 Arguments.of(Perfil.AGENTE_SANITARIO, 403));
     }
 
-    // T25 (V3 + V10) e V11: ocorrencias RW para Admin e Agente; o Vet nao
+    // V3 + V10 e V11: ocorrencias RW para Admin e Agente; o Vet nao
     // acessa o modulo (a V11 zerou a leitura que a V3 concedia). A feature
     // denunciante_sigiloso (Admin e Agente) libera o denunciante e os anexos de
     // ocorrencia sigilosa; vincular processo exige escrita em ocorrencias.
@@ -120,7 +120,7 @@ class RbacMatrixIT extends AbstractIntegrationTest {
                 Arguments.of(Perfil.AGENTE_SANITARIO, 200));
     }
 
-    // T34: lancar (e corrigir) resultado exige PROCESSOS_SANITARIOS:escrita,
+    // Lancar (e corrigir) resultado exige PROCESSOS_SANITARIOS:escrita,
     // que os tres cargos tem (V3). A recusa (403) sem a permissao e coberta no
     // ProcessoSanitarioControllerIT com o cargo leitor de teste.
     static Stream<Arguments> lancarResultadoPorPerfil() {
@@ -146,7 +146,7 @@ class RbacMatrixIT extends AbstractIntegrationTest {
     }
 
     // Decisao de 31/10/2026: o Agente lanca o resultado positivo definitivo. Definitivo
-    // e "nao corrigivel" (T35-15), nao encerramento: o processo fica em COM_RESULTADO.
+    // e "nao corrigivel", nao encerramento: o processo fica em COM_RESULTADO.
     @ParameterizedTest(name = "{0} lanca resultado positivo definitivo -> status {1}")
     @MethodSource("lancarResultadoPorPerfil")
     void lancarPositivoDefinitivoPorPerfil(Perfil perfil, int statusEsperado) {

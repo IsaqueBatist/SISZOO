@@ -10,7 +10,7 @@ export function useEventosAuditoriaQuery(pagina: number, tamanho: number, filtro
   })
 }
 
-// F2-027: opções dos filtros vêm do servidor (toda a trilha), não da página atual.
+// Opções dos filtros vêm do servidor (toda a trilha), não da página atual.
 export function useOpcoesFiltroAuditoriaQuery() {
   return useQuery({
     queryKey: ['auditoria', 'filtros'],

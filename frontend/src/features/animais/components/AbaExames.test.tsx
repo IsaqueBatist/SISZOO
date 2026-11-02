@@ -7,7 +7,6 @@ import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/Auth
 import type { Usuario } from '@/features/auth/types/auth.types'
 import { FichaAnimal } from './FichaAnimal'
 
-// F2-007 / RF-A04 (Fase 3 do TG): a aba "Exames" deixou de ser placeholder.
 const REX_ID = 'b2c3d4e5-0000-0000-0000-000000000001'
 
 function renderFicha(cargos: string[] = ['Veterinário']) {

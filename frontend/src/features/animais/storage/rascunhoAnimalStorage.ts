@@ -1,5 +1,5 @@
 // Rascunho local do formulário de animal em IndexedDB nativo (sem
-// dependência) — exigência de negócio para formulários longos
+// dependência): exigência de negócio para formulários longos
 // ("cadastro de animal"), já que a rede do CCZ é instável e o form não pode
 // perder dados preenchidos numa queda de conexão. O banco é compartilhado
 // com os outros rascunhos (lib/rascunhoDb.ts).
@@ -24,7 +24,7 @@ export function salvarRascunhoAnimal<T>(chave: string, valores: T): Promise<void
   return salvarRascunho(STORE, chave, valores)
 }
 
-// Devolve o registro completo (valores + instante do salvamento, T42), que é
+// Devolve o registro completo (valores + instante do salvamento), que é
 // o que o aviso de restauração precisa para dizer de quando é o rascunho.
 export function carregarRascunhoAnimal<T>(chave: string): Promise<RegistroRascunho<T> | null> {
   return carregarRascunho<T>(STORE, chave)

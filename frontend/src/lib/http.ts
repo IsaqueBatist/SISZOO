@@ -4,7 +4,7 @@ import { API_BASE_URL } from './env'
 import { EVENTO_SESSAO_RENOVADA, renovarSessao, sessaoRecusada } from './sessao/renovacao'
 import { tokenPertoDeVencer } from './sessao/token'
 
-// T42: o MDN avisa que `navigator.onLine === true` não garante acesso real à
+// O MDN avisa que `navigator.onLine === true` não garante acesso real à
 // internet, então o aviso de conexão não pode depender só dele. Uma requisição
 // que morre sem resposta (erro de rede ou timeout) é o sinal mais confiável de
 // que a rede caiu, e uma resposta qualquer é prova de que voltou. Mesma

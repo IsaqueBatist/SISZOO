@@ -1,8 +1,8 @@
-/* Portado do <style> inline de docs/prototipo/baias.html — o card fantasma
+/* Portado do <style> inline de docs/prototipo/baias.html - o card fantasma
    (.add-baia) foi deixado de fora: o botão "Adicionar Baia" já vive no
-   page-header. Os avatares de residentes (.resi-*) usam GET /animais
-   agrupado por baiaId no cliente (ver ResidentesBaia.tsx), já que a baia só
-   devolve a contagem de ocupação, não a lista. */
+   page-header. Os avatares de residentes (.resi-*) usam GET /baias/residentes
+   (ver ResidentesBaia.tsx), já que a baia só devolve a contagem de ocupação,
+   não a lista. */
 
 .baia-section {
   margin-bottom: var(--space-5);
@@ -84,8 +84,7 @@
   gap: 8px;
   font-size: 11px;
 }
-/* Faltava no projeto real — só existia em docs/prototipo/assets/components.css,
-   nunca portado. Sem isso a barra fica sem altura/cor, invisível. */
+/* Sem isso a barra fica sem altura/cor, invisível. */
 .occ-bar {
   height: 10px;
   background: var(--color-border);

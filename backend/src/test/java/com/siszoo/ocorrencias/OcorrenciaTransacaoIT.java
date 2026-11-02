@@ -55,10 +55,10 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import tools.jackson.databind.ObjectMapper;
 
-// Transacao e concorrencia da T25: rollback de status + movimentacao (D4),
-// protocolo unico sob concorrencia (D13), limite de anexos com lock (D24) e
+// Transacao e concorrencia de ocorrencias: rollback de status + movimentacao,
+// protocolo unico sob concorrencia, limite de anexos com lock e
 // ordem de locks no vinculo. O rollback e provocado por um gatilho temporario
-// que faz o INSERT da movimentacao falhar so para ocorrencias marcadas — sem
+// que faz o INSERT da movimentacao falhar so para ocorrencias marcadas, sem
 // mock, exercitando a transacao real do PostgreSQL.
 @Import(RelogioTesteConfig.class)
 class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
@@ -110,11 +110,9 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
         jdbcTemplate.execute("DROP TRIGGER IF EXISTS t25_falhar_movimentacao ON movimentacao_ocorrencia");
         jdbcTemplate.execute("DROP FUNCTION IF EXISTS t25_falhar_movimentacao()");
         // Segunda barreira (a primeira e o finally do teste): nenhum teste
-        // seguinte herda o relogio de um ano isolado (T30).
+        // seguinte herda o relogio de um ano isolado.
         RelogioTesteConfig.restaurar();
     }
-
-    // ── Rollback (D4) ────────────────────────────────────
 
     @Test
     @DisplayName("[D4] falha ao gravar a movimentacao do cadastro desfaz a ocorrencia e o incremento do protocolo")
@@ -144,7 +142,7 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
     void falhaNaMudancaDeStatusMantemStatus() {
         Map<String, Object> corpo = corpo("Normal");
         String id = idDe(criar(corpo));
-        // Marca a ocorrencia para o gatilho so depois do cadastro (o PUT nao gera movimentacao, D10).
+        // Marca a ocorrencia para o gatilho so depois do cadastro (o PUT nao gera movimentacao).
         corpo.put("descricao", MARCA_FALHA + " " + id);
         given().header("Authorization", "Bearer " + tokenAgente).contentType(ContentType.JSON).body(corpo)
                 .when().put(ROTA + "/" + id).then().statusCode(200);
@@ -157,8 +155,6 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
         assertThat(detalhe.path("statusOcorrencia"), equalTo("ABERTA"));
         assertThat(detalhe.path("movimentacoes"), hasSize(1));
     }
-
-    // ── Protocolo (D13) ──────────────────────────────────
 
     @Test
     @DisplayName("[D13] criacoes concorrentes recebem protocolos distintos e sequenciais")
@@ -262,7 +258,6 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
         }
     }
 
-    // ── Concorrencia do protocolo pela API (T30) ─────────
     // 6 criacoes: mais de uma para disputar a linha (OCORRENCIA, ano) de
     // protocolo_sequencia, com folga no pool padrao do Hikari (10; o
     // application.yml nao o configura): 6 transacoes da aplicacao + 1 conexao
@@ -288,7 +283,7 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
             String token = fixture.tokenComCargo("agente.concorrencia.ocorrencias@itu.sp.gov.br", "Agente",
                     "Concorrencia", ApiTesteFixture.CARGO_AGENTE_SANITARIO_ID);
             // dataAbertura fixa e no passado: o ano do protocolo vem do Clock,
-            // nao da data de abertura (D21), e estas linhas nao sobem para o
+            // nao da data de abertura, e estas linhas nao sobem para o
             // topo das listagens dos outros testes (mesmo banco, sem rollback).
             Map<String, Object> corpo = corpo("Ocorrencia concorrente");
             corpo.put("dataAbertura", "2026-01-01");
@@ -427,8 +422,6 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
                 + " vistas " + bloqueados);
     }
 
-    // ── Concorrencia de anexos e de vinculo ──────────────
-
     @Test
     @DisplayName("[D24] dois uploads simultaneos para o quinto anexo: um 200, um 422, total 5")
     void quintoAnexoConcorrente() throws Exception {
@@ -472,8 +465,6 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
         assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM processo_sanitario WHERE ocorrencia_id = CAST(? AS uuid)",
                 Integer.class, id), equalTo(1));
     }
-
-    // ── Apoio ────────────────────────────────────────────
 
     private Map<String, Object> corpo(String descricao) {
         Map<String, Object> corpo = new HashMap<>();

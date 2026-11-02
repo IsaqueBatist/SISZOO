@@ -23,9 +23,9 @@ function recusaDefinitiva(erro: unknown): boolean {
   return status === 422 || status === 413
 }
 
-// D15: envio em duas fases. A ocorrência já existe no backend; aqui só sobem
+// Envio em duas fases. A ocorrência já existe no backend; aqui só sobem
 // os anexos, um POST multipart por arquivo. Cada sucesso sai da pendência
-// gravada no IndexedDB; os que falham continuam lá para "Reenviar" — sem
+// gravada no IndexedDB; os que falham continuam lá para "Reenviar", sem
 // nunca repetir o POST /ocorrencias. A pendência é do usuário logado (chave
 // com o id dele): outro usuário do mesmo navegador não a vê.
 export function useAnexosPendentes() {

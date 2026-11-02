@@ -25,9 +25,9 @@ import com.siszoo.ocorrencias.service.PermissoesOcorrencia;
 // Ocorrencias pelos services reais (protocolo, movimentacoes, sigilo e
 // auditoria como no POST /api/ocorrencias), registradas por agentes. Cobrem os
 // tres status, todas as providencias (inclusive o encerramento direto de
-// ABERTA permitido pela D5 e o registro_indevido, que sai das contagens),
+// ABERTA e o registro_indevido, que sai das contagens),
 // denuncias sigilosas e anonimas, notas internas e anexos. As vinculadas a
-// processo sao encerradas por ProcessosSeed, depois do processo concluido (D12).
+// processo sao encerradas por ProcessosSeed, depois do processo concluido.
 // Dados pessoais 100% ficticios: CPF sempre nulo, telefone invalido de
 // proposito (prefixo 0000) e e-mail no dominio reservado exemplo.test.
 class OcorrenciasSeed {

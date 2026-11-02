@@ -33,8 +33,8 @@ import io.restassured.specification.RequestSpecification;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
-// T26: acesso autorizado ao denunciante de ocorrencia sigilosa gera
-// VISUALIZACAO — no detalhe (entidade 'denunciante') e no download de anexo
+// Acesso autorizado ao denunciante de ocorrencia sigilosa gera
+// VISUALIZACAO no detalhe (entidade 'denunciante') e no download de anexo
 // (entidade 'anexo_ocorrencia'). Toda verificacao le auditoria_evento por SQL
 // depois da requisicao HTTP: a transacao do servidor ja terminou (os ITs nao
 // usam @Transactional), entao a linha lida e a que foi de fato commitada.
@@ -73,8 +73,6 @@ class AuditoriaSigiloIT extends AbstractIntegrationTest {
         tokenLeitor = fixture.tokenLeitorOcorrencias(EMAIL_LEITOR, "Sigilo");
     }
 
-    // ── Detalhe ──────────────────────────────────────────
-
     @Test
     @DisplayName("[T26] Admin e Agente no detalhe de sigilosa: dados completos e um VISUALIZACAO cada, com usuario,"
             + " entidade, entidade_id e payload corretos")
@@ -101,8 +99,8 @@ class AuditoriaSigiloIT extends AbstractIntegrationTest {
         assertThat(eventos("denunciante", denuncianteId, null), hasSize(2));
     }
 
-    // T43: o 403 do Vet vem da permissao do modulo (PreAutorizacaoInterceptor),
-    // nao da regra de sigilo — ele e barrado em toda ocorrencia, sigilosa ou
+    // O 403 do Vet vem da permissao do modulo (PreAutorizacaoInterceptor),
+    // nao da regra de sigilo: ele e barrado em toda ocorrencia, sigilosa ou
     // nao. Por decisao, nao gera ACESSO_NEGADO.
     @Test
     @DisplayName("[T26/T43] Vet no detalhe e no download de sigilosa: 403 de acesso ao modulo (V11), nenhum dado, zero eventos")
@@ -120,7 +118,7 @@ class AuditoriaSigiloIT extends AbstractIntegrationTest {
         assertThat(acessosNegados(id), equalTo(0));
     }
 
-    // T43 (revisa a T26-7): a recusa pela regra de sigilo passa a ser auditada.
+    // A recusa pela regra de sigilo e auditada.
     // O 403 e o detalhe mascarado nao mudam; o evento e commitado mesmo com o
     // 403 (noRollbackFor) e nao leva nenhum dado pessoal.
     @Test
@@ -263,8 +261,6 @@ class AuditoriaSigiloIT extends AbstractIntegrationTest {
         assertThat(totalAcessosNegados(), equalTo(negadosAntes));
     }
 
-    // ── Download ─────────────────────────────────────────
-
     @Test
     @DisplayName("[T26] Admin e Agente baixando anexo de sigilosa: um VISUALIZACAO cada em anexo_ocorrencia")
     void downloadAutorizadoGeraUmEvento() throws Exception {
@@ -285,8 +281,6 @@ class AuditoriaSigiloIT extends AbstractIntegrationTest {
             assertThat(payload.get("ocorrenciaId").asString(), equalTo(id));
         }
     }
-
-    // ── Payload sem dado pessoal (D23) ───────────────────
 
     @Test
     @DisplayName("[T26/D23] payloads de VISUALIZACAO nao contem nenhum dado pessoal do denunciante")
@@ -311,8 +305,6 @@ class AuditoriaSigiloIT extends AbstractIntegrationTest {
             assertThat(texto, not(containsString(pessoal)));
         }
     }
-
-    // ── Falha da auditoria: nega a entrega ───────────────
 
     @Test
     @DisplayName("[T26] se o INSERT da auditoria falha, detalhe e download respondem 500 sem os dados e nada fica gravado")
@@ -352,7 +344,6 @@ class AuditoriaSigiloIT extends AbstractIntegrationTest {
         assertThat(eventosDaOcorrencia(id), equalTo(0));
     }
 
-    // ── Respostas de mutacao (A04) ───────────────────────
     // Edicao, status, encerramento, notas e vinculo devolvem o denunciante de
     // sigilosa mascarado ate para o Administrador, sem VISUALIZACAO: o dado
     // completo so sai pelo detalhe, que registra o acesso.
@@ -441,7 +432,7 @@ class AuditoriaSigiloIT extends AbstractIntegrationTest {
     }
 
     // A mutacao teve efeito (200), nao entregou nenhum dado pessoal nem gerou
-    // VISUALIZACAO; o detalhe continua entregando o dado ao Admin (D6 intacta).
+    // VISUALIZACAO; o detalhe continua entregando o dado ao Admin.
     private void assertMascaradaSemVisualizacao(Response resposta, String marcador, String id) {
         resposta.then().statusCode(200);
         assertThat(resposta.path("denunciante.nome"), nullValue());
@@ -454,8 +445,6 @@ class AuditoriaSigiloIT extends AbstractIntegrationTest {
         assertThat(detalhe(tokenAdmin, id).path("denunciante.nome"), equalTo("Nome " + marcador));
         assertThat(eventosDaOcorrencia(id), equalTo(1));
     }
-
-    // ── Apoio ────────────────────────────────────────────
 
     private static String marcador() {
         return UUID.randomUUID().toString().substring(0, 8);
@@ -534,7 +523,7 @@ class AuditoriaSigiloIT extends AbstractIntegrationTest {
                 Long.class);
     }
 
-    // T43: ACESSO_NEGADO ligados a ocorrencia, pelas duas entidades auditadas.
+    // ACESSO_NEGADO ligados a ocorrencia, pelas duas entidades auditadas.
     private Integer acessosNegados(String ocorrenciaId) {
         return jdbcTemplate.queryForObject("SELECT count(*) FROM auditoria_evento"
                 + " WHERE acao = 'ACESSO_NEGADO' AND payload_depois ->> 'ocorrenciaId' = ?", Integer.class, ocorrenciaId);
