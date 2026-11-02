@@ -538,14 +538,14 @@ class ProcessoSanitarioServiceTest {
     private static CriarProcessoRequest request(LocalDate dataAbertura, UUID ocorrenciaId, AmostraAnimalRequest amostra) {
         return new CriarProcessoRequest(dataAbertura, "raiva", "pasteur_sp", ocorrenciaId,
                 new ResponsavelProcessoRequest("Responsavel", null, null, null, null, null, null, null),
-                List.of(amostra), null);
+                List.of(amostra), null, null, null);
     }
 
     private static CriarProcessoRequest request(LocalDate dataAbertura, UUID ocorrenciaId,
             List<AmostraAnimalRequest> amostras) {
         return new CriarProcessoRequest(dataAbertura, "raiva", "pasteur_sp", ocorrenciaId,
                 new ResponsavelProcessoRequest("Responsavel", null, null, null, null, null, null, null),
-                amostras, null);
+                amostras, null, null, null);
     }
 
     private static AmostraAnimalRequest amostraDeCampo() {

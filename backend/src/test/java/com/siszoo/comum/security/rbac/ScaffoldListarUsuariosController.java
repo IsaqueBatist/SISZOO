@@ -5,10 +5,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-// SCAFFOLD: existe só em src/test, simula a leitura/gestão de usuários para
-// provar a matriz RBAC via @PreAuthorize antes de o UsuarioController real existir.
-// Reapontar a suíte RbacMatrixIT para o endpoint real de listagem de usuário quando ele
-// for implementado, e remover este scaffold.
+// SCAFFOLD: existe só em src/test e simula a listagem de usuários para que o
+// RbacMatrixIT prove a matriz de cargos de USUARIOS_ACESSO:leitura isolada do
+// endpoint real (UsuarioController).
 @RestController
 public class ScaffoldListarUsuariosController {
 

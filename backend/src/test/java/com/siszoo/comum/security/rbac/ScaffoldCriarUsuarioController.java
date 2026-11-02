@@ -5,10 +5,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-// SCAFFOLD: existe só em src/test, simula a criação de usuário (Módulo C) para
-// provar a matriz RBAC via @PreAuthorize antes de o UsuarioController real existir.
-// Reapontar a suíte RbacMatrixIT para o endpoint real de criação de usuário quando ele
-// for implementado, e remover este scaffold.
+// SCAFFOLD: existe só em src/test e simula a criação de usuário para que o
+// RbacMatrixIT prove a matriz de cargos de USUARIOS_ACESSO:escrita isolada das
+// validações e efeitos do endpoint real (UsuarioController).
 @RestController
 public class ScaffoldCriarUsuarioController {
 

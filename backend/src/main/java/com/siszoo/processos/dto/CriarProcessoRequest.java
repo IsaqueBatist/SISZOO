@@ -42,10 +42,4 @@ public record CriarProcessoRequest(
 
         @Size(max = 40)
         String sinanNumero) {
-
-    // Para as chamadas que nao informam GAL/SINAN (testes).
-    public CriarProcessoRequest(LocalDate dataAbertura, String doenca, String laboratorio, UUID ocorrenciaId,
-            ResponsavelProcessoRequest responsavel, List<AmostraAnimalRequest> amostras, String observacoes) {
-        this(dataAbertura, doenca, laboratorio, ocorrenciaId, responsavel, amostras, observacoes, null, null);
-    }
 }
