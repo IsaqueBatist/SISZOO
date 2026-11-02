@@ -1,0 +1,36 @@
+_id: "req_vacinas_422_intervalo_invalido"
+type: "Request"
+parentId: "fld_catalogos_clinicos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/vacinas"
+name: "422 - criar vacina com intervalo inválido"
+description: "O intervalo de reforço precisa ser positivo e de no máximo 1200 meses."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "nome": "Vacina inválida {{ _.execucao }}",
+      "intervaloMeses": 0
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 9000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 422', () => {
+    insomnia.expect(insomnia.response.code).to.equal(422);
+  });

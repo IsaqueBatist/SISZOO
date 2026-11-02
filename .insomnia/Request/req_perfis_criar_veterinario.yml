@@ -1,0 +1,45 @@
+_id: "req_perfis_criar_veterinario"
+type: "Request"
+parentId: "fld_perfis"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/usuarios"
+name: "Criar veterinário de teste"
+description: "Usuário fictício com perfil Veterinário, usado nos testes de permissão. O id fica em {{ _.usuario_veterinario_id_exemplo }}."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "nome": "Vera",
+      "sobrenome": "Teste",
+      "email": "vera.{{ _.execucao_letras }}@itu.sp.gov.br",
+      "cargo": "Veterinário",
+      "crmv": "SP-00000",
+      "telefone": "(11) 90000-0003",
+      "senhaInicial": "{{ _.senha_teste_padrao }}"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 1000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });
+  if (insomnia.response.code === 200) {
+    const corpo = insomnia.response.json();
+    insomnia.environment.set('usuario_veterinario_id_exemplo', corpo.id);
+  }

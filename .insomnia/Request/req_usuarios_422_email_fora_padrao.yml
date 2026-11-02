@@ -1,0 +1,39 @@
+_id: "req_usuarios_422_email_fora_padrao"
+type: "Request"
+parentId: "fld_usuarios"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/usuarios"
+name: "422 - criar usuário com e-mail fora do padrão"
+description: "Só e-mail institucional (@itu.sp.gov.br, letras minúsculas e pontos)."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "nome": "Teste",
+      "sobrenome": "Email",
+      "email": "teste.email@gmail.com",
+      "cargo": "Agente Sanitário",
+      "senhaInicial": "{{ _.senha_teste_padrao }}"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 3000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 422', () => {
+    insomnia.expect(insomnia.response.code).to.equal(422);
+  });

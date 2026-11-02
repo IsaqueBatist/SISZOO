@@ -21,7 +21,7 @@ headers:
 authentication:
   type: "bearer"
   token: "{{ _.token }}"
-metaSortKey: 2000
+metaSortKey: 3000
 isPrivate: false
 pathParameters: []
 settingStoreCookies: true

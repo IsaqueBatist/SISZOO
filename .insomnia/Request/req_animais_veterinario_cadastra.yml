@@ -1,0 +1,40 @@
+_id: "req_animais_veterinario_cadastra"
+type: "Request"
+parentId: "fld_animais"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/animais"
+name: "Veterinário cadastra animal"
+description: "O Veterinário tem GESTAO_ANIMAIS:escrita."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "nome": "Animal do veterinário",
+      "especie": "felino",
+      "sexo": "femea",
+      "status": "em_tratamento",
+      "motivoEntrada": "resgate",
+      "dataEntrada": "2026-09-01T10:00:00"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token_veterinario }}"
+metaSortKey: 13000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

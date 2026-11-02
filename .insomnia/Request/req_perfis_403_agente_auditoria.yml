@@ -1,0 +1,28 @@
+_id: "req_perfis_403_agente_auditoria"
+type: "Request"
+parentId: "fld_perfis"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/auditoria"
+name: "403 - agente não consulta a auditoria"
+description: "A trilha de auditoria é exclusiva do Administrador."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token_agente }}"
+metaSortKey: 9000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 403', () => {
+    insomnia.expect(insomnia.response.code).to.equal(403);
+  });

@@ -1,0 +1,37 @@
+_id: "req_baias_422_capacidade_invalida"
+type: "Request"
+parentId: "fld_baias"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/baias"
+name: "422 - criar baia com capacidade inválida"
+description: "A capacidade precisa ser maior que zero."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "nome": "Baia inválida",
+      "tipoBaia": "interna",
+      "capacidade": 0
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 8000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 422', () => {
+    insomnia.expect(insomnia.response.code).to.equal(422);
+  });

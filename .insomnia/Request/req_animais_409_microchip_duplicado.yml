@@ -1,0 +1,41 @@
+_id: "req_animais_409_microchip_duplicado"
+type: "Request"
+parentId: "fld_animais"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/animais"
+name: "409 - criar animal com microchip já cadastrado"
+description: "Repete o microchip de \"Criar animal - caso feliz\"."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "nome": "Rex Duplicado",
+      "especie": "canino",
+      "sexo": "macho",
+      "microchip": "CHIP-EXEMPLO-{{ _.execucao }}",
+      "status": "disponivel_adocao",
+      "motivoEntrada": "recolhimento",
+      "dataEntrada": "2026-08-30T09:00:00"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 10000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 409', () => {
+    insomnia.expect(insomnia.response.code).to.equal(409);
+  });

@@ -38,10 +38,6 @@ desktop.ini
 *.log
 logs/
 
-__pycache__/
-*.pyc
-.venv/
-
 docs/tg/**/*.docx
 docs/tg/**/*.pdf
 docs/tg/build/

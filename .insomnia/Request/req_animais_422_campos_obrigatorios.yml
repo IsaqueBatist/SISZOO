@@ -1,0 +1,33 @@
+_id: "req_animais_422_campos_obrigatorios"
+type: "Request"
+parentId: "fld_animais"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/animais"
+name: "422 - criar animal sem campos obrigatórios"
+description: "Corpo vazio: a resposta lista os campos obrigatórios que faltam."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {}
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 9000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 422', () => {
+    insomnia.expect(insomnia.response.code).to.equal(422);
+  });

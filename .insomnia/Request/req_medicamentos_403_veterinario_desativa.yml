@@ -1,0 +1,28 @@
+_id: "req_medicamentos_403_veterinario_desativa"
+type: "Request"
+parentId: "fld_medicamentos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/medicamentos/{{ _.medicamento_id_exemplo }}"
+name: "403 - veterinário não desativa medicamento"
+description: "O Veterinário cadastra e edita, mas desativar exige GESTAO_ANIMAIS:exclusao."
+method: "DELETE"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token_veterinario }}"
+metaSortKey: 7000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 403', () => {
+    insomnia.expect(insomnia.response.code).to.equal(403);
+  });

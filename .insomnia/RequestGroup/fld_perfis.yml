@@ -1,0 +1,10 @@
+_id: "fld_perfis"
+type: "RequestGroup"
+parentId: "wrk_siszoo_api"
+modified: 1750000000000
+created: 1750000000000
+name: "04 - Perfis para testes de permissão"
+description: ''
+environment: {}
+metaSortKey: 4000000
+environmentType: "kv"

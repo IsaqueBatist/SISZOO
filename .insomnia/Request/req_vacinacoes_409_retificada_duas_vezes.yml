@@ -1,0 +1,42 @@
+_id: "req_vacinacoes_409_retificada_duas_vezes"
+type: "Request"
+parentId: "fld_registros_clinicos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/vacinacoes"
+name: "409 - retificar uma vacinação já retificada"
+description: "Cada registro só pode ser retificado uma vez. Repete o retificaId de \"Retificar vacinação\"."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "animalId": "{{ _.animal_id_exemplo }}",
+      "vacina": "antirrabica",
+      "dataAplicacao": "2026-08-31",
+      "numeroDose": 1,
+      "doseQuantidade": 1.0,
+      "doseUnidade": "MILILITRO",
+      "lote": "LOTE-OUTRA-CORRECAO",
+      "retificaId": "{{ _.vacinacao_id_exemplo }}"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 5000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 409', () => {
+    insomnia.expect(insomnia.response.code).to.equal(409);
+  });

@@ -1,0 +1,44 @@
+_id: "req_perfis_criar_agente"
+type: "Request"
+parentId: "fld_perfis"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/usuarios"
+name: "Criar agente sanitário de teste"
+description: "Usuário fictício com perfil Agente Sanitário, usado nos testes de permissão."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "nome": "Gil",
+      "sobrenome": "Teste",
+      "email": "gil.{{ _.execucao_letras }}@itu.sp.gov.br",
+      "cargo": "Agente Sanitário",
+      "telefone": "(11) 90000-0004",
+      "senhaInicial": "{{ _.senha_teste_padrao }}"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 2000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });
+  if (insomnia.response.code === 200) {
+    const corpo = insomnia.response.json();
+    insomnia.environment.set('usuario_agente_id_exemplo', corpo.id);
+  }

@@ -1,0 +1,37 @@
+_id: "req_baias_403_agente_cria"
+type: "Request"
+parentId: "fld_baias"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/baias"
+name: "403 - agente não cria baia"
+description: "O Agente Sanitário só consulta animais e baias (GESTAO_ANIMAIS:leitura)."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "nome": "Baia do agente",
+      "tipoBaia": "interna",
+      "capacidade": 1
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token_agente }}"
+metaSortKey: 10000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 403', () => {
+    insomnia.expect(insomnia.response.code).to.equal(403);
+  });

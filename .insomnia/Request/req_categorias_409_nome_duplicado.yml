@@ -1,0 +1,35 @@
+_id: "req_categorias_409_nome_duplicado"
+type: "Request"
+parentId: "fld_catalogos_clinicos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/categorias-farmacologicas"
+name: "409 - criar categoria com nome repetido"
+description: "Repete o nome de \"Criar categoria farmacológica\"."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "nome": "Categoria Insomnia {{ _.execucao }}"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 8000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 409', () => {
+    insomnia.expect(insomnia.response.code).to.equal(409);
+  });

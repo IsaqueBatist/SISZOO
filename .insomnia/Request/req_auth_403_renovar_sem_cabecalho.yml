@@ -1,0 +1,26 @@
+_id: "req_auth_403_renovar_sem_cabecalho"
+type: "Request"
+parentId: "fld_sessao"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/auth/renovar"
+name: "403 - renovar sem o cabeçalho de sessão"
+description: "renovar e logout exigem X-SISZOO-Sessao; sem ele, 403."
+method: "POST"
+body: {}
+parameters: []
+headers: []
+authentication: {}
+metaSortKey: 1000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 403', () => {
+    insomnia.expect(insomnia.response.code).to.equal(403);
+  });

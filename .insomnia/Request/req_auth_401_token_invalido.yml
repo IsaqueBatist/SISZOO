@@ -1,0 +1,28 @@
+_id: "req_auth_401_token_invalido"
+type: "Request"
+parentId: "fld_auth"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/usuarios/me"
+name: "401 - token inválido"
+description: "Token malformado ou assinado com outra chave: 401."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "token-invalido"
+metaSortKey: 9000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 401', () => {
+    insomnia.expect(insomnia.response.code).to.equal(401);
+  });
