@@ -23,12 +23,15 @@ import com.siszoo.animais.clinico.service.ProcedimentoService;
 import com.siszoo.animais.clinico.service.VacinacaoService;
 import com.siszoo.animais.dto.AtualizarAnimalRequest;
 import com.siszoo.animais.dto.CriarAnimalRequest;
+import com.siszoo.animais.dto.TransferenciaRequest;
+import com.siszoo.animais.entity.TipoDestinoTransferencia;
 import com.siszoo.animais.service.AnexoAnimalService;
 import com.siszoo.animais.service.AnimalService;
 
 class AnimaisSeed {
 
     static final String GESTAO_ESCRITA = "GESTAO_ANIMAIS:escrita";
+    private static final String STATUS_TRANSFERIDO = "transferido";
 
     static final class Animal {
         final int numero;
@@ -491,7 +494,13 @@ class AnimaisSeed {
                 animal.medalha ? "SEED-" + String.format("%04d", animal.numero) : null,
                 implantadoAgora ? datas.diasAtras(11)
                         : animal.medalha && animal.microchip ? datas.diasAtras(animal.diasEntrada) : null,
-                animal.procedencia, desfecho ? animal.laudo : null);
+                animal.procedencia, desfecho ? animal.laudo : null, null, null,
+                desfecho && STATUS_TRANSFERIDO.equals(status) ? transferencia(datas) : null);
+    }
+
+    private static TransferenciaRequest transferencia(DatasSeed datas) {
+        return new TransferenciaRequest(TipoDestinoTransferencia.ENTIDADE_PROTECAO.name(),
+                "Abrigo parceiro (dado fictício do seed)", datas.entradaHa(1), "Ofício SEED-001");
     }
 
     private UUID baiaId(Animal animal) {

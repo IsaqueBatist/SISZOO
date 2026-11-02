@@ -269,7 +269,8 @@ class BaiaControllerIT extends AbstractIntegrationTest {
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Animal Teste", "canino", "macho", null, null, null, null, null, null, null,
                 fixture.microchipUnico(), false, null, statusCodigo, "resgate", fixture.agora(),
-                UUID.fromString(baiaId), null, null, null, null, null, laudo);
+                UUID.fromString(baiaId), null, null, null, null, null, laudo, null, null,
+                fixture.transferenciaDeTeste(statusCodigo));
 
         given()
                 .contentType(ContentType.JSON)

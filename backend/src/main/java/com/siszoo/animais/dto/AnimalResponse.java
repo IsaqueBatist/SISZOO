@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import com.siszoo.animais.entity.TipoDestinoTransferencia;
 import com.siszoo.comum.dto.CatalogoItemResponse;
 
 public record AnimalResponse(
@@ -44,5 +45,9 @@ public record AnimalResponse(
         String procedencia,
         String laudoEutanasia,
         List<CatalogoItemResponse> condicoes,
-        String condicoesOutras) {
+        String condicoesOutras,
+        TipoDestinoTransferencia tipoDestinoTransferencia,
+        String destinoTransferencia,
+        LocalDateTime dataSaida,
+        String documentoTransferencia) {
 }

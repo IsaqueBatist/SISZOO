@@ -22,12 +22,14 @@ import com.siszoo.animais.dto.AnimalResponse;
 import com.siszoo.animais.dto.AtualizarAnimalRequest;
 import com.siszoo.animais.dto.CriarAnimalRequest;
 import com.siszoo.animais.dto.DadosDescritivosAnimal;
+import com.siszoo.animais.dto.TransferenciaRequest;
 import com.siszoo.animais.entity.Animal;
 import com.siszoo.animais.entity.Baia;
 import com.siszoo.animais.entity.CondicaoSaude;
 import com.siszoo.animais.entity.Especie;
 import com.siszoo.animais.entity.MotivoEntrada;
 import com.siszoo.animais.entity.StatusAnimal;
+import com.siszoo.animais.entity.TipoDestinoTransferencia;
 import com.siszoo.animais.exception.AnimalNaoEncontradoException;
 import com.siszoo.animais.exception.BaiaIndisponivelException;
 import com.siszoo.animais.exception.BaiaInvalidaException;
@@ -36,6 +38,7 @@ import com.siszoo.animais.exception.MicrochipImutavelException;
 import com.siszoo.animais.exception.MicrochipJaCadastradoException;
 import com.siszoo.animais.exception.MotivoEntradaInvalidoException;
 import com.siszoo.animais.exception.StatusAnimalInvalidoException;
+import com.siszoo.animais.exception.TransferenciaImutavelException;
 import com.siszoo.animais.mapper.AnimalMapper;
 import com.siszoo.animais.repository.AnimalRepository;
 import com.siszoo.animais.repository.BaiaRepository;
@@ -124,6 +127,7 @@ public class AnimalService {
         animal.setDataImplantacaoChip(request.dataImplantacaoChip());
         animal.setProcedencia(Textos.normalizar(request.procedencia()));
         animal.setLaudoEutanasia(laudoEutanasia);
+        aplicarTransferencia(animal, null, status, request.transferencia(), request.dataEntrada());
         animal.setMicrochip(microchip);
         aplicarDadosDescritivos(animal, request, status, baia);
         animal.setFotoUrl(request.fotoUrl());
@@ -161,6 +165,7 @@ public class AnimalService {
         validarDataImplantacaoChip(request.dataImplantacaoChip(), animal.getMicrochip());
         String laudoEutanasia = Textos.normalizar(request.laudoEutanasia());
         exigirLaudoNaEutanasia(animal.getStatus(), status, laudoEutanasia);
+        aplicarTransferencia(animal, animal.getStatus(), status, request.transferencia(), request.dataEntrada());
         animal.setNumeroMedalha(numeroMedalha);
         animal.setDataImplantacaoChip(request.dataImplantacaoChip());
         animal.setProcedencia(Textos.normalizar(request.procedencia()));
@@ -313,6 +318,7 @@ public class AnimalService {
     }
 
     private static final String STATUS_OBITO_EUTANASIA = "obito_eutanasia";
+    private static final String STATUS_TRANSFERIDO = "transferido";
 
     private void verificarMedalhaDisponivel(String numeroMedalha, UUID animalIdAtual) {
         if (numeroMedalha == null) {
@@ -344,6 +350,78 @@ public class AnimalService {
         if (entrandoEmEutanasia && laudo == null) {
             throw new CampoInvalidoException("laudoEutanasia",
                     "Informe o laudo do responsável técnico que justifica a eutanásia.");
+        }
+    }
+
+    private void aplicarTransferencia(Animal animal, StatusAnimal statusAnterior, StatusAnimal statusNovo,
+            TransferenciaRequest transferencia, LocalDateTime dataEntrada) {
+        boolean informada = transferencia != null && transferencia.temAlgumDado();
+        if (animal.getDataSaida() != null) {
+            if (informada) {
+                exigirTransferenciaInalterada(animal, transferencia);
+            }
+            return;
+        }
+        boolean transferido = statusNovo != null && STATUS_TRANSFERIDO.equals(statusNovo.getCodigo());
+        boolean entrandoEmTransferencia = transferido
+                && (statusAnterior == null || !STATUS_TRANSFERIDO.equals(statusAnterior.getCodigo()));
+        if (!transferido) {
+            if (informada) {
+                throw new CampoInvalidoException("transferencia",
+                        "Informe o destino apenas quando o status for Transferido.");
+            }
+            return;
+        }
+        if (!entrandoEmTransferencia && !informada) {
+            return;
+        }
+        if (transferencia == null || !StringUtils.hasText(transferencia.tipoDestino())) {
+            throw new CampoInvalidoException("transferencia.tipoDestino", "Selecione o tipo de destino da transferência.");
+        }
+        TipoDestinoTransferencia tipo = resolverTipoDestino(transferencia.tipoDestino());
+        String destino = Textos.normalizar(transferencia.destino());
+        if (destino == null) {
+            throw new CampoInvalidoException("transferencia.destino", "Informe o órgão ou a entidade de destino.");
+        }
+        LocalDateTime dataSaida = transferencia.dataSaida();
+        if (dataSaida == null) {
+            throw new CampoInvalidoException("transferencia.dataSaida", "Informe a data de saída do animal.");
+        }
+        if (dataSaida.toLocalDate().isAfter(LocalDate.now(clock))) {
+            throw new CampoInvalidoException("transferencia.dataSaida", "A data de saída não pode ser futura.");
+        }
+        if (dataEntrada != null && dataSaida.isBefore(dataEntrada)) {
+            throw new CampoInvalidoException("transferencia.dataSaida",
+                    "A data de saída não pode ser anterior à data de entrada.");
+        }
+        animal.setTipoDestinoTransferencia(tipo);
+        animal.setDestinoTransferencia(destino);
+        animal.setDataSaida(dataSaida);
+        animal.setDocumentoTransferencia(Textos.normalizar(transferencia.documento()));
+    }
+
+    private static void exigirTransferenciaInalterada(Animal animal, TransferenciaRequest transferencia) {
+        String tipo = transferencia.tipoDestino();
+        String destino = Textos.normalizar(transferencia.destino());
+        String documento = Textos.normalizar(transferencia.documento());
+        boolean alterou = (StringUtils.hasText(tipo) && !tipo.equals(animal.getTipoDestinoTransferencia().name()))
+                || (destino != null && !destino.equals(animal.getDestinoTransferencia()))
+                || (transferencia.dataSaida() != null && !transferencia.dataSaida().equals(animal.getDataSaida()))
+                || (documento != null && animal.getDocumentoTransferencia() != null
+                        && !documento.equals(animal.getDocumentoTransferencia()));
+        if (alterou) {
+            throw new TransferenciaImutavelException();
+        }
+        if (documento != null && animal.getDocumentoTransferencia() == null) {
+            animal.setDocumentoTransferencia(documento);
+        }
+    }
+
+    private static TipoDestinoTransferencia resolverTipoDestino(String codigo) {
+        try {
+            return TipoDestinoTransferencia.valueOf(codigo.trim());
+        } catch (IllegalArgumentException ex) {
+            throw new CampoInvalidoException("transferencia.tipoDestino", "Selecione um tipo de destino da lista.");
         }
     }
 

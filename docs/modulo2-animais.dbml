@@ -174,6 +174,10 @@ Table Animal {
   baia_id               uuid         [ref: > Baia.id, note: 'NULL = em trânsito; baia ativa e com vaga ao alocar']
   ficha_completa        boolean      [not null, default: false, note: 'calculado: obrigatórios + microchip + ao menos 1 vacinação (V18)']
   laudo_eutanasia       text         [note: 'V24: obrigatório só na transição para obito_eutanasia (validado no serviço, sem CHECK)']
+  tipo_destino_transferencia varchar(40) [note: 'V36: ORGAO_PUBLICO, ENTIDADE_PROTECAO, OUTRO_CCZ ou OUTRO (CHECK); obrigatório ao entrar em transferido']
+  destino_transferencia varchar(200) [note: 'V36: órgão ou entidade de destino; obrigatório ao entrar em transferido']
+  data_saida            timestamp    [note: 'V36: obrigatória ao entrar em transferido; não futura nem anterior à entrada']
+  documento_transferencia varchar(120) [note: 'V36: ofício ou referência ao anexo; opcional. Transferência registrada é imutável (serviço)']
   foto_url              text
   foto_miniatura        text         [note: 'V28 (T45): miniatura para listagens']
   observacoes           text

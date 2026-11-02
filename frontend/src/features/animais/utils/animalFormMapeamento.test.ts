@@ -138,6 +138,41 @@ describe('paraAnimalRequest', () => {
     expect(corpo.esterilizado).toBe(false)
     expect(corpo.dataEsterilizacao).toBeUndefined()
   })
+
+  it('transferido manda o destino com a data de saída em segundos', () => {
+    const valores = {
+      ...rascunhoParaValores(valoresVazios(), undefined),
+      status: 'transferido',
+      tipoDestinoTransferencia: 'OUTRO_CCZ' as const,
+      destinoTransferencia: 'CCZ de Sorocaba',
+      dataSaida: '2026-03-12T09:30',
+    }
+
+    expect(paraAnimalRequest(valores).transferencia).toEqual({
+      tipoDestino: 'OUTRO_CCZ',
+      destino: 'CCZ de Sorocaba',
+      dataSaida: '2026-03-12T09:30:00',
+      documento: undefined,
+    })
+    expect(paraAnimalRequest({ ...valores, status: 'em_tratamento' }).transferencia).toBeUndefined()
+  })
+
+  it('transferência já registrada não é reenviada; só o documento que ficou em branco', () => {
+    const original = animal({
+      statusCodigo: 'transferido',
+      tipoDestinoTransferencia: 'ORGAO_PUBLICO',
+      destinoTransferencia: 'Prefeitura de Salto',
+      dataSaida: '2026-03-12T09:30:45',
+      documentoTransferencia: null,
+    })
+    const valores = rascunhoParaValores(valoresDeAnimal(original), undefined)
+
+    expect(paraAnimalRequest(valores, original.dataEntrada, original).transferencia).toBeUndefined()
+    expect(
+      paraAnimalRequest({ ...valores, documentoTransferencia: 'Ofício 7/2026' }, original.dataEntrada, original)
+        .transferencia,
+    ).toEqual({ documento: 'Ofício 7/2026' })
+  })
 })
 
 describe('rascunho', () => {

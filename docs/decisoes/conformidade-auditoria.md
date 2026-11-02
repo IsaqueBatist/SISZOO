@@ -61,3 +61,24 @@ animal). Coluna `ocorrencia.animal_id` (V35), regra no DER §3.3.
 - **Em aberto com o CCZ:** se preferem mudar o fluxo e cadastrar o animal antes de
   encerrar (decisão de processo deles; o sistema não força); se uma ocorrência pode
   gerar mais de um animal recolhido (ninhada).
+
+## Item 4 - destino da transferência
+
+Base: Portaria MS nº 1.138/2014, inc. XIII; Lei estadual nº 11.977/2005, art. 31
+(proíbe enviar animais do CCZ para experimentação; sem destino registrado isso não é
+demonstrável). Colunas em `animal` (V36), regra RN-AN06.
+
+- **Imutabilidade no serviço.** O projeto não tem mecanismo genérico de
+  imutabilidade por campo nem "novo registro" para a ficha do animal. A transferência
+  registrada é protegida em `AnimalService#exigirTransferenciaInalterada`: tipo,
+  destino e data não mudam (422); o documento pode ser preenchido uma vez, se ficou
+  em branco, como o microchip. A correção de um erro fica pendente com o CCZ.
+- **Vaga da baia.** Nada novo: `transferido` já está fora da custódia.
+- **Adoção fora do escopo.** Não há tipo de destino "adotante".
+- **Animais já transferidos antes da V36** continuam válidos sem destino; o
+  formulário pede o destino quando um deles é editado.
+- **Documento.** Texto livre (número do ofício ou nome do anexo); o arquivo vai nos
+  anexos da ficha (`anexo_animal`), sem vínculo de chave.
+- **Em aberto com o CCZ:** lista de destinos usados na prática; como corrigir uma
+  transferência registrada com erro; o que fazer quando um animal transferido volta
+  ao CCZ (hoje o status pode mudar e o destino gravado permanece).

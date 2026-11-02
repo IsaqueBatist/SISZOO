@@ -48,7 +48,21 @@ interface AnimalFormProps {
 
 const CAMPOS_STEP: Record<1 | 2 | 3, (keyof AnimalFormUiValues)[]> = {
   1: ['nome', 'especie', 'sexo', 'raca', 'coloracao', 'pelagem', 'porte', 'pesoKg', 'idadeAprox', 'dataNascimentoAprox', 'microchip', 'numeroMedalha', 'dataImplantacaoChip'],
-  2: ['status', 'motivoEntrada', 'dataEntrada', 'baiaId', 'dataEsterilizacao', 'procedencia', 'laudoEutanasia', 'condicoes', 'condicoesOutras'],
+  2: [
+    'status',
+    'motivoEntrada',
+    'dataEntrada',
+    'baiaId',
+    'dataEsterilizacao',
+    'procedencia',
+    'laudoEutanasia',
+    'tipoDestinoTransferencia',
+    'destinoTransferencia',
+    'dataSaida',
+    'documentoTransferencia',
+    'condicoes',
+    'condicoesOutras',
+  ],
   3: [],
 }
 
@@ -59,6 +73,11 @@ const CAMPOS_COM_ERRO = new Set<string>([...CAMPOS_STEP[1], ...CAMPOS_STEP[2]])
 const MAPA_ERROS_SERVIDOR: Record<string, keyof AnimalFormUiValues> = {
   ...mapaDeCampos<AnimalFormUiValues>([...CAMPOS_STEP[1], ...CAMPOS_STEP[2], 'observacoes']),
   esterilizado: 'castracaoOpcao',
+  transferencia: 'tipoDestinoTransferencia',
+  'transferencia.tipoDestino': 'tipoDestinoTransferencia',
+  'transferencia.destino': 'destinoTransferencia',
+  'transferencia.dataSaida': 'dataSaida',
+  'transferencia.documento': 'documentoTransferencia',
 }
 
 const ARMAZENAMENTO_RASCUNHO_ANIMAL: ArmazenamentoRascunho<RascunhoAnimalValores> = {
@@ -186,7 +205,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
   }
 
   async function onSubmit(dados: AnimalFormUiValues) {
-    const payload = paraAnimalRequest(dados, animal?.dataEntrada)
+    const payload = paraAnimalRequest(dados, animal?.dataEntrada, animal)
     try {
       let idSalvo: string
       if (animal) {
@@ -282,7 +301,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
               <h3>Saúde &amp; Baia</h3>
             </div>
             <div className="card-body">
-              <CamposSaudeBaia baiaAtualId={iniciais.baiaId} />
+              <CamposSaudeBaia baiaAtualId={iniciais.baiaId} transferenciaRegistrada={animal} />
             </div>
             <div
               className="card-header"

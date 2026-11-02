@@ -20,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.siszoo.animais.clinico.dto.CriarVacinacaoRequest;
 import com.siszoo.animais.clinico.entity.UnidadeDose;
 import com.siszoo.animais.dto.CriarAnimalRequest;
+import com.siszoo.animais.dto.TransferenciaRequest;
 import com.siszoo.usuarios.dto.LoginRequest;
 import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.entity.UsuarioCargo;
@@ -117,7 +118,7 @@ public class ApiTesteFixture {
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Animal de Teste", "canino", "macho", null, null, null, null, null, null, null,
                 microchipUnico(), false, null, status, "resgate", agora(), null, null, null,
-                null, null, null, laudo);
+                null, null, null, laudo, null, null, transferenciaDeTeste(status));
 
         return given()
                 .contentType(ContentType.JSON)
@@ -129,6 +130,12 @@ public class ApiTesteFixture {
                 .statusCode(200)
                 .extract()
                 .path("id");
+    }
+
+    public TransferenciaRequest transferenciaDeTeste(String status) {
+        return "transferido".equals(status)
+                ? new TransferenciaRequest("ENTIDADE_PROTECAO", "Abrigo de teste", agora(), null)
+                : null;
     }
 
     public Response postarVacinacao(

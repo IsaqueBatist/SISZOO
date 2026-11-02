@@ -1,6 +1,14 @@
 export type Sexo = 'macho' | 'femea' | 'nao_identificado'
 export type Pelagem = 'curta' | 'longa'
 export type Porte = 'pequeno' | 'medio' | 'grande'
+export type TipoDestinoTransferencia = 'ORGAO_PUBLICO' | 'ENTIDADE_PROTECAO' | 'OUTRO_CCZ' | 'OUTRO'
+
+export interface TransferenciaRequest {
+  tipoDestino?: TipoDestinoTransferencia
+  destino?: string
+  dataSaida?: string
+  documento?: string
+}
 
 export interface Animal {
   id: string
@@ -39,6 +47,10 @@ export interface Animal {
   dataImplantacaoChip?: string | null
   procedencia?: string | null
   laudoEutanasia?: string | null
+  tipoDestinoTransferencia?: TipoDestinoTransferencia | null
+  destinoTransferencia?: string | null
+  dataSaida?: string | null
+  documentoTransferencia?: string | null
 }
 
 export interface CatalogoItem {
@@ -131,6 +143,7 @@ export interface AnimalRequest {
   dataImplantacaoChip?: string
   procedencia?: string
   laudoEutanasia?: string
+  transferencia?: TransferenciaRequest
 }
 
 export interface ResidenteBaia {

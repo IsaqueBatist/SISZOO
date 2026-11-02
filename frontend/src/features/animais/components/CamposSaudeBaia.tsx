@@ -2,15 +2,23 @@ import { Controller, useFormContext, useWatch } from 'react-hook-form'
 import { RadioCards } from '@/components/RadioCards'
 import { hojeEmItu } from '@/lib/datas'
 import { useBaiasAtivasQuery, useCatalogosAnimaisQuery } from '../hooks/useAnimais'
-import { animalCastrado, CASTRACAO_OPCOES, CONDICAO_OUTRAS, type AnimalFormUiValues } from '../schemas/animalFormSchema'
+import {
+  animalCastrado,
+  CASTRACAO_OPCOES,
+  CONDICAO_OUTRAS,
+  STATUS_TRANSFERIDO,
+  type AnimalFormUiValues,
+} from '../schemas/animalFormSchema'
+import { CamposTransferencia, type TransferenciaRegistrada } from './CamposTransferencia'
 import { semVazio } from '../utils/animalFormMapeamento'
 import { semEspacos } from '@/lib/texto'
 
 interface CamposSaudeBaiaProps {
   baiaAtualId: string
+  transferenciaRegistrada?: TransferenciaRegistrada | null
 }
 
-export function CamposSaudeBaia({ baiaAtualId }: CamposSaudeBaiaProps) {
+export function CamposSaudeBaia({ baiaAtualId, transferenciaRegistrada = null }: CamposSaudeBaiaProps) {
   const {
     register,
     control,
@@ -208,6 +216,8 @@ export function CamposSaudeBaia({ baiaAtualId }: CamposSaudeBaiaProps) {
           )}
         </div>
       )}
+
+      {status === STATUS_TRANSFERIDO && <CamposTransferencia registrada={transferenciaRegistrada} />}
     </div>
   )
 }
