@@ -23,6 +23,7 @@ import com.siszoo.comum.util.Paginacao;
 import com.siszoo.ocorrencias.dto.CatalogosOcorrenciaResponse;
 import com.siszoo.ocorrencias.dto.OcorrenciaResponse;
 import com.siszoo.ocorrencias.dto.OcorrenciaResumoResponse;
+import com.siszoo.ocorrencias.dto.OrigemAnimalResponse;
 import com.siszoo.ocorrencias.dto.QuantidadePorBairroResponse;
 import com.siszoo.ocorrencias.entity.Denunciante;
 import com.siszoo.ocorrencias.entity.Ocorrencia;
@@ -117,6 +118,16 @@ public class OcorrenciaConsultaService {
     public List<QuantidadePorBairroResponse> contarPorBairro() {
         return ocorrenciaRepository.contarTodasPorBairro().stream()
                 .map(linha -> new QuantidadePorBairroResponse(linha.getBairro(), linha.getQuantidade()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrigemAnimalResponse> listarOrigemDoAnimal(UUID animalId) {
+        return ocorrenciaRepository.findByAnimal_IdOrderByDataAberturaDesc(animalId).stream()
+                .map(o -> o.isSigilosa()
+                        ? new OrigemAnimalResponse(o.getId(), o.getProtocolo(), true, null, null)
+                        : new OrigemAnimalResponse(o.getId(), o.getProtocolo(), false,
+                                o.getTipoOcorrencia().getNome(), o.getDataAbertura()))
                 .toList();
     }
 

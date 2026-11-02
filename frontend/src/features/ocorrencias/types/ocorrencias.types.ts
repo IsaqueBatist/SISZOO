@@ -65,6 +65,20 @@ export interface ProcessoVinculado {
   urgente: boolean
 }
 
+export interface AnimalVinculado {
+  id: string
+  nome: string
+  microchip: string | null
+}
+
+export interface OrigemAnimal {
+  ocorrenciaId: string
+  protocolo: string
+  sigilosa: boolean
+  tipoOcorrenciaNome: string | null
+  dataAbertura: string | null
+}
+
 export interface Ocorrencia {
   id: string
   protocolo: string
@@ -90,6 +104,7 @@ export interface Ocorrencia {
   encerradaEm: string | null
   encerradaPorNome: string | null
   processoVinculado: ProcessoVinculado | null
+  animalVinculado: AnimalVinculado | null
   denunciante: Denunciante | null
   denunciado: Denunciado | null
   movimentacoes: MovimentacaoOcorrencia[]
@@ -156,6 +171,7 @@ export interface CriarOcorrenciaRequest {
   anonima: boolean
   denunciante?: DenuncianteRequest
   denunciado?: DenunciadoRequest
+  animalId?: string
 }
 
 export interface AtualizarOcorrenciaRequest {

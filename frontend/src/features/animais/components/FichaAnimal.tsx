@@ -9,6 +9,7 @@ import { AbaMedicamentos } from './AbaMedicamentos'
 import { AbaProcedimentos } from './AbaProcedimentos'
 import { AbaVacinas } from './AbaVacinas'
 import { AnexosAnimal } from './AnexosAnimal'
+import { OrigemAnimal } from './OrigemAnimal'
 import './FichaAnimal.css'
 import { badgeDeEspecie, badgeDeStatus } from '../utils/statusBadge'
 import { useAnimalQuery } from '../hooks/useAnimais'
@@ -233,6 +234,8 @@ export function FichaAnimal() {
               </div>
             </div>
           </div>
+
+          <OrigemAnimal animalId={id} />
 
           <AnexosAnimal animalId={id} podeEscrever={podeEscrever} />
         </div>

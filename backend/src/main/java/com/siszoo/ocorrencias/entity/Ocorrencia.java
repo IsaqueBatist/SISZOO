@@ -9,6 +9,8 @@ import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.siszoo.animais.entity.Animal;
+import com.siszoo.ocorrencias.exception.AnimalDaOcorrenciaEncerradaException;
 import com.siszoo.ocorrencias.exception.OcorrenciaEncerradaException;
 import com.siszoo.ocorrencias.exception.TransicaoStatusInvalidaException;
 import com.siszoo.usuarios.entity.Usuario;
@@ -110,6 +112,11 @@ public class Ocorrencia {
     @JoinColumn(name = "encerrada_por_id")
     private Usuario encerradaPor;
 
+    @Setter(AccessLevel.NONE)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "animal_id")
+    private Animal animal;
+
     @CreationTimestamp
     @Column(name = "criado_em", nullable = false, updatable = false)
     private LocalDateTime criadoEm;
@@ -126,6 +133,17 @@ public class Ocorrencia {
         if (isEncerrada()) {
             throw new OcorrenciaEncerradaException();
         }
+    }
+
+    public boolean vincularAnimal(Animal novo) {
+        if (animal != null && animal.equals(novo)) {
+            return false;
+        }
+        if (isEncerrada() && animal != null) {
+            throw new AnimalDaOcorrenciaEncerradaException();
+        }
+        animal = novo;
+        return true;
     }
 
     public StatusOcorrencia iniciarAtendimento() {

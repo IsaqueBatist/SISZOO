@@ -9,6 +9,7 @@ import { statusHttpDoErro } from '@/lib/erroApi'
 import { AvisoAnexosPendentes } from './AvisoAnexosPendentes'
 import { CardDenunciante } from './CardDenunciante'
 import { CardEncerramento } from './CardEncerramento'
+import { CardAnimalRecolhido } from './CardAnimalRecolhido'
 import { CardProcessoVinculado } from './CardProcessoVinculado'
 import { FormNota } from './FormNota'
 import { MovimentacoesTimeline } from './MovimentacoesTimeline'
@@ -307,6 +308,8 @@ export function OcorrenciaDetalhe() {
 
         <div className="col gap-4">
           <CardProcessoVinculado ocorrencia={ocorrencia} podeAbrir={podeEscrever} podeAvancar={podeAvancarProcesso} />
+
+          <CardAnimalRecolhido ocorrencia={ocorrencia} podeVincular={podeEscrever} />
 
           <CardEncerramento ocorrencia={ocorrencia} podeEncerrar={podeEscrever} />
 

@@ -67,6 +67,7 @@ export function criarOcorrenciaFixture(sobrescrever: Partial<Ocorrencia> = {}): 
     encerradaEm: null,
     encerradaPorNome: null,
     processoVinculado: null,
+    animalVinculado: null,
     denunciante: {
       nome: 'Maria Souza Oliveira',
       cpf: '123.456.789-09',

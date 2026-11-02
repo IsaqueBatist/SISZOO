@@ -35,6 +35,7 @@ import com.siszoo.ocorrencias.dto.EncerrarOcorrenciaRequest;
 import com.siszoo.ocorrencias.dto.OcorrenciaResponse;
 import com.siszoo.ocorrencias.dto.OcorrenciaResumoResponse;
 import com.siszoo.ocorrencias.dto.QuantidadePorBairroResponse;
+import com.siszoo.ocorrencias.dto.VincularAnimalRequest;
 import com.siszoo.ocorrencias.dto.VincularProcessoRequest;
 import com.siszoo.ocorrencias.entity.StatusOcorrencia;
 import com.siszoo.ocorrencias.service.AnexoOcorrenciaService;
@@ -123,6 +124,13 @@ public class OcorrenciaController {
     public OcorrenciaResponse vincularProcesso(
             Authentication authentication, @PathVariable UUID id, @Valid @RequestBody VincularProcessoRequest request) {
         return ocorrenciaService.vincularProcesso(id, request.processoId(), PermissoesOcorrencia.de(authentication));
+    }
+
+    @PutMapping("/{id}/animal")
+    @PreAuthorize("hasAuthority('OCORRENCIAS_DENUNCIAS:escrita')")
+    public OcorrenciaResponse vincularAnimal(
+            Authentication authentication, @PathVariable UUID id, @Valid @RequestBody VincularAnimalRequest request) {
+        return ocorrenciaService.vincularAnimal(id, request.animalId(), PermissoesOcorrencia.de(authentication));
     }
 
     @PostMapping("/{id}/notas")

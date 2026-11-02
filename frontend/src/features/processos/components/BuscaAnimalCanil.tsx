@@ -5,12 +5,13 @@ import type { Animal } from '@/features/animais/types/animais.types'
 const TAMANHO_BUSCA_ANIMAL = 8
 
 interface BuscaAnimalCanilProps {
-  numero: number
+  numero?: number
+  rotulo?: string
   erro?: string
   onSelecionar: (animal: Animal) => void
 }
 
-export function BuscaAnimalCanil({ numero, erro, onSelecionar }: BuscaAnimalCanilProps) {
+export function BuscaAnimalCanil({ numero, rotulo, erro, onSelecionar }: BuscaAnimalCanilProps) {
   const [busca, setBusca] = useState('')
   const [mostrarSugestoes, setMostrarSugestoes] = useState(false)
   const [ativa, setAtiva] = useState(-1)
@@ -63,7 +64,7 @@ export function BuscaAnimalCanil({ numero, erro, onSelecionar }: BuscaAnimalCani
         aria-autocomplete="list"
         aria-activedescendant={listaAberta && ativa >= 0 ? `${idLista}-${ativa}` : undefined}
         aria-invalid={erro ? true : undefined}
-        aria-label={`Buscar animal do canil para o animal amostrado ${numero}`}
+        aria-label={rotulo ?? `Buscar animal do canil para o animal amostrado ${numero}`}
       />
       {listaAberta && (
         <div className="animal-suggestions show" id={idLista} role="listbox" aria-label="Animais encontrados">

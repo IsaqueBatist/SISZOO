@@ -12,6 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.siszoo.animais.entity.Animal;
+import com.siszoo.animais.exception.AnimalNaoEncontradoException;
+import com.siszoo.animais.repository.AnimalRepository;
 import com.siszoo.comum.service.ProtocoloService;
 import com.siszoo.ocorrencias.dto.AlterarStatusOcorrenciaRequest;
 import com.siszoo.ocorrencias.dto.AtualizarOcorrenciaRequest;
@@ -29,6 +32,7 @@ import com.siszoo.ocorrencias.entity.ProvidenciaTomada;
 import com.siszoo.ocorrencias.entity.StatusOcorrencia;
 import com.siszoo.ocorrencias.entity.TipoMovimentacaoOcorrencia;
 import com.siszoo.ocorrencias.entity.TipoOcorrencia;
+import com.siszoo.ocorrencias.exception.AnimalJaVinculadoException;
 import com.siszoo.ocorrencias.exception.AnonimaESigilosaException;
 import com.siszoo.ocorrencias.exception.AnonimatoIrreversivelException;
 import com.siszoo.ocorrencias.exception.DataAberturaFuturaException;
@@ -73,6 +77,7 @@ public class OcorrenciaService {
     private final DenunciadoRepository denunciadoRepository;
     private final MovimentacaoOcorrenciaRepository movimentacaoRepository;
     private final ProcessoSanitarioRepository processoRepository;
+    private final AnimalRepository animalRepository;
     private final UsuarioRepository usuarioRepository;
     private final ProtocoloService protocoloService;
     private final OcorrenciaMapper ocorrenciaMapper;
@@ -88,6 +93,7 @@ public class OcorrenciaService {
             DenunciadoRepository denunciadoRepository,
             MovimentacaoOcorrenciaRepository movimentacaoRepository,
             ProcessoSanitarioRepository processoRepository,
+            AnimalRepository animalRepository,
             UsuarioRepository usuarioRepository,
             ProtocoloService protocoloService,
             OcorrenciaMapper ocorrenciaMapper,
@@ -101,6 +107,7 @@ public class OcorrenciaService {
         this.denunciadoRepository = denunciadoRepository;
         this.movimentacaoRepository = movimentacaoRepository;
         this.processoRepository = processoRepository;
+        this.animalRepository = animalRepository;
         this.usuarioRepository = usuarioRepository;
         this.protocoloService = protocoloService;
         this.ocorrenciaMapper = ocorrenciaMapper;
@@ -134,6 +141,9 @@ public class OcorrenciaService {
         ocorrencia.setLatitude(request.latitude());
         ocorrencia.setLongitude(request.longitude());
         ocorrencia.setRegistradoPor(autor);
+        if (request.animalId() != null) {
+            ocorrencia.vincularAnimal(resolverAnimalLivre(request.animalId(), null));
+        }
         ocorrenciaRepository.save(ocorrencia);
 
         if (temDenunciante) {
@@ -311,6 +321,29 @@ public class OcorrenciaService {
                 .orElseThrow(ProcessoNaoEncontradoException::new);
         vincular(ocorrencia, processo, buscarUsuario(permissoes.usuarioId()));
         return montadorResposta.paraMutacao(ocorrencia, permissoes);
+    }
+
+    @Transactional
+    public OcorrenciaResponse vincularAnimal(UUID ocorrenciaId, UUID animalId, PermissoesOcorrencia permissoes) {
+        Ocorrencia ocorrencia = travar(ocorrenciaId);
+        Animal animal = resolverAnimalLivre(animalId, ocorrenciaId);
+        var antes = ocorrenciaMapper.toSnapshot(ocorrencia, false);
+        if (ocorrencia.vincularAnimal(animal)) {
+            ocorrenciaRepository.saveAndFlush(ocorrencia);
+            auditoriaEventoService.registrar(buscarUsuario(permissoes.usuarioId()), AcaoAuditoria.ATUALIZACAO,
+                    ENTIDADE_AUDITORIA, ocorrenciaId, antes, ocorrenciaMapper.toSnapshot(ocorrencia, false));
+        }
+        return montadorResposta.paraMutacao(ocorrencia, permissoes);
+    }
+
+    private Animal resolverAnimalLivre(UUID animalId, UUID ocorrenciaAtualId) {
+        Animal animal = animalRepository.findById(animalId).orElseThrow(AnimalNaoEncontradoException::new);
+        ocorrenciaRepository.findByAnimal_Id(animalId)
+                .filter(outra -> !outra.getId().equals(ocorrenciaAtualId))
+                .ifPresent(outra -> {
+                    throw new AnimalJaVinculadoException(outra.getProtocolo());
+                });
+        return animal;
     }
 
     public void exigirEscritaEmOcorrencias(PermissoesOcorrencia permissoes) {

@@ -7,6 +7,7 @@ import type {
   CriarOcorrenciaRequest,
   EncerrarOcorrenciaRequest,
   Ocorrencia,
+  OrigemAnimal,
   OcorrenciaResumo,
   OcorrenciasFiltro,
   ProcessoSanitario,
@@ -87,5 +88,15 @@ export async function baixarAnexo(id: string, anexoId: string): Promise<Blob> {
 
 export async function avancarStatusProcesso(processoId: string, status: StatusProcesso): Promise<ProcessoSanitario> {
   const { data } = await http.patch<ProcessoSanitario>(`/processos/${processoId}/status`, { status })
+  return data
+}
+
+export async function vincularAnimal(id: string, animalId: string): Promise<Ocorrencia> {
+  const { data } = await http.put<Ocorrencia>(`/ocorrencias/${id}/animal`, { animalId })
+  return data
+}
+
+export async function listarOrigemDoAnimal(animalId: string): Promise<OrigemAnimal[]> {
+  const { data } = await http.get<OrigemAnimal[]>(`/animais/${animalId}/origem`)
   return data
 }

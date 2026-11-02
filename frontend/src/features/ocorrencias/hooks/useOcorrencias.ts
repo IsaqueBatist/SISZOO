@@ -10,6 +10,8 @@ import {
   encerrarOcorrencia,
   iniciarAtendimento,
   listarOcorrencias,
+  listarOrigemDoAnimal,
+  vincularAnimal,
 } from '../api/ocorrenciasApi'
 import type {
   AtualizarOcorrenciaRequest,
@@ -137,5 +139,23 @@ export function useAvancarStatusProcessoMutation(ocorrenciaId: string) {
     mutationFn: ({ processoId, status }: { processoId: string; status: StatusProcesso }) =>
       avancarStatusProcesso(processoId, status),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: chaveDetalhe(ocorrenciaId) }),
+  })
+}
+
+export function useVincularAnimalMutation(id: string) {
+  const recarregar = useRecarregarOcorrencia(id)
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (animalId: string) => vincularAnimal(id, animalId),
+    onSuccess: () =>
+      Promise.all([recarregar(), queryClient.invalidateQueries({ queryKey: ['animais', 'origem'] })]),
+  })
+}
+
+export function useOrigemDoAnimalQuery(animalId: string | undefined) {
+  return useQuery({
+    queryKey: ['animais', 'origem', animalId],
+    queryFn: () => listarOrigemDoAnimal(animalId as string),
+    enabled: Boolean(animalId),
   })
 }

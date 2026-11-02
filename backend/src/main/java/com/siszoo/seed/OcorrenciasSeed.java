@@ -222,7 +222,7 @@ class OcorrenciasSeed {
                 plano.endereco(), plano.bairro(), null, plano.descricao(), plano.urgente(),
                 plano.sigilo() == Sigilo.SIGILOSA, plano.sigilo() == Sigilo.ANONIMA,
                 coordenada(LATITUDE_BASE, plano.numero(), 7), coordenada(LONGITUDE_BASE, plano.numero(), 11),
-                denunciante(plano), denunciado(plano)));
+                denunciante(plano), denunciado(plano), null));
         return agente.executar(ESCRITA, () -> ocorrenciaService.criar(request, permissoes).id());
     }
 

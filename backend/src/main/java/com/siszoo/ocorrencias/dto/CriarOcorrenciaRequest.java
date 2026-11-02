@@ -3,6 +3,7 @@ package com.siszoo.ocorrencias.dto;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.UUID;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
@@ -50,7 +51,9 @@ public record CriarOcorrenciaRequest(
         DenuncianteRequest denunciante,
 
         @Valid
-        DenunciadoRequest denunciado) {
+        DenunciadoRequest denunciado,
+
+        UUID animalId) {
 
     public boolean isUrgente() {
         return Boolean.TRUE.equals(urgente);

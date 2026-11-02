@@ -27,5 +27,6 @@ public record OcorrenciaAuditoriaSnapshot(
         String providenciaTomada,
         String descricaoEncerramento,
         LocalDateTime encerradaEm,
+        UUID animalId,
         boolean denuncianteAlterado) {
 }
