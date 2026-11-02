@@ -23,8 +23,7 @@ Status: **auditado em 25/10/2026** (branch `feat/dados-reais-seed`). Atualize ao
 
 | Onde | Uso |
 |---|---|
-| `frontend/src/mocks/handlers.ts`, `*Handlers.ts`, `*Fixtures.ts`, `server.ts` | MSW nos testes do Vitest (`test/setup.ts`). Nenhum código de produção importa `src/mocks/`. |
-| `frontend/src/mocks/browser.ts` + `main.tsx` | Worker do MSW **sem handlers**, só em `vite dev`; toda requisição vai para a API real. |
+| `frontend/src/mocks/handlers.ts`, `*Handlers.ts`, `*Fixtures.ts`, `server.ts` | MSW nos testes do Vitest (`test/setup.ts`). Nenhum código de produção importa `src/mocks/`; em desenvolvimento, toda requisição vai para a API real. |
 | Mockito nos `*Test` do backend | Testes unitários de service. Os `*IT` usam PostgreSQL real (Testcontainers). |
 
 ### 2. Dados fictícios persistidos no banco (desenvolvimento)

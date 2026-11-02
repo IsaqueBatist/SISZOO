@@ -28,10 +28,9 @@ import { relatoriosHandlers } from './relatoriosHandlers'
 import type { AtualizarUsuarioRequest, CriarUsuarioRequest, UsuarioListItem } from '@/features/usuarios/types/usuarios.types'
 import type { PreferenciaUsuario } from '@/features/configuracoes/types/configuracoes.types'
 
-// Usado só pelos testes automatizados (mocks/server.ts) - o dev browser
-// (mocks/browser.ts) não intercepta mais login/senha/usuários, que já existem
-// de verdade no backend (módulo usuarios). Mantido aqui para os componentes
-// não dependerem de um Postgres/Spring de pé para rodar `npm run test`.
+// Usado só pelos testes automatizados (mocks/server.ts): login, senha e
+// usuários existem de verdade no backend, e estes handlers servem para os
+// componentes não dependerem de um Postgres/Spring de pé em `npm run test`.
 export const CREDENCIAIS_VALIDAS: LoginRequest = {
   email: 'stephanie.lima@itu.sp.gov.br',
   senha: 'senha-de-exemplo',
