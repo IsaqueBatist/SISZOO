@@ -22,7 +22,7 @@ manda e a documentação é corrigida no mesmo PR (checklist abaixo, em "Como ma
 | `entrevista_09jan2026.md` | Registro da entrevista de levantamento de requisitos com a equipe do CCZ. |
 | `planilha_animais.md`, `planilha_processos.md` | Estrutura das planilhas Excel atuais (legado substituído). |
 | `prototipo/` | Protótipo navegável (HTML/CSS/JS) e design system; base visual das telas. |
-| `tg/` | Trabalho de Graduação: versões do documento (binários fora do git), análises das fases 1–4, capturas das telas, diagramas PlantUML e scripts. Índice em `tg/README.md`. |
+| `tg/` | Trabalho de Graduação: versões do documento (binários fora do git), análises das fases 1–4, capturas das telas e diagramas PlantUML. Índice em `tg/README.md`. |
 
 ## Diagramas lógicos (DBML)
 
