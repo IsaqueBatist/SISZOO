@@ -1,0 +1,32 @@
+_id: "req_auth_renovar"
+type: "Request"
+parentId: "fld_sessao"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/auth/renovar"
+name: "Renovar sessão"
+description: "Emite um novo token a partir do cookie de sessão gravado no login (a coleção guarda e envia cookies). Rota pública: não usa o token atual, mas exige o cabeçalho X-SISZOO-Sessao (sem ele, 403)."
+method: "POST"
+body: {}
+parameters: []
+headers:
+  - name: "X-SISZOO-Sessao"
+    value: "1"
+authentication: {}
+metaSortKey: 1000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });
+  if (insomnia.response.code === 200) {
+    const corpo = insomnia.response.json();
+    insomnia.environment.set('token', corpo.token);
+  }

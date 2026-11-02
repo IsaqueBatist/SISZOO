@@ -1,0 +1,28 @@
+_id: "req_vacinas_desativar"
+type: "Request"
+parentId: "fld_catalogos_clinicos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/vacinas/{{ _.vacina_id_exemplo }}"
+name: "Desativar vacina (soft-delete)"
+description: "DELETE desativa a vacina (ativo=false); o histórico de vacinações não é afetado. Requer GESTAO_ANIMAIS:exclusao."
+method: "DELETE"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 5000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

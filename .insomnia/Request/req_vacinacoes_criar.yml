@@ -27,7 +27,7 @@ headers:
 authentication:
   type: "bearer"
   token: "{{ _.token }}"
-metaSortKey: 50000000
+metaSortKey: 1000
 isPrivate: false
 pathParameters: []
 settingStoreCookies: true
@@ -36,3 +36,11 @@ settingDisableRenderRequestBody: false
 settingEncodeUrl: true
 settingRebuildPath: true
 settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });
+  if (insomnia.response.code === 200) {
+    const corpo = insomnia.response.json();
+    insomnia.environment.set('vacinacao_id_exemplo', corpo.id);
+  }

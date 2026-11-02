@@ -1,0 +1,28 @@
+_id: "req_auth_logout"
+type: "Request"
+parentId: "fld_sessao"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/auth/logout"
+name: "Encerrar sessão (logout)"
+description: "Encerra a sessão do cookie; exige o cabeçalho X-SISZOO-Sessao. Rode por último: depois dele, o token deixa de valer e é preciso fazer login de novo."
+method: "POST"
+body: {}
+parameters: []
+headers:
+  - name: "X-SISZOO-Sessao"
+    value: "1"
+authentication: {}
+metaSortKey: 2000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 204', () => {
+    insomnia.expect(insomnia.response.code).to.equal(204);
+  });

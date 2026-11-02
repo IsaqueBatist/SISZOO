@@ -1,0 +1,35 @@
+_id: "req_processos_status_concluido"
+type: "Request"
+parentId: "fld_processos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/processos/{{ _.processo_id_exemplo }}/status"
+name: "Concluir processo"
+description: "COM_RESULTADO → CONCLUIDO; exige resultado vigente."
+method: "PATCH"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "status": "CONCLUIDO"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 11000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

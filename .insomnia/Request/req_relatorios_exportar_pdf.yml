@@ -1,0 +1,37 @@
+_id: "req_relatorios_exportar_pdf"
+type: "Request"
+parentId: "fld_relatorios"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/relatorios/exportar"
+name: "Exportar relatório anual de processos (PDF)"
+description: "PDF gerado no servidor, com fontes embutidas."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "tipo": "anual_processos",
+      "ano": 2026,
+      "formato": "pdf"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 7000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

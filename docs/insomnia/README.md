@@ -1,121 +1,141 @@
 # Coleção Insomnia - SISZOO
 
 A pasta `.insomnia/` na raiz do repositório é uma coleção do
-[Insomnia](https://insomnia.rest/) sincronizada via Git ("Git Sync"), com 42
-requisições de exemplo para os endpoints de autenticação, usuários,
-preferências, auditoria, animais, baias, registros clínicos e medicamentos,
-além de suítes de testes automatizados (`insomnia.send()` + `chai`) que
-verificam regras de negócio críticas (microchip único, imutabilidade de
-microchip, RBAC por cargo, validações de e-mail/senha etc.). Os módulos que
-ainda não têm requisições estão em [O que não está aqui](#o-que-não-está-aqui).
+[Insomnia](https://insomnia.rest/) sincronizada via Git ("Git Sync"). Ela cobre
+**os 86 endpoints do backend** com **95 requisições** organizadas por módulo e
+numa ordem que pode ser executada do começo ao fim: cada requisição de criação
+guarda o id gerado no Environment, e as seguintes o reutilizam. Toda requisição
+tem um teste de status no "After Response Script".
+
+Além das requisições, há quatro suítes de testes de regras de negócio
+(`UnitTestSuite`: Auth, Usuários, Animais e Baias).
 
 ## Como abrir
 
-1. No Insomnia, crie/abra um Project e escolha **Git Sync → Clone** apontando
-   para este repositório (ou, se já tiver o repo clonado localmente, aponte
-   o Git Sync para esta pasta). O workspace **"SISZOO API"** aparece com 9
-   pastas (Health, Auth, Usuários, Preferências, Auditoria, Animais, Baias,
-   Registros Clínicos, Medicamentos).
-2. Selecione o Environment **"Local"** e preencha, no mínimo:
-   - `admin_email` / `admin_password`: credenciais do admin seedado
-     localmente (`ADMIN_SEED_EMAIL`/`ADMIN_SEED_PASSWORD` do seu `.env`).
-   - `base_url`: já vem `http://localhost:8080`; ajuste se rodar em outra
-     porta/host.
+1. No Insomnia, crie ou abra um Project e escolha **Git Sync → Clone** apontando
+   para este repositório (ou aponte o Git Sync para a pasta já clonada). O
+   workspace **"SISZOO API"** aparece com as 16 pastas descritas abaixo.
+2. Selecione o Environment **"Local"**. `base_url` já vem `http://localhost:8080`.
+3. Crie um sub-environment privado (*Private environment*) e preencha nele:
+   - `admin_email` e `admin_password`: a conta de administrador que vai rodar a
+     coleção;
+   - `admin_password_nova`: só se for o primeiro acesso dessa conta (veja
+     "Primeiro acesso").
 
    **Não grave senha nem token no Environment "Local":** o arquivo
    `.insomnia/Environment/env_local.yml` é versionado, e o Git Sync levaria o
-   valor para o repositório. Preencha `admin_email`, `admin_password` e `token`
-   num sub-environment privado (*Private environment*), que o Git Sync não
-   sincroniza, e mantenha os campos do "Local" vazios. A única senha que fica
-   no "Local", `senha_teste_padrao`, é a dos usuários temporários que as
-   próprias suítes criam.
-3. Suba o backend (`cd backend && ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev`,
-   com o banco via `docker compose up -d db` e as variáveis descritas no README da raiz).
+   valor para o repositório. O Private environment não é sincronizado. A única
+   senha que fica no "Local", `senha_teste_padrao`, é a dos usuários fictícios
+   que a própria coleção cria.
+4. Suba o backend. Qualquer forma do [README da raiz](../../README.md) serve; a
+   mais completa para explorar é o ambiente com dados fictícios
+   (`docker compose -f docker-compose.yml -f docker-compose.seed.yml up --build`).
 
-## Uso manual (explorar/testar endpoints à mão)
+### Primeiro acesso
 
-Rode primeiro **Auth → Login - caso feliz**: em caso de sucesso, o token é
-salvo automaticamente na variável `token` (script "After Response"), que as
-demais requisições da pasta usam via header `Authorization: Bearer {{ _.token }}`.
+Uma conta recém-criada precisa trocar a senha antes de usar a API (até lá, as
+demais rotas respondem 403). Com o administrador criado por `ADMIN_SEED_EMAIL`
+num banco novo:
 
-Algumas requisições têm placeholders para preencher manualmente, como
-`{{ _.usuario_id_exemplo }}`, `{{ _.animal_id_exemplo }}` e
-`{{ _.baia_id_exemplo }}` - copie o `id` da resposta de um "criar"/"listar"
-e cole no Environment ou direto na URL.
+1. preencha `admin_password` com a senha atual e `admin_password_nova` com a nova;
+2. rode **02 - Auth → Login - caso feliz** e, em seguida,
+   **Trocar a própria senha (primeiro acesso)**. A coleção passa a usar a nova
+   senha em `admin_password`.
 
-As requisições de criação (`Criar usuário`, `Criar animal`) usam e-mail/
-microchip fixos de propósito: rodá-las uma segunda vez sem alterar esses
-campos demonstra as regras de unicidade (409) - não é um bug do exemplo.
+Se a conta já trocou a senha (por exemplo, `marta.siqueira.seed@itu.sp.gov.br`
+no ambiente de dados fictícios, senha `Ficticio#2026`), pule essa requisição.
 
-A pasta **Baias** documenta um detalhe que não é óbvio pelo nome do verbo:
-"Excluir baia" é `DELETE`, mas o backend nunca remove a linha - é
-soft-delete (`ativa=false`, 200), sem bloqueio mesmo com animais alocados.
-Para reverter, use "Ativar/reativar baia" (`PATCH /status`).
+## Como executar
 
-A pasta **Registros Clínicos** (vacinações, procedimentos, prescrições) reúne
-os três recursos porque compartilham o mesmo padrão de imutabilidade:
-nenhum dos três controllers tem `PUT`/`PATCH`/`DELETE` - "Tentar
-atualizar vacinação (405)" mostra que o Spring MVC já rejeita esses verbos
-sozinho, sem código de bloqueio adicional. Correção de um registro (inclusive
-mudança de status de prescrição) é sempre um novo `POST` no mesmo endpoint com
-`retificaId` apontando para o registro anterior - ver "Retificar vacinação"
-para o exemplo completo (o padrão é idêntico nos outros dois recursos).
+Rode as pastas na ordem, a partir de **02 - Auth → Login - caso feliz**. O
+login guarda o token em `token` e gera um sufixo novo em `execucao`, usado nos
+dados que o banco exige únicos (e-mail do usuário, microchip, nome da vacina e
+da categoria). Por isso a sequência pode ser repetida no mesmo banco sem 409.
 
-A pasta **Medicamentos** cobre o catálogo `medicamento`
-(criar/listar/buscar/editar/desativar). "Desativar medicamento" é soft-delete
-(`ativo=false`), mesmo padrão de "Excluir baia". Para testar "Criar
-medicamento" (e, por tabela, "Criar prescrição", que referencia
-`medicamentoId`), é preciso o id de uma `categoria_farmacologica`: liste as
-existentes com `GET /api/categorias-farmacologicas` ou crie uma com
-`POST /api/categorias-farmacologicas` (endpoints ainda fora desta coleção) e
-cole o uuid em {{ _.categoria_farmacologica_id_exemplo }}.
+Os ids criados ficam em variáveis `*_id_exemplo` (`usuario_id_exemplo`,
+`animal_id_exemplo`, `ocorrencia_id_exemplo`, `processo_id_exemplo` etc.). Para
+usar um registro já existente, substitua o valor da variável no Environment.
 
-## Testes automatizados
+| Pasta | O que cobre |
+|---|---|
+| 01 - Health | Verificação de saúde |
+| 02 - Auth | Login, troca de senha do primeiro acesso, erros 401 e recuperação de senha |
+| 03 - Usuários | Listar, criar, editar, redefinir senha, ativar ou desativar; meu perfil |
+| 04 - Preferências | Tema, densidade e notificações do usuário logado |
+| 05 - Auditoria | Trilha de auditoria e opções de filtro |
+| 06 - Baias | CRUD, residentes, exclusão lógica e reativação |
+| 07 - Animais | CRUD, catálogos e anexos (envio, listagem e download) |
+| 08 - Catálogos clínicos | Vacinas (CRUD e desativação) e categorias farmacológicas |
+| 09 - Medicamentos | CRUD e desativação |
+| 10 - Registros clínicos | Vacinações (com retificação e o 405 de imutabilidade), procedimentos, prescrições e exames |
+| 11 - Alertas | Reforço vacinal |
+| 12 - Ocorrências | Catálogos, registro (identificada e anônima), filtros, edição, status, notas, anexos e estatística por bairro |
+| 13 - Processos sanitários | Abertura (com e sem ocorrência), edição pelo administrador com histórico, status, resultado, reenvio de notificação e conclusão |
+| 14 - Ocorrências: vínculo e encerramento | Vínculo de processo a uma ocorrência e encerramento |
+| 15 - Dashboard e relatórios | KPIs, gráficos, tipos, prévias, exportação em CSV e PDF e histórico |
+| 16 - Sessão | Renovação do token pelo cookie de sessão e logout (rode por último) |
 
-Cada pasta `UnitTestSuite` (Auth, Usuários, Animais, Baias) roda de forma
-independente e autocontida: os próprios testes criam os usuários/animais/
-baias temporários de que precisam (com e-mail/microchip/nome únicos gerados
-em tempo de execução), fazem login com o perfil certo e limpam-se sozinhos
-por não reaproveitar dados fixos - só o `admin_email`/`admin_password` do
-Environment precisa estar correto.
+### Comportamentos que a coleção demonstra
+
+- **Imutabilidade:** registros clínicos e resultados laboratoriais não têm
+  `PUT`/`PATCH`/`DELETE`. "Tentar atualizar vacinação" espera 405; a correção é
+  um novo `POST` com `retificaId` ("Retificar vacinação").
+- **Exclusão lógica:** "Excluir baia", "Desativar vacina" e "Desativar
+  medicamento" marcam o registro como inativo (200); a baia é reativada logo em
+  seguida por `PATCH /status`.
+- **Fluxo do processo:** o status avança um passo por vez
+  (ABERTO → AGUARDANDO_RESULTADO; COM_RESULTADO ao registrar o resultado;
+  CONCLUIDO). O resultado positivo é definitivo e dispara a notificação ao
+  munícipe; sem SMTP configurado, o envio só falha no log.
+- **Encerramento da ocorrência:** com processo vinculado, ele precisa estar
+  concluído; a partir de ABERTA, só as providências de encerramento direto.
+  Por isso a coleção encerra a ocorrência cujo processo foi concluído na pasta 13.
+- **Sessão:** `renovar` e `logout` usam o cookie gravado no login e exigem o
+  cabeçalho `X-SISZOO-Sessao` (sem ele, 403), já configurado nas requisições.
+- **Anexos:** os envios usam `backend/src/main/resources/seed/fotos/001-thor.jpg`
+  (foto CC0 do repositório). Se o Insomnia não localizar o caminho relativo,
+  selecione o arquivo de novo no campo `arquivo`.
+- **Limite de tentativas:** "202 - solicitar recuperação de senha" passa a
+  responder 429 se a coleção for executada várias vezes em poucos minutos. É a
+  regra de limite por e-mail e por IP; aguarde alguns minutos.
+
+## Testes automatizados (Unit Testing)
+
+Cada `UnitTestSuite` (Auth, Usuários, Animais, Baias) é independente: os testes
+criam os usuários, animais e baias temporários de que precisam (com e-mail,
+microchip e nome únicos gerados em tempo de execução), fazem login com o perfil
+certo e conferem as regras, inclusive o RBAC por cargo. Só `admin_email` e
+`admin_password` precisam estar corretos.
 
 Para rodar: com o backend de pé, abra a aba **Unit Testing** no Insomnia,
 selecione uma suíte e clique em **Run Tests**.
 
-**Importante:** o teste `ut_usuarios_autodesativacao_admin` cobre a regra 24 do
-DER: nenhum usuário desativa a própria conta (422, "Nao e permitido desativar o
-proprio usuario", em `UsuarioService#alterarStatus`). O teste cria um
-Administrador temporário só para isso (nunca usa o admin seedado real) e
-confere que ele continua ativo depois da tentativa.
+- `ut_usuarios_autodesativacao_admin` cobre a regra 24 do DER: nenhum usuário
+  desativa a própria conta (422). O teste cria um Administrador temporário e
+  confere que ele continua ativo.
+- `ut_baias_excluir_soft_delete_nao_bloqueia_ocupada` documenta que o backend
+  não bloqueia desativar uma baia ocupada (decisão AC-3 em
+  `docs/decisoes/animais-clinico-correcoes.md`), e
+  `ut_baias_animal_409_baia_superlotada` espera 409 ao alocar um animal numa
+  baia sem vaga (RN-AN02, `docs/regras-negocio-clinico.md`).
+- As regras de unicidade (409) são cobertas por
+  `ut_usuarios_criar_409_email_duplicado` e
+  `ut_animais_criar_409_microchip_duplicado`.
 
-Da mesma forma, `ut_baias_excluir_soft_delete_nao_bloqueia_ocupada` documenta
-que o backend não bloqueia excluir (desativar) uma baia ocupada: o único freio
-é o aviso da tela de Gestão de Baias, e o teste reflete o comportamento
-*atual* (200, permite; decisão AC-3 em
-`docs/decisoes/animais-clinico-correcoes.md`). Já alocar um animal numa baia
-sem vaga deixou de ser permitido: `ut_baias_animal_409_baia_superlotada`
-espera 409 (RN-AN02, `docs/regras-negocio-clinico.md`).
+## Validação da coleção
 
-## O que não está aqui
+Em 02/11/2026 as 95 requisições foram executadas contra um backend real
+(perfil `dev`, PostgreSQL 16 em banco vazio), lendo os arquivos `.insomnia/`
+como estão no repositório, com a mesma resolução de variáveis `{{ _.x }}`, a
+mesma API de scripts (`insomnia.response.code`, `insomnia.environment`,
+`insomnia.test` e `insomnia.expect`) e o envio de cookies do Insomnia:
 
-Estes endpoints já existem no backend, mas ainda não têm requisições nem
-testes nesta coleção:
+| Execução | Resultado |
+|---|---|
+| Banco vazio, primeiro acesso do administrador | 95 de 95 com o teste de status aprovado |
+| Mesmo banco, nova execução | 95 de 95 |
+| Environment persistido entre execuções, como no Insomnia | 95 de 95 e, na quarta execução seguida, 94 de 95 (o 429 do limite de tentativas descrito acima) |
 
-- **Ocorrências:** todo o módulo (`/api/ocorrencias`), inclusive anexos,
-  notas, status, encerramento e estatísticas por bairro.
-- **Processos sanitários:** todo o módulo (`/api/processos`), inclusive
-  resultados, alterações e reenvio da notificação.
-- **Dashboard e relatórios:** `/api/dashboard/kpis`, `/api/dashboard/graficos`
-  e `/api/relatorios` (tipos, prévia, exportação e histórico).
-- **Catálogos:** vacinas (`/api/vacinas`) e categorias farmacológicas
-  (`/api/categorias-farmacologicas`).
-- **Animais:** exames (`/api/exames`), anexos (`/api/animais/{id}/anexos`) e
-  residentes das baias (`GET /api/baias/residentes`).
-- **Alertas:** `GET /api/alertas/vacinas`.
-- **Sessão e usuários:** `POST /api/auth/renovar`, `POST /api/auth/logout`,
-  `PUT /api/usuarios/{id}`, `POST /api/usuarios/{id}/senha` e
-  `GET /api/auditoria/filtros`.
-
-A lista completa está nos controllers de cada pacote em
-`backend/src/main/java/com/siszoo/` e na matriz de
-[integracao-frontend-api.md](../integracao-frontend-api.md).
+Os 86 endpoints foram exercitados com sucesso ao menos uma vez. A execução não
+usou o aplicativo do Insomnia, e as suítes de Unit Testing não foram executadas
+nessa validação; elas rodam no Insomnia, como descrito acima.

@@ -1,0 +1,49 @@
+_id: "req_ocorrencias_criar_anonima"
+type: "Request"
+parentId: "fld_ocorrencias"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/ocorrencias"
+name: "Registrar ocorrência anônima"
+description: "Ocorrência sem denunciante, usada depois em \"Vincular processo à ocorrência\" e \"Encerrar ocorrência\". O id fica em {{ _.ocorrencia_vinculo_id_exemplo }}."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "tipoOcorrencia": "agressivo",
+      "dataAbertura": "2026-10-01",
+      "horaAbertura": "09:30",
+      "endereco": "Rua Fictícia, 100",
+      "bairro": "Vila Progresso",
+      "pontoReferencia": "Próximo à praça",
+      "descricao": "Ocorrência anônima fictícia criada pela coleção do Insomnia.",
+      "urgente": false,
+      "sigilosa": false,
+      "anonima": true,
+      "denunciante": null
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 3000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });
+  if (insomnia.response.code === 200) {
+    const corpo = insomnia.response.json();
+    insomnia.environment.set('ocorrencia_vinculo_id_exemplo', corpo.id);
+  }

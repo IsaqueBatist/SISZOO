@@ -1,0 +1,61 @@
+_id: "req_processos_editar"
+type: "Request"
+parentId: "fld_processos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/processos/{{ _.processo_id_exemplo }}"
+name: "Editar processo (administrador)"
+description: "Edição do registro com justificativa obrigatória (10 a 1000 caracteres), auditada em \"Histórico de alterações do processo\". Requer PROCESSOS_SANITARIOS:edicao_registro:escrita, só do Administrador."
+method: "PUT"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "doenca": "raiva",
+      "laboratorio": "pasteur_sp",
+      "responsavel": {
+        "nome": "Responsável Fictício",
+        "telefone": "(11) 90000-0001",
+        "email": "responsavel.ficticio@exemplo.test",
+        "bairroOcorrencia": "Vila Progresso"
+      },
+      "amostras": [
+        {
+          "id": "{{ _.amostra_id_exemplo }}",
+          "dados": {
+            "especie": "canino",
+            "sexo": "macho",
+            "statusClinico": "SINTOMATICO",
+            "tipoAbrigo": "PERIDOMICILIAR",
+            "dataColeta": "2026-10-02",
+            "materialBiologico": "TECIDO_ENCEFALICO",
+            "contatoHumano": false,
+            "sintomas": [
+              "apatia"
+            ]
+          }
+        }
+      ],
+      "observacoes": "Processo fictício criado pela coleção do Insomnia.",
+      "justificativa": "Correção do laboratório informado na abertura."
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 6000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

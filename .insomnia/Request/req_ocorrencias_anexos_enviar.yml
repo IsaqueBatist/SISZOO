@@ -1,0 +1,42 @@
+_id: "req_ocorrencias_anexos_enviar"
+type: "Request"
+parentId: "fld_ocorrencias"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/ocorrencias/{{ _.ocorrencia_id_exemplo }}/anexos"
+name: "Enviar anexo da ocorrência"
+description: "Envia um arquivo (JPEG, PNG ou PDF, até 5 MB). O campo \"arquivo\" aponta para uma foto CC0 do repositório; se o Insomnia não localizar o caminho, selecione o arquivo de novo."
+method: "POST"
+body:
+  mimeType: "multipart/form-data"
+  params:
+    - id: "pair_req_ocorrencias_anexos_enviar_0"
+      name: "arquivo"
+      value: ''
+      description: ''
+      type: "file"
+      fileName: "backend/src/main/resources/seed/fotos/001-thor.jpg"
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "multipart/form-data"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 9000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });
+  if (insomnia.response.code === 200) {
+    const corpo = insomnia.response.json();
+    insomnia.environment.set('anexo_ocorrencia_id_exemplo', corpo.id);
+  }

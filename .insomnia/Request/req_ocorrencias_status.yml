@@ -1,0 +1,35 @@
+_id: "req_ocorrencias_status"
+type: "Request"
+parentId: "fld_ocorrencias"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/ocorrencias/{{ _.ocorrencia_id_exemplo }}/status"
+name: "Colocar ocorrência em atendimento"
+description: "ABERTA → EM_ATENDIMENTO. O encerramento é feito por \"Encerrar ocorrência\", com a providência tomada."
+method: "PATCH"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "status": "EM_ATENDIMENTO"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 7000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

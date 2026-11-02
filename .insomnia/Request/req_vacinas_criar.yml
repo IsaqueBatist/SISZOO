@@ -1,0 +1,40 @@
+_id: "req_vacinas_criar"
+type: "Request"
+parentId: "fld_catalogos_clinicos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/vacinas"
+name: "Criar vacina no catálogo"
+description: "Cadastra uma vacina com intervalo de reforço em meses. O nome leva o sufixo da execução para não repetir. Requer GESTAO_ANIMAIS:escrita."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "nome": "Vacina Insomnia {{ _.execucao }}",
+      "intervaloMeses": 12
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 2000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });
+  if (insomnia.response.code === 200) {
+    const corpo = insomnia.response.json();
+    insomnia.environment.set('vacina_id_exemplo', corpo.id);
+  }

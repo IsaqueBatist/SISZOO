@@ -1,0 +1,28 @@
+_id: "req_exames_buscar_por_id"
+type: "Request"
+parentId: "fld_registros_clinicos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/exames/{{ _.exame_id_exemplo }}"
+name: "Buscar exame por id"
+description: "Exame criado em \"Criar exame - caso feliz\". Requer GESTAO_ANIMAIS:leitura."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 14000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

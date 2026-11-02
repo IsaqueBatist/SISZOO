@@ -24,7 +24,7 @@ headers:
 authentication:
   type: "bearer"
   token: "{{ _.token }}"
-metaSortKey: 55000000
+metaSortKey: 6000
 isPrivate: false
 pathParameters: []
 settingStoreCookies: true
@@ -33,3 +33,11 @@ settingDisableRenderRequestBody: false
 settingEncodeUrl: true
 settingRebuildPath: true
 settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });
+  if (insomnia.response.code === 200) {
+    const corpo = insomnia.response.json();
+    insomnia.environment.set('procedimento_id_exemplo', corpo.id);
+  }

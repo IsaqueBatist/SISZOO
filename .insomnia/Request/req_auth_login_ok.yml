@@ -5,7 +5,7 @@ modified: 1750000000000
 created: 1750000000000
 url: "{{ _.base_url }}/api/auth/login"
 name: "Login - caso feliz"
-description: "Preencha admin_email/admin_password no Environment \"Local\" antes de rodar. Ao responder 200, o token é salvo automaticamente na variável {{ _.token }} (ver aba \"After Response Script\"), reaproveitado pelas demais requisições protegidas."
+description: "Preencha admin_email e admin_password (num Private environment; ver docs/insomnia/README.md). Antes do envio, gera um sufixo novo em {{ _.execucao }}, usado nos cadastros para que a sequência possa ser repetida (rode a coleção na ordem, a partir do login); com 200, guarda o token em {{ _.token }} para as demais requisições."
 method: "POST"
 body:
   mimeType: "application/json"
@@ -19,7 +19,7 @@ headers:
   - name: "Content-Type"
     value: "application/json"
 authentication: {}
-metaSortKey: -1000000
+metaSortKey: 1000
 isPrivate: false
 pathParameters: []
 settingStoreCookies: true
@@ -28,8 +28,15 @@ settingDisableRenderRequestBody: false
 settingEncodeUrl: true
 settingRebuildPath: true
 settingFollowRedirects: "global"
+preRequestScript: |-
+  const sufixo = String(Date.now()).slice(-7);
+  insomnia.environment.set('execucao', sufixo);
+  insomnia.environment.set('execucao_letras', sufixo.replace(/\d/g, (d) => 'abcdefghij'[Number(d)]));
 afterResponseScript: |-
-  if (insomnia.response.status === 200) {
-    const body = insomnia.response.json();
-    insomnia.environment.set('token', body.token);
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });
+  if (insomnia.response.code === 200) {
+    const corpo = insomnia.response.json();
+    insomnia.environment.set('token', corpo.token);
   }

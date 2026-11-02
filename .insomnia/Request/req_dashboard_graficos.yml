@@ -1,0 +1,28 @@
+_id: "req_dashboard_graficos"
+type: "Request"
+parentId: "fld_relatorios"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/dashboard/graficos?ano=2026"
+name: "Gráficos do dashboard"
+description: "Casos por doença, raiva por espécie e resultados laboratoriais do ano. Requer RELATORIOS:leitura."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 2000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

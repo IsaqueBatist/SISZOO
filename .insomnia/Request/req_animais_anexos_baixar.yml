@@ -1,0 +1,28 @@
+_id: "req_animais_anexos_baixar"
+type: "Request"
+parentId: "fld_animais"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/animais/{{ _.animal_id_exemplo }}/anexos/{{ _.anexo_animal_id_exemplo }}"
+name: "Baixar anexo do animal"
+description: "Devolve o conteúdo do anexo {{ _.anexo_animal_id_exemplo }}. Requer GESTAO_ANIMAIS:leitura."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 8000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

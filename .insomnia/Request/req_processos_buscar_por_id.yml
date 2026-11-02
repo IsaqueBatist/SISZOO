@@ -1,0 +1,32 @@
+_id: "req_processos_buscar_por_id"
+type: "Request"
+parentId: "fld_processos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/processos/{{ _.processo_id_exemplo }}"
+name: "Buscar processo por id"
+description: "Detalhe do processo com amostras e resultados. Guarda o id da primeira amostra em {{ _.amostra_id_exemplo }}, usado em \"Editar processo\"."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 5000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });
+  if (insomnia.response.code === 200) {
+    const corpo = insomnia.response.json();
+    insomnia.environment.set('amostra_id_exemplo', corpo.amostras[0].id);
+  }

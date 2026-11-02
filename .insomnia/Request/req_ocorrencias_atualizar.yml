@@ -1,0 +1,49 @@
+_id: "req_ocorrencias_atualizar"
+type: "Request"
+parentId: "fld_ocorrencias"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/ocorrencias/{{ _.ocorrencia_id_exemplo }}"
+name: "Atualizar ocorrência"
+description: "PUT completo: urgente, sigilosa e anonima são obrigatórios. Requer OCORRENCIAS_DENUNCIAS:escrita."
+method: "PUT"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "tipoOcorrencia": "zoonose",
+      "dataAbertura": "2026-10-01",
+      "horaAbertura": "09:30",
+      "endereco": "Rua Fictícia, 100",
+      "bairro": "Vila Progresso",
+      "pontoReferencia": "Em frente à escola",
+      "descricao": "Ocorrência fictícia atualizada pela coleção do Insomnia.",
+      "urgente": false,
+      "sigilosa": false,
+      "anonima": false,
+      "denunciante": {
+        "nome": "Munícipe Fictício",
+        "telefone": "(11) 90000-0002",
+        "email": "municipe.ficticio@exemplo.test"
+      }
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 6000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

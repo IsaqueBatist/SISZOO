@@ -1,0 +1,28 @@
+_id: "req_relatorios_historico"
+type: "Request"
+parentId: "fld_relatorios"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/relatorios/historico?pagina=0&tamanho=20"
+name: "Histórico de exportações"
+description: "Exportações registradas, da mais recente para a mais antiga. Requer RELATORIOS:leitura."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 8000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

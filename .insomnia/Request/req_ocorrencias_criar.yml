@@ -1,0 +1,53 @@
+_id: "req_ocorrencias_criar"
+type: "Request"
+parentId: "fld_ocorrencias"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/ocorrencias"
+name: "Registrar ocorrência - caso feliz"
+description: "Registra uma ocorrência com denunciante identificado; o protocolo NNN/AAAA é gerado pelo sistema. O id fica em {{ _.ocorrencia_id_exemplo }}. Requer OCORRENCIAS_DENUNCIAS:escrita."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "tipoOcorrencia": "zoonose",
+      "dataAbertura": "2026-10-01",
+      "horaAbertura": "09:30",
+      "endereco": "Rua Fictícia, 100",
+      "bairro": "Vila Progresso",
+      "pontoReferencia": "Próximo à praça",
+      "descricao": "Ocorrência fictícia criada pela coleção do Insomnia.",
+      "urgente": false,
+      "sigilosa": false,
+      "anonima": false,
+      "denunciante": {
+        "nome": "Munícipe Fictício",
+        "telefone": "(11) 90000-0002",
+        "email": "municipe.ficticio@exemplo.test"
+      }
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 2000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });
+  if (insomnia.response.code === 200) {
+    const corpo = insomnia.response.json();
+    insomnia.environment.set('ocorrencia_id_exemplo', corpo.id);
+  }

@@ -1,0 +1,63 @@
+_id: "req_processos_criar"
+type: "Request"
+parentId: "fld_processos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/processos"
+name: "Abrir processo sanitário a partir da ocorrência"
+description: "Abre um processo de raiva vinculado à ocorrência {{ _.ocorrencia_id_exemplo }}, com uma amostra de campo. O id fica em {{ _.processo_id_exemplo }}. Requer PROCESSOS_SANITARIOS:escrita."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "dataAbertura": "2026-10-02",
+      "doenca": "raiva",
+      "laboratorio": "ial_sorocaba",
+      "ocorrenciaId": "{{ _.ocorrencia_id_exemplo }}",
+      "responsavel": {
+        "nome": "Responsável Fictício",
+        "telefone": "(11) 90000-0001",
+        "email": "responsavel.ficticio@exemplo.test",
+        "bairroOcorrencia": "Vila Progresso"
+      },
+      "amostras": [
+        {
+          "especie": "canino",
+          "sexo": "macho",
+          "statusClinico": "SINTOMATICO",
+          "tipoAbrigo": "PERIDOMICILIAR",
+          "dataColeta": "2026-10-02",
+          "materialBiologico": "TECIDO_ENCEFALICO",
+          "contatoHumano": false,
+          "sintomas": [
+            "apatia"
+          ]
+        }
+      ],
+      "observacoes": "Processo fictício criado pela coleção do Insomnia."
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 2000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });
+  if (insomnia.response.code === 200) {
+    const corpo = insomnia.response.json();
+    insomnia.environment.set('processo_id_exemplo', corpo.id);
+  }

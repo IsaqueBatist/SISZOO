@@ -18,7 +18,7 @@ headers:
   - name: "Content-Type"
     value: "application/json"
 authentication: {}
-metaSortKey: 1000100
+metaSortKey: 5000
 isPrivate: false
 pathParameters: []
 settingStoreCookies: true
@@ -27,3 +27,7 @@ settingDisableRenderRequestBody: false
 settingEncodeUrl: true
 settingRebuildPath: true
 settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 202', () => {
+    insomnia.expect(insomnia.response.code).to.equal(202);
+  });
