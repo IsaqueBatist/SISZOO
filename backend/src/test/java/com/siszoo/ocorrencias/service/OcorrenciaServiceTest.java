@@ -25,6 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -74,6 +75,7 @@ class OcorrenciaServiceTest {
     @Mock private UsuarioRepository usuarioRepository;
     @Mock private ProtocoloService protocoloService;
     @Mock private AuditoriaEventoService auditoriaEventoService;
+    @Mock private ApplicationEventPublisher eventPublisher;
 
     private final OcorrenciaMapper mapper = Mappers.getMapper(OcorrenciaMapper.class);
     private OcorrenciaService service;
@@ -91,7 +93,7 @@ class OcorrenciaServiceTest {
         service = new OcorrenciaService(ocorrenciaRepository, tipoOcorrenciaRepository, providenciaTomadaRepository,
                 denuncianteRepository, denunciadoRepository, movimentacaoRepository, processoRepository,
                 animalRepository,
-                usuarioRepository, protocoloService, mapper, montador, auditoriaEventoService, clock);
+                usuarioRepository, protocoloService, mapper, montador, auditoriaEventoService, eventPublisher, clock);
 
         TipoOcorrencia tipo = new TipoOcorrencia();
         tipo.setCodigo("zoonose");

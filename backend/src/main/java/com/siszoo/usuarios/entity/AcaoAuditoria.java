@@ -11,5 +11,6 @@ public enum AcaoAuditoria {
     ENCERRAMENTO,
     VISUALIZACAO,
     ACESSO_NEGADO,
-    SESSAO_REVOGADA
+    SESSAO_REVOGADA,
+    NOTIFICACAO
 }

@@ -246,6 +246,28 @@ Segundo uso do serviço: o link de "Esqueci minha senha" da tela de login
   por e-mail por hora). O token em si nunca é logado.
 - Teste de ponta a ponta com GreenMail: `RecuperacaoSenhaControllerIT`.
 
+## Aviso de encerramento ao denunciante (02/11/2026)
+
+Terceiro uso do serviço (auditoria de conformidade, item 5). É boa prática, não
+obrigação: a aplicabilidade da Lei nº 13.460/2017, art. 12, V, a denúncias
+sanitárias ficou inconclusiva, e os textos não afirmam que o envio é exigido.
+
+- Quando: encerramento de ocorrência não anônima cujo denunciante tem e-mail.
+  `OcorrenciaService#encerrar` publica `OcorrenciaEncerradaEvent`;
+  `AvisoEncerramentoListener` (`@Async`, depois do commit) chama
+  `AvisoEncerramentoService`.
+- Template `email/encerramento-ocorrencia` (HTML e texto), variáveis `nome`,
+  `protocolo`, `dataEncerramento` e `providencia`. Assunto: "SISZOO - Ocorrência
+  NNN/AAAA encerrada". Nunca leva endereço ou nome do denunciado nem o texto da
+  denúncia (nem a descrição do encerramento, que é texto livre).
+- Falha de SMTP não desfaz o encerramento. O resultado (`ENVIADO`, `FALHA` ou
+  `NAO_SUBMETIDO`) vai para `auditoria_evento` com a ação `NOTIFICACAO` (V37) e
+  `entidade = 'aviso_encerramento_ocorrencia'`; o destinatário fica mascarado.
+- Desligar sem mexer no código: `SISZOO_AVISO_ENCERRAMENTO=false`
+  (`siszoo.ocorrencia.aviso-encerramento`, padrão `true`).
+- O texto do e-mail é provisório e precisa ser validado com o CCZ.
+- Testes: `AvisoEncerramentoServiceTest` e `AvisoEncerramentoIT`.
+
 ## Revisão de 22/10/2026 - resultado `inconclusivo` também notifica
 
 Com o alinhamento ao TG (`docs/decisoes/alinhamento-tg.md` AT-1), a notificação ao munícipe sai para `positivo` **ou**

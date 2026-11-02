@@ -10,6 +10,7 @@ export type AcaoAuditoria =
   | 'VISUALIZACAO'
   | 'ACESSO_NEGADO'
   | 'SESSAO_REVOGADA'
+  | 'NOTIFICACAO'
 
 export interface EventoAuditoria {
   id: string

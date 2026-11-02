@@ -82,3 +82,20 @@ demonstrável). Colunas em `animal` (V36), regra RN-AN06.
 - **Em aberto com o CCZ:** lista de destinos usados na prática; como corrigir uma
   transferência registrada com erro; o que fazer quando um animal transferido volta
   ao CCZ (hoje o status pode mudar e o destino gravado permanece).
+
+## Item 5 - aviso de encerramento ao denunciante identificado
+
+Base: Lei nº 13.460/2017, art. 12, V, com aplicabilidade **inconclusiva** a
+denúncias sanitárias; implementado como boa prática, reaproveitando o padrão do
+e-mail de resultado positivo. Detalhes em `docs/email.md`.
+
+- **Registro do resultado.** A notificação ao munícipe grava a data do envio no
+  processo; a ocorrência não tem coluna para isso. O resultado vai para
+  `auditoria_evento` com a ação nova `NOTIFICACAO` (V37 amplia o `CHECK`), uma
+  linha por tentativa, com o resultado.
+- **Conteúdo mínimo.** Protocolo, data do encerramento e nome da providência. A
+  descrição do encerramento fica de fora por ser texto livre, que pode citar
+  terceiros.
+- **Ocorrência sigilosa com denunciante identificado recebe o aviso**: o sigilo
+  protege o denunciante perante terceiros, e o e-mail vai só para ele.
+- **Em aberto com o CCZ:** texto do e-mail.

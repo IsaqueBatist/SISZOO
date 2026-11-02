@@ -14,10 +14,11 @@ const TODAS_AS_ACOES: AcaoAuditoria[] = [
   'VISUALIZACAO',
   'ACESSO_NEGADO',
   'SESSAO_REVOGADA',
+  'NOTIFICACAO',
 ]
 
 describe('descricaoAcao', () => {
-  it('tem verbo, ícone e tom definidos para os 10 valores reais do enum do backend', () => {
+  it('tem verbo, ícone e tom definidos para os 12 valores reais do enum do backend', () => {
     for (const acao of TODAS_AS_ACOES) {
       const descricao = descricaoAcao(acao)
       expect(descricao.verbo).toBeTruthy()

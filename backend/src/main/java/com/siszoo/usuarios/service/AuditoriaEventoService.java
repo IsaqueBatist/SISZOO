@@ -135,7 +135,7 @@ public class AuditoriaEventoService {
             Modulo.GESTAO_ANIMAIS, List.of("animal", "baia", "vacinacao", "procedimento", "prescricao", "medicamento",
                     "exame", "anexo_animal"),
             Modulo.OCORRENCIAS_DENUNCIAS, List.of("ocorrencia", "denunciante", "anexo_ocorrencia",
-                    "movimentacao_ocorrencia"),
+                    "movimentacao_ocorrencia", "aviso_encerramento_ocorrencia"),
             Modulo.PROCESSOS_SANITARIOS, List.of("processo_sanitario"),
             Modulo.RELATORIOS, List.of("relatorio_gerado"));
 

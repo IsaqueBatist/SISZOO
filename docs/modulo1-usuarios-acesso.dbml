@@ -39,6 +39,8 @@ Enum AcaoAuditoria {
   ENCERRAMENTO
   VISUALIZACAO  // T26 (V12): acesso autorizado ao denunciante de ocorrência sigilosa
   ACESSO_NEGADO // T43 (V27): acesso ao denunciante sigiloso recusado pela regra de sigilo
+  SESSAO_REVOGADA // V29: reuso do token anterior fora da tolerância
+  NOTIFICACAO // V37: resultado do aviso de encerramento por e-mail ao denunciante (aviso_encerramento_ocorrencia)
 }
 
 // ── Usuario ────────────────────────────────────────────

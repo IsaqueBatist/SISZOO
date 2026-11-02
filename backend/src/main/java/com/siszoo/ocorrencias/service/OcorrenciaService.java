@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +33,7 @@ import com.siszoo.ocorrencias.entity.ProvidenciaTomada;
 import com.siszoo.ocorrencias.entity.StatusOcorrencia;
 import com.siszoo.ocorrencias.entity.TipoMovimentacaoOcorrencia;
 import com.siszoo.ocorrencias.entity.TipoOcorrencia;
+import com.siszoo.ocorrencias.event.OcorrenciaEncerradaEvent;
 import com.siszoo.ocorrencias.exception.AnimalJaVinculadoException;
 import com.siszoo.ocorrencias.exception.AnonimaESigilosaException;
 import com.siszoo.ocorrencias.exception.AnonimatoIrreversivelException;
@@ -83,6 +85,7 @@ public class OcorrenciaService {
     private final OcorrenciaMapper ocorrenciaMapper;
     private final MontadorRespostaOcorrencia montadorResposta;
     private final AuditoriaEventoService auditoriaEventoService;
+    private final ApplicationEventPublisher eventPublisher;
     private final Clock clock;
 
     public OcorrenciaService(
@@ -99,6 +102,7 @@ public class OcorrenciaService {
             OcorrenciaMapper ocorrenciaMapper,
             MontadorRespostaOcorrencia montadorResposta,
             AuditoriaEventoService auditoriaEventoService,
+            ApplicationEventPublisher eventPublisher,
             Clock clock) {
         this.ocorrenciaRepository = ocorrenciaRepository;
         this.tipoOcorrenciaRepository = tipoOcorrenciaRepository;
@@ -113,6 +117,7 @@ public class OcorrenciaService {
         this.ocorrenciaMapper = ocorrenciaMapper;
         this.montadorResposta = montadorResposta;
         this.auditoriaEventoService = auditoriaEventoService;
+        this.eventPublisher = eventPublisher;
         this.clock = clock;
     }
 
@@ -297,6 +302,7 @@ public class OcorrenciaService {
         ocorrenciaRepository.saveAndFlush(ocorrencia);
         auditoriaEventoService.registrar(autor, AcaoAuditoria.ENCERRAMENTO, ENTIDADE_AUDITORIA, id,
                 antes, ocorrenciaMapper.toSnapshot(ocorrencia, false));
+        eventPublisher.publishEvent(new OcorrenciaEncerradaEvent(id, autor.getId()));
 
         return montadorResposta.paraMutacao(ocorrencia, permissoes);
     }
