@@ -149,6 +149,16 @@ describe('ProcessoDetalhe — dados', () => {
     expect(amostra.getByText('Sem contato humano-animal nesta amostra.')).toBeInTheDocument()
   })
 
+  it('Agente Sanitário não vê o link para a ficha, mas continua vendo o retrato da amostra', async () => {
+    renderDetalhe(PROCESSO_SEM_VINCULO_ID, AGENTE)
+    await esperarDetalhe('046/2026')
+
+    const amostra = cardDe('Amostra 1')
+    expect(amostra.queryByRole('link', { name: 'Ver ficha do animal' })).not.toBeInTheDocument()
+    expect(amostra.getByText('Animal do canil')).toBeInTheDocument()
+    expect(amostra.getByText('Sem contato humano-animal nesta amostra.')).toBeInTheDocument()
+  })
+
   it('processo urgente mostra o banner de contato humano-animal', async () => {
     renderDetalhe(PROCESSO_PENDENTE_ID)
     await esperarDetalhe('045/2026')

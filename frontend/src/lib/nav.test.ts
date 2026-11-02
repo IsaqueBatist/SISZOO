@@ -46,7 +46,7 @@ describe('ordem do menu lateral', () => {
       SISTEMA: ['Configurações'],
     })
     expect(rotulosPorGrupo(getNavForRole('agente'))).toEqual({
-      PRINCIPAL: ['Animais', 'Dashboard', 'Ocorrências', 'Processos Sanitários', 'Relatórios'],
+      PRINCIPAL: ['Dashboard', 'Ocorrências', 'Processos Sanitários', 'Relatórios'],
       CADASTROS: ['Medicamentos', 'Vacinas'],
       SISTEMA: ['Configurações'],
     })

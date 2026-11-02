@@ -26,7 +26,7 @@ export const ROLES: Record<RoleKey, Role> = {
     label: 'Agente Sanitário',
     short: 'AGENTE',
     badgeCls: 'badge-role-agent',
-    access: ['dashboard', 'animais', 'ocorrencias', 'processos', 'relatorios', 'medicamentos', 'vacinas', 'config'],
+    access: ['dashboard', 'ocorrencias', 'processos', 'relatorios', 'medicamentos', 'vacinas', 'config'],
   },
   sem_perfil: {
     label: 'Sem perfil reconhecido',
