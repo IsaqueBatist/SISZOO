@@ -1,9 +1,5 @@
 import { useStatusConexao } from '@/lib/useStatusConexao'
 
-// Aviso de conexão. Não bloqueia nada: a rede do CCZ é instável e o
-// trabalho continua, com os formulários longos guardando rascunho local.
-// Dois textos, porque os dois casos têm certezas diferentes - ver
-// MotivoSemConexao em lib/useStatusConexao.ts.
 export function BannerOffline() {
   const motivo = useStatusConexao()
   if (!motivo) return null

@@ -8,8 +8,6 @@ import java.util.UUID;
 
 import com.siszoo.ocorrencias.entity.StatusOcorrencia;
 
-// Payload de auditoria da ocorrencia: sem nenhum dado pessoal do
-// denunciante. So registra se o bloco do denunciante foi alterado.
 public record OcorrenciaAuditoriaSnapshot(
         UUID id,
         String protocolo,

@@ -14,15 +14,10 @@ import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/e
 const MAPA_ERROS_MEDICAMENTO = mapaDeCampos<MedicamentoFormValues>(['nome', 'categoriaId'])
 
 interface CadastroRapidoMedicamentoProps {
-  // Recebe o id do medicamento criado, para o formulário de cima já escolhê-lo.
   onCadastrado: (id: string) => void
   onCancelar: () => void
 }
 
-// Cadastro de medicamento sem sair da prescrição — mesmo caminho do
-// CadastroRapidoVacina, e o mesmo que Medicamentos.tsx já usa para a categoria
-// farmacológica. A categoria não é cadastrável aqui: quem precisa de uma nova
-// vai à tela de Medicamentos, que trata esse caso aninhado.
 export function CadastroRapidoMedicamento({ onCadastrado, onCancelar }: CadastroRapidoMedicamentoProps) {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const criar = useCriarMedicamentoMutation()
@@ -50,8 +45,6 @@ export function CadastroRapidoMedicamento({ onCadastrado, onCancelar }: Cadastro
     }
   }
 
-  // `div` e não `form`: este bloco vive dentro do `form` da prescrição, e
-  // formulário aninhado é HTML inválido — o submit de um dispararia o outro.
   function aoEnviar(event: FormEvent<HTMLButtonElement>) {
     event.preventDefault()
     setSubmitError(null)

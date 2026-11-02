@@ -13,9 +13,6 @@ import { GraficoResultadosLaboratoriais } from './GraficoResultadosLaboratoriais
 
 const ALTURA_SKELETON = 220
 
-// "Ocupação por Baia" usa dado 100% real hoje (GET /baias, mesmo endpoint de
-// Gestão de Baias) - por isso não entra no toggle VITE_USE_MOCK_GRAFICOS nem
-// mostra o selo de demonstração, diferente dos outros dois cards.
 function CardOcupacaoBaia() {
   const { data, isLoading, isError, refetch } = useBaiasQuery()
 
@@ -93,10 +90,6 @@ function CardCasosSuspeitos({ query }: CardComDadosDeGraficosProps) {
   )
 }
 
-// Único ponto de React.lazy dos gráficos (ver Dashboard.tsx): os 4 componentes de
-// gráfico acima são import estático comum - todos entram no mesmo chunk de
-// `recharts` quando este módulo carrega. Export nomeado (não default), no
-// mesmo padrão de lazy-loading já usado em routes/AppRoutes.tsx.
 export function GraficosDashboard() {
   const query = useGraficosQuery()
 

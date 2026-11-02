@@ -30,8 +30,6 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 
-// Decisao funcional de 31/10/2026: so o Administrador edita processo ja
-// registrado, com justificativa e historico completo na auditoria.
 @Import(RelogioTesteConfig.class)
 class ProcessoEdicaoIT extends AbstractIntegrationTest {
 
@@ -66,8 +64,6 @@ class ProcessoEdicaoIT extends AbstractIntegrationTest {
         return criado;
     }
 
-    // Corpo da edicao a partir do GET: mesmos dados, com a amostra no formato de
-    // entrada. Mutavel, para cada teste variar um campo.
     private Map<String, Object> corpoEdicao(Response criado) {
         Map<String, Object> amostra = new HashMap<>();
         amostra.put("especie", criado.<String>path("amostras[0].especie.codigo"));

@@ -7,8 +7,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-// RF-A04: exame do animal (Quadro 77 do TG). Registro imutavel:
-// correcao = novo POST com `retificaId` (mesmo mecanismo de CriarProcedimentoRequest).
 public record CriarExameRequest(
         @NotNull
         UUID animalId,
@@ -16,7 +14,6 @@ public record CriarExameRequest(
         @NotBlank
         String tipoExame,
 
-        // Codigo do catalogo de laboratorios (V13); opcional (exame interno).
         String laboratorio,
 
         @NotNull
@@ -30,6 +27,5 @@ public record CriarExameRequest(
         @Size(max = 2000)
         String observacoes,
 
-        // Presenca (nao-nulo) indica que este POST retifica o registro apontado.
         UUID retificaId) {
 }

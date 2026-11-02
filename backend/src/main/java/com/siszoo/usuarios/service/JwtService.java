@@ -30,11 +30,6 @@ public class JwtService {
     private final SecretKey key;
     private final long expiracaoMinutos;
     private final Clock clock;
-    // Adaptador para o Clock proprio do jjwt (io.jsonwebtoken.Clock, so tem
-    // now(): Date) — sem isto, gerarToken() usaria o Clock injetado mas
-    // validarToken() checaria expiracao contra o relogio real da JVM, os
-    // dois podendo divergir (ex.: Clock.fixed(...) em teste) e invalidando
-    // token na hora por "expirado" mesmo tendo acabado de ser emitido.
     private final io.jsonwebtoken.Clock jjwtClock;
 
     public JwtService(
@@ -52,8 +47,6 @@ public class JwtService {
         this.jjwtClock = () -> Date.from(Instant.now(this.clock));
     }
 
-    // sid liga o token de acesso (curto) a sessao no servidor, que decide se
-    // ele ainda vale: logout e revogacao nao esperam a expiracao.
     public String gerarToken(Usuario usuario, UUID sessaoId) {
         Instant agora = Instant.now(clock);
         List<String> cargos = usuario.getCargos().stream()

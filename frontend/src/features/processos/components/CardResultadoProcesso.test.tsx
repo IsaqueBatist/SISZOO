@@ -10,14 +10,11 @@ import type { Processo } from '../types/processos.types'
 import { useProcessoQuery } from '../hooks/useProcessos'
 import { CardResultadoProcesso, type AcompanhamentoEnvio } from './CardResultadoProcesso'
 
-// Acompanhamento curto só no teste: o padrão (2 s / 20 s) é para o envio real.
 const ACOMPANHAMENTO_RAPIDO: AcompanhamentoEnvio = { intervaloMs: 50, duracaoMs: 400 }
 
 const NAO_NOTIFICADO = 'Munícipe NÃO notificado por e-mail — contatar por outro meio'
 const ENVIANDO = 'Enviando a notificação por e-mail ao munícipe…'
 
-// Lê o processo do mesmo cache que a tela usa: o lançamento e o
-// acompanhamento do envio atualizam o cache, e o card re-renderiza.
 function CardComCache() {
   const { data } = useProcessoQuery(PROCESSO_PENDENTE_ID)
   return data ? (
@@ -34,17 +31,14 @@ function renderCard() {
   )
 }
 
-// GET do processo: primeiro `inicial`; depois do lançamento, `depois`.
 function servirProcesso(inicial: Processo, depois: () => Processo) {
   let lancado = false
   server.use(
-    // "catalogos" casa com :id; sem resposta aqui, segue para o handler padrão.
     http.get(`${API_BASE_URL}/processos/:id`, ({ params }) =>
       params.id === 'catalogos' ? undefined : HttpResponse.json(lancado ? depois() : inicial),
     ),
     http.post(`${API_BASE_URL}/processos/:id/resultados`, () => {
       lancado = true
-      // Resposta do POST: positivo gravado, e-mail ainda não enviado (AFTER_COMMIT).
       return HttpResponse.json(processoComResultadoFixture({ dataNotificacaoMunicipe: null, responsavel: inicial.responsavel }))
     }),
   )
@@ -65,7 +59,6 @@ describe('CardResultadoProcesso — confirmação do positivo definitivo (T35-15
     const posts: unknown[] = []
     servirProcesso(processoFixture(), () => processoComResultadoFixture())
     server.use(
-      // Ja notificado na resposta: este teste e so da confirmacao, sem acompanhamento do envio.
       http.post(`${API_BASE_URL}/processos/:id/resultados`, async ({ request }) => {
         posts.push(await request.json())
         return HttpResponse.json(processoComResultadoFixture())

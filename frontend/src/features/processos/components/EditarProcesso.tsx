@@ -144,15 +144,12 @@ function FormularioEdicao({ processo }: { processo: Processo }) {
   )
 }
 
-// Rota só para o Administrador (RotaAdmin); o backend exige a autoridade própria.
 export function EditarProcesso() {
   const { id } = useParams<{ id: string }>()
   const { data: processo, isLoading, isError, error } = useProcessoQuery(id)
   const catalogosProcesso = useCatalogosProcessoQuery()
   const catalogosAnimais = useCatalogosAnimaisQuery()
 
-  // O formulário só monta com os catálogos: um select sem a opção do valor salvo
-  // mostraria outro dado (a primeira opção) como se fosse o do processo.
   if (isLoading || catalogosProcesso.isLoading || catalogosAnimais.isLoading) return <p>Carregando processo…</p>
 
   if (isError || !processo) {

@@ -22,10 +22,6 @@ import com.siszoo.comum.ApiTesteFixture;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-// Prova por HTTP real (token JWT emitido pelo login de produção, nunca fabricado
-// manualmente) que cada perfil só acessa os endpoints permitidos pela matriz de cargos
-// semeada em V3__seed_cargos.sql. Cada caso-âncora afirma tanto o 200 do perfil
-// autorizado quanto o 403 dos demais.
 class RbacMatrixIT extends AbstractIntegrationTest {
 
     private static final String ROTA_USUARIOS = "/api/teste/rbac/usuarios";
@@ -71,10 +67,6 @@ class RbacMatrixIT extends AbstractIntegrationTest {
                 Arguments.of(Perfil.AGENTE_SANITARIO, 403));
     }
 
-    // V3 + V10 e V11: ocorrencias RW para Admin e Agente; o Vet nao
-    // acessa o modulo (a V11 zerou a leitura que a V3 concedia). A feature
-    // denunciante_sigiloso (Admin e Agente) libera o denunciante e os anexos de
-    // ocorrencia sigilosa; vincular processo exige escrita em ocorrencias.
     static Stream<Arguments> lerOcorrenciasPorPerfil() {
         return Stream.of(
                 Arguments.of(Perfil.ADMINISTRADOR, 200),
@@ -89,9 +81,6 @@ class RbacMatrixIT extends AbstractIntegrationTest {
                 Arguments.of(Perfil.AGENTE_SANITARIO, 200));
     }
 
-    // So os perfis com acesso ao modulo; o Vet ja recebe 403 na leitura. A
-    // mascara (leitura sem a feature) e coberta no OcorrenciaControllerIT com
-    // o cargo leitor de teste, ja que nenhum cargo real tem esse perfil.
     static Stream<Arguments> verDenuncianteSigilosoPorPerfil() {
         return Stream.of(
                 Arguments.of(Perfil.ADMINISTRADOR, true),
@@ -112,7 +101,6 @@ class RbacMatrixIT extends AbstractIntegrationTest {
                 Arguments.of(Perfil.AGENTE_SANITARIO, 200));
     }
 
-    // PROCESSOS_SANITARIOS:leitura (V3): os tres cargos.
     static Stream<Arguments> listarProcessosPorPerfil() {
         return Stream.of(
                 Arguments.of(Perfil.ADMINISTRADOR, 200),
@@ -120,9 +108,6 @@ class RbacMatrixIT extends AbstractIntegrationTest {
                 Arguments.of(Perfil.AGENTE_SANITARIO, 200));
     }
 
-    // Lancar (e corrigir) resultado exige PROCESSOS_SANITARIOS:escrita,
-    // que os tres cargos tem (V3). A recusa (403) sem a permissao e coberta no
-    // ProcessoSanitarioControllerIT com o cargo leitor de teste.
     static Stream<Arguments> lancarResultadoPorPerfil() {
         return Stream.of(
                 Arguments.of(Perfil.ADMINISTRADOR, 200),
@@ -145,8 +130,6 @@ class RbacMatrixIT extends AbstractIntegrationTest {
                 .then().statusCode(statusEsperado);
     }
 
-    // Decisao de 31/10/2026: o Agente lanca o resultado positivo definitivo. Definitivo
-    // e "nao corrigivel", nao encerramento: o processo fica em COM_RESULTADO.
     @ParameterizedTest(name = "{0} lanca resultado positivo definitivo -> status {1}")
     @MethodSource("lancarResultadoPorPerfil")
     void lancarPositivoDefinitivoPorPerfil(Perfil perfil, int statusEsperado) {
@@ -165,7 +148,6 @@ class RbacMatrixIT extends AbstractIntegrationTest {
                 .body("resultados.size()", org.hamcrest.Matchers.equalTo(1))
                 .extract().path("resultados[0].id");
 
-        // Definitivo vale para todos os perfis, inclusive o Administrador.
         given().header("Authorization", "Bearer " + token).contentType(ContentType.JSON)
                 .body(Map.of("resultado", "negativo", "dataResultado", fixture.hoje().toString(), "retificaId", resultadoId))
                 .when().post("/api/processos/" + processoId + "/resultados")

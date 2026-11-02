@@ -78,9 +78,6 @@ class MedicamentoControllerIT extends AbstractIntegrationTest {
 
         tokenAdmin = login(EMAIL_ADMIN, SENHA_ADMIN);
 
-        // A categoria de apoio e criada direto via repositorio (o endpoint
-        // /api/categorias-farmacologicas tem teste proprio), com nome unico
-        // para nao esbarrar em uq_categoria_farmacologica_nome.
         CategoriaFarmacologica categoria = new CategoriaFarmacologica();
         categoria.setNome("Categoria Teste " + UUID.randomUUID());
         categoriaFarmacologicaRepository.save(categoria);
@@ -167,8 +164,6 @@ class MedicamentoControllerIT extends AbstractIntegrationTest {
         Medicamento medicamentoDesativado = medicamentoRepository.findById(UUID.fromString(id)).orElseThrow();
         assertThat(medicamentoDesativado.isAtivo(), equalTo(false));
 
-        // Prova de soft-delete: o registro continua existindo e acessivel via GET,
-        // so com ativo=false: nunca ha DELETE fisico na tabela.
         given()
                 .header("Authorization", "Bearer " + tokenAdmin)
                 .when()

@@ -58,10 +58,8 @@ public class CatalogoAnimalService {
         this.condicaoSaudeRepository = condicaoSaudeRepository;
     }
 
-    // RF-A04: catalogos do registro de exame.
     private final TipoExameRepository tipoExameRepository;
     private final LaboratorioRepository laboratorioRepository;
-    // Registro de vacinacao e de procedimento (seed da V5).
     private final VacinaRepository vacinaRepository;
     private final TipoProcedimentoRepository tipoProcedimentoRepository;
     private final CondicaoSaudeRepository condicaoSaudeRepository;
@@ -82,8 +80,6 @@ public class CatalogoAnimalService {
                         CondicaoSaude::getCodigo, CondicaoSaude::getNome));
     }
 
-    // Mesma ordenacao por nome do `mapear`, mas leva o intervalo de reforco
-    // adiante (VacinaCatalogoResponse).
     private List<VacinaCatalogoResponse> mapearVacinas(List<Vacina> vacinas) {
         return vacinas.stream()
                 .map(vacina -> new VacinaCatalogoResponse(vacina.getCodigo(), vacina.getNome(), vacina.getIntervaloMeses()))

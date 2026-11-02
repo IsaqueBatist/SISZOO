@@ -2,7 +2,6 @@ export type Sexo = 'macho' | 'femea' | 'nao_identificado'
 export type Pelagem = 'curta' | 'longa'
 export type Porte = 'pequeno' | 'medio' | 'grande'
 
-// Espelha com.siszoo.animais.dto.AnimalResponse do backend.
 export interface Animal {
   id: string
   nome: string
@@ -30,14 +29,12 @@ export interface Animal {
   fichaCompleta: boolean
   fotoUrl: string | null
   observacoes: string | null
-  // Nulo nas listagens: só o detalhe traz as condições.
   condicoes?: CatalogoItem[] | null
   condicoesOutras?: string | null
   criadoPorId: string
   criadoPorNome: string
   criadoEm: string
   atualizadoEm: string
-  // Opcionais no tipo para não quebrar fixtures antigas
   numeroMedalha?: string | null
   dataImplantacaoChip?: string | null
   procedencia?: string | null
@@ -49,34 +46,22 @@ export interface CatalogoItem {
   nome: string
 }
 
-// Espelha com.siszoo.animais.dto.VacinaCatalogoResponse: é um CatalogoItem
-// que leva também o intervalo de reforço, de que o modal de vacinação precisa
-// para prever a próxima aplicação. Estende `CatalogoItem`, então continua
-// servindo ao `SelectCatalogoClinico` sem mudança nenhuma lá.
-//
-// `intervaloMeses` nulo = vacina sem reforço definido, que não gera alerta
-// (RN-A03). A validade de uma vacinação já gravada continua vindo de
-// `Vacinacao.dataValidade`: não recalcular a partir daqui.
 export interface VacinaCatalogo extends CatalogoItem {
   intervaloMeses: number | null
 }
 
-// Espelha com.siszoo.animais.dto.CatalogosAnimalResponse.
 export interface CatalogosAnimal {
   especies: CatalogoItem[]
   status: CatalogoItem[]
   motivosEntrada: CatalogoItem[]
   tiposBaia: CatalogoItem[]
-  // RF-A04: catálogos do registro de exame (aditivos; opcionais para fixtures antigas)
   tiposExame?: CatalogoItem[]
   laboratorios?: CatalogoItem[]
-  // Registro de vacinação e de procedimento (seed da V5).
   vacinas: VacinaCatalogo[]
   tiposProcedimento: CatalogoItem[]
   condicoesSaude: CatalogoItem[]
 }
 
-// RF-A04: espelha com.siszoo.animais.dto.AnexoAnimalResponse.
 export interface AnexoAnimal {
   id: string
   animalId: string
@@ -89,7 +74,6 @@ export interface AnexoAnimal {
   criadoEm: string
 }
 
-// Espelha com.siszoo.animais.dto.BaiaResponse.
 export interface Baia {
   id: string
   nome: string
@@ -103,8 +87,6 @@ export interface Baia {
   superlotada: boolean
 }
 
-// Espelha com.siszoo.animais.dto.CriarBaiaRequest / AtualizarBaiaRequest do
-// backend (os dois DTOs têm campos idênticos).
 export interface BaiaRequest {
   nome: string
   tipoBaia: string
@@ -123,11 +105,6 @@ export interface AnimaisFiltro {
   tamanho: number
 }
 
-// Espelha com.siszoo.animais.dto.CriarAnimalRequest / AtualizarAnimalRequest
-// do backend (os dois DTOs têm campos idênticos). Ao contrário de `Animal`
-// (resposta), aqui espécie/status/motivo de entrada vão como código puro
-// (`especie`, `status`, `motivoEntrada`), sem o sufixo `Codigo` nem os `*Nome`
-// - nunca reenviar `especieNome`/`statusNome`/`motivoEntradaNome`.
 export interface AnimalRequest {
   nome: string
   especie: string
@@ -156,8 +133,6 @@ export interface AnimalRequest {
   laudoEutanasia?: string
 }
 
-// GET /baias/residentes: o mínimo do card de residentes da Gestão de
-// Baias. `fotoUrl` é a miniatura (avatar), como na listagem de animais.
 export interface ResidenteBaia {
   baiaId: string
   id: string

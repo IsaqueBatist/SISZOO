@@ -56,15 +56,11 @@ const ETAPAS = ['Dados Básicos', 'Saúde & Baia', 'Foto & Revisão'] as const
 
 const CAMPOS_COM_ERRO = new Set<string>([...CAMPOS_STEP[1], ...CAMPOS_STEP[2]])
 
-// Campo do DTO -> campo do formulário, para os erros por campo do 422. O
-// `esterilizado` do DTO é o grupo de cartões de castração na tela.
 const MAPA_ERROS_SERVIDOR: Record<string, keyof AnimalFormUiValues> = {
   ...mapaDeCampos<AnimalFormUiValues>([...CAMPOS_STEP[1], ...CAMPOS_STEP[2], 'observacoes']),
   esterilizado: 'castracaoOpcao',
 }
 
-// Pelas funções de rascunhoAnimalStorage (store 'animais'), não direto pelo
-// banco.
 const ARMAZENAMENTO_RASCUNHO_ANIMAL: ArmazenamentoRascunho<RascunhoAnimalValores> = {
   carregar: (chave) => carregarRascunhoAnimal<RascunhoAnimalValores>(chave),
   agendarSalvar: (chave, valores) => agendarSalvarRascunhoAnimal(chave, valores),
@@ -73,12 +69,9 @@ const ARMAZENAMENTO_RASCUNHO_ANIMAL: ArmazenamentoRascunho<RascunhoAnimalValores
   cancelarAgendado: (chave) => cancelarSalvamentoRascunhoAnimal(chave),
 }
 
-// Cadastro e edição de animal em 3 etapas: navegação, envio, rascunho e foto.
-// Os campos de cada etapa leem o formulário pelo FormProvider.
 export function AnimalForm({ animal }: AnimalFormProps) {
   const navigate = useNavigate()
   const { user } = useAuth()
-  // Rotas de formulário ficam atrás de RotaProtegida: o usuário sempre existe aqui.
   const chaveRascunho = chaveRascunhoAnimal(user?.id ?? '', animal?.id)
   const iniciais = animal ? valoresDeAnimal(animal) : valoresVazios()
 
@@ -89,8 +82,6 @@ export function AnimalForm({ animal }: AnimalFormProps) {
   const [fotoCarregando, setFotoCarregando] = useState(false)
   const [rascunhoMensagem, setRascunhoMensagem] = useState<string | null>(null)
 
-  // Id da foto na store 'arquivos'. Em ref, não em estado, porque só
-  // alimenta o que é gravado no rascunho: mudar não precisa redesenhar a tela.
   const fotoArquivoId = useRef<string | null>(null)
   const donoDosArquivos: DonoArquivoRascunho = { store: 'animais', chave: chaveRascunho }
 
@@ -98,22 +89,17 @@ export function AnimalForm({ animal }: AnimalFormProps) {
   const atualizarMutation = useAtualizarAnimalMutation()
   const salvando = criarMutation.isPending || atualizarMutation.isPending
   const envioPausado = criarMutation.isPaused || atualizarMutation.isPaused
-  // Voltar da edição é voltar à ficha: é de lá que a pessoa veio.
   const destinoVoltar = animal ? `/animais/${animal.id}` : '/animais'
 
   const formulario = useForm<AnimalFormUiValues>({
     resolver: zodResolver(animalFormUiSchema),
     mode: 'onSubmit',
     reValidateMode: 'onSubmit',
-    // Mesma conversão do rascunho: cobre todos os campos, porque o PUT da
-    // edição apaga o que estiver salvo em campo que não vier.
     defaultValues: rascunhoParaValores(iniciais, iniciais.fotoUrl),
   })
   const { handleSubmit, watch, setValue, setError, getValues, reset, trigger } = formulario
   const fotoUrl = watch('fotoUrl')
 
-  // Carrega uma vez ao montar, só então começa a salvar (debounce de 800 ms),
-  // e grava no formato RascunhoAnimalValores (ver valoresParaRascunho).
   const rascunho = useRascunho<AnimalFormUiValues, RascunhoAnimalValores>({
     armazenamento: ARMAZENAMENTO_RASCUNHO_ANIMAL,
     chave: chaveRascunho,
@@ -135,9 +121,6 @@ export function AnimalForm({ animal }: AnimalFormProps) {
     setRascunhoMensagem('Rascunho salvo.')
   }
 
-  // A foto do rascunho vem da store de arquivos, o que é assíncrono e não cabe
-  // na conversão síncrona do `deRascunho`, por isso o restaurar é envolvido
-  // aqui, lendo o id antes de o aviso ser fechado.
   async function handleRestaurarRascunho() {
     const id = rascunho.rascunhoDisponivel?.fotoArquivoId ?? null
     rascunho.restaurar()
@@ -172,9 +155,6 @@ export function AnimalForm({ animal }: AnimalFormProps) {
     }
   }
 
-  // Grava a imagem comprimida como Blob, UMA vez, aqui, fora do debounce do
-  // rascunho de texto, que guarda só o id. A foto anterior sai antes, para o
-  // rascunho não acumular arquivos trocados.
   async function guardarFotoNoRascunho(dataUri: string) {
     const blob = dataUriParaBlob(dataUri)
     if (!blob) return
@@ -185,16 +165,11 @@ export function AnimalForm({ animal }: AnimalFormProps) {
       new File([blob], 'foto.jpg', { type: blob.type }),
     )
     fotoArquivoId.current = referencia?.id ?? null
-    // O autosave disparado pelo setValue da foto foi montado antes desta
-    // gravação e não tem o id; salvar agora o substitui.
     await rascunho.salvarAgora()
-    // Sem IndexedDB ou sem cota: a foto segue na tela e no envio, só não
-    // sobrevive a um recarregamento.
     if (!referencia) setFotoAviso('A foto não ficou salva no rascunho, mas continua no formulário.')
   }
 
   function tratarErroSubmit(erro: unknown) {
-    // 409/422 sobre o microchip (duplicado, imutável) aparece no próprio campo.
     const regra = mensagemDeRegraDaApi(erro)
     if (regra?.toLowerCase().includes('icrochip')) {
       setError('microchip', { message: regra })
@@ -207,7 +182,6 @@ export function AnimalForm({ animal }: AnimalFormProps) {
       setStep((CAMPOS_STEP[1] as string[]).includes(campos[0]) ? 1 : 2)
       return
     }
-    // 409 de baia cheia/inativa e outras regras sem campo: mostra o motivo.
     setSubmitError(regra ?? 'Não foi possível salvar o animal. Tente novamente.')
   }
 
@@ -243,8 +217,6 @@ export function AnimalForm({ animal }: AnimalFormProps) {
     void handleSubmit(onSubmit, onInvalid)(event)
   }
 
-  // Valida a etapa ao sair dela: o erro aparece onde a pessoa está, não três
-  // telas depois.
   async function avancarDaEtapa(atual: 1 | 2) {
     if (await trigger(CAMPOS_STEP[atual])) setStep((atual + 1) as 2 | 3)
   }

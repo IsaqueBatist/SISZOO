@@ -14,14 +14,8 @@ import { CriteriosSenha } from './CriteriosSenha'
 import { PainelMarcaLogin } from './PainelMarcaLogin'
 import './Login.css'
 
-// A tela não sabe quem é o dono do token, então o schema só aplica o que não
-// depende do usuário (tamanho, categorias e confirmação). As regras de nome
-// da conta e do nome de exibição chegam da API como erro por campo (422).
 const schema = criarTrocarSenhaSchema({ email: '', nomeExibicao: '' })
 
-// Segundo passo da recuperação de senha, aberto pelo link do e-mail
-// (/redefinir-senha?token=...). O token é validado ao abrir a tela, para a
-// pessoa não preencher o formulário de um link que já venceu.
 export function RedefinirSenha() {
   const { token: tokenSessao, carregandoSessao } = useAuth()
   const [parametros] = useSearchParams()
@@ -31,7 +25,6 @@ export function RedefinirSenha() {
   const [concluido, setConcluido] = useState(false)
   const [linkInvalido, setLinkInvalido] = useState(false)
 
-  // O TanStack Query trata `undefined` como falha; a consulta devolve `true`.
   const validacao = useQuery({
     queryKey: ['recuperacao-senha', token],
     queryFn: async () => {

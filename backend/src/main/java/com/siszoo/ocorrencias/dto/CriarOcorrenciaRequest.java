@@ -11,9 +11,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-// dataAbertura futura e barrada no service com o Clock do projeto, nao
-// com @PastOrPresent (ver VacinacaoService, RN-C06). As flags sao Boolean e
-// opcionais (ausente = false): o Jackson 3 recusa null em boolean primitivo.
 public record CriarOcorrenciaRequest(
         @NotBlank
         String tipoOcorrencia,

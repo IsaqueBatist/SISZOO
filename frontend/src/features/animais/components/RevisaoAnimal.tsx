@@ -4,7 +4,6 @@ import { useBaiasAtivasQuery, useCatalogosAnimaisQuery } from '../hooks/useAnima
 import { CASTRACAO_OPCOES, CONDICAO_OUTRAS, PELAGEM_OPCOES, PORTE_OPCOES, SEXO_OPCOES, type AnimalFormUiValues } from '../schemas/animalFormSchema'
 import { nomeNoCatalogo } from '@/lib/catalogos'
 
-// Revisão dos dados antes de salvar (etapa 3): só leitura, ao vivo.
 export function RevisaoAnimal() {
   const { control } = useFormContext<AnimalFormUiValues>()
   const valores = useWatch({ control })

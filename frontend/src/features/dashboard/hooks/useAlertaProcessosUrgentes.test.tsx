@@ -35,8 +35,6 @@ describe('useProcessosUrgentesQuery', () => {
     expect(result.current.data?.itens[0].protocolo).toBe('045/2026')
   })
 
-  // O total vem de `totalItens` do filtro do servidor: exato mesmo
-  // quando há mais urgentes do que cabem na página.
   it('usa urgente=true e o total exato do servidor, mesmo maior que a página', async () => {
     const parametros: URLSearchParams[] = []
     server.use(

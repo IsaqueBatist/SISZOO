@@ -17,9 +17,6 @@ import { useCriarExameMutation } from '../hooks/useHistoricoAnimal'
 import type { Exame } from '../types/historico.types'
 import { semEspacos } from '@/lib/texto'
 
-// RF-A04: registro de exame, no mesmo padrão de
-// ModalRegistrarProcedimento (registro imutável; correção = novo registro).
-
 const MAPA_ERROS_SERVIDOR = mapaDeCampos<ExameFormValues>(Object.keys(exameFormSchema.shape) as (keyof ExameFormValues)[])
 
 const ARMAZENAMENTO_RASCUNHO = armazenamentoRascunhoClinico<ExameFormValues>()

@@ -9,10 +9,6 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-// Edicao de processo ja registrado, so pelo Administrador.
-// Protocolo, data de abertura, status, resultados, desfecho, vinculo
-// e notificacao ficam de fora: tem caminho proprio ou sao imutaveis. As amostras
-// vem todas, pelo id: a edicao corrige dados, nao inclui nem remove amostra.
 public record EditarProcessoRequest(
         @NotBlank(message = "Selecione a doença.")
         String doenca,

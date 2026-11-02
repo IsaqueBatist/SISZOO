@@ -22,12 +22,6 @@ import com.siszoo.relatorios.dto.PeriodoRelatorio;
 import com.siszoo.relatorios.dto.RelatorioOcupacaoBaiasResponse;
 import com.siszoo.relatorios.entity.TipoRelatorio;
 
-// "Ocupação de Baias" (DER §3.6 / docs/prototipo/relatorio-ocupacao.html): o
-// unico dos 6 tipos sem lista longa (numero de baias e pequeno e fixo), entao
-// preview e CSV reaproveitam a mesma consulta - nao ha "top N + Outros" aqui.
-// E sempre a posicao na data da geracao (mesma base de AlertaCriticoResponse
-// "baia_superlotada" do dashboard): o schema nao guarda snapshot diario de
-// ocupacao, entao nao ha periodo a filtrar.
 @Service
 public class RelatorioOcupacaoBaiasService implements GeradorRelatorio<RelatorioOcupacaoBaiasResponse> {
 
@@ -68,9 +62,6 @@ public class RelatorioOcupacaoBaiasService implements GeradorRelatorio<Relatorio
         return List.of(new BlocoCsv(titulo, CABECALHO_CSV, linhas));
     }
 
-    // Mesma fonte de dados de DashboardService#contarBaiasSuperlotadas
-    // (AnimalRepository#contarOcupacaoPorBaia): uma unica query agregada para
-    // todas as baias, nunca uma por baia (evita N+1 em maquinas com ~2GB RAM).
     private List<LinhaOcupacaoBaiaResponse> montarLinhas() {
         List<Baia> baias = baiaRepository.findByAtivaTrueOrderByNomeAsc();
         if (baias.isEmpty()) {

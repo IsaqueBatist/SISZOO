@@ -84,9 +84,6 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
-    // Recuperacao de senha (sem sessao). 202 sempre: a resposta nao diz se o
-    // e-mail tem conta. Os tres endpoints sao publicos (SecurityConfig) e
-    // limitados por IP e por e-mail (LimitadorRecuperacaoSenha).
     @PostMapping("/recuperacao")
     public ResponseEntity<Void> solicitarRecuperacaoSenha(@Valid @RequestBody SolicitarRecuperacaoSenhaRequest request,
             HttpServletRequest requisicao) {

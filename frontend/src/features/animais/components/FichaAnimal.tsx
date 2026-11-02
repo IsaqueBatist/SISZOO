@@ -24,13 +24,8 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'exames', label: 'Exames' },
 ]
 
-// Nascimento e castração são LocalDate: `new Date('AAAA-MM-DD')` mostraria o
-// dia anterior em São Paulo (ver lib/datas.ts).
 const formatarData = formatarDataBR
 
-// atualizadoEm é LocalDateTime de Itu: conta dias civis em Itu (ontem às 23h
-// é "há 1 dia" às 8h de hoje), sem `new Date(iso)`, que dependeria do fuso do
-// navegador.
 function formatarRelativo(iso: string): string {
   const dias = diasCivisAteHoje(iso)
   if (dias <= 0) return 'hoje'
@@ -98,7 +93,6 @@ export function FichaAnimal() {
           </div>
           <h1>{animal.nome}</h1>
           <p className="subtitle">
-            {/* fichaCompleta vem do backend (FichaCompletaService, DER §3.2); o protótipo só desenha o estado completo. */}
             {animal.fichaCompleta ? (
               'Ficha completa'
             ) : (
@@ -240,7 +234,6 @@ export function FichaAnimal() {
             </div>
           </div>
 
-          {/* RF-A04: documentos e fotos do animal (Quadro 69). */}
           <AnexosAnimal animalId={id} podeEscrever={podeEscrever} />
         </div>
 
@@ -263,12 +256,6 @@ export function FichaAnimal() {
                 </button>
               ))}
             </div>
-            {/* Só a aba ativa é montada: cada aba dispara sua própria query (e a
-                timeline faz merge de 3), então montar as 5 de uma vez faria
-                requisições desnecessárias para abas que o usuário nem abriu,
-                o que contraria "evitar N+1"/leveza exigida pela infra. Diferente do
-                protótipo estático (que mantém todas no DOM e só esconde via
-                CSS), aqui cada troca de aba desmonta a anterior. */}
             <div className="tab-content">
               <div className="tab-pane active" id={`tab-${tab}`} role="tabpanel" aria-labelledby={`tab-btn-${tab}`}>
                 {tab === 'historico' && <AbaHistorico animalId={id} animal={animal} refreshKey={refreshKey} />}

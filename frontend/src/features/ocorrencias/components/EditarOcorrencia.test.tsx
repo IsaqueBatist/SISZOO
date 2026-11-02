@@ -20,8 +20,6 @@ import type { Ocorrencia } from '../types/ocorrencias.types'
 import { EditarOcorrencia } from './EditarOcorrencia'
 import { OcorrenciaDetalhe } from './OcorrenciaDetalhe'
 
-// jsdom não implementa IndexedDB: o storage é mockado para conferir a chave
-// do rascunho da edição (mesmo padrão de OcorrenciaForm.autosave.test.tsx).
 vi.mock('../storage/rascunhoOcorrenciaStorage', async () => {
   const real =
     await vi.importActual<typeof import('../storage/rascunhoOcorrenciaStorage')>('../storage/rascunhoOcorrenciaStorage')
@@ -64,7 +62,6 @@ function renderEm(rota: string, cargos: string[] = ['Agente Sanitário']) {
   )
 }
 
-// Serve `ocorrencia` no GET e registra o corpo de cada PUT.
 function servirParaEdicao(ocorrencia: Ocorrencia) {
   const corpos: Record<string, unknown>[] = []
   server.use(
@@ -124,8 +121,6 @@ describe('EditarOcorrencia', () => {
 
     const telefone = await screen.findByLabelText('Telefone')
     await user.clear(telefone)
-    // Digita só os dígitos — é como um usuário real digita num campo com
-    // máscara (a pontuação é inserida pela máscara, não digitada).
     await user.type(telefone, '11900001111')
     await salvar(user)
 

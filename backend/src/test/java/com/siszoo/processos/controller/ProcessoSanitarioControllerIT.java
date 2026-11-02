@@ -59,9 +59,6 @@ import com.siszoo.processos.repository.ProcessoSanitarioRepository;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-// Processo sanitario completo pela API: criacao com responsavel e
-// amostras, as duas modalidades de amostra, independencia da ficha, urgencia
-// derivada, vinculo imutavel, catalogos, rollback e auditoria sem dado pessoal.
 @Import(RelogioTesteConfig.class)
 class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
 
@@ -95,8 +92,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
                 ApiTesteFixture.CARGO_VETERINARIO_ID);
     }
 
-    // Segunda barreira (a primeira e o finally de cada teste): nenhum teste
-    // seguinte herda o relogio de um ano isolado.
     @AfterEach
     void restaurarRelogio() {
         RelogioTesteConfig.restaurar();
@@ -228,7 +223,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         assertThat(criado.path("amostras[0].animalId"), equalTo(animalId));
         assertSnapshot(criado, "felino", "femea", "SRD", "Rajado", "curta", 4.2f, "2 anos");
 
-        // A ficha muda (identificacao e observacoes); a amostra continua igual.
         given().header("Authorization", "Bearer " + tokenAdmin).contentType(ContentType.JSON)
                 .body(new AtualizarAnimalRequest("Rex", "canino", "macho", "Labrador", "Preto", "longa", null,
                         new BigDecimal("9.90"), "5 anos", null, microchip, false, null, "em_tratamento", "resgate",
@@ -318,9 +312,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         conferirUrgencia(postarComAmostras(false, false, true), true);
     }
 
-    // Uma amostra de campo por contato (a da fixture, que ja traz nivel e
-    // agressao quando ha contato), com datas fixas de 2026: os processos
-    // criados aqui nao sobem para o topo das listagens dos outros testes.
     @SuppressWarnings("unchecked")
     private Response postarComAmostras(boolean... contatos) {
         Map<String, Object> corpo = fixture.corpoProcesso(null, false);
@@ -340,7 +331,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         return resposta;
     }
 
-    // A mesma urgencia na resposta do POST, no detalhe e na linha gravada.
     private void conferirUrgencia(Response criado, boolean esperado) {
         String id = criado.path("id");
         assertThat(criado.path("urgente"), equalTo(esperado));
@@ -382,7 +372,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
                 .when().post("/api/ocorrencias/" + outraOcorrencia + "/processo")
                 .then().statusCode(409);
 
-        // Ultima barreira, para qualquer caminho fora do service (trigger da V13).
         assertThrows(DataIntegrityViolationException.class, () -> jdbcTemplate.update(
                 "UPDATE processo_sanitario SET ocorrencia_id = CAST(? AS uuid) WHERE id = CAST(? AS uuid)",
                 outraOcorrencia, processoId));
@@ -390,7 +379,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
                 "UPDATE processo_sanitario SET ocorrencia_id = NULL WHERE id = CAST(? AS uuid)", processoId));
         assertThat(buscar(tokenAgente, processoId).path("ocorrenciaId"), equalTo(ocorrenciaId));
 
-        // Avancar o status grava a linha inteira (com o mesmo vinculo) e continua permitido.
         given().header("Authorization", "Bearer " + tokenAgente).contentType(ContentType.JSON)
                 .body(Map.of("status", "AGUARDANDO_RESULTADO"))
                 .when().patch(ROTA + "/" + processoId + "/status")
@@ -472,7 +460,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
                 .body(Map.of("status", "AGUARDANDO_RESULTADO"))
                 .when().patch(ROTA + "/" + esporotricoseId + "/status").then().statusCode(200);
 
-        // O detalhe traz o protocolo da ocorrencia, sem precisar busca-la.
         String protocoloOcorrencia = given().header("Authorization", "Bearer " + tokenAgente)
                 .when().get("/api/ocorrencias/" + ocorrenciaId).path("protocolo");
         assertThat(vinculado.path("ocorrenciaProtocolo"), equalTo(protocoloOcorrencia));
@@ -486,8 +473,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         assertThat(linha.get("ocorrenciaProtocolo"), equalTo(protocoloOcorrencia));
         assertThat(linha.get("statusProcesso"), equalTo("ABERTO"));
         assertThat(((Map<?, ?>) linha.get("doenca")).get("codigo"), equalTo("raiva"));
-        // Sem nenhum dado do responsavel (CPF, telefone, e-mail, endereco):
-        // a linha tem exatamente estes campos.
         assertThat(linha.keySet(), containsInAnyOrder("id", "protocolo", "dataAbertura", "doenca", "statusProcesso",
                 "urgente", "ocorrenciaId", "ocorrenciaProtocolo"));
         assertThat(pagina.asString(), not(containsString("Responsavel Teste")));
@@ -519,10 +504,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         List<String> datas = listar(tokenAgente, "?status=ABERTO&tamanho=500").path("itens.findAll { !it.urgente }.dataAbertura");
         assertThat(datas, equalTo(datas.stream().sorted(Comparator.reverseOrder()).toList()));
 
-        // Mesma urgencia e mesma data de abertura: desempate pela criacao mais
-        // recente, nao pelo texto do protocolo. A ordem de criacao (1000, 998,
-        // 999, da mais recente para a mais antiga) difere do texto desc
-        // (999, 998, 1000) e do numero desc (1000, 999, 998).
         String maisAntigo = criarComProtocolo("999/2099", "2026-01-01 08:00:00");
         String intermediario = criarComProtocolo("998/2099", "2026-01-01 09:00:00");
         String maisRecente = criarComProtocolo("1000/2099", "2026-01-01 10:00:00");
@@ -531,8 +512,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
                 equalTo(List.of(maisRecente, intermediario, maisAntigo)));
     }
 
-    // Processo comum com data_abertura 2026-01-01 (antiga: nao sobe para o topo
-    // das listagens dos outros testes); protocolo e criado_em fixados no banco.
     @SuppressWarnings("unchecked")
     private String criarComProtocolo(String protocolo, String criadoEm) {
         Map<String, Object> corpo = fixture.corpoProcesso(null, false);
@@ -544,8 +523,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         return id;
     }
 
-    // updatable = false tira a coluna do UPDATE que o Hibernate gera para a
-    // entidade; nao impede SQL direto (nao ha garantia no banco).
     @Test
     @DisplayName("[T30] alterar o processo pela entidade nao muda o protocolo gravado")
     void protocoloNaoEntraNoUpdateDoProcesso() {
@@ -562,22 +539,12 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
 
         Map<String, Object> gravado = jdbcTemplate.queryForMap(
                 "SELECT protocolo, observacoes FROM processo_sanitario WHERE id = CAST(? AS uuid)", id);
-        // A observacao prova que o UPDATE aconteceu; o protocolo ficou fora dele.
         assertThat(gravado.get("observacoes"), equalTo("Observacao alterada"));
         assertThat(gravado.get("protocolo"), equalTo(protocolo));
     }
 
-    // 6 criacoes: mais de uma para disputar a linha (PROCESSO, ano) de
-    // protocolo_sequencia, com folga no pool padrao do Hikari (10; o
-    // application.yml nao o configura): 6 transacoes da aplicacao + 1 conexao
-    // bloqueadora + 1 de polling = 8, para as 6 estarem abertas ao mesmo tempo
-    // disputando a linha, e nao esperando conexao.
     private static final int CRIACOES_CONCORRENTES = 6;
     private static final long TIMEOUT_SEGUNDOS = 30;
-    // Datas de negocio fixas e no passado em relacao ao relogio ajustado: o ano
-    // do protocolo vem do Clock, nao da data de abertura, e as linhas
-    // criadas aqui nao sobem para o topo das listagens dos outros testes, que
-    // usam o mesmo banco sem rollback.
     private static final String DATA_ANTIGA = "2026-01-01";
 
     @Test
@@ -611,8 +578,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         RelogioTesteConfig.fixarEm(Instant.parse(ano + "-06-15T15:00:00Z"));
         try {
             String token = tokenNoRelogioAjustado();
-            // Uma ocorrencia por processo, criadas antes e em sequencia: a
-            // disputa e so pela sequencia de PROCESSO, nao pelo mesmo vinculo.
             List<String> ocorrencias = new ArrayList<>();
             for (int i = 0; i < CRIACOES_CONCORRENTES; i++) {
                 ocorrencias.add(criarOcorrencia(token, DATA_ANTIGA));
@@ -622,7 +587,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
                     ocorrencias.stream().map(this::corpoComDataAntiga).toList(), ano);
 
             verificarProtocolosDoAno(respostas, ano);
-            // respostas.get(i) e a resposta do corpo i (ordem de envio, nao de conclusao).
             for (int i = 0; i < CRIACOES_CONCORRENTES; i++) {
                 String processoId = respostas.get(i).path("id");
                 assertThat(respostas.get(i).path("ocorrenciaId"), equalTo(ocorrencias.get(i)));
@@ -668,7 +632,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
                 + " WHERE processo_id = CAST(? AS uuid) AND retifica_id IS NULL AND registrado_por_id = ?",
                 Integer.class, processoId, idDoUsuario("agente.processos@itu.sp.gov.br")), equalTo(1));
         assertVigenteCoerente(processoId);
-        // Outro processo nao e tocado.
         assertSemResultado(outroProcesso, "AGUARDANDO_RESULTADO");
     }
 
@@ -690,9 +653,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         assertSemResultado(processoId, "AGUARDANDO_RESULTADO");
     }
 
-    // Sem limite inferior (docs/decisoes/T34.md): processo registrado no
-    // sistema depois do laudo; a abertura e imutavel e a data real do laudo
-    // precisa ser aceita.
     @Test
     @DisplayName("[T34] dataResultado anterior a abertura: aceita no registro e na correcao, gravada no banco")
     void dataResultadoAnteriorAAberturaAceita() {
@@ -710,9 +670,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         assertVigenteCoerente(processoId);
     }
 
-    // Processo nao e sigiloso (o sigilo e da ocorrencia): a resposta do
-    // processo, inclusive com resultado e historico, nao traz o denunciante
-    // da ocorrencia vinculada, e a consulta nao gera VISUALIZACAO.
     @Test
     @DisplayName("[T34/T26] processo vinculado a ocorrencia sigilosa, apos o resultado: GET sem dado do denunciante")
     void resultadoNaoExpoeDenuncianteSigiloso() {
@@ -778,7 +735,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
     void maquinaDeStatusCompleta() {
         String processoId = fixture.postarProcesso(tokenAgente, null, false).then().statusCode(200).extract().path("id");
 
-        // Pular passos e recusado.
         alterarStatus(tokenAgente, processoId, "COM_RESULTADO").then().statusCode(422);
         alterarStatus(tokenAgente, processoId, "CONCLUIDO").then().statusCode(422);
         alterarStatus(tokenAgente, processoId, "AGUARDANDO_RESULTADO").then().statusCode(200)
@@ -796,7 +752,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         alterarStatus(tokenAgente, processoId, "CONCLUIDO").then().statusCode(200)
                 .body("statusProcesso", equalTo("CONCLUIDO"));
 
-        // CONCLUIDO e terminal: nenhum avanco, nenhum lancamento nem correcao.
         String vigente = buscar(tokenAgente, processoId).path("resultados[0].id");
         for (String status : List.of("ABERTO", "AGUARDANDO_RESULTADO", "COM_RESULTADO", "CONCLUIDO")) {
             alterarStatus(tokenAgente, processoId, status).then().statusCode(422);
@@ -809,8 +764,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         assertVigenteCoerente(processoId);
     }
 
-    // Estado legado: COM_RESULTADO sem resultado, como um PATCH provisorio
-    // deixava (montado via SQL, depois da V15).
     @Test
     @DisplayName("[T34] COM_RESULTADO sem resultado vigente: PATCH CONCLUIDO 422, sem gravar nem auditar")
     void concluirSemResultadoVigenteRecusado() {
@@ -838,8 +791,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         assertVigenteCoerente(processoId);
         Map<String, Object> originalGravado = linhaDoResultado(originalId);
 
-        // A cadeia termina no positivo, que e definitivo (corrigi-lo e
-        // recusado, positivoEDefinitivo).
         Response primeira = lancarResultado(tokenVet, processoId, corpoResultado("inconclusivo", HOJE.minusDays(1), originalId));
         primeira.then().statusCode(200);
         assertThat(primeira.path("statusProcesso"), equalTo("COM_RESULTADO"));
@@ -857,11 +808,9 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         assertThat(segunda.path("resultados[2].retificaId"), equalTo(primeiraId));
         assertVigenteCoerente(processoId);
 
-        // O original nao mudou em nada e continua no historico.
         assertThat(linhaDoResultado(originalId), equalTo(originalGravado));
         assertThat(contarResultados(processoId), equalTo(3));
 
-        // Cada registro e corrigido uma vez so; so registros do proprio processo.
         lancarResultado(tokenAgente, processoId, corpoResultado("negativo", HOJE, originalId)).then().statusCode(409)
                 .body("mensagem", equalTo("Este registro já foi corrigido. Atualize a página para ver a versão atual."));
         Response doOutro = lancarResultado(tokenAgente, outroProcesso, corpoResultado("negativo", HOJE, null));
@@ -874,7 +823,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         assertThat(contarResultados(outroProcesso), equalTo(1));
         assertVigenteCoerente(processoId);
 
-        // Auditoria ATUALIZACAO do processo com o vigente antes e depois de cada correcao.
         List<Map<String, Object>> eventos = jdbcTemplate.queryForList("SELECT payload_antes ->> 'resultado' AS antes,"
                 + " payload_depois ->> 'resultado' AS depois, payload_depois ->> 'statusProcesso' AS status"
                 + " FROM auditoria_evento WHERE entidade = 'processo_sanitario' AND acao = 'ATUALIZACAO'"
@@ -890,10 +838,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         assertThat(eventos.get(2).get("status"), equalTo("COM_RESULTADO"));
     }
 
-    // O positivo e definitivo: nenhuma correcao dele, nem para
-    // outro resultado nem para positivo de novo (que reenviaria o e-mail). O
-    // positivo continua vigente, sem registro novo. Negativo -> positivo,
-    // por correcao, continua valendo (correcaoPorNovoRegistro).
     @Test
     @DisplayName("[T35-15] positivo e definitivo: corrigir para negativo ou positivo da 422, sem gravar nada")
     void positivoEDefinitivo() {
@@ -914,7 +858,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         assertThat(processo.path("dataResultado"), equalTo(HOJE.minusDays(1).toString()));
         assertThat(processo.path("statusProcesso"), equalTo("COM_RESULTADO"));
         assertVigenteCoerente(processoId);
-        // Lancar de novo sem retificaId continua 409 (ja ha resultado).
         lancarResultado(tokenAgente, processoId, corpoResultado("positivo", HOJE, null)).then().statusCode(409);
     }
 
@@ -945,9 +888,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         assertThat(buscar(tokenAgente, processoId).path("resultado.codigo"), equalTo("negativo"));
     }
 
-    // A garantia da V14 (um so original por processo) barra o INSERT do
-    // registro antes de o processo ser alterado: a transacao inteira e
-    // desfeita, sem status nem vigente gravados.
     @Test
     @DisplayName("[T34] atomicidade: violacao no INSERT do registro desfaz tudo; processo continua sem resultado")
     void falhaNoRegistroNaoAlteraOProcesso() {
@@ -965,10 +905,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         assertThat(eventosDeAtualizacao(processoId), equalTo(eventosAntes));
     }
 
-    // 6 lancamentos do primeiro resultado no mesmo processo:
-    // uma conexao do teste trava a linha do processo (FOR UPDATE, sem commit);
-    // so quando pg_stat_activity mostra as 6 transacoes esperando por ela o
-    // teste libera (rollback). Pool: 6 + bloqueadora + polling = 8 de 10.
     @Test
     @DisplayName("[T34] 6 lancamentos simultaneos do primeiro resultado: um 200, cinco 409, um so registro original")
     void lancamentosConcorrentesDoPrimeiroResultado() throws Exception {
@@ -1023,9 +959,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         assertVigenteCoerente(processoId);
     }
 
-    // 2 correcoes simultaneas do mesmo vigente, no mesmo padrao: a correcao
-    // trava o processo antes de ler o vigente, entao a segunda ja ve a
-    // primeira confirmada (existsByRetificaId) e recebe 409.
     @Test
     @DisplayName("[T34] 2 correcoes simultaneas do mesmo vigente: um 200, um 409, uma so correcao gravada")
     void correcoesConcorrentesDoMesmoVigente() throws Exception {
@@ -1131,8 +1064,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         return processoAguardandoResultado(fixture.corpoProcesso(null, false));
     }
 
-    // Aberto em data anterior a hoje: permite datas de resultado no passado
-    // (dataResultado >= dataAbertura).
     private String processoAguardandoResultadoAbertoEm(LocalDate abertura) {
         Map<String, Object> corpo = fixture.corpoProcesso(null, false);
         corpo.put("dataAbertura", abertura.toString());
@@ -1168,8 +1099,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         return corpo;
     }
 
-    // O vigente gravado em processo_sanitario e sempre o do unico registro
-    // que nenhum outro corrige (queryForMap falha se houver zero ou mais de um).
     private void assertVigenteCoerente(String processoId) {
         Map<String, Object> vigente = jdbcTemplate.queryForMap("SELECT p.resultado_laboratorial_id, p.data_resultado"
                 + " FROM processo_sanitario p WHERE p.id = CAST(? AS uuid)", processoId);
@@ -1210,10 +1139,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
                 + " AND acao = 'ATUALIZACAO' AND entidade_id = CAST(? AS uuid)", Integer.class, processoId);
     }
 
-    // Espera as N requisicoes paradas ao mesmo tempo no lock da linha do
-    // processo (findByIdForUpdate), presas pela conexao bloqueadora (direta ou
-    // indiretamente, na fila do lock de tupla). Uma requisicao que termina
-    // antes nao esperou as demais.
     private void aguardarLancamentosBloqueados(List<Future<Response>> futuros, int pidBloqueio) throws Exception {
         long limite = System.nanoTime() + TimeUnit.SECONDS.toNanos(TIMEOUT_SEGUNDOS);
         int bloqueados = 0;
@@ -1247,7 +1172,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         return given().header("Authorization", "Bearer " + token).when().get(ROTA + parametros);
     }
 
-    // O banco de teste e compartilhado: procura a linha do cenario pelo id.
     private static Map<String, Object> linhaDe(Response pagina, String id) {
         List<Map<String, Object>> itens = pagina.path("itens");
         return itens.stream().filter(item -> id.equals(item.get("id"))).findFirst().orElseThrow();
@@ -1266,7 +1190,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         return responsavel;
     }
 
-    // Corpo da fixture com campos da (unica) amostra sobrescritos.
     @SuppressWarnings("unchecked")
     private Map<String, Object> comAmostra(Map<String, Object> campos) {
         Map<String, Object> corpo = fixture.corpoProcesso(null, false);
@@ -1280,7 +1203,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         return corpo;
     }
 
-    // Amostra do canil: so animalId e os campos clinicos (sem identificacao).
     private Map<String, Object> amostraDoCanil(String animalId, Map<String, Object> campos) {
         Map<String, Object> amostra = new HashMap<>();
         amostra.put("animalId", animalId);
@@ -1331,10 +1253,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
                 .then().statusCode(200).extract().path("id");
     }
 
-    // O ano isolado so e usado pelo seu teste, e o banco do contexto e novo a
-    // cada execucao; mesmo assim confere que nenhum processo do ano existe (o
-    // 001 colidiria com o UNIQUE de protocolo) e zera a sequencia do ano, como
-    // os testes de 2091-2093 do OcorrenciaTransacaoIT.
     private void prepararAnoVazio(int ano) {
         assertThat("processos ja existentes em " + ano, jdbcTemplate.queryForObject(
                 "SELECT count(*) FROM processo_sanitario WHERE protocolo LIKE ?", Integer.class, "%/" + ano),
@@ -1342,9 +1260,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         jdbcTemplate.update("DELETE FROM protocolo_sequencia WHERE entidade = 'PROCESSO' AND ano = ?", ano);
     }
 
-    // Login depois de ajustar o relogio: o token do @BeforeEach foi emitido em
-    // 2026 e estaria vencido no relogio do ano isolado. Usuario proprio, para
-    // nao misturar com os perfis dos outros testes.
     private String tokenNoRelogioAjustado() {
         return fixture.tokenComCargo("agente.concorrencia.processos@itu.sp.gov.br", "Agente", "Concorrencia",
                 ApiTesteFixture.CARGO_AGENTE_SANITARIO_ID);
@@ -1358,15 +1273,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         return corpo;
     }
 
-    // Prova de simultaneidade no banco (padrao do VacinacaoControllerIT): uma
-    // conexao do teste insere, sem commit, a linha (PROCESSO, ano) da
-    // sequencia; o upsert de cada requisicao esbarra nela e espera. So quando
-    // pg_stat_activity mostra as N transacoes esperando juntas o teste libera
-    // (rollback), e as N disputam a mesma linha. O rollback deixa a sequencia
-    // vazia, entao o esperado continua 001..N. Prova que as N transacoes
-    // estavam abertas ao mesmo tempo disputando a linha; nao prova ausencia
-    // de deadlock em geral. A lista devolvida segue a ordem dos corpos (nao a
-    // de conclusao).
     private List<Response> postarEmParalelo(String token, List<Map<String, Object>> corpos, int ano)
             throws Exception {
         CountDownLatch largada = new CountDownLatch(1);
@@ -1376,9 +1282,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
             bloqueio.setAutoCommit(false);
             int pidBloqueio = pidDe(bloqueio);
             List<Future<Response>> futuros = new ArrayList<>();
-            // O rollback fica no finally: libera os upserts presos (e deixa a
-            // sequencia vazia) tambem quando a espera falha, antes do
-            // encerramento do executor.
             try {
                 try (PreparedStatement insert = bloqueio.prepareStatement(
                         "INSERT INTO protocolo_sequencia (entidade, ano, ultimo) VALUES ('PROCESSO', ?, 1)")) {
@@ -1412,10 +1315,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
             falha = t;
             throw t;
         } finally {
-            // shutdownNow so interrompe as threads do teste: o trabalho ja
-            // iniciado no servidor nao e cancelado. Se elas nao terminam, o
-            // teste falha dizendo isso, em vez de seguir (e restaurar o
-            // relogio) com requisicoes ainda em curso.
             executor.shutdownNow();
             if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
                 AssertionError pendentes = new AssertionError("Requisicoes ainda em execucao apos o encerramento;"
@@ -1437,11 +1336,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
         }
     }
 
-    // Espera ate as N requisicoes estarem paradas no upsert do protocolo ao
-    // mesmo tempo. Conta so sessoes ativas que esperam a transacao da conexao
-    // bloqueadora (pg_blocking_pids) no INSERT da sequencia; a propria sessao
-    // de polling e a bloqueadora (idle in transaction) ficam de fora por
-    // construcao. Uma requisicao que termina antes nao esperou as demais.
     private void aguardarUpsertsBloqueados(List<Future<Response>> futuros, int pidBloqueio) throws Exception {
         long limite = System.nanoTime() + TimeUnit.SECONDS.toNanos(TIMEOUT_SEGUNDOS);
         int bloqueados = 0;
@@ -1467,9 +1361,6 @@ class ProcessoSanitarioControllerIT extends AbstractIntegrationTest {
                 + " vistas " + bloqueados);
     }
 
-    // Sem depender da ordem: cada resposta 200 com protocolo do ano igual ao
-    // gravado; os numeros, ordenados, sao exatamente 1..N (duplicata ou lacuna
-    // falham); e nao ha no banco outro processo do ano alem destes.
     private void verificarProtocolosDoAno(List<Response> respostas, int ano) {
         List<String> protocolos = new ArrayList<>();
         List<Integer> numeros = new ArrayList<>();

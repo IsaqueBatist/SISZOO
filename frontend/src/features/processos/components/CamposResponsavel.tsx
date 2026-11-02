@@ -4,7 +4,6 @@ import { aplicarMascaraAoDigitar, formatarCep, formatarCpf, formatarTelefone } f
 import { buscarEnderecoPorCep } from '@/lib/viaCep'
 import type { ProcessoFormValues } from '../schemas/processoFormSchema'
 
-// Etapa 2 do processo sanitário: o responsável / munícipe.
 export function CamposResponsavel() {
   const {
     register,
@@ -14,9 +13,6 @@ export function CamposResponsavel() {
   } = useFormContext<ProcessoFormValues>()
   const [buscandoCep, setBuscandoCep] = useState(false)
 
-  // Diferente do denunciante de ocorrência sigilosa, o responsável de
-  // processo não tem esse conceito de sigilo — sempre pode disparar o
-  // ViaCEP. Só preenche endereço/bairro se ainda estiverem vazios.
   async function aoMudarCep(valorDigitado: string) {
     const digitos = valorDigitado.replace(/\D/g, '')
     if (digitos.length !== 8) return

@@ -34,26 +34,12 @@ import com.siszoo.usuarios.exception.TokenRecuperacaoInvalidoException;
 import com.siszoo.usuarios.repository.TokenRecuperacaoSenhaRepository;
 import com.siszoo.usuarios.repository.UsuarioRepository;
 
-/**
- * Recuperacao de senha pela tela de login (docs/decisoes/recuperacao-senha.md).
- *
- * <p>Fluxo: {@link #solicitar} grava o hash de um token de uso unico com prazo
- * curto e manda o link por e-mail; {@link #validar} diz se o link ainda vale;
- * {@link #redefinir} consome o token, grava a senha nova e encerra todas as
- * sessoes do usuario. Pedir um novo link ou trocar a senha por outro caminho
- * invalida os links pendentes.
- *
- * <p>Sem enumeracao de contas: a solicitacao responde igual para e-mail
- * cadastrado, inexistente ou de usuario desativado, e so o log (mascarado)
- * distingue os casos. Token, senha e e-mail completo nunca vao para o log.
- */
 @Service
 public class RecuperacaoSenhaService {
 
     static final String TEMPLATE_EMAIL = "email/recuperacao-senha";
     static final String ASSUNTO_EMAIL = "SISZOO - Redefinição de senha";
     static final String ROTA_REDEFINICAO = "/redefinir-senha?token=";
-    // Tokens vencidos ha mais tempo que isto sao apagados pelo expurgo diario.
     static final Duration RETENCAO_APOS_VENCIMENTO = Duration.ofDays(7);
 
     private static final Logger log = LoggerFactory.getLogger(RecuperacaoSenhaService.class);
@@ -95,8 +81,6 @@ public class RecuperacaoSenhaService {
         this.validade = Duration.ofMinutes(validadeMinutos);
     }
 
-    // Responde igual em todos os casos. O e-mail so sai depois do commit: um
-    // link cujo token nao chegou a ser gravado nao serviria para nada.
     @Transactional
     public void solicitar(String email, String ip) {
         limitador.registrarSolicitacao(email, ip);
@@ -150,19 +134,14 @@ public class RecuperacaoSenhaService {
             throw new CampoInvalidoException("novaSenha", "A nova senha precisa ser diferente da senha atual.");
         }
 
-        // Microssegundos, como em AuthService.trocarSenha: o payload da
-        // auditoria precisa ser o valor gravado, nao uma aproximacao.
         LocalDateTime alteradaAntes = usuario.getSenhaAlteradaEm();
         LocalDateTime alteradaAgora = agora().truncatedTo(ChronoUnit.MICROS);
         usuario.setSenha(passwordEncoder.encode(request.novaSenha()));
-        // Quem define a propria senha pelo link nao fica com senha temporaria,
-        // mesmo que ainda nao tivesse feito o primeiro acesso.
         usuario.setSenhaAlteradaEm(alteradaAgora);
         usuarioRepository.save(usuario);
 
         token.setUsadoEm(alteradaAgora);
         tokenRepository.invalidarOutrosPendentesDoUsuario(usuario.getId(), token.getId(), alteradaAgora);
-        // A credencial mudou fora de qualquer sessao: nenhuma sobrevive.
         sessaoService.encerrarDoUsuario(usuario.getId(), MotivoEncerramentoSessao.SENHA_ALTERADA, null);
 
         auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "usuario", usuario.getId(),
@@ -171,16 +150,11 @@ public class RecuperacaoSenhaService {
         log.info("Senha redefinida por link de recuperacao para {}", EmailService.mascarar(usuario.getEmail()));
     }
 
-    // Senha trocada ou redefinida por outro caminho: os links pendentes
-    // deixam de valer.
     @Transactional
     public void invalidarPendentes(UUID usuarioId) {
         tokenRepository.invalidarPendentesDoUsuario(usuarioId, agora());
     }
 
-    // Expurgo diario dos tokens vencidos ha mais de RETENCAO_APOS_VENCIMENTO.
-    // Tokens usados ou invalidados tambem vencem, entao a tabela nao cresce
-    // sem limite. Madrugada, fora do expediente do CCZ.
     @Scheduled(cron = "0 15 3 * * *", zone = "America/Sao_Paulo")
     @Transactional
     public void expurgarVencidos() {
@@ -207,14 +181,11 @@ public class RecuperacaoSenhaService {
                     emailTemplateService.renderizarTexto(TEMPLATE_EMAIL, variaveis));
             log.info("Link de recuperacao de senha enviado para {}", destinoMascarado);
         } catch (TaskRejectedException ex) {
-            // Recusa do executor (ex.: aplicacao encerrando) sobe na propria
-            // chamada. O token gravado vence sozinho.
             log.warn("Link de recuperacao de senha para {} nao submetido: executor recusou a tarefa", destinoMascarado);
             log.debug("Detalhes da recusa do envio do link de recuperacao", ex);
         }
     }
 
-    // Fora de transacao (testes unitarios), roda na hora.
     private static void aposCommit(Runnable acao) {
         if (!TransactionSynchronizationManager.isSynchronizationActive()) {
             acao.run();

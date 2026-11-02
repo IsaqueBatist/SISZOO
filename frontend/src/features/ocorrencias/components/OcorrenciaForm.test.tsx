@@ -122,11 +122,6 @@ describe('OcorrenciaForm', () => {
   })
 
   it('rejeita um anexo de tipo não permitido', async () => {
-    // `accept="image/jpeg,image/png,application/pdf"` no input já bloqueia a
-    // seleção pelo seletor nativo do navegador — `applyAccept: false` simula
-    // o caminho que ainda chega no `onChange` (ex.: arrastar-e-soltar, que
-    // não respeita `accept` em todo navegador), para exercitar de fato a
-    // validação em anexoOcorrencia.ts, não só o filtro do input.
     const user = userEvent.setup({ applyAccept: false })
     renderForm()
 
@@ -210,11 +205,6 @@ describe('OcorrenciaForm', () => {
   })
 
   describe('anexos em duas fases (D15)', () => {
-    // Conta as chamadas; a 2ª chamada de upload (o 2º arquivo — o envio é
-    // sequencial) falha com `statusFalha`. O nome do arquivo não dá para ler
-    // no handler: no jsdom o File chega ao MSW como um Blob anônimo
-    // (filename="blob"), então "só o pendente" é conferido pela lista do aviso
-    // e pela contagem de chamadas do reenvio.
     function contarChamadas(statusFalha: number) {
       const contagem = { cadastros: 0, uploads: 0, camposArquivo: 0 }
       server.use(
@@ -363,10 +353,6 @@ describe('OcorrenciaForm', () => {
     })
 
     it('ocorrência marcada como sigilosa não dispara o ViaCEP (dado do denunciante não vai a terceiro)', async () => {
-      // No cadastro (diferente da edição sem permissão), o campo continua
-      // visível — o usuário está digitando o dado pela primeira vez. Por
-      // isso a guarda dentro de aoMudarCepDenunciante é necessária de
-      // verdade, não só defesa redundante.
       const fetchMock = vi.fn()
       vi.stubGlobal('fetch', fetchMock)
       const user = userEvent.setup()

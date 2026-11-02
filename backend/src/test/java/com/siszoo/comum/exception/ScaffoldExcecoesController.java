@@ -20,10 +20,6 @@ import com.siszoo.usuarios.exception.FalhaAuditoriaException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 
-// SCAFFOLD (so em src/test): lanca cada excecao que o GlobalExceptionHandler
-// trata hoje, e algumas que ele nao trata, para o teste de caracterizacao
-// (GlobalExceptionHandlerCaracterizacaoIT) fixar a resposta HTTP e o log de
-// cada uma por HTTP de verdade (filtro JWT, advice, conversores e /error).
 @RestController
 @RequestMapping("/api/teste/excecoes")
 public class ScaffoldExcecoesController {
@@ -31,7 +27,6 @@ public class ScaffoldExcecoesController {
     public record CorpoValidado(@NotBlank String primeiro, @NotBlank String segundo) {
     }
 
-    // Excecoes de dominio com construtor sem argumentos, pelo nome da classe.
     @PostMapping("/dominio")
     public void dominio(@RequestParam String classe) throws ReflectiveOperationException {
         throw (RuntimeException) Class.forName(classe).getDeclaredConstructor().newInstance();
@@ -57,8 +52,6 @@ public class ScaffoldExcecoesController {
         throw new FalhaAuditoriaException(new IllegalStateException("causa interna: INSERT INTO auditoria_evento ..."));
     }
 
-    // Violacao de integridade como o Hibernate entrega: constraint nomeada e
-    // SQLException com o detalhe do PostgreSQL (que pode trazer dado pessoal).
     @PostMapping("/integridade/{constraint}")
     public void integridade(@PathVariable String constraint) {
         SQLException sql = new SQLException("Key (cpf)=(123.456.789-00) already exists", "23505");
@@ -71,7 +64,6 @@ public class ScaffoldExcecoesController {
         throw new DataIntegrityViolationException("violacao sem causa");
     }
 
-    // Subclasse de DataIntegrityViolationException (caminho do JdbcTemplate).
     @PostMapping("/chave-duplicada")
     public void chaveDuplicada() {
         throw new DuplicateKeyException("duplicate key", new SQLException("Failing row contains (x)", "23505"));
@@ -86,7 +78,6 @@ public class ScaffoldExcecoesController {
         throw new MaxUploadSizeExceededException(5 * 1024 * 1024);
     }
 
-    // Nao tratadas pelo GlobalExceptionHandler hoje (Security e /error do Boot).
     @PostMapping("/acesso-negado")
     public void acessoNegado() {
         throw new AccessDeniedException("negado no teste");

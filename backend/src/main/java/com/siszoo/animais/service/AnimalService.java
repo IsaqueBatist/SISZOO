@@ -76,8 +76,6 @@ public class AnimalService {
     private final MiniaturaFoto miniaturaFoto;
     private final Clock clock;
 
-    // RNF10: o cadastro do animal e alteracao critica - cada
-    // criacao e edicao gera AuditoriaEvento com o estado antes/depois.
     private static final String ENTIDADE_AUDITORIA = "animal";
 
     public AnimalService(
@@ -113,7 +111,6 @@ public class AnimalService {
                 request.esterilizado(), request.dataEsterilizacao());
         String microchip = normalizarMicrochip(request.microchip());
         verificarMicrochipDisponivel(microchip, null);
-        // Identificacao complementar e laudo de eutanasia.
         String numeroMedalha = Textos.normalizar(request.numeroMedalha());
         verificarMedalhaDisponivel(numeroMedalha, null);
         validarDataImplantacaoChip(request.dataImplantacaoChip(), microchip);
@@ -150,26 +147,18 @@ public class AnimalService {
                 .orElseThrow(AnimalNaoEncontradoException::new);
         Usuario autor = usuarioRepository.findById(usuarioAutenticadoId)
                 .orElseThrow(UsuarioNaoEncontradoException::new);
-        // Estado anterior para a auditoria (RNF10), antes de qualquer setter.
         AnimalResponse antes = animalMapper.toResponse(animal);
 
         validarDatas(request.dataEntrada(), request.dataNascimentoAprox(),
                 request.esterilizado(), request.dataEsterilizacao());
-        // Status e baia antes de qualquer setter: a contagem de ocupacao e uma
-        // query, e com o animal ja alterado o flush automatico a faria contar o
-        // estado novo, e nao o gravado.
         StatusAnimal status = resolverStatus(request.status());
         Baia baia = resolverBaia(request.baiaId(), status, animal);
 
         aplicarMicrochipNaAtualizacao(animal, request.microchip());
 
-        // Medalha unica; data de implantacao exige microchip (ja aplicado acima).
         String numeroMedalha = Textos.normalizar(request.numeroMedalha());
         verificarMedalhaDisponivel(numeroMedalha, animal.getId());
         validarDataImplantacaoChip(request.dataImplantacaoChip(), animal.getMicrochip());
-        // Laudo obrigatorio so na TRANSICAO para obito_eutanasia; quem ja
-        // estava em eutanasia (inclusive registros anteriores a V24) segue
-        // editavel, e um laudo ja gravado e mantido se o request vier vazio.
         String laudoEutanasia = Textos.normalizar(request.laudoEutanasia());
         exigirLaudoNaEutanasia(animal.getStatus(), status, laudoEutanasia);
         animal.setNumeroMedalha(numeroMedalha);
@@ -180,8 +169,6 @@ public class AnimalService {
         }
 
         aplicarDadosDescritivos(animal, request, status, baia);
-        // A miniatura so e refeita quando a foto muda (o PUT reenvia a foto
-        // inteira a cada edicao da ficha).
         if (!Objects.equals(animal.getFotoUrl(), request.fotoUrl())) {
             animal.setFotoUrl(request.fotoUrl());
             animal.setFotoMiniatura(miniaturaFoto.gerar(request.fotoUrl()));
@@ -207,12 +194,9 @@ public class AnimalService {
             String status, Boolean custodia, String especie, UUID baiaId, String q, int pagina, int tamanho) {
         Specification<Animal> filtro = construirFiltro(status, custodia, especie, baiaId, q);
         Page<Animal> paginaAnimais = animalRepository.findAll(filtro, Paginacao.pagina(pagina, tamanho, ORDEM_LISTAGEM));
-        // Na listagem, fotoUrl e a miniatura (avatar); a foto inteira fica no detalhe.
         return PaginaResponse.de(paginaAnimais.map(animalMapper::toResponseListagem));
     }
 
-    // Campos que o cadastro e a edicao gravam do mesmo jeito. Status e baia
-    // chegam resolvidos: a baia antes de qualquer setter (ver atualizar).
     private void aplicarDadosDescritivos(Animal animal, DadosDescritivosAnimal dados, StatusAnimal status, Baia baia) {
         animal.setNome(dados.nome());
         animal.setEspecie(resolverEspecie(dados.especie()));
@@ -250,10 +234,6 @@ public class AnimalService {
         animal.setCondicoesOutras(marcouOutras ? outras : null);
     }
 
-    // Microchip e o identificador fisico implantado no animal: uma vez definido, e
-    // permanente (regra critica de negocio sobre imutabilidade de identificadores/
-    // registros criticos). O PUT so pode ACEITAR um microchip quando o animal ainda
-    // nao tem um; se ja tem, qualquer valor diferente do atual e rejeitado.
     private void aplicarMicrochipNaAtualizacao(Animal animal, String microchipRequest) {
         String atual = animal.getMicrochip();
         String novo = normalizarMicrochip(microchipRequest);
@@ -273,7 +253,6 @@ public class AnimalService {
         animal.setMicrochip(novo);
     }
 
-    // Recebe o microchip ja normalizado (normalizarMicrochip).
     private void verificarMicrochipDisponivel(String microchip, UUID idAtual) {
         if (microchip == null) {
             return;
@@ -285,10 +264,6 @@ public class AnimalService {
                 });
     }
 
-    // RN01/RN07: microchip opcional, unico quando presente. Forma unica usada
-    // no cadastro, na edicao, na checagem de duplicidade e na busca: sem
-    // espacos (nas pontas e no meio); vazio vira null (sem microchip). A V16
-    // aplicou a mesma regra aos dados existentes.
     static String normalizarMicrochip(String microchip) {
         if (microchip == null) {
             return null;
@@ -309,17 +284,6 @@ public class AnimalService {
         return motivoEntradaRepository.findByCodigo(codigo).orElseThrow(MotivoEntradaInvalidoException::new);
     }
 
-    // DER §3.2 (baia_id so em baia com ocupacao < capacidade) e §5 regra 6
-    // (baia ativa). Vale so quando o animal PASSA a ocupar a baia: cadastro,
-    // troca de baia ou volta a custodia. Um animal que ja ocupa a baia nao e
-    // barrado por ela ter sido desativada ou ter tido a capacidade reduzida
-    // depois (BaiaService permite as duas coisas com animais dentro), senao
-    // nenhuma outra edicao dele passaria. Animal fora da custodia nao ocupa
-    // baia (DER §5, regra 7) e nao e conferido.
-    // Quem passa a ocupar trava a baia (findByIdForUpdate) ate o commit, ja
-    // com a gravacao do animal: dois cadastros simultaneos na ultima vaga sao
-    // serializados e o segundo conta o primeiro (BaiaConcorrenciaIT). Os
-    // outros casos nao aumentam a ocupacao e leem sem trava.
     private Baia resolverBaia(UUID baiaId, StatusAnimal statusNovo, Animal atual) {
         if (baiaId == null) {
             return null;
@@ -336,8 +300,6 @@ public class AnimalService {
         if (!baia.isAtiva()) {
             throw BaiaIndisponivelException.inativa();
         }
-        // O proprio animal nao entra na contagem: ou estava em outra baia, ou
-        // estava fora da custodia (que a contagem ja exclui).
         long ocupacao = animalRepository.countByBaia_IdAndStatus_CodigoNotIn(
                 baiaId, StatusAnimal.CODIGOS_FORA_DA_CUSTODIA);
         if (ocupacao >= baia.getCapacidade()) {
@@ -352,7 +314,6 @@ public class AnimalService {
 
     private static final String STATUS_OBITO_EUTANASIA = "obito_eutanasia";
 
-    // Medalha e identificador fisico alternativo: unica quando informada (V23).
     private void verificarMedalhaDisponivel(String numeroMedalha, UUID animalIdAtual) {
         if (numeroMedalha == null) {
             return;
@@ -364,8 +325,6 @@ public class AnimalService {
                 });
     }
 
-    // RN01: a data de implantacao e registrada junto com o numero do chip -
-    // sem microchip nao ha o que datar; e e fato ocorrido (nunca futura).
     private void validarDataImplantacaoChip(LocalDate dataImplantacao, String microchip) {
         if (dataImplantacao == null) {
             return;
@@ -379,9 +338,6 @@ public class AnimalService {
         }
     }
 
-    // RF-A05 / Lei 14.228/2021: laudo do responsavel tecnico obrigatorio ao
-    // registrar o destino eutanasia. Vale so na transicao (statusAnterior nulo
-    // = cadastro novo); registros ja em eutanasia nao sao invalidados.
     private static void exigirLaudoNaEutanasia(StatusAnimal statusAnterior, StatusAnimal statusNovo, String laudo) {
         boolean entrandoEmEutanasia = statusNovo != null && STATUS_OBITO_EUTANASIA.equals(statusNovo.getCodigo())
                 && (statusAnterior == null || !STATUS_OBITO_EUTANASIA.equals(statusAnterior.getCodigo()));
@@ -391,10 +347,6 @@ public class AnimalService {
         }
     }
 
-    // Datas de fato ocorrido: nao podem ser futuras, com "hoje" do Clock do
-    // projeto (nao @PastOrPresent, que usaria o relogio da JVM - mesmo motivo
-    // do RN-C06 em VacinacaoService). A coerencia da castracao vale para os
-    // dois caminhos (cadastro e edicao).
     private void validarDatas(
             LocalDateTime dataEntrada, LocalDate dataNascimento, Boolean esterilizado, LocalDate dataEsterilizacao) {
         LocalDate hoje = LocalDate.now(clock);
@@ -444,7 +396,6 @@ public class AnimalService {
 
             if (StringUtils.hasText(q)) {
                 String termo = BuscaTexto.padrao(q);
-                // O microchip e comparado na forma normalizada: " 985" acha "985".
                 String microchip = normalizarMicrochip(q);
                 Predicate porIdentificacao = cb.or(
                         BuscaTexto.contem(cb, root.get("nome"), termo),

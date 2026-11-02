@@ -23,12 +23,6 @@ import com.siszoo.processos.repository.ProcessoSanitarioRepository;
 
 import io.restassured.http.ContentType;
 
-// As contagens anuais do dashboard e do relatorio anual filtram por intervalo
-// [01/01, 31/12], e nao por YEAR(col) = :ano, que impede o indice de data.
-// Fixa que o resultado e o mesmo de YEAR:
-// processos nas bordas do ano caem no ano da propria data, e cada consulta
-// bate com uma referencia SQL por EXTRACT(YEAR ...). Os anos 2011-2013 nao sao
-// usados por nenhum outro teste do banco compartilhado.
 class ContagemAnualProcessosIT extends AbstractIntegrationTest {
 
     @Autowired
@@ -54,7 +48,6 @@ class ContagemAnualProcessosIT extends AbstractIntegrationTest {
     @Test
     @DisplayName("[T45] bordas do ano: 31/12 e 01/01 entram no ano da propria data, igual a YEAR()")
     void bordasDoAno() {
-        // (abertura, resultado): o ano do resultado pode ser outro, de proposito.
         abrirComResultadoNegativo(LocalDate.of(2011, 12, 31), LocalDate.of(2012, 12, 31));
         abrirComResultadoNegativo(LocalDate.of(2012, 1, 1), LocalDate.of(2013, 1, 1));
         abrirComResultadoNegativo(LocalDate.of(2012, 12, 31), LocalDate.of(2012, 12, 31));

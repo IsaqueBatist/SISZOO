@@ -11,10 +11,7 @@ export interface AuthContextValue {
   marcarSenhaAlterada: (senhaAlteradaEm: string) => void
   isLoading: boolean
   error: unknown
-  // Enquanto a aba descobre se já existe sessão (nova aba, recarga): as rotas
-  // esperam, em vez de mandar para o login quem já está conectado.
   carregandoSessao: boolean
-  // A sessão caiu sozinha (401 ou inatividade), e não por logout: o login explica o motivo.
   sessaoExpirada: boolean
   expirouPorInatividade: boolean
 }

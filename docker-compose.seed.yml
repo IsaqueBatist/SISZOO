@@ -1,15 +1,3 @@
-# Ambiente de DESENVOLVIMENTO com dados ficticios (seed, com.siszoo.seed).
-# Uso: docker compose -f docker-compose.yml -f docker-compose.seed.yml up --build
-#
-# - Projeto proprio (`siszoo-seed`): containers e volume do banco separados do
-#   stack normal; o banco do `docker compose up` comum nao e tocado. As portas
-#   sao as mesmas (5432/8080/5173): pare um stack antes de subir o outro.
-# - O backend roda com os perfis `dev,seed` em vez de `docker` (mesma
-#   configuracao); o seed recusa `docker`/`prod`, entao NUNCA use este arquivo
-#   num servidor. Ele tambem recusa banco com dados que nao vieram dele.
-# - JWT e admin inicial tem padroes so para este ambiente local; o .env (se
-#   existir) tem precedencia. Usuarios e senha ficticia: README, "Dados ficticios".
-# - Recomecar do zero: docker compose -f docker-compose.yml -f docker-compose.seed.yml down -v
 name: siszoo-seed
 
 services:

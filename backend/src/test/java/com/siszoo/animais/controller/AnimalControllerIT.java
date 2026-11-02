@@ -68,7 +68,6 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .body("motivoEntradaNome", equalTo("Resgate"))
                 .body("baiaNome", equalTo("Baia AnimalControllerIT 1"))
                 .body("tipoBaiaNome", equalTo("Interna"))
-                // DER §3.2: microchip sem nenhuma vacinacao ainda nao completa a ficha.
                 .body("fichaCompleta", equalTo(false));
     }
 
@@ -90,10 +89,6 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .body("fichaCompleta", equalTo(true));
     }
 
-    // RN-AN04: a ficha e recalculada na edicao do animal (FichaCompletaService
-    // via AnimalService#atualizar) e a retificacao de uma vacinacao nao a
-    // desfaz (a retificadora passa a ser a vigente). Exclusao de vacinacao nao
-    // existe (V17).
     @Test
     @DisplayName("[RN-AN04] ficha completa na edicao (microchip definido depois da vacina) e apos retificacao")
     void fichaCompletaNaEdicaoENaRetificacao() {
@@ -135,8 +130,6 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .body("campos[0].campo", equalTo("dataEntrada"));
     }
 
-    // Decisao de 31/10/2026: a resposta de castracao e
-    // opcional, e a ausencia fica como nao informado.
     @Test
     @DisplayName("cadastro sem esterilizado e aceito e fica como nao informado")
     void deveAceitarCadastroSemEsterilizado() {
@@ -528,15 +521,6 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .body("tiposBaia.size()", equalTo(3));
     }
 
-    // Os codigos sao os do seed da V5, os mesmos que o front grava nos
-    // rascunhos dos modais de vacina/procedimento.
-    //
-    // `hasItems` e nao `containsInAnyOrder` para as vacinas: outros ITs
-    // cadastram vacinas por POST /api/vacinas no mesmo banco (a JVM
-    // compartilha o Postgres do Testcontainers, sem rollback). Exigir conjunto
-    // exato tornaria este teste dependente da ordem de execucao. O que ele
-    // afirma e que o seed da V5 esta exposto no catalogo.
-    // Tipos de procedimento seguem exatos: nada na aplicacao os cria.
     @Test
     void deveListarVacinasETiposDeProcedimentoDaV5() {
         given()
@@ -551,13 +535,6 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                         "atendimento_clinico", "castracao", "cirurgia_maior", "vacinacao"));
     }
 
-    // O catalogo leva o intervalo de reforco adiante (VacinaCatalogoResponse)
-    // para o formulario de vacinacao conseguir prever a proxima aplicacao sem
-    // uma segunda consulta.
-    //
-    // Assertivas so sobre uma vacina do seed, nunca sobre a lista toda:
-    // intervalo nulo e valido (vacina sem reforco, RN-A03) e outros ITs
-    // cadastram vacinas neste mesmo banco.
     @Test
     void catalogoDeVacinasLevaOIntervaloDeReforco() {
         given()
@@ -588,8 +565,6 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .response();
     }
 
-    // Resposta crua: o chamador decide o status esperado (422, 409...).
-    // JSON cru, sem a chave "esterilizado" (o record serializaria o campo).
     private String jsonAnimalSemEsterilizado() {
         return """
                 {"nome": "Rex", "especie": "canino", "sexo": "macho", "status": "disponivel_adocao",

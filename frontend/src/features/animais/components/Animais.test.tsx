@@ -22,8 +22,6 @@ function renderAnimais(initialEntry = '/animais') {
   }
   definirSessaoEmMemoria({ token: 'token-existente', usuario })
 
-  // retry: false evita que o teste de erro espere os retries automáticos do
-  // TanStack Query (backoff de até alguns segundos) antes de isError virar true.
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
@@ -134,7 +132,6 @@ describe('Animais', () => {
     if (!linhaRex || !linhaMia) throw new Error('linha não encontrada')
 
     expect(within(linhaRex).getByText('Baia 3')).toBeInTheDocument()
-    // Mia está "adotado" e não tem baia (baiaId/baiaNome nulos no mock).
     expect(within(linhaMia).getByText('—')).toBeInTheDocument()
   })
 
@@ -233,9 +230,6 @@ describe('Animais', () => {
     await screen.findByText('Rex')
     await user.type(screen.getByPlaceholderText(/buscar por nome, microchip ou medalha/i), 'Luna')
 
-    // "Luna" já está na lista inicial (placeholderData mantém a página anterior
-    // visível enquanto a busca debounced ainda não voltou) - a asserção que
-    // realmente comprova que o filtro foi aplicado no servidor é "Rex" sumir.
     await waitFor(() => {
       expect(screen.queryByText('Rex')).not.toBeInTheDocument()
     })

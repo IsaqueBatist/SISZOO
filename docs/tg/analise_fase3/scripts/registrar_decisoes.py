@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Fase 3 — registra as decisões dos autores (22/10/2026) nas colunas decisao_autor / observacao_autor
 da matriz da Fase 2 (docs/tg/analise_fase2/matriz_rastreabilidade.csv). Reexecutável (sobrescreve as duas colunas)."""
 import csv, os, re, sys, io
@@ -8,7 +7,6 @@ CSV = os.path.normpath(os.path.join(HERE, '..', '..', 'analise_fase2', 'matriz_r
 rows = list(csv.DictReader(open(CSV, encoding='utf-8-sig'), delimiter=';'))
 cols = list(rows[0].keys())
 
-# Decisões específicas por ID (ID -> (decisao_autor, observacao_autor))
 ESP = {
     'F2-004': ('IMPLEMENTAR (Opção A)', 'Implementar numero_medalha, data_implantacao_chip e procedencia: migration, entidade, DTO, validação, formulário e ficha. Atualizar o documento conforme a implementação.'),
     'F2-057': ('IMPLEMENTAR (segue F2-004)', 'Data de implantação do chip passa a existir; RN01 permanece como está.'),
@@ -25,10 +23,8 @@ ESP = {
     'F2-065': ('MANTER CÓDIGO (Opção A) + ATUALIZAR_DOC', 'Manter a matriz de permissões do código; atualizar RN09, Quadro 4 e Quadro 15.'),
     'F2-105': ('MANTER CÓDIGO (segue F2-065)', 'T04: Agente lê animais.'), 'F2-112': ('MANTER CÓDIGO (segue F2-065)', 'T11: Veterinário também acessa.'),
     'F2-113': ('MANTER CÓDIGO (segue F2-065)', 'T12: três perfis.'), 'F2-114': ('MANTER CÓDIGO (segue F2-065)', 'T13: três perfis; resultado conforme F2-014.'),
-    # RF-A04 (exames e anexos clínicos): "execute" (autor, 22/10)
     'F2-007': ('IMPLEMENTAR (decisão do autor: "RF-A04, execute")', 'Escopo mínimo definido na Fase 3: Exame (+ TipoExame) com registro imutável e AnexoAnimal (upload no padrão de anexo_ocorrencia). Anexos por vacinação/procedimento/exame só se houver tempo; o que não entrar vai para bloqueios.md.'),
     'F2-037': ('IMPLEMENTAR (segue F2-007)', 'UC Registrar Exame.'), 'F2-039': ('IMPLEMENTAR (segue F2-007)', 'UC Anexar Documento ao Animal.'),
-    # Trabalhos futuros explícitos
     'F2-154': ('TRABALHO FUTURO', 'Playwright: não implementar; retirar do Quadro 14 como ferramenta em uso e registrar nas Considerações Finais.'),
     'F2-017': ('TRABALHO FUTURO — manter na modelagem', 'Documento do processo: não implementar. Manter nos diagramas, dicionário e casos de uso com a indicação "modelado; implementação prevista em trabalhos futuros"; retirar apenas do que é apresentado como implementado (cap. 5, telas, status dos RFs).'),
     'F2-050': ('TRABALHO FUTURO — manter na modelagem', 'UC Gerar Documento do Processo: manter com indicação de trabalho futuro.'),

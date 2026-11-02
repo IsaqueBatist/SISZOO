@@ -13,7 +13,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// Catalogo das condicoes de saude pre-existentes do animal (V33).
 @Entity
 @Table(name = "condicao_saude")
 @Getter

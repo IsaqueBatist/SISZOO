@@ -33,7 +33,6 @@ function renderProcessos(cargos = ['Administrador'], entrada = '/processos') {
   )
 }
 
-// Registra os parâmetros de cada GET /processos e devolve a página pedida.
 function capturarListagens(totalPaginas = 1) {
   const chamadas: URLSearchParams[] = []
   server.use(
@@ -101,7 +100,6 @@ describe('Processos — listagem', () => {
     const linha = (await screen.findByText('PS 045/2026')).closest('tr') as HTMLElement
     expect(within(linha).getByText('Raiva')).toBeInTheDocument()
     expect(within(linha).getByText('Aguardando resultado')).toBeInTheDocument()
-    // LocalDate "2026-05-18": new Date() leria meia-noite UTC e mostraria 17/05.
     expect(within(linha).getByText('18/05/2026')).toBeInTheDocument()
     expect(within(linha).getByText('OC 092/2026')).toBeInTheDocument()
     expect(within(linha).getByText(/Urgente/)).toBeInTheDocument()

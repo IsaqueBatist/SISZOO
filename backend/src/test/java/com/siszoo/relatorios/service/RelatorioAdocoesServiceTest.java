@@ -17,9 +17,6 @@ import com.siszoo.animais.repository.ContagemPorCaracteristicaProjection;
 import com.siszoo.relatorios.dto.PeriodoRelatorio;
 import com.siszoo.relatorios.dto.RelatorioAdocoesResponse;
 
-// Versao simplificada (sem tabela `adocao` no schema) - ver comentario de
-// RelatorioAdocoesResponse. E a posicao de Animal.status = 'adotado' na data
-// da geracao, sem filtro de periodo.
 @ExtendWith(MockitoExtension.class)
 class RelatorioAdocoesServiceTest {
 
@@ -47,9 +44,9 @@ class RelatorioAdocoesServiceTest {
         assertThat(resposta.kpis().animaisAdotados()).isEqualTo(24);
         assertThat(resposta.perfil()).extracting("caracteristica", "quantidade", "percentual")
                 .containsExactly(
-                        org.assertj.core.groups.Tuple.tuple("Canino", 17L, 71), // 17/24 = 70.8% -> 71
+                        org.assertj.core.groups.Tuple.tuple("Canino", 17L, 71),
                         org.assertj.core.groups.Tuple.tuple("Felino", 7L, 29),
-                        org.assertj.core.groups.Tuple.tuple("Porte Pequeno", 11L, 46), // 11/24 = 45.8% -> 46
+                        org.assertj.core.groups.Tuple.tuple("Porte Pequeno", 11L, 46),
                         org.assertj.core.groups.Tuple.tuple("Porte Médio", 9L, 38),
                         org.assertj.core.groups.Tuple.tuple("Porte Grande", 4L, 17));
         assertThat(resposta.notaLimitacao()).startsWith("Posição em 31/03/2026:").contains("Não é um histórico por período");

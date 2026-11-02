@@ -31,12 +31,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-// Exercita a V10 (ocorrências) num schema proprio do mesmo PostgreSQL de
-// teste, migrado por API ate a V10, no padrao de MigracaoV7RegistroClinicoIT.
-// Os casos gravam direto em SQL, sem a API: o objetivo e provar que as
-// constraints barram o dado invalido mesmo que o service seja contornado.
-// O schema e criado uma vez por classe; cada caso usa protocolo proprio, entao
-// os INSERTs que passam nao interferem entre si.
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MigracaoV10OcorrenciasIT extends AbstractIntegrationTest {
 
@@ -84,12 +78,9 @@ class MigracaoV10OcorrenciasIT extends AbstractIntegrationTest {
         assertThat(resultadoMigracao.targetSchemaVersion, equalTo("10"));
     }
 
-    // Campos de encerramento existem se, e somente se, ENCERRADA.
-
     static Stream<Arguments> casosEncerramento() {
         String ck = "ck_ocorrencia_encerramento";
         return Stream.of(
-                // status, providencia, encerrada_em, encerrada_por, descricao_encerramento, constraint violada
                 Arguments.of("ENCERRADA sem providencia", "ENCERRADA", false, true, true, false, ck),
                 Arguments.of("ENCERRADA sem encerrada_em", "ENCERRADA", true, false, true, false, ck),
                 Arguments.of("ENCERRADA sem encerrada_por", "ENCERRADA", true, true, false, false, ck),
@@ -115,8 +106,6 @@ class MigracaoV10OcorrenciasIT extends AbstractIntegrationTest {
                 status, providencia, encerradaEm, encerradaPor, descricaoEncerramento, false, false, null, null));
     }
 
-    // Anonima e sigilosa sao excludentes.
-
     static Stream<Arguments> casosAnonimaSigilosa() {
         return Stream.of(
                 Arguments.of("anonima e sigilosa", true, true, "ck_ocorrencia_anonima_sigilosa"),
@@ -131,8 +120,6 @@ class MigracaoV10OcorrenciasIT extends AbstractIntegrationTest {
         verificar(constraintEsperada, () -> inserirOcorrencia(
                 "ABERTA", false, false, false, false, anonima, sigilosa, null, null));
     }
-
-    // Faixas geograficas: nulos permitidos.
 
     static Stream<Arguments> casosCoordenadas() {
         return Stream.of(
@@ -153,12 +140,9 @@ class MigracaoV10OcorrenciasIT extends AbstractIntegrationTest {
                 "ABERTA", false, false, false, false, false, false, latitude, longitude));
     }
 
-    // Movimentacao amarrada a transicao e nota com descricao.
-
     static Stream<Arguments> casosMovimentacao() {
         String transicao = "ck_movimentacao_ocorrencia_transicao";
         return Stream.of(
-                // tipo, status_anterior, status_novo, descricao, com data, constraint violada
                 Arguments.of("REGISTRADA nulo -> ABERTA", "REGISTRADA", null, "ABERTA", null, true, null),
                 Arguments.of("EQUIPE_DESPACHADA ABERTA -> EM_ATENDIMENTO", "EQUIPE_DESPACHADA", "ABERTA", "EM_ATENDIMENTO", null, true, null),
                 Arguments.of("ENCERRADA ABERTA -> ENCERRADA", "ENCERRADA", "ABERTA", "ENCERRADA", null, true, null),
@@ -186,8 +170,6 @@ class MigracaoV10OcorrenciasIT extends AbstractIntegrationTest {
                 ocorrenciaBaseId, usuarioId, tipo, statusAnterior, statusNovo, descricao));
     }
 
-    // Sequencia de protocolo por entidade e ano.
-
     @Test
     @DisplayName("[D13] protocolo_sequencia recusa entidade fora da lista")
     void sequenciaDeveRecusarEntidadeDesconhecida() {
@@ -203,8 +185,6 @@ class MigracaoV10OcorrenciasIT extends AbstractIntegrationTest {
         assertThat(proximoProtocolo("PROCESSO", 2030), equalTo(1));
         assertThat(proximoProtocolo("OCORRENCIA", 2031), equalTo(1));
     }
-
-    // Vinculo unico processo-ocorrencia e status do processo.
 
     @Test
     @DisplayName("[D2] uma ocorrencia so pode ter um processo vinculado")
@@ -283,7 +263,6 @@ class MigracaoV10OcorrenciasIT extends AbstractIntegrationTest {
         int providencias = contar("providencia_tomada");
         int permissoes = contar("cargo_permissao");
 
-        // Reaplica so os INSERTs de seed da propria V10, qualificados com o schema do teste.
         String v10 = new ClassPathResource("db/migration/V10__schema_ocorrencias.sql")
                 .getContentAsString(StandardCharsets.UTF_8);
         String seed = v10.substring(v10.indexOf("INSERT INTO tipo_ocorrencia"))
@@ -348,7 +327,6 @@ class MigracaoV10OcorrenciasIT extends AbstractIntegrationTest {
         return jdbcTemplate.queryForObject("SELECT count(*) FROM " + SCHEMA + "." + tabela, Integer.class);
     }
 
-    // Protocolo so precisa ser unico dentro do schema do teste (varchar(20)).
     private static String protocoloUnico() {
         return "T" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
     }

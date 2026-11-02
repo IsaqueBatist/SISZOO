@@ -27,13 +27,6 @@ import com.siszoo.relatorios.dto.ProdutividadeVeterinarioResponse;
 import com.siszoo.relatorios.dto.RelatorioProcedimentosResponse;
 import com.siszoo.relatorios.entity.TipoRelatorio;
 
-// "Relatório de Procedimentos" (DER §3.6 / docs/prototipo/relatorio-procedimentos.html).
-// "Procedimentos" aqui e um conceito amplo (igual ao bar chart do prototipo:
-// Vacinações + Atendimentos clínicos + Castrações + Medicações + Cirurgias
-// maiores = Total), nao so a tabela `procedimento` - Vacinações vem de
-// Vacinacao e Medicações vem de Prescricao, fontes separadas na modelagem
-// clinica (ver RelatorioVacinacaoService, mesmo padrao de "atividade no
-// periodo" por dataAplicacao/dataInicio).
 @Service
 public class RelatorioProcedimentosService implements GeradorRelatorio<RelatorioProcedimentosResponse> {
 
@@ -101,7 +94,6 @@ public class RelatorioProcedimentosService implements GeradorRelatorio<Relatorio
                 String.valueOf(totalVet.castracoes()), String.valueOf(totalVet.cirurgias()),
                 String.valueOf(totalVet.vacinacoes()), String.valueOf(totalVet.total())));
 
-        // CSV exporta a lista COMPLETA de cirurgias, sem o corte de top N do preview/PDF.
         List<List<String>> linhasCirurgias = montarCirurgias(inicio, fim).stream()
                 .map(l -> List.of(Formatadores.DATA.format(l.data()), l.animal(), l.procedimento(), l.veterinario(),
                         l.resultado()))
@@ -116,13 +108,9 @@ public class RelatorioProcedimentosService implements GeradorRelatorio<Relatorio
                         List.of("Data", "Animal", "Procedimento", "Vet. responsável", "Resultado"), linhasCirurgias));
     }
 
-    // Contagens do periodo usadas tanto pelos KPIs quanto pelo grafico por
-    // tipo: consultadas uma vez por requisicao.
     private record ContagensDoPeriodo(List<ContagemCatalogoProjection> porTipo, long vacinacoes, long medicacoes) {
     }
 
-    // Exclui 'vacinacao' do catalogo tipo_procedimento (nunca usado pelo fluxo
-    // real de criacao) - Vacinações entra no relatorio via Vacinacao, nao Procedimento.
     private ContagensDoPeriodo contar(LocalDate inicio, LocalDate fim) {
         List<ContagemCatalogoProjection> porTipo = procedimentoRepository.contarPorTipo(inicio, fim).stream()
                 .filter(linha -> !VACINACAO_CODIGO_NAO_USADO_EM_PROCEDIMENTO.equals(linha.getCodigo()))
@@ -159,7 +147,7 @@ public class RelatorioProcedimentosService implements GeradorRelatorio<Relatorio
     }
 
     private List<ProdutividadeVeterinarioResponse> montarPorVeterinario(LocalDate inicio, LocalDate fim) {
-        Map<String, long[]> porVet = new LinkedHashMap<>(); // [atendimentos, castracoes, cirurgias, vacinacoes]
+        Map<String, long[]> porVet = new LinkedHashMap<>();
 
         for (ProdutividadeProcedimentoProjection linha : procedimentoRepository.contarPorVeterinarioETipo(inicio, fim)) {
             long[] valores = porVet.computeIfAbsent(linha.getNome(), k -> new long[4]);
@@ -167,7 +155,7 @@ public class RelatorioProcedimentosService implements GeradorRelatorio<Relatorio
                 case ATENDIMENTO_CLINICO -> valores[0] += linha.getQuantidade();
                 case CASTRACAO -> valores[1] += linha.getQuantidade();
                 case CIRURGIA_MAIOR -> valores[2] += linha.getQuantidade();
-                default -> { /* outros tipos (ex.: vacinacao legado) nao entram nesta tabela */ }
+                default -> { }
             }
         }
 

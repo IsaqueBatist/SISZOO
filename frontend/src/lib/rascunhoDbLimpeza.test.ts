@@ -49,9 +49,6 @@ describe('limparRascunhos', () => {
   })
 
   it('cancela o salvamento agendado: nada é gravado depois da limpeza', async () => {
-    // Só setTimeout/clearTimeout são falsificados: a fake-indexeddb agenda o
-    // próprio trabalho com setImmediate, e falsificar tudo trava a transação
-    // que limparRascunhos aguarda.
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
     agendarSalvarRascunho('ocorrencias', 'u1:novo', { bairro: 'X' }, 800)
 

@@ -1,21 +1,5 @@
 import type { DensidadeUsuario, PreferenciaUsuario, TemaUsuario } from '@/features/configuracoes/types/configuracoes.types'
 
-// Variáveis CSS já definidas em styles/tokens.css — aqui só trocamos os
-// valores em runtime (mesma técnica de docs/prototipo/assets/tweaks.js).
-// O backend modela "tema" como LIGHT/DARK (não como as 4 cores institucionais
-// do protótipo configuracoes.html), então aplicamos um par claro/escuro real
-// de superfícies em vez do seletor de tonalidade de verde do protótipo.
-//
-// IMPORTANTE: cada tema precisa definir o conjunto COMPLETO de variáveis
-// (superfícies, texto, primária E as cores semânticas success/danger/warning/
-// alert/info + seus "-bg"/"-border"). setProperty só sobrescreve o que está
-// na lista — se um tema novo omitir alguma, ela fica com o valor do tema
-// anterior "grudado" via inline style. Foi assim que o alerta de sucesso
-// ficou ilegível no DARK: só as superfícies/texto foram trocados, e
-// --color-success-bg continuou claro enquanto o texto ficou claro também.
-// Ao adicionar os temas institucionais (verde/oliva/azul/petroleo) quando o
-// backend suportar, copie um bloco inteiro como base e ajuste as cores —
-// nunca defina um tema parcial.
 const TEMAS: Record<TemaUsuario, Record<string, string>> = {
   LIGHT: {
     '--color-bg': '#F4F6F8',
@@ -83,9 +67,6 @@ const TEMAS: Record<TemaUsuario, Record<string, string>> = {
   },
 }
 
-// COMPACTO/NORMAL/CONFORTAVEL reaproveitam os mesmos três níveis de espaçamento
-// do tweaks.js (compact/comfortable/spacious) — NORMAL == valores padrão já
-// definidos em tokens.css.
 const DENSIDADES: Record<DensidadeUsuario, Record<string, string>> = {
   COMPACTO: {
     '--space-4': '12px',
@@ -112,7 +93,6 @@ const DENSIDADES: Record<DensidadeUsuario, Record<string, string>> = {
 
 export function aplicarPreferenciasVisuais(preferencias: Pick<PreferenciaUsuario, 'tema' | 'densidade'>) {
   const root = document.documentElement.style
-  // Para o que não é token: selos, campos nativos e demais cores fixas do CSS.
   document.documentElement.dataset.tema = preferencias.tema === 'DARK' ? 'escuro' : 'claro'
   const variaveisTema = TEMAS[preferencias.tema] ?? TEMAS.LIGHT
   const variaveisDensidade = DENSIDADES[preferencias.densidade] ?? DENSIDADES.NORMAL

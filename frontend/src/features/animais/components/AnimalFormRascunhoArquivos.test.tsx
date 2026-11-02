@@ -12,18 +12,10 @@ import { server } from '@/mocks/server'
 import { instalarIndexedDbEmMemoria } from '@/test/indexedDbEmMemoria'
 import { CadastrarAnimal } from './CadastrarAnimal'
 
-// IndexedDB de verdade (fake-indexeddb), sem mock do módulo de rascunho: o que
-// está sob teste é o ciclo de vida da store 'arquivos' - a foto vai
-// como Blob, volta na restauração e sai quando o cadastro dá certo.
 const DATA_URI_FOTO = 'data:image/jpeg;base64,ZmFrZS1jb21wcmltaWRh'
 
-// jsdom não renderiza canvas, então a compressão real nunca funcionaria aqui;
-// mesmo padrão de AnimalForm.test.tsx. As conversões data URI <-> Blob
-// continuam reais (vêm do importActual).
 vi.mock('../utils/comprimirImagem', async () => {
   const real = await vi.importActual<typeof import('../utils/comprimirImagem')>('../utils/comprimirImagem')
-  // Literal repetido de propósito: vi.mock é hoistado para o topo do arquivo e
-  // não alcança a constante acima.
   return { ...real, comprimirImagem: vi.fn().mockResolvedValue('data:image/jpeg;base64,ZmFrZS1jb21wcmltaWRh') }
 })
 
@@ -102,7 +94,6 @@ describe('AnimalForm — foto no rascunho (T42)', () => {
     await waitFor(async () => expect(await conteudo('animais')).toHaveProperty(CHAVE_RASCUNHO))
     const rascunho = (await conteudo('animais'))[CHAVE_RASCUNHO] as { fotoArquivoId?: string }
     expect(rascunho.fotoArquivoId).toBeTruthy()
-    // Nada de base64 no rascunho de texto.
     expect(JSON.stringify(rascunho)).not.toContain('base64')
   }, 15000)
 
@@ -117,8 +108,6 @@ describe('AnimalForm — foto no rascunho (T42)', () => {
     const { container } = renderCadastrar()
     await user.click(await screen.findByRole('button', { name: /restaurar rascunho/i }))
 
-    // A pré-visualização tem alt="" (decorativa), então não expõe role="img":
-    // mesma consulta que AnimalForm.test.tsx já usa.
     await waitFor(() => expect(container.querySelector('img')).not.toBeNull())
     expect((container.querySelector('img') as HTMLImageElement).src).toBe(DATA_URI_FOTO)
   }, 15000)
@@ -180,7 +169,6 @@ describe('AnimalForm — foto no rascunho (T42)', () => {
 
     expect(await screen.findByRole('button', { name: /cadastrar animal/i })).toBeInTheDocument()
     expect(screen.queryByText(/Encontramos um rascunho salvo/)).not.toBeInTheDocument()
-    // E já saiu do disco na leitura.
     await waitFor(async () => expect(await conteudo('animais')).toEqual({}))
   }, 15000)
 })

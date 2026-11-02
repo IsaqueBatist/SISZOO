@@ -47,12 +47,8 @@ public class BaiaService {
 
     private static final Logger log = LoggerFactory.getLogger(BaiaService.class);
 
-    // DER §3.3: status que removem o animal da contagem de ocupação da baia,
-    // os mesmos que o tiram da custódia do CCZ (fonte única em StatusAnimal).
     private static final Set<String> STATUS_FORA_DA_OCUPACAO = StatusAnimal.CODIGOS_FORA_DA_CUSTODIA;
 
-    // RNF10: baia e cadastro critico (define a ocupacao do canil):
-    // criacao, edicao, (des)ativacao e exclusao logica geram AuditoriaEvento.
     private static final String ENTIDADE_AUDITORIA = "baia";
 
     private final BaiaRepository baiaRepository;
@@ -166,8 +162,6 @@ public class BaiaService {
                 }));
     }
 
-    // Residentes (sob custodia, mesmo criterio da ocupacao) de todas as
-    // baias, por nome, numa consulta so de colunas leves.
     @Transactional(readOnly = true)
     public List<ResidenteBaiaResponse> listarResidentes() {
         return animalRepository.listarResidentesDeBaias(STATUS_FORA_DA_OCUPACAO).stream()
@@ -195,8 +189,6 @@ public class BaiaService {
         return tipoBaiaRepository.findByCodigo(codigo).orElseThrow(TipoBaiaInvalidoException::new);
     }
 
-    // Texto vazio ou so com espacos vira NULL: a tela usa o tipo da baia quando
-    // nao ha finalidade.
     private String textoOuNulo(String texto) {
         return StringUtils.hasText(texto) ? texto : null;
     }

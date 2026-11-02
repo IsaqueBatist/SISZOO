@@ -86,7 +86,6 @@ describe('useStatusConexao', () => {
     const { result } = renderHook(() => useStatusConexao())
     emitir(EVENTO_REDE_FALHA)
 
-    // Escondida ainda: o aviso fica.
     emitirNoDocumento('visibilitychange')
     expect(result.current).toBe('falha-de-rede')
 
@@ -104,7 +103,6 @@ describe('useStatusConexao', () => {
 
     expect(result.current).toBe('navegador')
 
-    // Uma resposta tardia não apaga o aviso enquanto o sistema diz que não há rede.
     emitir(EVENTO_REDE_OK)
     expect(result.current).toBe('navegador')
   })

@@ -56,7 +56,6 @@ function capturarEdicao() {
   return corpos
 }
 
-// Colar em vez de digitar: letra a letra, o formulário grande estoura o tempo do teste.
 async function preencher(user: ReturnType<typeof userEvent.setup>, campo: HTMLElement, texto: string) {
   await user.click(campo)
   await user.paste(texto)

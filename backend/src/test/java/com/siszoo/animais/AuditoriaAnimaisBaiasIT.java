@@ -29,8 +29,6 @@ import com.siszoo.comum.ApiTesteFixture;
 
 import io.restassured.http.ContentType;
 
-// RNF10: o cadastro do animal e o da baia sao alteracoes criticas - cada
-// escrita gera AuditoriaEvento com usuario, entidade_id e payload antes/depois.
 class AuditoriaAnimaisBaiasIT extends AbstractIntegrationTest {
 
     private static final String EMAIL_ADMIN = "teste.admin.auditoria.animais@itu.sp.gov.br";

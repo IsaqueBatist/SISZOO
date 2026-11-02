@@ -18,9 +18,6 @@ import com.siszoo.comum.ApiTesteFixture;
 
 import io.restassured.path.json.JsonPath;
 
-// GET /api/processos?q=: acha o processo por protocolo (com ou sem o prefixo da
-// tela), nome do responsavel, Nº GAL ou Nº SINAN. E so leitura: as permissoes
-// do endpoint nao mudam.
 class ProcessoBuscaIT extends AbstractIntegrationTest {
 
     @Autowired

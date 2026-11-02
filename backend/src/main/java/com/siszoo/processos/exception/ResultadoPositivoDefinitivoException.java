@@ -4,7 +4,6 @@ import org.springframework.http.HttpStatus;
 
 import com.siszoo.comum.exception.ErroNegocioException;
 
-// Resultado positivo e definitivo, nao pode ser corrigido (422).
 public class ResultadoPositivoDefinitivoException extends ErroNegocioException {
 
     public ResultadoPositivoDefinitivoException() {

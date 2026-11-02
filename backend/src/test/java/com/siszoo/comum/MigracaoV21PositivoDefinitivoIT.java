@@ -24,10 +24,6 @@ import org.postgresql.util.PSQLException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-// Exercita a V21 (positivo definitivo e data do envio da
-// notificacao) num schema proprio, no padrao de MigracaoV15ResultadoProcessoIT:
-// coluna nova e nula, trigger que recusa a correcao de um positivo por SQL
-// direto (o service recusa antes, com 422) e dados anteriores intactos.
 class MigracaoV21PositivoDefinitivoIT extends AbstractIntegrationTest {
 
     private static final String SCHEMA = "migracao_v21";
@@ -74,8 +70,6 @@ class MigracaoV21PositivoDefinitivoIT extends AbstractIntegrationTest {
         assertThat(contarResultados(), equalTo(1));
     }
 
-    // A correcao dos demais resultados continua valendo, inclusive para
-    // positivo; o positivo resultante passa a ser definitivo.
     @Test
     @DisplayName("[T35-15] V21 aceita corrigir negativo para positivo; o positivo resultante nao se corrige")
     void v21AceitaCorrecaoDeOutroResultado() throws Exception {
@@ -92,8 +86,6 @@ class MigracaoV21PositivoDefinitivoIT extends AbstractIntegrationTest {
         assertThat(contarResultados(), equalTo(2));
     }
 
-    // Linhas existentes nao mudam: uma correcao de positivo gravada antes da
-    // V21 (a API aceitava) fica no historico, e a migration nao falha.
     @Test
     @DisplayName("[T35-15] V21 sobre historico com positivo ja corrigido: aplica e preserva as linhas")
     void v21PreservaHistoricoAnterior() throws Exception {
@@ -122,7 +114,6 @@ class MigracaoV21PositivoDefinitivoIT extends AbstractIntegrationTest {
                 .migrate();
     }
 
-    // Executa os comandos numa transacao propria e devolve o erro (ou null se confirmou).
     private SQLException transacao(String... comandos) throws SQLException {
         try (Connection conexao = dataSource.getConnection()) {
             conexao.setAutoCommit(false);
@@ -147,8 +138,6 @@ class MigracaoV21PositivoDefinitivoIT extends AbstractIntegrationTest {
         assertThat(erro.getMessage(), containsString(trecho));
     }
 
-    // RAISE ... USING CONSTRAINT nao poe o nome no texto: ele vem no campo
-    // proprio da mensagem do servidor, que e o que a aplicacao enxergaria.
     private static void assertViolacaoDaConstraint(SQLException erro, String constraint) {
         assertThat("esperava check_violation de " + constraint, erro == null ? null : erro.getSQLState(),
                 equalTo("23514"));
@@ -156,7 +145,6 @@ class MigracaoV21PositivoDefinitivoIT extends AbstractIntegrationTest {
         assertThat(((PSQLException) erro).getServerErrorMessage().getConstraint(), equalTo(constraint));
     }
 
-    // Processo completo (responsavel e amostra, V13) no status pedido.
     private UUID processoEm(String status, UUID usuario) throws SQLException {
         UUID processo = UUID.randomUUID();
         assertThat(transacao(processo(processo, usuario), responsavel(processo), amostra(processo),
@@ -200,7 +188,6 @@ class MigracaoV21PositivoDefinitivoIT extends AbstractIntegrationTest {
                 "migracao." + UUID.randomUUID().toString().substring(0, 8) + "@itu.sp.gov.br");
     }
 
-    // Protocolo so precisa ser unico dentro do schema do teste (varchar(20)).
     private static String protocoloUnico() {
         return "T" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
     }

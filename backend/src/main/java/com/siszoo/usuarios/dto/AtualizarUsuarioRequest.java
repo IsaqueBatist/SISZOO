@@ -3,7 +3,6 @@ package com.siszoo.usuarios.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-// Edicao pelo Administrador. O e-mail fica de fora: e o login da pessoa.
 public record AtualizarUsuarioRequest(
         @NotBlank(message = "Informe o nome.")
         @Size(max = 100, message = "O nome deve ter no máximo 100 caracteres.")

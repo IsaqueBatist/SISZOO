@@ -38,13 +38,6 @@ import com.siszoo.comum.RelogioTesteConfig;
 
 import io.restassured.http.ContentType;
 
-// Endpoints de agregacao do dashboard: GET /api/dashboard/kpis e
-// GET /api/dashboard/graficos. O banco de teste e compartilhado entre
-// metodos sem rollback (AbstractIntegrationTest) e contagens globais (total
-// de animais, casos por doenca etc.) acumulam dado de OUTROS testes; por
-// isso os cenarios abaixo sempre medem o "antes" e verificam o DELTA exato
-// apos criar o cenario, nunca um valor absoluto, exceto onde a entidade e
-// nova (baia recem-criada).
 @Import(RelogioTesteConfig.class)
 class DashboardControllerIT extends AbstractIntegrationTest {
 
@@ -85,9 +78,6 @@ class DashboardControllerIT extends AbstractIntegrationTest {
     @Test
     @DisplayName("403 para perfil sem RELATORIOS:leitura")
     void deveRetornar403ParaPerfilSemAcesso() {
-        // Cargo de teste com so OCORRENCIAS_DENUNCIAS:leitura (ApiTesteFixture):
-        // nenhum cargo real do seed (V3) fica sem RELATORIOS:leitura, entao o
-        // cenario de "perfil sem acesso" so existe com este cargo de teste.
         String tokenSemAcesso = fixture.tokenLeitorOcorrencias("teste.leitor.dashboard@itu.sp.gov.br", "Dashboard");
 
         given().header("Authorization", "Bearer " + tokenSemAcesso).when().get(ROTA_KPIS).then().statusCode(403);
@@ -121,7 +111,7 @@ class DashboardControllerIT extends AbstractIntegrationTest {
     void graficosDeveTrazerAsSeisDoencasSempre() {
         List<String> codigos = given()
                 .header("Authorization", "Bearer " + tokenAdmin)
-                .when().get(ROTA_GRAFICOS + "?ano=1999") // ano sem nenhum processo: so testa o zero-fill
+                .when().get(ROTA_GRAFICOS + "?ano=1999")
                 .then().statusCode(200)
                 .extract().jsonPath().getList("casosPorDoenca.doenca.codigo", String.class);
 
@@ -155,8 +145,6 @@ class DashboardControllerIT extends AbstractIntegrationTest {
         assertThat(depois.get("caninos"), equalTo(antes.get("caninos") + 1));
     }
 
-    // Regressao: o caminho implicito o.providenciaTomada.codigo virava INNER
-    // JOIN e so ocorrencias ja encerradas entravam na contagem do dia.
     @Test
     @DisplayName("kpis.ocorrencias conta a ocorrencia ABERTA de hoje e ignora a encerrada como registro_indevido")
     void kpiOcorrenciasContaAbertaEIgnoraRegistroIndevido() {
@@ -195,8 +183,6 @@ class DashboardControllerIT extends AbstractIntegrationTest {
                 .extract().path("id");
     }
 
-    // KPI "adocoes": snapshot pelo status do animal.
-
     @Test
     @DisplayName("kpis.adocoes soma +1 em disponiveis ao criar e move para adotados ao mudar o status")
     void kpiAdocoesDeveSeguirOStatusAtualDoAnimal() {
@@ -228,11 +214,6 @@ class DashboardControllerIT extends AbstractIntegrationTest {
         assertThat(aposAdotar.get("adotados"), equalTo(antes.get("adotados") + 1));
     }
 
-    // fixture.criarAnimal cria SEM vacinacao (ficha_completa exige >=1 vacina
-    // vigente, nao so microchip), com esterilizado=false e status
-    // disponivel_adocao, e SEM procedimento algum; por isso um unico animal
-    // novo entra simultaneamente em ficha_incompleta, nao_castrado e
-    // sem_avaliacao_30d.
     @Test
     @DisplayName("animal novo (sem vacina, sem procedimento, disponivel p/ adocao) soma +1 em 3 alertas")
     void animalNovoContribuiParaTresAlertasAoMesmoTempo() {
@@ -245,8 +226,6 @@ class DashboardControllerIT extends AbstractIntegrationTest {
         assertThat(depois.get("nao_castrado"), equalTo(antes.get("nao_castrado") + 1));
         assertThat(depois.get("sem_avaliacao_30d"), equalTo(antes.get("sem_avaliacao_30d") + 1));
     }
-
-    // Alerta de vacina: reaproveita AlertaVacinalService.
 
     @Test
     @DisplayName("vacina a 7 dias do vencimento soma +1 em vacina_vencendo; vencida ha 1 dia soma +1 em vacina_vencida")
@@ -289,8 +268,6 @@ class DashboardControllerIT extends AbstractIntegrationTest {
     void deveContarBaiaSuperlotadaComEntidadeNova() {
         Map<String, Long> antes = totalPorTipoDeAlerta(tokenAdmin);
 
-        // nome tem limite de 40 chars (CriarBaiaRequest): so os 8 primeiros
-        // caracteres do UUID bastam pra evitar colisao entre execucoes.
         String baiaId = criarBaia("Baia T38 " + UUID.randomUUID().toString().substring(0, 8), (short) 1);
         criarAnimalNaBaia(baiaId);
 
@@ -342,9 +319,6 @@ class DashboardControllerIT extends AbstractIntegrationTest {
         String processoId = fixture.postarProcesso(tokenAdmin, null, false)
                 .then().statusCode(200).extract().path("id");
 
-        // Resultado so e aceito a partir de AGUARDANDO_RESULTADO:
-        // processo nasce ABERTO (ProcessoSanitario), precisa avancar 1 passo
-        // (StatusProcesso#podeTransicionarPara) antes do POST /resultados.
         avancarParaAguardandoResultado(processoId);
 
         Map<String, Object> resultado = new HashMap<>();
@@ -468,10 +442,6 @@ class DashboardControllerIT extends AbstractIntegrationTest {
                 .then().statusCode(200);
     }
 
-    // Prescricao gravada direto no repositorio (sem endpoint de catalogo de
-    // medicamentos disponivel no fixture), mesmo padrao de
-    // AlertaVacinalControllerIT#salvarVacinacaoDireta para entidades de teste
-    // fora do catalogo real.
     private void criarPrescricaoAtivaDireta(String animalId, LocalDate dataFimPrevista) {
         CategoriaFarmacologica categoria = new CategoriaFarmacologica();
         categoria.setNome("Categoria Teste T38 " + UUID.randomUUID());

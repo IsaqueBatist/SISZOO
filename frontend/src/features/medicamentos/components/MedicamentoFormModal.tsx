@@ -22,7 +22,6 @@ const MAPA_ERROS_MEDICAMENTO = mapaDeCampos<MedicamentoFormValues>(['nome', 'cat
 const MAPA_ERROS_CATEGORIA = mapaDeCampos<CategoriaFormValues>(['nome'])
 
 interface MedicamentoFormModalProps {
-  // Ausente = cadastro; presente = edição do medicamento existente.
   medicamento?: Medicamento
   onFechar: () => void
 }
@@ -79,7 +78,6 @@ export function MedicamentoFormModal({ medicamento, onFechar }: MedicamentoFormM
     void handleSubmit(salvar)(event)
   }
 
-  // A categoria recém-criada já fica escolhida.
   function aoCadastrarCategoria(id: string, nome: string) {
     setValue('categoriaId', id, { shouldValidate: true })
     setCadastrandoCategoria(false)
@@ -184,8 +182,6 @@ export function MedicamentoFormModal({ medicamento, onFechar }: MedicamentoFormM
   )
 }
 
-// Único caminho do sistema para criar categoria farmacológica: a API não tem
-// PUT nem DELETE de categoria, e não há tela própria para elas.
 function CadastroCategoria({
   onCadastrada,
   onCancelar,
@@ -218,8 +214,6 @@ function CadastroCategoria({
     }
   }
 
-  // `div` e não `form`: este bloco vive dentro do `form` do medicamento, e
-  // formulário aninhado é HTML inválido: o submit de um dispararia o outro.
   function aoEnviar(event: FormEvent<HTMLButtonElement>) {
     event.preventDefault()
     setErro(null)

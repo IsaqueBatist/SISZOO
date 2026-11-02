@@ -12,11 +12,6 @@ import { RotaLeituraOcorrencias } from './RotaLeituraOcorrencias'
 import { RotaProtegida } from './RotaProtegida'
 import { RouteErrorBoundary } from './RouteErrorBoundary'
 
-// Code-splitting por rota (máquinas do CCZ têm ~2GB RAM): todas as telas,
-// carregadas sob demanda. O Login também: eager, ele levaria zod,
-// react-hook-form e o resolver (~48 KB gzip, cerca de 1/3 do carregamento
-// inicial) para toda recarga de tela já autenticada, que nunca o mostra. Na
-// primeira visita custa só mais um arquivo, baixado junto com o resto.
 const EditarProcesso = lazy(() =>
   import('@/features/processos/components/EditarProcesso').then((m) => ({ default: m.EditarProcesso })),
 )
@@ -125,11 +120,7 @@ export function AppRoutes() {
                 <Route path="/animais/novo" element={<CadastrarAnimal />} />
                 <Route path="/animais/:id/editar" element={<EditarAnimal />} />
               </Route>
-              {/* GESTAO_ANIMAIS:leitura (todos os perfis); o cadastro só aparece com escrita. */}
               <Route path="/medicamentos" element={<Medicamentos />} />
-              {/* Mesma autoridade do catalogo de medicamentos: leitura para os 3
-                  perfis, cadastro/edicao so com escrita (checado no componente)
-                  e desativacao so para o Administrador, recusada pelo backend. */}
               <Route path="/vacinas" element={<Vacinas />} />
               <Route element={<RotaGestaoBaias />}>
                 <Route path="/baias" element={<GestaoBaias />} />
@@ -147,7 +138,6 @@ export function AppRoutes() {
               <Route element={<RotaEscritaProcessos />}>
                 <Route path="/processos/novo" element={<CadastrarProcesso />} />
               </Route>
-              {/* RELATORIOS:leitura (todos os perfis) - sem guard extra, nav.ts ja libera os 3. */}
               <Route path="/relatorios" element={<Relatorios />} />
               <Route path="/perfil" element={<Perfil />} />
               <Route path="/configuracoes" element={<Configuracoes />} />

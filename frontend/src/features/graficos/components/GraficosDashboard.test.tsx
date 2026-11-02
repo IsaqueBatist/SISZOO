@@ -33,11 +33,9 @@ describe('GraficosDashboard', () => {
     expect(await screen.findByText('Raiva por Espécie')).toBeInTheDocument()
     expect(await screen.findByText('Por Patologia')).toBeInTheDocument()
 
-    // Selo de mock aparece nos 2 cards mockados...
     const selos = await screen.findAllByText('Dados de demonstração')
     expect(selos).toHaveLength(2)
 
-    // ...mas nunca no card de ocupação de baia (dado real).
     const cardBaia = screen.getByText('Ocupação por Baia').closest('.card') as HTMLElement
     expect(cardBaia.textContent).not.toContain('Dados de demonstração')
   })

@@ -10,12 +10,6 @@ import org.springframework.stereotype.Component;
 import com.siszoo.comum.service.EmailService;
 import com.siszoo.usuarios.exception.LimiteTentativasException;
 
-// Freio contra forca bruta no login (docs/decisoes/politica-senha.md):
-// so as falhas contam, em janela fixa, por e-mail e por IP. Dentro da janela,
-// atingido um dos limites, o login responde 429 antes de conferir a senha,
-// mesmo que ela esteja certa; um login correto antes disso zera o contador do
-// e-mail. Nao ha bloqueio de conta nem estado no banco: reiniciar o backend
-// zera tudo, e o pior caso para quem tem a senha e esperar a janela.
 @Component
 public class LimitadorLogin {
 
@@ -51,7 +45,6 @@ public class LimitadorLogin {
         falhasIp.incrementar(LimitadorRecuperacaoSenha.chaveIp(ip));
     }
 
-    // Quem acabou de entrar com a senha certa nao carrega as falhas antigas.
     public void registrarSucesso(String email) {
         falhasEmail.limpar(LimitadorRecuperacaoSenha.normalizar(email));
     }

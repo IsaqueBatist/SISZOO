@@ -14,20 +14,6 @@ import {
 import { vi } from 'vitest'
 import { abrirBancoRascunhos, esquecerBancoRascunhos, STORE_ARQUIVOS, type StoreRascunho } from '@/lib/rascunhoDb'
 
-// O jsdom não tem IndexedDB. Aqui entra a fake-indexeddb, que implementa a
-// especificação de verdade (chaves, transações, versionamento).
-// Uma fábrica nova por teste mantém o isolamento entre eles.
-
-// A fake-indexeddb clona o valor na inserção com o structuredClone GLOBAL
-// (src/lib/cloneValueForInsertion.ts dela). No jsdom isso é um problema: o
-// structuredClone do Node não reconhece um Blob/File do jsdom e devolve um
-// objeto VAZIO, sem erro: o arquivo chegaria à store sem conteúdo. Medido no
-// jsdom 30: `ctor=Object, size=undefined, arrayBuffer=false`.
-// Solução: trocar cada Blob/File por um marcador, deixar o clone nativo cuidar
-// do resto e recolocar os arquivos por referência. Do ponto de vista do teste é
-// o que o navegador real faz: lá o Blob sobrevive ao round-trip.
-// Limite conhecido: cobre objetos simples, arrays e Blob/File nas folhas, que é
-// a forma de todos os rascunhos do projeto; não trata referências cíclicas.
 const MARCADOR_ARQUIVO = '__arquivoEmTeste__'
 
 interface Marcador {
@@ -36,7 +22,6 @@ interface Marcador {
 
 function ehArquivo(valor: unknown): valor is Blob {
   if (typeof Blob !== 'undefined' && valor instanceof Blob) return true
-  // Blob de outra realm (o do Node, por exemplo) não casa com o instanceof.
   return (
     typeof valor === 'object' &&
     valor !== null &&
@@ -75,10 +60,6 @@ function recolocarArquivos(valor: unknown, arquivos: Blob[]): unknown {
 export function instalarIndexedDbEmMemoria() {
   const cloneNativo = structuredClone
 
-  // A fábrica é nova a cada teste (isolamento), mas as classes vão todas: a
-  // idb faz `instanceof IDBRequest`/`IDBTransaction` internamente, e o jsdom
-  // não define nenhuma delas. É a mesma lista que o 'fake-indexeddb/auto'
-  // instala, só que por teste, não global na suíte inteira.
   vi.stubGlobal('indexedDB', new IDBFactory())
   vi.stubGlobal('IDBFactory', IDBFactory)
   vi.stubGlobal('IDBCursor', IDBCursor)
@@ -96,13 +77,8 @@ export function instalarIndexedDbEmMemoria() {
     return recolocarArquivos(cloneNativo(extrairArquivos(valor, arquivos)), arquivos)
   })
 
-  // O módulo guarda a conexão aberta; sem isto ela apontaria para o banco do
-  // teste anterior, de uma fábrica que acabou de ser descartada.
   esquecerBancoRascunhos()
 
-  // Leitura direta, para as asserções. Devolve o CONTEÚDO de cada rascunho
-  // (sem o envelope `{ dados, salvoEm }`), que é o que os testes
-  // afirmam; use `registros` quando a data do salvamento importar.
   async function conteudo(store: string): Promise<Record<string, unknown>> {
     const bruto = await registros(store)
     return Object.fromEntries(

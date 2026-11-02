@@ -3,13 +3,9 @@ import { useCatalogosProcessoQuery } from '../hooks/useProcessos'
 import type { ProcessoFormValues } from '../schemas/processoFormSchema'
 
 interface CamposDadosProcessoProps {
-  // Edição pelo Administrador: a abertura é imutável, e a doença trava depois
-  // do resultado (o backend recusa os dois).
   edicao?: { doencaBloqueada: boolean }
 }
 
-// Etapa 1 do processo sanitário, depois do vínculo: abertura, doença,
-// laboratório e os números GAL/SINAN.
 export function CamposDadosProcesso({ edicao }: CamposDadosProcessoProps) {
   const {
     register,

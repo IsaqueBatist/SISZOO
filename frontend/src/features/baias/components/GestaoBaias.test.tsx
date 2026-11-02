@@ -52,7 +52,6 @@ describe('GestaoBaias', () => {
     expect(within(secaoCanil).getByText('5 baia(s)')).toBeInTheDocument()
     expect(within(secaoGatil).getByText('1 baia(s)')).toBeInTheDocument()
 
-    // Baia Interditada é inativa: some do filtro padrão ("Ativas").
     expect(screen.queryByText('Baia Interditada')).not.toBeInTheDocument()
   })
 
@@ -214,8 +213,6 @@ describe('GestaoBaias', () => {
     expect(linkResidente).toHaveAttribute('href', '/animais/b2c3d4e5-0000-0000-0000-000000000001')
   })
 
-  // Residentes vêm de GET /baias/residentes (nome e miniatura), não da
-  // listagem de 500 animais com foto.
   it('carrega os residentes pelo endpoint dedicado, sem baixar a listagem de animais', async () => {
     const listagemDeAnimais = vi.fn()
     server.use(

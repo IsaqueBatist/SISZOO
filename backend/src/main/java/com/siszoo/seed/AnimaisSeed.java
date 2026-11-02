@@ -26,13 +26,6 @@ import com.siszoo.animais.dto.CriarAnimalRequest;
 import com.siszoo.animais.service.AnexoAnimalService;
 import com.siszoo.animais.service.AnimalService;
 
-// Animais do canil com historico clinico, pelos services reais (ficha
-// completa, auditoria e regras de baia/eutanasia como na API). Os 11 que saem
-// da custodia vem primeiro: entram numa baia, recebem o historico e saem
-// (adocao, transferencia, obito), entao a ocupacao nunca passa da capacidade.
-// Os valores que importam para os indicadores estao explicitos no plano:
-// vacinas vencendo/vencidas, prescricoes terminando em 7 dias, animais sem
-// avaliacao em 30 dias, nao castrados disponiveis, fichas incompletas.
 class AnimaisSeed {
 
     static final String GESTAO_ESCRITA = "GESTAO_ANIMAIS:escrita";
@@ -75,7 +68,6 @@ class AnimaisSeed {
             return "999000000000" + String.format("%03d", numero);
         }
 
-        // Foto real em src/main/resources/seed/fotos (creditos no CREDITOS.md da pasta).
         String foto() {
             return ArquivosFicticios.nomeDaFoto(numero, nome);
         }
@@ -108,7 +100,6 @@ class AnimaisSeed {
     }
 
     static final List<Animal> PLANO = List.of(
-            // Fora da custodia ao final (criados primeiro).
             canino(1, "Thor", "macho").cor("Caramelo").porte("medio").idade("3 anos").entrada(280).chip()
                     .castrado(250).em(BaiasSeed.CANIL_A1).medalha().destino("adotado"),
             canino(2, "Mel", "femea").cor("Preta").idade("2 anos").entrada(220).chip().castrado(200)
@@ -135,7 +126,6 @@ class AnimaisSeed {
             felino(11, "Frida", "femea").cor("Escaminha").idade("9 anos").entrada(60).chip().status("em_tratamento")
                     .motivo("resgate").em(BaiasSeed.GATIL_G1).destino("obito_eutanasia")
                     .laudo("Doença renal crônica em estágio terminal, refratária ao suporte clínico."),
-            // Sob custodia.
             canino(12, "Rex", "macho").cor("Preta").porte("medio").idade("6 anos").entrada(420).chip().castrado(400)
                     .em(BaiasSeed.CANIL_A1).medalha()
                     .procedencia("Recolhido na Rua das Acácias, Vila Nova"),
@@ -154,7 +144,6 @@ class AnimaisSeed {
                     .status("em_tratamento").em(BaiasSeed.CANIL_A2).obs("Chegou com ferida no membro anterior."),
             canino(19, "Trovão", "macho").cor("Cinza").porte("grande").idade("5 anos").entrada(380).chip()
                     .castrado(360).em(BaiasSeed.CANIL_EXTERNO_B1).medalha(),
-            // Microchip sem vacina: ficha incompleta ate a primeira vacina (roteiro 3.3).
             canino(20, "Pandora", "femea").cor("Preta").longa().porte("grande").idade("3 anos").entrada(140).chip()
                     .motivo("abandono").em(BaiasSeed.CANIL_EXTERNO_B1),
             felino(21, "Salem", "macho").cor("Preta").idade("4 anos").entrada(210).chip().castrado(190)
@@ -183,8 +172,6 @@ class AnimaisSeed {
             canino(32, "Bela", "femea").cor("Branca e preta").idade("1 ano").entrada(35).chip().castrado(30)
                     .motivo("entrega_voluntaria").em(BaiasSeed.CANIL_A1));
 
-    // dias > 0: aplicada ha `dias`; validadeEm != null: aplicada para vencer
-    // em hoje + validadeEm (negativo = ja vencida).
     record Vacina(int animal, int ordem, String vacina, int dias, Integer validadeEm, String lote) {
         String chave() {
             return "vacinacao:" + String.format("%03d", animal) + "." + ordem;
@@ -197,7 +184,6 @@ class AnimaisSeed {
         }
     }
 
-    // Datas relativas a hoje: negativo = passado, positivo = futuro.
     record Prescricao(int animal, String medicamento, int inicio, Integer fimPrevisto, Integer fimReal,
             StatusPrescricao status, int frequencia, UnidadeFrequencia unidadeFrequencia, String dose,
             UnidadeDose unidadeDose, ViaAdministracao via) {
@@ -245,7 +231,6 @@ class AnimaisSeed {
             new Vacina(31, 3, "leishmaniose", 110, null, "LSH-2026-002"),
             new Vacina(32, 1, "v10", 30, null, "V10-2026-025"));
 
-    // Lote digitado errado na vacinacao 021.1: a correcao e um registro novo.
     static final String VACINA_RETIFICADA = "vacinacao:021.1";
     static final String LOTE_CORRIGIDO = "L2026-040";
 
@@ -270,7 +255,6 @@ class AnimaisSeed {
             new Procedimento(10, 2, "atendimento_clinico", 180, "Massa em região cervical.", "Biópsia indicada."),
             new Procedimento(11, 2, "atendimento_clinico", 50, "Desidratação e anorexia.", "Fluidoterapia."));
 
-    // Descricao do atendimento 013.2 corrigida depois (registro imutavel).
     static final String PROCEDIMENTO_RETIFICADO = "procedimento:013.2";
 
     static final List<Prescricao> PRESCRICOES = List.of(
@@ -297,7 +281,6 @@ class AnimaisSeed {
             new Prescricao(22, "medicamento:01", -60, -50, null, StatusPrescricao.ATIVA, 12,
                     UnidadeFrequencia.HORAS, "100", UnidadeDose.MILIGRAMA, ViaAdministracao.ORAL));
 
-    // A prescricao 022.1 ficou ATIVA apos o fim: a correcao a conclui.
     static final String PRESCRICAO_RETIFICADA = "prescricao:022.1";
 
     static final List<Exame> EXAMES = List.of(
@@ -312,7 +295,6 @@ class AnimaisSeed {
             new Exame(18, "radiografia", null, -12, -12, "Sem fraturas; edema de tecidos moles."),
             new Exame(2, "hemograma", null, -215, -214, "Sem alterações."));
 
-    // Resultado do hemograma 012.1 corrigido (registro imutavel).
     static final String EXAME_RETIFICADO = "exame:012.1";
 
     static final List<Anexo> ANEXOS = List.of(
@@ -438,8 +420,6 @@ class AnimaisSeed {
         }
     }
 
-    // Castracoes geradas a partir da data de esterilizacao da ficha, mais os
-    // atendimentos avulsos do plano.
     static List<Procedimento> procedimentosDo(Animal animal) {
         List<Procedimento> lista = new ArrayList<>();
         if (animal.diasCastracao != null) {
@@ -496,9 +476,6 @@ class AnimaisSeed {
                 animal.procedencia, null);
     }
 
-    // PUT completo (a API substitui a ficha): mesmos dados da criacao, com o
-    // microchip implantado depois (RN-AN04 recalcula a ficha) ou o destino
-    // final. Fora da custodia o animal sai da baia.
     private AtualizarAnimalRequest atualizacao(Animal animal, DatasSeed datas, boolean comMicrochip, String status,
             boolean desfecho) {
         boolean implantadoAgora = animal.microchipDepois && comMicrochip;
@@ -525,7 +502,6 @@ class AnimaisSeed {
         return animal.diasCastracao == null ? null : datas.diasAtras(animal.diasCastracao);
     }
 
-    // Peso coerente com especie e porte, com pequena variacao pelo numero.
     private static BigDecimal peso(Animal animal) {
         double base = switch (animal.especie) {
             case "felino" -> 3.6;

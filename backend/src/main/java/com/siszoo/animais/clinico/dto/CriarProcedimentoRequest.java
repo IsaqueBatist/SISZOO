@@ -20,6 +20,5 @@ public record CriarProcedimentoRequest(
 
         String resultado,
 
-        // Presenca (nao-nulo) indica que este POST retifica o registro apontado.
         UUID retificaId) {
 }

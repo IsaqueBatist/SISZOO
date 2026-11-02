@@ -11,9 +11,6 @@ public record CriarMedicamentoRequest(
         @Size(max = 100)
         String nome,
 
-        // CategoriaFarmacologica nao tem `codigo` (ao contrario de Vacina/
-        // TipoProcedimento): referenciada por uuid cru, mesmo padrao usado por
-        // Prescricao.medicamentoId (ver comentario em V5__schema_clinico_catalogos.sql).
         @NotNull
         UUID categoriaId) {
 }

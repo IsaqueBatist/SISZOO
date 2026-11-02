@@ -10,18 +10,12 @@ interface BuscaAnimalCanilProps {
   onSelecionar: (animal: Animal) => void
 }
 
-// Busca do animal do canil numa amostra. Só é montada enquanto a amostra é do
-// canil e ainda não tem animal: a consulta não roda fora disso, e o texto
-// digitado some ao escolher ou ao trocar de modo. Segue o padrão combobox: o
-// foco fica no campo, setas percorrem a lista, Enter escolhe, Esc fecha.
 export function BuscaAnimalCanil({ numero, erro, onSelecionar }: BuscaAnimalCanilProps) {
   const [busca, setBusca] = useState('')
   const [mostrarSugestoes, setMostrarSugestoes] = useState(false)
   const [ativa, setAtiva] = useState(-1)
   const idLista = useId()
 
-  // Busca com o mesmo debounce de 300 ms da tela de Animais, para não fazer
-  // uma requisição por tecla.
   const [buscaDebounced, setBuscaDebounced] = useState('')
   useEffect(() => {
     const timeout = setTimeout(() => setBuscaDebounced(busca.trim()), 300)
@@ -44,7 +38,6 @@ export function BuscaAnimalCanil({ numero, erro, onSelecionar }: BuscaAnimalCani
       setMostrarSugestoes(true)
       setAtiva((atual) => (atual + passo + sugestoes.length) % sugestoes.length)
     } else if (event.key === 'Enter' && listaAberta && ativa >= 0) {
-      // Sem isto, o Enter enviaria o formulário do processo.
       event.preventDefault()
       onSelecionar(sugestoes[ativa])
     }

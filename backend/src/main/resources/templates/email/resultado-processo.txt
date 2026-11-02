@@ -7,4 +7,3 @@ CCZ "São Francisco de Assis"
 Avenida Sete Quedas, 1038 - Vila Progresso
 Fone: (11) 4023-1505 / WhatsApp: (11) 93231-9925
 Segunda a sexta, das 8h às 17h
-/*[- Versao em texto puro de resultado-processo.html (nao e comunicacao oficial aprovada pelo CCZ). Variavel resultado ("positivo" ou "inconclusivo", RN10): descreve o resultado vigente que disparou a notificacao. Endereco/telefones fixos, extraidos de https://itu.sp.gov.br/saude/zoonoses/ (2026-10-22). Variaveis: nome, protocolo, resultado. Comentario de template: nao sai no e-mail. Sem quebra de linha depois dele, para o texto terminar na linha acima. -]*/

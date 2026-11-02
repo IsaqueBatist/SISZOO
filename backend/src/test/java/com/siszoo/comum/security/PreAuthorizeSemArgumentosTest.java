@@ -14,10 +14,6 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.ClassUtils;
 
-// O PreAutorizacaoInterceptor avalia o @PreAuthorize antes de ler os
-// argumentos do metodo. Uma expressao com argumentos (#param) seria avaliada
-// com tudo nulo; o interceptor a recusa em tempo de execucao, e este teste
-// quebra antes disso, no build, se algum controller passar a usar "#".
 class PreAuthorizeSemArgumentosTest {
 
     private record Uso(String metodo, String expressao) {
@@ -44,8 +40,6 @@ class PreAuthorizeSemArgumentosTest {
     void nenhumControllerUsaArgumentoNoPreAuthorize() throws ClassNotFoundException {
         List<Uso> usos = preAuthorizeDosControllers("com.siszoo");
 
-        // A varredura tem de achar os endpoints protegidos, senao o teste
-        // passaria por vazio.
         assertThat(usos).hasSizeGreaterThanOrEqualTo(49);
         assertThat(usos).filteredOn(uso -> PreAutorizacaoInterceptor.usaArgumentosDoMetodo(uso.expressao())).isEmpty();
     }

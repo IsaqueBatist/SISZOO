@@ -29,7 +29,6 @@ import { useCatalogosProcessoQuery, useCriarProcessoMutation } from '../hooks/us
 import { formatarProtocoloProcesso } from '@/features/ocorrencias/utils/protocolo'
 import type { Denunciante } from '@/features/ocorrencias/types/ocorrencias.types'
 
-// Mensagem do servidor (409/422) com os campos recusados, quando vierem.
 function mensagemDoErro(erro: unknown): string {
   if (statusHttpDoErro(erro) === 403) {
     return 'Você não tem permissão para registrar este processo (vincular a uma ocorrência exige escrita em ocorrências).'
@@ -41,12 +40,8 @@ function mensagemDoErro(erro: unknown): string {
 }
 
 interface ProcessoFormProps {
-  // Etapa 1 pré-preenchida e travada (entrada pelo detalhe da ocorrência).
   ocorrenciaDaUrl: OcorrenciaParaVinculo | null
-  // OCORRENCIAS_DENUNCIAS:escrita: Admin e Agente. O Vet cria processo
-  // sem vínculo.
   podeVincular: boolean
-  // Só quando a ocorrência não é sigilosa nem anônima (CadastrarProcesso).
   denuncianteDaOcorrencia?: Denunciante | null
 }
 
@@ -98,13 +93,10 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular, denuncianteDaOcorr
     setVinculoTravado(true)
   }
 
-  // O sistema já sabe o bairro. Só preenche o vazio: o que foi digitado fica.
   function preencherBairroDaOcorrencia(bairro: string) {
     if (!getValues('responsavel.bairroOcorrencia')) setValue('responsavel.bairroOcorrencia', bairro)
   }
 
-  // Copia o que a própria pessoa vê na ocorrência, e só a pedido: nunca é
-  // automático, e nunca aparece para ocorrência sigilosa ou anônima.
   function usarDadosDoDenunciante() {
     if (!denuncianteDaOcorrencia) return
     const { nome, cpf, telefone, email, cep, endereco, bairroResidencial } = denuncianteDaOcorrencia
@@ -134,17 +126,10 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular, denuncianteDaOcorr
     return () => {
       cancelado = true
     }
-    // Só verifica o rascunho salvo uma vez, ao montar o formulário.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
-    // A assinatura só é criada depois que a checagem inicial de rascunho
-    // termina, senão um callback com closure obsoleto pode sobrescrever um
-    // rascunho real (mesmo gate de AnimalForm/OcorrenciaForm).
-    // Refeita a cada troca de etapa: o callback grava a etapa em que o
-    // usuário está, não a de quando a assinatura nasceu. Com rascunho à espera
-    // de Restaurar ou Descartar, digitar não pode apagá-lo.
     if (!prontoParaAutoSalvar || aguardandoEscolha) return
     const inscricao = watch((valoresAtuais) => {
       agendarSalvarRascunhoProcesso(chaveRascunho, { etapaAtual: step, valores: valoresAtuais as ProcessoFormValues })
@@ -154,15 +139,12 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular, denuncianteDaOcorr
 
   function handleRestaurarRascunho() {
     if (!rascunhoSalvo) return
-    // Um rascunho com vínculo não serve a quem não pode vincular.
     const valoresRestaurados =
       !podeVincular && rascunhoSalvo.valores.vinculoDecisao === 'vinculado'
         ? { ...rascunhoSalvo.valores, vinculoDecisao: '' as never, ocorrenciaId: null, ocorrenciaResumo: null }
         : rascunhoSalvo.valores
     reset(valoresRestaurados)
     setStep(valoresRestaurados.vinculoDecisao ? rascunhoSalvo.etapaAtual : 1)
-    // Cast: um rascunho salvo antes de qualquer decisão na etapa 1 ainda
-    // pode ter o placeholder "".
     setVinculoTravado((valoresRestaurados.vinculoDecisao as string) !== '')
     setRascunhoSalvo(null)
     setConflitoRascunho(false)

@@ -18,9 +18,6 @@ const EVENTOS_DE_ATIVIDADE = ['pointerdown', 'pointermove', 'keydown', 'wheel', 
 export const TEXTO_AVISO_INATIVIDADE =
   'Sua sessão vai expirar em 5 minutos por inatividade. Continue usando o sistema para mantê-la ativa.'
 
-// Enquanto há sessão: conta a inatividade, avisa antes do fim e estende a sessão
-// no servidor quando a pessoa interage. A conta usa o instante compartilhado,
-// então trabalhar em uma aba mantém as outras abertas.
 export function useSessaoAtiva(ativa: boolean, aoExpirar: () => void, aoSerRecusada: () => void) {
   const callbacks = useRef({ aoExpirar, aoSerRecusada })
   useEffect(() => {
@@ -33,8 +30,6 @@ export function useSessaoAtiva(ativa: boolean, aoExpirar: () => void, aoSerRecus
     if (!ultimaExtensao()) registrarExtensao()
     let avisado = false
 
-    // Devolve false quando a sessão acabou: a atividade que chega depois do
-    // limite não ressuscita a sessão.
     function verificar(): boolean {
       const ociosoMs = Date.now() - ultimaAtividade()
       if (ociosoMs >= LIMITE_INATIVIDADE_MS) {
@@ -62,7 +57,6 @@ export function useSessaoAtiva(ativa: boolean, aoExpirar: () => void, aoSerRecus
     }
 
     const intervalo = setInterval(verificar, INTERVALO_VERIFICACAO_MS)
-    // Máquina que volta da suspensão: o timer pode ter ficado parado.
     document.addEventListener('visibilitychange', verificar)
     for (const evento of EVENTOS_DE_ATIVIDADE) {
       window.addEventListener(evento, aoInteragir, { passive: true })

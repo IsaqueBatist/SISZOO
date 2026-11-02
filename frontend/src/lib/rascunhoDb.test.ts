@@ -18,9 +18,6 @@ import {
 const USUARIO = 'a1b2c3d4-0000-0000-0000-00000000000a'
 const NOME_BANCO = 'siszoo-rascunhos'
 
-// Cria o banco numa versão ANTERIOR, com só parte das stores: o cenário de um
-// navegador em que o upgrade criou a store do primeiro formulário aberto e
-// nenhuma das outras.
 async function bancoAntigo(versao: number, stores: string[], semear?: (banco: Awaited<ReturnType<typeof openDB>>) => Promise<unknown>) {
   const banco = await openDB(NOME_BANCO, versao, {
     upgrade(db) {
@@ -31,8 +28,6 @@ async function bancoAntigo(versao: number, stores: string[], semear?: (banco: Aw
   banco.close()
 }
 
-// Grava direto, sem passar por salvarRascunho, para datar o registro no passado.
-// Não fecha a conexão: ela é compartilhada pelo módulo (ver abrirBancoRascunhos).
 async function gravarComData(store: string, chave: string, dados: unknown, salvoEm: number) {
   const banco = await abrirBancoRascunhos()
   await banco.put(store as 'animais', { dados, salvoEm } as never, chave)
@@ -172,10 +167,6 @@ describe('arquivos do rascunho', () => {
   })
 
   it('falha de gravação (cota) devolve null sem lançar', async () => {
-    // A conexão fica em cache no módulo: descartá-la obriga a próxima operação
-    // a abrir o banco de novo, que é onde a falha é simulada. Depois do
-    // mockRestore o cache já está limpo, porque abrirBancoRascunhos não guarda
-    // uma abertura que falhou.
     esquecerBancoRascunhos()
     vi.spyOn(indexedDB, 'open').mockImplementation(() => {
       throw new DOMException('cota', 'QuotaExceededError')

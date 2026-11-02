@@ -20,15 +20,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-// Exercita a V11 (Veterinario sem acesso a ocorrencias) num schema proprio do
-// mesmo PostgreSQL de teste, no padrao de MigracaoV7RegistroClinicoIT: primeiro
-// ate a V10 (estado com a leitura concedida pela V3), depois a V11.
 class MigracaoV11AcessoVetIT extends AbstractIntegrationTest {
 
     private static final String SCHEMA = "migracao_v11";
     private static final String CARGO_VETERINARIO_ID = "00000000-0000-4000-8000-000000000002";
 
-    // Uma linha da matriz: cargo, modulo, feature e as tres flags.
     private static final String MATRIZ = "SELECT CAST(cargo_id AS varchar) AS cargo_id, modulo, feature,"
             + " leitura, escrita, exclusao FROM " + SCHEMA + ".cargo_permissao"
             + " ORDER BY cargo_id, modulo, feature";
@@ -58,7 +54,6 @@ class MigracaoV11AcessoVetIT extends AbstractIntegrationTest {
     @DisplayName("V11 zera a leitura do Veterinario em OCORRENCIAS_DENUNCIAS e nao muda o resto da matriz")
     void v11DeveZerarSoALinhaDoVeterinario() {
         migrarAte("10");
-        // Estado defeituoso herdado da V3: o Veterinario le o modulo.
         assertThat(flagsDoVetEmOcorrencias(), equalTo(Map.of("leitura", true, "escrita", false, "exclusao", false)));
         List<Map<String, Object>> antes = jdbcTemplate.queryForList(MATRIZ);
 
@@ -68,9 +63,6 @@ class MigracaoV11AcessoVetIT extends AbstractIntegrationTest {
         assertThat(flagsDoVetEmOcorrencias(), equalTo(Map.of("leitura", false, "escrita", false, "exclusao", false)));
         assertThat(linhasDoVetComAcessoAOcorrencias(), equalTo(0));
 
-        // Fora a linha corrigida, a matriz fica identica: as outras linhas do
-        // Veterinario (animais RW, processos RW, relatorios R) e as de
-        // Administrador e Agente, inclusive denunciante_sigiloso.
         List<Map<String, Object>> depois = jdbcTemplate.queryForList(MATRIZ);
         assertThat(depois.size(), equalTo(antes.size()));
         for (int i = 0; i < antes.size(); i++) {
@@ -115,7 +107,6 @@ class MigracaoV11AcessoVetIT extends AbstractIntegrationTest {
                 CARGO_VETERINARIO_ID);
     }
 
-    // Qualquer feature do modulo, nao so 'geral'.
     private Integer linhasDoVetComAcessoAOcorrencias() {
         return jdbcTemplate.queryForObject("SELECT count(*) FROM " + SCHEMA + ".cargo_permissao"
                 + " WHERE cargo_id = CAST(? AS uuid) AND modulo = 'OCORRENCIAS_DENUNCIAS'"

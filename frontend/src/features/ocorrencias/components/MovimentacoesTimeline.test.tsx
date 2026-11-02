@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest'
 import { MovimentacoesTimeline } from './MovimentacoesTimeline'
 import type { MovimentacaoOcorrencia } from '../types/ocorrencias.types'
 
-// Datas no formato da API: LocalDateTime sem fuso, já no horário do CCZ.
 function movimentacao(sobrescrever: Partial<MovimentacaoOcorrencia> & Pick<MovimentacaoOcorrencia, 'id' | 'tipoMovimentacao' | 'data'>): MovimentacaoOcorrencia {
   return {
     statusAnterior: null,

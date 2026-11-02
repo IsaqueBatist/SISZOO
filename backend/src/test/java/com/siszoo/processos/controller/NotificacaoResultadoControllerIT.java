@@ -48,13 +48,6 @@ import com.siszoo.comum.service.EmailService;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-// Desfecho do animal no mesmo lançamento do resultado e notificação assíncrona
-// ao município quando o vigente passa a "positivo" (RN10 do TG: Positivo e
-// Inconclusivo notificam).
-//
-// EmailService mockado na classe inteira: o envio é @Async, então mesmo
-// os testes que não verificam notificação não podem deixar uma tentativa real
-// de SMTP vazando para outra thread. O envio real fica no EmailServiceIT.
 @Import(RelogioTesteConfig.class)
 class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
 
@@ -92,11 +85,6 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
         semEnvio();
     }
 
-    // O desfecho e do processo (docs/decisoes/T37.md) e pode vir em
-    // qualquer lancamento (original ou correcao), fora do historico imutavel.
-    // A troca fica registrada na auditoria ATUALIZACAO de processo_sanitario
-    // (antes e depois), nao em resultado_processo. Correcao SEM desfecho (manter
-    // ou limpar o anterior) nao tem regra decidida e nao e testada aqui.
     @Test
     @DisplayName("[T37/T34-11] desfecho no lancamento e na correcao: processo sobrescrito, auditoria com antes e depois")
     void desfechoNaCorrecaoSobrescritoEAuditado() {
@@ -145,9 +133,6 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
         envioAoMunicipe(processoId);
     }
 
-    // Aceite do SMTP (aqui, future concluido do mock) grava a
-    // data/hora no processo, com um evento de auditoria de sistema: sem
-    // usuario, payload so com a data (nenhum dado pessoal).
     @Test
     @DisplayName("[T35-16] envio aceito grava data_notificacao_municipe e audita como evento de sistema")
     void envioAceitoGravaDataEAudita() {
@@ -170,13 +155,9 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
         assertThat(LocalDateTime.parse((String) eventos.get(0).get("depois")), equalTo(gravada));
         assertThat((String) eventos.get(0).get("bruto"), not(containsString("maria")));
         assertThat((String) eventos.get(0).get("bruto"), not(containsString("Maria")));
-        // GET do processo expoe a data (campo aditivo), para a tela mostrar
-        // "Municipe notificado em ...".
         assertThat(LocalDateTime.parse(buscar(processoId).path("dataNotificacaoMunicipe")), equalTo(gravada));
     }
 
-    // Depois de notificado, o positivo nao se corrige
-    // (422), entao nao ha segunda notificacao nem a data muda.
     @Test
     @DisplayName("[T35-15] positivo notificado: correcao recusada, uma unica notificacao e data mantida")
     void positivoNotificadoNaoReenvia() {
@@ -196,8 +177,6 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
         assertThat(dataNotificacao(processoId), equalTo(gravada));
     }
 
-    // RN10 do TG: Positivo e Inconclusivo notificam; os
-    // demais resultados nao.
     @Test
     @DisplayName("[F2-014/RN10] resultado inconclusivo notifica o municipe e grava a data do envio")
     void inconclusivoNotifica() {
@@ -220,8 +199,6 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
         dataNotificacaoContinuaNula(processoId);
     }
 
-    // Inconclusivo nao e definitivo: a correcao para positivo e um novo
-    // lancamento notificavel, com segundo e-mail e nova data de envio.
     @Test
     @DisplayName("[F2-014/RN10] correcao de inconclusivo para positivo notifica de novo e regrava a data")
     void correcaoDeInconclusivoParaPositivoNotificaDeNovo() {
@@ -273,8 +250,6 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
         assertThat(aguardarDataNotificacao(processoId), notNullValue());
     }
 
-    // A falha de SMTP chega como future falho (o EmailService
-    // loga e nunca lanca); o lancamento do resultado nao depende dela.
     @Test
     @DisplayName("[T37] e-mail indisponivel: resultado e salvo mesmo assim, e a tentativa de envio aconteceu")
     void resultadoSalvoMesmoComFalhaDeEmail() {
@@ -287,7 +262,6 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
         resposta.then().statusCode(200);
         assertThat(resposta.path("resultado.codigo"), equalTo("positivo"));
         envioAoMunicipe(processoId);
-        // So o aceite do SMTP grava a data; na falha, fica nula.
         dataNotificacaoContinuaNula(processoId);
         assertThat(buscar(processoId).path("dataNotificacaoMunicipe"), nullValue());
     }
@@ -301,14 +275,11 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
 
         semEnvio();
         assertThat(dataNotificacao(processoId), nullValue());
-        // No GET, o campo existe e vem nulo: a tela mostra "NAO notificado".
         buscar(processoId).then().statusCode(200)
                 .body("$", hasKey("dataNotificacaoMunicipe"))
                 .body("dataNotificacaoMunicipe", nullValue());
     }
 
-    // Reenvio manual quando o primeiro envio falhou:
-    // segunda tentativa real pelo EmailService, e so essa segunda grava a data.
     @Test
     @DisplayName("[T35] reenvio apos falha de SMTP: tenta de novo e grava a data no segundo aceite")
     void reenvioAposFalhaTentaDeNovoEGravaData() {
@@ -322,13 +293,10 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
 
         reenviar(processoId).then().statusCode(200);
 
-        // envioAceito() reseta o mock: a chamada do reenvio e a unica apos o reset.
         verify(emailService, timeout(5000).times(1)).enviar(any(), any(), any(), any());
         assertThat(aguardarDataNotificacao(processoId), notNullValue());
     }
 
-    // Ja confirmado pelo SMTP, o reenvio e recusado, sem segunda
-    // mensagem nem mudanca na data gravada.
     @Test
     @DisplayName("[T35] reenvio com notificacao ja confirmada: 422, sem segundo envio")
     void reenvioComNotificacaoJaConfirmadaRecusado() {
@@ -343,7 +311,6 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
         assertThat(dataNotificacao(processoId), equalTo(gravada));
     }
 
-    // Sem resultado positivo vigente, nao ha notificacao para reenviar.
     @Test
     @DisplayName("[T35] reenvio sem resultado positivo vigente: 422")
     void reenvioSemPositivoRecusado() {
@@ -360,21 +327,17 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
                 .when().post(ROTA + "/" + processoId + "/notificacoes/reenviar");
     }
 
-    // Mock sem stub devolveria null no lugar do future.
     private void envioAceito() {
         reset(emailService);
         when(emailService.enviar(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(CompletableFuture.completedFuture(null));
     }
 
-    // Notificacao ao responsavel cadastrado, com o protocolo no assunto e as
-    // versoes HTML e texto do template (NotificacaoResultadoService).
     private void envioAoMunicipe(String processoId) {
         String protocolo = buscar(processoId).path("protocolo");
         verify(emailService, timeout(5000)).enviar(eq("maria@exemplo.com"), contains(protocolo), anyString(), anyString());
     }
 
-    // O listener e @Async: a ausencia de chamada e conferida depois de uma espera.
     private void semEnvio() {
         verify(emailService, after(1000).never()).enviar(any(), any(), any(), any());
     }
@@ -384,8 +347,6 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
                 + " WHERE id = CAST(? AS uuid)", LocalDateTime.class, processoId);
     }
 
-    // A data e gravada no callback do envio, em outra thread: espera pela
-    // condicao, com prazo (nao um sleep fixo).
     private LocalDateTime aguardarDataNotificacao(String processoId) {
         long limite = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
         LocalDateTime data = dataNotificacao(processoId);
@@ -396,7 +357,6 @@ class NotificacaoResultadoControllerIT extends AbstractIntegrationTest {
         return data;
     }
 
-    // Ausencia so se confere com espera, como o semEnvio: 1 s sem a data aparecer.
     private void dataNotificacaoContinuaNula(String processoId) {
         long limite = System.nanoTime() + TimeUnit.SECONDS.toNanos(1);
         while (System.nanoTime() < limite) {

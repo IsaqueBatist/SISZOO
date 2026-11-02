@@ -1,7 +1,3 @@
-// Espelha AuthController/UsuarioResponse do backend (módulo usuarios).
-// cargos é uma lista (não um perfil único) porque o schema real (migration
-// V2__schema_usuarios.sql) relaciona usuário e cargo N:N via usuario_cargo.
-
 export interface Usuario {
   id: string
   nome: string

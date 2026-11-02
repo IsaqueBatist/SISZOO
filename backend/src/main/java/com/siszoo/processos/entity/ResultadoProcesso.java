@@ -22,10 +22,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-// Resultado laboratorial do processo (V14): registro critico imutavel.
-// Sem setters e com todas as colunas fora do UPDATE; a correcao e outra linha,
-// criada por retificar, com `retifica` apontando para esta. O banco recusa
-// UPDATE e DELETE (trigger da V14).
 @Entity
 @Table(name = "resultado_processo")
 @Getter
@@ -52,8 +48,6 @@ public class ResultadoProcesso {
     @Column(columnDefinition = "text", updatable = false)
     private String observacoes;
 
-    // Preenchida so no INSERT da linha que corrige outra do mesmo processo
-    // (FK composta da V14).
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "retifica_id", updatable = false)
     private ResultadoProcesso retifica;

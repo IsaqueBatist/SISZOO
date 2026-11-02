@@ -11,13 +11,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.siszoo.ocorrencias.service.PermissoesOcorrencia;
 
-// Usuario em nome de quem o seed chama os services, com as autoridades reais
-// do cargo (AutoridadeService, mesma resolucao do JwtAuthenticationFilter).
-// Os services nao conferem RBAC (o @PreAuthorize fica nos controllers):
-// `executar` repete a checagem do endpoint equivalente antes de cada operacao.
 record SeedAtor(UUID id, String cargo, Set<GrantedAuthority> autoridades) {
 
-    // Mesmo principal do JwtAuthenticationFilter (subject = id do usuario).
     Authentication autenticacao() {
         return new UsernamePasswordAuthenticationToken(id.toString(), null, autoridades);
     }
@@ -26,8 +21,6 @@ record SeedAtor(UUID id, String cargo, Set<GrantedAuthority> autoridades) {
         return PermissoesOcorrencia.de(autenticacao());
     }
 
-    // O contexto de seguranca fica com o ator so durante a operacao e e limpo
-    // no finally: nada vaza para a thread de subida da aplicacao.
     <T> T executar(String autoridadeExigida, Supplier<T> operacao) {
         boolean autorizado = autoridades.stream()
                 .anyMatch(a -> autoridadeExigida.equals(a.getAuthority()));

@@ -10,10 +10,6 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-// Processo completo numa unica requisicao: as etapas do wizard
-// sao da interface; o servidor nao guarda rascunho. Doenca e laboratorio sao
-// codigos de catalogo. `urgente` nao e informado: deriva das amostras
-// (DER regra 18). ocorrenciaId e o vinculo da etapa 1 (opcional).
 public record CriarProcessoRequest(
         @NotNull
         LocalDate dataAbertura,
@@ -35,8 +31,6 @@ public record CriarProcessoRequest(
 
         String observacoes,
 
-        // RF-B01 / limitacao 3.5.2: numeros dos sistemas
-        // estaduais, registrados manualmente (sem integracao). Opcionais.
         @Size(max = 40)
         String galNumero,
 

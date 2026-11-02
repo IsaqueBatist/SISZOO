@@ -13,7 +13,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// Catálogo de tipos de exame (V25, RF-A04): mesmo desenho de TipoProcedimento.
 @Entity
 @Table(name = "tipo_exame")
 @Getter

@@ -79,8 +79,6 @@ code: |-
 
   const adminToken = await login('{{ _.admin_email }}', '{{ _.admin_password }}');
 
-  // Capacidade 1: o primeiro animal já deixa a baia em 100% (>=capacidade é
-  // superlotada, não só acima — ver estadoLotacao no frontend, T19).
   const baia = await criarBaia(adminToken, { nome: `Baia Ocupacao ${Date.now()}`, capacidade: 1 });
 
   const antes = await buscarBaia(adminToken, baia.id);

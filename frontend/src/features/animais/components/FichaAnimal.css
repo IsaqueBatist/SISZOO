@@ -1,9 +1,3 @@
-/* Baseado no <style> inline de docs/prototipo/animal.html. Classes já
-   compartilhadas pelo design system (.card, .badge, .tabs/.tab, table.data,
-   .timeline/.timeline-item) ficam em components.css, não duplicadas aqui.
-   `.timeline-controls`/`.tf-chip` do protótipo (filtro por tipo na timeline)
-   ficam de fora: a aba Histórico não tem esse filtro. */
-
 .ficha-grid {
   display: grid;
   grid-template-columns: 340px 1fr;

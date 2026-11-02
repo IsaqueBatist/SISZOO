@@ -16,10 +16,6 @@ export function AbaHistorico({ animalId, animal, refreshKey }: AbaHistoricoProps
     if (eventos.length === 0 && !carregando && !fimDoHistorico && !erro) {
       carregarMais(20)
     }
-    // Dispara ao montar e sempre que o hook reinicia (eventos volta a [])
-    // após um novo registro criado em qualquer aba — ver useTimelineAnimal.
-    // carregarMais só muda de identidade quando animalId muda (useCallback),
-    // então incluí-la aqui não gera execuções extras do efeito.
   }, [eventos.length, carregando, fimDoHistorico, erro, carregarMais])
 
   return (

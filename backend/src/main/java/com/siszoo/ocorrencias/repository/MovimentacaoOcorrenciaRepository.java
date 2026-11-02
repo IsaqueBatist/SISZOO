@@ -8,8 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.siszoo.ocorrencias.entity.MovimentacaoOcorrencia;
 
-// Historico: o service so chama save() de linha nova; nenhuma movimentacao e
-// alterada ou removida.
 public interface MovimentacaoOcorrenciaRepository extends JpaRepository<MovimentacaoOcorrencia, UUID> {
 
     @EntityGraph(attributePaths = {"usuario"})

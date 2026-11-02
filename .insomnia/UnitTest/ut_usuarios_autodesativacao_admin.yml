@@ -6,11 +6,6 @@ created: 1750000000000
 requestId: null
 name: "Administrador não pode desativar a própria conta (422, regra 24 do DER)"
 code: |-
-  // Cria um Administrador TEMPORÁRIO e o desativa nele mesmo — nunca no admin
-  // seedado (evita travar o acesso real do time). O código atual (UsuarioService)
-  // não tem nenhuma regra que impeça autodesativação; este teste documenta o
-  // comportamento de HOJE (200 = permite). Se essa regra for definida no futuro
-  // (ex.: bloquear e retornar 422), atualizar a asserção abaixo de propósito.
   async function login(email, senha) {
     const res = await insomnia.send({
       url: '{{ _.base_url }}/api/auth/login',
@@ -64,12 +59,9 @@ code: |-
     ],
     body: { mimeType: 'application/json', text: JSON.stringify({ ativo: false }) },
   });
-  // Regra 24 do DER (UsuarioService#alterarStatus): ninguém desativa o
-  // próprio usuário.
   expect(autodesativar.status).to.equal(422);
   expect(JSON.parse(autodesativar.body).mensagem).to.equal('Você não pode desativar o seu próprio usuário.');
 
-  // Continua ativo: o login do Administrador temporário ainda funciona.
   const tokenDepois = await login(email, '{{ _.senha_teste_padrao }}');
   expect(typeof tokenDepois).to.equal('string');
 

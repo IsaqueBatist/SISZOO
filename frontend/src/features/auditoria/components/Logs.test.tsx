@@ -64,8 +64,6 @@ describe('Logs', () => {
     renderLogs()
 
     expect(await screen.findByRole('heading', { name: 'Logs do Sistema' })).toBeInTheDocument()
-    // A fixture tem 2 eventos de stephanie.lima - confere ao menos uma linha
-    // de evento (<strong>), não a opção do filtro por usuário.
     const linhas = await screen.findAllByText('stephanie.lima@itu.sp.gov.br', { selector: 'strong' })
     expect(linhas.length).toBeGreaterThan(0)
   })

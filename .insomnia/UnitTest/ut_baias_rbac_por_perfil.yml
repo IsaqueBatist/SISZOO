@@ -87,18 +87,15 @@ code: |-
   const tokenAgente = await criarELogar('Agente Sanitário', 'rbac.baias.agente');
   const tokenVeterinario = await criarELogar('Veterinário', 'rbac.baias.vet', 'CRMV-SP-0003');
 
-  // Agente Sanitário: só leitura.
   expect((await listarBaias(tokenAgente)).status).to.equal(200);
   expect((await criarBaia(tokenAgente, { nome: `NaoDeveriaCriar ${Date.now()}` })).status).to.equal(403);
 
-  // Veterinário: leitura + escrita, mas sem exclusão.
   expect((await listarBaias(tokenVeterinario)).status).to.equal(200);
   const criadaPeloVet = await criarBaia(tokenVeterinario, { nome: `VetPodeCriar ${Date.now()}` });
   expect(criadaPeloVet.status).to.equal(200);
   const baiaDoVet = JSON.parse(criadaPeloVet.body);
   expect((await excluirBaia(tokenVeterinario, baiaDoVet.id)).status).to.equal(403);
 
-  // Administrador: exclusão liberada (mesma baia criada pelo Vet).
   expect((await excluirBaia(adminToken, baiaDoVet.id)).status).to.equal(200);
 
 metaSortKey: 47000000

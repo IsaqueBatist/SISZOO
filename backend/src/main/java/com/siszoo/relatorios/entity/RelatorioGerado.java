@@ -25,11 +25,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// Registro de auditoria de exportacao (DER §3.6): uma linha so e gravada
-// quando a exportacao (CSV/PDF) termina com sucesso, na mesma transacao -
-// sem campo de status, nao ha estado intermediario "processando"/"erro" a
-// persistir. periodoInicio/periodoFim sao sempre concretos (ano ja
-// resolvidos pelo FiltroRelatorioResolver antes de chegar aqui).
 @Entity
 @Table(name = "relatorio_gerado")
 @Getter

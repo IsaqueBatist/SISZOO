@@ -2,9 +2,6 @@ package com.siszoo.processos.entity;
 
 import java.util.Optional;
 
-// Ordem de declaracao = ordem de avanco: so se avanca um passo por
-// vez, sem volta. CONCLUIDO e terminal. COM_RESULTADO so e alcancado pelo
-// registro do resultado laboratorial, nunca pelo avanco manual de status.
 public enum StatusProcesso {
     ABERTO,
     AGUARDANDO_RESULTADO,

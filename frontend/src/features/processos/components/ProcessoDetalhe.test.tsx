@@ -207,7 +207,6 @@ describe('ProcessoDetalhe — ocorrência vinculada', () => {
     const card = cardDe('Ocorrência Vinculada')
     expect(card.getByText('OC 092/2026')).toBeInTheDocument()
     expect(card.queryByRole('link', { name: 'Ver ocorrência' })).not.toBeInTheDocument()
-    // Nenhum link da página leva ao módulo de ocorrências.
     const destinos = screen.getAllByRole('link').map((link) => link.getAttribute('href') ?? '')
     expect(destinos.filter((href) => href.startsWith('/ocorrencias'))).toEqual([])
   })
@@ -269,9 +268,6 @@ describe('ProcessoDetalhe — ocorrência vinculada', () => {
 })
 
 describe('ProcessoDetalhe — status', () => {
-  // A transição AGUARDANDO_RESULTADO -> COM_RESULTADO não passa por este botão
-  // (vai só pelo lançamento do resultado): estes testes usam
-  // ABERTO -> AGUARDANDO_RESULTADO, que continua provisória.
   it.each([
     ['Administrador', ADMIN],
     ['Agente Sanitário', AGENTE],
@@ -359,9 +355,6 @@ describe('ProcessoDetalhe — status', () => {
   })
 })
 
-// O catálogo (GET /processos/catalogos) é uma query separada da do
-// processo: esperarDetalhe só garante que o processo carregou, não que o
-// <select> já tem as opções do catálogo.
 async function aguardarOpcoesDeResultado() {
   await screen.findByRole('option', { name: 'Positivo' })
 }
@@ -385,8 +378,6 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
 
     const select = await screen.findByLabelText('Resultado laboratorial')
     const opcoes = within(select).getAllByRole('option').map((opcao) => opcao.textContent)
-    // "Aguardando" não é uma opção de lançamento: vem do catálogo, sem
-    // ser hardcoded no front.
     expect(opcoes).toEqual(['Selecione...', 'Positivo', 'Negativo', 'Inconclusivo', 'Material Inadequado', 'Não Realizado'])
   })
 
@@ -418,20 +409,14 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
     await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
 
     expect(await screen.findByText('Confirmar lançamento do resultado')).toBeInTheDocument()
-    // Positivo é definitivo, confirmação explícita antes de enviar.
     await user.click(screen.getByRole('checkbox', { name: 'Entendo que o resultado positivo não poderá ser corrigido' }))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    // O e-mail sai depois do commit; os estados seguintes do aviso
-    // (notificado / NÃO notificado) estão em CardResultadoProcesso.test.tsx.
     expect(
       await cardDe('Resultado Laboratorial').findByText('Enviando a notificação por e-mail ao munícipe…'),
     ).toBeInTheDocument()
   })
 
-  // RN10 do TG: inconclusivo notifica o munícipe.
-  // Não é definitivo (só o positivo é): registra sem a
-  // confirmação, mas mostra o envio da notificação em andamento.
   it('resultado inconclusivo: notifica — sem confirmação, registra direto e acompanha o envio', async () => {
     const user = userEvent.setup()
     renderDetalhe(PROCESSO_PENDENTE_ID, AGENTE)
@@ -465,8 +450,6 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
     expect(screen.getByRole('button', { name: 'Registrar resultado' })).toBeInTheDocument()
   })
 
-  // docs/decisoes/T34.md: sem limite inferior, o laudo pode
-  // anteceder a abertura do processo (aberto em 2026-05-18 na fixture).
   it('data do resultado anterior à abertura: campo sem min e lançamento enviado com essa data', async () => {
     const corpos: unknown[] = []
     server.use(

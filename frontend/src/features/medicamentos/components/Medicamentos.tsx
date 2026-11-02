@@ -16,19 +16,11 @@ import { MedicamentoFormModal } from './MedicamentoFormModal'
 
 type FiltroSituacao = 'ativos' | 'inativos' | 'todos'
 
-// Busca, categoria e situação sobrevivem a abrir um medicamento e voltar
-// (sessionStorage), como nas outras listas.
 const FILTROS_PADRAO = { busca: '', categoriaId: '', situacao: 'ativos' }
 
 const LINHAS_SKELETON = [0, 1, 2, 3]
 const COLUNAS_TABELA = 4
 
-// Catálogo usado pelo registro de prescrição (modal "Registrar medicamento" da
-// ficha do animal). Leitura: GESTAO_ANIMAIS:leitura (os três perfis). Cadastro
-// e edição: GESTAO_ANIMAIS:escrita (Administrador e Veterinária). Desativar
-// exige :exclusao, que só o Administrador tem.
-//
-// Não há seed: o CCZ cadastra as categorias e os medicamentos reais.
 export function Medicamentos() {
   const { roleKey } = useAuth()
   const podeEscrever = roleKey === 'admin' || roleKey === 'vet'
@@ -37,12 +29,8 @@ export function Medicamentos() {
   const { filtros, definirFiltros, limparFiltros, filtrosAtivos } = useFiltrosLista('medicamentos', FILTROS_PADRAO)
   const { busca, categoriaId } = filtros
   const situacao = filtros.situacao as FiltroSituacao
-  // `undefined` = fechado; `'novo'` = cadastro; um medicamento = edição.
   const [emEdicao, setEmEdicao] = useState<Medicamento | 'novo' | undefined>(undefined)
 
-  // Catálogo inteiro numa consulta, filtrado em memória: a faixa de resumo
-  // precisa do conjunto completo, e o backend já tem os filtros para quem
-  // precisar deles (o select da prescrição usa `ativo=true`).
   const { data: medicamentos, isLoading, isError } = useMedicamentosQuery()
   const { data: categorias } = useCategoriasFarmacologicasQuery()
 
@@ -236,9 +224,6 @@ function LinhaMedicamento({
   const desativar = useDesativarMedicamentoMutation()
 
   function handleDesativar() {
-    // Diferente da vacina, aqui NÃO há volta: AtualizarMedicamentoRequest não
-    // tem campo `ativo` e não existe endpoint de reativação. A confirmação
-    // precisa dizer isso, senão o usuário supõe simetria com vacinas.
     const confirmado = window.confirm(
       `Desativar o medicamento ${medicamento.nome}?\n\n` +
         '· As prescrições já lançadas continuam como estão.\n' +

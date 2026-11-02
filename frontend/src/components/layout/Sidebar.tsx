@@ -8,7 +8,6 @@ import { Icon } from './Icon'
 interface SidebarProps {
   collapsed: boolean
   onToggleCollapsed: () => void
-  // Tela estreita: o menu é uma gaveta sobre o conteúdo.
   menuAberto?: boolean
   onFecharMenu?: () => void
 }
@@ -18,7 +17,6 @@ export function Sidebar({ collapsed, onToggleCollapsed, menuAberto = false, onFe
   const sair = useSair()
   const role = ROLES[roleKey]
   const nav = getNavForRole(roleKey)
-  // Carregando, com erro ou zerado: sem número (nunca um valor inventado).
   const { data: ocorrenciasAbertas } = useOcorrenciasAbertasCount(podeAcessar(roleKey, 'ocorrencias'))
   const contadores: Record<string, { total: number | undefined; rotulo: string }> = {
     ocorrencias: { total: ocorrenciasAbertas, rotulo: 'ocorrências abertas' },

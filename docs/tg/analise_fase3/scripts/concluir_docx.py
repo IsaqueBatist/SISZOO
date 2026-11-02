@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Fase 4 — passo 3: atualiza os campos (SEQ, Sumário, listas) no Word, salva a versão final e exporta o PDF.
 
 Entrada: build/v3_campos.docx  →  Saída: SISZOO_v3_final.docx e SISZOO_v3_final.pdf (em docs/tg).
@@ -33,7 +32,6 @@ try:
         t.UpdatePageNumbers()
     doc.Repaginate()
     print('paginas:', doc.ComputeStatistics(2), '| inline shapes:', doc.InlineShapes.Count, '| secoes:', doc.Sections.Count)
-    # primeira página numerada: a seção 2 começa na Introdução
     sec2 = doc.Sections(2)
     print('secao 2 inicia na pagina:', sec2.Range.Information(3), '| cabecalho sec1 vazio:', not sec2.Headers(1).LinkToPrevious)
     for p in (DOCX, PDF):

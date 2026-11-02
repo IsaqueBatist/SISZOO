@@ -22,11 +22,8 @@ import lombok.Setter;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class ProvidenciaTomada {
 
-    // DER §3.4: providencia "outro" exige descricao_encerramento.
     public static final String CODIGO_OUTRO = "outro";
 
-    // As unicas providencias que permitem encerrar direto de ABERTA
-    // (sem passar por EM_ATENDIMENTO).
     public static final Set<String> CODIGOS_ENCERRAMENTO_DIRETO =
             Set.of("sem_acao", "orientacao_municipe", "registro_indevido");
 

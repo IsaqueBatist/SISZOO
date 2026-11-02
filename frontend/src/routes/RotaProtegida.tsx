@@ -7,7 +7,6 @@ export function RotaProtegida() {
 
   if (carregandoSessao) return <p role="status" className="carregando-sessao">Carregando sua sessão…</p>
 
-  // Link direto sem sessão: depois de entrar, segue para onde a pessoa ia.
   if (!token) return <Navigate to="/login" replace state={{ voltarPara: `${location.pathname}${location.search}` }} />
 
   if (user?.senhaAlteradaEm === null && location.pathname !== '/trocar-senha') {

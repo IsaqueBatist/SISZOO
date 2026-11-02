@@ -5,8 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-// Os *IT trocam o encoder por um de custo 4 (SenhaRapidaTesteConfig); este
-// teste garante que o de producao continua BCrypt com custo 10.
 class SecurityConfigTest {
 
     @Test

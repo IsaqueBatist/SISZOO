@@ -44,8 +44,6 @@ import com.siszoo.usuarios.exception.TokenRecuperacaoInvalidoException;
 import com.siszoo.usuarios.repository.TokenRecuperacaoSenhaRepository;
 import com.siszoo.usuarios.repository.UsuarioRepository;
 
-// Regras do RecuperacaoSenhaService sem banco nem SMTP. O fluxo completo pela
-// API e o e-mail real ficam em RecuperacaoSenhaControllerIT.
 @ExtendWith(MockitoExtension.class)
 class RecuperacaoSenhaServiceTest {
 

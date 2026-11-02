@@ -1,6 +1,3 @@
-/* SISZOO - Components */
-
-/* ===== Buttons ===== */
 .btn {
   display: inline-flex; align-items: center; justify-content: center;
   gap: 8px;
@@ -19,10 +16,6 @@
 }
 .btn:hover { transform: translateY(-1px); text-decoration: none; }
 .btn .icon { width: 16px; height: 16px; }
-/* Sem isso, um botão `disabled` (ex.: "Vincular processo selecionado" antes
-   de selecionar uma linha) fica visualmente idêntico a um habilitado - o
-   usuário clica, nada acontece, e parece bug em vez de "ainda não
-   selecionou nada". */
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn:disabled:hover { transform: none; box-shadow: none; }
 
@@ -59,7 +52,6 @@
 .btn-icon-only { width: 38px; padding: 0; }
 .btn-icon-only.btn-sm { width: 32px; }
 
-/* ===== Cards ===== */
 .card {
   background: var(--color-surface);
   border-radius: var(--radius-lg);
@@ -76,10 +68,6 @@
 .card-header .sub { font-size: 12px; color: var(--color-text-secondary); }
 .card-body { padding: var(--space-5); }
 
-/* ===== KPI Card ===== */
-/* Grade de KPIs: global porque é usada pelo Dashboard e pelas pré-visualizações
-   de relatórios (ao abrir /relatorios diretamente, o CSS do Dashboard não está
-   carregado e os cartões ficariam empilhados). */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -150,7 +138,6 @@
   color: var(--color-text-secondary);
 }
 
-/* ===== Alert Banner ===== */
 .carregando-sessao {
   padding: 48px 16px;
   text-align: center;
@@ -187,7 +174,6 @@
 .alert.success { border-color: var(--color-success); background: var(--color-success-bg); }
 .alert.success .bullet { background: var(--color-success); }
 
-/* ===== Menu de perfil (topbar) ===== */
 .menu-perfil {
   position: relative;
 }
@@ -231,9 +217,6 @@
 }
 .menu-perfil-item:hover { background: var(--color-bg); text-decoration: none; }
 
-/* Portado de docs/prototipo/assets/shell.js (#dd-notif), com as cores saindo
-   de tokens: o protótipo usa rgba(198,40,40,…) cru, que não acompanha o tema
-   escuro. */
 .menu-notificacoes { position: relative; }
 .menu-notificacoes-popover {
   position: absolute;
@@ -297,8 +280,6 @@ a.dd-notif-item.urgent:hover { background: color-mix(in srgb, var(--color-danger
   margin-top: var(--space-2);
 }
 
-
-/* ===== Badge ===== */
 .badge {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 3px 10px;
@@ -335,7 +316,6 @@ a.dd-notif-item.urgent:hover { background: color-mix(in srgb, var(--color-danger
 .badge-inconclusive { background: #FFFDE7; color: #8A5200; }
 .badge-neutral { background: var(--color-bg); color: var(--color-text-secondary); border: 1px solid var(--color-border); }
 
-/* ===== Gráficos do mural ===== */
 .charts-row {
   display: grid;
   grid-template-columns: 1.1fr 1fr 1.1fr;
@@ -381,7 +361,6 @@ a.dd-notif-item.urgent:hover { background: color-mix(in srgb, var(--color-danger
   margin-bottom: var(--space-2);
 }
 
-/* Selo de dados de demonstração (mock ligado por env var) */
 .badge-mock {
   display: inline-flex; align-items: center;
   padding: 3px 10px;
@@ -393,13 +372,11 @@ a.dd-notif-item.urgent:hover { background: color-mix(in srgb, var(--color-danger
   border: 1px dashed var(--color-border-strong);
 }
 
-/* Process status */
 .badge-process-open { background: #E3F2FD; color: #1565C0; }
 .badge-process-awaiting { background: #FFF3E0; color: #B84300; }
 .badge-process-result { background: #E8F5E9; color: #2E7D32; }
 .badge-process-closed { background: #ECEFF1; color: #424242; }
 
-/* Disease badges */
 .badge-disease { color: #fff; font-weight: 700; letter-spacing: 0.05em; }
 .badge-disease.raiva { background: var(--disease-raiva); }
 .badge-disease.leishmaniose { background: var(--disease-leishmaniose); color: #3A2400; }
@@ -408,7 +385,6 @@ a.dd-notif-item.urgent:hover { background: color-mix(in srgb, var(--color-danger
 .badge-disease.febre-maculosa { background: var(--disease-febre-maculosa); }
 .badge-disease.febre-amarela { background: var(--disease-febre-amarela); color: #5a3a00; }
 
-/* Role badges */
 .badge-role-admin { background: #FFEBEE; color: #C62828; }
 .badge-role-vet { background: #E3F2FD; color: #1565C0; }
 .badge-role-agent { background: #E8F5E9; color: #2E7D32; }
@@ -418,7 +394,6 @@ a.dd-notif-item.urgent:hover { background: color-mix(in srgb, var(--color-danger
   50% { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(198, 40, 40, 0); }
 }
 
-/* ===== Tables ===== */
 .table-wrap {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -467,7 +442,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
 }
 .pager { display: inline-flex; gap: var(--space-2); align-items: center; }
 
-/* Animal cell */
 .animal-cell { display: flex; align-items: center; gap: var(--space-3); }
 .animal-avatar {
   width: 36px; height: 36px;
@@ -487,7 +461,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
   color: var(--color-text-muted);
 }
 
-/* ===== Forms ===== */
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -571,7 +544,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
 }
 .input-with-icon .right-btn:hover { background: var(--color-bg); }
 
-/* Radio / checkbox */
 .check-list { display: flex; flex-direction: column; gap: var(--space-2); }
 .check-list.inline { flex-direction: row; flex-wrap: wrap; gap: var(--space-4); }
 .check {
@@ -580,7 +552,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
 }
 .check input { accent-color: var(--color-primary); }
 
-/* Radio cards (visual) */
 .radio-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--space-3); }
 .radio-card {
   padding: var(--space-4);
@@ -602,7 +573,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
 .radio-card .label { font-weight: 600; font-size: 13px; }
 .radio-card .sub { font-size: 11px; color: var(--color-text-secondary); }
 
-/* Fieldset */
 .fieldset {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -618,7 +588,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
   padding: 0 8px;
 }
 
-/* Switch */
 .switch { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
 .switch input { opacity: 0; width: 0; height: 0; }
 .switch .slider {
@@ -641,7 +610,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
 .switch-row { display: flex; align-items: center; gap: 12px; }
 .switch-row label { font-size: 13px; cursor: pointer; }
 
-/* ===== Filter bar ===== */
 .filter-bar {
   display: flex; align-items: center; gap: var(--space-2);
   background: var(--color-surface);
@@ -702,13 +670,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
 }
 .filter-periodo.ativo input { border-color: var(--color-primary); }
 
-
-/* ===== Faixa de resumo de catálogo ===== */
-/* Número + rótulo + descrição, em cima de uma lista administrativa. Mesma
-   forma do `.role-card` de features/usuarios (portado de usuarios.html); aqui
-   fica no design system porque duas telas de catálogo o usam. Convergir o
-   `.role-card` com este é trabalho à parte, para não arrastar a tela de
-   Usuários junto. */
 .resumo-card {
   display: flex;
   align-items: center;
@@ -729,12 +690,10 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
   font-size: 18px;
   display: inline-flex; align-items: center; justify-content: center;
 }
-/* Tom de atenção quando o número pede ação (animais em alerta). */
 .resumo-card.alerta .num { background: var(--color-danger-bg); color: var(--color-danger); }
 .resumo-card .rotulo { font-size: 13px; font-weight: 600; }
 .resumo-card .desc { font-size: 11px; color: var(--color-text-secondary); }
 
-/* ===== Tabs ===== */
 .tabs {
   display: flex;
   gap: 4px;
@@ -769,7 +728,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
 }
 .tab.active .count { background: var(--color-primary-light); color: var(--color-primary); }
 
-/* ===== Timeline ===== */
 .timeline { position: relative; padding-left: 32px; }
 .timeline::before {
   content: ""; position: absolute;
@@ -808,7 +766,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
 .timeline-item .ev-body { font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; }
 .timeline-item .ev-warn { color: var(--color-warning); font-weight: 500; }
 
-/* ===== Occupancy bar ===== */
 .occ-bar {
   height: 10px;
   background: var(--color-border);
@@ -825,7 +782,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
 .occ-bar.warn .fill { background: var(--color-alert); }
 .occ-bar.danger .fill { background: var(--color-danger); }
 
-/* ===== Section header ===== */
 .section-header {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: var(--space-3);
@@ -833,7 +789,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
 .section-header h2 { font-size: 16px; font-weight: 600; font-family: var(--font-display); display: inline-flex; align-items: center; gap: 8px; }
 .section-header .icon { width: 18px; height: 18px; }
 
-/* ===== Modal ===== */
 .modal-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.45);
@@ -862,13 +817,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
   border-bottom: 1px solid var(--color-border);
   display: flex; align-items: center; justify-content: space-between;
 }
-/* O conteúdo precisa poder ENCOLHER para o rodapé caber. Sem isto, o <form>
-   (filho flex do .modal, com `min-height: auto` por padrão) cresce até a
-   altura do conteúdo, o .modal corta o excesso com `overflow: hidden` e o
-   botão de salvar fica inalcançável: o `overflow-y: auto` do .modal-body não
-   rola nada porque ele nunca recebe altura limitada. Os modais de formulário usam
-   .modal > form > (.modal-body + .modal-footer); a regra no .modal-body cobre
-   também um corpo solto, se algum modal futuro dispensar o form. */
 .modal > form {
   display: flex; flex-direction: column;
   flex: 1 1 auto; min-height: 0;
@@ -885,7 +833,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
   flex-shrink: 0;
 }
 
-/* ===== Skeleton ===== */
 .skel {
   background: linear-gradient(90deg, #ECEFF1 25%, #DDE3E8 50%, #ECEFF1 75%);
   background-size: 400% 100%;
@@ -898,11 +845,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
   100% { background-position: 0 0; }
 }
 
-/* ===== Toast ===== */
-/* Escala de z-index do app: 2 · 20 · 50 (topbar, base.css) · 100 · 200
-   (.modal-overlay) · 300 (.toast-stack). O aviso precisa aparecer ACIMA do
-   modal que o originou: é ali que a pessoa espera a confirmação de que a
-   ação deu certo. */
 .toast-stack {
   position: fixed;
   bottom: var(--space-6);
@@ -910,8 +852,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
   z-index: 300;
   display: flex; flex-direction: column; gap: var(--space-2);
   max-width: min(360px, calc(100vw - 2 * var(--space-6)));
-  /* O container fica sempre montado (as regiões live não podem nascer junto
-     com o conteúdo); sem isto ele capturaria cliques da tela mesmo vazio. */
   pointer-events: none;
 }
 .toast-regiao { display: flex; flex-direction: column; gap: var(--space-2); }
@@ -945,7 +885,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
   flex-shrink: 0;
 }
 .toast-fechar:hover { color: var(--color-text-primary); }
-/* .toast-sucesso usa o verde já definido em .toast (padrão do design system). */
 .toast-erro { border-left-color: var(--color-danger); }
 .toast-erro .ico { background: var(--color-danger-bg); color: var(--color-danger); }
 .toast-atencao { border-left-color: var(--color-info); }
@@ -958,7 +897,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
   .toast { animation: none; }
 }
 
-/* ===== Empty state ===== */
 .empty {
   display: flex; flex-direction: column; align-items: center;
   text-align: center;
@@ -976,7 +914,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
 .empty h3 { color: var(--color-text-primary); font-size: 16px; margin-bottom: 6px; }
 .empty p { font-size: 13px; margin-bottom: var(--space-4); max-width: 360px; }
 
-/* ===== Wizard (step-pane / upload-area / review) ===== */
 .wizard-shell { max-width: 920px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: var(--space-5); }
 .step-pane { display: none; }
 .step-pane.active { display: block; }
@@ -1007,7 +944,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
 .review-row .v { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
 .review-row .v.mono { font-family: var(--font-mono); font-size: 13px; }
 
-/* ===== Stepper ===== */
 .stepper {
   display: flex; align-items: center;
   background: var(--color-surface);
@@ -1043,7 +979,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
 }
 .stepper .arrow.done { background: var(--color-success); }
 
-/* ===== Misc ===== */
 .kv-row { display: flex; justify-content: space-between; gap: var(--space-3); align-items: baseline; font-size: 13px; padding: 6px 0; border-bottom: 1px solid var(--color-border); }
 .kv-row:last-child { border-bottom: none; }
 .kv-row .k { color: var(--color-text-secondary); display: inline-flex; align-items: center; gap: 6px; }
@@ -1052,8 +987,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
 
 .kv-list .kv-row:first-child { padding-top: 0; }
 
-/* Layout de detalhe (coluna principal + coluna lateral) - usado por
-   OcorrenciaDetalhe.tsx e ProcessoDetalhe.tsx. */
 .det-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -1066,7 +999,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
   }
 }
 
-/* Grid helpers */
 .grid { display: grid; gap: var(--space-4); }
 .grid-4 { grid-template-columns: repeat(4, 1fr); }
 .flex { display: flex; }
@@ -1077,7 +1009,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
 .gap-4 { gap: var(--space-4); }
 .w-full { width: 100%; }
 
-/* ===== Foco e leitura por teclado ===== */
 :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
@@ -1098,11 +1029,9 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
 .skip-link:focus { top: var(--space-3); }
 .alert { scroll-margin-top: calc(var(--topbar-height) + 16px); }
 
-/* ===== Avisos de resultado ===== */
 .toast { position: static; pointer-events: auto; }
 .toast .title { flex: 1; }
 
-/* ===== Estados de envio ===== */
 .banner-conexao {
   position: sticky;
   top: calc(var(--topbar-height) + 8px);
@@ -1141,14 +1070,11 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
 .secao-recolhivel[open] > summary { margin-bottom: var(--space-3); }
 .menu-btn { display: none; }
 
-/* ===== Larguras menores ===== */
 @media (max-width: 1100px) {
   .grid-4 { grid-template-columns: repeat(2, 1fr); }
   .page { padding: var(--space-5); }
 }
 
-/* O menu vira gaveta: o conteúdo fica com a largura inteira da tela. Mesmo
-   limite de lib/useTelaEstreita.ts. */
 @media (max-width: 768px) {
   .app-shell, .app-shell.collapsed { display: block; }
   .sidebar {
@@ -1190,7 +1116,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 
-/* ===== Tema escuro: o que não passa pelos tokens ===== */
 :root[data-tema='escuro'] { color-scheme: dark; }
 :root[data-tema='escuro'] table.data tbody tr:hover td { background: #243246; }
 :root[data-tema='escuro'] .skel { background: linear-gradient(90deg, #212C3D 25%, #2C3A4E 50%, #212C3D 75%); background-size: 400% 100%; }
@@ -1216,7 +1141,6 @@ table.data tr.urgent td:first-child { box-shadow: inset 4px 0 0 var(--color-dang
 :root[data-tema='escuro'] .badge-urgent { color: var(--color-on-primary); }
 :root[data-tema='escuro'] .alert-desc-item.severidade-vencida { color: #FF9E9B; }
 
-/* ===== Critérios de senha (CriteriosSenha) ===== */
 .criterios-senha {
   margin-top: 2px;
   padding: 10px 12px;

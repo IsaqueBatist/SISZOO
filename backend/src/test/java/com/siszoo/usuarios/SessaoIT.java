@@ -42,9 +42,6 @@ import com.siszoo.usuarios.repository.UsuarioRepository;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-// Sessao com renovacao deslizante (docs/decisoes/sessao.md). O relogio e o
-// ajustavel do RelogioTesteConfig: cada teste avanca o tempo a partir do
-// instante fixo, sem esperar de verdade.
 @Import(RelogioTesteConfig.class)
 class SessaoIT extends AbstractIntegrationTest {
 
@@ -262,7 +259,6 @@ class SessaoIT extends AbstractIntegrationTest {
         RelogioTesteConfig.avancar(Duration.ofSeconds(31));
         renovar(sessao.cookie(), true).then().statusCode(401);
 
-        // Quem roubou e quem era o dono ficam de fora: o token novo tambem cai.
         renovar(cookieNovo, true).then().statusCode(401);
         assertThat(statusProtegida(rotacao.path("token")), equalTo(401));
         assertThat(eventosDe(usuario(sessao).getId(), AcaoAuditoria.SESSAO_REVOGADA), equalTo(1L));

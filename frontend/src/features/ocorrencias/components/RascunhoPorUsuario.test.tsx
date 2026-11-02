@@ -15,8 +15,6 @@ import {
   salvarRascunhoOcorrencia,
 } from '../storage/rascunhoOcorrenciaStorage'
 
-// Sem mock do storage: as chaves passam pelo IndexedDB em memória, como no
-// navegador compartilhado do CCZ.
 const USUARIO_A = 'a1b2c3d4-0000-0000-0000-00000000000a'
 const USUARIO_B = 'a1b2c3d4-0000-0000-0000-00000000000b'
 
@@ -64,11 +62,6 @@ describe('rascunho e anexos pendentes têm escopo por usuário', () => {
     vi.unstubAllGlobals()
   })
 
-  // Afirmar que um aviso NÃO apareceu exige esperar as leituras do IndexedDB
-  // terminarem, senão o teste passa antes de elas resolverem. O sinal usado é
-  // comportamental: o formulário só começa a salvar o rascunho depois que a
-  // checagem inicial termina, então a presença da chave no banco prova que a
-  // leitura acabou.
   async function esperarChecagemInicial(user: ReturnType<typeof userEvent.setup>, usuarioId: string) {
     await user.type(await screen.findByLabelText(/^Bairro/i), 'Bairro qualquer')
     await waitFor(async () => expect(await conteudo('ocorrencias')).toHaveProperty(`${usuarioId}:novo`))

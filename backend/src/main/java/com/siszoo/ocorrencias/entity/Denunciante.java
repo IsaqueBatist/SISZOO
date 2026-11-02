@@ -16,9 +16,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// Dados pessoais (LGPD): em ocorrencia sigilosa so saem da API para quem tem
-// OCORRENCIAS_DENUNCIAS:denunciante_sigiloso:leitura, e nunca entram no
-// snapshot de auditoria.
 @Entity
 @Table(name = "denunciante")
 @Getter

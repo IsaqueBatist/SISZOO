@@ -25,9 +25,6 @@ import com.siszoo.processos.entity.ResultadoProcesso;
 import com.siszoo.processos.entity.Sintoma;
 import com.siszoo.usuarios.entity.Usuario;
 
-// Mapeamento do processo sanitario para resposta, resumo e snapshot de
-// auditoria. Como em OcorrenciaMapper, recebe tudo ja carregado (responsavel,
-// amostras, registros de resultado): quem consulta o banco e o service.
 @Mapper(componentModel = "spring")
 public interface ProcessoSanitarioMapper {
 
@@ -70,7 +67,6 @@ public interface ProcessoSanitarioMapper {
                 ocorrenciaProtocoloDe(processo));
     }
 
-    // Sem o responsavel: nenhum dado pessoal no evento.
     default ProcessoAuditoriaSnapshot toSnapshot(ProcessoSanitario processo, List<AmostraAnimalResponse> amostras) {
         return new ProcessoAuditoriaSnapshot(
                 processo.getId(),
@@ -128,8 +124,6 @@ public interface ProcessoSanitarioMapper {
                 responsavel.getBairroOcorrencia());
     }
 
-    // Historico em ordem de cadeia: o original e, a seguir, cada correcao da
-    // anterior (V14 garante um original e no maximo uma correcao por linha).
     private static List<ResultadoProcessoResponse> cadeiaDeResultados(List<ResultadoProcesso> registros) {
         Map<UUID, ResultadoProcesso> correcaoDe = registros.stream()
                 .filter(r -> r.getRetifica() != null)

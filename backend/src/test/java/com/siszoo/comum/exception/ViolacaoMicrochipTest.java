@@ -14,8 +14,6 @@ import org.springframework.http.ResponseEntity;
 
 import com.siszoo.comum.dto.ErroResponse;
 
-// Duas criacoes simultaneas passam juntas pela pre-checagem do service e a
-// segunda esbarra no indice. A resposta e a mesma da pre-checagem.
 class ViolacaoMicrochipTest {
 
     @Test

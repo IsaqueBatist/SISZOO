@@ -22,11 +22,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-// Exercita a V17 (RN06: historico veterinario e processo sanitario nao podem
-// ser excluidos) num schema proprio do mesmo PostgreSQL de teste, no padrao
-// de MigracaoV14ResultadoProcessoIT: do zero, DELETE e TRUNCATE recusados nas
-// quatro tabelas com 23514 e UPDATE ainda permitido. Cada comando roda numa
-// transacao JDBC propria; o erro devolvido traz o SQLSTATE e a mensagem.
 class MigracaoV17RegistrosCriticosIT extends AbstractIntegrationTest {
 
     private static final String SCHEMA = "migracao_v17";
@@ -69,8 +64,6 @@ class MigracaoV17RegistrosCriticosIT extends AbstractIntegrationTest {
             assertViolacao(transacao("DELETE FROM " + S + tabela), "23514", "não pode ser excluído");
             assertThat(contar(tabela), equalTo(1));
         }
-        // O processo apagado junto com amostras e responsavel (caminho aceito
-        // antes da V17): a transacao inteira e desfeita.
         assertViolacao(transacao(
                 "DELETE FROM " + S + "animal_amostrado WHERE processo_id = '" + registros.processo + "'",
                 "DELETE FROM " + S + "responsavel_processo WHERE processo_id = '" + registros.processo + "'",
@@ -89,8 +82,6 @@ class MigracaoV17RegistrosCriticosIT extends AbstractIntegrationTest {
         assertViolacao(transacao("TRUNCATE " + S + "vacinacao"), "23514", "não podem ser excluídos");
         assertViolacao(transacao("TRUNCATE " + S + "procedimento"), "23514", "não podem ser excluídos");
         assertViolacao(transacao("TRUNCATE " + S + "prescricao"), "23514", "não podem ser excluídos");
-        // processo_sanitario e referenciado por responsavel e amostras: sem
-        // CASCADE o PostgreSQL recusa antes por FK; com CASCADE, o trigger recusa.
         assertViolacao(transacao("TRUNCATE " + S + "processo_sanitario CASCADE"), "23514", "não podem ser excluídos");
         assertViolacao(transacao("TRUNCATE " + S + "animal CASCADE"), "23514", "não podem ser excluídos");
 
@@ -116,7 +107,6 @@ class MigracaoV17RegistrosCriticosIT extends AbstractIntegrationTest {
     private record Registros(UUID animal, UUID processo) {
     }
 
-    // Uma linha em cada tabela protegida, com as dependencias minimas.
     private Registros inserirRegistros() throws SQLException {
         UUID usuario = jdbcTemplate.queryForObject("INSERT INTO " + S + "usuario (email, senha, nome, sobrenome)"
                 + " VALUES (?, 'x', 'Migracao', 'Imutabilidade') RETURNING id", UUID.class,
@@ -168,7 +158,6 @@ class MigracaoV17RegistrosCriticosIT extends AbstractIntegrationTest {
                 .migrate();
     }
 
-    // Executa os comandos numa transacao propria e devolve o erro (ou null se confirmou).
     private SQLException transacao(String... comandos) throws SQLException {
         try (Connection conexao = dataSource.getConnection()) {
             conexao.setAutoCommit(false);

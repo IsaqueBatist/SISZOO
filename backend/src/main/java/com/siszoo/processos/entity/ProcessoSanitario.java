@@ -29,10 +29,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// Modelo-alvo do DER §3.5 (V13). Responsavel e amostras ficam fora da
-// entidade (sem colecao nem cascade), gravados pelo service na mesma transacao,
-// como denunciante e anexos na ocorrencia. O resultado vigente e sua data vem
-// do registro de resultado (historico em ResultadoProcesso).
 @Entity
 @Table(name = "processo_sanitario")
 @Getter
@@ -56,7 +52,6 @@ public class ProcessoSanitario {
     @JoinColumn(name = "doenca_id", nullable = false)
     private Doenca doenca;
 
-    // Snapshot de doenca.cid na criacao: preserva o CID da epoca.
     @Column(length = 20)
     private String cid;
 
@@ -64,14 +59,11 @@ public class ProcessoSanitario {
     @JoinColumn(name = "laboratorio_id", nullable = false)
     private Laboratorio laboratorio;
 
-    // Vinculo definido uma unica vez (DER regra 15): so por vincularOcorrencia,
-    // sem setter. O banco recusa troca ou remocao (trigger da V13).
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ocorrencia_id", unique = true)
     @Setter(AccessLevel.NONE)
     private Ocorrencia ocorrencia;
 
-    // Derivado das amostras (DER regra 18): contato humano em qualquer uma.
     @Column(nullable = false)
     private boolean urgente;
 
@@ -91,8 +83,6 @@ public class ProcessoSanitario {
     @Column(name = "previsao_retorno")
     private LocalDate previsaoRetorno;
 
-    // Resultado vigente: copia do ultimo registro nao retificado de
-    // resultado_processo, gravada so por aplicarResultadoVigente.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "resultado_laboratorial_id")
     @Setter(AccessLevel.NONE)
@@ -109,8 +99,6 @@ public class ProcessoSanitario {
     @Column(columnDefinition = "text")
     private String observacoes;
 
-    // V21: quando o SMTP aceitou o e-mail de resultado ao municipe. Gravada por
-    // registrarNotificacaoMunicipe; novo lancamento notificavel a zera.
     @Column(name = "data_notificacao_municipe")
     @Setter(AccessLevel.NONE)
     private LocalDateTime dataNotificacaoMunicipe;
@@ -134,17 +122,12 @@ public class ProcessoSanitario {
         this.ocorrencia = ocorrencia;
     }
 
-    // O service valida a transicao antes (StatusProcesso): o primeiro
-    // resultado leva AGUARDANDO_RESULTADO a COM_RESULTADO; a correcao so
-    // acontece em COM_RESULTADO e mantem o status.
     public void aplicarResultadoVigente(ResultadoProcesso registro) {
         this.resultadoLaboratorial = registro.getResultadoLaboratorial();
         this.dataResultado = registro.getDataResultado();
         this.statusProcesso = StatusProcesso.COM_RESULTADO;
     }
 
-    // Idempotente dentro de um mesmo lancamento: a primeira data aceita fica
-    // (o envio de um lancamento nao se repete). Devolve se gravou.
     public boolean registrarNotificacaoMunicipe(LocalDateTime aceitoEm) {
         if (this.dataNotificacaoMunicipe != null) {
             return false;
@@ -153,9 +136,6 @@ public class ProcessoSanitario {
         return true;
     }
 
-    // RN10: um novo lancamento notificavel (ex.: inconclusivo corrigido
-    // para positivo) e uma nova notificacao - a data do envio anterior deixa de
-    // valer ate o SMTP aceitar o novo e-mail.
     public void reiniciarNotificacaoMunicipe() {
         this.dataNotificacaoMunicipe = null;
     }

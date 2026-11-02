@@ -10,8 +10,6 @@ import com.siszoo.relatorios.dto.DashboardGraficosResponse;
 import com.siszoo.relatorios.dto.DashboardKpisResponse;
 import com.siszoo.relatorios.service.DashboardService;
 
-// RELATORIOS:leitura e seedado para os 3 perfis (V3__seed_cargos.sql), todos
-// so leitura — e o unico modulo nao editavel por nenhum perfil hoje.
 @RestController
 @RequestMapping("/api/dashboard")
 public class DashboardController {

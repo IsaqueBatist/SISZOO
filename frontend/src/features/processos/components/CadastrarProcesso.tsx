@@ -18,12 +18,6 @@ function Recusa({ mensagem, voltarPara }: { mensagem: string; voltarPara: string
   )
 }
 
-// Entrada via /processos/novo?ocorrencia=<id>: botão "Abrir processo
-// sanitário" do detalhe da ocorrência (DER §3.5: a etapa 1 vem pré-preenchida).
-// Antes de montar o wizard, confere a ocorrência real: vincular exige escrita
-// em ocorrências, e o backend recusa ocorrência encerrada ou que já
-// tem processo (0..1). Mostra o motivo aqui, em vez de deixar o usuário
-// preencher as quatro etapas para receber o erro no fim.
 export function CadastrarProcesso() {
   const [searchParams] = useSearchParams()
   const ocorrenciaId = searchParams.get('ocorrencia')

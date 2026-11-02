@@ -8,19 +8,10 @@ import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/e
 const MAPA_ERROS_VACINA = mapaDeCampos<VacinaFormValues>(['nome', 'intervaloMeses'])
 
 interface CadastroRapidoVacinaProps {
-  // Recebe o código da vacina criada, para o formulário de cima já escolhê-la.
   onCadastrada: (codigo: string) => void
   onCancelar: () => void
 }
 
-// Cadastro de vacina sem sair do registro de vacinação, no lugar de mandar o
-// usuário para /vacinas e trazê-lo de volta: é o mesmo caminho que
-// Medicamentos.tsx já usa para a categoria farmacológica, onde criar o item
-// aninhado o deixa selecionado no formulário de cima. Assim o que já foi
-// digitado no registro não corre risco nenhum — nem depende do rascunho.
-//
-// A tela /vacinas continua existindo para renomear, ajustar intervalo e
-// desativar; aqui só se cria.
 export function CadastroRapidoVacina({ onCadastrada, onCancelar }: CadastroRapidoVacinaProps) {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const criar = useCriarVacinaMutation()
@@ -40,9 +31,6 @@ export function CadastroRapidoVacina({ onCadastrada, onCancelar }: CadastroRapid
   async function salvar(dados: VacinaFormValues) {
     try {
       const criada = await criar.mutateAsync({ nome: dados.nome, intervaloMeses: dados.intervaloMeses })
-      // `mutateAsync` só resolve depois da invalidação do catálogo (o
-      // `onSuccess` do hook a aguarda), então a opção nova já existe no select
-      // quando `onCadastrada` a seleciona.
       onCadastrada(criada.codigo)
     } catch (erro) {
       if (aplicarErrosDeCampo(erro, setError, MAPA_ERROS_VACINA).length > 0) return
@@ -50,9 +38,6 @@ export function CadastroRapidoVacina({ onCadastrada, onCancelar }: CadastroRapid
     }
   }
 
-  // `div` e não `form`: este bloco vive dentro do `form` do registro de
-  // vacinação, e formulário aninhado é HTML inválido — o submit de um
-  // dispararia o outro.
   function aoEnviar(event: FormEvent<HTMLButtonElement>) {
     event.preventDefault()
     setSubmitError(null)

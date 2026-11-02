@@ -18,16 +18,8 @@ import org.springframework.data.repository.query.Param;
 import com.siszoo.animais.clinico.entity.Vacinacao;
 import com.siszoo.comum.repository.ContagemCatalogoProjection;
 
-// Sem metodo de update/delete: registro clinico imutavel (regra de negocio). Ver
-// com.siszoo.animais.clinico.service.VacinacaoService para o mecanismo de
-// retificacao (novo registro + `retifica`), e RegistrosClinicosSemMutacaoTest
-// para o teste que trava essa garantia por reflection.
 public interface VacinacaoRepository extends JpaRepository<Vacinacao, UUID>, JpaSpecificationExecutor<Vacinacao> {
 
-    // vacina/aplicadoPor sao carregados via getter no VacinacaoMapper (nao so
-    // o id): sem isto, listar() sofre N+1 (um SELECT extra por linha para cada
-    // relacao). Ambos sao @ManyToOne (to-one): nunca incluir aqui uma colecao
-    // @OneToMany/@ManyToMany, que forcaria o Hibernate a paginar em memoria.
     @Override
     @EntityGraph(attributePaths = {"vacina", "aplicadoPor"})
     Page<Vacinacao> findAll(Specification<Vacinacao> spec, Pageable pageable);
@@ -38,8 +30,6 @@ public interface VacinacaoRepository extends JpaRepository<Vacinacao, UUID>, Jpa
 
     List<Vacinacao> findByRetificaIdIn(Collection<UUID> retificaIds);
 
-    // ficha_completa (DER §3.2): o animal tem ao menos uma vacinacao vigente,
-    // isto e, que nenhuma outra retifica.
     @Query("""
             SELECT COUNT(v) > 0 FROM Vacinacao v
             WHERE v.animal.id = :animalId
@@ -47,19 +37,6 @@ public interface VacinacaoRepository extends JpaRepository<Vacinacao, UUID>, Jpa
             """)
     boolean existeVigenteDoAnimal(@Param("animalId") UUID animalId);
 
-    // Alerta de reforco vacinal (com.siszoo.alertas): devolve so a aplicacao
-    // vigente de cada par (animal, vacina), a mais recente entre as nao
-    // retificadas, via NOT EXISTS. Ao contrario de um finder que trouxesse
-    // todo o historico, o resultado nao cresce com anos de vacinacoes ja
-    // registradas: e limitado pelos pares (animal, vacina) atualmente
-    // ativos. Desempate de mesma dataAplicacao: criadoEm mais recente vence;
-    // se ainda empatar (mesmo timestamp de criacao), id maior vence: cada
-    // NOT EXISTS garante exatamente uma linha vencedora por par, mesmo numa
-    // cadeia de retificacao com mais de um elo (A retificado por B,
-    // retificado por C: A e B ficam de fora, so C sobra).
-    // RN-A05: so animais sob custodia do CCZ geram alerta: o chamador passa
-    // StatusAnimal.CODIGOS_FORA_DA_CUSTODIA (fonte unica, tambem usada pela
-    // ocupacao de baia) em vez de repetir os codigos aqui.
     @EntityGraph(attributePaths = {"animal", "animal.especie", "animal.baia", "vacina", "aplicadoPor"})
     @Query("""
             SELECT v FROM Vacinacao v
@@ -81,13 +58,6 @@ public interface VacinacaoRepository extends JpaRepository<Vacinacao, UUID>, Jpa
     List<Vacinacao> findVigentesParaAlertaVacinal(
             @Param("codigosForaDaCustodia") Collection<String> codigosForaDaCustodia);
 
-    // KPI "% vacinados" do dashboard (com.siszoo.relatorios): mesma
-    // selecao de "vigente" (NOT EXISTS) de findVigentesParaAlertaVacinal, mas
-    // DELIBERADAMENTE uma query separada: essa nao e a janela de alerta de 7
-    // dias, e "vacinado" aqui so precisa da vigente mais recente de cada par
-    // (animal, vacina), sem relacao com o alerta. dataValidade e calculada em
-    // Java pelo service (soma de meses nao e portavel em JPQL), igual
-    // Vacinacao#calcularDataValidade.
     @EntityGraph(attributePaths = {"animal", "vacina"})
     @Query("""
             SELECT v FROM Vacinacao v
@@ -109,14 +79,8 @@ public interface VacinacaoRepository extends JpaRepository<Vacinacao, UUID>, Jpa
     List<Vacinacao> findVigentesSobCustodiaParaKpiVacinacao(
             @Param("codigosForaDaCustodia") Collection<String> codigosForaDaCustodia);
 
-    // KPI "Vacinas aplicadas" do relatorio de vacinacao: conta todo
-    // evento de aplicacao no periodo, inclusive um que uma retificacao
-    // posterior tenha corrigido. E contagem de atividade realizada, nao de
-    // vigencia atual (que e o papel de findVigentesSobCustodiaParaKpiVacinacao).
     long countByDataAplicacaoBetween(LocalDate inicio, LocalDate fim);
 
-    // Secao "Aplicações por Vacina": codigo/nome/quantidade no mesmo
-    // formato generico de ContagemCatalogoProjection (dashboard).
     @Query("""
             SELECT v.vacina.codigo AS codigo, v.vacina.nome AS nome, COUNT(v) AS quantidade
             FROM Vacinacao v
@@ -126,9 +90,6 @@ public interface VacinacaoRepository extends JpaRepository<Vacinacao, UUID>, Jpa
     List<ContagemCatalogoProjection> contarAplicacoesPorVacina(
             @Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
-    // Secao "Aplicações por Veterinário": sem aplicadoPor (registro
-    // legado, campo nao obrigatorio) nao entra na contagem: nao ha "veterinario
-    // desconhecido" no protótipo.
     @Query("""
             SELECT CONCAT(v.aplicadoPor.nome, ' ', v.aplicadoPor.sobrenome) AS nome, COUNT(v) AS quantidade
             FROM Vacinacao v

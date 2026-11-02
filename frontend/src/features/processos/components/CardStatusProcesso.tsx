@@ -7,16 +7,9 @@ import { ACAO_DE_AVANCO_PROCESSO, labelDe, proximoStatusProcesso, STATUS_PROCESS
 
 interface CardStatusProcessoProps {
   processo: Processo
-  // PROCESSOS_SANITARIOS:escrita (V3): Admin, Veterinário e Agente.
   podeEscrever: boolean
 }
 
-// PATCH /api/processos/{id}/status provisório: avança um passo por vez,
-// sem registrar resultado nem notificar. A transição
-// AGUARDANDO_RESULTADO -> COM_RESULTADO não passa por aqui (o backend a
-// recusa neste endpoint): só acontece pelo lançamento do
-// resultado (CardResultadoProcesso), que grava resultado e desfecho na
-// mesma escrita.
 export function CardStatusProcesso({ processo, podeEscrever }: CardStatusProcessoProps) {
   const [erro, setErro] = useState<string | null>(null)
   const avancar = useAvancarStatusProcessoMutation(processo.id)

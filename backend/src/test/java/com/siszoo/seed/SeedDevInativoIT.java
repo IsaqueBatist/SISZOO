@@ -9,8 +9,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.siszoo.comum.AbstractIntegrationTest;
 
-// Sem o perfil `seed` (contexto base dos *IT, o mesmo de producao quanto a
-// isso), nenhum bean do seed existe e seed_controle nunca e criada.
 class SeedDevInativoIT extends AbstractIntegrationTest {
 
     @Autowired

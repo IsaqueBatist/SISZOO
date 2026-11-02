@@ -7,11 +7,9 @@ import { paraNumeroOuIndefinido, semVazio } from '../utils/animalFormMapeamento'
 import { semEspacos } from '@/lib/texto'
 
 interface CamposDadosBasicosProps {
-  // Microchip já definido não muda mais (regra do backend replicada na UI).
   microchipTravado: boolean
 }
 
-// Etapa 1 do cadastro de animal: identificação e características.
 export function CamposDadosBasicos({ microchipTravado }: CamposDadosBasicosProps) {
   const {
     register,

@@ -8,11 +8,6 @@ import {
   resultadoProcessoFixture,
 } from './processosFixtures'
 
-// Handlers de processos com respostas FIXAS - sem estado e sem regra de
-// negócio (validação, urgência derivada, vínculo e transições são do
-// backend). O teste que precisa ver o estado depois da ação, ou forçar
-// 403/404/409/422, sobrescreve o handler com `server.use()`.
-
 function buscarFixture(id: string) {
   return processosFixture().find((item) => item.id === id) ?? null
 }
@@ -22,14 +17,12 @@ function naoEncontrado() {
 }
 
 export const processosHandlers = [
-  // Antes de `/processos/:id` para "catalogos" não virar um id.
   http.get(`${API_BASE_URL}/processos/catalogos`, () => HttpResponse.json(CATALOGOS_PROCESSO_FIXTURE)),
 
   http.get(`${API_BASE_URL}/processos`, ({ request }) => {
     const url = new URL(request.url)
     const pagina = Number(url.searchParams.get('pagina') ?? '0')
     const tamanho = Number(url.searchParams.get('tamanho') ?? '20')
-    // `urgente` opcional, como o backend (ausente, sem filtro).
     const urgente = url.searchParams.get('urgente')
     const status = url.searchParams.get('status')?.split(',')
     const de = url.searchParams.get('de')
@@ -67,10 +60,6 @@ export const processosHandlers = [
     return HttpResponse.json({ ...processo, statusProcesso: status })
   }),
 
-  // Resposta fixa - o processo "vira" COM_RESULTADO com o
-  // resultado enviado, e o histórico ganha um item novo. Testes que
-  // precisam do erro (422 fora de AGUARDANDO_RESULTADO, falha de rede)
-  // sobrescrevem com `server.use()`.
   http.post(`${API_BASE_URL}/processos/:id/resultados`, async ({ params, request }) => {
     const processo = buscarFixture(params.id as string)
     if (!processo) return naoEncontrado()

@@ -10,11 +10,6 @@ export interface DescricaoAcao {
   tom: TomAcao
 }
 
-// Ícone + cor + verbo em português - para quem olha a tela entender a ação
-// sem precisar saber o nome do enum.
-// VISUALIZACAO e ACESSO_NEGADO em tom "danger": são as ações ligadas a dado
-// sensível (acesso, autorizado ou recusado, a denunciante de ocorrência
-// sigilosa, LGPD) - valem se destacar mais que as demais.
 const DESCRICOES: Record<AcaoAuditoria, DescricaoAcao> = {
   CRIACAO: { verbo: 'criou', rotulo: 'Criação', icone: 'plus', tom: 'success' },
   ATUALIZACAO: { verbo: 'atualizou', rotulo: 'Atualização', icone: 'edit', tom: 'info' },

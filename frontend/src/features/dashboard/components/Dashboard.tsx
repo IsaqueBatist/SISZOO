@@ -16,14 +16,10 @@ import { mapearKpisParaCards } from '../utils/kpiCards'
 import type { AlertaCritico } from '../types/dashboard.types'
 import './Dashboard.css'
 
-// Lazy: isola o chunk de `recharts` (pesado) do carregamento inicial do
-// dashboard - máquinas do CCZ têm ~2GB RAM.
 const GraficosDashboard = lazy(() =>
   import('@/features/graficos/components/GraficosDashboard').then((m) => ({ default: m.GraficosDashboard })),
 )
 
-// O que cada perfil mais faz ao abrir o sistema. Só atalho: quem decide o que
-// pode ser feito continuam sendo as rotas e a API.
 const ATALHOS_POR_PERFIL: Record<RoleKey, { to: string; rotulo: string; icone: IconName }[]> = {
   admin: [
     { to: '/ocorrencias/novo', rotulo: 'Registrar Ocorrência', icone: 'plus' },
@@ -51,9 +47,6 @@ interface ItemAlertaAchatado {
   severidade: SeveridadeAlerta
 }
 
-// Quantos itens nomear na descrição do card antes de resumir o resto em
-// "+N outras" - o card é um resumo compacto, a lista completa está em
-// /alertas/vacinas.
 const RESUMO_MAX_ITENS = 3
 
 function descreverItem(item: ItemAlertaAchatado): string {
@@ -68,9 +61,6 @@ function IconeSeveridadeVacina({ severidade }: { severidade: SeveridadeAlerta })
   return <Icon name={severidade === 'VENCIDA' ? 'alert' : 'bell'} size={12} />
 }
 
-// Card dedicado pro alerta de vacina (GET /api/alertas/vacinas, com a lista
-// de animais) - os outros 5 tipos do DER §3.7 vêm agregados em
-// kpis.alertas e são renderizados por AlertaCriticoGenerico, abaixo.
 function AlertaCriticoVacinas() {
   const { data, isLoading, isError, refetch } = useAlertasVacinaisQuery()
 
@@ -83,9 +73,6 @@ function AlertaCriticoVacinas() {
   }
 
   const animais = data ?? []
-  // Achata para o nível de vacina (não de animal): a veterinária precisa ver
-  // "Rex - Antirrábica venceu há 2d", não só "Rex" - um animal com 2 vacinas
-  // em alerta vira 2 linhas aqui, não 1.
   const itens: ItemAlertaAchatado[] = animais.flatMap((animal) =>
     animal.vacinas.map((vacina) => ({
       vacinacaoId: vacina.vacinacaoId,
@@ -113,9 +100,6 @@ function AlertaCriticoVacinas() {
     aVencer.length > 0 ? `${aVencer.length} vencendo em até 7 dias` : null,
   ].filter((parte) => parte !== null)
 
-  // diasRestantes negativo (vencida) sempre fica antes de positivo (a vencer)
-  // numa ordenação ascendente simples - não precisa de critério de severidade
-  // separado, o mais urgente (mais atrasado, ou mais perto de vencer) vem primeiro.
   const itensOrdenados = [...itens].sort((a, b) => a.diasRestantes - b.diasRestantes)
   const excedente = itensOrdenados.length - RESUMO_MAX_ITENS
 
@@ -148,9 +132,6 @@ function AlertaCriticoVacinas() {
   )
 }
 
-// Processos com contato humano-animal (regra 18, já aplicada 100% no
-// backend) - cada item navega para o detalhe do processo; o "ver todos" leva
-// à lista com o filtro de urgentes (docs/contratos/processos-filtro-urgente.md).
 function AlertaProcessosUrgentes() {
   const { data, isLoading, isError, refetch } = useProcessosUrgentesQuery()
 
@@ -203,16 +184,8 @@ function AlertaProcessosUrgentes() {
   )
 }
 
-// Os 6 alertas críticos do DER §3.7 chegam todos juntos em kpis.alertas,
-// mas vacina_vencendo/vacina_vencida já têm card dedicado acima
-// (AlertaCriticoVacinas, com a lista de animais via GET /api/alertas/vacinas)
-// - não duplicar aqui, só os outros 5 tipos.
 const TIPOS_JA_EXIBIDOS_EM_CARD_DEDICADO = new Set(['vacina_vencendo', 'vacina_vencida'])
 
-// Mesmo tom por tipo do protótipo (docs/prototipo/dashboard.html): não deriva
-// de `severidade` (info/atencao/critico) porque o protótipo usa classes mais
-// granulares que a enum do DER - fiel ao visual já validado, em vez de uma
-// conversão aproximada.
 const TOM_POR_TIPO_DE_ALERTA: Record<string, string> = {
   sem_avaliacao_30d: 'alert-yellow',
   baia_superlotada: 'warning',
@@ -221,9 +194,6 @@ const TOM_POR_TIPO_DE_ALERTA: Record<string, string> = {
   nao_castrado: 'danger',
 }
 
-// Sem link "ver detalhes" nos que não têm endpoint de lista de itens (só o total
-// agregado): navegar para uma tela sem o recorte seria pior do que não navegar.
-// A exceção é a baia superlotada, que a tela de Baias já mostra destacada.
 function AlertaCriticoGenerico({ alerta, linkBaias }: { alerta: AlertaCritico; linkBaias: boolean }) {
   return (
     <div className={`alert ${TOM_POR_TIPO_DE_ALERTA[alerta.tipo] ?? 'info'}`}>
@@ -251,12 +221,9 @@ export function Dashboard() {
   const { data: kpis, isLoading: kpisCarregando, isError: kpisComErro, refetch: refazerKpis } = useKpisDashboardQuery()
   const kpisMockados = kpisUsamMock()
   const cards = kpis ? mapearKpisParaCards(kpis, kpisMockados) : []
-  // Só os com total > 0: a seção é "Alertas Críticos", não um inventário -
-  // mostrar "0 baia(s) superlotada(s)" não ajuda ninguém a agir.
   const alertasGenericos = (kpis?.alertas ?? []).filter(
     (alerta) => !TIPOS_JA_EXIBIDOS_EM_CARD_DEDICADO.has(alerta.tipo) && alerta.total > 0,
   )
-  // "Crítico" só para o que a API classifica assim: o resto é rotina a acompanhar.
   const alertasCriticos = alertasGenericos.filter((alerta) => alerta.severidade === 'critico')
   const avisos = alertasGenericos.filter((alerta) => alerta.severidade !== 'critico')
 
@@ -318,7 +285,6 @@ export function Dashboard() {
             </span>
             Alertas Críticos
           </h2>
-          {/* Os alertas genéricos vêm do mesmo GET /dashboard/kpis. */}
           {kpisMockados && <SeloDadosMock />}
         </div>
         <div className="alerts-grid">
@@ -344,8 +310,6 @@ export function Dashboard() {
       )}
 
       <div style={{ marginTop: 'var(--space-4)' }}>
-        {/* Os gráficos ficam abaixo de KPIs e alertas; o chunk do recharts
-            só é baixado quando o usuário chega perto deles. */}
         <MontarQuandoVisivel alturaReservada={220}>
           <Suspense fallback={<Skeleton width="100%" height={220} />}>
             <GraficosDashboard />

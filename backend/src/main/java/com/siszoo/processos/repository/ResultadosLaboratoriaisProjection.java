@@ -1,10 +1,5 @@
 package com.siszoo.processos.repository;
 
-// Relatorio Anual de Processos, secao "Resultados Laboratoriais":
-// escopo por dataAbertura do processo (ano do relatorio), nao por
-// dataResultado como o grafico do dashboard (ContagemCatalogoProjection /
-// contarResultadosPorDoenca) - aqui o universo e "processos ABERTOS no ano",
-// nao "resultados LANCADOS no ano".
 public interface ResultadosLaboratoriaisProjection {
 
     String getNome();

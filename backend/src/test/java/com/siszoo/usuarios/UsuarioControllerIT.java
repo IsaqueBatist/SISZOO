@@ -118,9 +118,6 @@ class UsuarioControllerIT extends AbstractIntegrationTest {
                 .body("senhaAlteradaEm", nullValue());
     }
 
-    // Politica de senha: menos de 3 tipos de caractere, nome da conta (parte do
-    // e-mail antes do @) ou parte do nome com 3+ caracteres na senha inicial
-    // => 422 no campo senhaInicial, e o usuario nao e criado.
     @Test
     @DisplayName("[senha] senha inicial fora da politica de complexidade: 422 em senhaInicial e nada e criado")
     void deveRetornar422QuandoSenhaInicialForaDaPolitica() {
@@ -139,8 +136,6 @@ class UsuarioControllerIT extends AbstractIntegrationTest {
         assertThat(usuarioRepository.findByEmail(email).isPresent(), equalTo(false));
     }
 
-    // Teto do BCrypt: mais de 72 bytes UTF-8 => 422 em
-    // senhaInicial e nada e criado. 72 bytes exatos continuam aceitos.
     @Test
     @DisplayName("[senha] senha inicial acima de 72 bytes: 422 em senhaInicial; 72 bytes: criado")
     void deveRetornar422QuandoSenhaInicialPassaDe72Bytes() {
@@ -230,7 +225,6 @@ class UsuarioControllerIT extends AbstractIntegrationTest {
     @DisplayName("[A03] criacao, desativacao e reativacao gravam o admin como autor e o usuario afetado em entidade_id")
     void auditoriaDeUsuarioRegistraOAdminComoAutor() {
         UUID adminId = usuarioRepository.findByEmail(EMAIL_ADMIN).orElseThrow().getId();
-        // O e-mail institucional so aceita letras e pontos.
         String email = "autor.auditoria." + UUID.randomUUID().toString().replaceAll("[^a-f]", "") + "@itu.sp.gov.br";
 
         String criadoId = given()

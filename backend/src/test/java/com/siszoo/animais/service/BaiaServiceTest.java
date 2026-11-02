@@ -57,7 +57,6 @@ class BaiaServiceTest {
 
     private static final UUID USUARIO_ID = UUID.randomUUID();
 
-    // RNF10: toda escrita resolve o autor da auditoria.
     @BeforeEach
     void autorDaAuditoria() {
         Usuario usuario = new Usuario();

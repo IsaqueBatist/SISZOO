@@ -33,10 +33,6 @@ import com.siszoo.comum.AbstractIntegrationTest;
 import com.siszoo.comum.ApiTesteFixture;
 import com.siszoo.comum.RelogioTesteConfig;
 
-// "antirrabica" (seed V5) tem intervalo_meses=12: a data_validade de cada
-// cenario e controlada escolhendo dataAplicacao = HOJE.minusMonths(12) +/-
-// alguns dias, ja que HOJE (10/09, ver RelogioTesteConfig) esta longe de
-// qualquer virada de mes que quebraria plusMonths/minusMonths.
 @Import(RelogioTesteConfig.class)
 class AlertaVacinalControllerIT extends AbstractIntegrationTest {
 
@@ -44,9 +40,6 @@ class AlertaVacinalControllerIT extends AbstractIntegrationTest {
     private static final LocalDate HOJE = RelogioTesteConfig.HOJE;
     private static final LocalDate APLICACAO_VENCIDA_HA_UM_DIA = HOJE.minusMonths(12).minusDays(1);
 
-    // Especificacao da RN-A05 (oraculo do teste, escrito a mao): para cada
-    // codigo do catalogo status_animal (V4), se o animal continua sob
-    // custodia do CCZ e portanto aparece no alerta.
     private static final Map<String, Boolean> APARECE_NO_ALERTA_POR_STATUS = Map.of(
             "disponivel_adocao", true,
             "em_tratamento", true,
@@ -137,9 +130,7 @@ class AlertaVacinalControllerIT extends AbstractIntegrationTest {
     @DisplayName("[RN-A02] so a aplicacao mais recente de cada vacina por animal conta")
     void deveConsiderarSoAAplicacaoMaisRecenteDeCadaVacinaPorAnimal() {
         String animalId = fixture.criarAnimal(tokenAdmin);
-        // Aplicacao antiga: isolada, estaria VENCIDA ha 12 meses.
         fixture.criarVacinacao(tokenAdmin, animalId, HOJE.minusMonths(24), null);
-        // Reforco recente: dataValidade cai bem fora da janela de alerta.
         fixture.criarVacinacao(tokenAdmin, animalId, HOJE, null);
 
         assertThat(fixture.buscarAnimalNoAlertaVacinal(tokenAdmin, animalId).isPresent(), equalTo(false));
@@ -149,9 +140,6 @@ class AlertaVacinalControllerIT extends AbstractIntegrationTest {
     @DisplayName("[RN-A02] desempate de mesma dataAplicacao devolve um so item")
     void deveDevolverUmSoItemQuandoDuasAplicacoesIndependentesTemAMesmaDataAplicacao() {
         String animalId = fixture.criarAnimal(tokenAdmin);
-        // Duas vacinacoes independentes (sem retificacao entre elas) para o
-        // mesmo animal+vacina, com a mesma dataAplicacao: a query precisa
-        // desempatar (por criadoEm, o registro mais recente) e devolver 1 so.
         fixture.criarVacinacao(tokenAdmin, animalId, APLICACAO_VENCIDA_HA_UM_DIA, null);
         fixture.criarVacinacao(tokenAdmin, animalId, APLICACAO_VENCIDA_HA_UM_DIA, null);
 
@@ -177,7 +165,6 @@ class AlertaVacinalControllerIT extends AbstractIntegrationTest {
         assertThat(vacinas.get(0).get("severidade"), equalTo("VENCIDA"));
     }
 
-    // Vacina.ativo e true por padrao: so a falta de intervalo explica a ausencia.
     @Test
     @DisplayName("[RN-A03] vacina sem intervalo_meses nao gera alerta")
     void naoDeveAlertarVacinaSemIntervaloDefinidoNoCatalogo() {
@@ -188,8 +175,6 @@ class AlertaVacinalControllerIT extends AbstractIntegrationTest {
         assertThat(fixture.buscarAnimalNoAlertaVacinal(tokenAdmin, animalId).isPresent(), equalTo(false));
     }
 
-    // Mesma data que, numa vacina ativa, estaria VENCIDA ha 1 dia: so o
-    // ativo=false explica a ausencia no alerta.
     @Test
     @DisplayName("[RN-A03] vacina inativa no catalogo nao gera alerta")
     void naoDeveAlertarVacinaInativaNoCatalogo() {
@@ -200,15 +185,11 @@ class AlertaVacinalControllerIT extends AbstractIntegrationTest {
         assertThat(fixture.buscarAnimalNoAlertaVacinal(tokenAdmin, animalId).isPresent(), equalTo(false));
     }
 
-    // Teste de caracterizacao: o alerta parte das vacinacoes, entao nao ha
-    // mutacao de producao que faca um animal sem vacinacao aparecer; o teste
-    // documenta o comportamento e garante que o endpoint nao quebra (200).
     @Test
     @DisplayName("[RN-A04] animal sem nenhuma vacinacao nao aparece e nao causa erro")
     void naoDeveListarAnimalSemNenhumaVacinacao() {
         String animalId = fixture.criarAnimal(tokenAdmin);
 
-        // buscarAnimalNoAlertaVacinal ja exige status 200.
         assertThat(fixture.buscarAnimalNoAlertaVacinal(tokenAdmin, animalId).isPresent(), equalTo(false));
     }
 
@@ -222,9 +203,6 @@ class AlertaVacinalControllerIT extends AbstractIntegrationTest {
         assertThat(fixture.buscarAnimalNoAlertaVacinal(tokenAdmin, animalId).isPresent(), equalTo(deveAparecer));
     }
 
-    // Trava contra codigo novo no catalogo sem classificacao: todo codigo da
-    // tabela status_animal precisa estar na especificacao acima E na
-    // classificacao de producao (StatusAnimal), e as duas precisam concordar.
     @Test
     @DisplayName("[RN-A05] todo status do catalogo esta classificado quanto a custodia, sem sobreposicao")
     void todoStatusDoCatalogoDeveEstarClassificadoQuantoACustodia() {
@@ -256,8 +234,6 @@ class AlertaVacinalControllerIT extends AbstractIntegrationTest {
         return vacinaRepository.save(vacina);
     }
 
-    // Grava direto no repositorio: a API so aceita vacinas do catalogo por
-    // codigo, e estes cenarios precisam de vacinas de teste fora do padrao.
     private void salvarVacinacaoDireta(String animalId, Vacina vacina, LocalDate dataAplicacao) {
         Vacinacao vacinacao = new Vacinacao();
         vacinacao.setAnimal(animalRepository.findById(UUID.fromString(animalId)).orElseThrow());

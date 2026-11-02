@@ -20,7 +20,6 @@ import com.siszoo.comum.security.UsuarioAutenticado;
 
 import jakarta.validation.Valid;
 
-// Somente GET/POST: registro clinico imutavel (regra de negocio). Ver VacinacaoController.
 @RestController
 @RequestMapping("/api/procedimentos")
 public class ProcedimentoController {

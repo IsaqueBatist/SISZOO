@@ -15,10 +15,6 @@ import org.springframework.test.context.TestPropertySource;
 import com.siszoo.comum.AbstractIntegrationTest;
 import com.siszoo.comum.ApiTesteFixture;
 
-// Guarda de banco: num banco sem seed_controle que ja tem dados de
-// dominio criados fora do seed, o seed recusa ANTES de gravar qualquer coisa;
-// nem a tabela de controle e criada. Contexto proprio (banco proprio) com o
-// seed ligado mas sem rodar na subida.
 @ActiveProfiles("seed")
 @TestPropertySource(properties = {
         "siszoo.seed.habilitado=true",

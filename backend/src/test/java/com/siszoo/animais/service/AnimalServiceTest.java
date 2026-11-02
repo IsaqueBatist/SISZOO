@@ -46,7 +46,6 @@ import com.siszoo.usuarios.service.AuditoriaEventoService;
 @ExtendWith(MockitoExtension.class)
 class AnimalServiceTest {
 
-    // Mesmo dia do Clock fixo: "hoje" do service e LocalDate.now(clock).
     private static final LocalDate HOJE = LocalDate.of(2026, 9, 10);
     private static final LocalDateTime ENTRADA = HOJE.atTime(9, 30);
 
@@ -82,8 +81,6 @@ class AnimalServiceTest {
 
     private AnimalService animalService;
 
-    // Construido a mao (nao @InjectMocks): Clock e valor, nao mock; MiniaturaFoto
-    // e uma funcao pura (sem estado nem I/O externo), usada de verdade.
     @BeforeEach
     void criarService() {
         Clock clock = Clock.fixed(Instant.parse("2026-09-10T15:00:00Z"), ZoneId.of("America/Sao_Paulo"));
@@ -91,8 +88,6 @@ class AnimalServiceTest {
                 motivoEntradaRepository, condicaoSaudeRepository, usuarioRepository, animalMapper, fichaCompletaService,
                 auditoriaEventoService,
                 new MiniaturaFoto(), clock);
-        // RNF10: atualizar() resolve o autor da auditoria; nos testes de
-        // regra de baia o usuario e irrelevante, entao o stub e lenient.
         lenient().when(usuarioRepository.findById(usuarioComId().getId())).thenReturn(Optional.of(usuarioComId()));
     }
 
@@ -176,7 +171,6 @@ class AnimalServiceTest {
 
     @Test
     void naoConfereBaiaQuandoStatusNovoEstaForaDaCustodia() {
-        // Registro de historico de um animal que ja saiu: nao ocupa a baia.
         Baia baia = baia(1, false);
         prepararCatalogos("adotado");
         when(baiaRepository.findById(baia.getId())).thenReturn(Optional.of(baia));
@@ -189,8 +183,6 @@ class AnimalServiceTest {
 
     @Test
     void edicaoDeQuemJaOcupaABaiaNaoEBarradaPorLotacaoOuInatividade() {
-        // Baia desativada e lotada depois que o animal entrou: editar outro
-        // campo do animal continua permitido.
         Baia baia = baia(1, false);
         Animal animal = animalNaBaia(baia, "em_tratamento");
         prepararCatalogosEdicao("em_tratamento");
@@ -220,8 +212,6 @@ class AnimalServiceTest {
 
     @Test
     void voltaACustodiaNaMesmaBaiaCheiaERecusada() {
-        // Fora da custodia o animal nao conta na ocupacao; voltar a custodia e
-        // passar a ocupar a baia de novo.
         Baia baia = baia(1, true);
         Animal animal = animalNaBaia(baia, "transferido");
         when(animalRepository.findById(animal.getId())).thenReturn(Optional.of(animal));

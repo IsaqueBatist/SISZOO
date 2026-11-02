@@ -26,18 +26,10 @@ import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
-// Para cada excecao que o handler trata hoje (76 de dominio e 3 do framework,
-// com os ramos por nome de constraint e a subclasse DuplicateKeyException), e
-// para as que ele NAO trata (acesso negado, corpo ilegivel, metodo nao
-// suportado, erro inesperado, que nao podem passar a ser capturadas), fixa:
-// status, Content-Type, corpo completo e o log do GlobalExceptionHandler
-// (nivel, mensagem e excecao anexada). A referencia esta em
-// src/test/resources/caracterizacao/global-exception-handler.json.
 class GlobalExceptionHandlerCaracterizacaoIT extends AbstractIntegrationTest {
 
     static final String REFERENCIA = "/caracterizacao/global-exception-handler.json";
     static final JsonMapper JSON = JsonMapper.builder().build();
-    // Unico campo que muda a cada execucao (corpo padrao do /error do Boot).
     private static final String CAMPO_VARIAVEL = "timestamp";
 
     @Autowired
@@ -69,8 +61,6 @@ class GlobalExceptionHandlerCaracterizacaoIT extends AbstractIntegrationTest {
         assertThat(caso.get("id").asString(), observado, equalTo(esperado));
     }
 
-    // Faz a requisicao do caso e devolve o que foi observado, no mesmo formato
-    // da referencia: status, contentType, corpo e logs.
     static ObjectNode executar(String token, JsonNode requisicao) {
         try (LogCapturado log = LogCapturado.de(GlobalExceptionHandler.class)) {
             RequestSpecification spec = given().header("Authorization", "Bearer " + token);

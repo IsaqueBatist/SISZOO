@@ -11,12 +11,6 @@ import { server } from '@/mocks/server'
 import { EditarAnimal } from './EditarAnimal'
 import type { AnimalRequest } from '../types/animais.types'
 
-// O PUT do animal substitui a ficha inteira, então um campo que o formulário
-// envia vazio é apagado no servidor. Estes testes capturam o payload do PUT em
-// três situações de edição em que a ficha do Rex (mock) tem porte "grande" e a
-// baia "Baia 3".
-
-// O rascunho é controlado pelo teste (sem IndexedDB): por padrão, nenhum.
 vi.mock('../storage/rascunhoAnimalStorage', async () => {
   const real = await vi.importActual<typeof import('../storage/rascunhoAnimalStorage')>('../storage/rascunhoAnimalStorage')
   return {
@@ -77,7 +71,6 @@ function renderEditar() {
   )
 }
 
-// Captura o corpo do PUT; o handler responde 200 como o backend.
 function capturarPut() {
   const captura: { corpo: AnimalRequest | null } = { corpo: null }
   server.use(
@@ -89,7 +82,6 @@ function capturarPut() {
   return captura
 }
 
-// Fluxo de quem só quer salvar sem mexer em porte nem baia.
 async function salvarSemMexerEmPorteEBaia(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole('button', { name: /próximo: saúde/i }))
   const selectBaia = screen.getByLabelText(/baia atual/i) as HTMLSelectElement
@@ -103,8 +95,6 @@ beforeEach(() => {
   vi.mocked(carregarRascunhoAnimal).mockResolvedValue(null)
 })
 
-
-// Baias que só chegam quando o teste libera (cenário 2).
 function baiasComAtraso() {
   let liberar: () => void = () => {}
   const liberadas = new Promise<void>((resolve) => {
@@ -119,8 +109,6 @@ function baiasComAtraso() {
   return () => liberar()
 }
 
-// Rascunho da edição salvo quando o Rex ainda não tinha porte nem baia;
-// depois disso a ficha passou a ter porte "grande" e a "Baia 3".
 const RASCUNHO_ANTIGO = {
   nome: 'Rex',
   especie: 'canino',
@@ -182,7 +170,6 @@ describe('edição do animal — porte e baia existentes no PUT (I1, N5)', () =>
     expect(corpo?.baiaId).toBe(BAIA_DO_REX)
   })
 
-  // Salvar antes de a lista chegar mantém a baia no PUT.
   it('cenário 2a: salvar antes de a lista de baias chegar não apaga a baia', async () => {
     const user = userEvent.setup()
     const put = capturarPut()
@@ -198,7 +185,6 @@ describe('edição do animal — porte e baia existentes no PUT (I1, N5)', () =>
     expect(put.corpo).toMatchObject({ porte: 'grande', baiaId: BAIA_DO_REX })
   })
 
-  // O PUT mantém a baia quando as opções chegam depois.
   it('cenário 2b: baias que chegam depois da ficha não apagam a baia no PUT', async () => {
     const { corpo } = await cenarioBaiasChegamDepoisDaFicha()
     expect(corpo).toMatchObject({ porte: 'grande', baiaId: BAIA_DO_REX })
@@ -210,9 +196,6 @@ describe('edição do animal — porte e baia existentes no PUT (I1, N5)', () =>
     expect(corpo?.baiaId).toBe(BAIA_DO_REX)
   })
 
-  // Se o rascunho deve prevalecer sobre a ficha atual segue como decisão de
-  // produto. Aqui só se fixa que a ordem de carregamento das opções não
-  // apaga a baia: o campo vazio do rascunho mantém o valor da ficha.
   it('cenário 3: restaurar um rascunho antigo sem baia mantém a baia no PUT', async () => {
     const user = userEvent.setup()
     const put = capturarPut()

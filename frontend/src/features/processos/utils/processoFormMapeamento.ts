@@ -9,11 +9,6 @@ import type {
   Processo,
 } from '../types/processos.types'
 
-// Conversões do formulário de processo sanitário (ProcessoForm): valores
-// iniciais e o payload do POST.
-
-// Os `'' as never` são o placeholder dos selects ainda sem escolha: o schema
-// recusa o vazio na validação da etapa.
 export function amostraVazia(): ProcessoFormValues['amostras'][number] {
   return {
     origem: 'canil',
@@ -22,7 +17,6 @@ export function amostraVazia(): ProcessoFormValues['amostras'][number] {
     statusClinico: '' as never,
     tipoAbrigo: '' as never,
     alteracaoComportamental: '',
-    // Fato técnico: quem coletou informa. A data do registro é do servidor.
     dataColeta: '',
     materialBiologico: '' as never,
     contatoHumano: null,
@@ -63,10 +57,6 @@ function textoOuIndefinido(valor: string | undefined): string | undefined {
   return limpo ? limpo : undefined
 }
 
-// Payload de POST /api/processos. Whitelist por modalidade: a amostra do
-// canil leva só o animalId (o servidor copia a identificação da ficha e
-// recusa com 422 se ela vier junto); a de campo leva a identificação.
-// Nível de contato e agressão só com contato; sintomas só em SINTOMATICO.
 function paraAmostraRequisicao(amostra: ProcessoFormValues['amostras'][number]): AmostraAnimalRequest {
   const clinico = {
     statusClinico: amostra.statusClinico,
@@ -125,7 +115,6 @@ function amostraParaFormulario(amostra: AmostraAnimal): ProcessoFormValues['amos
   }
 }
 
-// Formulário de edição do Administrador, a partir do GET do processo.
 export function valoresDeProcesso(processo: Processo): ProcessoEdicaoValues {
   return {
     ...valoresVazios(),
@@ -150,8 +139,6 @@ export function valoresDeProcesso(processo: Processo): ProcessoEdicaoValues {
   }
 }
 
-// Payload de PUT /api/processos/{id}: a ordem das amostras é a do GET, e a amostra
-// do canil leva o animalId, conferido pelo servidor (não troca de animal).
 export function paraEdicao(valores: ProcessoEdicaoValues, processo: Processo): EditarProcessoRequest {
   const { responsavel, amostras, observacoes, galNumero, sinanNumero } = paraRequisicao(valores)
   return {

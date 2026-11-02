@@ -7,10 +7,6 @@ import type {
 } from '../features/processos/types/processos.types'
 import { OCORRENCIA_PROCESSO_PENDENTE_ID, PROCESSO_PENDENTE_ID } from './ocorrenciasFixtures'
 
-// Fixtures no formato da API de processos, só para os testes
-// automatizados (mocks/server.ts). O processo pendente é o mesmo vinculado à
-// ocorrência 092/2026 das fixtures de ocorrência.
-
 export { PROCESSO_PENDENTE_ID }
 export const PROCESSO_SEM_VINCULO_ID = 'h7000000-0000-0000-0000-000000000002'
 export const PROCESSO_CRIADO_ID = 'h7000000-0000-0000-0000-000000000098'
@@ -108,7 +104,6 @@ export function processoFixture(sobrescrever: Partial<Processo> = {}): Processo 
   }
 }
 
-// Um lançamento do histórico (original ou correção, via retificaId).
 export function resultadoProcessoFixture(sobrescrever: Partial<ResultadoProcessoItem> = {}): ResultadoProcessoItem {
   return {
     id: 'h8000000-0000-0000-0000-000000000001',
@@ -123,9 +118,6 @@ export function resultadoProcessoFixture(sobrescrever: Partial<ResultadoProcesso
   }
 }
 
-// Processo com resultado já lançado (write-once), para os testes
-// do modo somente-leitura/histórico do CardResultadoProcesso. Positivo já
-// notificado: o SMTP aceitou o e-mail logo depois do lançamento.
 export function processoComResultadoFixture(sobrescrever: Partial<Processo> = {}): Processo {
   return processoFixture({
     statusProcesso: 'COM_RESULTADO',
@@ -186,7 +178,6 @@ export function paraResumoProcesso(processo: Processo): ProcessoResumo {
   }
 }
 
-// Resposta fixa do POST /processos.
 export function processoCriadoFixture(): Processo {
   return processoFixture({ id: PROCESSO_CRIADO_ID, protocolo: '047/2026', statusProcesso: 'ABERTO' })
 }

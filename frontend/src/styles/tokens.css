@@ -1,26 +1,21 @@
-/* SISZOO — Design Tokens */
 :root {
-  /* Primárias */
   --color-primary: #1B5E20;
   --color-primary-hover: #2E7D32;
   --color-primary-light: #E8F5E9;
   --color-primary-mid: #4CAF50;
 
-  /* Superfícies */
   --color-bg: #F4F6F8;
   --color-surface: #FFFFFF;
   --color-surface-alt: #F9FAFB;
   --color-border: #E0E4EA;
   --color-border-strong: #C5CDD8;
 
-  /* Texto */
   --color-text-primary: #1A2332;
   --color-text-secondary: #5A6A7E;
   --color-text-muted: #5F6F82;
   --color-text-inverse: #FFFFFF;
   --color-on-primary: #FFFFFF;
 
-  /* Semânticas */
   --color-danger: #C62828;
   --color-danger-bg: #FFEBEE;
   --color-danger-border: #EF9A9A;
@@ -41,7 +36,6 @@
   --color-success-bg: #E8F5E9;
   --color-success-border: #A5D6A7;
 
-  /* Doenças */
   --disease-raiva: #C62828;
   --disease-leishmaniose: #F57F17;
   --disease-leptospirose: #1565C0;
@@ -49,7 +43,6 @@
   --disease-febre-maculosa: #B84300;
   --disease-febre-amarela: #F9A825;
 
-  /* Sidebar */
   --sidebar-bg: #1B5E20;
   --sidebar-item-hover: rgba(255,255,255,0.10);
   --sidebar-item-active: rgba(255,255,255,0.18);
@@ -57,7 +50,6 @@
   --sidebar-icon: rgba(255,255,255,0.65);
   --sidebar-border: rgba(255,255,255,0.10);
 
-  /* Tipografia */
   --font-display: 'DM Sans', system-ui, sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
@@ -70,18 +62,15 @@
   --text-2xl: 28px;
   --text-3xl: 36px;
 
-  /* Sombras */
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06);
   --shadow-lg: 0 8px 24px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.08);
 
-  /* Raios */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
   --radius-full: 9999px;
 
-  /* Espaçamentos */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -91,7 +80,6 @@
   --space-8: 32px;
   --space-12: 48px;
 
-  /* Layout */
   --sidebar-width: 260px;
   --topbar-height: 64px;
 }

@@ -17,11 +17,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-// Duas modalidades, decididas pelo service:
-//   - animalId preenchido: animal do canil; a identificacao (especie ate
-//     pesoKg) vem da ficha e NAO pode ser enviada (422);
-//   - animalId nulo: animal de campo; especie e sexo sao obrigatorios.
-// Os campos clinicos sao sempre informados aqui, nas duas modalidades.
 public record AmostraAnimalRequest(
         UUID animalId,
 
@@ -60,7 +55,6 @@ public record AmostraAnimalRequest(
         @NotNull
         MaterialBiologico materialBiologico,
 
-        // Opcional: null = nao informado, nunca "nao".
         Boolean contatoHumano,
 
         NivelContato nivelContato,
@@ -69,7 +63,6 @@ public record AmostraAnimalRequest(
 
         String observacoes,
 
-        // Codigos do catalogo `sintoma`; so em amostra SINTOMATICO.
         List<@NotBlank String> sintomas) {
 
     public boolean temIdentificacao() {

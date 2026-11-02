@@ -48,10 +48,6 @@ import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.repository.UsuarioRepository;
 import com.siszoo.usuarios.service.AuditoriaEventoService;
 
-// Defesa em profundidade das regras de sigilo. Pela matriz
-// atual da V3/V10, quem escreve em ocorrencias sempre tem a feature de sigilo;
-// por isso estes casos so sao alcancaveis em teste unitario, simulando um
-// usuario com escrita e sem a feature.
 @ExtendWith(MockitoExtension.class)
 class OcorrenciaServiceTest {
 
@@ -77,7 +73,6 @@ class OcorrenciaServiceTest {
     private final PermissoesOcorrencia escritaSemSigilo = new PermissoesOcorrencia(usuarioId, false, true);
     private Ocorrencia ocorrencia;
 
-    // Construido a mao (nao @InjectMocks): Clock e valor, nao mock.
     @BeforeEach
     void criarService() {
         Clock clock = Clock.fixed(Instant.parse("2026-09-10T15:00:00Z"), ZoneId.of("America/Sao_Paulo"));
@@ -155,7 +150,6 @@ class OcorrenciaServiceTest {
     }
 
     @Test
-    // Campos do record lidos por reflection: um campo pessoal novo no snapshot quebra este teste.
     @DisplayName("[D23] snapshot de auditoria nao tem campos do denunciante")
     void snapshotSemDenunciante() {
         assertThat(Arrays.stream(OcorrenciaAuditoriaSnapshot.class.getRecordComponents()).map(RecordComponent::getName))

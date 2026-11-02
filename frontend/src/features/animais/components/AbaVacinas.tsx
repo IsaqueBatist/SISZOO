@@ -24,10 +24,6 @@ export function AbaVacinas({ animalId, onRegistroCriado }: AbaVacinasProps) {
   const { data, isLoading, isError } = useVacinacoesQuery(animalId, pagina)
   const totalPaginas = Math.max(data?.totalPaginas ?? 1, 1)
 
-
-  // Qual aplicação de cada vacina é a que vale hoje (a mais recente, ativa) —
-  // é só nela que faz sentido oferecer o reforço. Mesma ideia da RN-A02, que
-  // ignora aplicações anteriores ao calcular o alerta.
   const idDaAplicacaoVigentePorVacina = new Map<string, string>()
   for (const item of data?.itens ?? []) {
     if (item.statusRegistro !== 'ATIVO') continue
@@ -114,10 +110,6 @@ export function AbaVacinas({ animalId, onRegistroCriado }: AbaVacinasProps) {
               <tbody>
                 {data.itens.map((vacinacao) => {
                   const badge = badgeReforcoVacina(vacinacao.dataValidade)
-                  // O reforço só é oferecido quando ele está de fato na hora
-                  // (dentro dos 7 dias ou já vencido) e só na aplicação que
-                  // conta — a mais recente daquela vacina (RN-A02). O botão do
-                  // topo continua disponível para aplicar fora dessa janela.
                   const podeRegistrarReforco =
                     podeEscrever &&
                     vacinacao.statusRegistro === 'ATIVO' &&
@@ -152,10 +144,6 @@ export function AbaVacinas({ animalId, onRegistroCriado }: AbaVacinasProps) {
                             <button
                               type="button"
                               className="btn btn-ghost btn-sm"
-                              // Deixa explícito o que "Corrigir" faz: é fácil
-                              // confundir com o registro do reforço, e a
-                              // correção marca a aplicação original como
-                              // retificada, como se não tivesse valido.
                               title="Corrigir um erro deste registro. Para uma nova aplicação, use Registrar reforço."
                               onClick={() => setRetificando(vacinacao)}
                             >

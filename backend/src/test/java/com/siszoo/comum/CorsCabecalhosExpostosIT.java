@@ -12,10 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import io.restassured.http.ContentType;
 
-// O front roda em outra origem (VITE_API_BASE_URL, sem proxy) e le o nome do
-// arquivo exportado no Content-Disposition (relatoriosApi.ts). Sem o header
-// em Access-Control-Expose-Headers o navegador o esconde e o download cai
-// em "relatorio.<formato>".
 class CorsCabecalhosExpostosIT extends AbstractIntegrationTest {
 
     private static final String ORIGEM_DO_FRONT = "http://localhost:5173";

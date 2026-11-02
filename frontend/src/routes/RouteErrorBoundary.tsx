@@ -8,9 +8,6 @@ interface RouteErrorBoundaryState {
   temErro: boolean
 }
 
-// Error Boundary de classe (única forma suportada pelo React) ao redor das
-// rotas com React.lazy: numa rede instável, a falha ao baixar o chunk de uma
-// rota não pode derrubar o app inteiro sem alternativa de retry.
 export class RouteErrorBoundary extends Component<RouteErrorBoundaryProps, RouteErrorBoundaryState> {
   state: RouteErrorBoundaryState = { temErro: false }
 

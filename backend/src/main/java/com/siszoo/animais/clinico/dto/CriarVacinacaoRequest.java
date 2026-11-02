@@ -37,7 +37,5 @@ public record CriarVacinacaoRequest(
 
         String observacoes,
 
-        // Presenca (nao-nulo) indica que este POST retifica o registro apontado,
-        // em vez de criar uma vacinacao nova e independente.
         UUID retificaId) {
 }

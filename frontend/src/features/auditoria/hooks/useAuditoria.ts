@@ -10,7 +10,6 @@ export function useEventosAuditoriaQuery(pagina: number, tamanho: number, filtro
   })
 }
 
-// Opções dos filtros vêm do servidor (toda a trilha), não da página atual.
 export function useOpcoesFiltroAuditoriaQuery() {
   return useQuery({
     queryKey: ['auditoria', 'filtros'],

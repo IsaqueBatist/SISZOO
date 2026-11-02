@@ -42,8 +42,6 @@ import com.siszoo.usuarios.service.AuditoriaEventoService;
 @ExtendWith(MockitoExtension.class)
 class ProcedimentoServiceTest {
 
-    // Mesmo dia do Clock fixo abaixo: o service recusa data futura comparando
-    // com LocalDate.now(clock).
     private static final LocalDate HOJE = LocalDate.of(2026, 9, 10);
 
     @Mock
@@ -66,7 +64,6 @@ class ProcedimentoServiceTest {
 
     private ProcedimentoService procedimentoService;
 
-    // Construido a mao (nao @InjectMocks): Clock e valor, nao mock.
     @BeforeEach
     void criarService() {
         Clock clock = Clock.fixed(Instant.parse("2026-09-10T15:00:00Z"), ZoneId.of("America/Sao_Paulo"));

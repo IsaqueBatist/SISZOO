@@ -55,9 +55,6 @@ export function useEditarProcessoMutation(id: string) {
   })
 }
 
-// Relê o detalhe direto do servidor e grava no cache, sem invalidar nada. Para
-// o acompanhamento do envio da notificação e para conferir, depois de um 422,
-// se a escrita anterior chegou. Estável (useCallback): entra em deps de efeito.
 export function useReconsultarProcesso(id: string) {
   const queryClient = useQueryClient()
   return useCallback(async () => {
@@ -75,10 +72,6 @@ export function useCatalogosProcessoQuery() {
   })
 }
 
-// O detalhe recebe a resposta gravada pelo servidor; listagens de processos e
-// listagem e detalhes de ocorrências são invalidados (a ocorrência vinculada
-// ganha o processo e pode passar a urgente). Catálogos (staleTime
-// Infinity) e a contagem por bairro não mudam com processo e ficam de fora.
 function invalidarOcorrenciasAfetadas(queryClient: QueryClient) {
   void queryClient.invalidateQueries({ queryKey: ['ocorrencias', 'lista'] })
   void queryClient.invalidateQueries({ queryKey: ['ocorrencias', 'detalhe'] })
@@ -109,9 +102,6 @@ export function useAvancarStatusProcessoMutation(id: string) {
   })
 }
 
-// Substitui o avanço provisório só para AGUARDANDO_RESULTADO ->
-// COM_RESULTADO (lançamento) ou corrige o vigente (com retificaId). A
-// resposta já traz o histórico completo em `resultados`.
 export function useRegistrarResultadoMutation(id: string) {
   const atualizarCache = useAtualizarCacheDoProcesso()
   return useMutation({
@@ -120,9 +110,6 @@ export function useRegistrarResultadoMutation(id: string) {
   })
 }
 
-// Reenvio manual quando o primeiro envio falhou. A resposta
-// ainda traz dataNotificacaoMunicipe nula (o envio é assíncrono): a tela
-// volta a acompanhar o processo como no lançamento inicial.
 export function useReenviarNotificacaoMutation(id: string) {
   const atualizarCache = useAtualizarCacheDoProcesso()
   return useMutation({
@@ -131,7 +118,6 @@ export function useReenviarNotificacaoMutation(id: string) {
   })
 }
 
-// A resposta é a ocorrência: o detalhe do processo é recarregado do servidor.
 export function useVincularOcorrenciaMutation(processoId: string) {
   const queryClient = useQueryClient()
   return useMutation({

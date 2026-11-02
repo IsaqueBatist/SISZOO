@@ -63,7 +63,6 @@ describe('hojeEmItu', () => {
   })
 
   it('usa o dia de São Paulo quando em UTC já é o dia seguinte', () => {
-    // 2026-10-19 01:30 UTC = 2026-10-18 22:30 em São Paulo (UTC-3).
     vi.useFakeTimers({ now: new Date('2026-10-19T01:30:00Z') })
     expect(hojeEmItu()).toBe('2026-10-18')
   })
@@ -80,9 +79,6 @@ describe('adicionarMesesIso', () => {
     expect(adicionarMesesIso('2026-03-10', 1)).toBe('2026-04-10')
   })
 
-  // Mesmo comportamento de LocalDate.plusMonths: trunca para o último dia do
-  // mês em vez de transbordar. Sem isso, a previsão no formulário divergiria
-  // da data de validade que o servidor calcula depois de salvar.
   it('trunca para o último dia quando o dia não existe no mês de destino', () => {
     expect(adicionarMesesIso('2026-01-31', 1)).toBe('2026-02-28')
     expect(adicionarMesesIso('2026-03-31', 1)).toBe('2026-04-30')

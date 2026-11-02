@@ -24,18 +24,8 @@ import com.siszoo.comum.ApiTesteFixture;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-/**
- * IMPORTANTE: nenhum teste daqui pode desativar uma vacina do seed da V5.
- * {@code ApiTesteFixture.postarVacinacao} usa o codigo "antirrabica" fixo e e
- * compartilhada por varios ITs; como o banco e o mesmo para toda a JVM e
- * vacina inativa recusa vacinacao nova, desativar uma do seed
- * quebraria esses testes conforme a ordem de execucao. Cada teste cria a sua,
- * com nome unico.
- */
 class VacinaControllerIT extends AbstractIntegrationTest {
 
-    // A listagem sempre tem pelo menos as 8 do seed, mais as criadas por
-    // outros testes: nunca assertar totalItens nem posicao.
     private static final int TAMANHO_AMPLO = 500;
 
     @Autowired
@@ -81,7 +71,6 @@ class VacinaControllerIT extends AbstractIntegrationTest {
                 .body("intervaloMeses", nullValue());
     }
 
-    // Nomes diferentes que derivam o mesmo codigo.
     @Test
     void deveRetornar409QuandoONomeDerivaUmCodigoJaUsado() {
         criarVacinaViaApi("V9 (felinos)", 12);
@@ -140,7 +129,6 @@ class VacinaControllerIT extends AbstractIntegrationTest {
                 .body("campos.campo", hasItem("intervaloMeses"));
     }
 
-    // Truncar o codigo faria nomes diferentes colidirem: recusa com 422.
     @Test
     void deveRetornar422QuandoONomeNaoCabeNoCodigo() {
         given()
@@ -180,7 +168,6 @@ class VacinaControllerIT extends AbstractIntegrationTest {
                 .statusCode(200)
                 .body("nome", equalTo("Nome Completamente Outro"))
                 .body("intervaloMeses", equalTo(24))
-                // A chave dos registros ja gravados nao muda.
                 .body("codigo", equalTo(codigoOriginal));
     }
 
@@ -236,9 +223,6 @@ class VacinaControllerIT extends AbstractIntegrationTest {
                 .body("itens.ativo", everyItem(equalTo(false)));
     }
 
-    // Guarda contra o risco descrito no topo da classe: se algum teste
-    // desativar uma vacina do seed, os ITs que gravam vacinacao com
-    // "antirrabica" passam a falhar conforme a ordem de execucao.
     @Test
     void asVacinasDoSeedContinuamAtivas() {
         given()

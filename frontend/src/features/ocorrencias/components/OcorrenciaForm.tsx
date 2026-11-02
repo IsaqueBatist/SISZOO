@@ -28,13 +28,9 @@ import { SecaoDenunciado } from './SecaoDenunciado'
 import { SecaoDenunciante } from './SecaoDenunciante'
 
 interface OcorrenciaFormProps {
-  // Presente = modo edição (/ocorrencias/:id/editar); ausente = cadastro.
   ocorrencia?: Ocorrencia
 }
 
-// Cadastro e edição de ocorrência: o envio (POST com anexos em duas fases;
-// PUT por blocos) e o rascunho. Cada card do formulário é uma seção
-// que lê o formulário pelo FormProvider.
 export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -108,8 +104,6 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
     await rascunho.removerAnexoGuardado(removido)
   }
 
-  // Primeira fase: um único POST /ocorrencias. Daqui em diante a ocorrência
-  // existe; o rascunho do form sai e só os anexos ficam pendentes (segunda fase).
   async function onSubmit(dados: OcorrenciaFormValues) {
     if (ocorrencia) {
       await salvarEdicao(dados, ocorrencia)
@@ -135,8 +129,6 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
       navigate(`/ocorrencias/${nova.id}`)
       return
     }
-    // Ficou anexo pendente: o form é limpo para que a mesma ocorrência não
-    // seja registrada de novo; o aviso acima oferece Reenviar/Descartar.
     reset(valoresVazios())
     rascunho.retomarAutosave()
   }

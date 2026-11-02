@@ -19,11 +19,8 @@ interface SessaoAtual {
   usuario: Usuario
 }
 
-// O token de acesso fica só em memória: cada aba ou recarga obtém o seu pelo
-// cookie httpOnly (docs/decisoes/sessao.md).
 let sessaoEmMemoria: SessaoAtual | null = null
 
-// Para quem já tem a sessão em mãos antes de montar o provider (testes).
 export function definirSessaoEmMemoria(sessao: SessaoAtual | null) {
   sessaoEmMemoria = sessao
   setAuthToken(sessao?.token ?? null)
@@ -59,15 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [mutateAsync, aplicarSessao],
   )
 
-  // O cache do React Query some nos dois casos (o próximo usuário não pode
-  // ver dados do anterior). Rascunhos e anexos pendentes só no logout manual:
-  // quando a sessão expira (401) no meio de um formulário, o mesmo usuário
-  // entra de novo e retoma o rascunho, que tem escopo por usuário: ninguém
-  // mais o vê.
   const encerrarSessao = useCallback(
     ({ apagarRascunhos }: { apagarRascunhos: boolean }) => {
-      // Antes de tudo: limparRascunhos cancela já, de forma síncrona, os
-      // salvamentos agendados que recriariam o rascunho.
       if (apagarRascunhos) void limparRascunhos()
       limparFiltrosDeListas()
       toast.limpar()
@@ -84,9 +74,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     encerrarSessao({ apagarRascunhos: true })
   }, [encerrarSessao])
 
-  // A sessão acabou sem a pessoa pedir. Rascunhos ficam, e ela volta à tela em
-  // que estava. Sessão já encerrada não repete: vários 401 chegam em paralelo,
-  // e o segundo trocaria o destino por /login.
   const expirar = useCallback(
     (porInatividade: boolean) => {
       if (!sessaoEmMemoria) return
@@ -111,7 +98,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useSessaoAtiva(sessao !== null, expirarPorInatividade, expirarPorRecusa)
 
-  // Nova aba ou recarga: o cookie diz se já existe sessão, sem pedir login.
   useEffect(() => {
     if (sessaoEmMemoria) return
     renovarSessao(true)
@@ -164,10 +150,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('auth:unauthorized', expirarPorRecusa)
   }, [expirarPorRecusa])
 
-  // O AuthProvider re-renderiza a cada navegação (useNavigate); com o
-  // value recriado a cada render, toda a árvore que lê o contexto (Sidebar,
-  // Topbar, guardas de rota, página) re-renderizaria junto. Memoizado, só
-  // muda quando a sessão ou o estado do login mudam.
   const { isPending, error } = mutation
   const value: AuthContextValue = useMemo(
     () => ({

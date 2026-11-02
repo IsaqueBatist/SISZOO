@@ -20,8 +20,6 @@ import com.siszoo.comum.ApiTesteFixture;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-// Revisao de mensagens: os status e o contrato continuam, o texto fica em
-// portugues e nada interno vaza, inclusive nos erros que saem pelo /error.
 class RespostasDeErroIT extends AbstractIntegrationTest {
 
     @Autowired

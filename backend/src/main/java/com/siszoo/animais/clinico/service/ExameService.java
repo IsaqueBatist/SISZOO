@@ -42,8 +42,6 @@ import com.siszoo.usuarios.service.AuditoriaEventoService;
 
 import jakarta.persistence.criteria.Predicate;
 
-// RF-A04. Sem metodo atualizar/excluir: registro clinico
-// imutavel (RN06). Correcao = novo POST com `retificaId` (ver ProcedimentoService).
 @Service
 public class ExameService {
 
@@ -84,7 +82,6 @@ public class ExameService {
         Usuario usuarioAutenticado = usuarioRepository.findById(usuarioAutenticadoId)
                 .orElseThrow(UsuarioNaoEncontradoException::new);
         validarDatas(request.dataSolicitacao(), request.dataResultado());
-        // O resultado e o laudo do exame: sem data do resultado ele nao faz sentido (e vice-versa).
         if (StringUtils.hasText(request.resultado()) != (request.dataResultado() != null)) {
             throw new CampoInvalidoException("resultado", "Informe o resultado e a data do resultado juntos.");
         }
@@ -135,7 +132,6 @@ public class ExameService {
         return PaginaResponse.de(paginaExames.map(e -> exameMapper.toResponse(e, retificadoPorPorId.get(e.getId()))));
     }
 
-    // Fatos ocorridos: nenhuma das datas e futura; resultado nao antecede a solicitacao.
     private void validarDatas(LocalDate solicitacao, LocalDate resultado) {
         LocalDate hoje = LocalDate.now(clock);
         if (solicitacao.isAfter(hoje)) {

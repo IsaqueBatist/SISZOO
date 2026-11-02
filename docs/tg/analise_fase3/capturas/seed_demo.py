@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Seed de DEMONSTRAÇÃO para as capturas de tela do TG (Fase 3) — somente dados FICTÍCIOS.
 
 Popula o banco de desenvolvimento local pela API REST do SISZOO (respeita regras,
@@ -24,7 +23,6 @@ random.seed(2026)
 ETAPAS = set(sys.argv[1].split(',')) if len(sys.argv) > 1 else {'usuarios', 'baias', 'animais', 'clinico', 'ocorrencias', 'processos', 'relatorios', 'exames'}
 def etapa(n): return n in ETAPAS
 
-# ------------------------------------------------------------------ HTTP
 def req(metodo, caminho, token=None, corpo=None, multipart=None):
     url = API + caminho
     cab = {'Accept': 'application/json'}
@@ -57,7 +55,6 @@ def login(email, senha):
     s, c = req('POST', '/api/auth/login', corpo={'email': email, 'senha': senha})
     return ok(s, c, f'login {email}')['token']
 
-# ------------------------------------------------------------------ utilidades de dados fictícios
 def cpf_valido(semente):
     rnd = random.Random(semente); n = [rnd.randint(0, 9) for _ in range(9)]
     for _ in range(2):
@@ -66,7 +63,6 @@ def cpf_valido(semente):
     return '%d%d%d.%d%d%d.%d%d%d-%d%d' % tuple(n)
 
 def png_minusculo():
-    # PNG 2x2 vermelho, gerado em memória (anexo de demonstração)
     def chunk(t, d): return struct.pack('>I', len(d)) + t + d + struct.pack('>I', zlib.crc32(t + d) & 0xffffffff)
     raw = b''.join(b'\x00' + b'\xc6\x28\x28' * 2 for _ in range(2))
     return (b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', 2, 2, 8, 2, 0, 0, 0))
@@ -75,7 +71,6 @@ def png_minusculo():
 def d(dias_atras): return (HOJE - dt.timedelta(days=dias_atras)).isoformat()
 def dh(dias_atras, hora='09:30:00'): return f'{d(dias_atras)}T{hora}'
 
-# ------------------------------------------------------------------ 1. usuários
 admin_tok = login(env('ADMIN_SEED_EMAIL'), env('ADMIN_SEED_PASSWORD'))
 USUARIOS = [
     ('Mariana', 'Souza', 'mariana.souza@itu.sp.gov.br', 'Veterinário', 'SP-45678'),
@@ -91,18 +86,15 @@ for nome, sobrenome, email, cargo, crmv in USUARIOS:
     print('usuario', email, s)
     tok = login(email, SENHA_DEMO)
     if s < 300:
-        # primeiro acesso: troca obrigatória de senha (mantém a senha de demonstração)
         req('POST', '/api/auth/senha', tok, {'novaSenha': SENHA_DEMO, 'confirmarSenha': SENHA_DEMO})
     tokens[email] = login(email, SENHA_DEMO)
 vet = tokens['mariana.souza@itu.sp.gov.br']; vet2 = tokens['joao.almeida@itu.sp.gov.br']
 agente = tokens['carlos.pereira@itu.sp.gov.br']; agente2 = tokens['fernanda.lima@itu.sp.gov.br']
-# um usuário desativado para a tela de usuários
 s, c = (999, None)
 if etapa('usuarios'): s, c = req('POST', '/api/usuarios', admin_tok, {'nome': 'Paulo', 'sobrenome': 'Ramos', 'email': 'paulo.ramos@itu.sp.gov.br',
                                                  'cargo': 'Agente Sanitário', 'crmv': None, 'telefone': None, 'senhaInicial': SENHA_DEMO})
 if s < 300: req('PATCH', f"/api/usuarios/{c['id']}/status", admin_tok, {'ativo': False})
 
-# ------------------------------------------------------------------ 2. baias
 BAIAS = [('Baia 1', 'interna', 4), ('Baia 2', 'interna', 4), ('Baia 3', 'interna', 3), ('Baia 4', 'interna', 4),
          ('Baia 5', 'interna', 2), ('Baia 6', 'interna', 4), ('Gatil A', 'gatil', 6), ('Gatil B', 'gatil', 4),
          ('Externa 1', 'externa', 8), ('Externa 2', 'externa', 8), ('Corredor', 'externa', 3)]
@@ -115,10 +107,8 @@ for nome, tipo, cap in (BAIAS if etapa('baias') else []):
     baias[nome] = c['id']
 print('baias', len(baias))
 
-# ------------------------------------------------------------------ 3. animais
 def chip(i): return '985' + str(1210000000000 + i * 7919).zfill(12)[:12]
 ANIMAIS = [
-    # nome, especie, sexo, raca, cor, pelagem, porte, peso, idade, status, motivo, dias_entrada, baia, chip?, medalha, procedencia, laudo
     ('Thor', 'canino', 'macho', 'SRD', 'Caramelo', 'curta', 'medio', 18.5, '3 anos', 'disponivel_adocao', 'recolhimento', 120, 'Baia 1', True, 'M-0101', 'Recolhido na Av. Sete Quedas, Vila Progresso', None),
     ('Luna', 'canino', 'femea', 'SRD', 'Preta', 'curta', 'pequeno', 9.2, '2 anos', 'em_tratamento', 'abandono', 40, 'Baia 1', True, 'M-0102', 'Abandonada em frente ao CCZ', None),
     ('Rex', 'canino', 'macho', 'Pastor Alemão', 'Preto e marrom', 'longa', 'grande', 32.0, '5 anos', 'em_quarentena', 'apreensao_judicial', 12, 'Baia 5', True, None, 'Apreensão judicial, bairro Cidade Nova', None),
@@ -156,8 +146,6 @@ for i, a in enumerate(ANIMAIS if etapa('animais') else [], 1):
     animais[nome] = c['id']
 print('animais', len(animais))
 
-# ------------------------------------------------------------------ 4. histórico clínico
-# vacinações: vigentes, vencendo em até 7 dias (aplicadas ~ 12 meses atrás) e vencidas
 VAC = [('Thor', 'antirrabica', 100, 1), ('Thor', 'v10', 100, 2), ('Luna', 'antirrabica', 362, 1), ('Mel', 'antirrabica', 364, 2),
        ('Bidu', 'v8', 400, 1), ('Nina', 'antirrabica', 20, 1), ('Pipoca', 'v10', 50, 1), ('Mia', 'v4_felinos', 361, 1),
        ('Tom', 'antirrabica', 420, 1), ('Frida', 'v4_felinos', 30, 2), ('Lola', 'antirrabica', 380, 1), ('Max', 'v10', 10, 1),
@@ -176,7 +164,6 @@ for nome, tipo, dias, desc, res in (PROC if etapa('clinico') else []):
     if nome not in animais or SOMENTE_VAC: continue
     s, c = req('POST', '/api/procedimentos', vet2, {'animalId': animais[nome], 'tipoProcedimento': tipo, 'data': d(dias), 'descricao': desc, 'resultado': res})
     if s >= 300: print('procedimento', nome, s, str(c)[:160])
-# medicamentos e prescrições ativas
 if etapa('clinico') and not SOMENTE_VAC:
   cat = ok(*req('POST', '/api/categorias-farmacologicas', vet, {'nome': 'Antibiótico'}), 'categoria')
   cat2 = ok(*req('POST', '/api/categorias-farmacologicas', vet, {'nome': 'Antiparasitário'}), 'categoria 2')
@@ -190,7 +177,6 @@ if etapa('clinico') and not SOMENTE_VAC:
                                                  'viaAdministracao': 'ORAL', 'status': 'ATIVA'})
     if s >= 300: print('prescricao', nome, s, str(c)[:160])
 
-# ------------------------------------------------------------------ 5. ocorrências (Agente Sanitário)
 OCS = [
     ('zoonose', 9, '08:40', 'Rua Santa Rita, 120', 'Centro', 'Próximo à praça', 'Cão com comportamento agressivo e salivação excessiva circulando pela rua; moradores relatam mordida em transeunte.', True, False, False, 1, 1, 'EM_ATENDIMENTO'),
     ('morcegos', 6, '14:15', 'Av. Galileu Bicudo, 455', 'Vila Padre Bento', 'Escola municipal', 'Morcego encontrado caído no pátio da escola, ainda vivo.', True, False, False, 2, None, 'EM_ATENDIMENTO'),
@@ -241,14 +227,12 @@ for idx, (tipo, dias, hora, end, bairro, ref, desc, urg, sig, anon, den, dend, s
         if s2 >= 300: print('encerramento', idx, s2, str(c2)[:160])
 print('ocorrencias', len(ocorrencias))
 
-# ------------------------------------------------------------------ 6. processos sanitários (um urgente, resultados variados)
 def responsavel(i):
     nomes = ['Helena Castro', 'Antônio Barbosa', 'Juliana Prado', 'Sérgio Mendes', 'Beatriz Rocha', 'Luiz Henrique Dias']
     return {'nome': nomes[i % len(nomes)], 'cpf': cpf_valido(500 + i), 'telefone': f'(11) 99777-10{i:02d}', 'email': f'municipe{i}@exemplo.com',
             'cep': '13300-000', 'endereco': f'Rua Fictícia, {100 + i}', 'bairroResidencial': ['Centro', 'Brasil', 'Cidade Nova', 'Pirapitingui'][i % 4],
             'bairroOcorrencia': ['Centro', 'Brasil', 'Cidade Nova', 'Pirapitingui'][i % 4]}
 def amostra(esp, contato, animal_id=None, sintomas=('alt_comportamental', 'salivacao_excessiva'), material='TECIDO_ENCEFALICO', status='OBITO'):
-    # animal do canil: identificacao vem da ficha; sintomas so em amostra sintomatica (regras do ProcessoSanitarioService)
     ident = {} if animal_id else {'especie': esp, 'sexo': 'macho', 'raca': 'SRD', 'coloracao': 'Caramelo', 'pelagem': 'curta', 'idadeAprox': '3 anos', 'pesoKg': 14.0}
     base = {'animalId': animal_id, 'statusClinico': status, 'tipoAbrigo': 'PERIDOMICILIAR', 'alteracaoComportamental': 'Agressividade súbita' if contato else None, 'dataColeta': d(2),
             'materialBiologico': material, 'contatoHumano': contato, 'nivelContato': 'DIRETA' if contato else None, 'agrediuHumano': True if contato else None,
@@ -257,9 +241,9 @@ def amostra(esp, contato, animal_id=None, sintomas=('alt_comportamental', 'saliv
     return base
 oc_ids = {idx: oid for oid, idx, _ in ocorrencias}
 PROCS = [
-    ('raiva', 'pasteur_sp', oc_ids.get(1), True, 'canino', 9, 'AGUARDANDO_RESULTADO', None),          # urgente, vinculado à ocorrência 1
+    ('raiva', 'pasteur_sp', oc_ids.get(1), True, 'canino', 9, 'AGUARDANDO_RESULTADO', None),
     ('raiva', 'pasteur_sp', oc_ids.get(2), True, 'quiroptero', 6, 'COM_RESULTADO', 'negativo'),
-    ('esporotricose', 'ial_sorocaba', None, False, 'felino', 28, 'CONCLUIDO', 'positivo'),  # ocorrência 6 já encerrada: sem vínculo
+    ('esporotricose', 'ial_sorocaba', None, False, 'felino', 28, 'CONCLUIDO', 'positivo'),
     ('leishmaniose_visceral', 'ccz_sp', None, False, 'canino', 40, 'COM_RESULTADO', 'inconclusivo'),
     ('leptospirose', 'itu_ll01', None, False, 'canino', 15, 'ABERTO', None),
     ('raiva', 'pasteur_sp', None, False, 'canino', 60, 'CONCLUIDO', 'negativo'),
@@ -285,7 +269,6 @@ for i, (doenca, lab, oc, contato, esp, dias, status_final, resultado) in enumera
         req('PATCH', f'/api/processos/{pid}/status', agente, {'status': 'CONCLUIDO'})
 print('processos', len(PROCS))
 
-# ------------------------------------------------------------------ 7. relatórios (histórico de exportações)
 for tipo, extra in ([('anual_processos', {'ano': HOJE.year}), ('vacinacao', {'periodoInicio': d(365), 'periodoFim': d(0)}),
                     ('ocupacao_baias', {'janela': 'ultimos_6_meses'}), ('ocorrencias_bairro', {'periodoInicio': d(90), 'periodoFim': d(0)})] if etapa('relatorios') else []):
     for formato in ('pdf', 'csv'):
@@ -295,7 +278,6 @@ for tipo, extra in ([('anual_processos', {'ano': HOJE.year}), ('vacinacao', {'pe
         try:
             with urllib.request.urlopen(r, timeout=120) as resp: print('relatorio', tipo, formato, resp.status)
         except urllib.error.HTTPError as e: print('relatorio', tipo, formato, e.code, e.read()[:120])
-# ------------------------------------------------------------------ 8. exames e anexos do animal (RF-A04, F2-007)
 if etapa('exames'):
     EXAMES = [('Thor', 'hemograma', 'ial_sorocaba', 30, 25, 'Hemograma sem alterações dignas de nota.'), ('Thor', 'sorologia', 'pasteur_sp', 10, None, None),
               ('Luna', 'radiografia', None, 20, 20, 'Fratura de fêmur consolidando; sem desvio.'), ('Tom', 'raspado_pele', 'ial_sorocaba', 28, 21, 'Negativo para Sporothrix; dermatofitose compatível.'),

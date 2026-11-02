@@ -3,10 +3,6 @@ export interface Badge {
   label: string
 }
 
-// O catálogo real de status (status_animal) tem 7 valores, mas o design
-// system só define badge dedicado para 5. Óbito natural e óbito eutanásia
-// caem ambos em "Falecido" (badge-deceased); transferido usa o fallback
-// neutro, já que não existe classe própria para ele.
 const STATUS_BADGE_MAP: Record<string, Badge> = {
   disponivel_adocao: { classe: 'badge-available', label: 'Disponível' },
   em_tratamento: { classe: 'badge-treatment', label: 'Em tratamento' },
@@ -21,8 +17,6 @@ export function badgeDeStatus(statusCodigo: string, statusNome: string): Badge {
   return STATUS_BADGE_MAP[statusCodigo] ?? { classe: 'badge-neutral', label: statusNome }
 }
 
-// Só canino e felino têm classe de badge dedicada; quiróptero e primata
-// não-humano caem no fallback neutro.
 const ESPECIE_BADGE_MAP: Record<string, Badge> = {
   canino: { classe: 'badge-canine', label: 'Canino' },
   felino: { classe: 'badge-feline', label: 'Felino' },

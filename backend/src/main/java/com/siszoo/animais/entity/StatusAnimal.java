@@ -22,12 +22,6 @@ import lombok.Setter;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class StatusAnimal {
 
-    // Classificacao de todo codigo do catalogo status_animal (V4) quanto a
-    // custodia do CCZ. Fonte unica usada pela ocupacao de baia (DER §3.3) e
-    // pelo alerta vacinal (RN-A05, docs/regras-negocio-clinico.md). Um codigo
-    // novo no catalogo precisa entrar em um dos dois conjuntos — o teste
-    // AlertaVacinalControllerIT#todoStatusDoCatalogoDeveEstarClassificadoQuantoACustodia
-    // falha enquanto isso nao for feito.
     public static final Set<String> CODIGOS_SOB_CUSTODIA =
             Set.of("disponivel_adocao", "em_tratamento", "em_quarentena");
     public static final Set<String> CODIGOS_FORA_DA_CUSTODIA =

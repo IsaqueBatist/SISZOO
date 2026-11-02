@@ -24,10 +24,6 @@ import com.siszoo.comum.ApiTesteFixture;
 import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 
-// Contagem por bairro agregada no banco, para o grafico e as sugestoes de
-// bairro da tela de ocorrencias (docs/contratos/distribuicao-ocorrencias-bairro.md).
-// So bairro e quantidade saem no corpo; ocorrencia sigilosa conta
-// como as demais (a listagem ja mostra o bairro dela), sem dado de denunciante.
 class OcorrenciasPorBairroIT extends AbstractIntegrationTest {
 
     private static final String ROTA = "/api/ocorrencias/estatisticas/bairro";
@@ -73,7 +69,6 @@ class OcorrenciasPorBairroIT extends AbstractIntegrationTest {
         for (Map<String, Object> linha : linhas) {
             assertThat(linha.keySet(), equalTo(Set.of("bairro", "quantidade")));
         }
-        // Mais frequente primeiro: a ordem e a do grafico.
         List<Long> quantidades = linhas.stream().map(linha -> ((Number) linha.get("quantidade")).longValue()).toList();
         assertThat(quantidades, equalTo(quantidades.stream().sorted((a, b) -> Long.compare(b, a)).toList()));
         assertThat(linhas.stream().map(linha -> linha.get("bairro")).toList(), hasItem(bairro));
@@ -88,8 +83,6 @@ class OcorrenciasPorBairroIT extends AbstractIntegrationTest {
         given().when().get(ROTA).then().statusCode(401);
     }
 
-    // Com nome de denunciante: ocorrencia sigilosa (exige denunciante
-    // identificado). Sem: anonima e nao sigilosa.
     private void criar(String bairro, String denuncianteSigiloso) {
         Map<String, Object> corpo = new HashMap<>();
         corpo.put("tipoOcorrencia", "irregular");

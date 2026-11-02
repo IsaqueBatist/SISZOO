@@ -11,12 +11,6 @@ import com.siszoo.usuarios.exception.UsuarioNaoEncontradoException;
 import com.siszoo.usuarios.repository.UsuarioRepository;
 import com.siszoo.usuarios.service.AuditoriaEventoService;
 
-// Eventos de acesso a dado de denunciante de ocorrencia sigilosa, gerados pelo
-// detalhe (OcorrenciaConsultaService.buscarPorId) e pelo download de anexo
-// (AnexoOcorrenciaService.baixarAnexo). Sem @Transactional e sem lancar
-// AccessDeniedException: grava na transacao de quem chama, que e a mais
-// externa e decide o rollback (o 403 do download e lancado por baixarAnexo,
-// com noRollbackFor, depois de o ACESSO_NEGADO estar gravado).
 @Component
 public class AuditoriaSigiloOcorrencia {
 
@@ -28,17 +22,12 @@ public class AuditoriaSigiloOcorrencia {
         this.usuarioRepository = usuarioRepository;
     }
 
-    // Acesso autorizado a dado de denunciante sigiloso. O payload so leva
-    // o id da ocorrencia - nenhum dado pessoal.
     public void registrarVisualizacao(PermissoesOcorrencia permissoes, String entidade, UUID entidadeId,
             UUID ocorrenciaId) {
         auditoriaEventoService.registrar(autor(permissoes), AcaoAuditoria.VISUALIZACAO,
                 entidade, entidadeId, null, Map.of("ocorrenciaId", ocorrenciaId));
     }
 
-    // Acesso ao dado de denunciante sigiloso recusado pela regra de
-    // sigilo. Mesmo payload da VISUALIZACAO (so o id da ocorrencia). Gravado
-    // com flush antes da resposta: falha vira 500, nunca 409 nem entrega.
     public void registrarAcessoNegado(PermissoesOcorrencia permissoes, String entidade, UUID entidadeId,
             UUID ocorrenciaId) {
         auditoriaEventoService.registrarImediato(autor(permissoes), AcaoAuditoria.ACESSO_NEGADO,

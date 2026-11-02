@@ -4,8 +4,6 @@ import org.springframework.http.HttpStatus;
 
 import com.siszoo.comum.exception.ErroNegocioException;
 
-// Limite de solicitacoes ou tentativas de recuperacao de senha atingido
-// (LimitadorRecuperacaoSenha). A mensagem nao diz qual limite nem quanto falta.
 public class LimiteTentativasException extends ErroNegocioException {
 
     public LimiteTentativasException() {

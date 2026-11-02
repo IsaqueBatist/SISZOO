@@ -9,9 +9,6 @@ interface ModalProps {
   children: ReactNode
 }
 
-// Diálogo único da aplicação (.modal): anuncia título, leva o foco para dentro,
-// mantém o Tab no diálogo, fecha com Esc e devolve o foco a quem abriu. Clicar
-// fora não fecha: um clique perdido não pode encerrar um registro em andamento.
 export function Modal({ titulo, onFechar, children }: ModalProps) {
   const idTitulo = useId()
   const dialogo = useRef<HTMLDivElement>(null)

@@ -20,10 +20,6 @@ import com.siszoo.comum.ApiTesteFixture;
 
 import io.restassured.path.json.JsonPath;
 
-// GET /api/processos aceita `urgente` opcional
-// (docs/contratos/processos-filtro-urgente.md). O card de urgentes do dashboard
-// tem o total exato, sem baixar 50 processos para filtrar no cliente. Sem o
-// parametro, nada muda.
 class ProcessoFiltroUrgenteIT extends AbstractIntegrationTest {
 
     @Autowired

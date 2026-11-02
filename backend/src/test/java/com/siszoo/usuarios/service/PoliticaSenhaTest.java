@@ -9,9 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-// Regras de complexidade da politica "Passwords must meet complexity
-// requirements" (Windows), adaptadas ao SISZOO: nome da conta = parte do
-// e-mail antes do @; nome de exibicao = nome + sobrenome.
 class PoliticaSenhaTest {
 
     private static final String EMAIL = "erin.hagens@itu.sp.gov.br";
@@ -24,14 +21,14 @@ class PoliticaSenhaTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "Abcdefgh1",      // maiuscula + minuscula + digito
-            "abcdefg1!",      // minuscula + digito + simbolo
-            "ABCDEFG1!",      // maiuscula + digito + simbolo
-            "Abcdefgh!",      // maiuscula + minuscula + simbolo
-            "Ação-Útil",      // maiusculas e minusculas com acento + simbolo
-            "Ωμέγα-Σύνολο",   // grego: maiuscula + minuscula + simbolo
-            "Пароль-Тест",    // cirilico: maiuscula + minuscula + simbolo
-            "密码密码ab12",    // letra sem caixa (ideograma) + minuscula + digito
+            "Abcdefgh1",
+            "abcdefg1!",
+            "ABCDEFG1!",
+            "Abcdefgh!",
+            "Ação-Útil",
+            "Ωμέγα-Σύνολο",
+            "Пароль-Тест",
+            "密码密码ab12",
     })
     @DisplayName("aceita senha com pelo menos 3 categorias")
     void categorias(String senha) {
@@ -40,14 +37,14 @@ class PoliticaSenhaTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "abcdefgh",        // so minusculas
-            "abcdefg1",        // minuscula + digito
-            "ABCDEFG1",        // maiuscula + digito
-            "Abcdefgh",        // maiuscula + minuscula
-            "abcdefg€",        // moeda nao e simbolo da politica
-            "abcd efgh",       // espaco nao e simbolo da politica
-            "Senha\\Forte",    // barra invertida nao esta na lista da politica
-            "١٢٣٤٥٦٧٨abc",     // digitos arabes nao sao "0 a 9"
+            "abcdefgh",
+            "abcdefg1",
+            "ABCDEFG1",
+            "Abcdefgh",
+            "abcdefg€",
+            "abcd efgh",
+            "Senha\\Forte",
+            "١٢٣٤٥٦٧٨abc",
     })
     @DisplayName("recusa senha com menos de 3 categorias")
     void menosDeTresCategorias(String senha) {
@@ -86,7 +83,6 @@ class PoliticaSenhaTest {
     @Test
     @DisplayName("substrings das partes do nome nao sao checadas")
     void substringDaParte() {
-        // "eri" e "hag" sao pedacos de "Erin"/"Hagens", nao partes inteiras.
         assertThat(violacao("Eri-Hag-2026")).isEmpty();
     }
 
@@ -98,7 +94,6 @@ class PoliticaSenhaTest {
             assertThat(PoliticaSenha.violacao("X9!" + parte, "x.y@itu.sp.gov.br", nome, "Silva"))
                     .as("parte %s", parte).isPresent();
         }
-        // "Ana" tem 3 caracteres: tambem e checada.
         assertThat(PoliticaSenha.violacao("X9!ana", "x.y@itu.sp.gov.br", nome, "Silva")).isPresent();
     }
 

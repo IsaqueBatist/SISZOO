@@ -1,15 +1,3 @@
-// Espelha com.siszoo.usuarios.service.PoliticaSenha (backend), que é a fonte
-// da verdade: complexidade de senha no modelo da política "Passwords must meet
-// complexity requirements" do Windows, aplicada na senha inicial, na troca de
-// senha e na redefinição por link.
-// - Nome da conta = parte do e-mail antes do @, inteira, sem diferenciar
-//   maiúsculas; ignorada se tiver menos de 3 caracteres.
-// - Nome de exibição (nome + sobrenome) dividido nos delimitadores; cada parte
-//   com 3+ caracteres não pode aparecer na senha.
-// - Ao menos 3 das 5 categorias de caractere.
-// O tamanho mínimo (8) fica nos schemas; aqui só entra na avaliação que o
-// componente CriteriosSenha mostra enquanto a pessoa digita.
-
 export interface DonoDaSenha {
   email: string
   nomeExibicao: string
@@ -20,7 +8,6 @@ export const CATEGORIAS_EXIGIDAS = 3
 
 const DELIMITADORES_NOME = /[,.\-‐-―_ #\t]+/
 const TAMANHO_MINIMO_PARTE = 3
-// Lista exata da política; símbolos de moeda não contam.
 const CARACTERES_ESPECIAIS = `'-!"#$%&()*,./:;?@[]^_\`{|}~+<=>`
 
 export const MENSAGEM_CATEGORIAS =
@@ -31,8 +18,6 @@ export interface CategoriasSenha {
   minuscula: boolean
   digito: boolean
   especial: boolean
-  // Letra sem maiúscula/minúscula (ex.: ideogramas asiáticos): conta na
-  // política, mas não aparece como item na lista de critérios.
   outraLetra: boolean
 }
 
@@ -41,16 +26,12 @@ export interface AvaliacaoSenha {
   categorias: CategoriasSenha
   totalCategorias: number
   categoriasSuficientes: boolean
-  // Só há o que verificar quando o dono tem nome de conta ou partes do nome
-  // com 3+ caracteres; sem isso, o critério não aparece.
   contaVerificavel: boolean
   contemConta: boolean
   nomeVerificavel: boolean
   contemNome: boolean
 }
 
-// Cada regra da política avaliada separadamente, para a lista de critérios
-// acompanhar a digitação. violacaoPoliticaSenha deriva daqui.
 export function avaliarSenha(senha: string, { email, nomeExibicao }: DonoDaSenha): AvaliacaoSenha {
   const senhaMinuscula = senha.toLowerCase()
 
@@ -78,8 +59,6 @@ export function avaliarSenha(senha: string, { email, nomeExibicao }: DonoDaSenha
   }
 }
 
-// Primeira regra violada (mensagem para o usuário) ou null. Mesma ordem do
-// backend: nome da conta, partes do nome, categorias.
 export function violacaoPoliticaSenha(senha: string, dono: DonoDaSenha): string | null {
   const avaliacao = avaliarSenha(senha, dono)
   if (avaliacao.contemConta) {

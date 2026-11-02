@@ -1,8 +1,3 @@
-/* Baseado nos <style> inline de docs/prototipo/cadastrar-processo.html e
-   docs/prototipo/processo.html. Classes já compartilhadas pelo design
-   system (.card, .stepper, .alert, .form-grid, .badge, .radio-cards) ficam
-   em components.css, não duplicadas aqui. */
-
 .wizard-shell {
   max-width: 960px;
   margin: 0 auto;
@@ -11,11 +6,6 @@
   flex-direction: column;
   gap: var(--space-5);
 }
-
-/* Estilos de .occur-, .vinculo-display e .empty-search ficam em
-   SeletorVinculo.css (importado por SeletorOcorrencia.tsx diretamente):
-   esse componente também é usado fora do wizard, então o import precisa
-   morar no componente, não aqui. */
 
 .animal-amostra-mini {
   border: 1px solid var(--color-border);
@@ -158,8 +148,6 @@
   margin-top: 4px;
 }
 
-/* Baseado em docs/prototipo/processo.html: aviso de urgência (RN4) e flags
-   de contato humano dentro do card de amostra. */
 .urgency-banner {
   background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
   border: 1px solid #ef9a9a;

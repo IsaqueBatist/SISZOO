@@ -7,10 +7,6 @@ import org.springframework.boot.webmvc.error.DefaultErrorAttributes;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.WebRequest;
 
-// Erros que nao passam pelo GlobalExceptionHandler (corpo ilegivel, metodo nao
-// suportado, falha inesperada) saem pelo /error do Spring Boot. Aqui eles ganham
-// a `mensagem` que o front ja le, sem mudar o status nem os demais campos do
-// corpo. O detalhe da excecao fica so no log.
 @Component
 public class AtributosDeErro extends DefaultErrorAttributes {
 

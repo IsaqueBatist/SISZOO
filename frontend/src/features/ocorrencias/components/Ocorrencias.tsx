@@ -12,9 +12,6 @@ import { formatarData } from '../utils/datas'
 import { formatarProtocoloOcorrencia, formatarProtocoloProcesso } from '../utils/protocolo'
 import { useCatalogosOcorrenciaQuery, useOcorrenciasQuery } from '../hooks/useOcorrencias'
 
-// Lazy: isola o chunk do Recharts do carregamento inicial da tela de
-// Ocorrências, e só é pedido quando a pessoa abre o gráfico: a tabela é o que
-// o trabalho diário usa, e as máquinas do CCZ têm ~2GB RAM.
 const GraficoOcorrenciasPorBairro = lazy(() =>
   import('./GraficoOcorrenciasPorBairro').then((m) => ({ default: m.GraficoOcorrenciasPorBairro })),
 )
@@ -29,9 +26,6 @@ const FILTROS_PADRAO = { busca: '', tipo: '', status: '', de: '', ate: '' }
 const STATUS_PENDENTES = 'PENDENTES'
 const STATUS_NAO_ENCERRADOS: StatusOcorrencia[] = ['ABERTA', 'EM_ATENDIMENTO']
 
-// A anônima não tem denunciante para ninguém. Na sigilosa, a listagem
-// não traz o nome para nenhum perfil: mesmo quem tem
-// permissão só o vê no detalhe, onde o acesso é auditado.
 function ColunaDenunciante({ ocorrencia }: { ocorrencia: OcorrenciaResumo }) {
   const textoMudo = { fontStyle: 'italic', color: 'var(--color-text-muted)' } as const
   if (ocorrencia.anonima) return <span style={textoMudo}>Anônima</span>
@@ -45,7 +39,6 @@ export function Ocorrencias() {
 
   const { filtros, pagina, definirFiltros, irParaPagina, limparFiltros, filtrosAtivos } = useFiltrosLista('ocorrencias', FILTROS_PADRAO)
   const buscaDebounced = useValorComAtraso(filtros.busca).trim()
-  // RF-E02: período da data de abertura, aplicado no servidor.
   const { tipo: tipoFiltro, status: statusFiltro, de: deFiltro, ate: ateFiltro } = filtros
   const deDebounced = useValorComAtraso(deFiltro)
   const ateDebounced = useValorComAtraso(ateFiltro)

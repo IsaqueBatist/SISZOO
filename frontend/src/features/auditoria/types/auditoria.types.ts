@@ -1,6 +1,3 @@
-// Espelha com.siszoo.usuarios.entity.AcaoAuditoria do backend (e o CHECK
-// ck_auditoria_evento_acao, V27). Valor novo no enum Java exige entrada aqui
-// e em DESCRICOES (descricaoAcao.ts), senão a tela de Logs quebra.
 export type AcaoAuditoria =
   | 'CRIACAO'
   | 'ATUALIZACAO'
@@ -14,7 +11,6 @@ export type AcaoAuditoria =
   | 'ACESSO_NEGADO'
   | 'SESSAO_REVOGADA'
 
-// Espelha com.siszoo.usuarios.dto.AuditoriaEventoResponse.
 export interface EventoAuditoria {
   id: string
   usuarioEmail: string | null
@@ -23,12 +19,10 @@ export interface EventoAuditoria {
   entidadeId: string | null
   ocorreuEm: string
   ip?: string | null
-  // Estado antes/depois (JSON serializado pelo backend); opcionais.
   payloadAntes?: string | null
   payloadDepois?: string | null
 }
 
-// Filtros aplicados no servidor (GET /api/auditoria?acao=&usuarioEmail=&modulo=&de=&ate=).
 export interface FiltrosAuditoria {
   acao?: string
   usuarioEmail?: string
@@ -37,7 +31,6 @@ export interface FiltrosAuditoria {
   ate?: string
 }
 
-// Espelha com.siszoo.usuarios.dto.OpcoesFiltroAuditoriaResponse (GET /api/auditoria/filtros).
 export interface OpcoesFiltroAuditoria {
   acoes: AcaoAuditoria[]
   usuarios: string[]

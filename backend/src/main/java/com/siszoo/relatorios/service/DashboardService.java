@@ -50,12 +50,6 @@ import com.siszoo.relatorios.dto.KpiOcorrenciasResponse;
 import com.siszoo.relatorios.dto.KpiVacinacaoResponse;
 import com.siszoo.relatorios.dto.ResultadoPorDoencaResponse;
 
-// DER §3.7: os 6 alertas criticos sao computados sob demanda, nunca
-// persistidos. "Hoje"/"ano corrente" sempre via Clock (ClockConfig,
-// America/Sao_Paulo) para o teste poder controlar a data. Cache de 5 min
-// (CacheConfig) evita recalcular essas agregacoes a cada refresh do
-// dashboard - ver docs/contratos/dashboard-kpis.md para o atraso que isso
-// pode introduzir.
 @Service
 public class DashboardService {
 
@@ -118,8 +112,6 @@ public class DashboardService {
         return new DashboardKpisResponse(animais, vacinacao, ocorrencias, adocoes, alertas);
     }
 
-    // Snapshot pelo status atual, como RelatorioAdocoesService: sem data de
-    // adocao no schema, nao ha "adocoes no mes".
     private KpiAdocoesResponse calcularKpiAdocoes() {
         return new KpiAdocoesResponse(
                 animalRepository.countByStatus_Codigo(STATUS_ADOTADO),
@@ -168,9 +160,6 @@ public class DashboardService {
         return new KpiAnimaisResponse(total, porEspecie.getOrDefault(ESPECIE_CANINO, 0L), porEspecie.getOrDefault(ESPECIE_FELINO, 0L));
     }
 
-    // "Vacinado" (decisao de produto, sem conceito de protocolo no modelo):
-    // animal sob custodia com ao menos uma vacinacao vigente cuja
-    // dataValidade (dataAplicacao + vacina.intervaloMeses) ainda nao passou.
     private KpiVacinacaoResponse calcularKpiVacinacao(Set<String> foraDaCustodia, LocalDate hoje, long totalSobCustodia) {
         List<Vacinacao> vigentes = vacinacaoRepository.findVigentesSobCustodiaParaKpiVacinacao(foraDaCustodia);
 
@@ -187,9 +176,6 @@ public class DashboardService {
         return new KpiVacinacaoResponse(percentual, vacinados, totalSobCustodia);
     }
 
-    // Denominador de mediaPorHora = hora atual em America/Sao_Paulo (0-23).
-    // mediaPorHora omitido (null) na virada do dia (hora 0), para nao mostrar
-    // uma media falsa de "X/0".
     private KpiOcorrenciasResponse calcularKpiOcorrencias(LocalDate hoje) {
         long registradasHoje = ocorrenciaRepository.contarRegistradasEm(hoje);
         int horasDecorridas = LocalTime.now(clock).getHour();
@@ -254,7 +240,6 @@ public class DashboardService {
         return alertas;
     }
 
-    // Mesma regra de NivelLotacao usada em BaiaService e no relatorio de ocupacao.
     private long contarBaiasSuperlotadas(Set<String> foraDaCustodia) {
         List<Baia> baiasAtivas = baiaRepository.findByAtivaTrue();
         if (baiasAtivas.isEmpty()) {

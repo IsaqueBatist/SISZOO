@@ -15,8 +15,6 @@ import com.siszoo.animais.clinico.service.CategoriaFarmacologicaService;
 
 import jakarta.validation.Valid;
 
-// Mesmas permissoes de /api/medicamentos: quem cadastra medicamento precisa
-// poder cadastrar a categoria dele.
 @RestController
 @RequestMapping("/api/categorias-farmacologicas")
 public class CategoriaFarmacologicaController {

@@ -4,9 +4,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { RouteErrorBoundary } from './RouteErrorBoundary'
 
 function ComponenteQueQuebra(): never {
-  // Representa uma rota lazy cujo chunk falhou ao carregar/avaliar (ex.:
-  // falha de rede ao baixar o import() dinâmico) — o boundary precisa tratar
-  // qualquer erro de render da subárvore, não só esse caso específico.
   throw new Error('Falha ao carregar o chunk da rota')
 }
 

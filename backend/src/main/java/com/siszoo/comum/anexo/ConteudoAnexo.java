@@ -6,14 +6,9 @@ import java.util.function.Supplier;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-// Regra de anexo comum a ocorrencias e animais: JPG, PNG ou
-// PDF, ate 5 MB, com o tipo detectado pelos bytes iniciais e nao pelo
-// Content-Type informado pelo cliente (que so reflete a extensao do arquivo).
-// Cada modulo lanca a propria excecao (e com a propria mensagem) via `invalido`.
 public final class ConteudoAnexo {
 
     public static final int TAMANHO_MAXIMO = 5 * 1024 * 1024;
-    // nome varchar(255) em anexo_ocorrencia (V10) e anexo_animal (V26).
     public static final int TAMANHO_MAXIMO_NOME = 255;
 
     private ConteudoAnexo() {
@@ -30,9 +25,6 @@ public final class ConteudoAnexo {
         return new Validado(conteudo, detectarTipo(conteudo, invalido));
     }
 
-    // Nome gravado: so o nome do arquivo (sem o caminho que alguns navegadores
-    // mandam, inclusive com barra invertida), sem espacos nas pontas e cortado
-    // no tamanho da coluna. Sem nome utilizavel, "anexo".
     public static String nomeDoArquivo(String original) {
         String nome = StringUtils.hasText(original) ? StringUtils.getFilename(original.replace('\\', '/')) : null;
         nome = StringUtils.hasText(nome) ? nome.trim() : "anexo";

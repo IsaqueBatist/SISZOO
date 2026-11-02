@@ -65,13 +65,9 @@ code: |-
 
   const adminToken = await login('{{ _.admin_email }}', '{{ _.admin_password }}');
 
-  // Controle: o payload base, sem nenhum catálogo inválido, é aceito. Assim
-  // cada 422 abaixo só pode vir do catálogo que o caso troca.
   const base = await criarAnimal(adminToken, {});
   expect(base.status).to.equal(200);
 
-  // Erro de catálogo é regra do serviço: mensagem própria e sem "campos"
-  // (campos só aparece na validação de campo, ex.: obrigatório ausente).
   async function esperarCatalogoInvalido(overrides, mensagem) {
     const res = await criarAnimal(adminToken, overrides);
     expect(res.status).to.equal(422);

@@ -49,10 +49,6 @@ public class PreferenciaUsuarioService {
             throw new NotificacaoCriticaObrigatoriaException();
         }
 
-        // O "antes" so existe se a linha ja estava gravada. Sem linha, ela
-        // nasce nesta requisicao (defaults + valores do pedido) e o evento e
-        // CRIACAO: montar um "antes" com os defaults recem-criados fingiria um
-        // estado que nunca esteve no banco.
         Optional<PreferenciaUsuario> existentes = preferenciaUsuarioRepository.findByUsuarioId(usuarioId);
         PreferenciaUsuarioResponse antes = existentes.map(preferenciaUsuarioMapper::toResponse).orElse(null);
         PreferenciaUsuario preferencias = existentes.orElseGet(() -> criarPreferenciasPadrao(usuarioId));
@@ -75,11 +71,6 @@ public class PreferenciaUsuarioService {
         return response;
     }
 
-    // Usuários criados fora de UsuarioService.criar() (ex.: admin do
-    // DataSeeder, que só grava usuario + usuario_cargo) não ganham uma linha
-    // em preferencia_usuario automaticamente. Em vez de 404 em GET/PATCH
-    // /me/preferencias para esses casos, criamos a linha com os defaults da
-    // entity na primeira leitura/gravação.
     private PreferenciaUsuario criarPreferenciasPadrao(UUID usuarioId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(UsuarioNaoEncontradoException::new);

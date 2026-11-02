@@ -30,10 +30,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// Animal amostrado (DER §3.5). animal nulo = animal de campo, com dados
-// proprios; preenchido = animal do canil, com a identificacao copiada da ficha
-// na criacao (snapshot). Os campos clinicos sao sempre da amostra: nada
-// aqui e relido de Animal, que so e referenciado.
 @Entity
 @Table(name = "animal_amostrado")
 @Getter
@@ -59,7 +55,6 @@ public class AnimalAmostrado {
     @JoinColumn(name = "especie_id", nullable = false)
     private Especie especie;
 
-    // Mesmo dominio de animal.sexo/pelagem (V4, minusculas).
     @Column(nullable = false, length = 20)
     private String sexo;
 
@@ -96,7 +91,6 @@ public class AnimalAmostrado {
     @Column(name = "material_biologico", nullable = false, length = 20)
     private MaterialBiologico materialBiologico;
 
-    // true = houve, false = nao houve, null = nao informado (V31).
     @Column(name = "contato_humano")
     private Boolean contatoHumano;
 
@@ -110,7 +104,6 @@ public class AnimalAmostrado {
     @Column(columnDefinition = "text")
     private String observacoes;
 
-    // Sem cascade: sintoma e catalogo; so a linha de amostra_sintoma e gravada.
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "amostra_sintoma",

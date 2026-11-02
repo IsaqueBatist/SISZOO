@@ -1,4 +1,3 @@
-// Top N + "Outros": evita um gráfico com dezenas de barras minúsculas.
 const TOP_N_BAIRROS = 15
 const ROTULO_OUTROS = 'Outros'
 
@@ -7,18 +6,11 @@ export interface BairroDatum {
   quantidade: number
 }
 
-// Uma ocorrência (sem `quantidade`, conta 1) ou uma linha já contada pelo
-// backend (GET /ocorrencias/estatisticas/bairro, uma por grafia gravada).
 interface EntradaBairro {
   bairro: string
   quantidade?: number
 }
 
-// `bairro` é texto livre (sem catálogo) — grafias diferentes da mesma
-// região (ex. "São Luiz" vs. "Sao Luiz", ou maiúsculas/espaços) são
-// agrupadas pela CHAVE normalizada (trim + minúsculo + sem acento); o
-// RÓTULO exibido continua sendo a grafia mais frequente do grupo, nunca
-// uma forma "corrigida" inventada.
 function normalizarChave(bairro: string): string {
   return bairro
     .trim()
@@ -27,8 +19,6 @@ function normalizarChave(bairro: string): string {
     .replace(/\p{Diacritic}/gu, '')
 }
 
-// Núcleo compartilhado entre o gráfico (com corte Top N) e a lista de
-// sugestões do formulário (sem corte, precisa de todo mundo).
 function agruparBairros(entradas: EntradaBairro[]): BairroDatum[] {
   const quantidadePorChave = new Map<string, number>()
   const rotulosPorChave = new Map<string, Map<string, number>>()
@@ -64,10 +54,6 @@ export function mapearOcorrenciasPorBairro(entradas: EntradaBairro[]): BairroDat
   return [...principais, { bairro: ROTULO_OUTROS, quantidade: somaOutros }]
 }
 
-// Para sugestão de preenchimento (datalist do formulário de ocorrência):
-// todas as grafias distintas (sem corte Top N — aqui não é gráfico, é lista
-// de opções), uma por grupo (a grafia mais frequente, mesma regra acima),
-// em ordem alfabética.
 export function extrairBairrosDistintos(entradas: EntradaBairro[]): string[] {
   return agruparBairros(entradas)
     .map((item) => item.bairro)

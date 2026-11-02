@@ -20,10 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-// Exercita a V7 isoladamente num schema proprio do mesmo PostgreSQL de teste:
-// o Flyway da aplicacao ja migrou o schema public ate a ultima versao, entao
-// aqui as migrations sao aplicadas de novo, por API, num schema descartavel:
-// primeiro ate a V6, depois a V7.
 class MigracaoV7RegistroClinicoIT extends AbstractIntegrationTest {
 
     private static final String SCHEMA = "migracao_v7";
@@ -48,9 +44,6 @@ class MigracaoV7RegistroClinicoIT extends AbstractIntegrationTest {
         assertThat(resultado.targetSchemaVersion, equalTo("7"));
     }
 
-    // Banco com vacinacao legada sem unidade (o formulario antigo
-    // permitia): a V7 nao pode abortar nem inventar unidade clinica; o
-    // registro legado fica nulo e so linhas novas passam a exigir unidade.
     @Test
     @DisplayName("[RN-C05] V7 preserva vacinacao legada sem unidade e passa a exigir unidade em linha nova")
     void v7DevePreservarLegadoSemUnidadeEExigirUnidadeEmLinhaNova() {
@@ -63,7 +56,6 @@ class MigracaoV7RegistroClinicoIT extends AbstractIntegrationTest {
         assertThat(jdbcTemplate.queryForObject(
                 "SELECT dose_unidade FROM " + SCHEMA + ".vacinacao WHERE id = ?", String.class, idLegado),
                 nullValue());
-        // NOT VALID: a constraint existe, mas nao foi validada contra as linhas antigas.
         assertThat(jdbcTemplate.queryForObject("""
                 SELECT c.convalidated FROM pg_constraint c
                 JOIN pg_namespace n ON n.oid = c.connamespace
@@ -90,8 +82,6 @@ class MigracaoV7RegistroClinicoIT extends AbstractIntegrationTest {
                 .migrate();
     }
 
-    // Grava direto em SQL, sem a API: simula um dado ja existente no banco,
-    // inclusive o caso legado sem unidade que a API atual nao aceitaria.
     private UUID inserirVacinacao(String doseUnidade) {
         UUID autorId = jdbcTemplate.queryForObject("INSERT INTO " + SCHEMA + ".usuario (email, senha, nome, sobrenome)"
                 + " VALUES (?, 'x', 'Legado', 'Migracao') RETURNING id", UUID.class,

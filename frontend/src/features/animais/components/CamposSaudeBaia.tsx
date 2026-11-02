@@ -7,12 +7,9 @@ import { semVazio } from '../utils/animalFormMapeamento'
 import { semEspacos } from '@/lib/texto'
 
 interface CamposSaudeBaiaProps {
-  // Baia em que o animal já está (edição): continua selecionável mesmo
-  // superlotada.
   baiaAtualId: string
 }
 
-// Etapa 2 do cadastro de animal: baia, situação, entrada e castração.
 export function CamposSaudeBaia({ baiaAtualId }: CamposSaudeBaiaProps) {
   const {
     register,
@@ -28,8 +25,6 @@ export function CamposSaudeBaia({ baiaAtualId }: CamposSaudeBaiaProps) {
     <div className="form-grid">
       <div className="field">
         <label htmlFor="baiaId">Baia atual</label>
-        {/* Controlado: com register, opções que chegam depois da ficha deixariam
-            o select vazio no DOM e o reset do rascunho apagaria a baia. */}
         <Controller
           control={control}
           name="baiaId"
@@ -44,8 +39,6 @@ export function CamposSaudeBaia({ baiaAtualId }: CamposSaudeBaiaProps) {
               onChange={(evento) => field.onChange(semVazio(evento.target.value))}
             >
               <option value="">Sem baia (em trânsito)</option>
-              {/* Baia inativa ou lista ainda carregando: a tela não diz "Sem baia"
-                  para um animal que tem baia. */}
               {field.value && !baias?.some((baia) => baia.id === field.value) && <option value={field.value}>Baia atual</option>}
               {baias?.map((baia) => (
                 <option key={baia.id} value={baia.id} disabled={baia.superlotada && baia.id !== baiaAtualId}>
@@ -115,8 +108,6 @@ export function CamposSaudeBaia({ baiaAtualId }: CamposSaudeBaiaProps) {
               valor={field.value}
               onChange={(opcao) => {
                 field.onChange(opcao)
-                // O campo some da tela, mas o RHF guardaria o valor:
-                // data sem castração é recusada pelo backend.
                 if (!animalCastrado(opcao)) setValue('dataEsterilizacao', undefined)
               }}
               aria-labelledby="castracao-label"
@@ -197,7 +188,6 @@ export function CamposSaudeBaia({ baiaAtualId }: CamposSaudeBaiaProps) {
         )}
       </div>
 
-      {/* O laudo só aparece (e só é exigido) quando o destino é eutanásia. */}
       {status === 'obito_eutanasia' && (
         <div className="field full">
           <label htmlFor="laudoEutanasia">

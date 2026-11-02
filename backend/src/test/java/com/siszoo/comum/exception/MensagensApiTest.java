@@ -17,9 +17,6 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-// Guarda da revisao de mensagens (decisao de 31/10/2026): todo texto que a API
-// devolve ao usuario esta em portugues, com acento, e sem termo interno. Le o
-// fonte, porque boa parte das mensagens so aparece em cenarios raros.
 class MensagensApiTest {
 
     private static final Path FONTES = Path.of("src/main/java/com/siszoo");
@@ -30,8 +27,6 @@ class MensagensApiTest {
             Pattern.compile("message\\s*=\\s*\"((?:[^\"\\\\]|\\\\.)*)\""),
             Pattern.compile("new ErroResponse\\(\\s*\"((?:[^\"\\\\]|\\\\.)*)\""));
 
-    // Palavras que, em portugues correto, levam acento: sem ele, o texto veio de
-    // alguem digitando sem acentuar.
     private static final Pattern SEM_ACENTO = Pattern.compile("(?iu)(?<![\\p{L}])(nao|sao|ja|so|ate|apos|invalid[oa]s?|"
             + "obrigatori[oa]s?|usuarios?|ocorrencias?|denuncias?|sanitario|maximo|minimo|periodo|especie|providencia|"
             + "municipe|vacinacao|prescricao|castracao|implantacao|aplicacao|solicitacao|transicao|medio|femea|"

@@ -9,8 +9,6 @@ export interface DonutDatum {
   cor: string
 }
 
-// Mantém as 6 doenças mesmo com quantidade 0 (ex. febre_amarela sem caso no
-// período) — o donut mostra a fatia zerada, não omite a categoria.
 export function mapearCasosPorDoenca(dados: CasosPorDoenca[]): DonutDatum[] {
   return dados.map((item) => ({
     codigo: item.doenca.codigo,
@@ -37,8 +35,6 @@ export interface BarraResultadoDatum {
   totalExames: number
 }
 
-// Lista dinâmica: só entram as doenças que a API devolver (as que tiveram
-// exame) — diferente do donut de "casos por doença", que é fixo nas 6.
 export function mapearResultadosLaboratoriais(dados: ResultadoLaboratorialPorDoenca[]): BarraResultadoDatum[] {
   return dados.map((item) => ({
     codigo: item.doenca.codigo,

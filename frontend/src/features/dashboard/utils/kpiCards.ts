@@ -8,9 +8,6 @@ export interface KpiCardData {
   value: string
   unit?: string
   foot: string
-  // Só com VITE_USE_MOCK_KPIS=true (opt-in de desenvolvimento): mostra o selo
-  // "Dados de demonstração" em cada card, no mesmo padrão dos cards de
-  // gráfico (GraficosDashboard.tsx). Com dados reais, nunca aparece.
   isMock?: boolean
 }
 
@@ -26,8 +23,6 @@ export function mapearKpisParaCards(kpis: DashboardKpis, usaMock = false): KpiCa
     {
       tone: 'kpi-info',
       icon: 'paw',
-      // O indicador conta quem está sob custódia, e não todo animal cadastrado:
-      // adotados, transferidos e falecidos ficam na lista de Animais.
       label: 'Animais sob custódia',
       value: String(kpis.animais.total),
       foot: rodapeDeEspecies(kpis),

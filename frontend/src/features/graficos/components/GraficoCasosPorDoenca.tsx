@@ -5,9 +5,6 @@ interface GraficoCasosPorDoencaProps {
   dados: DonutDatum[]
 }
 
-// Legenda própria (lista de texto), não a do Recharts: garante rótulo com
-// valor sempre visível (não só em hover) e lido por leitor de tela — a cor
-// nunca é o único indicador de categoria.
 export function GraficoCasosPorDoenca({ dados }: GraficoCasosPorDoencaProps) {
   const totalCasos = dados.reduce((soma, item) => soma + item.quantidade, 0)
 

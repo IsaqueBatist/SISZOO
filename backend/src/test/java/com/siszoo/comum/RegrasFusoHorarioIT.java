@@ -22,12 +22,6 @@ import org.springframework.context.annotation.Primary;
 
 import com.siszoo.animais.clinico.entity.UnidadeDose;
 
-// "Hoje" das regras e o dia civil de America/Sao_Paulo, nao o de UTC. O
-// relogio marca 02:00 UTC de 11/09 = 23:00 de 10/09 em Sao Paulo: quem usar
-// o dia UTC acha que hoje e 11/09, quem usar o dia local acha que e 10/09.
-// Cobre as duas regras que dependem de "hoje": o alerta vacinal (RN-A06 sobre
-// RN-A01) e a data de aplicacao (RN-C06). Contexto proprio (nao usa
-// RelogioTesteConfig) porque o instante precisa estar perto da virada do dia.
 @Import(RegrasFusoHorarioIT.RelogioVesperaMeiaNoiteConfig.class)
 class RegrasFusoHorarioIT extends AbstractIntegrationTest {
 
@@ -57,7 +51,6 @@ class RegrasFusoHorarioIT extends AbstractIntegrationTest {
     @DisplayName("[RN-A06] 23:00 local: validade = hoje local + 7 ainda aparece (hoje e o dia de Sao Paulo)")
     void alertaDeveUsarODiaDeSaoPauloParaOLimiteSuperiorDaJanela() {
         String animalId = fixture.criarAnimal(tokenAdmin);
-        // "antirrabica" tem intervalo_meses=12 (seed V5).
         fixture.criarVacinacao(tokenAdmin, animalId, HOJE_LOCAL.plusDays(7).minusMonths(12), null);
 
         @SuppressWarnings("unchecked")
@@ -86,7 +79,6 @@ class RegrasFusoHorarioIT extends AbstractIntegrationTest {
                 .body("dataAplicacao", equalTo(HOJE_LOCAL.toString()));
     }
 
-    // 11/09 ja e "hoje" em UTC, mas ainda e amanha em Sao Paulo.
     @Test
     @DisplayName("[RN-C06] 23:00 local: dataAplicacao = dia local + 1 (o dia UTC) retorna 422")
     void vacinacaoDeveRejeitarODiaUtcQuandoAindaEVesperaEmSaoPaulo() {

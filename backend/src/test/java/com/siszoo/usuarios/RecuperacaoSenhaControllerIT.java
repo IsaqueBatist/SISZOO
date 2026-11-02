@@ -43,11 +43,6 @@ import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 
-// Recuperacao de senha de ponta a ponta, sem mock no envio: POST da
-// solicitacao -> commit -> EmailService -> SMTP falso do GreenMail -> link com
-// o token -> validacao -> redefinicao -> login com a senha nova. Os limites de
-// tentativas por IP sao afrouxados aqui, porque todos os testes chegam de
-// 127.0.0.1; o limite por e-mail (3) e testado com o valor real.
 class RecuperacaoSenhaControllerIT extends AbstractIntegrationTest {
 
     @RegisterExtension
@@ -113,19 +108,16 @@ class RecuperacaoSenhaControllerIT extends AbstractIntegrationTest {
         assertThat(html, containsString("Se você não pediu a redefinição"));
         String token = tokenDoLink(texto);
         assertThat(tokenDoLink(html), equalTo(token));
-        // So o hash vai para o banco.
         assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM token_recuperacao_senha WHERE token_hash = ?",
                 Integer.class, token), equalTo(0));
 
         validar(token).then().statusCode(204);
         redefinir(token, SENHA_NOVA, SENHA_NOVA).then().statusCode(204);
 
-        // Senha nova entra; a antiga e a sessao aberta antes nao.
         login(conta.email(), SENHA_NOVA).then().statusCode(200).body("usuario.senhaAlteradaEm", not(equalTo(null)));
         login(conta.email(), SENHA_ATUAL).then().statusCode(401);
         given().header("Authorization", "Bearer " + conta.tokenSessao()).get(ROTA_PROTEGIDA).then().statusCode(401);
 
-        // Uso unico.
         validar(token).then().statusCode(410);
         redefinir(token, "Terceira-Senha-2026", "Terceira-Senha-2026").then().statusCode(410);
 
@@ -208,7 +200,6 @@ class RecuperacaoSenhaControllerIT extends AbstractIntegrationTest {
         redefinir(token, SENHA_ATUAL, SENHA_ATUAL).then().statusCode(422)
                 .body("campos[0].mensagem", equalTo("A nova senha precisa ser diferente da senha atual."));
 
-        // As recusas nao consomem o token.
         redefinir(token, SENHA_NOVA, SENHA_NOVA).then().statusCode(204);
         login(conta.email(), SENHA_NOVA).then().statusCode(200);
     }

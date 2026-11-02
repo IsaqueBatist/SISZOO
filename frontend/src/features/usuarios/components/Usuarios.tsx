@@ -21,8 +21,6 @@ type FiltroStatus = 'Todos' | 'Ativos' | 'Inativos'
 
 const FILTROS_PADRAO = { busca: '', perfil: 'Todos', status: 'Todos' }
 
-// ultimoAcesso e criadoEm são LocalDateTime sem fuso, já no horário de Itu:
-// `new Date(iso)` os leria no fuso do navegador (ver lib/datas.ts).
 function formatarData(iso: string | null, comHora = false): string {
   return comHora ? formatarDataHoraBR(iso) : formatarDataBR(iso)
 }
@@ -206,7 +204,6 @@ export function Usuarios() {
                   const roleKey = roleKeyFromCargos(usuario.cargos)
                   const role = ROLES[roleKey]
                   const nomeCompleto = `${usuario.nome} ${usuario.sobrenome}`
-                  // Na própria conta, senha e acesso têm outro caminho (o backend recusa).
                   const ehOProprioUsuario = usuario.id === user?.id
                   return (
                     <tr key={usuario.id}>

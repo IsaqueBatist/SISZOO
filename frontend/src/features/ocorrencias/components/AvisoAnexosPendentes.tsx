@@ -11,10 +11,6 @@ interface AvisoAnexosPendentesProps {
   onDescartar: () => void
 }
 
-// Aviso de anexos pendentes: aparece no cadastro e no detalhe da ocorrência
-// dona dos anexos. "Descartar" só esquece os arquivos locais; a ocorrência continua.
-// Recusa definitiva (422/413) não tem conserto reenviando: o aviso diz isso e,
-// quando nada mais pode subir, "Descartar" vira a única ação.
 export function AvisoAnexosPendentes({
   pendencia,
   falhas,

@@ -35,8 +35,6 @@ describe('MenuNotificacoes', () => {
   it('mostra o ponto e a contagem de alertas ativos no rótulo', async () => {
     renderSino()
 
-    // O número é a quantidade de alertas ATIVOS, não a soma dos itens: somar
-    // daria três dígitos, que assusta sem dizer o que precisa de ação.
     const botao = await screen.findByRole('button', { name: /notificações: \d+ alerta/i })
     expect(botao.querySelector('.dot')).toBeInTheDocument()
   })
@@ -79,8 +77,6 @@ describe('MenuNotificacoes', () => {
     expect(botaoDoSino()).toHaveFocus()
   })
 
-  // Só os tipos com tela própria são navegáveis; os agregados ficam como
-  // texto, para não oferecer um caminho que não existe.
   it('o alerta de vacina navega para o detalhe; o agregado não é link', async () => {
     const user = userEvent.setup()
     renderSino()
@@ -88,8 +84,6 @@ describe('MenuNotificacoes', () => {
     await user.click(botaoDoSino())
 
     const menu = screen.getByRole('menu', { name: /notificações/i })
-    // Espera os alertas dos KPIs chegarem: o botão já aparece com a contagem
-    // dos processos urgentes, que resolvem antes.
     await within(menu).findByText(/vacina\(s\) vencida/i)
 
     const linkDaVacina = within(menu)
@@ -106,8 +100,6 @@ describe('MenuNotificacoes', () => {
   })
 
   it('sem alerta nenhum, não mostra ponto e diz que está tudo limpo', async () => {
-    // Sem isto o getKpisDashboard usa o mock local (o setup liga a flag) e
-    // ignora o MSW.
     vi.stubEnv('VITE_USE_MOCK_KPIS', 'false')
     server.use(
       http.get(`${API_BASE_URL}/dashboard/kpis`, () =>

@@ -14,10 +14,6 @@ import { baiaFormSchema, type BaiaFormValues } from '../schemas/baiaFormSchema'
 import { armazenamentoRascunhoBaia, chaveRascunhoBaia } from '../storage/rascunhoBaiaStorage'
 import { semEspacos } from '@/lib/texto'
 
-// Texto vazio ou só com espaços vai como ausente (o backend grava NULL e a
-// listagem usa o tipo da baia). Mesmo padrão de AnimalForm.
-
-// Erros por campo do 422: só os campos que existem no modal.
 const MAPA_ERROS_SERVIDOR = mapaDeCampos<BaiaFormValues>(
   Object.keys(baiaFormSchema.shape) as (keyof BaiaFormValues)[],
 )
@@ -55,18 +51,12 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
     defaultValues: {
       nome: baia?.nome ?? '',
       tipoBaia: baia?.tipoBaiaCodigo ?? '',
-      // valueAsNumber (não z.coerce.number() no schema): campo vazio vira
-      // NaN, que z.number() rejeita como inválido ("Informe a capacidade.").
-      // z.coerce.number() converteria '' em 0, um valor numérico válido —
-      // mudaria a regra de negócio (capacidade zero silenciosamente aceita).
       capacidade: baia ? baia.capacidade : undefined,
       finalidade: baia?.finalidade ?? '',
       observacoes: baia?.observacoes ?? '',
     },
   })
 
-  // Internet instável do CCZ: fechar o modal sem salvar mantém o que foi
-  // digitado; salvar com sucesso remove o rascunho.
   const rascunho = useRascunho<BaiaFormValues>({
     armazenamento: ARMAZENAMENTO_RASCUNHO,
     chave: chaveRascunhoBaia(user?.id ?? '', baia?.id),

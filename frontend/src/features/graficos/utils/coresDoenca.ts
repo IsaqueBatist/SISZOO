@@ -1,10 +1,3 @@
-// Mirror manual dos valores de --disease-* em styles/tokens.css — mesmo
-// padrão já usado em lib/theme.ts para --color-danger/warning/alert/info.
-// Atualizar os dois juntos se o design system mudar essas cores.
-//
-// Mapeamento codigo -> slug replica features/processos/utils/statusBadge.ts
-// (classeDeDoenca), para o gráfico usar a MESMA cor que o badge de doença já
-// usado em /processos e /animais/:id.
 const CORES_POR_SLUG: Record<string, string> = {
   raiva: '#C62828',
   esporotricose: '#6A1B9A',
@@ -23,7 +16,7 @@ const DOENCA_SLUG: Record<string, string> = {
   febre_amarela: 'febre-amarela',
 }
 
-const COR_FALLBACK = '#9AAABB' // --color-text-muted, para codigo desconhecido
+const COR_FALLBACK = '#9AAABB'
 
 export function corDoenca(codigo: string): string {
   const slug = DOENCA_SLUG[codigo]

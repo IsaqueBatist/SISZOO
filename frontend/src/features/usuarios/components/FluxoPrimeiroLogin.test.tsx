@@ -71,6 +71,5 @@ describe('fluxo completo: admin cria usuário → 1º login força troca de senh
     expect(await screen.findByRole('heading', { name: /dashboard operacional/i })).toBeInTheDocument()
 
     vi.restoreAllMocks()
-    // Timeout maior: fluxo ponta a ponta com várias idas à API mockada, mais lento que um teste unitário.
   }, 15000)
 })

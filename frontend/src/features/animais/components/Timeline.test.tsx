@@ -17,8 +17,6 @@ describe('Timeline', () => {
     const eventos: EventoTimeline[] = [
       evento({ id: '1', tipo: 'vacina', data: '2026-01-10', titulo: 'Vacina V10 aplicada' }),
       evento({ id: '2', tipo: 'medicamento', data: '2026-03-05', titulo: 'Início: Fenobarbital 30mg' }),
-      // Mesma data que o evento acima, tipo diferente — cobre comparação
-      // entre datas iguais/próximas, não só bem espaçadas.
       evento({ id: '3', tipo: 'procedimento', data: '2026-03-05', titulo: 'Castração' }),
       evento({ id: '4', tipo: 'entrada', data: '2026-01-01', titulo: 'Entrada no CCZ' }),
     ]
@@ -47,7 +45,6 @@ describe('Timeline', () => {
     )
 
     expect(iconesPorTipo.every(Boolean)).toBe(true)
-    // Cada tipo deve renderizar um ícone com marcação SVG diferente dos demais.
     expect(new Set(iconesPorTipo).size).toBe(iconesPorTipo.length)
   })
 

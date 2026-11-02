@@ -25,9 +25,6 @@ import com.siszoo.comum.util.Paginacao;
 
 import jakarta.persistence.criteria.Predicate;
 
-// Catalogo (nao registro clinico): diferente de Vacinacao/Procedimento/Prescricao,
-// medicamento e mutavel — editar e desativar aqui nao violam a regra de
-// imutabilidade de negocio, que vale so para os registros clinicos em si.
 @Service
 public class MedicamentoService {
 
@@ -66,8 +63,6 @@ public class MedicamentoService {
         return medicamentoMapper.toResponse(medicamento);
     }
 
-    // Soft-delete: nunca remove a linha fisicamente, so marca ativo=false
-    // (mesmo padrao de BaiaService.desativar).
     @Transactional
     public MedicamentoResponse desativar(UUID id) {
         Medicamento medicamento = medicamentoRepository.findById(id)

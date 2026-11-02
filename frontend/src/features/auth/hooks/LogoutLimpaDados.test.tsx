@@ -39,7 +39,6 @@ function EntrarComo() {
   )
 }
 
-// Mesmo fluxo do botão "Sair" da Sidebar.
 function BotaoSair() {
   const { logout } = useAuth()
   const navigate = useNavigate()
@@ -132,7 +131,6 @@ describe('logout limpa cache e IndexedDB', () => {
 
     await user.click(screen.getByRole('button', { name: 'Entrar como A' }))
     await digitarRascunhoEEsperarGravacao(user, conteudo)
-    // Nova digitação agenda outro salvamento (800 ms); o logout vem antes dele.
     await user.type(screen.getByLabelText(/^Bairro/i), ' 2')
     await user.click(screen.getByRole('button', { name: 'Sair' }))
 

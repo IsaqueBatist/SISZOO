@@ -1,26 +1,13 @@
 spring:
   application:
     name: siszoo-backend
-  # Idioma fixo: a mensagem de validacao nao pode depender do Accept-Language.
   web:
     locale: pt_BR
     locale-resolver: fixed
-  # Anexos: ate 5 MB por arquivo, um arquivo por requisicao.
   servlet:
     multipart:
       max-file-size: 5MB
       max-request-size: 6MB
-  # Sem hibernate.jdbc.time_zone, de proposito: as datas de negocio sao
-  # LocalDate/LocalDateTime em colunas `date`/`timestamp` sem fuso, e a
-  # propriedade fazia o Hibernate converter o LocalDateTime pelo fuso da JVM
-  # ao gravar (09:30 virava 06:30 com a JVM em UTC). O fuso do sistema e
-  # fixado na JVM (SiszooBackendApplication, TZ do Dockerfile) e no Clock
-  # (ClockConfig). Ver FusoHorarioPersistenciaIT.
-  # SMTP do EmailService (usado pela notificacao de resultado).
-  # Sem SMTP real configurado, o envio falha ao conectar: a falha
-  # so e logada pelo EmailService e nunca bloqueia quem chamou. Timeouts
-  # curtos para a thread assincrona nao ficar presa. Variaveis e sandbox de
-  # desenvolvimento: docs/email.md.
   mail:
     host: ${SMTP_HOST:localhost}
     port: ${SMTP_PORT:25}
@@ -32,43 +19,23 @@ spring:
           auth: ${SMTP_AUTH:false}
           starttls:
             enable: ${SMTP_STARTTLS:false}
-            # true recusa a sessao se o servidor nao aceitar STARTTLS, em vez
-            # de seguir em texto claro (o Angus tenta o STARTTLS so com isso).
             required: ${SMTP_STARTTLS_REQUIRED:false}
-          # SMTPS (TLS implicito desde a conexao, tipicamente porta 465):
-          # SMTP_SSL=true com SMTP_PORT=465; as SMTP_STARTTLS* nao se aplicam.
-          # O certificado do servidor e validado (cadeia e nome do host).
           ssl:
             enable: ${SMTP_SSL:false}
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
-  # Executor do @EnableAsync (AsyncConfig): o applicationTaskExecutor do
-  # Boot. Prefixo para identificar as threads no log; no encerramento
-  # normal, espera os envios em curso (ate 3 timeouts SMTP de 5 s).
   task:
     execution:
       thread-name-prefix: siszoo-async-
       shutdown:
         await-termination: true
         await-termination-period: 20s
-  # Cache das agregacoes do dashboard (com.siszoo.relatorios): TTL curto
-  # para nao recalcular a cada refresh/polling em maquinas com ~2GB RAM. Sem
-  # @CacheEvict - ver docs/contratos/dashboard-kpis.md para o atraso que isso
-  # pode introduzir. Desligado no perfil de teste (abaixo).
   cache:
     cache-names: dashboardKpis, dashboardGraficos
     caffeine:
       spec: expireAfterWrite=5m,maximumSize=10
 
-# O navegador chama a API direto (VITE_API_BASE_URL, sem o nginx no meio):
-# sem isto, as respostas JSON trafegariam sem compressao. So JSON e so a partir
-# de 1 KB (respostas pequenas nao compensam). BREACH (compressao + TLS) exige
-# segredo e texto escolhido pelo atacante na mesma resposta: o unico segredo
-# no corpo e o token de acesso do login e da renovacao, cuja resposta (token +
-# usuario) fica abaixo de 1 KB e, com e-mail/senha forjados pelo atacante, e 401
-# sem token; o token de renovacao so trafega em Set-Cookie, que nao e
-# comprimido. Reavaliar se algum desses pontos mudar.
 server:
   compression:
     enabled: true
@@ -78,8 +45,6 @@ server:
 siszoo:
   cors:
     allowed-origin: ${SISZOO_CORS_ORIGIN:http://localhost:5173}
-  # docs/decisoes/sessao.md. inatividade-minutos e o limite da decisao funcional
-  # de 31/10/2026; o token de acesso dura menos (siszoo.jwt.expiracao-minutos).
   sessao:
     inatividade-minutos: 60
     rotacao-minutos: 5
@@ -88,20 +53,13 @@ siszoo:
     cookie-same-site: ${SISZOO_COOKIE_SAMESITE:Strict}
   notificacoes:
     remetente: ${SISZOO_MAIL_FROM:nao-responda@itu.sp.gov.br}
-  # Endereco do frontend usado nos links enviados por e-mail (recuperacao de
-  # senha). Por padrao e a mesma origem aceita pelo CORS: o navegador abre a
-  # aplicacao exatamente de onde a API a aceita.
   app:
     url: ${SISZOO_APP_URL:${SISZOO_CORS_ORIGIN:http://localhost:5173}}
-  # Limite de tentativas do login (LimitadorLogin): so as falhas contam,
-  # em janela fixa, por e-mail e por IP. Atingido, 429 ate a janela vencer.
   login:
     limite:
       falhas-por-email: 5
       falhas-por-ip: 30
       janela-minutos: 15
-  # Recuperacao de senha (docs/decisoes/recuperacao-senha.md): validade do
-  # link e limites de tentativas em memoria (LimitadorRecuperacaoSenha).
   recuperacao-senha:
     validade-minutos: 30
     limite:
@@ -136,9 +94,6 @@ siszoo:
     expiracao-minutos: 15
 
 ---
-# `prod` tem a mesma configuracao do `docker` (o docker-compose continua com
-# `docker`). Os dois existem tambem para o seed de dados ficticios recusar a
-# subida neles (com.siszoo.seed.SeedDevGuarda).
 spring:
   config:
     activate:
@@ -167,24 +122,16 @@ spring:
   config:
     activate:
       on-profile: test
-  # Os *IT compartilham um PostgreSQL (um database por contexto em cache,
-  # TestcontainersConfiguration). O maximo do pool continua o padrao (10,
-  # usado pelos testes de concorrencia); so as conexoes ociosas dos contextos
-  # fora de uso sao devolvidas, para o servidor nao carregar ~120 backends
-  # parados enquanto os testes de migracao rodam DDL.
   datasource:
     hikari:
       minimum-idle: 0
-      idle-timeout: 10000 # ms (minimo aceito pelo Hikari)
+      idle-timeout: 10000
   jpa:
     hibernate:
       ddl-auto: validate
     open-in-view: false
   flyway:
     enabled: true
-  # Fixo nos testes: um SMTP_* exportado na maquina nao vaza para a suite.
-  # Nada escuta em 127.0.0.1:25 no CI; os testes que precisam de SMTP sobem
-  # o GreenMail e sobrescrevem host/porta (EmailServiceIT).
   mail:
     host: 127.0.0.1
     port: 25
@@ -199,9 +146,6 @@ spring:
             required: false
           ssl:
             enable: false
-  # Cache do dashboard desligado nos testes: o banco de teste é
-  # compartilhado entre métodos sem rollback (AbstractIntegrationTest), e um
-  # TTL de 5 min faria um teste ler o resultado cacheado de outro.
   cache:
     type: none
 
@@ -211,9 +155,6 @@ siszoo:
     expiracao-minutos: 15
   notificacoes:
     remetente: nao-responda@siszoo.test
-  # Os *IT chegam todos de 127.0.0.1 e alguns erram a senha de proposito: os
-  # limites do login ficam altos no contexto compartilhado. LimiteLoginIT
-  # sobe um contexto proprio com limites baixos para testar o 429.
   login:
     limite:
       falhas-por-email: 1000
@@ -221,9 +162,6 @@ siszoo:
       janela-minutos: 15
 
 ---
-# Seed de dados ficticios (com.siszoo.seed, docs/decisoes/seed-dev.md): so com
-# `dev` ou `test` junto, nunca com `docker`/`prod` (a subida falha), e so cria
-# dados com SISZOO_SEED_HABILITADO=true. Idempotente: reexecutar nao duplica.
 spring:
   config:
     activate:

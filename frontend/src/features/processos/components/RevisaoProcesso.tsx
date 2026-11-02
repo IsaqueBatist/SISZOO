@@ -13,10 +13,7 @@ interface RevisaoProcessoProps {
   onEditar: (etapa: 2 | 3) => void
 }
 
-// Etapa 4 — somente leitura. Sem link de edição para a etapa 1 (RN2: o
-// vínculo é imutável depois de definido).
 export function RevisaoProcesso({ valores, catalogos, onEditar }: RevisaoProcessoProps) {
-  // Prévia da regra 18: quem decide é o servidor, pelas amostras enviadas.
   const urgente = valores.amostras.some((amostra) => amostra.contatoHumano)
   const ocorrencia = valores.ocorrenciaResumo
   const { data: catalogosAnimais } = useCatalogosAnimaisQuery()

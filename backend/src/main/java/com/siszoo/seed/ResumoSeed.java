@@ -3,8 +3,6 @@ package com.siszoo.seed;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-// Resultado de uma execucao do seed: por entidade, quantos agregados foram
-// criados agora e quantos ja existiam (pulados).
 public record ResumoSeed(Map<String, Contagem> porEntidade) {
 
     public record Contagem(int criados, int existentes) {

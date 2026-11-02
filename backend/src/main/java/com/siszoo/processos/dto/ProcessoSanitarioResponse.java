@@ -8,16 +8,6 @@ import java.util.UUID;
 import com.siszoo.comum.dto.CatalogoItemResponse;
 import com.siszoo.processos.entity.StatusProcesso;
 
-// ocorrenciaProtocolo permite exibir o vinculo
-// sem buscar a ocorrencia (que exige acesso ao modulo e audita o sigilo).
-// resultado/dataResultado sao o vigente (nulos sem resultado);
-// resultados e o historico, do original a ultima correcao.
-// desfechoAnimal nao entra no historico imutavel - e so do processo.
-// dataNotificacaoMunicipe: quando o SMTP aceitou o e-mail de
-// resultado ao municipe; nula quando nao houve envio aceito.
-// galNumero/sinanNumero: numeros dos sistemas estaduais
-// informados manualmente na abertura (RF-B01; sem integracao, 3.5.2).
-// dataEnvioAmostras/previsaoRetorno continuam fora: nenhum fluxo os preenche.
 public record ProcessoSanitarioResponse(
         UUID id,
         String protocolo,

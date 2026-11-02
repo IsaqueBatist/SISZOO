@@ -32,7 +32,6 @@ export function criarProcedimento(payload: CriarProcedimentoRequest): Promise<Pr
   return http.post<Procedimento>('/procedimentos', payload).then((response) => response.data)
 }
 
-// RF-A04: exames (GET/POST /api/exames; registro imutável, correção por retificaId).
 export function listarExames(animalId: string, pagina: number, tamanho: number): Promise<PaginaResponse<Exame>> {
   return http.get<PaginaResponse<Exame>>('/exames', { params: { animalId, pagina, tamanho } }).then((response) => response.data)
 }
@@ -51,9 +50,6 @@ export function criarPrescricao(payload: CriarPrescricaoRequest): Promise<Prescr
   return http.post<Prescricao>('/prescricoes', payload).then((response) => response.data)
 }
 
-// Só medicamentos ativos: são os únicos que fazem sentido oferecer numa
-// nova prescrição. Percorre todas as páginas: o catálogo entra inteiro na tela
-// de Medicamentos e no modal da ficha, que filtram no cliente.
 const TAMANHO_PAGINA_CATALOGO = 500
 
 export async function listarMedicamentosAtivos(): Promise<Medicamento[]> {

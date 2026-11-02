@@ -61,8 +61,6 @@ function comStatusProcesso(statusProcesso: StatusProcesso): Ocorrencia {
 }
 
 describe('nota interna (D37)', () => {
-  // A tela recarrega o detalhe pelo GET depois da nota; o GET devolve o
-  // estado que a nota gravou, como o backend.
   it('adiciona a nota: envia a descrição, mostra a movimentação recarregada e limpa o campo', async () => {
     const user = userEvent.setup()
     const corpos: unknown[] = []
@@ -153,9 +151,6 @@ describe('nota interna (D37)', () => {
   })
 })
 
-// O processo é aberto pelo wizard real, com a etapa 1 pré-preenchida e
-// travada nesta ocorrência (DER §3.5). Só para quem escreve em ocorrências
-// e só em ocorrência aberta e sem processo (0..1).
 describe('abrir processo (D33, T29)', () => {
   it.each([
     ['Administrador', ADMIN],

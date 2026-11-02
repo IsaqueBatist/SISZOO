@@ -35,11 +35,6 @@ import io.restassured.specification.RequestSpecification;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
-// Camada de auditoria de eventos (DER §3.8). Toda verificacao le
-// auditoria_evento por SQL depois da requisicao HTTP real (RestAssured, porta
-// aleatoria): a transacao do servidor ja terminou, entao a linha lida e a que
-// foi commitada. Os payloads sao comparados com a linha do negocio lida do
-// banco, nao com o corpo enviado: o evento tem de registrar o estado gravado.
 class AuditoriaEventosIT extends AbstractIntegrationTest {
 
     private static final Set<String> IPS_LOOPBACK = Set.of("127.0.0.1", "0:0:0:0:0:0:0:1");
@@ -88,14 +83,10 @@ class AuditoriaEventosIT extends AbstractIntegrationTest {
             assertThat(evento.get("ocorreu_em"), notNullValue());
         }
 
-        // CRIACAO: sem estado anterior; posterior = linha criada.
         assertThat(eventos.get(0).get("antes"), nullValue());
         assertMesmaBaia(json(eventos.get(0).get("depois")), criada);
-        // ATUALIZACAO: anterior = o que estava gravado; posterior = o gravado depois.
         assertMesmaBaia(json(eventos.get(1).get("antes")), criada);
         assertMesmaBaia(json(eventos.get(1).get("depois")), editada);
-        // DESATIVACAO (DELETE e soft-delete, DER §3.3): a linha continua
-        // existindo, entao o posterior e a linha inativa, nao "inexistente".
         assertMesmaBaia(json(eventos.get(2).get("antes")), editada);
         assertMesmaBaia(json(eventos.get(2).get("depois")), excluida);
         assertThat(excluida.get("ativa"), equalTo(false));
@@ -157,8 +148,6 @@ class AuditoriaEventosIT extends AbstractIntegrationTest {
         String email = emailUnico("preferencias");
         String token = fixture.tokenComCargo(email, "Preferencias", "Eventos", ApiTesteFixture.CARGO_VETERINARIO_ID);
         UUID usuarioId = usuarioId(email);
-        // A fixture cria o usuario sem passar pelo UsuarioService: sem linha de
-        // preferencias ate a primeira gravacao.
         assertThat(preferenciasNoBanco(usuarioId), nullValue());
 
         comToken(token).contentType(ContentType.JSON).body(corpoPreferencias("DARK", "COMPACTO", false))
@@ -199,8 +188,6 @@ class AuditoriaEventosIT extends AbstractIntegrationTest {
                 .filter(e -> "ATUALIZACAO".equals(e.get("acao"))).toList();
         assertThat(trocas, hasSize(2));
         JsonNode primeiraDepois = json(trocas.get(0).get("depois"));
-        // Primeira troca: nunca tinha trocado (antes nulo). Segunda: o antes e
-        // o depois da primeira, e o depois e exatamente o valor gravado.
         assertThat(json(trocas.get(0).get("antes")), equalTo(objectMapper.readTree("{\"senhaAlteradaEm\": null}")));
         assertThat(json(trocas.get(1).get("antes")), equalTo(primeiraDepois));
         JsonNode segundaDepois = json(trocas.get(1).get("depois"));
@@ -331,7 +318,6 @@ class AuditoriaEventosIT extends AbstractIntegrationTest {
         String token = fixture.tokenAdmin(email, "FalhaExportacao");
         UUID usuarioId = usuarioId(email);
         long relatoriosAntes = relatoriosDe(usuarioId);
-        // Gatilho temporario: recusa so a EXPORTACAO deste usuario, sem mock.
         jdbcTemplate.execute("""
                 CREATE OR REPLACE FUNCTION t43_falhar_exportacao() RETURNS trigger AS $$
                 BEGIN
@@ -369,8 +355,6 @@ class AuditoriaEventosIT extends AbstractIntegrationTest {
         return UUID.randomUUID().toString().substring(0, 8);
     }
 
-    // O login exige e-mail so com letras e pontos (LoginRequest): o sufixo
-    // aleatorio vira letras.
     private static String emailUnico(String prefixo) {
         String letras = marcador().chars().mapToObj(c -> String.valueOf((char) ('a' + c % 26)))
                 .reduce("", String::concat);
@@ -450,14 +434,12 @@ class AuditoriaEventosIT extends AbstractIntegrationTest {
         return objectMapper.readTree((String) payload);
     }
 
-    // Eventos de um registro, na ordem em que ocorreram.
     private List<Map<String, Object>> eventos(String entidade, String entidadeId) {
         return jdbcTemplate.queryForList("SELECT acao, usuario_id, ip, ocorreu_em, payload_antes::text AS antes,"
                 + " payload_depois::text AS depois FROM auditoria_evento"
                 + " WHERE entidade = ? AND entidade_id = CAST(? AS uuid) ORDER BY ocorreu_em, id", entidade, entidadeId);
     }
 
-    // Todos os eventos do usuario como texto (todas as colunas).
     private String linhaCompleta(UUID usuarioId) {
         return String.join("\n", jdbcTemplate.queryForList("SELECT CAST(to_jsonb(e) AS text) FROM auditoria_evento e"
                 + " WHERE usuario_id = ? OR entidade_id = ?", String.class, usuarioId, usuarioId));

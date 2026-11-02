@@ -12,8 +12,6 @@ import { CATALOGOS_OCORRENCIA_FIXTURE, criarOcorrenciaFixture } from '@/mocks/oc
 import { CardEncerramento } from './CardEncerramento'
 import type { Ocorrencia, ProcessoVinculado } from '../types/ocorrencias.types'
 
-// O POST de encerramento e o GET /ocorrencias/catalogos caem nos handlers
-// fixos de ../../../mocks/ocorrenciasHandlers.ts.
 function criarOcorrencia(sobrescrever: Partial<Ocorrencia> = {}): Ocorrencia {
   return criarOcorrenciaFixture(sobrescrever)
 }
@@ -45,7 +43,6 @@ function renderCard(ocorrencia: Ocorrencia, podeEncerrar: boolean) {
   )
 }
 
-// As opções vêm do catálogo (assíncrono): espera o select habilitar.
 async function codigosDasOpcoes(): Promise<string[]> {
   const select = screen.getByLabelText('Providência tomada') as HTMLSelectElement
   await waitFor(() => expect(select).toBeEnabled())

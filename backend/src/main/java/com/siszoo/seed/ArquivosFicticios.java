@@ -15,10 +15,6 @@ import java.util.Locale;
 
 import javax.imageio.ImageIO;
 
-// Arquivos do seed. As fotos dos animais sao fotografias reais em dominio
-// publico (CC0), versionadas em src/main/resources/seed/fotos e creditadas no
-// CREDITOS.md da pasta (docs/decisoes/seed-dev.md).
-// Anexos (PNG e PDF) sao gerados em codigo, deterministicos.
 final class ArquivosFicticios {
 
     static final String PASTA_FOTOS = "/seed/fotos/";
@@ -26,15 +22,11 @@ final class ArquivosFicticios {
     private ArquivosFicticios() {
     }
 
-    // "001-thor.jpg", "018-faisca.jpg": numero com tres digitos e nome sem
-    // acentos, em minusculas.
     static String nomeDaFoto(int numero, String nome) {
         String semAcentos = Normalizer.normalize(nome, Normalizer.Form.NFD).replaceAll("\\p{M}", "");
         return String.format("%03d-%s.jpg", numero, semAcentos.toLowerCase(Locale.ROOT));
     }
 
-    // Mesmo formato que o frontend grava em animal.foto_url: data URI de um
-    // JPEG com lado maior de ate 800 px. O AnimalService gera a miniatura.
     static String fotoDataUri(String arquivo) {
         return "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(foto(arquivo));
     }
@@ -50,7 +42,6 @@ final class ArquivosFicticios {
         }
     }
 
-    // Quadrado colorido com um circulo claro: anexo de imagem do animal.
     static byte[] png(int rgb) {
         BufferedImage imagem = new BufferedImage(96, 96, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = imagem.createGraphics();
@@ -72,7 +63,6 @@ final class ArquivosFicticios {
         return saida.toByteArray();
     }
 
-    // PDF minimo valido (uma pagina com uma linha de texto ASCII).
     static byte[] pdf(String texto) {
         String conteudo = "BT /F1 12 Tf 72 720 Td (" + texto.replace("(", "").replace(")", "") + ") Tj ET";
         String[] objetos = {

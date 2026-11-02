@@ -11,7 +11,6 @@ import { PERFIS_USUARIO, type PerfilUsuario, type UsuarioListItem } from '../typ
 
 interface EditarUsuarioModalProps {
   usuario: UsuarioListItem
-  // O próprio perfil de acesso não pode mudar (o backend recusa).
   ehOProprioUsuario: boolean
   onFechar: () => void
 }

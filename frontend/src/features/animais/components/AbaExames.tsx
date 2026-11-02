@@ -5,9 +5,6 @@ import { useExamesQuery } from '../hooks/useHistoricoAnimal'
 import type { Exame } from '../types/historico.types'
 import { formatarDataBR } from '@/lib/datas'
 
-// RF-A04: aba de exames, no mesmo padrão de AbaProcedimentos: listagem
-// paginada, registro e correção (registro clínico imutável: correção cria novo
-// registro vinculado).
 interface AbaExamesProps {
   animalId: string
   onRegistroCriado: () => void

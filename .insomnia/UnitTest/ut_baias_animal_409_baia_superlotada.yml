@@ -77,7 +77,6 @@ code: |-
 
   const adminToken = await login('{{ _.admin_email }}', '{{ _.admin_password }}');
 
-  // Capacidade 1: o primeiro animal já deixa a baia superlotada (>=capacidade).
   const baia = await criarBaia(adminToken, { nome: `Baia Superlotada ${Date.now()}`, capacidade: 1 });
 
   const primeiro = await criarAnimal(adminToken, {
@@ -90,8 +89,6 @@ code: |-
   const baiaSuperlotada = await buscarBaia(adminToken, baia.id);
   expect(baiaSuperlotada.superlotada).to.equal(true);
 
-  // AnimalService.resolverBaia recusa quem passa a ocupar uma baia sem vaga
-  // (RN-AN02, DER §3.2 e regra 25, decisão AC-3): 409, mesmo direto na API.
   const segundo = await criarAnimal(adminToken, {
     nome: 'Segundo',
     baiaId: baia.id,

@@ -23,10 +23,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-// Exercita a V16 (microchip normalizado e unico quando presente, RN01) num
-// schema proprio do mesmo PostgreSQL de teste, no padrao de
-// MigracaoV14ResultadoProcessoIT: do zero, por atualizacao a partir da V14 com
-// animais existentes, a recusa com duplicatas e a unicidade parcial.
 class MigracaoV16MicrochipIT extends AbstractIntegrationTest {
 
     private static final String SCHEMA = "migracao_v16";
@@ -102,8 +98,6 @@ class MigracaoV16MicrochipIT extends AbstractIntegrationTest {
         assertThat(erro.getMessage(), containsString(segundo.toString()));
         assertThat(microchipDe(primeiro), equalTo("985"));
         assertThat(microchipDe(segundo), equalTo(" 98 5"));
-        // A V16 nao ficou aplicada (as anteriores, inclusive a V15, podem ter
-        // sido aplicadas antes dela na mesma chamada).
         assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM " + S + "flyway_schema_history"
                 + " WHERE success AND version::int >= 16", Integer.class), equalTo(0));
     }
@@ -133,7 +127,6 @@ class MigracaoV16MicrochipIT extends AbstractIntegrationTest {
                 .migrate();
     }
 
-    // Executa os comandos numa transacao propria e devolve o erro (ou null se confirmou).
     private SQLException transacao(String... comandos) throws SQLException {
         try (Connection conexao = dataSource.getConnection()) {
             conexao.setAutoCommit(false);

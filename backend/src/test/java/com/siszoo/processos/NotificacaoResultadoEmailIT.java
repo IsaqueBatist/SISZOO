@@ -37,11 +37,6 @@ import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 
-// A notificacao de resultado de ponta a ponta, sem mock no envio:
-// POST do resultado positivo -> commit -> listener AFTER_COMMIT ->
-// NotificacaoResultadoService -> templates reais -> EmailService -> SMTP falso
-// do GreenMail -> data/hora gravada no processo. E o positivo
-// definitivo: a tentativa de corrigir nao gera segunda mensagem.
 class NotificacaoResultadoEmailIT extends AbstractIntegrationTest {
 
     @RegisterExtension
@@ -79,7 +74,6 @@ class NotificacaoResultadoEmailIT extends AbstractIntegrationTest {
         String processoId = processoAguardandoResultado("<b>Ana</b> Responsavel");
         String protocolo = buscar(processoId).path("protocolo");
 
-        // 200 = commit do resultado; so depois disso o envio pode acontecer.
         lancarResultado(processoId, corpo("positivo", null)).then().statusCode(200);
 
         assertThat(GREEN_MAIL.waitForIncomingEmail(ESPERA_MS, 1), is(true));
@@ -122,7 +116,6 @@ class NotificacaoResultadoEmailIT extends AbstractIntegrationTest {
         lancarResultado(processoId, corpo("negativo", positivoId)).then().statusCode(422);
         lancarResultado(processoId, corpo("positivo", positivoId)).then().statusCode(422);
 
-        // Ausencia so com espera: uma segunda mensagem teria 1 s para chegar.
         assertThat(GREEN_MAIL.waitForIncomingEmail(1000, 2), is(false));
         assertThat(GREEN_MAIL.getReceivedMessages(), arrayWithSize(1));
         assertThat(dataNotificacao(processoId), equalTo(gravada));
@@ -165,8 +158,6 @@ class NotificacaoResultadoEmailIT extends AbstractIntegrationTest {
                 + " WHERE id = CAST(? AS uuid)", LocalDateTime.class, processoId);
     }
 
-    // A data e gravada no callback do envio, em outra thread: espera pela
-    // condicao, com prazo (nao um sleep fixo).
     private LocalDateTime aguardarDataNotificacao(String processoId) {
         long limite = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(ESPERA_MS);
         LocalDateTime data = dataNotificacao(processoId);

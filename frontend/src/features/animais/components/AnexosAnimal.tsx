@@ -6,9 +6,6 @@ import { baixarAnexoAnimal } from '../api/animaisApi'
 import { useAnexosAnimalQuery, useEnviarAnexoAnimalMutation } from '../hooks/useAnimais'
 import type { AnexoAnimal } from '../types/animais.types'
 
-// RF-A04: documentos e fotos do animal (Quadro 69).
-// Mesmo padrão do cartão de anexos da ocorrência: lista, upload (JPG/PNG/PDF
-// até 5 MB) e download autenticado via Blob. Sem exclusão (histórico).
 interface AnexosAnimalProps {
   animalId: string
   podeEscrever: boolean

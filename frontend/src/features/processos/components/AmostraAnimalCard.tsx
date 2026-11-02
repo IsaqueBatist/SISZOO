@@ -18,8 +18,6 @@ import {
 } from '../utils/processosCatalogos'
 import { BuscaAnimalCanil } from './BuscaAnimalCanil'
 
-// Tipo mínimo do erro de uma amostra: o RHF não distribui bem FieldErrors
-// sobre a união discriminada em arrays.
 export interface AmostraErros {
   sexo?: { message?: string }
   statusClinico?: { message?: string }
@@ -41,8 +39,6 @@ function paraNumeroOuIndefinido(valor: unknown): number | undefined {
   return limpo === '' ? undefined : Number(limpo)
 }
 
-// Texto do animal escolhido no cartão e na revisão: a identificação gravada
-// na amostra é copiada da ficha pelo servidor, não por aqui.
 function descricaoDoAnimal(animal: Animal): string {
   return [animal.nome, animal.especieNome, animal.microchip ?? 'sem microchip'].join(' · ')
 }
@@ -57,13 +53,10 @@ interface AmostraAnimalCardProps {
   erros?: AmostraErros
   podeRemover: boolean
   onRemover: () => void
-  // Edição de processo registrado: corrige a amostra, sem trocar o animal.
   identificacaoFixa?: boolean
 }
 
 export function AmostraAnimalCard({ index, numero, control, register, setValue, watch, erros, podeRemover, onRemover, identificacaoFixa }: AmostraAnimalCardProps) {
-  // Os campos de cada modalidade só existem numa das variantes da união; o
-  // caminho é montado aqui e o tipo é afrouxado de propósito.
   const campo = (nome: string) => `amostras.${index}.${nome}` as Path<ProcessoFormValues>
   const definir = (nome: string, valor: unknown, validar = false) => setValue(campo(nome), valor as never, { shouldValidate: validar })
 
@@ -77,8 +70,6 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
 
   function selecionarOrigem(novaOrigem: 'canil' | 'externo') {
     if (novaOrigem === origem) return
-    // Troca de modo descarta os dados do modo anterior: o payload só leva os
-    // campos da modalidade atual (ProcessoForm), e a tela não mostra resto.
     definir('origem', novaOrigem)
     if (novaOrigem === 'canil') {
       definir('animalId', '')
@@ -265,8 +256,6 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
             className={`select${erros?.statusClinico ? ' error' : ''}`} aria-invalid={erros?.statusClinico ? true : undefined} aria-describedby={erros?.statusClinico ? `amostra-${index}-status-clinico-erro` : undefined}
             defaultValue=""
             {...register(campo('statusClinico'), {
-              // Sintomas só em amostra sintomática: sair de
-              // SINTOMATICO descarta os já marcados.
               onChange: (event) => {
                 if (event.target.value !== 'SINTOMATICO') definir('sintomas', [])
               },
@@ -378,7 +367,6 @@ export function AmostraAnimalCard({ index, numero, control, register, setValue, 
 
         {amostra.contatoHumano && (
           <>
-            {/* DER regra 18: contato humano em qualquer amostra marca o processo como urgente. */}
             <div className="urgency-banner" role="alert" style={{ marginTop: 10 }}>
               <span className="ub-ico">
                 <Icon name="alert" size={22} />

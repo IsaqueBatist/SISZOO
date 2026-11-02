@@ -47,7 +47,5 @@ public record CriarPrescricaoRequest(
         @NotNull
         StatusPrescricao status,
 
-        // Presenca (nao-nulo) indica que este POST retifica o registro apontado
-        // (inclusive para transicoes de status: ver Prescricao).
         UUID retificaId) {
 }

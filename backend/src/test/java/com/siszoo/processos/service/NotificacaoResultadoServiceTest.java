@@ -47,11 +47,6 @@ import com.siszoo.processos.repository.ResponsavelProcessoRepository;
 
 import ch.qos.logback.classic.Level;
 
-// NotificacaoResultadoService roda fora da transacao de escrita (chamado
-// so pelo NotificacaoResultadoListener, AFTER_COMMIT). Aqui, testes diretos
-// do servico, sem Spring e sem @Async: so a logica de melhor esforco. O envio
-// passa pelo EmailService (envio real e template: EmailServiceIT); aqui ele e
-// um mock. Futures ja concluidos: o callback roda na hora, na thread do teste.
 @ExtendWith(MockitoExtension.class)
 class NotificacaoResultadoServiceTest {
 
@@ -98,8 +93,6 @@ class NotificacaoResultadoServiceTest {
                 equalTo(Map.of("nome", "Maria Responsavel", "protocolo", "045/2026", "resultado", "registrado")));
     }
 
-    // Aceite do SMTP grava a data/hora com o relogio do projeto
-    // (America/Sao_Paulo: 15:30Z = 12:30 local).
     @Test
     void envioAceitoRegistraADataComORelogioDoProjeto() {
         processoComResponsavel("maria@exemplo.com");
@@ -131,8 +124,6 @@ class NotificacaoResultadoServiceTest {
         verifyNoInteractions(emailService, emailTemplateService, processoSanitarioService);
     }
 
-    // O EmailService nao lanca: a falha vem no future (ja logada por ele) e a
-    // data do envio nao e gravada.
     @Test
     void falhaDeEnvioNaoPropagaNemRegistraEnvio() {
         processoComResponsavel("maria@exemplo.com");
@@ -145,7 +136,6 @@ class NotificacaoResultadoServiceTest {
         verify(processoSanitarioService, never()).registrarNotificacaoMunicipe(any(), any());
     }
 
-    // A recusa do executor sobe na chamada, nao no future.
     @Test
     void recusaDoExecutorNaoPropagaNemRegistraEnvio() {
         processoComResponsavel("maria@exemplo.com");
@@ -160,8 +150,6 @@ class NotificacaoResultadoServiceTest {
         assertThat(log.textos(Level.WARN).get(0), containsString("045/2026"));
     }
 
-    // Excecao dentro do callback sumiria no future: vira WARN so com o
-    // protocolo, sem endereco nem nome do municipe.
     @Test
     void falhaAoGravarADataViraWarnSoComOProtocolo() {
         processoComResponsavel("maria@exemplo.com");

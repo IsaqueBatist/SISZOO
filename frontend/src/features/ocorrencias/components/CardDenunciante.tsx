@@ -1,24 +1,16 @@
 import type { Denunciante } from '../types/ocorrencias.types'
 
 interface CardDenuncianteProps {
-  // `sigilosa && !podeVerDenunciante`: o backend já mandou os campos
-  // `null`; aqui só se decide o texto do placeholder.
   mascarado: boolean
   anonima: boolean
   denunciante: Denunciante | null
 }
 
-// O backend é quem decide mascarar: o componente nunca decide sozinho quem
-// pode ver. Campo nulo com o denunciante mascarado vira "Sigiloso"; campo
-// nulo fora disso é só um dado ausente ("—").
 function valorCampo(valor: string | null, mascarado: boolean): string {
   if (valor !== null) return valor
   return mascarado ? 'Sigiloso' : '—'
 }
 
-// Endereço residencial combina 3 campos (endereco/bairroResidencial/cep):
-// se todos vierem null, mostra um único "Sigiloso"/"—" em vez de repetir o
-// placeholder 3 vezes separado por "·".
 function valorEndereco(denunciante: Denunciante, mascarado: boolean): string {
   const partes = [denunciante.endereco, denunciante.bairroResidencial, denunciante.cep].filter(
     (parte): parte is string => parte !== null,

@@ -39,9 +39,6 @@ import ch.qos.logback.classic.Level;
 import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
 
-// Ramos do EmailService chamados direto, sem Spring e sem proxy @Async
-// (o envio real, o template e a thread assincrona estao no EmailServiceIT;
-// a falha real de SMTP, no EmailServiceFalhaSmtpIT). Endereco so em .test.
 @ExtendWith(MockitoExtension.class)
 class EmailServiceTest {
 
@@ -67,8 +64,6 @@ class EmailServiceTest {
 
     @Test
     void envioAceitoCompletaOFutureELogaSoODestinatarioMascarado() {
-        // Mock de JavaMailSender devolve null em createMimeMessage(); sem o
-        // send real, o Message-ID fica nulo, e o log tem que aceitar isso.
         mensagemVazia();
 
         CompletableFuture<Void> envio = service.enviar(DESTINATARIO, ASSUNTO, "<p>corpo secreto</p>", "corpo secreto");
@@ -105,8 +100,6 @@ class EmailServiceTest {
         assertThat(log.textos(Level.INFO), empty());
     }
 
-    // LGPD: a mensagem de um erro SMTP pode repetir o endereco (ex.: 550 com
-    // o destinatario). O WARN so leva as classes; o detalhe fica no DEBUG.
     @Test
     void falhaDoSmtpViraFutureFalhoEOWarnNaoRepeteOEndereco() {
         mensagemVazia();
@@ -126,9 +119,6 @@ class EmailServiceTest {
         assertThat(log.textos(Level.INFO), empty());
     }
 
-    // Pelo proxy assincrono (o mesmo interceptor do @EnableAsync), a
-    // tarefa e submetida na thread de quem chama. Executor encerrado recusa,
-    // e a TaskRejectedException sobe na propria chamada, nao no future.
     @Test
     void recusaDoExecutorSobeNaPropriaChamadaSemTentarEnviar() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
@@ -171,7 +161,6 @@ class EmailServiceTest {
         when(mailSender.createMimeMessage()).thenReturn(new MimeMessage(Session.getInstance(new Properties())));
     }
 
-    // Nenhum evento do nivel traz o endereco completo nem o trecho informado.
     private void semDadosNoLog(Level nivel, String trecho) {
         assertThat(log.textos(nivel), everyItem(not(containsString(DESTINATARIO))));
         assertThat(log.textos(nivel), everyItem(not(containsString(trecho))));

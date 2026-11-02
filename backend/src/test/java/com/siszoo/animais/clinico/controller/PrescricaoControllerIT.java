@@ -184,8 +184,6 @@ class PrescricaoControllerIT extends AbstractIntegrationTest {
         given().header("Authorization", "Bearer " + tokenAdmin).when().get("/api/prescricoes/" + idCorrecao)
                 .then().statusCode(200).body("statusRegistro", equalTo("ATIVO")).body("retificadoPorId", nullValue());
 
-        // Banco de testes compartilhado entre metodos (sem rollback por teste):
-        // filtra pelo id da correcao especifica, nao pelo total de eventos do banco.
         List<AuditoriaEvento> eventosDestaCorrecao = auditoriaEventoRepository.findAll().stream()
                 .filter(e -> "prescricao".equals(e.getEntidade()) && e.getAcao() == AcaoAuditoria.ATUALIZACAO)
                 .filter(e -> idCorrecao.equals(objectMapper.readTree(e.getPayloadDepois()).get("id").asString()))

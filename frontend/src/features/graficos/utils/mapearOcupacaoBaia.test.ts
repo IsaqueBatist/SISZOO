@@ -21,9 +21,9 @@ function baia(sobrescrever: Partial<Baia>): Baia {
 describe('mapearOcupacaoBaia', () => {
   it('ordena por percentual de ocupação decrescente', () => {
     const resultado = mapearOcupacaoBaia([
-      baia({ id: '1', nome: 'Baia 1', ocupacaoAtual: 1, capacidade: 4 }), // 25%
-      baia({ id: '2', nome: 'Baia 2', ocupacaoAtual: 2, capacidade: 2 }), // 100%
-      baia({ id: '3', nome: 'Baia 3', ocupacaoAtual: 2, capacidade: 4 }), // 50%
+      baia({ id: '1', nome: 'Baia 1', ocupacaoAtual: 1, capacidade: 4 }),
+      baia({ id: '2', nome: 'Baia 2', ocupacaoAtual: 2, capacidade: 2 }),
+      baia({ id: '3', nome: 'Baia 3', ocupacaoAtual: 2, capacidade: 4 }),
     ])
 
     expect(resultado.map((item) => item.nome)).toEqual(['Baia 2', 'Baia 3', 'Baia 1'])

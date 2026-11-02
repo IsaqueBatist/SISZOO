@@ -17,8 +17,6 @@ const LABEL_EVENTO: Record<TipoEventoTimeline, string> = {
   entrada: 'Entrada',
 }
 
-// Não existe ícone de "admissão/entrada" no design system: `home` é o mais
-// próximo semanticamente (chegada ao CCZ) e já está portado em Icon.tsx.
 const ICONE_EVENTO: Record<TipoEventoTimeline, IconName> = {
   vacina: 'syringe',
   procedimento: 'scissors',
@@ -26,19 +24,10 @@ const ICONE_EVENTO: Record<TipoEventoTimeline, IconName> = {
   entrada: 'home',
 }
 
-// `.timeline-item.{classe}` só define cor de bullet para vacina/exame/
-// cirurgia/medicamento/entrada (components.css). Não existe uma classe
-// própria para "procedimento" porque a ficha não separa Cirurgias de
-// Procedimentos, então reaproveita a cor de "cirurgia" para esse tipo.
 function classeCss(tipo: TipoEventoTimeline): string {
   return tipo === 'procedimento' ? 'cirurgia' : tipo
 }
 
-// Segurança explícita na borda de apresentação: o hook já entrega `eventos`
-// ordenado por data desc (merge k-way), mas a ordenação aqui garante o
-// contrato de `<Timeline>` mesmo se a prop vier de outra fonte no futuro.
-// Comparação lexicográfica é segura porque `EventoTimeline.data` é sempre
-// 'YYYY-MM-DD' (ver `useTimelineAnimal.ts`, funções `*ParaEvento`).
 function ordenarPorDataDesc(eventos: EventoTimeline[]): EventoTimeline[] {
   return [...eventos].sort((a, b) => (a.data < b.data ? 1 : a.data > b.data ? -1 : 0))
 }

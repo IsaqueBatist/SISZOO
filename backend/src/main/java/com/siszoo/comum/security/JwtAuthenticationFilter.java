@@ -65,29 +65,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    // Por padrao OncePerRequestFilter pula o re-dispatch de erro (ex.: o
-    // sendError(405) que o Spring MVC dispara para verbo nao mapeado): sem
-    // isso, o SecurityContext fica vazio nesse segundo passe pelo filter
-    // chain e o AuthorizationFilter troca o 405 correto por 401. Refazendo
-    // a autenticacao tambem no dispatch de erro mantem o status original.
     @Override
     protected boolean shouldNotFilterErrorDispatch() {
         return false;
     }
 
-    // Devolve false quando a resposta ja foi escrita. Sem autenticacao, segue o
-    // fluxo normal: as rotas protegidas respondem 401 pelo entry point.
     private boolean autenticarOuRecusar(String token, HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         try {
             Claims claims = jwtService.validarToken(token).getPayload();
             String usuarioId = claims.getSubject();
             String sessaoId = JwtService.sessaoDe(claims);
-            // Token valido nao basta: sessao encerrada, vencida por inatividade
-            // ou de usuario desativado (ou removido) perde o acesso na hora, sem
-            // esperar a expiracao. Sem autenticacao, as rotas protegidas
-            // respondem 401 (entry point), como com token invalido. Uma consulta
-            // por requisicao, sem cache (volume baixo do CCZ).
             Optional<Boolean> senhaTemporaria = usuarioId == null || sessaoId == null
                     ? Optional.empty()
                     : sessaoService.senhaTemporariaDaSessaoAtiva(UUID.fromString(sessaoId), UUID.fromString(usuarioId));
@@ -95,14 +83,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.clearContext();
                 return true;
             }
-            // Senha temporaria nao da acesso ao sistema, so a troca-la: a regra
-            // nao pode depender da tela (RotaProtegida).
             if (senhaTemporaria.get() && !rotaDaSenhaTemporaria(request)) {
                 recusarPorSenhaTemporaria(response);
                 return false;
             }
-            // Erasure: a API de claims do jjwt so oferece get(key, Class<T>), sem
-            // variante parametrizada para List<String> — o cast e inevitavel aqui.
             @SuppressWarnings("unchecked")
             List<String> cargos = claims.get("cargos", List.class);
             Set<GrantedAuthority> autoridades = autoridadeService.resolverAutoridades(cargos);

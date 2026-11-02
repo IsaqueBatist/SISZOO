@@ -33,9 +33,6 @@ public class SecurityConfig {
             JwtAccessDeniedHandler jwtAccessDeniedHandler,
             CorsConfigurationSource corsConfigurationSource) throws Exception {
         return http
-                // A API autentica por Bearer. O unico cookie (sessao de renovacao) tem Path
-                // /api/auth e SameSite, e renovar/logout exigem um header proprio que forca
-                // o preflight de CORS (AuthController): sem CSRF, nada a proteger.
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -57,10 +54,7 @@ public class SecurityConfig {
         configuracao.setAllowedOrigins(List.of(origemPermitida));
         configuracao.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuracao.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-SISZOO-Sessao"));
-        // O front (outra origem) le o nome do arquivo exportado em
-        // POST /api/relatorios/exportar; sem isto o navegador esconde o header.
         configuracao.setExposedHeaders(List.of("Content-Disposition"));
-        // Credenciais so para o cookie de renovacao; a origem continua sendo uma so.
         configuracao.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource fonte = new UrlBasedCorsConfigurationSource();

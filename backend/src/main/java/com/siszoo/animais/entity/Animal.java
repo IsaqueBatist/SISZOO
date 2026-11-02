@@ -72,15 +72,9 @@ public class Animal {
     @Column(name = "data_nascimento_aprox")
     private LocalDate dataNascimentoAprox;
 
-    // Único quando informado (DER §3.2): índice único parcial
-    // uq_animal_microchip ... WHERE microchip IS NOT NULL (V16). Gravado sempre
-    // na forma de AnimalService.normalizarMicrochip (sem espaços; vazio = null).
     @Column(unique = true, nullable = true, length = 30)
     private String microchip;
 
-    // V23: identificação complementar (RF-A01/RN01). Medalha única
-    // quando informada (índice parcial uq_animal_numero_medalha); data de
-    // implantação exige microchip (CHECK + AnimalService).
     @Column(name = "numero_medalha", length = 30)
     private String numeroMedalha;
 
@@ -90,12 +84,9 @@ public class Animal {
     @Column(length = 200)
     private String procedencia;
 
-    // V24: laudo do responsável técnico, exigido pelo AnimalService só
-    // na transição para o status obito_eutanasia (RF-A05, Lei nº 14.228/2021).
     @Column(name = "laudo_eutanasia", columnDefinition = "text")
     private String laudoEutanasia;
 
-    // true = castrado, false = nao castrado, null = nao informado (V31).
     @Column
     private Boolean esterilizado;
 
@@ -123,14 +114,12 @@ public class Animal {
     @Column(name = "foto_url", columnDefinition = "text")
     private String fotoUrl;
 
-    // V28: avatar das listagens, derivado de fotoUrl por MiniaturaFoto.
     @Column(name = "foto_miniatura", columnDefinition = "text")
     private String fotoMiniatura;
 
     @Column(columnDefinition = "text")
     private String observacoes;
 
-    // V33: condicoes de saude pre-existentes (pedido da entrevista de 09/01/2026).
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "animal_condicao_saude",

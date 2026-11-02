@@ -28,8 +28,6 @@ export function EditarOcorrencia() {
     )
   }
 
-  // Edição só até o encerramento: acesso direto à URL de uma
-  // encerrada volta para o detalhe (o backend também recusaria o PUT).
   if (ocorrencia.statusOcorrencia === 'ENCERRADA') {
     return <Navigate to={`/ocorrencias/${ocorrencia.id}`} replace />
   }

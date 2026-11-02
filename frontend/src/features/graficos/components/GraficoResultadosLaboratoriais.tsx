@@ -5,10 +5,8 @@ interface GraficoResultadosLaboratoriaisProps {
   dados: BarraResultadoDatum[]
 }
 
-// Cores semânticas do design system (não tokens de doença): positivo/negativo
-// são um resultado, não uma categoria de doença.
-const COR_POSITIVO = '#C62828' // --color-danger
-const COR_NEGATIVO = '#2E7D32' // --color-success
+const COR_POSITIVO = '#C62828'
+const COR_NEGATIVO = '#2E7D32'
 
 export function GraficoResultadosLaboratoriais({ dados }: GraficoResultadosLaboratoriaisProps) {
   if (dados.length === 0) {

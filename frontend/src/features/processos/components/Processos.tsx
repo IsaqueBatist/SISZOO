@@ -42,7 +42,6 @@ function Cabecalho() {
 
 export function Processos() {
   const { roleKey } = useAuth()
-  // PROCESSOS_SANITARIOS:escrita (V3): os três cargos.
   const podeEscrever = roleKey === 'admin' || roleKey === 'vet' || roleKey === 'agente'
 
   const urgentesDoLink = useFiltroDeLink('urgente')

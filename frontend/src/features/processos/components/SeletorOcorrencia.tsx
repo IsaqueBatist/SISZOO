@@ -8,7 +8,6 @@ import './SeletorVinculo.css'
 
 const TAMANHO_PAGINA = 20
 
-// Resumo exibido da ocorrência escolhida (etapa 1, revisão e vínculo posterior).
 export interface OcorrenciaParaVinculo {
   id: string
   protocolo: string
@@ -16,14 +15,10 @@ export interface OcorrenciaParaVinculo {
   bairro: string
 }
 
-// Ocorrência só pode receber processo se ainda não tem um (0..1) e não está
-// encerrada: o backend recusa os dois casos com 409/422.
 function disponivelParaVinculo(ocorrencia: OcorrenciaResumo): boolean {
   return ocorrencia.processoProtocolo === null && ocorrencia.statusOcorrencia !== 'ENCERRADA'
 }
 
-// Na listagem, o nome do denunciante de ocorrência sigilosa
-// vem nulo para todos; mostra "Sigiloso"/"Anônima" no lugar.
 function denuncianteExibido(ocorrencia: OcorrenciaResumo): string | null {
   if (ocorrencia.anonima) return 'Anônima'
   if (ocorrencia.sigilosa) return 'Sigiloso'
@@ -38,16 +33,10 @@ interface SeletorOcorrenciaProps {
   erro?: string
   onSelecionar: (ocorrencia: OcorrenciaParaVinculo) => void
   onPular: () => void
-  // Fora do wizard (vínculo posterior no detalhe do processo) não existe
-  // "pular etapa": é "cancelar".
   textoAjuda?: string
   textoBotaoPular?: string
 }
 
-// RN2: uma vez decidida (ocorrência selecionada OU "Pular esta etapa"), a
-// etapa 1 vira somente leitura pelo resto do wizard. Não existe, de
-// propósito, nenhum botão "trocar" aqui. Travado, não busca a lista de
-// ocorrências (ela fica em ListaOcorrencias, montada só quando há escolha).
 export function SeletorOcorrencia(props: SeletorOcorrenciaProps) {
   const { travado, ocorrenciaVinculada, vinculoDecisao } = props
   if (travado) {
@@ -80,8 +69,6 @@ function ListaOcorrencias({
   textoBotaoPular = 'Pular esta etapa',
 }: SeletorOcorrenciaProps) {
   const [busca, setBusca] = useState('')
-  // Debounce de 300 ms, como na tela de Ocorrências, para não fazer uma
-  // requisição por tecla.
   const [buscaDebounced, setBuscaDebounced] = useState('')
   useEffect(() => {
     const timeout = setTimeout(() => setBuscaDebounced(busca.trim()), 300)

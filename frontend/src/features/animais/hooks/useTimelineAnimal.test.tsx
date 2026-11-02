@@ -10,16 +10,9 @@ import type { Prescricao, Procedimento, Vacinacao } from '../types/historico.typ
 
 const ANIMAL_ID = 'timeline-teste-0000-0000-000000000001'
 
-// Âncora fixa: o hook só compara datas entre si (não lê "hoje"), então
-// qualquer dia serve; fixo deixa o cenário determinístico.
 const HOJE = '2026-09-10'
 const CRIADO_EM = `${HOJE}T15:00:00.000Z`
 
-// 25 vacinas (mais que uma página de 20) com datas estritamente decrescentes
-// (-1 a -25 dias) e 2 procedimentos cujas datas caem perto da fronteira
-// entre a 1ª e a 2ª página de vacinas (-20 e -21): uma abordagem ingênua
-// ("buscar as N mais recentes de cada fonte e mesclar") cortaria essas vacinas
-// mais antigas ou posicionaria mal os procedimentos perto do corte.
 function seedVacinasGrandes(): Vacinacao[] {
   return Array.from({ length: 25 }, (_, indice) => {
     const dias = indice + 1
@@ -127,8 +120,6 @@ describe('useTimelineAnimal (merge k-way de fontes paginadas)', () => {
     instalarHandlersDeFronteira()
     const { result } = renderTimeline()
 
-    // 27 eventos reais no total (25 vacinas + 2 procedimentos); pedir 28
-    // força o loop a esgotar as 3 fontes e marcar `fimDoHistorico`.
     await act(async () => {
       await result.current.carregarMais(28)
     })
@@ -143,8 +134,6 @@ describe('useTimelineAnimal (merge k-way de fontes paginadas)', () => {
     expect(result.current.eventos).toHaveLength(27)
     expect(result.current.eventos.map((e) => ({ tipo: e.tipo, data: e.data }))).toEqual(sequenciaEsperada)
 
-    // A vacina mais antiga (dia -25, na 2ª página) precisa estar presente:
-    // é justamente o item que uma abordagem "top-N de cada fonte" perderia.
     expect(result.current.eventos.some((e) => e.titulo.includes('V25'))).toBe(true)
   })
 
@@ -163,8 +152,6 @@ describe('useTimelineAnimal (merge k-way de fontes paginadas)', () => {
     const primeiros20 = result.current.eventos.map((e) => e.data)
 
     expect(primeiros20.slice(0, 10)).toEqual(primeiros10)
-    // Ordem global continua não-crescente (mais recente primeiro) mesmo
-    // cruzando a fronteira de página de vacinas no meio da 2ª chamada.
     for (let i = 1; i < primeiros20.length; i++) {
       expect(primeiros20[i] <= primeiros20[i - 1]).toBe(true)
     }

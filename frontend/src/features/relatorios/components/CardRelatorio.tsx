@@ -11,10 +11,6 @@ interface InfoVisualCard {
   descricao: string
 }
 
-// Icone/cor/descricao vem do prototipo (docs/prototipo/relatorios.html) -
-// texto literal, nao inventado. Filtro padrao de cada tipo (ano atual,
-// periodo dos ultimos 30 dias) é só o valor inicial do controle; o usuário
-// pode mudar antes de clicar em "Gerar Relatório".
 const INFO_VISUAL: Record<string, InfoVisualCard> = {
   anual_processos: {
     icone: 'fileText',
@@ -33,8 +29,6 @@ const INFO_VISUAL: Record<string, InfoVisualCard> = {
     icone: 'heart',
     cor: '#6A1B9A',
     corFundo: '#F3E5F5',
-    // O backend só tem o status atual do animal (sem tabela `adocao`): nada
-    // de tempo de permanência, adotantes ou devoluções.
     descricao: 'Animais adotados e perfil por espécie e porte, pela situação atual do cadastro.',
   },
   procedimentos: {
@@ -57,8 +51,6 @@ const INFO_VISUAL: Record<string, InfoVisualCard> = {
   },
 }
 
-// Último mês até hoje, em datas civis do fuso do CCZ (toISOString daria o dia
-// em UTC, que à noite em Itu já é o dia seguinte).
 function periodoPadrao() {
   const fim = hojeEmItu()
   const [ano, mes, dia] = fim.split('-').map(Number)

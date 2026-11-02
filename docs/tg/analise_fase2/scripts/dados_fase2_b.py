@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Fase 2 — linhas MANUAIS da matriz (parte B) + mapeamentos usados pelo gerador.
 Cobre: tecnologias/versões, fora do escopo, enumerações, entidades (nível tabela), itens SÓ NO CÓDIGO,
 mapeamento documento→código de tabelas e colunas (para as linhas automáticas de atributo) e a resolução
@@ -6,7 +5,6 @@ dos achados da Fase 1 à luz do código.
 """
 from dados_fase2_a import R, SVC, MIG, FE
 
-# ---------------------------------------------------------------- Tecnologias (Seção 2.3, 5.1, Quadro 14)
 def TEC(nome, versao_doc, orig, evid, tcod, status, tipo, f1, dec, just, esf='P', risco='Baixo', locdoc='Quadro 14 / Seção 2.3'):
     return R('Tecnologia', 'Geral', nome, orig, f'Versão no documento: {versao_doc or "não informada"}', evid, tcod, status, tipo, f1, dec, just, esf, risco, locdoc, '—')
 
@@ -49,7 +47,6 @@ TECNOLOGIAS = [
       'backend/src/main/resources/application.yml:9-14 ("Sem hibernate.jdbc.time_zone, de proposito: as datas de negocio sao ... no horario local"); ClockConfig; backend/Dockerfile (ENV TZ); V20 (relatorio_gerado.gerado_em timestamptz é a exceção)', 'Datas gravadas sem fuso, no horário de America/Sao_Paulo; não em UTC.', 'DIVERGENTE', 'FATO', '', 'ATUALIZAR_DOC', 'Decisão consciente e comentada no código (evita deslocamento de 3h); critério 5: corrigir o texto do Cap. 4.', 'P', 'Baixo', 'Cap. 4 intro; Seção 4.3', '—'),
     R('Tecnologia', 'Geral', 'Decisão de modelagem: ocupação de baia calculada, não armazenada', 'Cap. 4; Quadro 60', 'ocupação de baia calculada, não armazenada', f'{SVC}/animais/service/BaiaService.java:120-147; {MIG}/V4 (comentário "atual_ocupacao NÃO é coluna")', 'Conforme.', 'CONFORME', 'FATO', 'F1-025', 'ATUALIZAR_DOC', 'Conforme; corrigir DER/lógico (F1-025).', 'P', 'Baixo', 'Figura 8/13', '—'),
     R('Tecnologia', 'Geral', 'Decisão de modelagem: AmostraAnimal é cópia do momento da coleta', 'Cap. 4.4', 'AmostraAnimal é cópia do momento da coleta', f'{MIG}/V13 (animal_amostrado com animal_id opcional e campos próprios); {SVC}/processos/dto/AmostraAnimalRequest.java', 'Conforme (snapshot; animal_id opcional).', 'CONFORME', 'FATO', 'F1-032', 'ATUALIZAR_DOC', 'Conforme.', 'P', 'Baixo', '—', '—'),
-    # Só no código
     R('Tecnologia', 'Geral', 'react-hook-form + @hookform/resolvers', '— (não consta no Quadro 14)', '—', 'frontend/package.json (react-hook-form ^7.87.0, @hookform/resolvers ^5.9.1)', 'Formulários com validação Zod via resolver.', 'SÓ NO CÓDIGO', 'FATO', '', 'ATUALIZAR_DOC', 'Incluir no Quadro 14.', 'P', 'Baixo', 'Quadro 14', '—'),
     R('Tecnologia', 'Geral', 'MapStruct', '— (não consta no Quadro 14)', '—', 'backend/pom.xml:136; */mapper/*Mapper.java', 'Mapeamento entidade↔DTO.', 'SÓ NO CÓDIGO', 'FATO', '', 'ATUALIZAR_DOC', 'Incluir no Quadro 14.', 'P', 'Baixo', 'Quadro 14', '—'),
     R('Tecnologia', 'Geral', 'Caffeine (cache)', '— (não consta no Quadro 14)', '—', 'backend/pom.xml:53; application.yml:55-58', 'Cache de 5 min dos KPIs/gráficos do dashboard.', 'SÓ NO CÓDIGO', 'FATO', '', 'ATUALIZAR_DOC', 'Incluir no Quadro 14 e explicar em RF-D01 ("tempo real" com cache).', 'P', 'Baixo', 'Quadro 14; Quadro 10', '—'),
@@ -57,7 +54,6 @@ TECNOLOGIAS = [
     R('Tecnologia', 'Geral', 'nginx (servindo o frontend)', '—', '—', 'frontend/nginx.conf; frontend/Dockerfile', 'Servidor estático em produção (porta 80).', 'SÓ NO CÓDIGO', 'FATO', '', 'ATUALIZAR_DOC', 'Mencionar na Seção 5.1 (implantação).', 'P', 'Baixo', 'Seção 5.1', '—'),
 ]
 
-# ---------------------------------------------------------------- Fora do escopo (3.4) e limitações (3.5)
 def FORA(item, evid, tcod, status, tipo, f1, dec, just, esf='P', risco='Baixo', locdoc='Seção 3.4'):
     return R('RNF', 'Geral', f'Fora do escopo: {item}', 'Seção 3.4', item, evid, tcod, status, tipo, f1, dec, just, esf, risco, locdoc, '—')
 
@@ -74,7 +70,6 @@ FORA_ESCOPO = [
     R('RNF', 'Geral', 'Risco 3.5.1: dependência de internet; instabilidade tratada por RNF03', 'Seção 3.5.1', 'instabilidade de rede tratada por RNF03', f'{FE}/lib/rascunhoDb.ts; useAnexosPendentes.ts', 'Rascunhos locais e reenvio de anexos.', 'CONFORME', 'FATO', '', 'ATUALIZAR_DOC', 'Conforme.', 'P', 'Baixo', '—', '—'),
 ]
 
-# ---------------------------------------------------------------- Enumerações
 def ENUM(nome, mod, orig, valores_doc, evid, valores_cod, status, tipo, f1, dec, just, esf='P', risco='Baixo', locdoc=None):
     return R('Enum', mod, f'Enum {nome}', orig, valores_doc, evid, valores_cod, status, tipo, f1, dec, just, esf, risco, locdoc or orig, '—')
 
@@ -105,14 +100,11 @@ ENUMS = [
     ENUM('StatusDocumento', 'M4', 'Figura 24; RF-B06', 'PENDENTE, EM_PROCESSAMENTO, CONCLUIDO, FALHA', 'Busca "StatusDocumento" → nenhum resultado', 'Não existe.', 'SÓ NO DOCUMENTO', 'FATO', 'F1-018', 'REMOVER_DO_DOC', 'Ver RF-B06.'),
     ENUM('StatusRelatorio', 'M5', 'Figura 25; RN11; Quadro 94', 'PENDENTE, EM_PROCESSAMENTO, CONCLUIDO, FALHA', 'Busca "StatusRelatorio" → nenhum resultado; V20 sem coluna status', 'Não existe.', 'SÓ NO DOCUMENTO', 'FATO', 'F1-039', 'REMOVER_DO_DOC', 'Ver RF-D02/RN11.'),
     ENUM('TipoRelatorio', 'M5', 'Figura 25; Quadro 94', 'ANUAL_PROCESSOS, VACINACAO, ADOCOES, PROCEDIMENTOS, OCUPACAO_BAIAS, OCORRENCIAS_BAIRRO', f'{SVC}/relatorios/entity/TipoRelatorio.java; {MIG}/V20 CHECK', 'Idênticos.', 'CONFORME', 'FATO', '', 'ATUALIZAR_DOC', 'Conforme.'),
-    # Só no código
     ENUM('StatusClinicoAmostra (SINTOMATICO, ASSINTOMATICO, OBITO)', 'M4', '— (Quadro 92 tem status_clinico varchar(100) livre)', 'status_clinico texto livre', f'{SVC}/processos/entity/StatusClinicoAmostra.java; {MIG}/V13 (ck_animal_amostrado_status_clinico; NOT NULL)', 'Domínio fechado obrigatório.', 'SÓ NO CÓDIGO', 'FATO', '', 'ATUALIZAR_DOC', 'Documentar o enum na Figura 24 e no Quadro 92.'),
     ENUM('SeveridadeAlerta (VENCIDA, A_VENCER)', 'M2', '—', '—', f'{SVC}/alertas/dto/SeveridadeAlerta.java', 'Classificação do alerta vacinal.', 'SÓ NO CÓDIGO', 'FATO', '', 'ATUALIZAR_DOC', 'Opcional: citar em RF-A03.'),
     ENUM('ProtocoloService.Entidade (OCORRENCIA, PROCESSO, RELATORIO)', 'Geral', '—', '—', f'{SVC}/comum/service/ProtocoloService.java; {MIG}/V10/V20 (ck_protocolo_sequencia_entidade)', 'Sequências independentes por entidade e ano.', 'SÓ NO CÓDIGO', 'FATO', 'F1-022', 'ATUALIZAR_DOC', 'Citar em RN02 e na Seção 4.3 (protocolo_sequencia).'),
 ]
 
-# ---------------------------------------------------------------- Mapeamento de entidades (documento → código)
-# nome_doc : (tabela_codigo | None, arquivo de migration, entidade JPA | None, observacao)
 MAPA_ENTIDADES = {
     'Usuario': ('usuario', 'V2__schema_usuarios.sql', 'usuarios/entity/Usuario.java', ''),
     'Cargo': ('cargo', 'V2__schema_usuarios.sql', 'usuarios/entity/Cargo.java', ''),
@@ -160,8 +152,6 @@ MAPA_ENTIDADES = {
     'RelatorioGerado': ('relatorio_gerado', 'V20__relatorio_gerado.sql', 'relatorios/entity/RelatorioGerado.java', ''),
 }
 
-# Mapeamento de colunas documento → código por entidade. Valor: nome da coluna no código, ou None (ausente),
-# ou ('INVERTIDA', 'tabela.coluna') quando a FK está no outro lado.
 MAPA_COLUNAS = {
     'Animal': {'numero_microchip': 'microchip', 'status_animal': 'status_id', 'especie': 'especie_id', 'cadastrado_por': 'criado_por_id',
                'numero_medalha': None, 'data_implantacao_chip': None, 'procedencia': None, 'data_saida': None},
@@ -178,7 +168,6 @@ MAPA_COLUNAS = {
     'MotivoEntrada': {'ativo': None}, 'TipoBaia': {'ativo': None},
 }
 
-# Explicação para colunas ausentes (status SÓ NO DOCUMENTO) — termos pesquisados e decisão
 AUSENTES = {
     ('Animal', 'numero_medalha'): ('buscas "medalha|numero_medalha" em backend/frontend → 0', 'DECISAO_AUTORES', 'Ver RF-A01.', 'M'),
     ('Animal', 'data_implantacao_chip'): ('buscas "implantacao|dataImplantacao" → 0', 'DECISAO_AUTORES', 'Ver RF-A01/RN01.', 'M'),
@@ -194,7 +183,6 @@ AUSENTES = {
     ('TipoBaia', 'ativo'): ('tabela tipo_baia sem coluna ativo (V4)', 'ATUALIZAR_DOC', 'Remover do Quadro 59.', 'P'),
 }
 
-# Colunas extras no código (SÓ NO CÓDIGO) — justificativa curta por coluna
 EXTRAS_JUST = {
     'usuario.dois_fatores_ativo': 'Coluna reservada (default false); sem uso na aplicação (busca "doisFatores" só na entidade). Documentar como reserva ou remover em migration futura.',
     'cargo_permissao.feature': 'Permissão granular (geral / denunciante_sigiloso). Documentar no Quadro 55.',
@@ -224,7 +212,6 @@ EXTRAS_JUST = {
     'relatorio_gerado.gerado_por_id': 'Equivalente a gerado_por.',
 }
 
-# Tabelas que só existem no código
 TABELAS_SO_CODIGO = {
     'protocolo_sequencia': ('V10__schema_ocorrencias.sql (+V20)', 'Sequência anual por entidade (OCORRENCIA, PROCESSO, RELATORIO) com upsert e lock — base de RN02. Incluir no DER/lógico M3 e na Seção 4.3 (fecha F1-022).'),
     'resultado_processo': ('V14__resultado_processo.sql (+V15, V21)', 'Histórico imutável de resultados laboratoriais (retifica_id, triggers). Incluir no DER/lógico/dicionário M4 e em RN06.'),
@@ -235,7 +222,6 @@ TABELAS_SO_CODIGO = {
     'desfecho_animal': ('V13__schema_processos.sql', 'Catálogo em tabela (substitui enum). Incluir no dicionário M4.'),
 }
 
-# ---------------------------------------------------------------- Itens funcionais SÓ NO CÓDIGO
 def SC(mod, item, evid, tcod, just, locdoc, cat='RF', f1='', esf='P'):
     return R(cat, mod, item, '— (não consta no documento)', '—', evid, tcod, 'SÓ NO CÓDIGO', 'FATO', f1, 'ATUALIZAR_DOC', just, esf, 'Baixo', locdoc, '—')
 
@@ -266,8 +252,6 @@ SO_CODIGO = [
     SC('Geral', 'Pacote backend "alertas" (AlertaVacinalController/Service)', f'{SVC}/alertas/', 'Módulo técnico separado para alertas vacinais.', 'Incluir na lista de pacotes da Seção 5.1.', 'Seção 5.1', cat='Tecnologia'),
 ]
 
-# ---------------------------------------------------------------- Resolução dos achados da Fase 1 pelo código
-# id: (veredito, texto). veredito ∈ {'RESOLVE', 'PARCIAL', 'NAO_RESOLVE'}
 RESOLUCAO_F1 = {
     'F1-001': ('NAO_RESOLVE', 'Nomes de casos de uso (diagrama × quadro) são questão documental; o código não nomeia casos de uso.'),
     'F1-002': ('PARCIAL', 'O código tem GET /api/auditoria (AuditoriaController.java:23-28) sem filtros e sem tela; confirma que a trilha existe como funcionalidade e precisa de RF próprio. Ver linha UC Quadro 22 (DECISAO_AUTORES).'),

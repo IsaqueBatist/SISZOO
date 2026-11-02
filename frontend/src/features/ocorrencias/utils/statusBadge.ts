@@ -6,9 +6,6 @@ export interface Badge {
   label: string
 }
 
-// Chaves em maiúsculas (códigos da API, StatusOcorrencia). O mock de
-// processos ainda usa minúsculas nas ocorrências de demonstração: a
-// busca normaliza para servir os dois.
 const STATUS_BADGE_MAP: Record<string, Badge> = {
   ABERTA: { classe: 'badge-process-open', label: 'Aberta' },
   EM_ATENDIMENTO: { classe: 'badge-process-awaiting', label: 'Em atendimento' },
@@ -30,8 +27,6 @@ export function labelDeStatusProcesso(status: string): string {
   return STATUS_PROCESSO_LABEL[status] ?? status
 }
 
-// O backend só aceita o status seguinte (ProcessoSanitarioService); null no
-// último.
 const PROXIMO_STATUS_PROCESSO: Record<StatusProcesso, StatusProcesso | null> = {
   ABERTO: 'AGUARDANDO_RESULTADO',
   AGUARDANDO_RESULTADO: 'COM_RESULTADO',
@@ -43,7 +38,6 @@ export function proximoStatusProcesso(status: StatusProcesso): StatusProcesso | 
   return PROXIMO_STATUS_PROCESSO[status]
 }
 
-// Rótulos idênticos aos de docs/prototipo/cadastrar-ocorrencia.html.
 const TIPO_LABEL_MAP: Record<string, string> = {
   zoonose: 'Suspeita de Zoonose',
   morcegos: 'Infestação de Morcegos',

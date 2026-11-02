@@ -5,8 +5,6 @@ import com.siszoo.comum.validacao.TamanhoMaximoBytes;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-// Mesmas regras de tamanho de TrocarSenhaRequest: so novaSenha passa pelo
-// BCrypt.encode, por isso so ela tem teto em bytes.
 public record RedefinirSenhaComTokenRequest(
         @NotBlank
         @Size(max = 128)

@@ -13,13 +13,6 @@ import { Usuarios } from '@/features/usuarios/components/Usuarios'
 import { API_BASE_URL } from '@/lib/env'
 import { server } from '@/mocks/server'
 
-// Datas com hora da API (criadoEm, ultimoAcesso, atualizadoEm) são
-// LocalDateTime sem fuso, já no horário de Itu. Lidas com
-// `new Date(iso)`, viram horário do navegador: fora de São Paulo a tela
-// mostrava outro dia perto da meia-noite. Cada caso roda com o processo em UTC
-// (navegador fora de Itu) e em America/Sao_Paulo, e o resultado tem de ser o
-// mesmo. O Node aplica a troca de process.env.TZ na hora.
-
 const FUSOS_DO_NAVEGADOR = ['UTC', 'America/Sao_Paulo'] as const
 const TZ_ORIGINAL = process.env.TZ
 
@@ -127,19 +120,19 @@ describe.each(FUSOS_DO_NAVEGADOR)('navegador em %s', (fuso) => {
 
     it('atualizado ontem às 10:00, agora 09:30: "há 1 dia" (menos de 24 h, mas outro dia)', async () => {
       vi.useFakeTimers({ toFake: ['Date'], shouldAdvanceTime: true })
-      vi.setSystemTime(new Date('2030-03-16T12:30:00Z')) // 16/03 09:30 em Itu
+      vi.setSystemTime(new Date('2030-03-16T12:30:00Z'))
       expect(await renderFichaComAtualizacao('2030-03-15T10:00:00')).toContain('Última atualização há 1 dia')
     })
 
     it('atualizado hoje às 00:10, agora 31/12 21:30: "hoje" (em UTC já é 01/01)', async () => {
       vi.useFakeTimers({ toFake: ['Date'], shouldAdvanceTime: true })
-      vi.setSystemTime(new Date('2031-01-01T00:30:00Z')) // 31/12 21:30 em Itu
+      vi.setSystemTime(new Date('2031-01-01T00:30:00Z'))
       expect(await renderFichaComAtualizacao('2030-12-31T00:10:00')).toContain('Última atualização hoje')
     })
 
     it('atualizado em 30/04 23:59, agora 01/05 00:00: "há 1 dia" (virada do mês)', async () => {
       vi.useFakeTimers({ toFake: ['Date'], shouldAdvanceTime: true })
-      vi.setSystemTime(new Date('2030-05-01T03:00:00Z')) // 01/05 00:00 em Itu
+      vi.setSystemTime(new Date('2030-05-01T03:00:00Z'))
       expect(await renderFichaComAtualizacao('2030-04-30T23:59:00')).toContain('Última atualização há 1 dia')
     })
   })

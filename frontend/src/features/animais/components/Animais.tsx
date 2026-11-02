@@ -23,8 +23,6 @@ const FILTROS_PADRAO = { busca: '', status: '', especie: '', baia: '' }
 const STATUS_SOB_CUSTODIA = 'sob_custodia'
 const ROTULOS_STATUS_FILTRO: Record<string, string> = { disponivel_adocao: 'Disponível p/ adoção' }
 
-// dataEntrada é LocalDateTime sem fuso, já no horário do CCZ: separar a
-// string não depende do fuso do navegador (ver lib/datas.ts).
 const formatarData = formatarDataBR
 
 function formatarPelagem(pelagem: Pelagem | null): string {
@@ -36,8 +34,6 @@ function formatarPelagem(pelagem: Pelagem | null): string {
 export function Animais() {
   const { roleKey } = useAuth()
   const podeEscrever = roleKey === 'admin' || roleKey === 'vet'
-  // Um card de baia linka para cá com `?baiaId=`: esse filtro vale mais
-  // que o guardado da última visita.
   const baiaDaUrl = useFiltroDeLink('baiaId')
   const { filtros, pagina, definirFiltros, irParaPagina, limparFiltros, filtrosAtivos } = useFiltrosLista(
     'animais',

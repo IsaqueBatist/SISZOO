@@ -61,8 +61,6 @@ describe('Configuracoes', () => {
 
     expect(await screen.findByText(/não foi possível salvar/i)).toBeInTheDocument()
     expect(screen.getByRole('combobox')).toHaveValue('COMPACTO')
-    // Mesma instância de DOM: o formulário não pode ser remontado ao
-    // re-renderizar após a falha, sob risco de perder o foco do usuário.
     expect(screen.getByRole('combobox')).toBe(select)
   })
 })

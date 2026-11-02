@@ -11,10 +11,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-// PUT: substitui os campos descritivos. As flags sao obrigatorias para
-// que a omissao nao seja lida como "false" (o que mudaria sigilo/urgencia sem
-// querer). Blocos denunciante/denunciado: ausente = sem alteracao; presente =
-// substitui o bloco inteiro.
 public record AtualizarOcorrenciaRequest(
         @NotBlank
         String tipoOcorrencia,

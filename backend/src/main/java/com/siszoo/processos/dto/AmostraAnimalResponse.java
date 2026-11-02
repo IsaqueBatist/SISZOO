@@ -11,8 +11,6 @@ import com.siszoo.processos.entity.NivelContato;
 import com.siszoo.processos.entity.StatusClinicoAmostra;
 import com.siszoo.processos.entity.TipoAbrigo;
 
-// animalId e so a referencia: a identificacao abaixo e a gravada na amostra
-// (snapshot), nunca a ficha atual do animal.
 public record AmostraAnimalResponse(
         UUID id,
         UUID animalId,

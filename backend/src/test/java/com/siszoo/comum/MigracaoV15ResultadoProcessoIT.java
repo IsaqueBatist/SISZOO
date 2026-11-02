@@ -23,10 +23,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-// Exercita a V15 (integridade do resultado do processo) num schema proprio, no
-// padrao de MigracaoV14ResultadoProcessoIT: do zero, a reconciliacao do legado
-// por atualizacao a partir da V14, o indice por processo, a recusa da linha
-// auto-retificada e do TRUNCATE.
 class MigracaoV15ResultadoProcessoIT extends AbstractIntegrationTest {
 
     private static final String SCHEMA = "migracao_v15";
@@ -66,7 +62,6 @@ class MigracaoV15ResultadoProcessoIT extends AbstractIntegrationTest {
                 "UPDATE " + S + "processo_sanitario SET resultado_laboratorial_id = (SELECT id FROM " + S
                         + "resultado_laboratorial WHERE codigo = 'negativo'), data_resultado = DATE '2026-10-11'"
                         + " WHERE id = '" + comVigente + "'"), nullValue());
-        // Historico sem vigente: a API nao produz; a V15 nao o trata de proposito.
         UUID historicoSemVigente = processoEm("COM_RESULTADO", usuario);
         assertThat(transacao(resultado(UUID.randomUUID(), historicoSemVigente, null, "negativo", usuario)), nullValue());
         UUID concluidoSemResultado = processoEm("CONCLUIDO", usuario);
@@ -82,8 +77,6 @@ class MigracaoV15ResultadoProcessoIT extends AbstractIntegrationTest {
         assertThat(statusDe(aguardando), equalTo("AGUARDANDO_RESULTADO"));
     }
 
-    // Lacuna da V14: a FK composta auto-referente enxerga a
-    // propria linha no INSERT e aceita retifica_id = id.
     @Test
     @DisplayName("[T34] na V14 a linha que corrige a si mesma passava pela FK composta")
     void v14AceitavaLinhaAutoRetificada() throws Exception {
@@ -95,9 +88,6 @@ class MigracaoV15ResultadoProcessoIT extends AbstractIntegrationTest {
         assertThat(transacao(resultado(propria, processo, propria, "negativo", usuario)), nullValue());
     }
 
-    // Pre-condicao da V15: com uma linha auto-retificada ja gravada, a
-    // V15 para com mensagem propria antes de mudar qualquer coisa, sem a
-    // reconciliacao, sem o indice, e o schema continua na V14.
     @Test
     @DisplayName("[T34] V15 sobre banco com linha auto-retificada falha antes de mudar qualquer coisa")
     void v15FalhaComLinhaAutoRetificadaSemAplicarNada() throws Exception {
@@ -114,7 +104,6 @@ class MigracaoV15ResultadoProcessoIT extends AbstractIntegrationTest {
         assertThat(statusDe(legado), equalTo("COM_RESULTADO"));
         assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM pg_indexes WHERE schemaname = ?"
                 + " AND indexname = 'ix_resultado_processo_processo_id'", Integer.class, SCHEMA), equalTo(0));
-        // version e texto: a ultima aplicada vem pela ordem de instalacao.
         assertThat(jdbcTemplate.queryForObject("SELECT version FROM " + S + "flyway_schema_history WHERE success"
                 + " ORDER BY installed_rank DESC LIMIT 1", String.class), equalTo("14"));
         assertThat(contarResultados(), equalTo(1));
@@ -161,7 +150,6 @@ class MigracaoV15ResultadoProcessoIT extends AbstractIntegrationTest {
                 .migrate();
     }
 
-    // Executa os comandos numa transacao propria e devolve o erro (ou null se confirmou).
     private SQLException transacao(String... comandos) throws SQLException {
         try (Connection conexao = dataSource.getConnection()) {
             conexao.setAutoCommit(false);
@@ -186,7 +174,6 @@ class MigracaoV15ResultadoProcessoIT extends AbstractIntegrationTest {
         assertThat(erro.getMessage(), containsString(trecho));
     }
 
-    // Processo completo (responsavel e amostra, V13) no status pedido.
     private UUID processoEm(String status, UUID usuario) throws SQLException {
         UUID processo = UUID.randomUUID();
         assertThat(transacao(processo(processo, usuario), responsavel(processo), amostra(processo),
@@ -235,7 +222,6 @@ class MigracaoV15ResultadoProcessoIT extends AbstractIntegrationTest {
                 "migracao." + UUID.randomUUID().toString().substring(0, 8) + "@itu.sp.gov.br");
     }
 
-    // Protocolo so precisa ser unico dentro do schema do teste (varchar(20)).
     private static String protocoloUnico() {
         return "T" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
     }

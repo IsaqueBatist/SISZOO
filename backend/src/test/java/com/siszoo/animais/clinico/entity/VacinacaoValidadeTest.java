@@ -6,8 +6,6 @@ import java.time.LocalDate;
 
 import org.junit.jupiter.api.Test;
 
-// Vacinacao#calcularDataValidade e a fonte unica da validade (RN-A01) para
-// ficha, alerta vacinal, dashboard e relatorio de vacinacao.
 class VacinacaoValidadeTest {
 
     private static Vacinacao vacinacao(LocalDate aplicacao, Integer intervaloMeses) {
@@ -22,7 +20,6 @@ class VacinacaoValidadeTest {
     @Test
     void validadeEAAplicacaoMaisOIntervaloEmMeses() {
         assertThat(vacinacao(LocalDate.of(2026, 3, 10), 12).calcularDataValidade()).isEqualTo(LocalDate.of(2027, 3, 10));
-        // Fim de mes: segue LocalDate.plusMonths.
         assertThat(vacinacao(LocalDate.of(2026, 1, 31), 1).calcularDataValidade()).isEqualTo(LocalDate.of(2026, 2, 28));
     }
 

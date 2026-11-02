@@ -30,11 +30,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// O status e os campos de encerramento nao tem setter publico: so mudam por
-// iniciarAtendimento()/encerrar(), que aplicam a matriz de transicoes. Quem chama
-// (OcorrenciaService) grava a movimentacao correspondente na mesma transacao.
-// Denunciante, denunciado, anexos e processo vinculado ficam fora da entidade
-// (relacoes do lado filho), para a listagem nao carregar nada disso por linha.
 @Entity
 @Table(name = "ocorrencia")
 @Getter
@@ -127,15 +122,12 @@ public class Ocorrencia {
         return statusOcorrencia == StatusOcorrencia.ENCERRADA;
     }
 
-    // Edicao, notas, anexos e vinculo so ate o encerramento. O proprio
-    // encerramento recusa com TransicaoStatusInvalidaException (matriz de transicoes).
     public void exigirAberta() {
         if (isEncerrada()) {
             throw new OcorrenciaEncerradaException();
         }
     }
 
-    // ABERTA -> EM_ATENDIMENTO e a unica transicao fora do encerramento.
     public StatusOcorrencia iniciarAtendimento() {
         if (statusOcorrencia != StatusOcorrencia.ABERTA) {
             throw new TransicaoStatusInvalidaException();
@@ -145,8 +137,6 @@ public class Ocorrencia {
         return anterior;
     }
 
-    // Encerra a partir de EM_ATENDIMENTO, ou direto de ABERTA so com as
-    // providencias de ProvidenciaTomada.CODIGOS_ENCERRAMENTO_DIRETO.
     public StatusOcorrencia encerrar(ProvidenciaTomada providencia, String descricao, LocalDateTime em, Usuario por) {
         boolean deEmAtendimento = statusOcorrencia == StatusOcorrencia.EM_ATENDIMENTO;
         boolean diretoDeAberta = statusOcorrencia == StatusOcorrencia.ABERTA

@@ -22,9 +22,6 @@ import com.siszoo.relatorios.dto.LinhaOcupacaoBaiaResponse;
 import com.siszoo.relatorios.dto.PeriodoRelatorio;
 import com.siszoo.relatorios.dto.RelatorioOcupacaoBaiasResponse;
 
-// "Ocupação de Baias": a mesma regra da tela de baias e do Dashboard
-// (NivelLotacao): abaixo de 80% normal, de 80% a 99% proximo_limite, 100% ou
-// mais superlotada. Difere do prototipo, que marcava 100% como "Próx. limite".
 @ExtendWith(MockitoExtension.class)
 class RelatorioOcupacaoBaiasServiceTest {
 
@@ -49,9 +46,6 @@ class RelatorioOcupacaoBaiasServiceTest {
         Baia superlotada = baia(idSuperlotada, "Baia 3", (short) 6);
 
         when(baiaRepository.findByAtivaTrueOrderByNomeAsc()).thenReturn(List.of(normal, noLimite, superlotada));
-        // Mocks das projeções precisam estar prontos ANTES do when/thenReturn
-        // abaixo - criar mock() dentro dos argumentos de um thenReturn em
-        // andamento confunde o estado interno do Mockito (UnfinishedStubbingException).
         List<OcupacaoBaiaProjection> ocupacoes = List.of(ocupacao(idNormal, 3L), ocupacao(idLimite, 5L), ocupacao(idSuperlotada, 6L));
         when(animalRepository.contarOcupacaoPorBaia(
                 List.of(idNormal, idLimite, idSuperlotada), com.siszoo.animais.entity.StatusAnimal.CODIGOS_FORA_DA_CUSTODIA))
@@ -66,7 +60,6 @@ class RelatorioOcupacaoBaiasServiceTest {
         assertThat(resposta.kpis().baiasSuperlotadas()).isEqualTo(1);
         assertThat(resposta.kpis().baiasNoLimite()).isEqualTo(1);
         assertThat(resposta.kpis().capacidadeTotal()).isEqualTo(18);
-        // (3+5+6)/18 = 77,8% -> arredonda para 78%
         assertThat(resposta.kpis().ocupacaoMediaPercentual()).isEqualTo(78);
     }
 

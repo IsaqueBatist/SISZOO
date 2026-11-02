@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { MENSAGEM_CATEGORIAS, violacaoPoliticaSenha } from './politicaSenha'
 
-// Mesmos casos de PoliticaSenhaTest (backend): as duas implementações têm de
-// concordar.
 const DONO = { email: 'erin.hagens@itu.sp.gov.br', nomeExibicao: 'Erin M. Hagens' }
 
 describe('violacaoPoliticaSenha', () => {

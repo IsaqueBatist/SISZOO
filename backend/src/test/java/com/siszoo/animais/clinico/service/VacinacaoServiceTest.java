@@ -69,7 +69,6 @@ class VacinacaoServiceTest {
 
     private static final LocalDate HOJE = LocalDate.of(2026, 9, 10);
 
-    // Construido a mao (nao @InjectMocks): Clock e valor, nao mock.
     @BeforeEach
     void criarService() {
         Clock clock = Clock.fixed(Instant.parse("2026-09-10T15:00:00Z"), ZoneId.of("America/Sao_Paulo"));
@@ -148,7 +147,6 @@ class VacinacaoServiceTest {
         VacinacaoResponse resultado = vacinacaoService.criar(requestComRetificacao(animalId, retificaId), usuarioId);
 
         assertThat(resultado).isEqualTo(respostaDepois);
-        // entidadeId e o do NOVO registro (V2), nao o do retificado.
         verify(auditoriaEventoService).registrar(usuario, AcaoAuditoria.ATUALIZACAO, "vacinacao", novoId, respostaAntes, respostaDepois);
     }
 

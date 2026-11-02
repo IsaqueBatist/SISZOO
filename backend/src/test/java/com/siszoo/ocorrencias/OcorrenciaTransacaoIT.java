@@ -55,11 +55,6 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import tools.jackson.databind.ObjectMapper;
 
-// Transacao e concorrencia de ocorrencias: rollback de status + movimentacao,
-// protocolo unico sob concorrencia, limite de anexos com lock e
-// ordem de locks no vinculo. O rollback e provocado por um gatilho temporario
-// que faz o INSERT da movimentacao falhar so para ocorrencias marcadas, sem
-// mock, exercitando a transacao real do PostgreSQL.
 @Import(RelogioTesteConfig.class)
 class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
 
@@ -109,8 +104,6 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
     void removerGatilho() {
         jdbcTemplate.execute("DROP TRIGGER IF EXISTS t25_falhar_movimentacao ON movimentacao_ocorrencia");
         jdbcTemplate.execute("DROP FUNCTION IF EXISTS t25_falhar_movimentacao()");
-        // Segunda barreira (a primeira e o finally do teste): nenhum teste
-        // seguinte herda o relogio de um ano isolado.
         RelogioTesteConfig.restaurar();
     }
 
@@ -123,7 +116,6 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
         Response resposta = criar(corpo(marca));
 
         resposta.then().statusCode(500);
-        // Nenhum detalhe interno no corpo do 500: sem stack trace, SQL ou mensagem da excecao.
         String corpo = resposta.asString();
         for (String interno : List.of("falha simulada", "movimentacao_ocorrencia", "INSERT", "PSQLException",
                 "Exception", "at com.siszoo", "trace", "message")) {
@@ -142,7 +134,6 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
     void falhaNaMudancaDeStatusMantemStatus() {
         Map<String, Object> corpo = corpo("Normal");
         String id = idDe(criar(corpo));
-        // Marca a ocorrencia para o gatilho so depois do cadastro (o PUT nao gera movimentacao).
         corpo.put("descricao", MARCA_FALHA + " " + id);
         given().header("Authorization", "Bearer " + tokenAgente).contentType(ContentType.JSON).body(corpo)
                 .when().put(ROTA + "/" + id).then().statusCode(200);
@@ -202,8 +193,6 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
         }
     }
 
-    // updatable = false tira a coluna do UPDATE que o Hibernate gera para a
-    // entidade; nao impede SQL direto (nao ha garantia no banco).
     @Test
     @DisplayName("[T30] alterar a ocorrencia pela entidade nao muda o protocolo gravado")
     void protocoloNaoEntraNoUpdateDaOcorrencia() {
@@ -219,14 +208,9 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
 
         Map<String, Object> gravada = jdbcTemplate.queryForMap(
                 "SELECT protocolo, descricao FROM ocorrencia WHERE id = CAST(? AS uuid)", id);
-        // A descricao prova que o UPDATE aconteceu; o protocolo ficou fora dele.
         assertThat(gravada.get("descricao"), equalTo("Protocolo imutavel, descricao alterada"));
         assertThat(gravada.get("protocolo"), equalTo(protocolo));
     }
-
-    // Virada do ano: o ano do protocolo e o de America/Sao_Paulo (ClockConfig),
-    // nao o de UTC. 2098-01-01T02:00Z ainda e 31/12/2097 23:00 em Sao Paulo
-    // (UTC-3); 03:00Z ja e 01/01/2098 00:00.
 
     @Test
     @DisplayName("[D13/T30] virada do ano: UTC ja em 2098 e Sao Paulo ainda em 2097 gera 001/2097")
@@ -258,11 +242,6 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
         }
     }
 
-    // 6 criacoes: mais de uma para disputar a linha (OCORRENCIA, ano) de
-    // protocolo_sequencia, com folga no pool padrao do Hikari (10; o
-    // application.yml nao o configura): 6 transacoes da aplicacao + 1 conexao
-    // bloqueadora + 1 de polling = 8, para as 6 estarem abertas ao mesmo tempo
-    // disputando a linha, e nao esperando conexao.
     private static final int CRIACOES_CONCORRENTES = 6;
     private static final long TIMEOUT_SEGUNDOS = 30;
 
@@ -270,29 +249,18 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
     @DisplayName("[T30] POST /api/ocorrencias simultaneos: todos 200, protocolos 001..N do ano, sem duplicata nem lacuna")
     void ocorrenciasConcorrentesPelaApi() throws Exception {
         int ano = 2096;
-        // O ano so e usado aqui e o banco do contexto e novo a cada execucao;
-        // ainda assim, nenhuma ocorrencia do ano pode existir (o 001 colidiria
-        // com o UNIQUE de protocolo), e a sequencia do ano e zerada.
         assertThat("ocorrencias ja existentes em " + ano, jdbcTemplate.queryForObject(
                 "SELECT count(*) FROM ocorrencia WHERE protocolo LIKE ?", Integer.class, "%/" + ano), equalTo(0));
         jdbcTemplate.update("DELETE FROM protocolo_sequencia WHERE entidade = 'OCORRENCIA' AND ano = ?", ano);
         RelogioTesteConfig.fixarEm(Instant.parse(ano + "-06-15T15:00:00Z"));
         try {
-            // Login depois de ajustar o relogio: o token do @BeforeEach foi
-            // emitido em 2026 e estaria vencido no relogio do ano isolado.
             String token = fixture.tokenComCargo("agente.concorrencia.ocorrencias@itu.sp.gov.br", "Agente",
                     "Concorrencia", ApiTesteFixture.CARGO_AGENTE_SANITARIO_ID);
-            // dataAbertura fixa e no passado: o ano do protocolo vem do Clock,
-            // nao da data de abertura, e estas linhas nao sobem para o
-            // topo das listagens dos outros testes (mesmo banco, sem rollback).
             Map<String, Object> corpo = corpo("Ocorrencia concorrente");
             corpo.put("dataAbertura", "2026-01-01");
 
             List<Response> respostas = postarOcorrenciasEmParalelo(token, corpo, ano);
 
-            // Sem depender da ordem: cada resposta 200 com protocolo do ano igual
-            // ao gravado; os numeros, ordenados, sao exatamente 1..N (duplicata ou
-            // lacuna falham); e nao ha no banco outra ocorrencia do ano.
             List<String> protocolos = new ArrayList<>();
             List<Integer> numeros = new ArrayList<>();
             for (Response resposta : respostas) {
@@ -313,14 +281,6 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
         }
     }
 
-    // Prova de simultaneidade no banco (padrao do VacinacaoControllerIT): uma
-    // conexao do teste insere, sem commit, a linha (OCORRENCIA, ano) da
-    // sequencia; o upsert de cada requisicao esbarra nela e espera. So quando
-    // pg_stat_activity mostra as N transacoes esperando juntas o teste libera
-    // (rollback), e as N disputam a mesma linha. O rollback deixa a sequencia
-    // vazia, entao o esperado continua 001..N. Prova que as N transacoes
-    // estavam abertas ao mesmo tempo disputando a linha; nao prova ausencia
-    // de deadlock em geral.
     private List<Response> postarOcorrenciasEmParalelo(String token, Map<String, Object> corpo, int ano)
             throws Exception {
         CountDownLatch largada = new CountDownLatch(1);
@@ -330,9 +290,6 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
             bloqueio.setAutoCommit(false);
             int pidBloqueio = pidDe(bloqueio);
             List<Future<Response>> futuros = new ArrayList<>();
-            // O rollback fica no finally: libera os upserts presos (e deixa a
-            // sequencia vazia) tambem quando a espera falha, antes do
-            // encerramento do executor.
             try {
                 try (PreparedStatement insert = bloqueio.prepareStatement(
                         "INSERT INTO protocolo_sequencia (entidade, ano, ultimo) VALUES ('OCORRENCIA', ?, 1)")) {
@@ -367,10 +324,6 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
             falha = t;
             throw t;
         } finally {
-            // shutdownNow so interrompe as threads do teste: o trabalho ja
-            // iniciado no servidor nao e cancelado. Se elas nao terminam, o
-            // teste falha dizendo isso, em vez de seguir (e restaurar o
-            // relogio) com requisicoes ainda em curso.
             executor.shutdownNow();
             if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
                 AssertionError pendentes = new AssertionError("Requisicoes ainda em execucao apos o encerramento;"
@@ -392,11 +345,6 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
         }
     }
 
-    // Espera ate as N requisicoes estarem paradas no upsert do protocolo ao
-    // mesmo tempo. Conta so sessoes ativas que esperam a transacao da conexao
-    // bloqueadora (pg_blocking_pids) no INSERT da sequencia; a propria sessao
-    // de polling e a bloqueadora (idle in transaction) ficam de fora por
-    // construcao. Uma requisicao que termina antes nao esperou as demais.
     private void aguardarUpsertsBloqueados(List<Future<Response>> futuros, int pidBloqueio) throws Exception {
         long limite = System.nanoTime() + TimeUnit.SECONDS.toNanos(TIMEOUT_SEGUNDOS);
         int bloqueados = 0;
@@ -513,15 +461,11 @@ class OcorrenciaTransacaoIT extends AbstractIntegrationTest {
         return servicoNoInstante(ano + "-06-15T15:00:00Z");
     }
 
-    // Fuso escrito aqui, igual ao de ClockConfig: o resultado esperado nunca
-    // depende do fuso da maquina.
     private ProtocoloService servicoNoInstante(String instante) {
         Clock clock = Clock.fixed(Instant.parse(instante), ZoneId.of("America/Sao_Paulo"));
         return new ProtocoloService(jdbcTemplate, clock);
     }
 
-    // Fora do proxy do Spring, a exigencia de transacao (MANDATORY) nao se
-    // aplica; o TransactionTemplate reproduz o uso real, dentro de transacao.
     private String proximo(ProtocoloService servico, ProtocoloService.Entidade entidade) {
         return transactionTemplate.execute(status -> servico.proximo(entidade));
     }

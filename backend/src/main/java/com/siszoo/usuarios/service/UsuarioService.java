@@ -127,8 +127,6 @@ public class UsuarioService {
         preferencias.setUsuario(usuario);
         preferenciaUsuarioRepository.save(preferencias);
 
-        // Autor do evento e o administrador que executou a acao; o usuario
-        // afetado fica em entidade_id.
         UsuarioResponse response = usuarioMapper.toResponse(usuario);
         auditoriaEventoService.registrar(buscarAutor(usuarioAutenticadoId), AcaoAuditoria.CRIACAO, "usuario",
                 usuario.getId(), null, response.semTelefone());
@@ -136,8 +134,6 @@ public class UsuarioService {
         return response;
     }
 
-    // Edicao pelo Administrador. Vale para outro Administrador, com auditoria; os
-    // limites sao o proprio cargo e o ultimo Administrador ativo.
     @Transactional
     public UsuarioResponse atualizar(UUID id, AtualizarUsuarioRequest request, UUID usuarioAutenticadoId) {
         Usuario usuario = usuarioRepository.findById(id)
@@ -182,8 +178,6 @@ public class UsuarioService {
         return usuarioMapper.toResponse(usuario);
     }
 
-    // A senha nova e temporaria: reaproveita o primeiro acesso (senha_alterada_em
-    // nula), e a pessoa troca ao entrar. O evento so registra o fato.
     @Transactional
     public void redefinirSenha(UUID id, RedefinirSenhaRequest request, UUID usuarioAutenticadoId) {
         if (id.equals(usuarioAutenticadoId)) {
@@ -257,7 +251,6 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(UsuarioNaoEncontradoException::new);
 
-        // Impede usuario de desativar a si mesmo (DER §3.1).
         if (!Boolean.TRUE.equals(request.ativo()) && id.equals(usuarioAutenticadoId)) {
             throw new UsuarioNaoPodeDesativarASiMesmoException();
         }
@@ -270,12 +263,10 @@ public class UsuarioService {
         usuario.setAtivo(ativar);
         usuario.setDesativadoEm(ativar ? null : LocalDateTime.now(clock));
         usuarioRepository.save(usuario);
-        // Reativar nao ressuscita sessao antiga: a pessoa entra de novo.
         if (!ativar) {
             sessaoService.encerrarDoUsuario(usuario.getId(), MotivoEncerramentoSessao.USUARIO_DESATIVADO, null);
         }
 
-        // So o estado alterado (ativo), sem os dados pessoais do usuario.
         AcaoAuditoria acao = ativar ? AcaoAuditoria.REATIVACAO : AcaoAuditoria.DESATIVACAO;
         auditoriaEventoService.registrar(buscarAutor(usuarioAutenticadoId), acao, "usuario", usuario.getId(),
                 Map.of("ativo", ativoAntes), Map.of("ativo", ativar));
@@ -304,9 +295,6 @@ public class UsuarioService {
         usuario.setTelefone(telefoneNovo);
         usuarioRepository.save(usuario);
 
-        // LGPD: auditoria_evento e imutavel e sem expurgo, entao o telefone
-        // nao entra no evento - so se mudou, no padrao do denuncianteAlterado
-        // da ocorrencia.
         boolean telefoneAlterado = !Objects.equals(telefoneAnterior, telefoneNovo);
         auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "usuario", usuario.getId(),
                 Map.of("telefoneAlterado", false), Map.of("telefoneAlterado", telefoneAlterado));

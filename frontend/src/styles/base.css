@@ -1,4 +1,3 @@
-/* SISZOO - Base styles */
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 body {
@@ -35,9 +34,6 @@ a:hover { text-decoration: underline; }
   color: var(--color-text-secondary);
 }
 
-/* Esconde visualmente mas mantém no nome acessível (leitor de tela), ao
-   contrário de display:none, que também tira o elemento da árvore de
-   acessibilidade. Usado na sidebar colapsada. */
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -50,7 +46,6 @@ a:hover { text-decoration: underline; }
   border: 0;
 }
 
-/* App layout */
 .app-shell { display: grid; grid-template-columns: var(--sidebar-width) 1fr; min-height: 100vh; }
 .app-shell.collapsed { grid-template-columns: 72px 1fr; }
 .main { display: flex; flex-direction: column; min-width: 0; }
@@ -61,7 +56,6 @@ a:hover { text-decoration: underline; }
   min-width: 0;
 }
 
-/* Sidebar */
 .sidebar {
   background: var(--sidebar-bg);
   color: var(--color-text-inverse);
@@ -189,7 +183,6 @@ a:hover { text-decoration: underline; }
 }
 .sidebar-footer .logout-btn:hover { background: var(--sidebar-item-hover); color: #fff; }
 
-/* Topbar */
 .topbar {
   height: var(--topbar-height);
   background: var(--color-surface);
@@ -209,7 +202,6 @@ a:hover { text-decoration: underline; }
 .breadcrumb .crumb { color: var(--color-text-secondary); }
 .breadcrumb .crumb.current { color: var(--color-text-primary); font-weight: 600; }
 
-/* Sem busca global: as ações ficam à direita. */
 .topbar-actions { display: flex; align-items: center; gap: var(--space-3); margin-left: auto; }
 .icon-btn {
   width: 38px; height: 38px;
@@ -250,7 +242,6 @@ a:hover { text-decoration: underline; }
 }
 .topbar-user .name { font-size: 13px; font-weight: 600; }
 
-/* Page header */
 .page-header {
   display: flex; align-items: flex-start; justify-content: space-between;
   gap: var(--space-4); flex-wrap: wrap;

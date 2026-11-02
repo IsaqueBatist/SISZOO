@@ -19,14 +19,10 @@ public interface TokenRecuperacaoSenhaRepository extends JpaRepository<TokenRecu
     @Query("select t from TokenRecuperacaoSenha t join fetch t.usuario where t.tokenHash = :hash")
     Optional<TokenRecuperacaoSenha> buscarPorHash(@Param("hash") String hash);
 
-    // Lock na linha: dois envios do mesmo formulario ao mesmo tempo passam um
-    // de cada vez, e o segundo ja encontra o token consumido.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select t from TokenRecuperacaoSenha t join fetch t.usuario where t.tokenHash = :hash")
     Optional<TokenRecuperacaoSenha> buscarPorHashParaAtualizar(@Param("hash") String hash);
 
-    // Nova solicitacao ou senha trocada por outro caminho: os links anteriores
-    // ainda pendentes deixam de valer.
     @Modifying(flushAutomatically = true)
     @Query("""
             update TokenRecuperacaoSenha t set t.invalidadoEm = :agora
@@ -34,8 +30,6 @@ public interface TokenRecuperacaoSenhaRepository extends JpaRepository<TokenRecu
             """)
     int invalidarPendentesDoUsuario(@Param("usuarioId") UUID usuarioId, @Param("agora") LocalDateTime agora);
 
-    // Na redefinicao: o token consumido fica como usado; os demais pendentes
-    // do usuario sao invalidados.
     @Modifying(flushAutomatically = true)
     @Query("""
             update TokenRecuperacaoSenha t set t.invalidadoEm = :agora

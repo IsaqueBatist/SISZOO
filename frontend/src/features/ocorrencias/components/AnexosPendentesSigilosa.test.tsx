@@ -12,9 +12,6 @@ import { server } from '@/mocks/server'
 import { instalarIndexedDbEmMemoria } from '@/test/indexedDbEmMemoria'
 import { CadastrarOcorrencia } from './CadastrarOcorrencia'
 
-// Ocorrência sigilosa: o rascunho guarda o denunciante, mas o anexo não vai
-// para o disco, e a pendência de anexos não traz dados dele e é só do usuário
-// que registrou.
 const USUARIO_A = 'a1b2c3d4-0000-0000-0000-00000000000a'
 const USUARIO_B = 'a1b2c3d4-0000-0000-0000-00000000000b'
 const NOME_DENUNCIANTE = 'Fulano Sigiloso'
@@ -72,15 +69,11 @@ describe('ocorrência sigilosa no IndexedDB', () => {
     await user.type(screen.getByLabelText(/^Bairro/i), 'Bairro Teste')
     await user.type(screen.getByLabelText(/Descrição da ocorrência/i), 'Descrição de teste para a ocorrência.')
 
-    // O rascunho guarda o denunciante, inclusive na sigilosa
-    // (decisão dos dois autores, docs/decisoes/T42.md).
     await waitFor(async () =>
       expect(JSON.stringify((await conteudo('ocorrencias'))[`${USUARIO_A}:novo`])).toContain('Descrição de teste'),
     )
     expect(JSON.stringify(await conteudo('ocorrencias'))).toContain(NOME_DENUNCIANTE)
 
-    // Já o ANEXO da sigilosa não é gravado: pode ser a foto do local ou um
-    // documento do denunciante protegido.
     await user.upload(screen.getByLabelText('Adicionar anexo'), [new File(['a'], 'a.png', { type: 'image/png' })])
     expect(await screen.findByText(/anexos não são guardados no rascunho/)).toBeInTheDocument()
     expect(await conteudo('arquivos')).toEqual({})
@@ -88,8 +81,6 @@ describe('ocorrência sigilosa no IndexedDB', () => {
     await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
     await screen.findByText(/Há anexos pendentes/)
 
-    // Depois do POST: só a pendência, com id, protocolo e arquivos, e nada do
-    // denunciante nela, nem resto na store de arquivos.
     const store = await conteudo('ocorrencias')
     expect(Object.keys(store)).toEqual([`${USUARIO_A}:anexos-pendentes`])
     expect(Object.keys(store[`${USUARIO_A}:anexos-pendentes`] as object).sort()).toEqual(['anexos', 'ocorrenciaId', 'protocolo'])
@@ -118,7 +109,6 @@ describe('ocorrência sigilosa no IndexedDB', () => {
     await waitFor(async () =>
       expect(JSON.stringify((await conteudo('ocorrencias'))[`${USUARIO_A}:novo`])).toContain('laudo.png'),
     )
-    // No rascunho de texto fica só a referência, nunca o conteúdo.
     expect(JSON.stringify((await conteudo('ocorrencias'))[`${USUARIO_A}:novo`])).not.toContain('conteudo')
 
     unmount()

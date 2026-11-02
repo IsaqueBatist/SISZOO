@@ -16,8 +16,6 @@ export function MenuPerfil() {
   const botaoRef = useRef<HTMLButtonElement>(null)
   const primeiroItemRef = useRef<HTMLAnchorElement>(null)
 
-  // Estável entre renders: useClickOutside refaz a inscrição nos listeners do
-  // documento sempre que o handler muda.
   const fechar = useCallback(() => {
     setAberto(false)
     botaoRef.current?.focus()

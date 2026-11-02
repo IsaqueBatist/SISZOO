@@ -7,9 +7,6 @@ import com.siszoo.animais.dto.AtualizarStatusBaiaRequest;
 import com.siszoo.animais.dto.CriarBaiaRequest;
 import com.siszoo.animais.service.BaiaService;
 
-// Baias do seed. A ocupacao final (AnimaisSeed) cobre os estados do relatorio
-// e do alerta: Canil Externo B1 fica com 2/2 (baia_superlotada usa >=),
-// Canil A2 perto do limite, Canil C9 vazia e desativada.
 class BaiasSeed {
 
     record PlanoBaia(String chave, String nome, String tipo, int capacidade, String finalidade, boolean inativa) {

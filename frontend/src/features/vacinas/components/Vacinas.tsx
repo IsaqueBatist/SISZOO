@@ -13,28 +13,16 @@ import { VacinaFormModal } from './VacinaFormModal'
 
 type FiltroSituacao = 'ativas' | 'inativas' | 'todas'
 
-// Busca e situação sobrevivem a abrir uma vacina e voltar (sessionStorage),
-// como nas outras listas.
 const FILTROS_PADRAO = { busca: '', situacao: 'ativas' }
 
 const LINHAS_SKELETON = [0, 1, 2, 3]
 const COLUNAS_TABELA = 5
 
-// Contagem de animais em alerta por vacina, agrupada de GET /api/alertas/vacinas.
 interface AlertaDaVacina {
   animais: number
   vencidas: number
 }
 
-// Catálogo usado pelo registro de vacinação (modal "Registrar vacina" da ficha
-// do animal). Leitura: GESTAO_ANIMAIS:leitura (os três perfis). Cadastro e
-// edição: GESTAO_ANIMAIS:escrita (Administrador e Veterinária). Desativar
-// exige :exclusao, que só o Administrador tem.
-//
-// O intervalo de reforço cadastrado aqui é o que gera o alerta de vacina
-// vencendo: a data de validade de cada aplicação é a data aplicada + esse
-// intervalo. Por isso o catálogo é editável — o seed da V5 usa 12 meses para
-// todas, valor provisório que o CCZ precisa confirmar.
 export function Vacinas() {
   const { roleKey } = useAuth()
   const podeEscrever = roleKey === 'admin' || roleKey === 'vet'
@@ -43,16 +31,10 @@ export function Vacinas() {
   const { filtros, definirFiltros, limparFiltros, filtrosAtivos } = useFiltrosLista('vacinas', FILTROS_PADRAO)
   const { busca } = filtros
   const situacao = filtros.situacao as FiltroSituacao
-  // `undefined` = fechado; `'nova'` = cadastro; uma vacina = edição.
   const [emEdicao, setEmEdicao] = useState<Vacina | 'nova' | undefined>(undefined)
 
-  // Carrega o catálogo inteiro (ativas e inativas) de uma vez e filtra em
-  // memória, como Usuarios.tsx: a faixa de resumo precisa do conjunto completo
-  // de qualquer jeito, então refazer a consulta a cada filtro só gastaria rede.
   const { data: vacinas, isLoading, isError } = useVacinasQuery(true)
 
-  // Mesma queryKey que o Dashboard já usa, então não custa uma requisição a
-  // mais. Falha aqui não quebra a tela: a coluna some e o catálogo continua.
   const { data: alertas } = useAlertasVacinaisQuery()
 
   const alertaPorVacina = useMemo(() => {
@@ -161,9 +143,6 @@ export function Vacinas() {
                 <tr>
                   <th>Vacina</th>
                   <th>Intervalo de reforço</th>
-                  {/* O número vem do alerta de reforço, que por desenho olha só
-                      7 dias à frente, só animais sob custódia e só a aplicação
-                      vigente de cada vacina (RN-A01, RN-A02, RN-A05). */}
                   <th title="Animais com reforço vencido ou a vencer nos próximos 7 dias. Conta só animais sob custódia e a aplicação mais recente de cada vacina.">
                     Em alerta
                   </th>
@@ -346,8 +325,6 @@ function LinhaVacina({
   )
 }
 
-// Vacina inativa ou sem intervalo nunca entra no alerta (RN-A03) — o traço
-// nesses casos é a resposta certa, não dado faltando, e o `title` diz isso.
 function CelulaAlerta({ vacina, alerta }: { vacina: Vacina; alerta: AlertaDaVacina | undefined }) {
   if (!vacina.ativo) return <span className="muted" title="Vacina inativa não gera alerta de reforço.">—</span>
   if (vacina.intervaloMeses === null) {

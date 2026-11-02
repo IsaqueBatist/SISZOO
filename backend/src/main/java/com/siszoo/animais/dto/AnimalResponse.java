@@ -43,7 +43,6 @@ public record AnimalResponse(
         LocalDate dataImplantacaoChip,
         String procedencia,
         String laudoEutanasia,
-        // V33. Nulo nas listagens: so o detalhe carrega a colecao.
         List<CatalogoItemResponse> condicoes,
         String condicoesOutras) {
 }

@@ -20,9 +20,6 @@ import type { AnimaisFiltro, AnimalRequest, BaiaRequest } from '../types/animais
 const ANIMAIS_QUERY_KEY = ['animais']
 const BAIAS_QUERY_KEY = ['baias']
 
-// A key inclui o objeto de filtro inteiro: qualquer mudança de status,
-// espécie, busca ou página gera uma key nova e refaz a query automaticamente,
-// sem precisar de invalidateQueries manual.
 export function useAnimaisQuery(filtro: AnimaisFiltro, habilitada = true) {
   return useQuery({
     queryKey: ['animais', filtro],
@@ -71,10 +68,6 @@ export function useAtualizarAnimalMutation() {
   })
 }
 
-// A ocupação das baias é calculada a partir dos animais: cadastro, troca de
-// baia ou de status mudam o "x/capacidade" das telas de baia e do select.
-// Catálogos (staleTime Infinity) e anexos não mudam com o cadastro do animal
-// e ficam de fora, para cada gravação não os recarregar.
 function invalidarAnimaisEBaias(queryClient: QueryClient) {
   return Promise.all([
     queryClient.invalidateQueries({
@@ -85,11 +78,6 @@ function invalidarAnimaisEBaias(queryClient: QueryClient) {
   ])
 }
 
-// Traz ativas e inativas: usado pela tela de gestão, que filtra por
-// status em memória. Key própria, distinta de `['baias', { ativa: true }]`
-// (dropdown de filtro em /animais), mas invalidada junto por compartilhar o
-// prefixo `['baias']`.
-// RF-A04: anexos do animal.
 export function useAnexosAnimalQuery(animalId: string) {
   return useQuery({
     queryKey: ['animais', 'anexos', animalId],
@@ -113,8 +101,6 @@ export function useBaiasQuery() {
   })
 }
 
-// Sob o prefixo `['baias']`, então é recarregada junto com as baias e
-// sempre que um animal muda (invalidarAnimaisEBaias).
 export function useResidentesDeBaiasQuery() {
   return useQuery({
     queryKey: [...BAIAS_QUERY_KEY, 'residentes'],

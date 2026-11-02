@@ -3,13 +3,9 @@ import { formatarInstanteBR } from '@/lib/datas'
 interface BannerRascunhoProps {
   onRestaurar: () => void
   onDescartar: () => void
-  // Instante do último salvamento. null em rascunho antigo, que não tem a
-  // data registrada: nesse caso o aviso sai sem ela.
   salvoEm?: number | null
 }
 
-// Aviso de rascunho salvo (useRascunho): o formulário não é preenchido
-// sozinho, quem decide é o usuário.
 export function BannerRascunho({ onRestaurar, onDescartar, salvoEm }: BannerRascunhoProps) {
   return (
     <div className="alert info" role="alert">

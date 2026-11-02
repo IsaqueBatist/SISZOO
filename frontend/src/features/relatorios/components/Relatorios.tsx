@@ -13,18 +13,11 @@ interface GeracaoAtiva {
   nomeExibicao: string
 }
 
-// Tela de Relatórios (docs/prototipo/relatorios.html): 6 cards (um por
-// tipo do catálogo, DER §3.6) + seção "Relatórios recentes". O preview do
-// relatório gerado aparece abaixo da grade de cards, não dentro do card: o
-// card só guarda o filtro escolhido; `geracaoAtiva` nunca é limpo por um erro
-// de preview/exportação, então uma falha de rede não perde o que o usuário
-// já escolheu (internet instável).
 export function Relatorios() {
   const tipos = useTiposRelatorioQuery()
   const [geracaoAtiva, setGeracaoAtiva] = useState<GeracaoAtiva | null>(null)
   const previa = useRef<HTMLDivElement>(null)
 
-  // A prévia aparece abaixo dos cards: sem isto, gerar parece não ter feito nada.
   useEffect(() => {
     if (geracaoAtiva) previa.current?.scrollIntoView?.({ block: 'start' })
   }, [geracaoAtiva])

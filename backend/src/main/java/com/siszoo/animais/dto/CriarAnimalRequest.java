@@ -47,7 +47,6 @@ public record CriarAnimalRequest(
         @Size(max = 30)
         String microchip,
 
-        // Opcional: null = nao informado, nunca "nao".
         Boolean esterilizado,
 
         LocalDate dataEsterilizacao,
@@ -67,7 +66,6 @@ public record CriarAnimalRequest(
 
         String observacoes,
 
-        // Identificação complementar (RF-A01/RN01). Opcionais.
         @Size(max = 30)
         String numeroMedalha,
 
@@ -76,17 +74,14 @@ public record CriarAnimalRequest(
         @Size(max = 200)
         String procedencia,
 
-        // Exigido pelo AnimalService quando status = obito_eutanasia.
         @Size(max = 4000)
         String laudoEutanasia,
 
-        // V33: codigos do catalogo condicao_saude; "outras" exige o texto.
         List<String> condicoes,
 
         @Size(max = 500, message = "Descreva a condição em até 500 caracteres.")
         String condicoesOutras) implements DadosDescritivosAnimal {
 
-    // Sem as condicoes de saude (V33): usado pelo seed e pelos testes.
     public CriarAnimalRequest(String nome, String especie, String sexo, String raca, String coloracao, String pelagem,
             String porte, BigDecimal pesoKg, String idadeAprox, LocalDate dataNascimentoAprox, String microchip,
             Boolean esterilizado, LocalDate dataEsterilizacao, String status, String motivoEntrada,

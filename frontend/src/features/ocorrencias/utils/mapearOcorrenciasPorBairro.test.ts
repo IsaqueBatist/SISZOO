@@ -48,21 +48,18 @@ describe('mapearOcorrenciasPorBairro', () => {
 
   it('agrupa em "Outros" a partir do 16º bairro mais frequente', () => {
     const ocorrencias = Array.from({ length: 17 }, (_, indice) =>
-      // bairro índice 0 aparece 17 vezes, índice 1 aparece 16 vezes, ...,
-      // garantindo uma ordem de frequência decrescente clara.
       Array.from({ length: 17 - indice }, () => ocorrencia(`Bairro ${indice}`)),
     ).flat()
 
     const resultado = mapearOcorrenciasPorBairro(ocorrencias)
 
-    expect(resultado).toHaveLength(16) // 15 principais + "Outros"
+    expect(resultado).toHaveLength(16)
     expect(resultado[15].bairro).toBe('Outros')
     const somaEsperadaOutros = Array.from({ length: 2 }, (_, i) => 17 - (15 + i)).reduce((a, b) => a + b, 0)
     expect(resultado[15].quantidade).toBe(somaEsperadaOutros)
   })
 })
 
-// O backend devolve uma linha por grafia já contada.
 describe('mapearOcorrenciasPorBairro com contagens do backend', () => {
   it('soma as quantidades das grafias do mesmo bairro e rotula pela de maior quantidade', () => {
     const resultado = mapearOcorrenciasPorBairro([

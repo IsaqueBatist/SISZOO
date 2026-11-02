@@ -20,9 +20,6 @@ import com.siszoo.comum.security.UsuarioAutenticado;
 
 import jakarta.validation.Valid;
 
-// RF-A04. Somente GET/POST: registro clinico imutavel (RN06); nao
-// existe PUT/PATCH/DELETE de proposito (405 do Spring MVC). Correcao = novo
-// POST com `retificaId` (ver CriarExameRequest).
 @RestController
 @RequestMapping("/api/exames")
 public class ExameController {

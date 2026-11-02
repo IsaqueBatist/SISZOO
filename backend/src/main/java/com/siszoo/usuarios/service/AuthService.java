@@ -36,7 +36,6 @@ public class AuthService {
     private final LimitadorLogin limitadorLogin;
     private final Clock clock;
 
-    // tokenRenovacao vai so no cookie httpOnly; nulo quando o cookie nao muda.
     public record SessaoAutenticada(LoginResponse resposta, String tokenRenovacao) {
     }
 
@@ -61,9 +60,6 @@ public class AuthService {
         this.clock = clock;
     }
 
-    // Limite de tentativas antes de conferir a senha: dentro da janela,
-    // a resposta e 429 mesmo para a senha certa. Login recusado nao gera
-    // evento de auditoria; so a falha conta no limitador.
     @Transactional
     public SessaoAutenticada login(LoginRequest request, String ip, String userAgent) {
         limitadorLogin.exigirPermitido(request.email(), ip);
@@ -82,8 +78,6 @@ public class AuthService {
         return respostaDe(sessaoService.criar(usuario, ip, userAgent));
     }
 
-    // noRollbackFor acompanha o do SessaoService: sem ele, a recusa desfaria o
-    // encerramento da sessao gravado na mesma transacao.
     @Transactional(noRollbackFor = SessaoExpiradaException.class)
     public SessaoAutenticada renovar(String tokenRenovacao, boolean houveAtividade) {
         return respostaDe(sessaoService.renovar(tokenRenovacao, houveAtividade));
@@ -95,8 +89,6 @@ public class AuthService {
                 usuario, AcaoAuditoria.LOGOUT, "usuario", usuario.getId(), null, null));
     }
 
-    // Cargos relidos do banco a cada emissao: mudanca de cargo vale no maximo
-    // na proxima renovacao, nao so no proximo login.
     private SessaoAutenticada respostaDe(SessaoService.SessaoRenovada sessao) {
         Usuario usuario = sessao.sessao().getUsuario();
         String token = jwtService.gerarToken(usuario, sessao.sessao().getId());
@@ -116,22 +108,16 @@ public class AuthService {
                 .ifPresent(mensagem -> {
                     throw new CampoInvalidoException("novaSenha", mensagem);
                 });
-        // Quem recebeu uma senha temporaria nao pode ficar com ela.
         if (passwordEncoder.matches(request.novaSenha(), usuario.getSenha())) {
             throw new CampoInvalidoException("novaSenha", "A nova senha precisa ser diferente da senha atual.");
         }
 
-        // O evento registra so a data da troca, nunca senha nem hash. A
-        // data vai truncada em microssegundos, a precisao do timestamp do
-        // PostgreSQL (que arredondaria os nanossegundos): assim o payload_depois
-        // e o valor gravado, nao uma aproximacao dele.
         LocalDateTime alteradaAntes = usuario.getSenhaAlteradaEm();
         LocalDateTime alteradaAgora = LocalDateTime.now(clock).truncatedTo(ChronoUnit.MICROS);
         usuario.setSenha(passwordEncoder.encode(request.novaSenha()));
         usuario.setSenhaAlteradaEm(alteradaAgora);
         usuarioRepository.save(usuario);
         sessaoService.encerrarDoUsuario(usuario.getId(), MotivoEncerramentoSessao.SENHA_ALTERADA, sessaoAtual);
-        // Um link de recuperacao pedido antes da troca nao pode valer depois dela.
         recuperacaoSenhaService.invalidarPendentes(usuario.getId());
 
         auditoriaEventoService.registrar(usuario, AcaoAuditoria.ATUALIZACAO, "usuario", usuario.getId(),

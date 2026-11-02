@@ -26,8 +26,6 @@ public class AuditoriaController {
         this.auditoriaEventoService = auditoriaEventoService;
     }
 
-    // Filtros opcionais de servidor (docs/contratos/auditoria-filtros.md). Sem
-    // parametros, so paginacao.
     @GetMapping
     @PreAuthorize("hasAuthority('USUARIOS_ACESSO:leitura')")
     public PaginaResponse<AuditoriaEventoResponse> listar(

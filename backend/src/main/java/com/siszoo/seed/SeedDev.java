@@ -12,10 +12,6 @@ import org.springframework.cache.CacheManager;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
 
-// Orquestrador do seed de dados ficticios (docs/decisoes/seed-dev.md). Roda
-// no ApplicationReadyEvent, depois do DataSeeder (CommandLineRunner) ter
-// criado o admin bootstrap, e pode ser chamado de novo (executar) pelos testes.
-// Cada fase so cria o que ainda nao tem chave em seed_controle.
 public class SeedDev {
 
     private static final Logger log = LoggerFactory.getLogger(SeedDev.class);
@@ -84,11 +80,6 @@ public class SeedDev {
         return resumo;
     }
 
-    // Guarda de banco, antes de qualquer escrita: num banco sem
-    // seed_controle, so roda se nao houver dado de dominio - nada alem do
-    // admin bootstrap. Assim o seed nunca mistura registros ficticios com
-    // dados de quem ja usa o banco. E o inverso: seed_controle existe mas
-    // esta vazia enquanto ha usuarios do seed (tabela limpa a mao).
     private void verificarBanco() {
         if (!executor.tabelaDeControleExiste()) {
             long registrosDeDominio = executor.contar("SELECT count(*) FROM animal")

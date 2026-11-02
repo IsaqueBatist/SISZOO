@@ -33,15 +33,12 @@ import io.restassured.specification.RequestSpecification;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
-// Relogio fixo (RelogioTesteConfig): o service compara dataAbertura com o "hoje" do
-// Clock, e o protocolo usa o ano do Clock (2026).
 @Import(RelogioTesteConfig.class)
 class OcorrenciaControllerIT extends AbstractIntegrationTest {
 
     private static final String ROTA = "/api/ocorrencias";
     private static final LocalDate HOJE = RelogioTesteConfig.HOJE;
 
-    // Assinaturas minimas aceitas pela deteccao de tipo do service.
     private static final byte[] PNG = {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x01};
     private static final byte[] GIF = {0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x00};
 
@@ -57,8 +54,6 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
     private String tokenAdmin;
     private String tokenAgente;
     private String tokenVet;
-    // Le o modulo sem denunciante_sigiloso: o perfil que recebe a mascara.
-    // Nenhum cargo real e assim desde a V11 (Vet sem acesso a ocorrencias).
     private String tokenLeitor;
 
     @BeforeEach
@@ -316,7 +311,6 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
 
         encerrar(tokenAgente, id, Map.of("providenciaTomada", "abertura_processo")).then().statusCode(422);
 
-        // COM_RESULTADO so pelo lancamento do resultado.
         alterarStatusProcesso(tokenAgente, processoId, "AGUARDANDO_RESULTADO").then().statusCode(200);
         encerrar(tokenAgente, id, Map.of("providenciaTomada", "abertura_processo")).then().statusCode(422);
         Response comResultado = comToken(tokenAgente).contentType(ContentType.JSON)
@@ -488,11 +482,6 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
     @Test
     @DisplayName("[D31/T30] mesma urgencia e mesma data de abertura: desempate pela criacao mais recente, nao pelo texto do protocolo")
     void listagemDesempataPelaCriacao() {
-        // Gravadas direto no banco para fixar protocolo e criado_em. A ordem de
-        // criacao (1000, 998, 999, da mais recente para a mais antiga) difere
-        // do texto do protocolo desc (999, 998, 1000) e do numero desc
-        // (1000, 999, 998): so o desempate por criado_em produz a esperada.
-        // data_abertura antiga e ano 2099 no protocolo isolam estas linhas.
         inserirOcorrencia("999/2099", "2026-01-01 08:00:00");
         inserirOcorrencia("998/2099", "2026-01-01 09:00:00");
         inserirOcorrencia("1000/2099", "2026-01-01 10:00:00");
@@ -624,8 +613,6 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
                 }
             }
         }
-        // O endereco e o bairro DA OCORRENCIA continuam no snapshot;
-        // o que sai sao so os dados pessoais do denunciante.
         JsonNode depoisDoPut = objectMapper.readTree((String) eventos.get(1).get("depois"));
         assertThat(depoisDoPut.has("denunciante"), equalTo(false));
         assertThat(depoisDoPut.get("endereco").asString(), equalTo("Rua da Ocorrencia " + marcador));
@@ -650,7 +637,6 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
         return corpo;
     }
 
-    // PUT exige as flags explicitas; parte do corpo usado no cadastro.
     private static Map<String, Object> corpoPut(Map<String, Object> base) {
         return new HashMap<>(base);
     }
@@ -703,7 +689,6 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
         return comToken(token).when().get(ROTA + "/" + id + "/anexos/" + anexoId);
     }
 
-    // Processo urgente = amostra com contato humano (DER regra 18).
     private Response criarProcesso(String token, boolean urgente, String ocorrenciaId) {
         return fixture.postarProcesso(token, ocorrenciaId, urgente);
     }
@@ -721,7 +706,6 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
         return jdbcTemplate.queryForObject("SELECT count(*) FROM " + tabela, Integer.class);
     }
 
-    // Ocorrencia nao urgente com data_abertura 2026-01-01 e criado_em explicito.
     private void inserirOcorrencia(String protocolo, String criadoEm) {
         jdbcTemplate.update("INSERT INTO ocorrencia (protocolo, tipo_ocorrencia_id, data_abertura, endereco, bairro,"
                 + " descricao, registrado_por_id, criado_em)"

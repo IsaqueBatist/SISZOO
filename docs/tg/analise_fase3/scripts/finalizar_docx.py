@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Fase 4 — passo 2: edições finais (sem controle de alterações) sobre build/v3_aceito.docx.
 
 Saída: build/v3_campos.docx (campos ainda não atualizados; o passo 3 usa o Word para isso).
@@ -21,13 +20,11 @@ T = k.texto
 PPR_CORPO = '<w:pPr><w:pStyle w:val="CorpoTexto"/></w:pPr>'
 relatorio = {}
 
-# ============================================================ 1. mídia das 7 capturas 1920×1080
 for cod, arq in [('T14', 'T14_central_relatorios.png'), ('T18', 'T18_relatorio_anual_processos.png'), ('T19', 'T19_relatorio_vacinacao.png'),
                  ('T20', 'T20_relatorio_adocoes.png'), ('T21', 'T21_relatorio_procedimentos.png'), ('T22', 'T22_relatorio_ocupacao_baias.png'),
                  ('T23', 'T23_relatorio_ocorrencias_bairro.png')]:
     k.substituir_midia(f'fase3_{cod}.png', os.path.join(CAP, arq), local=f'Figura da tela {cod}', id_item='Capturas 1920×1080')
 
-# ============================================================ 2. descrições das telas (Seção 5.2) e do Apêndice E
 DESCR = {
  'A Figura 31 apresenta a tela T01': (
   'A Figura 31 apresenta a tela T01, de login, comum a todos os perfis. A tela é dividida em um painel institucional, com o nome e a '
@@ -206,7 +203,6 @@ for legenda, _, texto in APE:
     k.doc = k.doc[:ini] + novo + k.doc[ini:]
     k.log.append({'op': 'inserir', 'local': 'Apêndice E', 'id': 'Correção 2', 'antes': '', 'depois': texto[:120], 'controlado': False})
 
-# ============================================================ 3. Apêndice D: remover fotos de monitor (Figs. 49–51)
 def validar_apD(textos, bloco):
     assert bloco.count('<w:drawing>') == 3, bloco.count('<w:drawing>')
     legendas = [t for t in textos if re.match(r'^Figura \d+ – ', t)]
@@ -223,23 +219,19 @@ k.substituir_texto('Este apêndice reúne as fotografias feitas pelos autores na
   'canil, os formulários e documentos dos processos sanitários e os gráficos afixados no mural da unidade. As planilhas eletrônicas em uso '
   'são reproduzidas no Anexo A. Os dados pessoais de munícipes e funcionários foram ocultados, em observância à Lei nº 13.709/2018 (LGPD).',
   apos=apD_ini, local='Apêndice D', id_item='Correção 5')
-# Fontes sem ponto final (F1-060)
 while True:
     try:
         k.substituir_texto('Fonte: Acervo dos autores (2026)', 'Fonte: Acervo dos autores (2026).', apos=apD_ini, exato=True, local='Apêndice D', id_item='F1-060')
     except ValueError:
         break
-# Anexo A: fonte de documento não publicado (F1-057)
 anexo_ini = k.pos_legenda('ANEXO A', 1)
 for _ in range(4):
     k.substituir_texto('Fonte: Centro de Controle de Zoonoses de Itu (2026).',
                        'Fonte: planilhas cedidas pelo CCZ de Itu (2026), documento não publicado.', apos=anexo_ini, exato=True, local='Anexo A', id_item='F1-057')
 
-# ============================================================ 4. legendas com SEQ + listas automáticas + Sumário
 intro_ini, _ = k.pos_texto(' INTRODUÇÃO', exato=True)
 MAPA_FIG = {n: (n if n <= 48 else n - 3) for n in range(1, 70)}
 refs_corpo = []
-# 4a) referências no corpo a figuras ≥ 49 (fora das legendas)
 for ini, fim, p in list(k.paragrafos(intro_ini)):
     t = T(p)
     if re.match(r'^(Figura|Quadro) \d+ – ', t):
@@ -248,7 +240,6 @@ for ini, fim, p in list(k.paragrafos(intro_ini)):
         if int(m.group(1)) >= 49:
             refs_corpo.append((int(m.group(1)), t[:80]))
 relatorio['referencias_figuras_49_mais'] = refs_corpo
-# 4b) legendas → SEQ
 n_fig = n_qua = 0
 pos = intro_ini
 while True:
@@ -271,10 +262,8 @@ while True:
     _, novo_fim = k.legenda_seq(ini, fim, rotulo, novo_num, titulo, centralizar)
     pos = novo_fim
 relatorio['legendas_seq'] = {'figuras': n_fig, 'quadros': n_qua}
-# 4c) listas pré-textuais → campos TOC (remove entradas estáticas)
 def substituir_lista(titulo, instr):
     ini_t, fim_t = k.pos_texto(titulo, exato=True)
-    # entradas: do parágrafo seguinte até o parágrafo de quebra de página (exclusivo)
     fim_bloco = None
     for ini, fim, p in k.paragrafos(fim_t):
         if 'w:type="page"' in p or '<w:sectPr' in p:
@@ -285,28 +274,21 @@ def substituir_lista(titulo, instr):
     k.log.append({'op': 'lista_toc', 'local': titulo, 'id': 'Correção 6 (ABNT) / F1-051', 'antes': f'{removidos} entradas estáticas', 'depois': instr, 'controlado': False})
 substituir_lista('LISTA DE FIGURAS', 'TOC \\h \\z \\c "Figura"')
 substituir_lista('LISTA DE QUADROS', 'TOC \\h \\z \\c "Quadro"')
-# 4d) Sumário: instrução por níveis de título
 k.doc = k.doc.replace(' TOC \\h \\u \\z \\t &quot;Heading 1,1,Heading 2,2,Heading 3,3,&quot;', ' TOC \\o &quot;1-3&quot; \\h \\z \\u ')
 k.doc = k.doc.replace(' TOC \\h \\u \\z \\t "Heading 1,1,Heading 2,2,Heading 3,3,"', ' TOC \\o "1-3" \\h \\z \\u ')
 assert 'TOC \\o' in k.doc, 'instrução do Sumário não trocada'
 k.doc = k.doc.replace('<w:t>No table of contents entries found.</w:t>', '<w:t>[Atualizar campo]</w:t>')
 k.log.append({'op': 'sumario', 'local': 'SUMÁRIO', 'id': 'F1-052', 'antes': 'TOC \\t "Heading 1,1,…"', 'depois': 'TOC \\o "1-3" \\h \\z \\u', 'controlado': False})
 
-# ============================================================ 5. pré-textual
 for titulo in ['DEDICATÓRIA', 'EPÍGRAFE']:
     k.remover_paragrafo(titulo, exato=True, local='Pré-textual', id_item='Correção 6 (NBR 14724: sem título)')
-# Resumo/Abstract em espaçamento simples
 for ancora in ['O Centro de Controle de Zoonoses (CCZ) de Itu, unidade municipal responsável', 'The Zoonoses Control Center', 'Palavras-chave:', 'Keywords:']:
     ini, fim = k.pos_texto(ancora)
     k.definir_ppr(ini, fim, '<w:pPr><w:spacing w:after="120" w:line="240" w:lineRule="auto"/><w:jc w:val="both"/></w:pPr>')
-# quebra de página entre capa e folha de rosto
-# quebra no fim do último parágrafo da capa ("2026"), não em parágrafo próprio (a capa já ocupa a página inteira)
 ini, fim = k.pos_texto('2026', ocorrencia=1, exato=True)
 k.doc = k.doc[:fim - len('</w:p>')] + '<w:r><w:br w:type="page"/></w:r>' + k.doc[fim - len('</w:p>'):]
 k.log.append({'op': 'inserir', 'local': 'Capa → folha de rosto', 'id': 'Correção 6', 'antes': '', 'depois': 'quebra de página', 'controlado': False})
-# título da capa com travessão
 k.substituir_texto('SISZOO - SISTEMA DE GERENCIAMENTO', 'SISZOO – SISTEMA DE GERENCIAMENTO DO CENTRO DE ZOONOSES DA CIDADE DE ITU', local='Capa', id_item='Correção 6')
-# lista de abreviaturas: + E2E, FK, NN, PK, RN, RNF, UQ; − UTC (N-09)
 ini, fim = k.pos_texto('DER – Diagrama Entidade-Relacionamento', exato=True)
 _, _, pmodelo = next(k.paragrafos(ini, fim + 1))
 ab, ppr_ab, corpo_ab = k._ppr_e_runs(pmodelo)
@@ -323,23 +305,17 @@ sigla_antes('SINAN – Sistema de Informação de Agravos de Notificação', 'RN
 sigla_antes('UUID – Universally Unique Identifier', 'UQ – Unique (valor único)')
 k.remover_paragrafo('UTC – Tempo Universal Coordenado', exato=True, local='Lista de abreviaturas', id_item='N-09')
 k.log.append({'op': 'siglas', 'local': 'Lista de abreviaturas', 'id': 'F1-061', 'antes': '', 'depois': 'E2E, FK, NN, PK, RN, RNF, UQ', 'controlado': False})
-# ordem: listas de figuras e quadros antes da lista de abreviaturas
 lf_ini, _ = k.pos_texto('LISTA DE FIGURAS', exato=True)
 sum_ini, _ = k.pos_texto('SUMÁRIO', exato=True)
-# bloco = [LISTA DE FIGURAS … até o parágrafo de quebra antes de INTRODUÇÃO) — o parágrafo de quebra fica
 intro_ini, _ = k.pos_texto(' INTRODUÇÃO', exato=True)
 quebra_ini = k.doc.rfind('<w:p', 0, intro_ini)
 bloco = k.doc[lf_ini:quebra_ini]
 assert 'LISTA DE QUADROS' in bloco and 'SUMÁRIO' not in bloco
 k.doc = k.doc[:lf_ini] + k.doc[quebra_ini:]
-# o bloco entra antes do parágrafo de quebra que antecede "LISTA DE ABREVIATURAS"
 la_ini, _ = k.pos_texto('LISTA DE ABREVIATURAS E SIGLAS', exato=True)
-# a quebra que precede o SUMÁRIO continua lá; o bloco movido termina com a quebra que precedia o SUMÁRIO? não: termina no fim da lista de quadros
-# inserir bloco + quebra de página antes de LISTA DE ABREVIATURAS
 k.doc = k.doc[:la_ini] + bloco + '<w:p><w:r><w:br w:type="page"/></w:r></w:p>' + k.doc[la_ini:]
 k.log.append({'op': 'mover', 'local': 'Pré-textual', 'id': 'Correção 6 (NBR 14724 ordem)', 'antes': 'Sumário antes das listas', 'depois': 'Listas de figuras e quadros → abreviaturas → sumário', 'controlado': False})
 
-# ============================================================ 6. numeração de páginas (seção pré-textual sem número)
 intro_ini, _ = k.pos_texto(' INTRODUÇÃO', exato=True)
 quebra_ini = k.doc.rfind('<w:p', 0, intro_ini)
 quebra_fim = k.doc.find('</w:p>', quebra_ini) + len('</w:p>')
@@ -352,7 +328,6 @@ k.remover_rodapes()
 rid_hdr = k.criar_cabecalho_pagina()
 sects = [m for m in re.finditer(r'<w:sectPr[ >].*?</w:sectPr>', k.doc, flags=re.S)]
 assert sects[0].start() < intro_ini + 2000 and 'pgNumType' in sects[0].group(0)
-# 2 cm de cabeçalho em todas as seções; headerReference só na primeira seção do corpo; pgNumType só na pré-textual
 novo_doc = k.doc[:sects[0].end()]
 pos_ant = sects[0].end()
 for i, m in enumerate(sects[1:], start=1):
@@ -368,7 +343,6 @@ k.doc = novo_doc + k.doc[pos_ant:]
 k.log.append({'op': 'secoes', 'local': 'sectPr', 'id': 'Correção 3 (numeração)', 'antes': '44 seções com rodapé PAGE desde a capa',
               'depois': f'seção pré-textual sem número (contada a partir de 1) + cabeçalho {rid_hdr} com PAGE a partir da Introdução', 'controlado': False})
 
-# ============================================================ 7. estilos e corpo (ABNT)
 k.substituir_estilo('Heading1',
   '<w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:uiPriority w:val="9"/><w:qFormat/>'
   '<w:pPr><w:keepNext/><w:pageBreakBefore/><w:spacing w:before="0" w:after="360" w:line="360" w:lineRule="auto"/><w:outlineLvl w:val="0"/></w:pPr>'
@@ -395,18 +369,15 @@ k.adicionar_estilos(
   '<w:style w:type="paragraph" w:styleId="TOC3"><w:name w:val="toc 3"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:autoRedefine/><w:uiPriority w:val="39"/><w:unhideWhenUsed/>'
   '<w:pPr><w:tabs><w:tab w:val="right" w:leader="dot" w:pos="9061"/></w:tabs><w:spacing w:after="0" w:line="240" w:lineRule="auto"/><w:ind w:left="907"/></w:pPr><w:rPr><w:i/><w:iCs/></w:rPr></w:style>'
   '<w:style w:type="character" w:styleId="Hyperlink"><w:name w:val="Hyperlink"/><w:basedOn w:val="DefaultParagraphFont"/><w:uiPriority w:val="99"/><w:unhideWhenUsed/><w:rPr><w:color w:val="000000"/><w:u w:val="none"/></w:rPr></w:style>')
-# Normal: fonte explícita
 k.substituir_estilo('Normal', '<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/>'
   '<w:rPr><w:rFonts w:ascii="Times New Roman" w:eastAsia="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/><w:sz w:val="24"/><w:szCs w:val="24"/></w:rPr></w:style>')
 k.log.append({'op': 'estilos', 'local': 'styles.xml', 'id': 'Correção 6 (ABNT)', 'antes': 'Heading1 14 pt sem quebra; sem Caption/TOC', 'depois': 'Heading1 12 pt caps + quebra; Heading3 itálico; CorpoTexto; Caption; TOC1-3; TableofFigures; Hyperlink', 'controlado': False})
 
-# 7a) corpo: parágrafos de texto após a Introdução (fora de tabelas, sem estilo, justificados em 1,5)
 intro_ini, _ = k.pos_texto(' INTRODUÇÃO', exato=True)
 ref_ini, _ = k.pos_texto('REFERÊNCIAS', exato=True)
 apA_ini, _ = k.pos_texto('APÊNDICE A – CASOS DE USO DE BAIXO NÍVEL', exato=True)
 n_corpo = 0
 pos = intro_ini
-# reconstrução linear para evitar re-busca O(n²)
 saida = []
 ultimo = 0
 prof = 0
@@ -426,12 +397,10 @@ for m in re.finditer(r'<w:tbl>|</w:tbl>|<w:p[ >](?:(?!<w:p[ >]).)*?</w:p>', k.do
         novo = re.sub(r'<w:pPr>.*?</w:pPr>', lambda mm: PPR_CORPO.replace('</w:pPr>', (re.search(r'<w:sectPr.*?</w:sectPr>', mm.group(0), flags=re.S).group(0) if '<w:sectPr' in mm.group(0) else '') + '</w:pPr>'), p, count=1, flags=re.S)
         if novo != p:
             saida.append((m.start(), m.end(), novo)); n_corpo += 1
-# aplica de trás para frente
 for ini, fim, novo in reversed(saida):
     k.doc = k.doc[:ini] + novo + k.doc[fim:]
 k.log.append({'op': 'corpo', 'local': 'Introdução → Considerações Finais; apêndices', 'id': 'Correção 6 (recuo 1,25 cm; 1,5)', 'antes': 'formatação direta', 'depois': f'{n_corpo} parágrafos com estilo CorpoTexto', 'controlado': False})
 
-# 7b) Referências: alinhadas à esquerda, espaçamento simples, entrada separada por espaço depois
 ref_ini, _ = k.pos_texto('REFERÊNCIAS', exato=True)
 apA_ini, _ = k.pos_texto('APÊNDICE A – CASOS DE USO DE BAIXO NÍVEL', exato=True)
 bloco = k.doc[ref_ini:apA_ini]
@@ -450,7 +419,6 @@ for ini, fim, novo in reversed(novos):
 k.doc = k.doc[:ref_ini] + bloco + k.doc[apA_ini:]
 k.log.append({'op': 'referencias', 'local': 'REFERÊNCIAS', 'id': 'Correção 6 (NBR 6023)', 'antes': f'{n_vazios} parágrafos vazios separadores', 'depois': f'{n_ref} entradas simples, à esquerda, 12 pt depois', 'controlado': False})
 
-# 7c) quebras manuais imediatamente antes de Heading1 (agora pageBreakBefore) — remove parágrafo só-quebra ou o run de quebra
 n_q = 0
 for m in list(re.finditer(r'<w:p[ >](?:(?!<w:p[ >]).)*?</w:p>', k.doc, flags=re.S))[::-1]:
     p = m.group(0)
@@ -464,11 +432,8 @@ for m in list(re.finditer(r'<w:p[ >](?:(?!<w:p[ >]).)*?</w:p>', k.doc, flags=re.
         else:
             k.doc = k.doc[:prev_ini] + re.sub(r'<w:r>(?:<w:rPr>.*?</w:rPr>)?<w:br w:type="page"/></w:r>', '', prev, flags=re.S) + k.doc[m.start():]; n_q += 1
 k.log.append({'op': 'quebras', 'local': 'títulos de seção primária', 'id': 'Correção 6', 'antes': 'quebras manuais', 'depois': f'{n_q} removidas (pageBreakBefore no estilo)', 'controlado': False})
-# o título " INTRODUÇÃO" tem espaço à esquerda
 k.doc = k.doc.replace('<w:t xml:space="preserve"> INTRODUÇÃO</w:t>', '<w:t>INTRODUÇÃO</w:t>')
-# Heading2 do cap. 1 com <w:caps/> redundante: inofensivo, mantido.
 
-# 7d) "Fonte:" — 10 pt simples; centralizada após figura, à esquerda após quadro; imagens soltas centralizadas
 n_f = 0
 for m in list(re.finditer(r'<w:p[ >](?:(?!<w:p[ >]).)*?</w:p>', k.doc, flags=re.S))[::-1]:
     p = m.group(0)
@@ -486,10 +451,8 @@ for m in list(re.finditer(r'<w:p[ >](?:(?!<w:p[ >]).)*?</w:p>', k.doc, flags=re.
         ab, ppr, corpo = k._ppr_e_runs(p)
         k.doc = k.doc[:m.start()] + f'{ab}<w:pPr><w:jc w:val="center"/></w:pPr>{corpo}</w:p>' + k.doc[m.end():]
 k.log.append({'op': 'fontes', 'local': 'linhas "Fonte:" e imagens soltas', 'id': 'Correção 6', 'antes': '', 'depois': f'{n_f} fontes padronizadas; imagens do Ap. D/Anexo A centralizadas', 'controlado': False})
-# Quadro 1: autospacing de importação HTML
 k.doc = k.doc.replace(' w:beforeAutospacing="1"', '').replace(' w:afterAutospacing="1"', '')
 
-# ============================================================ 8. citações × referências (F1-055/056)
 k.substituir_texto('Gráficos do painel de indicadores', 'Gráficos do painel de indicadores (RECHARTS, 2026)', exato=True, local='Quadro 14', id_item='F1-055')
 k.substituir_texto('Site do CCZ de São José dos Campos (2022)', 'Site do CCZ de São José dos Campos (RIBEIRO, 2022)', exato=True, local='Quadro 2', id_item='F1-055')
 ini, fim = k.pos_texto('“Eu Adoto no CCZ”, que exibe os animais disponíveis para adoção (SÃO PAULO, 2017).')
@@ -499,7 +462,6 @@ t_novo = ('Em São José dos Campos, a Prefeitura lançou em 2022 o site do CCZ 
           'Paulo, a capital mantém o portal ' + t_antigo)
 k.substituir_texto('“Eu Adoto no CCZ”, que exibe os animais disponíveis para adoção (SÃO PAULO, 2017).', t_novo, local='Seção 1.9', id_item='F1-056')
 
-# ============================================================ salvar + log
 k.salvar(DEST)
 relatorio['operacoes'] = len(k.log)
 with open(LOG, 'w', encoding='utf-8') as f:

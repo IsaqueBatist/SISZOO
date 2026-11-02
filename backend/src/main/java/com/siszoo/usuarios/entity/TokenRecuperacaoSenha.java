@@ -17,9 +17,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// Token de recuperacao de senha (V34, docs/decisoes/recuperacao-senha.md). Como
-// na SessaoUsuario, so o hash SHA-256 fica no banco: o token em si vai no link
-// do e-mail e nunca e gravado nem logado.
 @Entity
 @Table(name = "token_recuperacao_senha")
 @Getter
@@ -55,8 +52,6 @@ public class TokenRecuperacaoSenha {
     @Column(name = "ip_solicitacao", length = 45, updatable = false)
     private String ipSolicitacao;
 
-    // Pendente = ainda pode ser consumido: nunca usado, nunca invalidado e
-    // dentro do prazo.
     public boolean pendenteEm(LocalDateTime agora) {
         return usadoEm == null && invalidadoEm == null && !expiraEm.isBefore(agora);
     }

@@ -26,12 +26,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 
-// Exercita a V27 num schema proprio do mesmo PostgreSQL de teste, no
-// padrao de MigracaoV12AuditoriaIT e MigracaoV17RegistrosCriticosIT: acao
-// ACESSO_NEGADO no CHECK e auditoria_evento imutavel (UPDATE/DELETE/TRUNCATE
-// recusados com 23514), com a unica excecao do ON DELETE SET NULL da FK do
-// usuario. Cada comando roda numa transacao JDBC propria; o erro devolvido
-// traz o SQLSTATE e a mensagem.
 class MigracaoV27AuditoriaIT extends AbstractIntegrationTest {
 
     private static final String SCHEMA = "migracao_v27";
@@ -68,7 +62,6 @@ class MigracaoV27AuditoriaIT extends AbstractIntegrationTest {
         for (String acao : ACOES_ANTERIORES) {
             inserirEvento(acao, null);
         }
-        // Antes da V27 a nova acao e recusada pelo CHECK da V12.
         assertThrows(DataIntegrityViolationException.class, () -> inserirEvento("ACESSO_NEGADO", null));
 
         MigrateResult resultado = migrarAte("27");
@@ -93,8 +86,6 @@ class MigracaoV27AuditoriaIT extends AbstractIntegrationTest {
         }
     }
 
-    // Na versao mais recente (nao so na V27): quem acrescentar um valor ao enum
-    // sem migration que o aceite quebra este teste.
     @Test
     @DisplayName("[T43] todo valor de AcaoAuditoria e aceito pelo CHECK da versao mais recente")
     void enumECheckAlinhados() {
@@ -139,8 +130,6 @@ class MigracaoV27AuditoriaIT extends AbstractIntegrationTest {
         assertThat(linha(evento), equalTo(original));
     }
 
-    // Caso (a): o usuario ainda existe, e falham a checagem de existencia e a
-    // de profundidade (UPDATE direto tem pg_trigger_depth() = 1).
     @Test
     @DisplayName("[T43] (a) usuario_id -> NULL por SQL direto e recusado, sozinho ou com outra coluna, com o usuario existente")
     void setNullDiretoRecusado() throws Exception {
@@ -155,14 +144,6 @@ class MigracaoV27AuditoriaIT extends AbstractIntegrationTest {
         assertThat(usuarioDoEvento(evento), equalTo(usuario));
     }
 
-    // Caso (b): o usuario ja nao existe, mas o UPDATE nao vem da cascata. Para
-    // chegar a esse estado, a exclusao roda com session_replication_role =
-    // replica, que desliga os triggers da FK e os da V27 so nesse comando
-    // (exige superusuario, o usuario do PostgreSQL de teste); o evento fica
-    // apontando para um usuario inexistente. De volta ao modo normal, o
-    // UPDATE direto satisfaz todas as condicoes da excecao menos uma (a
-    // profundidade) e tem de ser recusado. Tudo numa transacao: a recusa
-    // desfaz tambem a exclusao.
     @Test
     @DisplayName("[T43] (b) usuario_id -> NULL por SQL direto e recusado mesmo com o usuario ja excluido (fora da cascata)")
     void setNullForaDaCascataComUsuarioExcluidoRecusado() throws Exception {
@@ -195,11 +176,6 @@ class MigracaoV27AuditoriaIT extends AbstractIntegrationTest {
         assertThat(linhaSemUsuario(evento), equalTo(original));
     }
 
-    // Prova a condicao "nenhuma outra coluna muda" no mesmo contexto da acao
-    // referencial (dentro de um trigger, com o usuario ja excluido): um trigger
-    // de teste em usuario, que dispara antes do da FK (nomes "A..." < "RI_..."),
-    // faz o SET NULL. Sozinho ele passa; combinado com outra coluna, a exclusao
-    // inteira e desfeita.
     @Test
     @DisplayName("[T43] dentro da exclusao do usuario, SET NULL combinado com outra coluna e recusado")
     void setNullCombinadoNaExclusaoRecusado() throws Exception {
@@ -264,8 +240,6 @@ class MigracaoV27AuditoriaIT extends AbstractIntegrationTest {
                 "migracao." + UUID.randomUUID().toString().substring(0, 8) + "@itu.sp.gov.br");
     }
 
-    // Grava direto em SQL: o objetivo e provar as constraints e os triggers,
-    // nao o service.
     private UUID inserirEvento(String acao, UUID usuario) {
         return jdbcTemplate.queryForObject("INSERT INTO " + S + "auditoria_evento (acao, entidade, entidade_id,"
                 + " usuario_id, payload_depois) VALUES (?, 'teste_v27', gen_random_uuid(), ?, '{\"campo\": 1}'::jsonb)"

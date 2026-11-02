@@ -29,9 +29,6 @@ import com.siszoo.comum.ApiTesteFixture;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-// Filtros de servidor em GET /api/auditoria (acao,
-// usuarioEmail, modulo, de/ate), payload antes/depois no DTO e o
-// catalogo GET /api/auditoria/filtros. Contrato: docs/contratos/auditoria-filtros.md.
 class AuditoriaFiltrosIT extends AbstractIntegrationTest {
 
     private static final String EMAIL_ADMIN = "teste.admin.filtros.auditoria@itu.sp.gov.br";
@@ -45,7 +42,6 @@ class AuditoriaFiltrosIT extends AbstractIntegrationTest {
     @BeforeEach
     void preparar() {
         tokenAdmin = fixture.tokenAdmin(EMAIL_ADMIN, "Filtros");
-        // Um evento CRIACAO de baia deste admin, para filtrar por acao/usuario/modulo.
         baiaId = given().contentType(ContentType.JSON).header("Authorization", "Bearer " + tokenAdmin)
                 .body(new CriarBaiaRequest("Baia Filtro " + System.nanoTime() % 100000, "interna", (short) 3, null, null))
                 .when().post("/api/baias").then().statusCode(200).extract().path("id");
@@ -75,7 +71,6 @@ class AuditoriaFiltrosIT extends AbstractIntegrationTest {
         assertThat(usuarios, everyItem(equalTo(EMAIL_ADMIN)));
         List<String> ids = r.path("itens.entidadeId");
         assertThat(ids, hasItem(baiaId));
-        // payload antes/depois expostos (pedido adicional do contrato)
         List<Map<String, Object>> itens = r.path("itens");
         Map<String, Object> evento = itens.stream().filter(i -> baiaId.equals(i.get("entidadeId"))).findFirst().orElseThrow();
         assertThat(evento.get("payloadAntes"), equalTo(null));
@@ -93,8 +88,6 @@ class AuditoriaFiltrosIT extends AbstractIntegrationTest {
 
         Response usuarios = listar("?modulo=USUARIOS_ACESSO&tamanho=50");
         usuarios.then().statusCode(200);
-        // O modulo USUARIOS_ACESSO cobre usuario e preferencia_usuario; outros
-        // testes da suite podem ter gravado eventos de preferencias antes.
         List<String> entidadesUsuarios = usuarios.path("itens.entidade");
         assertThat(entidadesUsuarios, hasItem("usuario"));
         assertThat(entidadesUsuarios, everyItem(in(List.of("usuario", "preferencia_usuario"))));

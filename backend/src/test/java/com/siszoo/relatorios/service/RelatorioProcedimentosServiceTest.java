@@ -68,11 +68,8 @@ class RelatorioProcedimentosServiceTest {
         assertThat(resposta.kpis().castracoesFemeas()).isEqualTo(13);
         assertThat(resposta.kpis().atendimentosClinicos()).isEqualTo(87);
         assertThat(resposta.kpis().cirurgiasMaiores()).isEqualTo(12);
-        // 34 (castracoes) + 87 (atendimentos) + 12 (cirurgias) + 159 (vacinacoes) + 26 (medicacoes)
         assertThat(resposta.kpis().totalProcedimentos()).isEqualTo(318);
 
-        // KPIs e grafico por tipo compartilham as contagens; cada uma vai
-        // ao banco uma vez por preview.
         verify(procedimentoRepository, times(1)).contarPorTipo(PERIODO.inicio(), PERIODO.fim());
         verify(vacinacaoRepository, times(1)).countByDataAplicacaoBetween(PERIODO.inicio(), PERIODO.fim());
         verify(prescricaoRepository, times(1)).countByDataInicioBetween(PERIODO.inicio(), PERIODO.fim());
@@ -88,11 +85,6 @@ class RelatorioProcedimentosServiceTest {
 
         when(procedimentoRepository.countByTipoProcedimento_CodigoAndDataBetweenAndAnimal_Sexo(
                 any(), any(), any(), any())).thenReturn(0L);
-        // Linha legada/teorica com tipo 'vacinacao' no catalogo de Procedimento:
-        // nao deve ser somada, pois Vacinações vem de Vacinacao, nao de Procedimento.
-        // getNome()/getQuantidade() nao sao stubados: o service filtra pelo
-        // codigo ANTES de ler esses campos, entao nunca deveriam ser chamados
-        // para esta linha; stubar e nao usar quebraria com UnnecessaryStubbingException.
         ContagemCatalogoProjection vacinacaoLegada = mock(ContagemCatalogoProjection.class);
         when(vacinacaoLegada.getCodigo()).thenReturn("vacinacao");
         when(procedimentoRepository.contarPorTipo(any(), any())).thenReturn(List.of(vacinacaoLegada));
@@ -104,7 +96,7 @@ class RelatorioProcedimentosServiceTest {
 
         RelatorioProcedimentosResponse resposta = service.gerarPreview(PERIODO);
 
-        assertThat(resposta.kpis().totalProcedimentos()).isEqualTo(10); // só as 10 vacinações reais, não 999+10
+        assertThat(resposta.kpis().totalProcedimentos()).isEqualTo(10);
         assertThat(resposta.porTipo()).extracting("tipo").doesNotContain("Vacinação");
     }
 

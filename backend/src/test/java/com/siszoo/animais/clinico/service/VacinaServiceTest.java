@@ -41,8 +41,6 @@ class VacinaServiceTest {
     @InjectMocks
     private VacinaService vacinaService;
 
-    // Lastro contra o seed da V5: se a slugificacao mudar, as 8 vacinas
-    // existentes deixariam de ser encontradas por codigo.
     @ParameterizedTest
     @CsvSource({
         "Antirrábica, antirrabica",
@@ -69,7 +67,6 @@ class VacinaServiceTest {
         assertThat(VacinaService.derivarCodigo(nome.trim())).isEqualTo(codigoEsperado);
     }
 
-    // Nunca truncar: nomes diferentes passariam a colidir no mesmo codigo.
     @ParameterizedTest
     @ValueSource(strings = {"!!!", "---", "Vacina polivalente para felinos domesticos adultos"})
     void deveRecusarNomeQueNaoProduzCodigoValido(String nome) {
@@ -104,8 +101,6 @@ class VacinaServiceTest {
         assertThat(salva.getValue().getIntervaloMeses()).isNull();
     }
 
-    // Nomes diferentes que derivam o mesmo codigo: o usuario nao ve o codigo,
-    // entao a mensagem precisa nomear a vacina em conflito.
     @Test
     void deveRecusarNomeQueDerivaCodigoJaUsado() {
         Vacina existente = new Vacina();
@@ -136,8 +131,6 @@ class VacinaServiceTest {
         verify(vacinaRepository, never()).save(any());
     }
 
-    // O codigo e a chave dos registros ja gravados: renomear nao pode mexer
-    // nele (mesmo argumento do microchip na RN01).
     @Test
     void naoDeveAlterarOCodigoAoRenomear() {
         UUID id = UUID.randomUUID();
@@ -179,8 +172,6 @@ class VacinaServiceTest {
 
         assertThat(vacina.isAtivo()).isFalse();
         verify(vacinaRepository).save(vacina);
-        // delete(any()) seria ambiguo: JpaSpecificationExecutor acrescenta uma
-        // sobrecarga delete(Specification).
         verify(vacinaRepository, never()).delete(any(Vacina.class));
     }
 

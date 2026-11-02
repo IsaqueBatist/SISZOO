@@ -5,10 +5,6 @@ import org.springframework.data.domain.Sort;
 
 import com.siszoo.comum.exception.CampoInvalidoException;
 
-// Pagina das listagens com teto de tamanho. Sem teto, `?tamanho=` grande
-// carregaria a tabela inteira na memoria de uma vez (maquinas de ~2 GB); com
-// tamanho 0, o PageRequest lancaria IllegalArgumentException (500). 500 e o
-// maior tamanho que o frontend pede hoje.
 public final class Paginacao {
 
     public static final int TAMANHO_MAXIMO = 500;
