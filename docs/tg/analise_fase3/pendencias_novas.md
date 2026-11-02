@@ -38,3 +38,9 @@ entregue, para o texto acompanhar numa próxima revisão.
 | N-17 | O documento descreve a confirmação de ações por mensagem na própria tela; a aplicação passou a usar **toast** (`components/toast/`) para toda confirmação de sucesso, e os três banners `alert success` que existiam foram convertidos. O erro continua inline. | Seção 5.2 (padrões de interface) | O `.toast` já estava no design system portado do protótipo, sem consumidor; a interface não tinha confirmação na maioria dos fluxos. | Atualizar a descrição dos padrões de interface e, se houver captura nova, preferir uma que mostre o toast. |
 
 | N-18 | As telas `/vacinas` e `/medicamentos` foram redesenhadas em 01/11/2026 (cadastro em modal, busca e filtros, coluna "Em alerta", edição de vacina, edição e desativação de medicamento). Qualquer captura dessas telas no documento — e a descrição textual delas — fica desatualizada. | Quadro 15, Seção 5.2 | Telas mudaram de estrutura e de capacidades depois da entrega. | Regerar as capturas junto com as da N-16 e revisar a descrição. Ver `docs/decisoes/catalogo-vacina.md` (CV-36 a CV-44). |
+
+## Pendências abertas pela correção do painel de relatórios (02/11/2026)
+
+| # | Pendência | Onde no documento | Por quê | Encaminhamento |
+|---|---|---|---|---|
+| N-19 | O painel de pré-visualização de `/relatorios` passou a envolver o conteúdo num `.card-body` e os botões do cabeçalho do card passaram a receber o `gap` de `.actions`. As capturas `T14_central_relatorios.png` e `T18`–`T21` mostram o conteúdo encostado na borda do card e os botões sem espaçamento. | Quadro 15, Seção 5.2, Figuras das telas de relatórios | Era um defeito de layout (o `.card` não tem padding por design e `.actions` só existia como descendente de `.page-header`). | Regerar as 5 capturas com `capturas.mjs` junto com as da N-16/N-18. Só muda o espaçamento: nenhum dado, campo ou ação da tela foi alterado. |

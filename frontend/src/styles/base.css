@@ -260,7 +260,11 @@ a:hover { text-decoration: underline; }
 .page-header .title-block { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .page-header h1 { font-size: var(--text-2xl); }
 .page-header .subtitle { color: var(--color-text-secondary); font-size: 14px; }
-.page-header .actions { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+/* `.actions` nasceu só como descendente de `.page-header`, mas o mesmo bloco de
+   botões também aparece no cabeçalho de card (PainelPreviewRelatorio) — sem o
+   seletor abaixo os botões ficavam encostados, porque nada aplicava o `gap`. */
+.page-header .actions,
+.card-header .actions { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
 .page-header .counter {
   display: inline-flex; align-items: center;
   font-size: 14px; font-weight: 500;
