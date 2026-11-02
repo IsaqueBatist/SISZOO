@@ -82,7 +82,8 @@ mesmo método, caminho e parâmetros, os tipos TS batem com os records Java e h�
 | Anexos do animal | AnexosAnimal | `animaisApi.ts` | `GET/POST /animais/{id}/anexos`, `GET .../{anexoId}` | `anexo_animal*` |
 | Baias | GestaoBaias, BaiaFormModal | `animaisApi.ts` | `GET/POST /baias`, `PUT/DELETE /baias/{id}`, `PATCH /baias/{id}/status`, `GET /baias/residentes` | `baia` |
 | Vacinação, procedimento, exame, prescrição | Abas da ficha + modais | `animais/api/historicoApi.ts` | `GET/POST /vacinacoes`, `/procedimentos`, `/exames`, `/prescricoes` | tabelas clínicas (imutáveis, V17) |
-| Medicamentos e categorias | Medicamentos | `medicamentos/api`, `historicoApi.ts` | `GET/POST /categorias-farmacologicas`, `GET/POST /medicamentos` | `categoria_farmacologica`, `medicamento` |
+| Medicamentos e categorias | Medicamentos, MedicamentoFormModal | `medicamentos/api`, `historicoApi.ts` | `GET/POST /categorias-farmacologicas`, `GET/POST /medicamentos`, `PUT/DELETE /medicamentos/{id}` | `categoria_farmacologica`, `medicamento` |
+| Catálogo de vacinas | Vacinas, VacinaFormModal | `vacinas/api/vacinasApi.ts` | `GET/POST /vacinas`, `PUT/DELETE /vacinas/{id}` | `vacina` |
 | Alertas vacinais | AlertaVacinasDetalhe, Dashboard | `alertas/api/alertasApi.ts` | `GET /alertas/vacinas` | calculado |
 | Ocorrências | Ocorrencias, OcorrenciaDetalhe, OcorrenciaForm | `ocorrencias/api/ocorrenciasApi.ts` | `GET/POST /ocorrencias`, `GET/PUT /ocorrencias/{id}`, `PATCH .../status`, `POST .../encerramento`, `POST .../notas`, `POST/GET .../anexos`, `GET /ocorrencias/catalogos`, `GET /ocorrencias/estatisticas/bairro` | `ocorrencia`, `denunciante`, `denunciado`, `movimentacao_ocorrencia`, `anexo_ocorrencia*` |
 | Contador do menu | Sidebar | `ocorrenciasApi.ts` (`useOcorrenciasAbertasCount`) | `GET /ocorrencias?status=ABERTA&tamanho=1` | `ocorrencia.status_ocorrencia` |
@@ -93,8 +94,7 @@ mesmo método, caminho e parâmetros, os tipos TS batem com os records Java e h�
 | CEP | SecaoDenunciante, CamposResponsavel | `lib/viaCep.ts` | serviço externo ViaCEP | - |
 
 **Notas da matriz:**
-- **Endpoints sem tela:** `GET /health`, `GET` por id dos registros clínicos, de baia e de medicamento, e
-  `PUT/DELETE /medicamentos/{id}` (não há edição de medicamento na interface).
+- **Endpoints sem tela:** `GET /health` e o `GET` por id dos registros clínicos, de baia, de medicamento e de vacina.
 - **Filtro de data das ocorrências:** são os parâmetros `de`/`ate` (`docs/contratos/ocorrencias-filtro-data.md`).
 - **Pendência de regra:** `GET /ocorrencias/estatisticas/bairro` conta todo o histórico, inclusive `registro_indevido`,
   enquanto o KPI e o relatório excluem. É uma decisão de produto a confirmar.

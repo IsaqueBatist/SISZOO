@@ -1,8 +1,8 @@
-# docs/tg — Trabalho de Graduação (documento e análise de alinhamento)
+# docs/tg - Trabalho de Graduação (documento e análise de alinhamento)
 
 Material do TG do SISZOO (FATEC Itu, ADS 2026). Os textos, scripts, capturas e diagramas são versionados;
 os binários do documento (`.docx`, `.pdf`) e a pasta `build/` ficam **fora do git** (`.gitignore`) e vivem na
-máquina dos autores — quem precisar deles pede a um dos autores.
+máquina dos autores; quem precisar deles pede a um dos autores.
 
 ## Versões do documento (não versionadas)
 
@@ -10,7 +10,7 @@ máquina dos autores — quem precisar deles pede a um dos autores.
 |---|---|---|
 | `SISZOO_versao_limpa.docx` | Texto original entregue à análise (22/10/2026, antes de qualquer correção). | **Nunca.** É a linha de base. |
 | `SISZOO_v2_alinhado.docx` | Original + 301 alterações **controladas** (autor "Revisão SISZOO") que alinham o texto ao código; capturas inseridas. | Só para consultar o que mudou. |
-| `SISZOO_v3_final.docx` | **Versão entregue.** Alterações aceitas, capturas 1920×1080 dos relatórios, descrições detalhadas das telas, Apêndice D sem fotos repetidas, ABNT (numeração a partir da Introdução, legendas e listas automáticas). | Sim — é o documento vivo. |
+| `SISZOO_v3_final.docx` | **Versão entregue.** Alterações aceitas, capturas 1920×1080 dos relatórios, descrições detalhadas das telas, Apêndice D sem fotos repetidas, ABNT (numeração a partir da Introdução, legendas e listas automáticas). | Sim: é o documento vivo. |
 | `SISZOO_v3_final.pdf` | Exportação do Word para conferência. | Regenerar a partir do `.docx`. |
 
 ## Pastas
@@ -28,7 +28,7 @@ máquina dos autores — quem precisar deles pede a um dos autores.
 ## Como regenerar
 
 1. **Capturas**: ambiente local (`docker compose up` ou backend + `npm run dev` em `localhost:5173`, única origem aceita
-   pelo CORS), banco com dados fictícios (`seed_demo.py` ou `npm run db:seed`), Playwright via `npx` em uma pasta
+   pelo CORS), banco com dados fictícios (`seed_demo.py` ou o seed do backend, `docker-compose.seed.yml`; ver o README da raiz), Playwright via `npx` em uma pasta
    **fora do repositório** (o projeto não depende de Playwright): `capturas.mjs` (cópia de referência em
    `analise_fase3/capturas/`, se existir) com `SOMENTE=T14,T18` para refazer só algumas. Telas em 1366×768;
    relatórios (T14, T18–T23) em 1920×1080, viewport rolada até o painel gerado. Tema claro, dados fictícios, sem spinner.

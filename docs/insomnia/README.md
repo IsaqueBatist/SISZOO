@@ -1,11 +1,13 @@
-# Coleção Insomnia — SISZOO
+# Coleção Insomnia - SISZOO
 
 A pasta `.insomnia/` na raiz do repositório é uma coleção do
-[Insomnia](https://insomnia.rest/) sincronizada via Git ("Git Sync"), com
-todos os endpoints REST do backend documentados como requisições de exemplo,
+[Insomnia](https://insomnia.rest/) sincronizada via Git ("Git Sync"), com 42
+requisições de exemplo para os endpoints de autenticação, usuários,
+preferências, auditoria, animais, baias, registros clínicos e medicamentos,
 além de suítes de testes automatizados (`insomnia.send()` + `chai`) que
-verificam as regras de negócio críticas do projeto (microchip único,
-imutabilidade de microchip, RBAC por cargo, validações de e-mail/senha etc.).
+verificam regras de negócio críticas (microchip único, imutabilidade de
+microchip, RBAC por cargo, validações de e-mail/senha etc.). Os módulos que
+ainda não têm requisições estão em [O que não está aqui](#o-que-não-está-aqui).
 
 ## Como abrir
 
@@ -19,6 +21,14 @@ imutabilidade de microchip, RBAC por cargo, validações de e-mail/senha etc.).
      localmente (`ADMIN_SEED_EMAIL`/`ADMIN_SEED_PASSWORD` do seu `.env`).
    - `base_url`: já vem `http://localhost:8080`; ajuste se rodar em outra
      porta/host.
+
+   **Não grave senha nem token no Environment "Local":** o arquivo
+   `.insomnia/Environment/env_local.yml` é versionado, e o Git Sync levaria o
+   valor para o repositório. Preencha `admin_email`, `admin_password` e `token`
+   num sub-environment privado (*Private environment*), que o Git Sync não
+   sincroniza, e mantenha os campos do "Local" vazios. A única senha que fica
+   no "Local", `senha_teste_padrao`, é a dos usuários temporários que as
+   próprias suítes criam.
 3. Suba o backend (`cd backend && ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev`,
    com o banco via `docker compose up -d db` e as variáveis descritas no README da raiz).
 
@@ -30,39 +40,35 @@ demais requisições da pasta usam via header `Authorization: Bearer {{ _.token 
 
 Algumas requisições têm placeholders para preencher manualmente, como
 `{{ _.usuario_id_exemplo }}`, `{{ _.animal_id_exemplo }}` e
-`{{ _.baia_id_exemplo }}` — copie o `id` da resposta de um "criar"/"listar"
+`{{ _.baia_id_exemplo }}` - copie o `id` da resposta de um "criar"/"listar"
 e cole no Environment ou direto na URL.
 
 As requisições de criação (`Criar usuário`, `Criar animal`) usam e-mail/
 microchip fixos de propósito: rodá-las uma segunda vez sem alterar esses
-campos demonstra as regras de unicidade (409) — não é um bug do exemplo.
+campos demonstra as regras de unicidade (409) - não é um bug do exemplo.
 
 A pasta **Baias** documenta um detalhe que não é óbvio pelo nome do verbo:
-"Excluir baia" é `DELETE`, mas o backend nunca remove a linha — é
+"Excluir baia" é `DELETE`, mas o backend nunca remove a linha - é
 soft-delete (`ativa=false`, 200), sem bloqueio mesmo com animais alocados.
 Para reverter, use "Ativar/reativar baia" (`PATCH /status`).
 
 A pasta **Registros Clínicos** (vacinações, procedimentos, prescrições) reúne
 os três recursos porque compartilham o mesmo padrão de imutabilidade:
-nenhum dos três controllers tem `PUT`/`PATCH`/`DELETE` — "Tentar
+nenhum dos três controllers tem `PUT`/`PATCH`/`DELETE` - "Tentar
 atualizar vacinação (405)" mostra que o Spring MVC já rejeita esses verbos
 sozinho, sem código de bloqueio adicional. Correção de um registro (inclusive
 mudança de status de prescrição) é sempre um novo `POST` no mesmo endpoint com
-`retificaId` apontando para o registro anterior — ver "Retificar vacinação"
+`retificaId` apontando para o registro anterior - ver "Retificar vacinação"
 para o exemplo completo (o padrão é idêntico nos outros dois recursos).
 
-A pasta **Medicamentos** dá escrita (criar/listar/buscar/editar/desativar) ao
-catálogo `medicamento` — ao contrário dos outros catálogos clínicos (vacina,
-tipo_procedimento, categoria_farmacologica), que continuam schema-only, sem
-nenhum endpoint. É uma assimetria consciente, não descuido: só `medicamento`
-recebeu escrita nesta etapa. "Desativar medicamento" é soft-delete
-(`ativo=false`), mesmo padrão de "Excluir baia" — mas, diferente de Baia, não
-há endpoint de reativação aqui. Para testar "Criar medicamento" (e, por
-tabela, "Criar prescrição", que referencia `medicamentoId`), ainda é preciso
-inserir uma `categoria_farmacologica` direto no banco primeiro — não há
-endpoint de catálogo para ela — e colar o uuid em
-{{ _.categoria_farmacologica_id_exemplo }}; a partir daí, "Criar medicamento"
-já funciona pela API normalmente.
+A pasta **Medicamentos** cobre o catálogo `medicamento`
+(criar/listar/buscar/editar/desativar). "Desativar medicamento" é soft-delete
+(`ativo=false`), mesmo padrão de "Excluir baia". Para testar "Criar
+medicamento" (e, por tabela, "Criar prescrição", que referencia
+`medicamentoId`), é preciso o id de uma `categoria_farmacologica`: liste as
+existentes com `GET /api/categorias-farmacologicas` ou crie uma com
+`POST /api/categorias-farmacologicas` (endpoints ainda fora desta coleção) e
+cole o uuid em {{ _.categoria_farmacologica_id_exemplo }}.
 
 ## Testes automatizados
 
@@ -70,7 +76,7 @@ Cada pasta `UnitTestSuite` (Auth, Usuários, Animais, Baias) roda de forma
 independente e autocontida: os próprios testes criam os usuários/animais/
 baias temporários de que precisam (com e-mail/microchip/nome únicos gerados
 em tempo de execução), fazem login com o perfil certo e limpam-se sozinhos
-por não reaproveitar dados fixos — só o `admin_email`/`admin_password` do
+por não reaproveitar dados fixos - só o `admin_email`/`admin_password` do
 Environment precisa estar correto.
 
 Para rodar: com o backend de pé, abra a aba **Unit Testing** no Insomnia,
@@ -92,8 +98,24 @@ espera 409 (RN-AN02, `docs/regras-negocio-clinico.md`).
 
 ## O que não está aqui
 
-Os módulos `ocorrencias` (`/api/ocorrencias`), `processos` (`/api/processos`) e
-`relatorios` (`/api/dashboard`, `/api/relatorios`) já estão implementados no
-backend, mas ainda não têm requisições nem testes nesta coleção. Os endpoints
-estão nos controllers de cada pacote em `backend/src/main/java/com/siszoo/`;
-adicioná-los aqui é trabalho pendente.
+Estes endpoints já existem no backend, mas ainda não têm requisições nem
+testes nesta coleção:
+
+- **Ocorrências:** todo o módulo (`/api/ocorrencias`), inclusive anexos,
+  notas, status, encerramento e estatísticas por bairro.
+- **Processos sanitários:** todo o módulo (`/api/processos`), inclusive
+  resultados, alterações e reenvio da notificação.
+- **Dashboard e relatórios:** `/api/dashboard/kpis`, `/api/dashboard/graficos`
+  e `/api/relatorios` (tipos, prévia, exportação e histórico).
+- **Catálogos:** vacinas (`/api/vacinas`) e categorias farmacológicas
+  (`/api/categorias-farmacologicas`).
+- **Animais:** exames (`/api/exames`), anexos (`/api/animais/{id}/anexos`) e
+  residentes das baias (`GET /api/baias/residentes`).
+- **Alertas:** `GET /api/alertas/vacinas`.
+- **Sessão e usuários:** `POST /api/auth/renovar`, `POST /api/auth/logout`,
+  `PUT /api/usuarios/{id}`, `POST /api/usuarios/{id}/senha` e
+  `GET /api/auditoria/filtros`.
+
+A lista completa está nos controllers de cada pacote em
+`backend/src/main/java/com/siszoo/` e na matriz de
+[integracao-frontend-api.md](../integracao-frontend-api.md).
