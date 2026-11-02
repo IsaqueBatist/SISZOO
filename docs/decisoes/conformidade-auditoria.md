@@ -99,3 +99,32 @@ e-mail de resultado positivo. Detalhes em `docs/email.md`.
 - **Ocorrência sigilosa com denunciante identificado recebe o aviso**: o sigilo
   protege o denunciante perante terceiros, e o e-mail vai só para ele.
 - **Em aberto com o CCZ:** texto do e-mail.
+
+## Item 6 - laudo de eutanásia com responsável técnico
+
+Base: Lei nº 14.228/2021, art. 2º, § 1º; Lei estadual nº 11.977/2005, art. 12,
+parágrafo único. Versão enxuta: responsável técnico, método, restrição de quem
+registra e imutabilidade. A entidade `laudo_eutanasia` completa, ofertas a entidades
+de proteção, dossiê e regras por doença ficam para decisão posterior; o prompt
+citava `claude/prompt_lei_14228_eutanasia.md`, que não existe no repositório.
+
+- **Permissão.** A matriz é por módulo e feature, então a ação virou a feature
+  `eutanasia` de `GESTAO_ANIMAIS`, só escrita, só para o Veterinário (V38). A
+  autoridade gerada é `GESTAO_ANIMAIS:eutanasia:escrita` (o prompt escrevia
+  `GESTAO_ANIMAIS:eutanasia`; o sufixo da ação vem do padrão do
+  `AutoridadeService`). O serviço resolve as autoridades a partir dos cargos do
+  autor, então a regra vale também para o seed e para chamadas diretas à API.
+- **403 em vez de 422 para quem não pode registrar**, antes de conferir os campos.
+  Administrador com CRMV mas sem o cargo de Veterinário também recebe 403.
+- **CRMV copiado.** `laudo_eutanasia_crmv` guarda o CRMV do momento do registro; a
+  edição posterior do usuário não muda o laudo.
+- **Imutabilidade no serviço**, como na transferência: não há "novo registro" para a
+  ficha do animal. Laudo, método e insensibilização não mudam depois de gravados
+  (422). Laudos anteriores à V38 ficam sem responsável e também não mudam; um
+  registro antigo em eutanásia **sem** laudo ainda pode recebê-lo, já com as regras
+  novas.
+- **Frontend.** A opção "Óbito eutanásia" fica desabilitada, com explicação, para
+  quem não é Veterinário com CRMV (o CRMV vem de `GET /api/usuarios/me`). O texto
+  diz que o sistema registra o laudo e que a decisão técnica é do veterinário.
+- **Em aberto com o CCZ:** a administradora registra eutanásia? Se sim, precisa do
+  cargo de Veterinário e de CRMV cadastrado.

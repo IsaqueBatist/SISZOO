@@ -84,7 +84,10 @@ public record AtualizarAnimalRequest(
         String condicoesOutras,
 
         @Valid
-        TransferenciaRequest transferencia) implements DadosDescritivosAnimal {
+        TransferenciaRequest transferencia,
+
+        @Valid
+        EutanasiaRequest eutanasia) implements DadosDescritivosAnimal {
 
     public AtualizarAnimalRequest(String nome, String especie, String sexo, String raca, String coloracao, String pelagem,
             String porte, BigDecimal pesoKg, String idadeAprox, LocalDate dataNascimentoAprox, String microchip,
@@ -93,7 +96,7 @@ public record AtualizarAnimalRequest(
             LocalDate dataImplantacaoChip, String procedencia, String laudoEutanasia) {
         this(nome, especie, sexo, raca, coloracao, pelagem, porte, pesoKg, idadeAprox, dataNascimentoAprox, microchip,
                 esterilizado, dataEsterilizacao, status, motivoEntrada, dataEntrada, baiaId, fotoUrl, observacoes,
-                numeroMedalha, dataImplantacaoChip, procedencia, laudoEutanasia, null, null, null);
+                numeroMedalha, dataImplantacaoChip, procedencia, laudoEutanasia, null, null, null, null);
     }
 
     public AtualizarAnimalRequest(String nome, String especie, String sexo, String raca, String coloracao, String pelagem,
@@ -104,6 +107,18 @@ public record AtualizarAnimalRequest(
             String condicoesOutras) {
         this(nome, especie, sexo, raca, coloracao, pelagem, porte, pesoKg, idadeAprox, dataNascimentoAprox, microchip,
                 esterilizado, dataEsterilizacao, status, motivoEntrada, dataEntrada, baiaId, fotoUrl, observacoes,
-                numeroMedalha, dataImplantacaoChip, procedencia, laudoEutanasia, condicoes, condicoesOutras, null);
+                numeroMedalha, dataImplantacaoChip, procedencia, laudoEutanasia, condicoes, condicoesOutras, null, null);
+    }
+
+    public AtualizarAnimalRequest(String nome, String especie, String sexo, String raca, String coloracao, String pelagem,
+            String porte, BigDecimal pesoKg, String idadeAprox, LocalDate dataNascimentoAprox, String microchip,
+            Boolean esterilizado, LocalDate dataEsterilizacao, String status, String motivoEntrada,
+            LocalDateTime dataEntrada, UUID baiaId, String fotoUrl, String observacoes, String numeroMedalha,
+            LocalDate dataImplantacaoChip, String procedencia, String laudoEutanasia, List<String> condicoes,
+            String condicoesOutras, TransferenciaRequest transferencia) {
+        this(nome, especie, sexo, raca, coloracao, pelagem, porte, pesoKg, idadeAprox, dataNascimentoAprox, microchip,
+                esterilizado, dataEsterilizacao, status, motivoEntrada, dataEntrada, baiaId, fotoUrl, observacoes,
+                numeroMedalha, dataImplantacaoChip, procedencia, laudoEutanasia, condicoes, condicoesOutras,
+                transferencia, null);
     }
 }

@@ -4,6 +4,7 @@ import {
   CONDICAO_OUTRAS,
   castracaoParaEsterilizado,
   esterilizadoParaCastracao,
+  STATUS_OBITO_EUTANASIA,
   STATUS_TRANSFERIDO,
   type AnimalFormUiValues,
   type CastracaoOpcao,
@@ -11,6 +12,7 @@ import {
 import type {
   Animal,
   AnimalRequest,
+  EutanasiaRequest,
   Pelagem,
   Porte,
   Sexo,
@@ -39,6 +41,8 @@ export interface RascunhoAnimalValores {
   destinoTransferencia?: string
   dataSaida?: string
   documentoTransferencia?: string
+  metodoEutanasia?: string
+  insensibilizacaoPrevia?: boolean
   dataEsterilizacao: string
   status: string
   motivoEntrada: string
@@ -73,6 +77,8 @@ export function valoresVazios(): ValoresIniciaisAnimal {
     destinoTransferencia: '',
     dataSaida: '',
     documentoTransferencia: '',
+    metodoEutanasia: '',
+    insensibilizacaoPrevia: false,
     castracaoOpcao: 'nao_informado',
     dataEsterilizacao: '',
     status: '',
@@ -105,6 +111,8 @@ export function valoresDeAnimal(animal: Animal): ValoresIniciaisAnimal {
     destinoTransferencia: animal.destinoTransferencia ?? '',
     dataSaida: animal.dataSaida?.slice(0, 16) ?? '',
     documentoTransferencia: animal.documentoTransferencia ?? '',
+    metodoEutanasia: animal.laudoEutanasiaMetodo ?? '',
+    insensibilizacaoPrevia: animal.laudoEutanasiaInsensibilizacaoPrevia ?? false,
     castracaoOpcao: esterilizadoParaCastracao(animal.esterilizado, animal.sexo),
     dataEsterilizacao: animal.dataEsterilizacao ?? '',
     status: animal.statusCodigo,
@@ -139,6 +147,8 @@ export function valoresParaRascunho(valores: AnimalFormUiValues, fotoArquivoId: 
     destinoTransferencia: valores.destinoTransferencia ?? '',
     dataSaida: valores.dataSaida ?? '',
     documentoTransferencia: valores.documentoTransferencia ?? '',
+    metodoEutanasia: valores.metodoEutanasia ?? '',
+    insensibilizacaoPrevia: valores.insensibilizacaoPrevia ?? false,
     castracaoOpcao: valores.castracaoOpcao,
     dataEsterilizacao: valores.dataEsterilizacao ?? '',
     status: valores.status,
@@ -173,6 +183,8 @@ export function rascunhoParaValores(rascunho: RascunhoAnimalValores, fotoUrlAtua
     destinoTransferencia: rascunho.destinoTransferencia || undefined,
     dataSaida: rascunho.dataSaida || undefined,
     documentoTransferencia: rascunho.documentoTransferencia || undefined,
+    metodoEutanasia: rascunho.metodoEutanasia || undefined,
+    insensibilizacaoPrevia: rascunho.insensibilizacaoPrevia ?? false,
     castracaoOpcao: rascunho.castracaoOpcao,
     dataEsterilizacao: rascunho.dataEsterilizacao || undefined,
     status: rascunho.status,
@@ -191,11 +203,11 @@ function dataEntradaParaEnvio(dataDoForm: string, original?: string): string {
   return `${dataDoForm}T00:00:00`
 }
 
-type TransferenciaOriginal = Pick<Animal, 'dataSaida' | 'documentoTransferencia'>
+type RegistroOriginal = Pick<Animal, 'dataSaida' | 'documentoTransferencia' | 'laudoEutanasia'>
 
 function transferenciaParaEnvio(
   dados: AnimalFormUiValues,
-  original?: TransferenciaOriginal,
+  original?: RegistroOriginal,
 ): TransferenciaRequest | undefined {
   if (original?.dataSaida) {
     const documento = dados.documentoTransferencia?.trim()
@@ -210,10 +222,18 @@ function transferenciaParaEnvio(
   }
 }
 
+function eutanasiaParaEnvio(dados: AnimalFormUiValues, original?: RegistroOriginal): EutanasiaRequest | undefined {
+  if (original?.laudoEutanasia || dados.status !== STATUS_OBITO_EUTANASIA) return undefined
+  return {
+    metodo: dados.metodoEutanasia || undefined,
+    insensibilizacaoPrevia: dados.insensibilizacaoPrevia === true,
+  }
+}
+
 export function paraAnimalRequest(
   dados: AnimalFormUiValues,
   dataEntradaOriginal?: string,
-  transferenciaOriginal?: TransferenciaOriginal,
+  registroOriginal?: RegistroOriginal,
 ): AnimalRequest {
   return {
     nome: dados.nome,
@@ -241,7 +261,8 @@ export function paraAnimalRequest(
     observacoes: dados.observacoes,
     condicoes: dados.condicoes,
     condicoesOutras: dados.condicoes.includes(CONDICAO_OUTRAS) ? dados.condicoesOutras : undefined,
-    transferencia: transferenciaParaEnvio(dados, transferenciaOriginal),
+    transferencia: transferenciaParaEnvio(dados, registroOriginal),
+    eutanasia: eutanasiaParaEnvio(dados, registroOriginal),
   }
 }
 

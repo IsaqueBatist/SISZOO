@@ -20,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.siszoo.animais.clinico.dto.CriarVacinacaoRequest;
 import com.siszoo.animais.clinico.entity.UnidadeDose;
 import com.siszoo.animais.dto.CriarAnimalRequest;
+import com.siszoo.animais.dto.EutanasiaRequest;
 import com.siszoo.animais.dto.TransferenciaRequest;
 import com.siszoo.usuarios.dto.LoginRequest;
 import com.siszoo.usuarios.entity.Usuario;
@@ -39,6 +40,7 @@ public class ApiTesteFixture {
     public static final UUID CARGO_AGENTE_SANITARIO_ID = UUID.fromString("00000000-0000-4000-8000-000000000003");
     public static final UUID CARGO_LEITOR_OCORRENCIAS_ID = UUID.fromString("00000000-0000-4000-8000-0000000000f1");
     private static final String SENHA_PADRAO = "SenhaTeste123";
+    private static final String EUTANASIA = "obito_eutanasia";
 
     private final UsuarioRepository usuarioRepository;
     private final CargoRepository cargoRepository;
@@ -114,15 +116,18 @@ public class ApiTesteFixture {
     }
 
     public String criarAnimal(String token, String status) {
-        String laudo = "obito_eutanasia".equals(status) ? "Laudo de teste: quadro irreversivel" : null;
+        String laudo = EUTANASIA.equals(status) ? "Laudo de teste: quadro irreversivel" : null;
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Animal de Teste", "canino", "macho", null, null, null, null, null, null, null,
                 microchipUnico(), false, null, status, "resgate", agora(), null, null, null,
-                null, null, null, laudo, null, null, transferenciaDeTeste(status));
+                null, null, null, laudo, null, null, transferenciaDeTeste(status), eutanasiaDeTeste(status));
+        String autor = EUTANASIA.equals(status)
+                ? tokenVeterinario("vet.eutanasia.fixture@itu.sp.gov.br", "Fixture")
+                : token;
 
         return given()
                 .contentType(ContentType.JSON)
-                .header("Authorization", "Bearer " + token)
+                .header("Authorization", "Bearer " + autor)
                 .body(request)
                 .when()
                 .post("/api/animais")
@@ -136,6 +141,16 @@ public class ApiTesteFixture {
         return "transferido".equals(status)
                 ? new TransferenciaRequest("ENTIDADE_PROTECAO", "Abrigo de teste", agora(), null)
                 : null;
+    }
+
+    public EutanasiaRequest eutanasiaDeTeste(String status) {
+        return EUTANASIA.equals(status) ? new EutanasiaRequest("Anestesia seguida de barbitúrico intravenoso", true) : null;
+    }
+
+    public String tokenVeterinario(String email, String sobrenome) {
+        String token = tokenComCargo(email, "Vet", sobrenome, CARGO_VETERINARIO_ID);
+        jdbcTemplate.update("UPDATE usuario SET crmv = 'SP-00001' WHERE email = ? AND crmv IS NULL", email);
+        return token;
     }
 
     public Response postarVacinacao(

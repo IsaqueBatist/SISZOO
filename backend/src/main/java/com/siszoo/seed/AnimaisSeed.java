@@ -23,6 +23,7 @@ import com.siszoo.animais.clinico.service.ProcedimentoService;
 import com.siszoo.animais.clinico.service.VacinacaoService;
 import com.siszoo.animais.dto.AtualizarAnimalRequest;
 import com.siszoo.animais.dto.CriarAnimalRequest;
+import com.siszoo.animais.dto.EutanasiaRequest;
 import com.siszoo.animais.dto.TransferenciaRequest;
 import com.siszoo.animais.entity.TipoDestinoTransferencia;
 import com.siszoo.animais.service.AnexoAnimalService;
@@ -32,6 +33,8 @@ class AnimaisSeed {
 
     static final String GESTAO_ESCRITA = "GESTAO_ANIMAIS:escrita";
     private static final String STATUS_TRANSFERIDO = "transferido";
+    private static final EutanasiaRequest EUTANASIA =
+            new EutanasiaRequest("Anestesia geral seguida de agente eutanásico intravenoso", true);
 
     static final class Animal {
         final int numero;
@@ -495,7 +498,8 @@ class AnimaisSeed {
                 implantadoAgora ? datas.diasAtras(11)
                         : animal.medalha && animal.microchip ? datas.diasAtras(animal.diasEntrada) : null,
                 animal.procedencia, desfecho ? animal.laudo : null, null, null,
-                desfecho && STATUS_TRANSFERIDO.equals(status) ? transferencia(datas) : null);
+                desfecho && STATUS_TRANSFERIDO.equals(status) ? transferencia(datas) : null,
+                desfecho && animal.laudo != null ? EUTANASIA : null);
     }
 
     private static TransferenciaRequest transferencia(DatasSeed datas) {

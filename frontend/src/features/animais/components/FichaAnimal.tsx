@@ -9,6 +9,7 @@ import { AbaMedicamentos } from './AbaMedicamentos'
 import { AbaProcedimentos } from './AbaProcedimentos'
 import { AbaVacinas } from './AbaVacinas'
 import { AnexosAnimal } from './AnexosAnimal'
+import { LaudoEutanasiaRegistrado } from './CamposEutanasia'
 import { OrigemAnimal } from './OrigemAnimal'
 import './FichaAnimal.css'
 import { badgeDeEspecie, badgeDeStatus } from '../utils/statusBadge'
@@ -155,12 +156,7 @@ export function FichaAnimal() {
                 <span className="k">Procedência</span>
                 <span className="v">{animal.procedencia ?? '—'}</span>
               </div>
-              {animal.statusCodigo === 'obito_eutanasia' && (
-                <div className="kv-row">
-                  <span className="k">Laudo de eutanásia</span>
-                  <span className="v">{animal.laudoEutanasia ?? '— (não informado)'}</span>
-                </div>
-              )}
+              {animal.statusCodigo === 'obito_eutanasia' && <LaudoEutanasiaRegistrado laudo={animal} />}
               {animal.statusCodigo === 'transferido' && (
                 <>
                   <div className="kv-row">

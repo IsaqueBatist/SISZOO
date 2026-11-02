@@ -31,6 +31,8 @@ public interface AnimalMapper {
     @Mapping(target = "criadoPorId", source = "criadoPor.id")
     @Mapping(target = "criadoPorNome", source = "criadoPor", qualifiedByName = "nomeCompleto")
     @Mapping(target = "condicoes", source = "condicoes", qualifiedByName = "condicoesOrdenadas")
+    @Mapping(target = "laudoEutanasiaResponsavelId", source = "laudoEutanasiaResponsavel.id")
+    @Mapping(target = "laudoEutanasiaResponsavelNome", source = "laudoEutanasiaResponsavel", qualifiedByName = "nomeOuNulo")
     AnimalResponse toResponse(Animal animal);
 
     @Named("listagem")
@@ -50,6 +52,11 @@ public interface AnimalMapper {
     @Named("tipoBaiaNome")
     default String tipoBaiaNome(Baia baia) {
         return baia == null ? null : baia.getTipoBaia().getNome();
+    }
+
+    @Named("nomeOuNulo")
+    default String nomeOuNulo(Usuario usuario) {
+        return usuario == null ? null : usuario.nomeCompleto();
     }
 
     @Named("nomeCompleto")

@@ -198,3 +198,32 @@ describe('rascunho', () => {
     expect(restaurado.procedencia).toBeUndefined()
   })
 })
+
+describe('eutanásia', () => {
+  it('manda método e insensibilização ao registrar; desmarcada vai como false', () => {
+    const valores = {
+      ...rascunhoParaValores(valoresVazios(), undefined),
+      status: 'obito_eutanasia',
+      laudoEutanasia: 'Quadro irreversível',
+      metodoEutanasia: 'Barbitúrico intravenoso',
+      insensibilizacaoPrevia: true,
+    }
+
+    expect(paraAnimalRequest(valores).eutanasia).toEqual({
+      metodo: 'Barbitúrico intravenoso',
+      insensibilizacaoPrevia: true,
+    })
+    expect(paraAnimalRequest({ ...valores, insensibilizacaoPrevia: false }).eutanasia?.insensibilizacaoPrevia).toBe(false)
+    expect(paraAnimalRequest({ ...valores, status: 'em_tratamento' }).eutanasia).toBeUndefined()
+  })
+
+  it('laudo já registrado não reenvia método nem insensibilização', () => {
+    const original = animal({ statusCodigo: 'obito_eutanasia', laudoEutanasia: 'Laudo gravado' })
+    const valores = rascunhoParaValores(valoresDeAnimal(original), undefined)
+
+    const corpo = paraAnimalRequest(valores, original.dataEntrada, original)
+
+    expect(corpo.eutanasia).toBeUndefined()
+    expect(corpo.laudoEutanasia).toBe('Laudo gravado')
+  })
+})

@@ -90,7 +90,7 @@ Table CargoPermissao {
   id       uuid    [pk, not null, default: `gen_random_uuid()`]
   cargo_id uuid    [not null, ref: > Cargo.id]
   modulo   Modulo  [not null]
-  feature  varchar(100) [not null, note: 'geral (módulo inteiro) ou denunciante_sigiloso (OCORRENCIAS_DENUNCIAS, só leitura: Administrador e Agente Sanitário, V10)']
+  feature  varchar(100) [not null, note: 'geral (módulo inteiro); denunciante_sigiloso (OCORRENCIAS_DENUNCIAS, só leitura: Administrador e Agente Sanitário, V10); edicao_registro (PROCESSOS_SANITARIOS, Administrador, V30); ocorrencias_bairro (RELATORIOS, V32); eutanasia (GESTAO_ANIMAIS, só escrita: Veterinário, V38)']
   leitura  boolean [not null, default: false]
   escrita  boolean [not null, default: false]
   exclusao boolean [not null, default: false]

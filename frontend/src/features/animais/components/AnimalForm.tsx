@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { FormProvider, useForm, type FieldErrors as RhfFieldErrors } from 'react-hook-form'
 import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { usePerfilQuery } from '@/features/perfil/hooks/usePerfil'
 import { toast } from '@/components/toast/toast'
 import { aplicarErrosDeCampo, mapaDeCampos, mensagemDeRegraDaApi } from '@/lib/erroApi'
 import type { Animal } from '../types/animais.types'
@@ -60,6 +61,8 @@ const CAMPOS_STEP: Record<1 | 2 | 3, (keyof AnimalFormUiValues)[]> = {
     'destinoTransferencia',
     'dataSaida',
     'documentoTransferencia',
+    'metodoEutanasia',
+    'insensibilizacaoPrevia',
     'condicoes',
     'condicoesOutras',
   ],
@@ -67,6 +70,8 @@ const CAMPOS_STEP: Record<1 | 2 | 3, (keyof AnimalFormUiValues)[]> = {
 }
 
 const ETAPAS = ['Dados Básicos', 'Saúde & Baia', 'Foto & Revisão'] as const
+
+const CARGO_VETERINARIO = 'Veterinário'
 
 const CAMPOS_COM_ERRO = new Set<string>([...CAMPOS_STEP[1], ...CAMPOS_STEP[2]])
 
@@ -78,6 +83,8 @@ const MAPA_ERROS_SERVIDOR: Record<string, keyof AnimalFormUiValues> = {
   'transferencia.destino': 'destinoTransferencia',
   'transferencia.dataSaida': 'dataSaida',
   'transferencia.documento': 'documentoTransferencia',
+  'eutanasia.metodo': 'metodoEutanasia',
+  'eutanasia.insensibilizacaoPrevia': 'insensibilizacaoPrevia',
 }
 
 const ARMAZENAMENTO_RASCUNHO_ANIMAL: ArmazenamentoRascunho<RascunhoAnimalValores> = {
@@ -91,6 +98,8 @@ const ARMAZENAMENTO_RASCUNHO_ANIMAL: ArmazenamentoRascunho<RascunhoAnimalValores
 export function AnimalForm({ animal }: AnimalFormProps) {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { data: perfil } = usePerfilQuery()
+  const podeRegistrarEutanasia = Boolean(user?.cargos.includes(CARGO_VETERINARIO) && perfil?.crmv?.trim())
   const chaveRascunho = chaveRascunhoAnimal(user?.id ?? '', animal?.id)
   const iniciais = animal ? valoresDeAnimal(animal) : valoresVazios()
 
@@ -301,7 +310,11 @@ export function AnimalForm({ animal }: AnimalFormProps) {
               <h3>Saúde &amp; Baia</h3>
             </div>
             <div className="card-body">
-              <CamposSaudeBaia baiaAtualId={iniciais.baiaId} transferenciaRegistrada={animal} />
+              <CamposSaudeBaia
+                baiaAtualId={iniciais.baiaId}
+                registroOriginal={animal}
+                podeRegistrarEutanasia={podeRegistrarEutanasia}
+              />
             </div>
             <div
               className="card-header"

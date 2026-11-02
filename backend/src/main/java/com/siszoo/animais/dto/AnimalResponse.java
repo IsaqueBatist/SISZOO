@@ -49,5 +49,11 @@ public record AnimalResponse(
         TipoDestinoTransferencia tipoDestinoTransferencia,
         String destinoTransferencia,
         LocalDateTime dataSaida,
-        String documentoTransferencia) {
+        String documentoTransferencia,
+        UUID laudoEutanasiaResponsavelId,
+        String laudoEutanasiaResponsavelNome,
+        String laudoEutanasiaCrmv,
+        String laudoEutanasiaMetodo,
+        Boolean laudoEutanasiaInsensibilizacaoPrevia,
+        LocalDateTime laudoEutanasiaRegistradoEm) {
 }

@@ -3,6 +3,11 @@ export type Pelagem = 'curta' | 'longa'
 export type Porte = 'pequeno' | 'medio' | 'grande'
 export type TipoDestinoTransferencia = 'ORGAO_PUBLICO' | 'ENTIDADE_PROTECAO' | 'OUTRO_CCZ' | 'OUTRO'
 
+export interface EutanasiaRequest {
+  metodo?: string
+  insensibilizacaoPrevia?: boolean
+}
+
 export interface TransferenciaRequest {
   tipoDestino?: TipoDestinoTransferencia
   destino?: string
@@ -51,6 +56,12 @@ export interface Animal {
   destinoTransferencia?: string | null
   dataSaida?: string | null
   documentoTransferencia?: string | null
+  laudoEutanasiaResponsavelId?: string | null
+  laudoEutanasiaResponsavelNome?: string | null
+  laudoEutanasiaCrmv?: string | null
+  laudoEutanasiaMetodo?: string | null
+  laudoEutanasiaInsensibilizacaoPrevia?: boolean | null
+  laudoEutanasiaRegistradoEm?: string | null
 }
 
 export interface CatalogoItem {
@@ -144,6 +155,7 @@ export interface AnimalRequest {
   procedencia?: string
   laudoEutanasia?: string
   transferencia?: TransferenciaRequest
+  eutanasia?: EutanasiaRequest
 }
 
 export interface ResidenteBaia {

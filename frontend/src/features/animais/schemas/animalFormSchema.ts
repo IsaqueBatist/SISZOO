@@ -45,6 +45,7 @@ export function esterilizadoParaCastracao(esterilizado: boolean | null, sexo: st
 }
 
 export const STATUS_TRANSFERIDO = 'transferido'
+export const STATUS_OBITO_EUTANASIA = 'obito_eutanasia'
 
 export const animalFormSchema = z.object({
   nome: z.string().trim().min(1, 'Informe o nome do animal.').max(80, 'Máximo de 80 caracteres.'),
@@ -75,6 +76,8 @@ export const animalFormSchema = z.object({
     .refine((valor) => naoEhFutura(valor.slice(0, 10)), 'A data de saída não pode ser futura.')
     .optional(),
   documentoTransferencia: z.string().trim().max(120, 'Máximo de 120 caracteres.').optional(),
+  metodoEutanasia: z.string().trim().max(120, 'Máximo de 120 caracteres.').optional(),
+  insensibilizacaoPrevia: z.boolean().optional(),
   esterilizado: z.boolean().nullable(),
   dataEsterilizacao: z
     .string()

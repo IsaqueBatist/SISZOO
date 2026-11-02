@@ -22,6 +22,7 @@ import com.siszoo.animais.dto.AnimalResponse;
 import com.siszoo.animais.dto.AtualizarAnimalRequest;
 import com.siszoo.animais.dto.CriarAnimalRequest;
 import com.siszoo.animais.dto.DadosDescritivosAnimal;
+import com.siszoo.animais.dto.EutanasiaRequest;
 import com.siszoo.animais.dto.TransferenciaRequest;
 import com.siszoo.animais.entity.Animal;
 import com.siszoo.animais.entity.Baia;
@@ -34,6 +35,8 @@ import com.siszoo.animais.exception.AnimalNaoEncontradoException;
 import com.siszoo.animais.exception.BaiaIndisponivelException;
 import com.siszoo.animais.exception.BaiaInvalidaException;
 import com.siszoo.animais.exception.EspecieInvalidaException;
+import com.siszoo.animais.exception.EutanasiaSemResponsavelTecnicoException;
+import com.siszoo.animais.exception.LaudoEutanasiaImutavelException;
 import com.siszoo.animais.exception.MicrochipImutavelException;
 import com.siszoo.animais.exception.MicrochipJaCadastradoException;
 import com.siszoo.animais.exception.MotivoEntradaInvalidoException;
@@ -56,6 +59,7 @@ import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.exception.UsuarioNaoEncontradoException;
 import com.siszoo.usuarios.repository.UsuarioRepository;
 import com.siszoo.usuarios.service.AuditoriaEventoService;
+import com.siszoo.usuarios.service.AutoridadeService;
 
 import jakarta.persistence.criteria.Predicate;
 
@@ -76,6 +80,7 @@ public class AnimalService {
     private final AnimalMapper animalMapper;
     private final FichaCompletaService fichaCompletaService;
     private final AuditoriaEventoService auditoriaEventoService;
+    private final AutoridadeService autoridadeService;
     private final MiniaturaFoto miniaturaFoto;
     private final Clock clock;
 
@@ -92,6 +97,7 @@ public class AnimalService {
             AnimalMapper animalMapper,
             FichaCompletaService fichaCompletaService,
             AuditoriaEventoService auditoriaEventoService,
+            AutoridadeService autoridadeService,
             MiniaturaFoto miniaturaFoto,
             Clock clock) {
         this.animalRepository = animalRepository;
@@ -104,6 +110,7 @@ public class AnimalService {
         this.animalMapper = animalMapper;
         this.fichaCompletaService = fichaCompletaService;
         this.auditoriaEventoService = auditoriaEventoService;
+        this.autoridadeService = autoridadeService;
         this.miniaturaFoto = miniaturaFoto;
         this.clock = clock;
     }
@@ -118,23 +125,20 @@ public class AnimalService {
         verificarMedalhaDisponivel(numeroMedalha, null);
         validarDataImplantacaoChip(request.dataImplantacaoChip(), microchip);
         StatusAnimal status = resolverStatus(request.status());
-        String laudoEutanasia = Textos.normalizar(request.laudoEutanasia());
-        exigirLaudoNaEutanasia(null, status, laudoEutanasia);
         Baia baia = resolverBaia(request.baiaId(), status, null);
+        Usuario criadoPor = usuarioRepository.findById(usuarioAutenticadoId)
+                .orElseThrow(UsuarioNaoEncontradoException::new);
 
         Animal animal = new Animal();
+        aplicarLaudoEutanasia(animal, null, status, request.laudoEutanasia(), request.eutanasia(), criadoPor);
         animal.setNumeroMedalha(numeroMedalha);
         animal.setDataImplantacaoChip(request.dataImplantacaoChip());
         animal.setProcedencia(Textos.normalizar(request.procedencia()));
-        animal.setLaudoEutanasia(laudoEutanasia);
         aplicarTransferencia(animal, null, status, request.transferencia(), request.dataEntrada());
         animal.setMicrochip(microchip);
         aplicarDadosDescritivos(animal, request, status, baia);
         animal.setFotoUrl(request.fotoUrl());
         animal.setFotoMiniatura(miniaturaFoto.gerar(request.fotoUrl()));
-
-        Usuario criadoPor = usuarioRepository.findById(usuarioAutenticadoId)
-                .orElseThrow(UsuarioNaoEncontradoException::new);
         animal.setCriadoPor(criadoPor);
 
         animal.setFichaCompleta(fichaCompletaService.calcular(animal));
@@ -163,15 +167,11 @@ public class AnimalService {
         String numeroMedalha = Textos.normalizar(request.numeroMedalha());
         verificarMedalhaDisponivel(numeroMedalha, animal.getId());
         validarDataImplantacaoChip(request.dataImplantacaoChip(), animal.getMicrochip());
-        String laudoEutanasia = Textos.normalizar(request.laudoEutanasia());
-        exigirLaudoNaEutanasia(animal.getStatus(), status, laudoEutanasia);
+        aplicarLaudoEutanasia(animal, animal.getStatus(), status, request.laudoEutanasia(), request.eutanasia(), autor);
         aplicarTransferencia(animal, animal.getStatus(), status, request.transferencia(), request.dataEntrada());
         animal.setNumeroMedalha(numeroMedalha);
         animal.setDataImplantacaoChip(request.dataImplantacaoChip());
         animal.setProcedencia(Textos.normalizar(request.procedencia()));
-        if (laudoEutanasia != null) {
-            animal.setLaudoEutanasia(laudoEutanasia);
-        }
 
         aplicarDadosDescritivos(animal, request, status, baia);
         if (!Objects.equals(animal.getFotoUrl(), request.fotoUrl())) {
@@ -319,6 +319,7 @@ public class AnimalService {
 
     private static final String STATUS_OBITO_EUTANASIA = "obito_eutanasia";
     private static final String STATUS_TRANSFERIDO = "transferido";
+    private static final String AUTORIDADE_EUTANASIA = "GESTAO_ANIMAIS:eutanasia:escrita";
 
     private void verificarMedalhaDisponivel(String numeroMedalha, UUID animalIdAtual) {
         if (numeroMedalha == null) {
@@ -344,12 +345,62 @@ public class AnimalService {
         }
     }
 
-    private static void exigirLaudoNaEutanasia(StatusAnimal statusAnterior, StatusAnimal statusNovo, String laudo) {
-        boolean entrandoEmEutanasia = statusNovo != null && STATUS_OBITO_EUTANASIA.equals(statusNovo.getCodigo())
+    private void aplicarLaudoEutanasia(Animal animal, StatusAnimal statusAnterior, StatusAnimal statusNovo,
+            String laudoInformado, EutanasiaRequest eutanasia, Usuario autor) {
+        String laudo = Textos.normalizar(laudoInformado);
+        String metodo = eutanasia == null ? null : Textos.normalizar(eutanasia.metodo());
+        Boolean insensibilizacao = eutanasia == null ? null : eutanasia.insensibilizacaoPrevia();
+        if (animal.getLaudoEutanasia() != null) {
+            exigirLaudoInalterado(animal, laudo, metodo, insensibilizacao);
+            return;
+        }
+        boolean eutanasiaNoStatus = statusNovo != null && STATUS_OBITO_EUTANASIA.equals(statusNovo.getCodigo());
+        boolean entrandoEmEutanasia = eutanasiaNoStatus
                 && (statusAnterior == null || !STATUS_OBITO_EUTANASIA.equals(statusAnterior.getCodigo()));
-        if (entrandoEmEutanasia && laudo == null) {
+        boolean informado = laudo != null || metodo != null || insensibilizacao != null;
+        if (!eutanasiaNoStatus || (!entrandoEmEutanasia && !informado)) {
+            return;
+        }
+        exigirResponsavelTecnico(autor);
+        if (laudo == null) {
             throw new CampoInvalidoException("laudoEutanasia",
                     "Informe o laudo do responsável técnico que justifica a eutanásia.");
+        }
+        if (metodo == null) {
+            throw new CampoInvalidoException("eutanasia.metodo", "Informe o método de eutanásia.");
+        }
+        if (insensibilizacao == null) {
+            throw new CampoInvalidoException("eutanasia.insensibilizacaoPrevia",
+                    "Informe se houve insensibilização prévia.");
+        }
+        if (!insensibilizacao) {
+            throw new CampoInvalidoException("eutanasia.insensibilizacaoPrevia",
+                    "O registro exige insensibilização prévia do animal (Lei estadual nº 11.977/2005, art. 12, parágrafo único).");
+        }
+        animal.setLaudoEutanasia(laudo);
+        animal.setLaudoEutanasiaResponsavel(autor);
+        animal.setLaudoEutanasiaCrmv(autor.getCrmv().trim());
+        animal.setLaudoEutanasiaMetodo(metodo);
+        animal.setLaudoEutanasiaInsensibilizacaoPrevia(true);
+        animal.setLaudoEutanasiaRegistradoEm(LocalDateTime.now(clock));
+    }
+
+    private void exigirResponsavelTecnico(Usuario autor) {
+        Set<String> cargos = new HashSet<>();
+        autor.getCargos().forEach(vinculo -> cargos.add(vinculo.getCargo().getNome()));
+        boolean podeRegistrar = autoridadeService.resolverAutoridades(cargos).stream()
+                .anyMatch(autoridade -> AUTORIDADE_EUTANASIA.equals(autoridade.getAuthority()));
+        if (!podeRegistrar || !StringUtils.hasText(autor.getCrmv())) {
+            throw new EutanasiaSemResponsavelTecnicoException();
+        }
+    }
+
+    private static void exigirLaudoInalterado(Animal animal, String laudo, String metodo, Boolean insensibilizacao) {
+        boolean alterou = (laudo != null && !laudo.equals(animal.getLaudoEutanasia()))
+                || (metodo != null && !metodo.equals(animal.getLaudoEutanasiaMetodo()))
+                || (insensibilizacao != null && !insensibilizacao.equals(animal.getLaudoEutanasiaInsensibilizacaoPrevia()));
+        if (alterou) {
+            throw new LaudoEutanasiaImutavelException();
         }
     }
 

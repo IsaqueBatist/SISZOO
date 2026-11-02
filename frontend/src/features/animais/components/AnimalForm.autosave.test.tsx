@@ -77,7 +77,7 @@ describe('AnimalForm — autosave do rascunho', () => {
     await waitFor(() => expect(agendarSalvarRascunhoAnimal).toHaveBeenCalled())
   })
 
-  it('agenda salvar com exatamente as 29 chaves de RascunhoAnimalValores', async () => {
+  it('agenda salvar com exatamente as 31 chaves de RascunhoAnimalValores', async () => {
     vi.mocked(carregarRascunhoAnimal).mockResolvedValue(null)
 
     const user = userEvent.setup()
@@ -119,6 +119,8 @@ describe('AnimalForm — autosave do rascunho', () => {
         'destinoTransferencia',
         'dataSaida',
         'documentoTransferencia',
+        'metodoEutanasia',
+        'insensibilizacaoPrevia',
       ].sort(),
     )
   })

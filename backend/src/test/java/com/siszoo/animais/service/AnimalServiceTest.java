@@ -42,6 +42,7 @@ import com.siszoo.comum.exception.CampoInvalidoException;
 import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.repository.UsuarioRepository;
 import com.siszoo.usuarios.service.AuditoriaEventoService;
+import com.siszoo.usuarios.service.AutoridadeService;
 
 @ExtendWith(MockitoExtension.class)
 class AnimalServiceTest {
@@ -79,6 +80,9 @@ class AnimalServiceTest {
     @Mock
     private AuditoriaEventoService auditoriaEventoService;
 
+    @Mock
+    private AutoridadeService autoridadeService;
+
     private AnimalService animalService;
 
     @BeforeEach
@@ -86,7 +90,7 @@ class AnimalServiceTest {
         Clock clock = Clock.fixed(Instant.parse("2026-09-10T15:00:00Z"), ZoneId.of("America/Sao_Paulo"));
         animalService = new AnimalService(animalRepository, baiaRepository, especieRepository, statusAnimalRepository,
                 motivoEntradaRepository, condicaoSaudeRepository, usuarioRepository, animalMapper, fichaCompletaService,
-                auditoriaEventoService,
+                auditoriaEventoService, autoridadeService,
                 new MiniaturaFoto(), clock);
         lenient().when(usuarioRepository.findById(usuarioComId().getId())).thenReturn(Optional.of(usuarioComId()));
     }

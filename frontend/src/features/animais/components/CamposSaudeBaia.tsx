@@ -6,19 +6,27 @@ import {
   animalCastrado,
   CASTRACAO_OPCOES,
   CONDICAO_OUTRAS,
+  STATUS_OBITO_EUTANASIA,
   STATUS_TRANSFERIDO,
   type AnimalFormUiValues,
 } from '../schemas/animalFormSchema'
+import { CamposEutanasia, type LaudoRegistrado } from './CamposEutanasia'
 import { CamposTransferencia, type TransferenciaRegistrada } from './CamposTransferencia'
 import { semVazio } from '../utils/animalFormMapeamento'
 import { semEspacos } from '@/lib/texto'
 
 interface CamposSaudeBaiaProps {
   baiaAtualId: string
-  transferenciaRegistrada?: TransferenciaRegistrada | null
+  registroOriginal?: (TransferenciaRegistrada & LaudoRegistrado & { statusCodigo: string }) | null
+  podeRegistrarEutanasia?: boolean
 }
 
-export function CamposSaudeBaia({ baiaAtualId, transferenciaRegistrada = null }: CamposSaudeBaiaProps) {
+export function CamposSaudeBaia({
+  baiaAtualId,
+  registroOriginal = null,
+  podeRegistrarEutanasia = false,
+}: CamposSaudeBaiaProps) {
+  const jaEmEutanasia = registroOriginal?.statusCodigo === STATUS_OBITO_EUTANASIA
   const {
     register,
     control,
@@ -67,12 +75,24 @@ export function CamposSaudeBaia({ baiaAtualId, transferenciaRegistrada = null }:
             Selecione…
           </option>
           {catalogos?.status.map((item) => (
-            <option key={item.codigo} value={item.codigo}>
+            <option
+              key={item.codigo}
+              value={item.codigo}
+              disabled={item.codigo === STATUS_OBITO_EUTANASIA && !podeRegistrarEutanasia && !jaEmEutanasia}
+            >
               {item.nome}
             </option>
           ))}
         </select>
-        {errors.status && <span className="err" id="status-erro">{errors.status.message}</span>}
+        {errors.status ? (
+          <span className="err" id="status-erro">{errors.status.message}</span>
+        ) : (
+          !podeRegistrarEutanasia && !jaEmEutanasia && (
+            <span className="hint">
+              Óbito por eutanásia: só veterinário com CRMV cadastrado pode registrar o laudo.
+            </span>
+          )
+        )}
       </div>
 
       <div className="field">
@@ -196,28 +216,9 @@ export function CamposSaudeBaia({ baiaAtualId, transferenciaRegistrada = null }:
         )}
       </div>
 
-      {status === 'obito_eutanasia' && (
-        <div className="field full">
-          <label htmlFor="laudoEutanasia">
-            Laudo de eutanásia <span className="req">*</span>
-          </label>
-          <textarea
-            id="laudoEutanasia"
-            className={`input${errors.laudoEutanasia ? ' error' : ''}`} aria-invalid={errors.laudoEutanasia ? true : undefined} aria-describedby={errors.laudoEutanasia ? 'laudoEutanasia-erro' : undefined}
-            rows={4}
-            maxLength={4000}
-            placeholder="Justificativa do responsável técnico (Lei nº 14.228/2021, art. 2º, § 1º)"
-            {...register('laudoEutanasia', { setValueAs: semEspacos })}
-          />
-          {errors.laudoEutanasia ? (
-            <span className="err" id="laudoEutanasia-erro">{errors.laudoEutanasia.message}</span>
-          ) : (
-            <span className="hint">Obrigatório ao registrar o destino óbito por eutanásia.</span>
-          )}
-        </div>
-      )}
+      {status === STATUS_OBITO_EUTANASIA && <CamposEutanasia registrado={registroOriginal} />}
 
-      {status === STATUS_TRANSFERIDO && <CamposTransferencia registrada={transferenciaRegistrada} />}
+      {status === STATUS_TRANSFERIDO && <CamposTransferencia registrada={registroOriginal} />}
     </div>
   )
 }
