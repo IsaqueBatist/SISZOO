@@ -99,7 +99,11 @@ export function useCriarProcedimentoMutation(animalId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (payload: CriarProcedimentoRequest) => criarProcedimento(payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['procedimentos', animalId] }),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['procedimentos', animalId] }),
+        queryClient.invalidateQueries({ queryKey: ['animais', 'detalhe', animalId] }),
+      ]),
   })
 }
 
