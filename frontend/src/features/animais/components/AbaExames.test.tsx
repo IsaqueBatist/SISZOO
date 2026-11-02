@@ -56,7 +56,9 @@ describe('AbaExames', () => {
     expect(screen.getByRole('button', { name: 'Lançar resultado' })).toBeInTheDocument()
   })
 
-  it('agente sanitário (só leitura) não vê o botão de registrar exame', async () => {
+  // Ver nota em FichaAnimal.test.tsx: o Agente Sanitário não alcança mais a ficha; o caso cobre o
+  // modo leitura do componente.
+  it('perfil sem escrita em animais não vê o botão de registrar exame', async () => {
     const user = userEvent.setup()
     renderFicha(['Agente Sanitário'])
     await screen.findByRole('tab', { name: 'Exames' })

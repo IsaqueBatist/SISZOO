@@ -6,6 +6,7 @@ import { SEXO_OPCOES, PELAGEM_OPCOES } from '@/features/animais/schemas/animalFo
 import { formatarData } from '@/features/ocorrencias/utils/datas'
 import { formatarProtocoloOcorrencia, formatarProtocoloProcesso } from '@/features/ocorrencias/utils/protocolo'
 import { mensagemDeRegraDaApi, statusHttpDoErro } from '@/lib/erroApi'
+import { podeAcessar } from '@/lib/nav'
 import { CardHistoricoAlteracoes } from './CardHistoricoAlteracoes'
 import { CardResultadoProcesso } from './CardResultadoProcesso'
 import { CardStatusProcesso } from './CardStatusProcesso'
@@ -24,17 +25,27 @@ function Campo({ rotulo, valor, mono, full }: { rotulo: string; valor: string | 
   )
 }
 
-function CardAmostra({ amostra, indice }: { amostra: AmostraAnimal; indice: number }) {
+function CardAmostra({
+  amostra,
+  indice,
+  podeVerFichaAnimal,
+}: {
+  amostra: AmostraAnimal
+  indice: number
+  podeVerFichaAnimal: boolean
+}) {
   return (
     <div className="card">
       <div className="card-header">
         <h3>Amostra {indice + 1}</h3>
-        {amostra.animalId ? (
+        {!amostra.animalId ? (
+          <span className="badge badge-neutral">Animal de campo</span>
+        ) : podeVerFichaAnimal ? (
           <Link to={`/animais/${amostra.animalId}`} className="btn btn-outline btn-sm">
             Ver ficha do animal
           </Link>
         ) : (
-          <span className="badge badge-neutral">Animal de campo</span>
+          <span className="badge badge-neutral">Animal do canil</span>
         )}
       </div>
       <div className="card-body">
@@ -133,6 +144,7 @@ export function ProcessoDetalhe() {
   const podeEscrever = roleKey === 'admin' || roleKey === 'vet' || roleKey === 'agente'
   const acessaOcorrencias = roleKey === 'admin' || roleKey === 'agente'
   const podeEditarRegistro = roleKey === 'admin'
+  const podeVerFichaAnimal = podeAcessar(roleKey, 'animais')
   const { data: processo, isLoading, isError, error } = useProcessoQuery(id)
 
   if (isLoading) {
@@ -266,7 +278,7 @@ export function ProcessoDetalhe() {
           </div>
 
           {processo.amostras.map((amostra, indice) => (
-            <CardAmostra key={amostra.id} amostra={amostra} indice={indice} />
+            <CardAmostra key={amostra.id} amostra={amostra} indice={indice} podeVerFichaAnimal={podeVerFichaAnimal} />
           ))}
         </div>
 

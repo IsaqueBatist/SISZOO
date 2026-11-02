@@ -190,7 +190,9 @@ describe('FichaAnimal', () => {
     expect(container.querySelector('.table-footer')).toHaveTextContent('Mostrando 6 de 6 vacinas')
   })
 
-  it('esconde os botões de registro para Agente Sanitário (perfil só-leitura)', async () => {
+  // Defesa em profundidade: desde a restrição de 02/11/2026 o Agente Sanitário não alcança esta rota
+  // (RotaLeituraAnimais). O caso continua garantindo que o modo leitura da ficha não oferece escrita.
+  it('esconde os botões de registro para perfil sem escrita em animais', async () => {
     const user = userEvent.setup()
     renderFicha(['Agente Sanitário'])
     await screen.findByRole('heading', { name: 'Rex', level: 1 })

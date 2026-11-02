@@ -4,5 +4,5 @@ import { RedirecionarSemAcesso } from './RedirecionarSemAcesso'
 
 export function RotaEscritaAnimais() {
   const { roleKey } = useAuth()
-  return roleKey === 'admin' || roleKey === 'vet' ? <Outlet /> : <RedirecionarSemAcesso para="/animais" />
+  return roleKey === 'admin' || roleKey === 'vet' ? <Outlet /> : <RedirecionarSemAcesso para="/dashboard" />
 }

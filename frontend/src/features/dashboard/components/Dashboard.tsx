@@ -218,6 +218,7 @@ export function Dashboard() {
   const { roleKey } = useAuth()
   const atalhos = ATALHOS_POR_PERFIL[roleKey]
   const linkBaias = podeAcessar(roleKey, 'baias')
+  const acessaAnimais = podeAcessar(roleKey, 'animais')
   const { data: kpis, isLoading: kpisCarregando, isError: kpisComErro, refetch: refazerKpis } = useKpisDashboardQuery()
   const kpisMockados = kpisUsamMock()
   const cards = kpis ? mapearKpisParaCards(kpis, kpisMockados) : []
@@ -288,7 +289,7 @@ export function Dashboard() {
           {kpisMockados && <SeloDadosMock />}
         </div>
         <div className="alerts-grid">
-          <AlertaCriticoVacinas />
+          {acessaAnimais && <AlertaCriticoVacinas />}
           <AlertaProcessosUrgentes />
           {!kpisCarregando &&
             !kpisComErro &&

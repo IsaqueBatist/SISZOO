@@ -6,18 +6,21 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { API_BASE_URL } from '@/lib/env'
 import { server } from '@/mocks/server'
+import { AuthContext, type AuthContextValue } from '@/features/auth/hooks/authContextValue'
 import { MenuNotificacoes } from './MenuNotificacoes'
 
-function renderSino() {
+function renderSino(roleKey: AuthContextValue['roleKey'] = 'admin') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={['/dashboard']}>
-        <Routes>
-          <Route path="/dashboard" element={<MenuNotificacoes />} />
-          <Route path="/alertas/vacinas" element={<p>Tela de alertas de vacina</p>} />
-          <Route path="/processos" element={<p>Tela de processos</p>} />
-        </Routes>
+        <AuthContext.Provider value={{ roleKey } as AuthContextValue}>
+          <Routes>
+            <Route path="/dashboard" element={<MenuNotificacoes />} />
+            <Route path="/alertas/vacinas" element={<p>Tela de alertas de vacina</p>} />
+            <Route path="/processos" element={<p>Tela de processos</p>} />
+          </Routes>
+        </AuthContext.Provider>
       </MemoryRouter>
     </QueryClientProvider>,
   )
@@ -97,6 +100,18 @@ describe('MenuNotificacoes', () => {
 
     await user.click(linkDaVacina)
     expect(screen.getByText(/tela de alertas de vacina/i)).toBeInTheDocument()
+  })
+
+  it('Agente Sanitário não recebe os alertas de vacina, só os de processo', async () => {
+    const user = userEvent.setup()
+    renderSino('agente')
+    await screen.findByRole('button', { name: /notificações: \d+ alerta/i })
+
+    await user.click(botaoDoSino())
+
+    const menu = screen.getByRole('menu', { name: /notificações/i })
+    expect(within(menu).queryByText(/vacina/i)).not.toBeInTheDocument()
+    expect(within(menu).getByText(/processos? urgentes?/i)).toBeInTheDocument()
   })
 
   it('sem alerta nenhum, não mostra ponto e diz que está tudo limpo', async () => {
