@@ -7,13 +7,13 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.OptionalDouble;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.siszoo.comum.repository.ContagemCatalogoProjection;
 import com.siszoo.comum.util.BlocoCsv;
+import com.siszoo.comum.util.Estatisticas;
 import com.siszoo.ocorrencias.repository.BairroTipoProjection;
 import com.siszoo.ocorrencias.repository.ContagemPorBairroProjection;
 import com.siszoo.ocorrencias.repository.OcorrenciaRepository;
@@ -25,13 +25,6 @@ import com.siszoo.relatorios.dto.RelatorioOcorrenciasBairroResponse;
 import com.siszoo.relatorios.dto.TipoOcorrenciaContagemResponse;
 import com.siszoo.relatorios.entity.TipoRelatorio;
 
-// "Ocorrências por Bairro" (DER §3.6 / docs/prototipo/relatorio-ocorrencias.html).
-// Exclui ocorrencias com providencia 'registro_indevido' de toda contagem,
-// mesma regra ja aplicada ao KPI do dashboard (OcorrenciaRepository#contarRegistradasEm).
-// "Tempo médio (h)" é registro -> encerramento (criadoEm -> encerradaEm), não
-// "registro -> atendimento" como o rótulo do protótipo sugere — decisão
-// validada com o usuário (horaAbertura é opcional e nem toda ocorrência passa
-// por EM_ATENDIMENTO).
 @Service
 public class RelatorioOcorrenciasBairroService implements GeradorRelatorio<RelatorioOcorrenciasBairroResponse> {
 
@@ -55,7 +48,6 @@ public class RelatorioOcorrenciasBairroService implements GeradorRelatorio<Relat
         LocalDate inicio = periodo.inicio();
         LocalDate fim = periodo.fim();
 
-        // Uma consulta de tempos de atendimento para os KPIs e para as linhas por bairro.
         List<TempoAtendimentoProjection> tempos = ocorrenciaRepository.listarTemposDeAtendimento(inicio, fim);
         List<LinhaBairroOcorrenciaResponse> todosBairros = montarBairros(inicio, fim, tempos);
         List<LinhaBairroOcorrenciaResponse> bairrosComOutros = aplicarTopNComOutros(todosBairros);
@@ -72,7 +64,6 @@ public class RelatorioOcorrenciasBairroService implements GeradorRelatorio<Relat
         LocalDate inicio = periodo.inicio();
         LocalDate fim = periodo.fim();
 
-        // CSV exporta a lista COMPLETA de bairros, sem a agregacao "Outros" do preview/PDF.
         List<List<String>> linhasBairros = montarBairros(inicio, fim, ocorrenciaRepository.listarTemposDeAtendimento(inicio, fim)).stream()
                 .map(l -> List.of(l.bairro(), String.valueOf(l.ocorrencias()), l.tipoPredominante(),
                         l.tempoMedioHoras() != null ? formatarComVirgula(l.tempoMedioHoras()) : "—"))
@@ -98,7 +89,7 @@ public class RelatorioOcorrenciasBairroService implements GeradorRelatorio<Relat
         List<Double> todasAsHoras = tempos.stream()
                 .map(this::horasEntre)
                 .toList();
-        Double tempoMedio = media(todasAsHoras);
+        Double tempoMedio = Estatisticas.mediaComUmaCasa(todasAsHoras);
 
         return new KpisOcorrenciasBairroResponse(registradas, bairrosAtingidos, tempoMedio, encerradas, percentualEncerradas);
     }
@@ -123,12 +114,10 @@ public class RelatorioOcorrenciasBairroService implements GeradorRelatorio<Relat
         return contagens.stream()
                 .map(c -> new LinhaBairroOcorrenciaResponse(
                         c.getBairro(), c.getQuantidade(), tipoPredominante(tipoPorBairro.get(c.getBairro())),
-                        media(horasPorBairro.get(c.getBairro()))))
+                        Estatisticas.mediaComUmaCasa(horasPorBairro.get(c.getBairro()))))
                 .toList();
     }
 
-    // Top N (ordem ja vem desc do repository) + 1 linha agregada "Outros (N
-    // bairros)" com o restante — mesmo padrao das demais listas longas.
     private List<LinhaBairroOcorrenciaResponse> aplicarTopNComOutros(List<LinhaBairroOcorrenciaResponse> todos) {
         if (todos.size() <= TOP_N_BAIRROS) {
             return todos;
@@ -144,7 +133,7 @@ public class RelatorioOcorrenciasBairroService implements GeradorRelatorio<Relat
 
         List<LinhaBairroOcorrenciaResponse> resultado = new ArrayList<>(top);
         resultado.add(new LinhaBairroOcorrenciaResponse(
-                "Outros (" + resto.size() + " bairros)", ocorrenciasRestantes, SEM_DADOS, media(horasRestantes)));
+                "Outros (" + resto.size() + " bairros)", ocorrenciasRestantes, SEM_DADOS, Estatisticas.mediaComUmaCasa(horasRestantes)));
         return resultado;
     }
 
@@ -178,15 +167,6 @@ public class RelatorioOcorrenciasBairroService implements GeradorRelatorio<Relat
         return Duration.between(linha.getCriadoEm(), linha.getEncerradaEm()).toMinutes() / 60.0;
     }
 
-    private Double media(List<Double> valores) {
-        if (valores == null || valores.isEmpty()) {
-            return null;
-        }
-        OptionalDouble media = valores.stream().mapToDouble(Double::doubleValue).average();
-        return media.isPresent() ? Math.round(media.getAsDouble() * 10.0) / 10.0 : null;
-    }
-
-    // "3.4" -> "3,4" (separador decimal PT-BR, DER regra de formatacao).
     private String formatarComVirgula(double valor) {
         return String.valueOf(valor).replace('.', ',');
     }

@@ -7,7 +7,6 @@ import { Login } from './Login'
 import { AuthProvider, definirSessaoEmMemoria } from '../hooks/AuthContext'
 import { CREDENCIAIS_VALIDAS, EMAIL_RECUPERACAO_LIMITADO } from '@/mocks/handlers'
 
-// O formulário aparece depois de a aba descobrir que não há sessão.
 async function renderLogin() {
   const queryClient = new QueryClient()
   render(
@@ -87,7 +86,6 @@ describe('validação do formulário de login', () => {
     await user.type(screen.getByLabelText(/^senha/i), CREDENCIAIS_VALIDAS.senha)
     await user.click(screen.getByRole('button', { name: /^entrar$/i }))
 
-    // Login aceito: com sessão aberta, a tela de login dá lugar ao destino.
     await waitFor(() => expect(screen.queryByRole('button', { name: /^entrar$/i })).not.toBeInTheDocument())
     expect(
       screen.queryByText('Use seu e-mail institucional (@itu.sp.gov.br).'),

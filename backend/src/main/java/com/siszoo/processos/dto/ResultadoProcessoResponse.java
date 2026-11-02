@@ -6,8 +6,6 @@ import java.util.UUID;
 
 import com.siszoo.comum.dto.CatalogoItemResponse;
 
-// Um registro do historico de resultados; autor no padrao dos registros
-// clinicos (VacinacaoResponse).
 public record ResultadoProcessoResponse(
         UUID id,
         CatalogoItemResponse resultado,

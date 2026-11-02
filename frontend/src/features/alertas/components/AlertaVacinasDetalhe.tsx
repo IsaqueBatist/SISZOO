@@ -10,8 +10,6 @@ import { formatarSexo } from '@/features/animais/utils/rotulosAnimal'
 
 const FILTROS_PADRAO = { busca: '', situacao: '' }
 
-// dataValidade é LocalDate: `new Date('AAAA-MM-DD')` mostraria o dia
-// anterior em São Paulo (ver lib/datas.ts).
 const formatarData = formatarDataBR
 
 function formatarPrazo(diasRestantes: number): string {

@@ -61,8 +61,6 @@ function comStatusProcesso(statusProcesso: StatusProcesso): Ocorrencia {
 }
 
 describe('nota interna (D37)', () => {
-  // A04: a tela recarrega o detalhe pelo GET depois da nota; o GET devolve o
-  // estado que a nota gravou, como o backend.
   it('adiciona a nota: envia a descrição, mostra a movimentação recarregada e limpa o campo', async () => {
     const user = userEvent.setup()
     const corpos: unknown[] = []
@@ -153,11 +151,6 @@ describe('nota interna (D37)', () => {
   })
 })
 
-// T29: o backend exige o processo completo; até o wizard de processos ser
-// integrado (T32/T33), "Abrir processo" fica desabilitado e não envia nada.
-// T29: o processo é aberto pelo wizard real, com a etapa 1 pré-preenchida e
-// travada nesta ocorrência (DER §3.5). Só para quem escreve em ocorrências
-// (D33) e só em ocorrência aberta e sem processo (0..1, D20).
 describe('abrir processo (D33, T29)', () => {
   it.each([
     ['Administrador', ADMIN],

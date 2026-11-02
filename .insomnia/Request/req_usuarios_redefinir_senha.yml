@@ -1,0 +1,35 @@
+_id: "req_usuarios_redefinir_senha"
+type: "Request"
+parentId: "fld_usuarios"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/usuarios/{{ _.usuario_id_exemplo }}/senha"
+name: "Redefinir senha de usuário (senha temporária)"
+description: "O administrador define uma senha temporária; o usuário volta ao primeiro acesso e precisa trocá-la no próximo login. Requer USUARIOS_ACESSO:escrita."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "senhaTemporaria": "{{ _.senha_teste_padrao }}"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 4000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 204', () => {
+    insomnia.expect(insomnia.response.code).to.equal(204);
+  });

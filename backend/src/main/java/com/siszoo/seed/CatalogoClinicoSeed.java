@@ -9,9 +9,6 @@ import com.siszoo.animais.clinico.dto.CriarMedicamentoRequest;
 import com.siszoo.animais.clinico.service.CategoriaFarmacologicaService;
 import com.siszoo.animais.clinico.service.MedicamentoService;
 
-// Categorias farmacologicas e medicamentos (nenhuma migration os semeia: V5
-// so cria as tabelas). Um medicamento inativo exercita o filtro ?ativo=true
-// do modal de prescricao.
 class CatalogoClinicoSeed {
 
     record PlanoMedicamento(String chave, String nome, String categoria, boolean inativo) {
@@ -59,7 +56,6 @@ class CatalogoClinicoSeed {
                     () -> veterinario.executar("GESTAO_ANIMAIS:escrita", () -> medicamentoService
                             .criar(executor.valido(new CriarMedicamentoRequest(plano.nome(), categoriaId))).id()));
             if (plano.inativo()) {
-                // Desativar exige GESTAO_ANIMAIS:exclusao: so o Administrador.
                 executor.garantir(plano.chave() + ":inativo", "medicamento_status", () -> atores.admin()
                         .executar("GESTAO_ANIMAIS:exclusao", () -> medicamentoService.desativar(id).id()));
             }

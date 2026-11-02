@@ -24,8 +24,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// Registro clinico imutavel (RN06; V25, F2-007 / RF-A04): ver Vacinacao para o
-// mecanismo de retificacao (nova linha + `retifica`, nunca UPDATE na original).
 @Entity
 @Table(name = "exame")
 @Getter
@@ -47,7 +45,6 @@ public class Exame {
     @JoinColumn(name = "tipo_exame_id", nullable = false)
     private TipoExame tipoExame;
 
-    // Catalogo do modulo de processos (V13), como previsto no Quadro 77 do TG.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "laboratorio_id")
     private Laboratorio laboratorio;

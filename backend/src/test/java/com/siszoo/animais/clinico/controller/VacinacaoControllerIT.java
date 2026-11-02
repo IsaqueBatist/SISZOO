@@ -53,10 +53,6 @@ import io.restassured.response.Response;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
-// Relogio fixo (RelogioTesteConfig): RN-C06 compara dataAplicacao com
-// LocalDate.now(clock) em Sao Paulo; LocalDate.now() da JVM (UTC na CI)
-// viraria "amanha" a partir das 21:00 locais e quebraria os testes. A virada
-// do dia em si e coberta por RegrasFusoHorarioIT.
 @Import(RelogioTesteConfig.class)
 class VacinacaoControllerIT extends AbstractIntegrationTest {
 
@@ -133,10 +129,6 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
                 .body("mensagem", equalTo("A vacina informada não existe. Selecione uma da lista."));
     }
 
-    // RN-C09: vacina desativada no catalogo (DELETE /api/vacinas/{id}) nao
-    // aceita registro novo. A vacina e criada aqui, nunca uma do seed:
-    // ApiTesteFixture grava vacinacao com "antirrabica" fixo e o banco e
-    // compartilhado por toda a JVM.
     @Test
     void deveRetornar422QuandoVacinaDoCatalogoEstaInativa() {
         String animalId = fixture.criarAnimal(tokenAdmin);
@@ -157,8 +149,6 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
                 .body("mensagem", equalTo("A vacina informada não existe. Selecione uma da lista."));
     }
 
-    // RN06: registro clinico so se corrige por um POST novo com retificaId.
-    // Desativar a vacina depois nao pode impedir a correcao de um historico.
     @Test
     void devePermitirRetificarRegistroCujaVacinaFoiDesativadaDepois() {
         String animalId = fixture.criarAnimal(tokenAdmin);
@@ -194,8 +184,6 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
                 .statusCode(200);
     }
 
-    // Idempotente: o banco e compartilhado, e `codigo` tem UNIQUE — numa
-    // segunda execucao o insert falharia.
     private Vacina vacinaDeTeste(String codigo, String nome) {
         return vacinaRepository.findByCodigo(codigo).orElseGet(() -> {
             Vacina nova = new Vacina();
@@ -270,7 +258,6 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
 
         assertThat(idCorrecao, not(equalTo(idOriginal)));
 
-        // A linha original nao pode ter sido alterada por UPDATE algum.
         Vacinacao originalReconsultada = vacinacaoRepository.findById(UUID.fromString(idOriginal)).orElseThrow();
         assertThat(originalReconsultada.getDoseQuantidade(), equalTo(doseOriginal));
         assertThat(originalReconsultada.getDataAplicacao(), equalTo(dataAplicacaoOriginal));
@@ -294,9 +281,6 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
                 .body("statusRegistro", equalTo("ATIVO"))
                 .body("retificadoPorId", nullValue());
 
-        // O banco de testes e compartilhado entre metodos de teste (sem rollback
-        // por teste), entao filtra pelo id da correcao especifica deste teste em
-        // vez de assumir que e o unico evento ATUALIZACAO/vacinacao do banco.
         List<AuditoriaEvento> eventosDestaCorrecao = auditoriaEventoRepository.findAll().stream()
                 .filter(e -> "vacinacao".equals(e.getEntidade()) && e.getAcao() == AcaoAuditoria.ATUALIZACAO)
                 .filter(e -> idCorrecao.equals(objectMapper.readTree(e.getPayloadDepois()).get("id").asString()))
@@ -306,13 +290,10 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
         AuditoriaEvento evento = eventosDestaCorrecao.get(0);
         JsonNode antes = objectMapper.readTree(evento.getPayloadAntes());
         JsonNode depois = objectMapper.readTree(evento.getPayloadDepois());
-        // jsonb normaliza literais numericos (remove zeros a direita), entao a
-        // comparacao e por valor (compareTo), nao pelo texto exato da string.
         assertThat(antes.get("doseQuantidade").decimalValue(), comparesEqualTo(new BigDecimal("1.000")));
         assertThat(depois.get("doseQuantidade").decimalValue(), comparesEqualTo(new BigDecimal("2.000")));
         assertThat(antes.get("id").asString(), equalTo(idOriginal));
         assertThat(depois.get("id").asString(), equalTo(idCorrecao));
-        // entidade_id aponta para o NOVO registro (V2), o mesmo de payload_depois.
         assertThat(evento.getEntidadeId(), equalTo(UUID.fromString(idCorrecao)));
     }
 
@@ -354,12 +335,6 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
                 .body("mensagem", equalTo("Este registro já foi corrigido. Atualize a página para ver a versão atual."));
     }
 
-    // Corrida real, sem mock: uma transacao paralela insere a retificacao e
-    // segura o commit. A requisicao passa pela pre-checagem do service (nao
-    // enxerga a linha nao commitada) e o INSERT dela fica preso no indice
-    // unico de retifica_id; o commit da paralela a faz violar
-    // uq_vacinacao_retifica_id, que o handler deve traduzir no mesmo 409 da
-    // pre-checagem, e nao no 409 generico de integridade.
     @Test
     @DisplayName("[RN-C02] retificacao concorrente do mesmo registro responde 409 com mensagem especifica")
     void deveRetornar409ComMensagemEspecificaQuandoRetificacaoConcorrenteViolaUnicidade() throws Exception {
@@ -454,8 +429,6 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
         assertThat(vacinacaoRepository.existsByRetificaId(UUID.fromString(idOriginal)), equalTo(false));
     }
 
-    // O mesmo POST com unidade e aceito (deveAceitarDataAplicacaoHoje): so a
-    // ausencia de doseUnidade explica o 422, e `campos` aponta exatamente ela.
     @Test
     @DisplayName("[RN-C05] vacinacao sem doseUnidade retorna 422 apontando o campo doseUnidade")
     void deveRetornar422QuandoDoseUnidadeAusente() {
@@ -466,9 +439,6 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
                 .body("campos.campo", contains("doseUnidade"));
     }
 
-    // Sem @Transactional no metodo: cada chamada do JdbcTemplate roda em
-    // autocommit na propria conexao, entao o erro de FK do DELETE nao deixa
-    // uma transacao PostgreSQL abortada para as releituras seguintes.
     @Test
     @DisplayName("[RN-C04] autor referenciado por vacinacao nao pode ser excluido fisicamente")
     void naoDeveExcluirFisicamenteUsuarioAutorDeVacinacao() {
@@ -476,8 +446,6 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
                 "teste.autor." + UUID.randomUUID().toString().substring(0, 8) + "@itu.sp.gov.br",
                 "Autor", "Vacinacao");
 
-        // Autor so e referenciado por esta vacinacao (o animal e criado pelo
-        // admin): a unica FK que pode barrar o DELETE e fk_vacinacao_usuario.
         Vacinacao vacinacao = new Vacinacao();
         vacinacao.setAnimal(animalRepository.findById(UUID.fromString(fixture.criarAnimal(tokenAdmin))).orElseThrow());
         vacinacao.setVacina(vacinaRepository.findByCodigo("antirrabica").orElseThrow());
@@ -506,7 +474,6 @@ class VacinacaoControllerIT extends AbstractIntegrationTest {
                 .collect(Collectors.toMap(
                         linha -> (String) linha.get("conname"), linha -> (String) linha.get("confdeltype")));
 
-        // 'r' = RESTRICT no catalogo do PostgreSQL (pg_constraint.confdeltype).
         assertThat(tipoDeletePorConstraint, equalTo(Map.of(
                 "fk_vacinacao_usuario", "r",
                 "fk_procedimento_usuario", "r",

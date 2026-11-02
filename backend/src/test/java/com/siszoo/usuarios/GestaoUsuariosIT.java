@@ -31,8 +31,6 @@ import com.siszoo.usuarios.repository.UsuarioRepository;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-// Decisao funcional de 31/10/2026: o Administrador edita o cadastro e redefine a
-// senha de usuarios, inclusive de outro Administrador, com auditoria.
 class GestaoUsuariosIT extends AbstractIntegrationTest {
 
     private static final String SENHA_TEMPORARIA = "Tmp#Zoo2026!seg";
@@ -154,8 +152,6 @@ class GestaoUsuariosIT extends AbstractIntegrationTest {
         editar(admin, outro.id(), cadastro("Agente Sanitário", null)).then().statusCode(200);
     }
 
-    // Um administrador sempre tem outro ativo (ele mesmo), entao a recusa so e
-    // alcancavel por quem tem a permissao sem ser Administrador, ou na corrida.
     @Test
     @DisplayName("ultimo administrador ativo nao pode ser rebaixado nem desativado")
     void ultimoAdministrador() {
@@ -213,7 +209,6 @@ class GestaoUsuariosIT extends AbstractIntegrationTest {
         return fixture.tokenComCargo(emailUnico("gestao.gestor"), "Gestor", "Teste", cargo);
     }
 
-    // Banco compartilhado entre testes: os demais administradores saem do caminho.
     private List<UUID> desativarAdministradoresExceto(UUID... mantidos) {
         List<UUID> manter = List.of(mantidos);
         List<UUID> outros = jdbcTemplate.queryForList("""

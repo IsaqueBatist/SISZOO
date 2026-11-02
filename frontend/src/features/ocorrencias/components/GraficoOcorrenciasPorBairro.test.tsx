@@ -58,9 +58,6 @@ describe('GraficoOcorrenciasPorBairro', () => {
     expect(await screen.findByText('Sao Luiz: 7')).toBeInTheDocument()
   })
 
-  // T45: a contagem vem agregada de todo o histórico — o gráfico não baixa
-  // mais a listagem de ocorrências (nem mostra o antigo aviso de "amostra
-  // das 500 mais recentes", que deixou de existir).
   it('usa a contagem agregada e não baixa a listagem de ocorrências', async () => {
     const listagem = vi.fn()
     server.use(

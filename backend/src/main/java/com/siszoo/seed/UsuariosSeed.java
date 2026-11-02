@@ -19,18 +19,9 @@ import com.siszoo.usuarios.service.AuthService;
 import com.siszoo.usuarios.service.AutoridadeService;
 import com.siszoo.usuarios.service.UsuarioService;
 
-// Usuarios ficticios de cada perfil, criados pelo admin bootstrap
-// (DataSeeder, siszoo.admin.email) pelo mesmo caminho do POST /api/usuarios:
-// politica de senha, hash do PasswordEncoder e auditoria reais. A troca de
-// senha (AuthService) marca senha_alterada_em, para o login nao cair no
-// primeiro acesso — exceto no usuario "primeiro acesso", de proposito.
 class UsuariosSeed {
 
-    // Senha unica e ficticia de todos os usuarios do seed, documentada no
-    // README (secao "Dados ficticios"). Atende a PoliticaSenha de todos eles.
     static final String SENHA_FICTICIA = "Ficticio#2026";
-    // Quem nao fica no primeiro acesso troca a senha temporaria pela ficticia:
-    // a troca recusa a senha atual.
     private static final String SENHA_TEMPORARIA = "Temporaria#2026";
     static final String SUFIXO_EMAIL = ".seed@itu.sp.gov.br";
 
@@ -41,7 +32,6 @@ class UsuariosSeed {
     record PlanoUsuario(String chave, String nome, String sobrenome, String cargo, String crmv,
             boolean primeiroAcesso, boolean inativo) {
 
-        // Padrao institucional so aceita [a-z.]: "Sérgio" vira "sergio".
         String email() {
             String semAcento = Normalizer.normalize(nome + "." + sobrenome, Normalizer.Form.NFD)
                     .replaceAll("\\p{M}", "");
@@ -59,7 +49,6 @@ class UsuariosSeed {
             new PlanoUsuario("usuario:agente-3", "Rafael", "Campos", AGENTE, null, false, false),
             new PlanoUsuario("usuario:agente-4", "Sérgio", "Lacerda", AGENTE, null, false, true));
 
-    // Quem faz cada tipo de trabalho no resto do seed.
     record Atores(SeedAtor admin, List<SeedAtor> veterinarios, List<SeedAtor> agentes) {
 
         SeedAtor veterinario(int indice) {
@@ -103,8 +92,6 @@ class UsuariosSeed {
         return ator(admin.getId());
     }
 
-    // Um passo (chave + transacao propria) por chamada de service, como uma
-    // requisicao HTTP por acao na API: criar, trocar a senha, desativar.
     Atores executar() {
         SeedAtor bootstrap = adminBootstrap();
         for (PlanoUsuario plano : PLANO) {
@@ -143,7 +130,6 @@ class UsuariosSeed {
         return bootstrap.executar("USUARIOS_ACESSO:escrita", () -> usuarioService.criar(request, bootstrap.id()).id());
     }
 
-    // Mesma resolucao do JwtAuthenticationFilter: cargos do usuario -> autoridades.
     private SeedAtor ator(UUID usuarioId) {
         List<String> cargos = jdbcTemplate.queryForList(
                 "SELECT c.nome FROM usuario_cargo uc JOIN cargo c ON c.id = uc.cargo_id WHERE uc.usuario_id = ?",

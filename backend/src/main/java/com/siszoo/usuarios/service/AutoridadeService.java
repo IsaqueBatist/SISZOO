@@ -45,10 +45,6 @@ public class AutoridadeService {
         return autoridades;
     }
 
-    // Feature 'geral' e o acesso ao modulo inteiro (MODULO:acao, formato
-    // historico das @PreAuthorize). Qualquer outra feature gera uma autoridade
-    // propria (MODULO:feature:acao) e nunca concede o modulo inteiro — ex.:
-    // OCORRENCIAS_DENUNCIAS:denunciante_sigiloso:leitura (V10).
     private static String prefixo(CargoPermissao permissao) {
         String modulo = permissao.getModulo().name();
         return FEATURE_GERAL.equals(permissao.getFeature()) ? modulo : modulo + ":" + permissao.getFeature();

@@ -1,0 +1,28 @@
+_id: "req_ocorrencias_listar"
+type: "Request"
+parentId: "fld_ocorrencias"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/ocorrencias?status=ABERTA&pagina=0&tamanho=20"
+name: "Listar ocorrências (com filtros)"
+description: "Filtros opcionais: tipo, status (repetível), q, de, ate. Requer OCORRENCIAS_DENUNCIAS:leitura."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 4000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

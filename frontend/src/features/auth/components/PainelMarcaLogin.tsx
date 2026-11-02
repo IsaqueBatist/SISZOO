@@ -1,7 +1,5 @@
 import { Icon } from '@/components/layout/Icon'
 
-// Painel lateral das telas públicas (login, esqueci minha senha, redefinir
-// senha). Some em telas estreitas (Login.css).
 export function PainelMarcaLogin() {
   return (
     <section className="login-brand">

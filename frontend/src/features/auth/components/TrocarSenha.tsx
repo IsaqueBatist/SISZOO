@@ -21,8 +21,6 @@ export function TrocarSenha() {
 
   const mutation = useMutation({ mutationFn: trocarSenha })
 
-  // A rota é protegida (sempre há usuário); a política usa o nome da conta e
-  // o nome de exibição de quem troca. O backend aplica a mesma regra.
   const dono = useMemo(
     () => ({ email: user?.email ?? '', nomeExibicao: user ? `${user.nome} ${user.sobrenome}` : '' }),
     [user],

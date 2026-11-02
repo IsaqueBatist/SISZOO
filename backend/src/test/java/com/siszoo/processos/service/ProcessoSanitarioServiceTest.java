@@ -124,7 +124,6 @@ class ProcessoSanitarioServiceTest {
 
     private final UUID usuarioId = UUID.randomUUID();
 
-    // Construido a mao (nao @InjectMocks): Clock e valor, nao mock.
     @BeforeEach
     void criarService() {
         Clock clock = Clock.fixed(Instant.parse("2026-09-10T15:00:00Z"), ZoneId.of("America/Sao_Paulo"));
@@ -138,12 +137,9 @@ class ProcessoSanitarioServiceTest {
         lenient().when(usuarioRepository.findById(usuarioId)).thenReturn(Optional.of(new Usuario()));
     }
 
-    // T34: AGUARDANDO_RESULTADO -> COM_RESULTADO deixou de ser avanco manual
-    // (substitui a D18): so pelo registro do resultado.
     static Stream<Arguments> transicoes() {
         Class<? extends Throwable> invalida = TransicaoStatusProcessoInvalidaException.class;
         return Stream.of(
-                // atual, pedido, erro esperado (null = permitido)
                 Arguments.of(StatusProcesso.ABERTO, StatusProcesso.AGUARDANDO_RESULTADO, null),
                 Arguments.of(StatusProcesso.AGUARDANDO_RESULTADO, StatusProcesso.COM_RESULTADO,
                         ResultadoObrigatorioException.class),
@@ -164,7 +160,6 @@ class ProcessoSanitarioServiceTest {
         processo.setDoenca(doenca());
         processo.setLaboratorio(laboratorio());
         if (atual.ordinal() >= StatusProcesso.COM_RESULTADO.ordinal()) {
-            // Depois do resultado ha sempre um vigente (CONCLUIDO o exige).
             processo.aplicarResultadoVigente(ResultadoProcesso.registrar(processo, resultado("negativo", true),
                     HOJE, null, new Usuario()));
         }
@@ -182,8 +177,6 @@ class ProcessoSanitarioServiceTest {
         }
     }
 
-    // Processo que chegou a COM_RESULTADO sem resultado (PATCH provisorio da
-    // D18, antes da T34): CONCLUIDO exige o vigente.
     @Test
     void concluirSemResultadoVigenteRecusado() {
         ProcessoSanitario processo = processoEm(StatusProcesso.COM_RESULTADO);
@@ -196,7 +189,6 @@ class ProcessoSanitarioServiceTest {
         verifyNoInteractions(auditoriaEventoService);
     }
 
-    // Matriz completa 4x4 da maquina de estados (T34): so o proximo passo.
     static Stream<Arguments> matrizDeTransicoes() {
         Set<String> validas = Set.of("ABERTO>AGUARDANDO_RESULTADO", "AGUARDANDO_RESULTADO>COM_RESULTADO",
                 "COM_RESULTADO>CONCLUIDO");
@@ -210,8 +202,6 @@ class ProcessoSanitarioServiceTest {
         assertThat(atual.podeTransicionarPara(destino)).isEqualTo(esperado);
         assertThat(destino.exigeResultado()).isEqualTo(destino == StatusProcesso.COM_RESULTADO);
     }
-
-    // ── Resultado (T34) ──────────────────────────────────
 
     static Stream<Arguments> registroPorStatus() {
         return Stream.of(
@@ -271,8 +261,6 @@ class ProcessoSanitarioServiceTest {
         verify(resultadoProcessoRepository, never()).saveAndFlush(any());
     }
 
-    // DH-21 (docs/decisoes/T37.md): desfecho de catalogo inexistente ou
-    // INATIVO -> 422; o caso inativo nao tinha teste (o seed so tem ativos).
     @Test
     void desfechoInativoRecusadoSemGravar() {
         ProcessoSanitario processo = processoEm(StatusProcesso.AGUARDANDO_RESULTADO);
@@ -292,8 +280,6 @@ class ProcessoSanitarioServiceTest {
         verify(processoRepository, never()).saveAndFlush(any());
     }
 
-    // Sem limite inferior (docs/decisoes/T34.md): coleta e laudo podem
-    // anteceder a abertura do processo, no registro e na correcao.
     @Test
     void dataResultadoAnteriorAAberturaAceitaNoRegistroENaCorrecao() {
         ProcessoSanitario processo = processoEm(StatusProcesso.AGUARDANDO_RESULTADO);
@@ -394,9 +380,6 @@ class ProcessoSanitarioServiceTest {
         verify(resultadoProcessoRepository, never()).saveAndFlush(any());
     }
 
-    // T35-15: positivo e definitivo. Corrigir um positivo e recusado para
-    // qualquer resultado novo (inclusive outro positivo, que reenviaria o
-    // e-mail), sem gravar registro, sem mexer no vigente e sem notificar.
     @ParameterizedTest(name = "[T35-15] corrigir positivo para {0}: 422")
     @ValueSource(strings = {"negativo", "positivo", "inconclusivo"})
     void correcaoDePositivoRecusada(String novoResultado) {
@@ -415,8 +398,6 @@ class ProcessoSanitarioServiceTest {
         verifyNoInteractions(eventPublisher, auditoriaEventoService);
     }
 
-    // T35-16: data/hora do aceite do SMTP com um evento de auditoria de
-    // sistema (sem usuario, so a data); a segunda chamada nao muda nada.
     @Test
     void registroDaNotificacaoGravaUmaVezEAuditaSemUsuario() {
         ProcessoSanitario processo = processoEm(StatusProcesso.COM_RESULTADO);
@@ -455,8 +436,6 @@ class ProcessoSanitarioServiceTest {
         verify(processoRepository, never()).save(any());
         verify(protocoloService, never()).proximo(any());
     }
-
-    // ── Regras da amostra: recusadas antes de qualquer acesso ao banco ──
 
     static Stream<Arguments> amostrasInvalidas() {
         return Stream.of(
@@ -502,8 +481,6 @@ class ProcessoSanitarioServiceTest {
         verifyNoInteractions(protocoloService, processoRepository, doencaRepository, ocorrenciaService);
     }
 
-    // ── Urgencia derivada das amostras (DER regra 18) ────
-
     static Stream<Arguments> contatosDasAmostras() {
         return Stream.of(
                 Arguments.of("nenhuma amostra com contato", List.of(false, false, false), false),
@@ -517,7 +494,6 @@ class ProcessoSanitarioServiceTest {
         when(doencaRepository.findByCodigo("raiva")).thenReturn(Optional.of(doenca()));
         when(laboratorioRepository.findByCodigo("pasteur_sp")).thenReturn(Optional.of(laboratorio()));
         when(especieRepository.findByCodigo("canino")).thenReturn(Optional.of(especie()));
-        // O valor no momento do save, nao o do objeto depois de criar().
         AtomicReference<Boolean> urgenteNoSave = new AtomicReference<>();
         when(processoRepository.save(any())).thenAnswer(invocacao -> {
             ProcessoSanitario processo = invocacao.getArgument(0);
@@ -533,8 +509,6 @@ class ProcessoSanitarioServiceTest {
         assertThat(urgenteNoSave.get()).isEqualTo(esperado);
     }
 
-    // ── Apoio ────────────────────────────────────────────
-
     private PermissoesOcorrencia agente() {
         return new PermissoesOcorrencia(usuarioId, true, true);
     }
@@ -542,14 +516,14 @@ class ProcessoSanitarioServiceTest {
     private static CriarProcessoRequest request(LocalDate dataAbertura, UUID ocorrenciaId, AmostraAnimalRequest amostra) {
         return new CriarProcessoRequest(dataAbertura, "raiva", "pasteur_sp", ocorrenciaId,
                 new ResponsavelProcessoRequest("Responsavel", null, null, null, null, null, null, null),
-                List.of(amostra), null);
+                List.of(amostra), null, null, null);
     }
 
     private static CriarProcessoRequest request(LocalDate dataAbertura, UUID ocorrenciaId,
             List<AmostraAnimalRequest> amostras) {
         return new CriarProcessoRequest(dataAbertura, "raiva", "pasteur_sp", ocorrenciaId,
                 new ResponsavelProcessoRequest("Responsavel", null, null, null, null, null, null, null),
-                amostras, null);
+                amostras, null, null, null);
     }
 
     private static AmostraAnimalRequest amostraDeCampo() {

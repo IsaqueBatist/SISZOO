@@ -19,8 +19,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// Sessao de login (V29, docs/decisoes/sessao.md). Os hashes sao SHA-256 do
-// token de renovacao: o token em si so existe no cookie httpOnly do navegador.
 @Entity
 @Table(name = "sessao_usuario")
 @Getter

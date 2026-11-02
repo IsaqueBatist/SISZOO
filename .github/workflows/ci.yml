@@ -15,28 +15,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Verificar se o projeto Maven existe
-        id: check
-        run: |
-          if [ -f "pom.xml" ]; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::backend/pom.xml ainda não existe — job de backend pulado."
-          fi
-
       - uses: actions/setup-java@v4
-        if: steps.check.outputs.exists == 'true'
         with:
           distribution: temurin
           java-version: "21"
           cache: maven
 
-      # Wrapper (Maven 3.9.16, o mesmo do Dockerfile) em vez do mvn do runner;
-      # sem --update-snapshots, ja que nao ha dependencia SNAPSHOT. `sh mvnw`
-      # nao depende do bit de execucao (hoje versionado: 100755).
       - name: mvnw verify
-        if: steps.check.outputs.exists == 'true'
         run: sh mvnw --batch-mode verify
 
   frontend:
@@ -49,8 +34,6 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          # Major fixa dentro de frontend/package.json "engines" (jsdom dos
-          # testes exige 22.22.2+, 24.15+ ou 26+); "lts/*" mudava sozinho.
           node-version: "24"
           cache: npm
           cache-dependency-path: frontend/package-lock.json

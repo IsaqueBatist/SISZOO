@@ -4,7 +4,6 @@ import { ErroComRetry } from '@/components/layout/ErroComRetry'
 import { formatarDataHoraBR } from '@/lib/datas'
 import { useAlteracoesProcessoQuery } from '../hooks/useProcessos'
 
-// Só para o Administrador: o evento da edição traz dados pessoais do responsável.
 export function CardHistoricoAlteracoes({ processoId }: { processoId: string }) {
   const { data: eventos, isLoading, isError, refetch } = useAlteracoesProcessoQuery(processoId)
 

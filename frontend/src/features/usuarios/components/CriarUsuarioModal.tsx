@@ -22,7 +22,6 @@ function dividirNomeCompleto(nomeCompleto: string): { nome: string; sobrenome: s
 
 export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
   const [submitError, setSubmitError] = useState<string | null>(null)
-  // Depois de criar, o modal mostra a senha: ela não volta a aparecer em lugar nenhum.
   const [criado, setCriado] = useState<{ nome: string; senha: string } | null>(null)
 
   const mutation = useCriarUsuarioMutation()

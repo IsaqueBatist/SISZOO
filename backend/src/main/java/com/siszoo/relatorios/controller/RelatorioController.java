@@ -29,16 +29,10 @@ import com.siszoo.relatorios.dto.TipoRelatorioResponse;
 import com.siszoo.relatorios.service.FiltroRelatorioResolver;
 import com.siszoo.relatorios.service.RelatorioGeradoService;
 
-// RELATORIOS:leitura e seedado para os 3 perfis (V3__seed_cargos.sql, mesmo
-// comentario de DashboardController) - o DER modela a capacidade completa do
-// modulo (ver/gerar/exportar relatorios) como "leitura", sem authority de
-// escrita separada.
 @RestController
 @RequestMapping("/api/relatorios")
 public class RelatorioController {
 
-    // V32: @PreAuthorize nao le argumentos (PreAuthorizeSemArgumentosTest), e a
-    // regra depende do tipo pedido; quem decide e o service.
     private static final String AUTORIDADE_OCORRENCIAS_BAIRRO = "RELATORIOS:ocorrencias_bairro:leitura";
 
     private final RelatorioGeradoService relatorioGeradoService;

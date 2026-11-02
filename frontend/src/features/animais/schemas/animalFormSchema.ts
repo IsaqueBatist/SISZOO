@@ -1,15 +1,6 @@
 import { z } from 'zod'
-import { hojeEmItu } from '@/lib/datas'
+import { naoEhFutura } from '@/lib/datas'
 
-// "Hoje" lido a cada validação, não fixado no carregamento do módulo.
-function naoEhFutura(data: string): boolean {
-  return !data || data <= hojeEmItu()
-}
-
-// Opções fixas do design system (não vêm de catálogo da API): Sexo/Pelagem/
-// Porte já são tipos fechados em animais.types.ts, espelhando os regex do
-// DTO real (CriarAnimalRequest/AtualizarAnimalRequest). "Sem pelo" do
-// protótipo foi removido: o backend só aceita curta|longa.
 export const SEXO_OPCOES = [
   { valor: 'macho', label: 'Macho' },
   { valor: 'femea', label: 'Fêmea' },
@@ -27,10 +18,6 @@ export const PELAGEM_OPCOES = [
   { valor: 'longa', label: 'Longa' },
 ] as const
 
-// Os cartões de castração colapsam em `esterilizado: boolean | null` no DTO
-// real — Orquiectomia e OSH viram ambos `esterilizado: true` (só mudam o
-// rótulo por sexo; não existe coluna própria para essa opção). "Não informado"
-// é null: a resposta não é obrigatória e não equivale a "não castrado".
 export type CastracaoOpcao = 'nao_informado' | 'nao_castrado' | 'orquiectomia' | 'osh'
 
 export const CASTRACAO_OPCOES: { valor: CastracaoOpcao; label: string; sub: string }[] = [
@@ -57,11 +44,6 @@ export function esterilizadoParaCastracao(esterilizado: boolean | null, sexo: st
   return sexo === 'femea' ? 'osh' : 'orquiectomia'
 }
 
-// Campos e limites espelham com.siszoo.animais.dto.CriarAnimalRequest /
-// AtualizarAnimalRequest (idênticos). Microchip e baiaId são opcionais no
-// DTO real (sem @NotBlank/@NotNull) mesmo aparecendo com "*" no protótipo —
-// decisão confirmada: ficha pode ficar incompleta (fichaCompleta calculado
-// no backend), o form não bloqueia o envio por causa deles.
 export const animalFormSchema = z.object({
   nome: z.string().trim().min(1, 'Informe o nome do animal.').max(80, 'Máximo de 80 caracteres.'),
   especie: z.string().min(1, 'Selecione a espécie.'),
@@ -72,25 +54,17 @@ export const animalFormSchema = z.object({
   porte: z.enum(['pequeno', 'medio', 'grande']).optional(),
   pesoKg: z.number().positive('O peso deve ser maior que zero.').optional(),
   idadeAprox: z.string().trim().max(30, 'Máximo de 30 caracteres.').optional(),
-  // Datas de fato ocorrido: nunca futuras, com "hoje" no fuso de Itu (mesma
-  // regra do AnimalService). Datas ISO comparam certo como texto. A regra
-  // entre campos (nascimento até a entrada) fica no schema de UI do
-  // AnimalForm: refinamento de objeto impediria o .omit() feito lá.
   dataNascimentoAprox: z
     .string()
     .refine(naoEhFutura, 'A data de nascimento não pode ser futura.')
     .optional(),
   microchip: z.string().trim().max(30, 'Máximo de 30 caracteres.').optional(),
-  // F2-004 (RF-A01/RN01): identificação complementar. A exigência de
-  // microchip para a data de implantação e a unicidade da medalha ficam no
-  // backend (AnimalService), que devolve 422 por campo.
   numeroMedalha: z.string().trim().max(30, 'Máximo de 30 caracteres.').optional(),
   dataImplantacaoChip: z
     .string()
     .refine(naoEhFutura, 'A data de implantação não pode ser futura.')
     .optional(),
   procedencia: z.string().trim().max(200, 'Máximo de 200 caracteres.').optional(),
-  // F2-008 (RF-A05): laudo exigido pelo backend só na transição para eutanásia.
   laudoEutanasia: z.string().trim().max(4000, 'Máximo de 4000 caracteres.').optional(),
   esterilizado: z.boolean().nullable(),
   dataEsterilizacao: z
@@ -110,19 +84,11 @@ export const animalFormSchema = z.object({
   condicoesOutras: z.string().trim().max(500, 'Máximo de 500 caracteres.').optional(),
 })
 
-export type AnimalFormValues = z.infer<typeof animalFormSchema>
-
-// Schema de UI: troca `esterilizado` (campo real do DTO) por
-// `castracaoOpcao` (os cartões da tela) — a conversão para o DTO
-// acontece só no submit, via castracaoParaEsterilizado. Mantém o
-// animalFormSchema original intacto (é o contrato espelhado do backend,
-// usado/citado em outros lugares).
 export const animalFormUiSchema = animalFormSchema
   .omit({ esterilizado: true })
   .extend({
     castracaoOpcao: z.enum(['nao_informado', 'nao_castrado', 'orquiectomia', 'osh']),
   })
-  // Mesma regra do AnimalService: o animal não nasce depois de entrar no CCZ.
   .superRefine((dados, ctx) => {
     if (dados.condicoes.includes(CONDICAO_OUTRAS) && !dados.condicoesOutras?.trim()) {
       ctx.addIssue({ code: 'custom', path: ['condicoesOutras'], message: 'Descreva qual é a outra condição.' })

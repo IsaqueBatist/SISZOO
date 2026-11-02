@@ -28,11 +28,6 @@ import com.siszoo.processos.exception.SintomaInvalidoException;
 import com.siszoo.processos.exception.SintomaSemStatusSintomaticoException;
 import com.siszoo.processos.repository.SintomaRepository;
 
-// Regras da amostra na criacao do processo (T29, DER §3.5): com animalId, a
-// identificacao e copiada da ficha do animal neste momento (snapshot, DH-5) e
-// nunca mais relida; sem ele, vem do request. Os campos clinicos vem sempre do
-// request. Nao ha sincronizacao com a ficha (DER regra 17). Sem
-// @Transactional: participa da transacao de ProcessoSanitarioService.criar.
 @Component
 public class AmostraProcessoFactory {
 
@@ -47,8 +42,6 @@ public class AmostraProcessoFactory {
         this.sintomaRepository = sintomaRepository;
     }
 
-    // Regras que nao dependem do banco: chamadas antes de consumir protocolo
-    // ou travar a ocorrencia.
     public void validar(AmostraAnimalRequest amostra, LocalDate hoje) {
         if (amostra.animalId() != null) {
             if (amostra.temIdentificacao()) {
@@ -60,8 +53,6 @@ public class AmostraProcessoFactory {
         if (amostra.dataColeta().isAfter(hoje)) {
             throw new DataColetaFuturaException();
         }
-        // Contato humano exige nivel e agressao; sem contato ou sem resposta,
-        // nenhum dos dois.
         boolean comDadosDeContato = amostra.nivelContato() != null || amostra.agrediuHumano() != null;
         boolean contatoCompleto = amostra.nivelContato() != null && amostra.agrediuHumano() != null;
         if (Boolean.TRUE.equals(amostra.contatoHumano()) ? !contatoCompleto : comDadosDeContato) {
@@ -72,8 +63,6 @@ public class AmostraProcessoFactory {
         }
     }
 
-    // Sintomas de todas as amostras numa consulta so; codigo inexistente ou
-    // inativo recusa o request inteiro.
     public Map<String, Sintoma> resolverSintomas(List<AmostraAnimalRequest> amostras) {
         Set<String> codigos = amostras.stream()
                 .flatMap(amostra -> amostra.sintomasOuVazio().stream())
@@ -94,8 +83,6 @@ public class AmostraProcessoFactory {
         AnimalAmostrado amostra = new AnimalAmostrado();
         amostra.setProcesso(processo);
         if (request.animalId() != null) {
-            // Qualquer status do animal pode ser amostrado na T29 (ponto a
-            // confirmar com o CCZ, docs/decisoes/T29.md).
             Animal animal = animalRepository.findById(request.animalId())
                     .orElseThrow(AnimalNaoEncontradoException::new);
             amostra.setAnimal(animal);
@@ -107,8 +94,6 @@ public class AmostraProcessoFactory {
         return amostra;
     }
 
-    // Edicao pelo Administrador: a identificacao do animal do canil continua
-    // sendo o snapshot da ficha na amostragem.
     public void corrigir(AnimalAmostrado amostra, AmostraAnimalRequest request, Map<String, Sintoma> sintomas) {
         if (amostra.getAnimal() == null) {
             aplicarIdentificacaoDeCampo(amostra, request);
@@ -141,8 +126,6 @@ public class AmostraProcessoFactory {
         amostra.setSintomas(new HashSet<>(request.sintomasOuVazio().stream().map(sintomas::get).toList()));
     }
 
-    // Snapshot da identificacao (DER §3.5, DH-5): copiada uma vez, aqui.
-    // Mudancas posteriores na ficha nao alteram a amostra.
     private static void copiarIdentificacaoDaFicha(AnimalAmostrado amostra, Animal animal) {
         amostra.setEspecie(animal.getEspecie());
         amostra.setSexo(animal.getSexo());

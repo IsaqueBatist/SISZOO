@@ -25,20 +25,9 @@ import com.siszoo.comum.util.Paginacao;
 
 import jakarta.persistence.criteria.Predicate;
 
-// Catalogo (nao registro clinico): diferente de Vacinacao/Procedimento/
-// Prescricao, a vacina e mutavel — editar e desativar aqui nao violam a regra
-// de imutabilidade, que vale so para os registros clinicos em si.
-//
-// Efeitos a ter em mente (documentados em docs/regras-negocio-clinico.md):
-// - desativar NAO altera nenhuma vacinacao ja gravada, mas tira a vacina do
-//   alerta de reforco, do KPI de cobertura e do relatorio de vacinacao, porque
-//   essas consultas ja filtram vacina.ativo = true (RN-A03);
-// - editar intervaloMeses muda a data de validade de TODAS as vacinacoes dessa
-//   vacina, porque a validade e derivada, nao persistida.
 @Service
 public class VacinaService {
 
-    // Limite da coluna `codigo` na V5.
     private static final int TAMANHO_MAXIMO_CODIGO = 30;
 
     private final VacinaRepository vacinaRepository;
@@ -67,12 +56,6 @@ public class VacinaService {
         return vacinaMapper.toResponse(vacina);
     }
 
-    /**
-     * Altera nome, intervalo e situacao. O {@code codigo} NAO muda: ele e a
-     * chave usada por {@code VacinacaoService.resolverVacina} e ja foi
-     * devolvido em respostas anteriores como {@code vacinaCodigo} — recalcula-lo
-     * a partir do nome novo quebraria o vinculo dos registros ja gravados.
-     */
     @Transactional
     public VacinaResponse atualizar(UUID id, AtualizarVacinaRequest request) {
         Vacina vacina = vacinaRepository.findById(id).orElseThrow(VacinaNaoEncontradaException::new);
@@ -85,9 +68,6 @@ public class VacinaService {
         return vacinaMapper.toResponse(vacina);
     }
 
-    // Soft-delete: nunca remove a linha fisicamente, so marca ativo=false
-    // (mesmo padrao de MedicamentoService.desativar). Diferente do medicamento,
-    // aqui existe caminho de volta: PUT com ativo=true.
     @Transactional
     public VacinaResponse desativar(UUID id) {
         Vacina vacina = vacinaRepository.findById(id).orElseThrow(VacinaNaoEncontradaException::new);
@@ -111,21 +91,6 @@ public class VacinaService {
         return PaginaResponse.de(paginaVacinas.map(vacinaMapper::toResponse));
     }
 
-    /**
-     * Deriva o codigo a partir do nome, reproduzindo exatamente a convencao do
-     * seed da V5 ("V4 (felinos)" -&gt; "v4_felinos"): sem acento, minusculas, o
-     * que nao e letra ou digito vira "_", repeticoes colapsam e as pontas sao
-     * aparadas.
-     *
-     * <p>O usuario do CCZ nunca digita o codigo — pedir um slug seria hostil e
-     * abriria espaco para variacoes como "antirrábica" e "Antirrabica" virarem
-     * duas vacinas. Como a tabela nao tem UNIQUE(nome), e justamente o codigo
-     * derivado que impede esse tipo de duplicata.
-     *
-     * <p>Nome que nao produz codigo valido (so pontuacao, ou longo demais para
-     * a coluna) e recusado com 422 apontando o campo, nunca truncado em
-     * silencio — truncar criaria colisao entre nomes diferentes.
-     */
     static String derivarCodigo(String nome) {
         String semAcento = Normalizer.normalize(nome, Normalizer.Form.NFD).replaceAll("\\p{M}+", "");
         String codigo = semAcento.toLowerCase()

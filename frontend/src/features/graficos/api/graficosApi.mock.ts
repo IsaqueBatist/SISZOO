@@ -1,14 +1,7 @@
 import type { DashboardGraficos } from '../types/graficos.types'
 
-// Mesma latência simulada de features/dashboard/api/dashboardApi.mock.ts.
 const LATENCIA_MOCK_MS = 300
 
-// Números do protótipo (docs/prototipo/dashboard.html, script inline):
-// donut "Por Patologia" soma 20 (Raiva 7, Leishmaniose 5, Leptospirose 4,
-// Esporotricose 3, Febre Maculosa 1) — febre_amarela entra com 0 (ausente no
-// protótipo, decisão validada: mostrar as 6 do catálogo mesmo assim).
-// Donut "Raiva por Espécie" soma 20 (Canino 10, Felino 5, PNH 3,
-// Quiróptero 2). "Resultados Laboratoriais" só tem 3 doenças com exame.
 const GRAFICOS_MOCK: DashboardGraficos = {
   casosPorDoenca: [
     { doenca: { codigo: 'raiva', nome: 'Raiva' }, quantidade: 7 },

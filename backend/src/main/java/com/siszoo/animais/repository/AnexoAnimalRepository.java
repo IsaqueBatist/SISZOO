@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.siszoo.animais.entity.AnexoAnimal;
 
-// So metadados: nenhuma consulta daqui toca anexo_animal_conteudo (D9).
 public interface AnexoAnimalRepository extends JpaRepository<AnexoAnimal, UUID> {
 
     @EntityGraph(attributePaths = {"criadoPor"})

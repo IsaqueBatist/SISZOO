@@ -10,10 +10,6 @@ export interface OcupacaoBaiaDatum {
   estado: EstadoLotacao
 }
 
-// Ordena por % de ocupação decrescente (replica docs/prototipo/dashboard.html
-// — BAIAS.sort((a,b) => b.cur/b.cap - a.cur/a.cap) — diferente do agrupamento
-// por tipo usado em GestaoBaias.tsx). Só considera baias ativas (baias
-// desativadas não entram no gráfico operacional).
 export function mapearOcupacaoBaia(baias: Baia[]): OcupacaoBaiaDatum[] {
   return baias
     .filter((baia) => baia.ativa)

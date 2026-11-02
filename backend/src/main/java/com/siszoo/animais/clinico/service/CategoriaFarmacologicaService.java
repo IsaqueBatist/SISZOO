@@ -12,9 +12,6 @@ import com.siszoo.animais.clinico.exception.CategoriaFarmacologicaJaCadastradaEx
 import com.siszoo.animais.clinico.mapper.CategoriaFarmacologicaMapper;
 import com.siszoo.animais.clinico.repository.CategoriaFarmacologicaRepository;
 
-// Catalogo de apoio ao cadastro de medicamento (MedicamentoService exige uma
-// categoria). Sem seed: as categorias reais sao cadastradas pelo CCZ. Mesmo
-// padrao do medicamento: catalogo mutavel, sem auditoria.
 @Service
 public class CategoriaFarmacologicaService {
 
@@ -35,9 +32,6 @@ public class CategoriaFarmacologicaService {
                 .toList();
     }
 
-    // O UNIQUE(nome) da V5 diferencia maiusculas; a pre-checagem nao, para
-    // "Antibiotico" e "antibiotico" nao virarem duas categorias. Em corrida,
-    // o UNIQUE do banco ainda barra a copia exata (409 generico).
     @Transactional
     public CategoriaFarmacologicaResponse criar(CriarCategoriaFarmacologicaRequest request) {
         String nome = request.nome().trim();

@@ -8,16 +8,6 @@ import org.springframework.stereotype.Component;
 
 import com.siszoo.usuarios.exception.LimiteTentativasException;
 
-// Limite de tentativas da recuperacao de senha, em memoria e por instancia
-// (o CCZ roda uma so), sobre JanelaDeTentativas.
-//
-// Tres contadores independentes:
-// - solicitacoes por e-mail: freia o envio repetido para uma mesma caixa;
-// - solicitacoes por IP: freia a varredura de e-mails a partir de um ponto;
-// - consumo (validar/redefinir) por IP: freia a adivinhacao de tokens, que ja
-//   e inviavel pelos 256 bits de entropia.
-// O IP e o do socket (getRemoteAddr), como na auditoria (T43); atras de um
-// proxy todos os clientes compartilham o mesmo limite.
 @Component
 public class LimitadorRecuperacaoSenha {
 
@@ -43,8 +33,6 @@ public class LimitadorRecuperacaoSenha {
         this.consumosIp = new JanelaDeTentativas(Duration.ofMinutes(janelaConsumosMinutos));
     }
 
-    // Conta a solicitacao antes de qualquer consulta ao banco: um e-mail
-    // inexistente gasta a cota do mesmo jeito que um cadastrado.
     public void registrarSolicitacao(String email, String ip) {
         boolean dentroDoLimiteIp = solicitacoesIp.incrementar(chaveIp(ip)) <= solicitacoesPorIp;
         boolean dentroDoLimiteEmail = solicitacoesEmail.incrementar(normalizar(email)) <= solicitacoesPorEmail;

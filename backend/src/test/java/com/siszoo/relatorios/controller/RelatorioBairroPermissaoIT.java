@@ -30,8 +30,6 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 
-// Decisao funcional de 31/10/2026: o Veterinario nao ve ocorrencias por bairro em
-// nenhuma superficie agregada. Administrador e Agente mantem o acesso.
 @Import(RelogioTesteConfig.class)
 class RelatorioBairroPermissaoIT extends AbstractIntegrationTest {
 

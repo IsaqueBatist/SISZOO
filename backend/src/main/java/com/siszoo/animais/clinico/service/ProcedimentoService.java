@@ -40,8 +40,6 @@ import com.siszoo.usuarios.service.AuditoriaEventoService;
 
 import jakarta.persistence.criteria.Predicate;
 
-// Sem metodo atualizar/excluir: registro clinico imutavel (regra de negocio). Ver
-// VacinacaoService para o mecanismo de retificacao.
 @Service
 public class ProcedimentoService {
 
@@ -77,8 +75,6 @@ public class ProcedimentoService {
         Usuario usuarioAutenticado = usuarioRepository.findById(usuarioAutenticadoId)
                 .orElseThrow(UsuarioNaoEncontradoException::new);
 
-        // Procedimento e fato ocorrido (como a vacinacao, RN-C06): data futura
-        // e recusada, inclusive na retificacao, com "hoje" do Clock do projeto.
         if (request.data().isAfter(LocalDate.now(clock))) {
             throw new CampoInvalidoException("data", "A data do procedimento não pode ser futura.");
         }
@@ -148,7 +144,6 @@ public class ProcedimentoService {
         return tipoProcedimentoRepository.findByCodigo(codigo).orElseThrow(TipoProcedimentoInvalidoException::new);
     }
 
-    // Texto vazio ou so com espacos vira NULL: a tela trata ausencia como "—".
     private String textoOuNulo(String texto) {
         return StringUtils.hasText(texto) ? texto : null;
     }

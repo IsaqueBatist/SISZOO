@@ -12,11 +12,6 @@ import { CadastrarAnimal } from './CadastrarAnimal'
 import { EditarAnimal } from './EditarAnimal'
 import type { AnimalRequest } from '../types/animais.types'
 
-// jsdom não implementa renderização de canvas (getContext('2d') retorna
-// null), então a compressão real (comprimirImagem.ts) sempre falharia aqui.
-// O teste de preview de foto mocka o módulo para validar só a integração
-// (input de arquivo -> chamada de compressão -> estado -> <img>), não o
-// algoritmo de compressão em si.
 vi.mock('../utils/comprimirImagem', async () => {
   const real = await vi.importActual<typeof import('../utils/comprimirImagem')>('../utils/comprimirImagem')
   return { ...real, comprimirImagem: vi.fn().mockResolvedValue('data:image/jpeg;base64,ZmFrZS1jb21wcmltaWRh') }
@@ -26,7 +21,6 @@ const REX_ID = 'b2c3d4e5-0000-0000-0000-000000000001'
 
 const USUARIO_ID = 'a1b2c3d4-0000-0000-0000-000000000001'
 
-// AnimalForm usa o id do usuário logado na chave do rascunho.
 function autenticar() {
   const usuario: Usuario = {
     id: USUARIO_ID,
@@ -120,10 +114,7 @@ describe('AnimalForm — cadastro', () => {
       status: 'disponivel_adocao',
       motivoEntrada: 'resgate',
     })
-    // Sem mexer nos cartões de castração, a resposta é "não informado": null,
-    // nunca false (decisão de 31/10/2026).
     expect((corpoCapturado as AnimalRequest | null)?.esterilizado).toBeNull()
-    // Nomes de resposta (com sufixo) nunca devem ser reenviados no request.
     expect(corpoCapturado).not.toHaveProperty('especieNome')
     expect(corpoCapturado).not.toHaveProperty('statusNome')
     expect(corpoCapturado).not.toHaveProperty('motivoEntradaNome')
@@ -166,14 +157,11 @@ describe('AnimalForm — cadastro', () => {
     const campoMicrochip = screen.getByLabelText(/microchip/i).closest('.field')
     expect(campoMicrochip).not.toBeNull()
     expect(await within(campoMicrochip as HTMLElement).findByText('Este microchip já está cadastrado em outro animal.')).toBeInTheDocument()
-    // O nome preenchido continua lá — reenvio sem perda de dados.
     expect(screen.getByLabelText(/nome do animal/i)).toHaveValue('Rex Teste')
   })
 
   it('preview de foto aparece após a seleção de um arquivo', async () => {
     const user = userEvent.setup()
-    // A foto usa alt="" (decorativa, o nome já aparece em outro campo) — por
-    // isso não tem role="img" acessível, e o teste busca via querySelector.
     const { container } = renderCadastrar()
 
     await user.click(screen.getByRole('button', { name: /próximo: saúde/i }))
@@ -205,8 +193,6 @@ describe('AnimalForm — edição', () => {
     renderEditar(REX_ID)
 
     expect(await screen.findByDisplayValue('Rex')).toBeInTheDocument()
-    // Rex já tem microchip cadastrado no mock: o campo deve travar (regra de
-    // imutabilidade do backend replicada na UI).
     expect(screen.getByLabelText(/microchip/i)).toBeDisabled()
 
     await avancarParaRevisao(user)
@@ -217,21 +203,15 @@ describe('AnimalForm — edição', () => {
       nome: 'Rex',
       especie: 'canino',
       microchip: '985121234567890',
-      // O PUT substitui a ficha: o esterilizado do animal (Rex é castrado no
-      // mock) tem de voltar no corpo, senão o backend responde 422 (FS-6).
       esterilizado: true,
     })
 
     expect(await screen.findByText('Ficha do animal')).toBeInTheDocument()
   })
 
-  // O PUT substitui a ficha (AnimalService.atualizar grava o que recebe):
-  // campo que não chega ao formulário na edição volta vazio e apaga o dado.
   describe('campos F2-004/F2-008 vindos do GET', () => {
     const ID_COMPLETO = 'b2c3d4e5-0000-0000-0000-0000000000f2'
 
-    // Formato real de AnimalResponse serializado pelo Jackson: BigDecimal como
-    // número, LocalDate como AAAA-MM-DD, LocalDateTime sem fuso.
     function animalDoGet(sobrescrever: Record<string, unknown>) {
       return {
         id: ID_COMPLETO,
@@ -304,7 +284,6 @@ describe('AnimalForm — edição', () => {
         dataImplantacaoChip: '2026-03-11',
         procedencia: 'Bairro Brasil',
         pesoKg: 12.5,
-        // Dia não mudou: a hora original volta inteira.
         dataEntrada: '2026-03-10T14:30:00',
       })
     })

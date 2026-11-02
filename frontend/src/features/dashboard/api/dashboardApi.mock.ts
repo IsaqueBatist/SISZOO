@@ -1,13 +1,7 @@
 import type { DashboardKpisApi } from '../types/dashboard.types'
 
-// Latência simulada para o skeleton ser visível e o estado de loading ser
-// testável — mesmo valor usado em features/graficos/api/graficosApi.mock.ts.
 const LATENCIA_MOCK_MS = 300
 
-// Números do protótipo (docs/prototipo/dashboard.html): 147 animais (123
-// cães, 24 gatos), 84% vacinados (123 de 147), 4 ocorrências registradas
-// hoje. Alertas replicam o mesmo protótipo (vacinas, avaliação, baia,
-// medicação, ficha, castração).
 const KPIS_REAIS_MOCK: DashboardKpisApi = {
   animais: { total: 147, caninos: 123, felinos: 24 },
   vacinacao: { percentualVacinados: 84, vacinados: 123, total: 147 },

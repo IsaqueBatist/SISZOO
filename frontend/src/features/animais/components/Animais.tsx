@@ -14,6 +14,7 @@ import { useAnimaisQuery, useBaiasQuery, useCatalogosAnimaisQuery } from '../hoo
 import { badgeDeEspecie, badgeDeStatus } from '../utils/statusBadge'
 import type { Animal, Pelagem } from '../types/animais.types'
 import { formatarPorte, formatarSexo } from '../utils/rotulosAnimal'
+import { corAvatar } from '@/lib/avatar'
 
 const TAMANHO_PAGINA = 20
 const LINHAS_SKELETON = [0, 1, 2, 3, 4]
@@ -22,8 +23,6 @@ const FILTROS_PADRAO = { busca: '', status: '', especie: '', baia: '' }
 const STATUS_SOB_CUSTODIA = 'sob_custodia'
 const ROTULOS_STATUS_FILTRO: Record<string, string> = { disponivel_adocao: 'Disponível p/ adoção' }
 
-// dataEntrada é LocalDateTime sem fuso, já no horário do CCZ: separar a
-// string não depende do fuso do navegador (ver lib/datas.ts).
 const formatarData = formatarDataBR
 
 function formatarPelagem(pelagem: Pelagem | null): string {
@@ -32,16 +31,9 @@ function formatarPelagem(pelagem: Pelagem | null): string {
   return ''
 }
 
-function corAvatar(seed: string): string {
-  const hue = Math.abs([...seed].reduce((acumulado, char) => acumulado + char.charCodeAt(0), 0)) % 360
-  return `hsl(${hue}, 35%, 34%)`
-}
-
 export function Animais() {
   const { roleKey } = useAuth()
   const podeEscrever = roleKey === 'admin' || roleKey === 'vet'
-  // Um card de baia (T19) linka para cá com `?baiaId=`: esse filtro vale mais
-  // que o guardado da última visita.
   const baiaDaUrl = useFiltroDeLink('baiaId')
   const { filtros, pagina, definirFiltros, irParaPagina, limparFiltros, filtrosAtivos } = useFiltrosLista(
     'animais',

@@ -7,13 +7,6 @@ import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/Auth
 import type { Usuario } from '@/features/auth/types/auth.types'
 import { CadastrarAnimal } from './CadastrarAnimal'
 
-// jsdom não implementa IndexedDB (typeof indexedDB === 'undefined'), então o
-// módulo de rascunho é mockado diretamente — o mesmo padrão já usado para
-// comprimirImagem.ts em AnimalForm.test.tsx. Isso testa exatamente o que
-// importa aqui: QUANDO agendarSalvarRascunhoAnimal é chamado (gate de
-// hidratação) e COM QUE FORMA (compatibilidade retroativa do rascunho), não
-// a mecânica de IndexedDB em si (isso é responsabilidade de
-// rascunhoAnimalStorage.ts, inalterado nesta migração).
 vi.mock('../storage/rascunhoAnimalStorage', async () => {
   const real = await vi.importActual<typeof import('../storage/rascunhoAnimalStorage')>('../storage/rascunhoAnimalStorage')
   return {
@@ -30,7 +23,6 @@ import { agendarSalvarRascunhoAnimal, carregarRascunhoAnimal } from '../storage/
 
 const USUARIO_ID = 'a1b2c3d4-0000-0000-0000-000000000001'
 
-// AnimalForm usa o id do usuário logado na chave do rascunho.
 function autenticar() {
   const usuario: Usuario = {
     id: USUARIO_ID,
@@ -74,9 +66,6 @@ describe('AnimalForm — autosave do rascunho', () => {
     const user = userEvent.setup()
     renderCadastrar()
 
-    // Digitar antes da checagem do rascunho salvo terminar: nada pode ser
-    // agendado ainda — senão um objeto vazio/parcial sobrescreveria, no
-    // IndexedDB real, um rascunho de verdade do usuário.
     await user.type(screen.getByLabelText(/nome do animal/i), 'Rex')
     expect(agendarSalvarRascunhoAnimal).not.toHaveBeenCalled()
 
@@ -88,11 +77,6 @@ describe('AnimalForm — autosave do rascunho', () => {
     await waitFor(() => expect(agendarSalvarRascunhoAnimal).toHaveBeenCalled())
   })
 
-  // F2-004/F2-008 (Fase 3 do TG): as 19 chaves originais mais numeroMedalha,
-  // dataImplantacaoChip, procedencia e laudoEutanasia. V33: condicoes e
-  // condicoesOutras. T42: `fotoUrl` saiu da
-  // lista e entrou `fotoArquivoId` — a imagem passou a ser gravada como Blob na
-  // store 'arquivos', e o rascunho de texto guarda só o id.
   it('agenda salvar com exatamente as 25 chaves de RascunhoAnimalValores', async () => {
     vi.mocked(carregarRascunhoAnimal).mockResolvedValue(null)
 
@@ -151,9 +135,6 @@ describe('AnimalForm — autosave do rascunho', () => {
 
   it('restaura um rascunho salvo no formato anterior à migração, sem lançar erro', async () => {
     vi.mocked(carregarRascunhoAnimal).mockResolvedValue({
-      // Rascunho gravado antes da T42: sem envelope no disco, o módulo de
-      // armazenamento o devolve com salvoEm null e o `fotoUrl` legado, que a
-      // restauração ignora.
       salvoEm: null,
       dados: {
         nome: 'Rascunho Antigo',

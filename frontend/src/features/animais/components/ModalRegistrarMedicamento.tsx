@@ -23,7 +23,6 @@ import { useCriarPrescricaoMutation, useMedicamentosAtivosQuery } from '../hooks
 import { CadastroRapidoMedicamento } from './CadastroRapidoMedicamento'
 import type { Prescricao } from '../types/historico.types'
 
-// Erros por campo do 422: só os campos que existem no modal.
 const MAPA_ERROS_SERVIDOR = mapaDeCampos<PrescricaoFormValues>(
   Object.keys(prescricaoFormSchema.shape) as (keyof PrescricaoFormValues)[],
 )
@@ -32,7 +31,6 @@ const ARMAZENAMENTO_RASCUNHO = armazenamentoRascunhoClinico<PrescricaoFormValues
 
 interface ModalRegistrarMedicamentoProps {
   animalId: string
-  // Ver comentário equivalente em ModalRegistrarVacina.tsx.
   retifica?: Prescricao
   onFechar: () => void
   onSucesso: () => void
@@ -67,11 +65,6 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
       dataFimPrevista: retifica?.dataFimPrevista ?? '',
       dataFimReal: retifica?.dataFimReal ?? '',
       frequenciaAplicada: retifica?.frequenciaAplicada,
-      // Selects obrigatórios sem retifica precisam de defaultValue '' (não
-      // undefined) para o <select> nativo ficar preso na opção placeholder
-      // desabilitada — com undefined, o RHF não fixa nenhum valor via ref e
-      // o navegador cai no fallback de selecionar a 1ª opção habilitada,
-      // fazendo a validação passar silenciosamente com um valor nunca escolhido.
       unidadeFrequencia: (retifica?.unidadeFrequencia ?? '') as PrescricaoFormValues['unidadeFrequencia'],
       doseQuantidade: retifica?.doseQuantidade,
       doseUnidade: (retifica?.doseUnidade ?? '') as PrescricaoFormValues['doseUnidade'],
@@ -80,7 +73,6 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
     },
   })
 
-  // Ver comentário equivalente em ModalRegistrarVacina.tsx.
   const rascunho = useRascunho<PrescricaoFormValues>({
     armazenamento: ARMAZENAMENTO_RASCUNHO,
     chave: chaveRascunhoClinico(user?.id ?? '', 'prescricao', animalId, retifica?.id),
@@ -110,8 +102,6 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
       onSucesso()
     } catch (erro) {
       if (aplicarErrosDeCampo(erro, setError, MAPA_ERROS_SERVIDOR).length > 0) return
-      // 409/422 de regra ("Este registro já foi corrigido. Atualize a página para ver a versão atual."...) mostram o
-      // motivo real, como nos outros modais clínicos.
       setSubmitError(
         mensagemDeRegraDaApi(erro) ??
           `Não foi possível ${retifica ? 'corrigir' : 'registrar'} a prescrição. Tente novamente.`,
@@ -119,9 +109,6 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
     }
   }
 
-  // Volta do cadastro rápido: o medicamento novo já entra escolhido. Aqui o
-  // select é controlado (Controller), então o setValue basta — diferente do
-  // modal de vacina, cujo select é não-controlado e precisa esperar a opção.
   function aoCadastrarMedicamento(id: string) {
     setValue('medicamentoId', id, { shouldValidate: true })
     setCadastrandoMedicamento(false)
@@ -156,12 +143,6 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
               <label htmlFor="pres-medicamento">
                 Medicamento <span className="req">*</span>
               </label>
-              {/* Controller (não register puro): as opções vêm de uma query
-                  assíncrona, e a pré-seleção do medicamentoId da retifica
-                  só é aplicada corretamente se o <select> continuar
-                  controlado — um register() não-controlado fixaria o valor
-                  no momento do mount, antes das opções existirem, e nunca
-                  mais re-sincronizaria quando elas chegassem. */}
               <div className="flex gap-2">
                 <Controller
                   name="medicamentoId"
@@ -187,9 +168,6 @@ export function ModalRegistrarMedicamento({ animalId, retifica, onFechar, onSuce
                     </select>
                   )}
                 />
-                {/* Sem checagem de papel: a aba só oferece o caminho para este
-                    modal a quem tem escrita, e o backend recusa o POST de
-                    qualquer outro. */}
                 {!cadastrandoMedicamento && (
                   <button
                     type="button"

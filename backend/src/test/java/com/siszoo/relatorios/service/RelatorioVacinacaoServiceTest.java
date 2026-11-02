@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.Clock;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -26,14 +25,10 @@ import com.siszoo.animais.clinico.repository.VacinacaoRepository;
 import com.siszoo.animais.entity.Animal;
 import com.siszoo.animais.entity.Baia;
 import com.siszoo.animais.repository.AnimalRepository;
-import com.siszoo.comum.repository.ContagemCatalogoProjection;
 import com.siszoo.comum.util.BlocoCsv;
 import com.siszoo.relatorios.dto.PeriodoRelatorio;
 import com.siszoo.relatorios.dto.RelatorioVacinacaoResponse;
 
-// "Relatório de Vacinação" (T41, regra 22 do DER: 30 dias, nao os 7 do alerta
-// do sistema). HOJE fixo via Clock.fixed para "vencida"/"a vencer" serem
-// deterministicos (sem depender da data real da execucao).
 @ExtendWith(MockitoExtension.class)
 class RelatorioVacinacaoServiceTest {
 
@@ -53,11 +48,8 @@ class RelatorioVacinacaoServiceTest {
     void deveComputarKpisDeVencidasEAVencerEm30Dias() {
         service = new RelatorioVacinacaoService(vacinacaoRepository, animalRepository, CLOCK);
 
-        // intervalo 12 meses: aplicada ha 12 meses e 1 dia -> vencida ha 1 dia.
         Vacinacao vencida = vacinacao(HOJE.minusMonths(12).minusDays(1), 12, null);
-        // aplicada ha 12 meses menos 10 dias -> valida ate hoje+10 (dentro da janela de 30).
         Vacinacao aVencer = vacinacao(HOJE.minusMonths(12).plusDays(10), 12, null);
-        // aplicada ontem -> valida por quase 1 ano, fora da janela de 30 dias.
         Vacinacao emDia = vacinacao(HOJE.minusDays(1), 12, null);
 
         when(vacinacaoRepository.findVigentesParaAlertaVacinal(any())).thenReturn(List.of(vencida, aVencer, emDia));
@@ -71,8 +63,8 @@ class RelatorioVacinacaoServiceTest {
         assertThat(resposta.kpis().vacinasAplicadas()).isEqualTo(50);
         assertThat(resposta.kpis().vencidas()).isEqualTo(1);
         assertThat(resposta.kpis().aVencerEm30Dias()).isEqualTo(1);
-        assertThat(resposta.kpis().animaisVacinados()).isEqualTo(2); // aVencer + emDia, nao a vencida
-        assertThat(resposta.kpis().percentualAnimaisVacinados()).isEqualTo(20); // 2 de 10
+        assertThat(resposta.kpis().animaisVacinados()).isEqualTo(2);
+        assertThat(resposta.kpis().percentualAnimaisVacinados()).isEqualTo(20);
         assertThat(resposta.animaisVencidos()).hasSize(1);
         assertThat(resposta.animaisVencidos().get(0).diasAtraso()).isEqualTo(1);
     }
@@ -94,7 +86,6 @@ class RelatorioVacinacaoServiceTest {
         RelatorioVacinacaoResponse preview = service.gerarPreview(PERIODO);
         assertThat(preview.animaisVencidos()).hasSize(10);
         assertThat(preview.animaisVencidosExcedente()).isEqualTo(2);
-        // maior atraso primeiro.
         assertThat(preview.animaisVencidos().get(0).diasAtraso()).isEqualTo(12);
 
         List<BlocoCsv> blocos = service.blocosCsv(PERIODO);

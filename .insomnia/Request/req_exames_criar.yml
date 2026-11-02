@@ -1,0 +1,45 @@
+_id: "req_exames_criar"
+type: "Request"
+parentId: "fld_registros_clinicos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/exames"
+name: "Criar exame - caso feliz"
+description: "Registra um exame do animal. Como os demais registros clínicos, é imutável: correção é um novo POST com retificaId. Requer GESTAO_ANIMAIS:escrita."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "animalId": "{{ _.animal_id_exemplo }}",
+      "tipoExame": "hemograma",
+      "laboratorio": "ccz_sp",
+      "dataSolicitacao": "2026-09-01",
+      "dataResultado": "2026-09-03",
+      "resultado": "Dentro da normalidade.",
+      "observacoes": "Exame fictício criado pela coleção."
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 12000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });
+  if (insomnia.response.code === 200) {
+    const corpo = insomnia.response.json();
+    insomnia.environment.set('exame_id_exemplo', corpo.id);
+  }

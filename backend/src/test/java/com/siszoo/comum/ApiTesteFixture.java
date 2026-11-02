@@ -30,19 +30,12 @@ import com.siszoo.usuarios.repository.UsuarioRepository;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-// Preparacao de cenario compartilhada pelos *IT (usuario + login, animal,
-// vacinacao e processo sanitario via API). Toda data vem do Clock do contexto — o fixo de
-// RelogioTesteConfig quando a classe o importa, o de ClockConfig nos demais —
-// para "hoje" do cenario ser o mesmo "hoje" das regras sob teste.
 @TestComponent
 public class ApiTesteFixture {
 
     public static final UUID CARGO_ADMINISTRADOR_ID = UUID.fromString("00000000-0000-4000-8000-000000000001");
     public static final UUID CARGO_VETERINARIO_ID = UUID.fromString("00000000-0000-4000-8000-000000000002");
     public static final UUID CARGO_AGENTE_SANITARIO_ID = UUID.fromString("00000000-0000-4000-8000-000000000003");
-    // Cargo que so existe nos testes: le ocorrencias sem denunciante_sigiloso.
-    // Nenhum cargo real tem esse perfil desde a V11 (o Veterinario perdeu o
-    // acesso ao modulo); ele mantem a cobertura da mascara do denunciante (D14).
     public static final UUID CARGO_LEITOR_OCORRENCIAS_ID = UUID.fromString("00000000-0000-4000-8000-0000000000f1");
     private static final String SENHA_PADRAO = "SenhaTeste123";
 
@@ -80,8 +73,6 @@ public class ApiTesteFixture {
         return "MC" + UUID.randomUUID().toString().substring(0, 20);
     }
 
-    // Idempotente: o banco de teste e compartilhado entre metodos (sem
-    // rollback), entao so cria o usuario na primeira chamada por e-mail.
     public String tokenComCargo(String email, String nome, String sobrenome, UUID cargoId) {
         if (usuarioRepository.findByEmail(email).isEmpty()) {
             Usuario usuario = criarUsuarioSemCargo(email, nome, sobrenome);
@@ -97,8 +88,6 @@ public class ApiTesteFixture {
         return tokenComCargo(email, "Admin", sobrenome, CARGO_ADMINISTRADOR_ID);
     }
 
-    // OCORRENCIAS_DENUNCIAS:leitura e nada mais (sem escrita e sem a feature
-    // denunciante_sigiloso). Idempotente, como o seed da V3.
     public String tokenLeitorOcorrencias(String email, String sobrenome) {
         jdbcTemplate.update("INSERT INTO cargo (id, nome, descricao) VALUES (?, 'Leitor de Ocorrências (teste)',"
                 + " 'Cargo de teste: leitura de ocorrências sem denunciante_sigiloso.') ON CONFLICT (id) DO NOTHING",
@@ -115,7 +104,6 @@ public class ApiTesteFixture {
         usuario.setSenha(passwordEncoder.encode(SENHA_PADRAO));
         usuario.setNome(nome);
         usuario.setSobrenome(sobrenome);
-        // Quem precisa do primeiro acesso cria o usuario pela API ou zera o campo.
         usuario.setSenhaAlteradaEm(LocalDateTime.now());
         return usuarioRepository.save(usuario);
     }
@@ -125,7 +113,6 @@ public class ApiTesteFixture {
     }
 
     public String criarAnimal(String token, String status) {
-        // F2-008: o destino obito_eutanasia exige o laudo do responsavel tecnico.
         String laudo = "obito_eutanasia".equals(status) ? "Laudo de teste: quadro irreversivel" : null;
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Animal de Teste", "canino", "macho", null, null, null, null, null, null, null,
@@ -144,7 +131,6 @@ public class ApiTesteFixture {
                 .path("id");
     }
 
-    // Resposta crua: o chamador decide o status esperado (200, 422...).
     public Response postarVacinacao(
             String token, String animalId, LocalDate dataAplicacao, UnidadeDose doseUnidade, String retificaId) {
         return given()
@@ -158,7 +144,6 @@ public class ApiTesteFixture {
                 .post("/api/vacinacoes");
     }
 
-    // Caminho feliz: exige 200 e devolve o id criado.
     public String criarVacinacao(String token, String animalId, LocalDate dataAplicacao, String retificaId) {
         return postarVacinacao(token, animalId, dataAplicacao, UnidadeDose.MILILITRO, retificaId)
                 .then()
@@ -167,10 +152,6 @@ public class ApiTesteFixture {
                 .path("id");
     }
 
-    // Corpo do menor processo completo valido (T29): doenca, laboratorio,
-    // responsavel e uma amostra de animal de campo coletada hoje. contatoHumano
-    // decide a urgencia do processo (DER regra 18). Mutavel, para o chamador
-    // variar um campo.
     public Map<String, Object> corpoProcesso(String ocorrenciaId, boolean contatoHumano) {
         Map<String, Object> amostra = new HashMap<>();
         amostra.put("especie", "canino");
@@ -197,7 +178,6 @@ public class ApiTesteFixture {
         return corpo;
     }
 
-    // Resposta crua de POST /api/processos: o chamador decide o status esperado.
     public Response postarProcesso(String token, Map<String, Object> corpo) {
         return given()
                 .contentType(ContentType.JSON)
@@ -207,14 +187,10 @@ public class ApiTesteFixture {
                 .post("/api/processos");
     }
 
-    // Helper unico para criar processo completo nos *IT (substitui o processo
-    // minimo da T25, que a V13 deixou de aceitar).
     public Response postarProcesso(String token, String ocorrenciaId, boolean contatoHumano) {
         return postarProcesso(token, corpoProcesso(ocorrenciaId, contatoHumano));
     }
 
-    // GET /api/alertas/vacinas (exige 200) filtrado pelo animal do cenario —
-    // o banco e compartilhado, entao o alerta traz animais de outros testes.
     public Optional<Map<String, Object>> buscarAnimalNoAlertaVacinal(String token, String animalId) {
         List<Map<String, Object>> resposta = given()
                 .header("Authorization", "Bearer " + token)
@@ -229,8 +205,6 @@ public class ApiTesteFixture {
         return resposta.stream().filter(item -> animalId.equals(item.get("animalId"))).findFirst();
     }
 
-    // Senha explicita para usuarios criados fora do fixture — o AuthControllerIT
-    // controla a senha de proposito, porque ela e o objeto do teste.
     public String login(String email, String senha) {
         return given()
                 .contentType(ContentType.JSON)

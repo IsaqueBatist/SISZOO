@@ -4,7 +4,6 @@ import type { CatalogoItem } from '../types/animais.types'
 
 interface SelectCatalogoClinicoProps {
   id: string
-  // undefined enquanto carrega ou depois de um erro.
   itens: CatalogoItem[] | undefined
   carregando: boolean
   comErro: boolean
@@ -13,10 +12,6 @@ interface SelectCatalogoClinicoProps {
   temErro: boolean
 }
 
-// Select de vacina/tipo de procedimento lido de GET /api/animais/catalogos.
-// O select registrado só monta com as opções já carregadas: é não-controlado
-// (react-hook-form), e o valor padrão (correção) ou o rascunho restaurado só é
-// aplicado ao elemento se a opção existir quando ele monta.
 export function SelectCatalogoClinico({
   id,
   itens,

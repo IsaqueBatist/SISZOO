@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Fase 3 — gera docs/tg/SISZOO_v2_alinhado.docx a partir da versão limpa (que NÃO é alterada).
 
 Todas as edições de texto entram como controle de alterações (autor "Revisão SISZOO").
@@ -11,7 +10,7 @@ import os, sys, json, datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from docx_kit import DocxKit
 
-RAIZ = r'C:\Users\isaqu\Desktop\codigo\SISZOO\docs\tg'
+RAIZ = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
 ORIG = os.path.join(RAIZ, 'SISZOO_versao_limpa.docx')
 DEST = os.path.join(RAIZ, 'SISZOO_v2_alinhado.docx')
 CAP = os.path.join(RAIZ, 'analise_fase3', 'capturas')
@@ -19,7 +18,7 @@ LOG = os.path.join(RAIZ, 'analise_fase3', 'log_alteracoes_documento.md')
 TESTES = json.load(open(os.path.join(RAIZ, 'analise_fase3', 'contagem_testes.json'), encoding='utf-8'))
 
 k = DocxKit(ORIG)
-CORPO = 'Esta seção apresenta as telas do SISZOO implementado'   # parágrafo-modelo de corpo (pPr)
+CORPO = 'Esta seção apresenta as telas do SISZOO implementado'
 
 import re as _re
 _LEGENDAS = {}
@@ -56,7 +55,6 @@ def P(ancora, texto, local, ids, oc=1):
 
 TF = 'modelado; implementação prevista em trabalhos futuros'
 
-# ============================================================ 2.2 Perfis
 S('As permissões são registradas na entidade CargoPermissao',
   'O Quadro 4 apresenta os perfis de acesso do SISZOO e os módulos a que cada um tem acesso, conforme a regra de negócio RN09. '
   'A recepcionista participou da entrevista, mas o perfil de recepção não foi incluído no sistema, porque a recepção não executa as rotinas '
@@ -75,7 +73,6 @@ S('Processos sanitários; ocorrências; dashboard e relatórios',
   'Ocorrências (leitura e escrita, inclusive denunciante sigiloso); processos sanitários (leitura e escrita); gestão de animais (consulta); dashboard e relatórios',
   'Quadro 4', 'F2-065, F2-059')
 
-# ============================================================ 2.3 Tecnologias
 S('com o framework Spring Boot 3, que reduz',
   'O backend foi desenvolvido em Java 21, versão com suporte de longo prazo da plataforma Java SE (ORACLE, 2023), com o framework Spring Boot 4, '
   'que reduz a configuração necessária para criar aplicações Spring por meio de dependências pré-configuradas e de servidor web embutido '
@@ -92,7 +89,6 @@ S('O frontend foi desenvolvido com React 18',
   'bibliotecas de navegação, comunicação com a API, validação de formulários e gráficos são apresentadas na Seção 5.1.',
   'Seção 2.3.2', 'F2-130')
 
-# ============================================================ Quadro 5 (S8) e 3.5.2 Limitações
 S('Robustez a falhas de rede e testes ponta a ponta (end-to-end).',
   'Robustez a falhas de rede (rascunhos locais) e ampliação dos testes de integração da API e de componentes; os testes ponta a ponta '
   '(end-to-end) não foram incorporados e passaram a trabalho futuro.', 'Quadro 5 (S8)', 'F2-154')
@@ -107,7 +103,6 @@ S('O escopo do trabalho está restrito ao Centro de Controle de Zoonoses do muni
   'backup diário (RNF04, RNF06) dependem do ambiente de implantação da Prefeitura.',
   'Seção 3.5.2', 'F2-008, F2-014, F2-007, F2-072, F2-074, F2-087, F2-329')
 
-# ============================================================ Quadro 6 — Módulo 1
 S('Login com e-mail institucional e senha, com troca de senha obrigatória no primeiro acesso.',
   'Login com e-mail institucional (domínio itu.sp.gov.br) e senha, com troca de senha obrigatória no primeiro acesso e troca de senha pelo '
   'próprio usuário; o usuário também atualiza o próprio telefone na tela de perfil. Autenticação sem estado por token JWT com prazo de '
@@ -124,7 +119,6 @@ L('O usuário ajusta o tema, densidade da interface',
    'em lista paginada com os valores anterior e posterior de cada evento (RNF10).', 'Média'],
   'Quadro 6 (novo RF-C04)', 'F2-027')
 
-# ============================================================ Quadro 7 — Módulo 2
 S('Registrar um animal com número do microchip (identificador único, RN01) e data de implantação do chip',
   'Registrar um animal com número do microchip (identificador único, RN01), data de implantação do chip, número da medalha (único quando '
   'informado), espécie, nome, raça, sexo, porte, pelagem, coloração, data de nascimento aproximada, idade aproximada, baia, foto, '
@@ -151,7 +145,6 @@ S('Registrar a procedência ao entrar e o destino e a data de saída ao sair',
   'específica de saída não é registrada (limitação, Seção 3.5.2). O registro dos dados do adotante e da devolução (entidade Adocao) está '
   'modelado, com implementação prevista em trabalhos futuros. Histórico imutável (RN06).', 'Quadro 7 (RF-A05)', 'F2-008, F2-167, F2-329')
 
-# ============================================================ Quadro 8 — Módulo 3
 S('Registrar ocorrência com protocolo (0000/AAAA, RN02), tipo, bairro',
   'Registrar ocorrência com protocolo (NNN/AAAA, RN02), tipo, data e hora de abertura, endereço, bairro, ponto de referência, descrição, '
   'urgente, sigilosa (RN03) ou anônima (sem denunciante), denunciante, denunciado (opcional), anexos (JPG, PNG ou PDF, até 5 MB) e '
@@ -165,7 +158,6 @@ S('Encerrar com providência tomada, descrição (obrigatória quando a providê
   'Administrador. Não pode ser encerrada enquanto houver processo sanitário vinculado não concluído (RN05). Registro imutável após '
   'encerramento (RN06).', 'Quadro 8 (RF-E03)', 'F2-011, F2-061')
 
-# ============================================================ Quadro 9 — Módulo 4
 S('Criar processo sanitário com protocolo (0000/AAAA, RN02), número do GAL',
   'Criar processo sanitário com protocolo (NNN/AAAA, RN02), números do GAL e do SINAN (opcionais, registro manual), urgente, data de '
   'abertura, status (RN12), doença, laboratório, observações, responsável, amostras e vínculo opcional a uma ocorrência, definido na '
@@ -188,7 +180,6 @@ S('Gerar PDF do processo com controle de estado em DocumentoProcesso',
   'Gerar PDF do processo com controle de estado em DocumentoProcesso (Pendente→Em Processamento→Concluído/Falha). Requisito ' + TF + '.',
   'Quadro 9 (RF-B06)', 'F2-017')
 
-# ============================================================ Quadro 10 — Módulo 5
 S('Exibir em tempo real: total por StatusAnimal, ocupação de baias',
   'Exibir, com atualização a cada 5 minutos (cache), os indicadores do CCZ: total de animais por espécie, percentual de animais vacinados, '
   'ocorrências registradas no dia, alertas (reforço vacinal em 7 dias, vacinas vencidas, animais sem avaliação há 30 dias, baias '
@@ -198,7 +189,6 @@ S('Gerar, em PDF e CSV, os relatórios de ocorrências por bairro, ocupação de
   'de forma síncrona na central de relatórios, com pré-visualização em tela. Cada exportação é registrada em RelatorioGerado (histórico de '
   'exportações com identificador DOC-AAAA-NNNN), sem armazenar o arquivo no banco (RN11).', 'Quadro 10 (RF-D02)', 'F2-020, F2-576')
 
-# ============================================================ Quadro 11 — Relatórios
 S('Histórico mensal de ocupação por baia, transferências internas e taxa média de superlotação.',
   'Ocupação atual por baia (capacidade, ocupação e situação), ocupação média, baias no limite ou superlotadas e capacidade total. '
   'Histórico mensal e transferências internas não são registrados.', 'Quadro 11 (Ocupação de Baias)', 'F2-095, F2-032')
@@ -215,7 +205,6 @@ S('Distribuição das investigações sanitárias por doença, espécie e bairro
   'Por ano civil: processos abertos, confirmados positivos e taxa de positividade, processos com contato humano e tempo médio até o '
   'resultado; distribuição por doença, resultados laboratoriais, espécie, bairro e laboratório.', 'Quadro 11 (Anual de Processos)', 'F2-577')
 
-# ============================================================ Quadro 12 — RNFs
 S('Responder em até 3 segundos. Interface responsiva em listas com 200+ registros.',
   'Meta: responder em até 3 segundos, com listas paginadas no servidor e cache dos indicadores do dashboard. Não houve medição formal de '
   'desempenho nesta entrega.', 'Quadro 12 (RNF01)', 'F2-069')
@@ -233,7 +222,6 @@ S('Registrar usuário, data, hora e valores anterior/posterior em toda alteraç�
   'AuditoriaEvento, inclusive cadastro e edição de animais e baias e acesso a denunciante sigiloso. O endereço IP não é capturado.',
   'Quadro 12 (RNF10)', 'F2-078, F2-604')
 
-# ============================================================ Quadro 13 — Regras de negócio
 S('O protocolo (processo sanitário e ocorrência) é gerado automaticamente no formato 0000/AAAA',
   'O protocolo é gerado automaticamente pelo sistema no formato NNN/AAAA (três dígitos, crescendo além de 999 quando necessário), '
   'sequencial e reiniciado em 001 a cada ano civil, com uma sequência independente por entidade (ocorrência, processo sanitário e '
@@ -274,7 +262,6 @@ S('Transições: ABERTO→EM_ANDAMENTO→AGUARDANDO_RESULTADO→CONCLUIDO.',
   'Transições: ABERTO→AGUARDANDO_RESULTADO→COM_RESULTADO→CONCLUIDO. O primeiro resultado só pode ser lançado com status '
   'AGUARDANDO_RESULTADO; a conclusão exige resultado registrado.', 'Quadro 13 (RN12)', 'F2-068, F2-177')
 
-# ============================================================ Cap. 4 — datas e fuso; dicionário
 S('Os campos de data e hora (timestamps) são armazenados em UTC',
   'Todos os modelos foram validados contra os requisitos funcionais (Capítulo 3), as regras de negócio (Seção 3.3) e os documentos de campo '
   'coletados na visita ao CCZ de Itu em 9 de janeiro de 2026. O banco de dados de destino é o PostgreSQL 16. As chaves primárias das '
@@ -313,7 +300,6 @@ S('O acesso à trilha de auditoria é restrito ao perfil Administrador, que pode
   'Administrador, que a consulta na tela de Logs aplicando filtros por ação, entidade, módulo, usuário e período (RF-C04), em conformidade '
   'com os princípios de responsabilização e prestação de contas previstos pela LGPD.', 'Seção 4.4', 'F2-027, F2-604')
 
-# ============================================================ Quadro 14 — bibliotecas
 S('Rascunho local de formulários no IndexedDB', 'Rascunho local de formulários no IndexedDB (API nativa do navegador, sem biblioteca)', 'Quadro 14 (idb)', 'F2-149')
 R('idb', 'IndexedDB', 'Quadro 14 (idb)', 'F2-149')
 S('Testes ponta a ponta no navegador', 'Previsto para testes ponta a ponta; não incorporado nesta entrega (trabalho futuro)', 'Quadro 14 (Playwright)', 'F2-154')
@@ -322,7 +308,6 @@ L('Mapeamento entre entidades e DTOs', ['Caffeine', 'Backend', 'Cache de 5 minut
 L('Validação dos formulários no navegador', ['react-hook-form e @hookform/resolvers', 'Frontend', 'Estado dos formulários e integração da validação Zod', 'RN07, RN08'], 'Quadro 14 (nova linha)', 'F2-587')
 L('Estado dos formulários e integração da validação Zod', ['ViaCEP (serviço externo)', 'Frontend', 'Preenchimento do endereço a partir do CEP, com preenchimento manual quando indisponível', 'RF-E01'], 'Quadro 14 (nova linha)', 'F2-155')
 
-# ============================================================ Seção 5.1
 S('O backend está organizado em pacotes por módulo – usuarios, animais, ocorrencias, processos, relatorios e comum –',
   'O backend está organizado em pacotes por módulo – usuarios, animais, alertas, ocorrencias, processos, relatorios, auditoria e comum –, cada um '
   'com controladores, serviços, repositórios e entidades; o frontend está organizado em pastas por funcionalidade. Na inicialização, uma '
@@ -331,7 +316,6 @@ S('O backend está organizado em pacotes por módulo – usuarios, animais, ocor
   'Seção 2.3, o SISZOO utiliza as bibliotecas do Quadro 14, escolhidas por implementarem diretamente os requisitos e as regras de negócio '
   'indicados na última coluna.', 'Seção 5.1', 'F2-562, F2-579, F2-591, F2-592')
 
-# ============================================================ Quadro 15 — telas
 S('Veterinário, Administrador', 'Veterinário, Administrador; Agente Sanitário (consulta)', 'Quadro 15 (T04)', 'F2-105', oc=1, exato=True)
 S('Administrador (edição); Veterinário (consulta)', 'Administrador e Veterinário (edição); exclusão só Administrador', 'Quadro 15 (T07)', 'F2-108')
 S('RF-E02, RN03', 'RF-E02, RN03 (denunciante sigiloso visível a Administrador e Agente Sanitário, com auditoria)', 'Quadro 15 (T08)', 'F2-059')
@@ -347,7 +331,6 @@ N('Quadro 15 – Telas do SISZOO',
   'independentes. As telas T24 a T26 e as variantes de edição de animal e de ocorrência (abertas a partir de T06 e T10) não têm captura '
   'neste documento.', 'F2-119, F2-583, F2-584, F2-585')
 
-# ============================================================ Seção 5.2 — textos das telas
 S('A Figura 31 apresenta a tela T01, de login, comum a todos os perfis.',
   'A Figura 31 apresenta a tela T01, de login, comum a todos os perfis. O acesso é feito com e-mail institucional e senha, e o sistema exige '
   'a troca de senha no primeiro acesso, em tela própria (RF-C01). A tela corresponde ao caso de uso Realizar Login.', 'Seção 5.2 (T01)', 'F2-583')
@@ -411,7 +394,6 @@ S('Este apêndice apresenta as telas dos relatórios específicos do SISZOO, des
   'Este apêndice apresenta as telas dos relatórios específicos do SISZOO, descritos no Quadro 11. Elas são visualizações geradas na central '
   'de relatórios (T14), capturadas após o acionamento de “Gerar Relatório”.', 'Apêndice E', 'F2-119')
 
-# ============================================================ Considerações Finais
 TXT_TESTES = (f"Na entrega, o backend conta com {TESTES['backend_unitarios']} testes unitários e {TESTES['backend_integracao']} testes de "
               f"integração (JUnit 5, Testcontainers e Rest Assured), e o frontend com {TESTES['frontend']} testes de componentes (Vitest, "
               f"Testing Library e MSW), todos aprovados; os testes ponta a ponta não foram realizados.")
@@ -438,7 +420,6 @@ S('Como trabalhos futuros, propõem-se a capacitação da equipe e a implantaç�
   '15.046/2024; o desenvolvimento de aplicativo móvel para os agentes em campo; e um módulo público de adoção.',
   'Considerações Finais (trabalhos futuros)', 'F2-008, F2-017, F2-014, F2-154')
 
-# ============================================================ Apêndice A — casos de uso
 S('Registra o evento de auditoria de LOGOUT e redireciona à tela de login.',
   'Redireciona à tela de login. O logout é uma ação do cliente, sem chamada ao servidor; não gera evento de auditoria.', 'Quadro 17', 'F2-001, F2-022')
 S('O usuário encerra o uso do sistema, descartando o token JWT em uso.',
@@ -583,12 +564,9 @@ S('Verifica se o relatório está concluído e se a URL não expirou.', 'Gera o 
 S('O download só é permitido com status Concluído e dentro da validade da URL (RN11).', 'O arquivo não é armazenado no servidor; cada download gera o arquivo novamente (RN11).', 'Quadro 51', 'F2-056')
 S('URL expirada: o sistema informa a expiração e orienta a solicitar uma nova geração.', 'Falha na geração: o sistema informa o erro e mantém o relatório em tela.', 'Quadro 51', 'F2-056')
 
-# ============================================================ Apêndice B — dicionário de dados
-# Quadro 57 (AuditoriaEvento)
 L('Entidade afetada pela ação.', ['entidade_id', 'uuid', '', 'Identificador do registro afetado pela ação.'], 'Quadro 57 (nova linha)', 'F2-604')
 S('Endereço IP de origem da ação.', 'Endereço IP de origem da ação (coluna reservada; não preenchida pela aplicação).', 'Quadro 57', 'F2-078')
 S('Tipo de ação registrada (criação, login etc.).', 'Tipo de ação registrada: CRIACAO, ATUALIZACAO, DESATIVACAO, REATIVACAO, LOGIN, ENCERRAMENTO ou VISUALIZACAO (acesso a dado sigiloso); LOGOUT e EXPORTACAO são valores reservados, não gravados.', 'Quadro 57', 'F2-001, F2-582')
-# Quadro 67 (Animal)
 S('Número da medalha de identificação.', 'Número da medalha (plaqueta) de identificação; único quando informado.', 'Quadro 67', 'F2-310')
 S('varchar(50)', 'varchar(30)', 'Quadro 67 (numero_medalha)', 'F2-310', oc=1)
 S('Data de implantação do microchip.', 'Data de implantação do microchip (RN01); exige microchip informado e não pode ser futura.', 'Quadro 67', 'F2-311')
@@ -604,27 +582,21 @@ L('Data e hora da última atualização.',
   ['ficha_completa', 'boolean', '', 'Indicador calculado: campos obrigatórios, microchip e vacinação vigente (RN07).'], 'Quadro 67 (nova linha)', 'F2-609', oc=1)
 L('Indicador calculado: campos obrigatórios, microchip e vacinação vigente (RN07).',
   ['laudo_eutanasia', 'text', '', 'Laudo do responsável técnico que justifica a eutanásia; obrigatório na transição para Óbito eutanásia (RF-A05).'], 'Quadro 67 (nova linha)', 'F2-008')
-# Quadro 69 (AnexoAnimal)
 S('URL de armazenamento do arquivo.', 'Tipo do arquivo (image/jpeg, image/png ou application/pdf); o conteúdo binário fica na tabela anexo_animal_conteudo (bytea).', 'Quadro 69', 'F2-007', oc=1)
 R('url', 'mime_type', 'Quadro 69 (url)', 'F2-007', oc=1)
 L('Tipo do arquivo (image/jpeg, image/png ou application/pdf); o conteúdo binário fica na tabela anexo_animal_conteudo (bytea).',
   ['descricao', 'varchar(200)', '', 'Descrição opcional do anexo.'], 'Quadro 69 (nova linha)', 'F2-007')
 L('Descrição opcional do anexo.', ['criado_por_id', 'uuid', 'FK', 'Usuário que fez o upload (Usuario).'], 'Quadro 69 (nova linha)', 'F2-007')
-# Quadro 70 (Vacinacao)
 S('Data de validade da dose; base do alerta de reforço (RF-A03).', 'Atributo derivado: data de aplicação somada à validade da vacina; base do alerta de reforço (RF-A03). Não é coluna da tabela.', 'Quadro 70', 'F2-349')
 L('Observações da aplicação.', ['retifica_id', 'uuid', 'FK/UQ', 'Registro anterior que este corrige (Vacinacao); correção sem alterar o original (RN06).'], 'Quadro 70 (nova linha)', 'F2-610')
-# Quadro 72 (Procedimento) e 75 (Prescricao)
 L('Descrição do procedimento.', ['retifica_id', 'uuid', 'FK/UQ', 'Registro anterior que este corrige (Procedimento) (RN06).'], 'Quadro 72 (nova linha)', 'F2-611')
 L('Situação atual do tratamento.', ['retifica_id', 'uuid', 'FK/UQ', 'Registro anterior que este corrige (Prescricao) (RN06).'], 'Quadro 75 (nova linha)', 'F2-612')
-# Quadro 76 (TipoExame)
 L('Identificador único do tipo de exame.', ['codigo', 'varchar(30)', 'UQ', 'Código do tipo de exame (hemograma, sorologia, radiografia etc.).'], 'Quadro 76 (nova linha)', 'F2-007')
 S('Nome do tipo de exame.', 'Nome do tipo de exame (não único; a unicidade é do código).', 'Quadro 76', 'F2-007')
-# Quadro 77 (Exame)
 S('Laboratório responsável (Laboratorio).', 'Laboratório responsável, quando informado (Laboratorio).', 'Quadro 77', 'F2-007')
 L('Resultado do exame.', ['observacoes', 'text', '', 'Observações do exame.'], 'Quadro 77 (nova linha)', 'F2-007')
 L('Observações do exame.', ['solicitado_por_id', 'uuid', 'FK', 'Usuário que registrou a solicitação (Usuario).'], 'Quadro 77 (nova linha)', 'F2-007')
 L('Usuário que registrou a solicitação (Usuario).', ['retifica_id', 'uuid', 'FK/UQ', 'Registro anterior que este corrige (Exame) (RN06).'], 'Quadro 77 (nova linha)', 'F2-007')
-# Quadro 84 (Ocorrencia)
 S('Protocolo sequencial anual 0000/AAAA (RN02).', 'Protocolo sequencial anual NNN/AAAA (RN02).', 'Quadro 84', 'F2-058', oc=1)
 S('Protocolo sequencial anual 0000/AAAA (RN02).', 'Protocolo sequencial anual NNN/AAAA (RN02).', 'Quadro 90', 'F2-058', oc=1)
 S('Denunciante vinculado (Denunciante).', 'Denunciante vinculado (Denunciante). No esquema implementado a chave estrangeira fica na tabela Denunciante (ocorrencia_id, única).', 'Quadro 84', 'F2-452, F2-615')
@@ -634,39 +606,32 @@ L('Oculta dados do denunciante para não-Administradores (RN03).', ['anonima', '
 S('Oculta dados do denunciante para não-Administradores (RN03).', 'Mascara os dados do denunciante para perfis sem a permissão denunciante_sigiloso (RN03).', 'Quadro 84', 'F2-059')
 L('Denúncia anônima, sem denunciante; excludente com sigilosa (RN03).', ['latitude / longitude', 'decimal(9,6)', '', 'Coordenadas opcionais, reservadas para integração futura (sem mapa na versão atual).'], 'Quadro 84 (nova linha)', 'F2-619, F2-620')
 L('Data e hora de encerramento.', ['encerrada_por_id', 'uuid', 'FK', 'Usuário que encerrou a ocorrência (Usuario).'], 'Quadro 84 (nova linha)', 'F2-621')
-# Quadro 85 (AnexoOcorrencia)
 S('URL de armazenamento do arquivo.', 'Tipo do arquivo (image/jpeg, image/png ou application/pdf); o conteúdo binário fica na tabela anexo_ocorrencia_conteudo (bytea).', 'Quadro 85', 'F2-468, F2-598, F2-622', oc=1)
 R('url', 'mime_type', 'Quadro 85 (url)', 'F2-468', oc=1)
 L('Tipo do arquivo (image/jpeg, image/png ou application/pdf); o conteúdo binário fica na tabela anexo_ocorrencia_conteudo (bytea).',
   ['criado_por_id', 'uuid', 'FK', 'Usuário que fez o upload (Usuario).'], 'Quadro 85 (nova linha)', 'F2-623', oc=1)
-# Quadro 86 (MovimentacaoOcorrencia)
 S('Tipo da movimentação registrada.', 'Tipo da movimentação: REGISTRADA, EQUIPE_DESPACHADA, PROCESSO_VINCULADO, AGUARDANDO_RESULTADO, ENCERRADA ou NOTA_INTERNA.', 'Quadro 86', 'F2-176, F2-569')
 L('Tipo da movimentação: REGISTRADA, EQUIPE_DESPACHADA, PROCESSO_VINCULADO, AGUARDANDO_RESULTADO, ENCERRADA ou NOTA_INTERNA.',
   ['status_anterior / status_novo', 'varchar(20)', '', 'Transição de status da ocorrência registrada pela movimentação (ABERTA, EM_ATENDIMENTO, ENCERRADA), quando houver.'], 'Quadro 86 (nova linha)', 'F2-624, F2-625')
-# Quadro 89 (ResponsavelProcesso)
 L('Identificador único do responsável.', ['processo_id', 'uuid', 'FK/UQ', 'Processo ao qual o responsável pertence (ProcessoSanitario); relação 1:1 com a chave no responsável.'], 'Quadro 89 (nova linha)', 'F2-627')
 S('CPF do responsável.', 'CPF do responsável (sem restrição de unicidade).', 'Quadro 89', 'F2-487')
-# Quadro 90 (ProcessoSanitario)
 S('Responsável pelo animal (ResponsavelProcesso).', 'Responsável pelo animal (ResponsavelProcesso). No esquema implementado a chave estrangeira fica em ResponsavelProcesso (processo_id).', 'Quadro 90', 'F2-502')
 S('Resultado da análise laboratorial.', 'Resultado atual da análise: FK para o catálogo resultado_laboratorial (coluna resultado_laboratorial_id); o histórico fica em ResultadoProcesso.', 'Quadro 90', 'F2-500, F2-597, F2-601')
 S('Desfecho do animal investigado.', 'Desfecho do animal investigado: FK para o catálogo desfecho_animal (coluna desfecho_animal_id).', 'Quadro 90', 'F2-501, F2-602')
 S('Data de envio das amostras ao laboratório.', 'Data e hora de envio das amostras ao laboratório (timestamp).', 'Quadro 90', 'F2-508')
 S('Data e hora do envio da notificação de resultado (RN10).', 'Data e hora do envio da notificação de resultado ao responsável (coluna data_notificacao_municipe, RN10).', 'Quadro 90', 'F2-014')
 L('Doença investigada (Doenca).', ['cid', 'varchar(20)', '', 'Código CID da doença no momento da abertura (cópia do catálogo).'], 'Quadro 90 (nova linha)', 'F2-628')
-# Quadro 92 (AmostraAnimal)
 S('Espécie do animal amostrado (canino, felino, quiróptero ou primata não humano).', 'Espécie do animal amostrado: FK para o catálogo especie (coluna especie_id).', 'Quadro 92', 'F2-527')
 S('Nome do animal amostrado.', 'Não implementado (removido da tabela animal_amostrado).', 'Quadro 92', 'F2-533')
 S('Estado clínico observado.', 'Estado clínico observado: SINTOMATICO, ASSINTOMATICO ou OBITO.', 'Quadro 92', 'F2-593')
 S('Tipo de material biológico coletado.', 'Material biológico coletado: TECIDO_ENCEFALICO, SORO, SANGUE, SALIVA ou URINA.', 'Quadro 92', 'F2-181')
 S('Forma de conservação da amostra.', 'Não implementado (atributo e enumeração TipoAmostra não existem na tabela).', 'Quadro 92', 'F2-182, F2-538')
 S('Nível de contato com humano.', 'Nível de contato com humano: DIRETA ou INDIRETA; preenchido somente quando há contato humano.', 'Quadro 92', 'F2-180')
-# Quadro 94 (RelatorioGerado)
 L('Identificador único do relatório.', ['doc_id', 'varchar(30)', 'UQ', 'Identificador legível da exportação, no formato DOC-AAAA-NNNN, gerado pela sequência anual (RN02).'], 'Quadro 94 (nova linha)', 'F2-629, F2-576')
 S('Situação do processamento (RN11).', 'Não implementado: a exportação é síncrona e não há ciclo de estados (RN11).', 'Quadro 94', 'F2-555')
 S('URL do arquivo gerado, com expiração.', 'Caminho ou nome do arquivo gerado, sem armazenamento do binário.', 'Quadro 94', 'F2-020')
 S('Momento em que a URL do arquivo deixa de valer (RN11).', 'Não implementado: não há URL com expiração (RN11).', 'Quadro 94', 'F2-557')
 S('Data e hora da solicitação.', 'Data e hora da exportação (timestamp com fuso).', 'Quadro 94', 'F2-020')
-# Notas "modelado; implementação prevista em trabalhos futuros" nos quadros de entidades não implementadas
 for q, ids in [('Quadro 63 – Dicionário de dados – tabela VacinaEspecie', 'F2-199'),
                ('Quadro 68 – Dicionário de dados – tabela AnimalSintoma', 'F2-204'),
                ('Quadro 71 – Dicionário de dados – tabela AnexoVacinacao', 'F2-207'),
@@ -690,7 +655,6 @@ S('Evidencia a numeração sequencial por ano, que o SISZOO padroniza no formato
   'Capa em papel do processo, com carimbo de protocolo numerado (007) e datado, e quadro de movimentação entre setores. Evidencia a '
   'numeração sequencial por ano, que o SISZOO padroniza no formato NNN/AAAA.', 'Apêndice D (descrição da Figura 52)', 'F2-058')
 
-# ============================================================ Lista de Figuras (estática) e numeração do Apêndice E / Anexo A (F1)
 R('Figura 48 – [DESCRIÇÃO DA FOTOGRAFIA]', 'Figura 48 – Ficha física de controle do canil', 'Lista de Figuras', 'F1 (lista × legendas)')
 LISTA_49_55 = ['Figura 49 – Planilha de registro dos animais do canil', 'Figura 50 – Planilha de animais do canil com marcação por cores',
                'Figura 51 – Planilha de controle dos processos sanitários', 'Figura 52 – Capa de processo sanitário em manuseio',
@@ -711,7 +675,6 @@ ancora = 'Figura 55 – Etiqueta de protocolo do GAL'
 for novo in NOVAS:
     P(ancora, novo, 'Lista de Figuras (nova entrada; número de página a atualizar)', 'F1 (Lista de Figuras incompleta)', oc=1)
     ancora = novo
-# legendas do corpo: Apêndice E 49–54 → 60–65 (as entradas da lista já foram trocadas, então só resta a ocorrência do corpo)
 for i in range(6):
     R(f'Figura {49 + i} – Tela T{18 + i}: {APE[i]}', f'Figura {60 + i} – Tela T{18 + i}: {APE[i]}', 'Apêndice E (legenda)', 'F1 (figuras duplicadas 49–54)', oc=1)
 S('Figura 56 –  Requisição de exame molecular e notificação no SINAN', 'Figura 56 – Requisição de exame molecular e notificação no SINAN', 'Apêndice D (legenda)', 'F1 (espaço duplo)')
@@ -720,7 +683,6 @@ ANEXO = ['Trecho da planilha “Animais do Canil”', 'Trecho da planilha “Ani
 for i, t in enumerate(ANEXO):
     R(f'Figura {60 + i} - {t}', f'Figura {66 + i} – {t}', 'Anexo A (legenda)', 'F1 (hífen × travessão; renumeração)', oc=1)
 
-# ============================================================ Capturas de tela (23 figuras)
 TELAS = [('T01', 'LOGIN', 'T01_login.png'), ('T02', 'DASHBOARD OPERACIONAL', 'T02_dashboard.png'), ('T03', 'ALERTAS', 'T03_alertas.png'),
          ('T04', 'ANIMAIS DO CANIL', 'T04_animais.png'), ('T05', 'CADASTRO DE ANIMAL', 'T05_cadastro_animal.png'),
          ('T06', 'FICHA DO ANIMAL', 'T06_ficha_animal.png'), ('T07', 'GESTÃO DE BAIAS', 'T07_gestao_baias.png'),
@@ -735,14 +697,12 @@ TELAS = [('T01', 'LOGIN', 'T01_login.png'), ('T02', 'DASHBOARD OPERACIONAL', 'T0
          ('T23', 'RELATÓRIO DE OCORRÊNCIAS POR BAIRRO', 'T23_relatorio_ocorrencias_bairro.png')]
 for cod, nome, arq in TELAS:
     k.inserir_figura(f'[INSERIR CAPTURA DA TELA {cod} – {nome}]', os.path.join(CAP, arq), local=f'Figura da tela {cod}', id_item='Capturas (Fase 3)', nome_midia=f'fase3_{cod}.png')
-# legenda T17 ("Perfil e Ajuda" → "Perfil"): lista e corpo
 R('Figura 47 – Tela T17: Perfil e Ajuda', 'Figura 47 – Tela T17: Perfil', 'Lista de Figuras', 'F2-118', oc=1)
 R('Figura 47 – Tela T17: Perfil e Ajuda', 'Figura 47 – Tela T17: Perfil', 'Seção 5.2 (legenda)', 'F2-118', oc=1)
 
 k.marcar_update_fields()
 k.salvar(DEST)
 
-# ------------------------------------------------------------ log
 with open(LOG, 'w', encoding='utf-8') as f:
     f.write('# Log de alterações do documento — Fase 3\n\n')
     f.write(f'Gerado em {datetime.date.today():%d/%m/%Y} por `scripts/editar_docx.py`. Origem: `SISZOO_versao_limpa.docx` (intacta). '

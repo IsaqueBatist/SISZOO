@@ -1,0 +1,28 @@
+_id: "req_dashboard_kpis"
+type: "Request"
+parentId: "fld_relatorios"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/dashboard/kpis"
+name: "Indicadores do dashboard"
+description: "KPIs agregados (cache de 5 minutos). Requer RELATORIOS:leitura."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 1000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

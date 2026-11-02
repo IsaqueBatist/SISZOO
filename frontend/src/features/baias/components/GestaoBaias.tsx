@@ -52,8 +52,6 @@ export function GestaoBaias() {
 
   const { data: baias, isLoading, isError, refetch } = useBaiasQuery()
   const { data: catalogos } = useCatalogosAnimaisQuery()
-  // T45: o backend já devolve só quem está sob custódia (mesma regra da
-  // ocupação), com nome e miniatura; aqui só se agrupa por baia.
   const { data: residentes } = useResidentesDeBaiasQuery()
   const excluirMutation = useExcluirBaiaMutation()
   const alterarStatusMutation = useAlterarStatusBaiaMutation()
@@ -337,8 +335,6 @@ export function GestaoBaias() {
           onConfirmar={() => void confirmarAcao(confirmacao)}
           onFechar={() => setConfirmacao(null)}
         >
-          {/* A confirmação é a única proteção contra excluir uma baia ocupada: o
-              backend faz soft-delete sem bloquear, mesmo com animais alocados. */}
           <p>
             {confirmacao.acao === 'excluir'
               ? `Excluir a baia ${confirmacao.baia.nome}?`

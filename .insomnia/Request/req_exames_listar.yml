@@ -1,0 +1,28 @@
+_id: "req_exames_listar"
+type: "Request"
+parentId: "fld_registros_clinicos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/exames?animalId={{ _.animal_id_exemplo }}&pagina=0&tamanho=20"
+name: "Listar exames do animal"
+description: "Exames paginados, filtrados por animalId. Requer GESTAO_ANIMAIS:leitura."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 13000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

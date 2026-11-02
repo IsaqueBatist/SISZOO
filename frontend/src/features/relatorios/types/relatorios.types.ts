@@ -1,5 +1,3 @@
-// Espelha com.siszoo.relatorios.entity.TipoRelatorio / dto do backend (T41).
-// Os 6 codigos vem do catalogo do DER §3.6 - nao inventar outro aqui.
 export type TipoRelatorioCodigo =
   | 'anual_processos'
   | 'vacinacao'
@@ -16,9 +14,6 @@ export interface TipoRelatorioInfo {
   filtro: FiltroEsperado
 }
 
-// Filtro bruto enviado para /preview e /exportar - cada tipo usa um
-// subconjunto (periodoInicio/Fim, OU ano, OU nenhum nos relatórios de posição),
-// resolvido no backend (FiltroRelatorioResolver) para um periodo sempre concreto.
 export interface FiltroRelatorio {
   tipo: TipoRelatorioCodigo
   periodoInicio?: string
@@ -90,8 +85,6 @@ export interface PreviewVacinacao {
   animaisVencidosExcedente: number
 }
 
-// --- Procedimentos ---
-
 export interface KpisProcedimentos {
   totalProcedimentos: number
   castracoes: number
@@ -134,8 +127,6 @@ export interface PreviewProcedimentos {
   cirurgiasExcedente: number
 }
 
-// --- Ocorrências por Bairro ---
-
 export interface LinhaBairroOcorrencia {
   bairro: string
   ocorrencias: number
@@ -165,8 +156,6 @@ export interface PreviewOcorrenciasBairro {
   notaFocoGeografico: string
 }
 
-// --- Adoções (versão simplificada - ver backend RelatorioAdocoesResponse) ---
-
 export interface PerfilAdocao {
   caracteristica: string
   quantidade: number
@@ -184,8 +173,6 @@ export interface PreviewAdocoes {
   perfil: PerfilAdocao[]
   notaLimitacao: string
 }
-
-// --- Relatório Anual de Processos ---
 
 export interface KpisAnualProcessos {
   processosAbertos: number
@@ -241,15 +228,10 @@ export interface PreviewAnualProcessos {
   resultadosPorDoenca: ResultadoLaboratorialPorDoenca[]
   totalResultados: ResultadoLaboratorialPorDoenca
   porEspecie: DistribuicaoEspecie[]
-  // Nulo para quem não vê ocorrências por bairro (Veterinário, V32).
   bairros: BairroProcesso[] | null
   laboratorios: LaboratorioUtilizado[]
 }
 
-// GET /api/relatorios/historico - sem arquivoUrl: o arquivo nao e persistido
-// nesta versao. A acao da linha e "Gerar novamente", nao "Baixar".
-// parametrosJson e o filtro bruto original (string JSON), necessario porque
-// periodoInicio/periodoFim aqui ja vem resolvidos (ver RelatorioGeradoResponse no backend).
 export interface RelatorioGeradoItem {
   docId: string
   tipo: TipoRelatorioCodigo

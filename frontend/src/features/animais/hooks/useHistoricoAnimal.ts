@@ -12,15 +12,8 @@ import {
 } from '../api/historicoApi'
 import type { CriarExameRequest, CriarPrescricaoRequest, CriarProcedimentoRequest, CriarVacinacaoRequest } from '../types/historico.types'
 
-// Tamanho de página padrão das abas Vacinas/Procedimentos/Medicamentos —
-// também usado pelo merge k-way de `useTimelineAnimal` para reaproveitar as
-// mesmas query keys (e, portanto, o mesmo cache).
 export const TAMANHO_PAGINA_HISTORICO = 20
 
-// Chaves em array — o prefixo `['vacinacoes', animalId]` é compartilhado
-// entre a query paginada da aba e a leitura avulsa feita pelo merge da
-// timeline, então uma única invalidação (nas mutations abaixo) alcança as
-// duas sem precisar de coordenação manual.
 export function chaveVacinacoes(animalId: string, pagina: number) {
   return ['vacinacoes', animalId, 'pagina', pagina] as const
 }
@@ -60,8 +53,7 @@ export function usePrescricoesQuery(animalId: string, pagina: number, tamanho: n
   })
 }
 
-// F2-007 / RF-A04
-export function chaveExames(animalId: string, pagina: number) {
+function chaveExames(animalId: string, pagina: number) {
   return ['exames', animalId, 'pagina', pagina] as const
 }
 
@@ -94,8 +86,6 @@ export function useCriarVacinacaoMutation(animalId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (payload: CriarVacinacaoRequest) => criarVacinacao(payload),
-    // Também os alertas de vacina (a aplicação nova pode tirar o animal da
-    // lista) e o detalhe do animal (ficha_completa é recalculada no backend).
     onSuccess: () =>
       Promise.all([
         queryClient.invalidateQueries({ queryKey: ['vacinacoes', animalId] }),

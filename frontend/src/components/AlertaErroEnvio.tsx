@@ -5,9 +5,6 @@ interface AlertaErroEnvioProps {
   estilo?: React.CSSProperties
 }
 
-// Erro de envio de formulário. O botão de salvar costuma estar no fim da página
-// e o aviso, no topo: sem levar a tela e o foco até ele, a falha passa
-// despercebida e a pessoa acredita que o registro foi salvo.
 export function AlertaErroEnvio({ mensagem, estilo }: AlertaErroEnvioProps) {
   const alerta = useRef<HTMLDivElement>(null)
 

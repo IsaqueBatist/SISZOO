@@ -15,12 +15,6 @@ import io.restassured.RestAssured;
 import org.junit.jupiter.api.BeforeEach;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-// ApiTesteFixture vem aqui (e nao em cada classe) para nao multiplicar
-// contextos Spring em cache — a chave do contexto inclui os @Import. Pelo
-// mesmo motivo os controllers scaffold (so em src/test, todos sob
-// /api/teste/*, inertes ate alguem chamar a rota) ficam no contexto base em
-// vez de criar um contexto proprio para GlobalExceptionHandlerIT,
-// JwtAuthenticationIT e RbacMatrixIT.
 @Import({
         TestcontainersConfiguration.class,
         ApiTesteFixture.class,

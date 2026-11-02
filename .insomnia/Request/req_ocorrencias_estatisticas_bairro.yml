@@ -1,0 +1,28 @@
+_id: "req_ocorrencias_estatisticas_bairro"
+type: "Request"
+parentId: "fld_ocorrencias"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/ocorrencias/estatisticas/bairro"
+name: "Ocorrências por bairro"
+description: "Contagem de ocorrências por bairro (mapa e relatório). Requer OCORRENCIAS_DENUNCIAS:leitura."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 11000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

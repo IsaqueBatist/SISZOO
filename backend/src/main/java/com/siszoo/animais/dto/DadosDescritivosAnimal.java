@@ -5,9 +5,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-// Campos da ficha que o cadastro e a edicao gravam do mesmo jeito
-// (CriarAnimalRequest e AtualizarAnimalRequest). Microchip, medalha, laudo,
-// foto, status e baia tem regra propria em cada caminho e ficam de fora.
 public interface DadosDescritivosAnimal {
 
     String nome();

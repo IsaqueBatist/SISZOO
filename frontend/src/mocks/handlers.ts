@@ -28,21 +28,13 @@ import { relatoriosHandlers } from './relatoriosHandlers'
 import type { AtualizarUsuarioRequest, CriarUsuarioRequest, UsuarioListItem } from '@/features/usuarios/types/usuarios.types'
 import type { PreferenciaUsuario } from '@/features/configuracoes/types/configuracoes.types'
 
-// Usado só pelos testes automatizados (mocks/server.ts) - o dev browser
-// (mocks/browser.ts) não intercepta mais login/senha/usuários, que já existem
-// de verdade no backend (módulo usuarios). Mantido aqui para os componentes
-// não dependerem de um Postgres/Spring de pé para rodar `npm run test`.
 export const CREDENCIAIS_VALIDAS: LoginRequest = {
   email: 'stephanie.lima@itu.sp.gov.br',
   senha: 'senha-de-exemplo',
 }
 
-// Recuperação de senha: o único token que o mock aceita, e o e-mail que
-// simula o limite de tentativas (429) no login e na recuperação.
 export const TOKEN_RECUPERACAO_VALIDO = 'token-recuperacao-valido'
 export const EMAIL_RECUPERACAO_LIMITADO = 'limite.atingido@itu.sp.gov.br'
-// Senha que o mock considera "a atual" do dono do token: cumpre a política do
-// formulário e, por isso, chega à API, que a recusa com 422 por campo.
 export const SENHA_ATUAL_RECUPERACAO = 'Senha-Atual-2026'
 
 function respostaLinkInvalido() {
@@ -64,8 +56,6 @@ const LOGIN_RESPONSE: LoginResponse = {
   },
 }
 
-// `senhaInicial` é um detalhe só deste mock (permite simular login com um
-// usuário recém-criado nos testes) e nunca é devolvido pela API simulada.
 interface UsuarioMockInterno extends UsuarioListItem {
   senhaInicial: string
 }
@@ -165,9 +155,6 @@ export function resetUsuariosMock() {
   usuariosMock = seedUsuariosMock()
 }
 
-// GET/PATCH /usuarios/me e /usuarios/me/preferencias não recebem id - no
-// backend real o usuário vem do token JWT. Aqui sempre representam o usuário
-// logado nos testes (usuariosMock[0]).
 function seedPreferenciasMock(): PreferenciaUsuario {
   return {
     tema: 'LIGHT',
@@ -190,13 +177,6 @@ function paraUsuarioPublico({ senhaInicial: _senhaInicial, ...usuario }: Usuario
   return usuario
 }
 
-// Cobre os 7 status reais do catálogo (incluindo os dois tipos de óbito e
-// "transferido", que não têm badge dedicado no design system) e inclui
-// espécies sem classe de badge própria (quiróptero, pnh) para exercitar o
-// fallback neutro nos testes.
-// fichaCompleta fixa aqui segue fichaCompletaMock: só o Rex tem microchip e
-// vacinação (seedVacinacoesMock). Calcular na hora não dá: este seed roda
-// antes de vacinacoesMock existir.
 function seedAnimaisMock(): Animal[] {
   return [
     {
@@ -522,8 +502,6 @@ function seedAnimaisMock(): Animal[] {
   ]
 }
 
-// Animais adicionais só para garantir 2 páginas reais (tamanho padrão = 20),
-// permitindo testar paginação de servidor de ponta a ponta na UI.
 function criarAnimalFiller(indice: number): Animal {
   return {
     id: `b2c3d4e5-0000-0000-0000-0000000000${indice}`,
@@ -608,9 +586,6 @@ const CATALOGOS_ANIMAIS_MOCK: CatalogosAnimal = {
     { codigo: 'canil', nome: 'Canil' },
     { codigo: 'gatil', nome: 'Gatil' },
   ],
-  // Mesmos códigos do seed da V5 (o backend devolve todos em /animais/catalogos),
-  // com o `intervaloMeses` que o seed grava (12 para todas) — o modal de
-  // vacinação o usa para prever o próximo reforço.
   vacinas: [
     { codigo: 'antirrabica', nome: 'Antirrábica', intervaloMeses: 12 },
     { codigo: 'v10', nome: 'V10', intervaloMeses: 12 },
@@ -629,9 +604,6 @@ const CATALOGOS_ANIMAIS_MOCK: CatalogosAnimal = {
   ],
 }
 
-// IDs alinhados aos baiaId/baiaNome já usados em seedAnimaisMock (Rex, Luna,
-// Bidu, Bob), mais uma baia inativa para exercitar o filtro de status e uma
-// superlotada/em atenção para exercitar o destaque visual da T19.
 function seedBaiasMock(): Baia[] {
   return [
     {
@@ -731,9 +703,6 @@ function nomeDoCatalogo(itens: { codigo: string; nome: string }[], codigo: strin
   return itens.find((item) => item.codigo === codigo)?.nome ?? codigo
 }
 
-// Espelha FichaCompletaService (DER §3.2): microchip com texto e ao menos uma
-// vacinação que nenhuma outra retifica. Recalculada no POST/PUT do animal e a
-// cada POST de vacinação, como no backend.
 function fichaCompletaMock(animalId: string, microchip: string | null): boolean {
   if (!microchip?.trim()) return false
   return vacinacoesMock.some(
@@ -741,9 +710,6 @@ function fichaCompletaMock(animalId: string, microchip: string | null): boolean 
   )
 }
 
-// Recompõe um `Animal` (resposta) a partir de um `AnimalRequest` (o que o
-// form de T18 envia) - espelha o que o service real faz ao resolver os
-// códigos de espécie/status/motivo/baia para os nomes exibidos.
 function construirAnimalMock(id: string, body: AnimalRequest, existente: Animal | null): Animal {
   const baia = body.baiaId ? baiasMock.find((item) => item.id === body.baiaId) : undefined
   const agora = agoraEmItu()
@@ -781,9 +747,6 @@ function construirAnimalMock(id: string, body: AnimalRequest, existente: Animal 
   }
 }
 
-// Registros clínicos: o mock guarda os campos crus +
-// `retificaId`, e deriva `retificadoPorId`/`statusRegistro` do mesmo jeito
-// que o mapper real do backend faz - nunca armazenados diretamente.
 type RegistroClinicoBruto = { id: string; retificaId: string | null }
 
 function derivarStatusRegistro<T extends RegistroClinicoBruto>(
@@ -801,9 +764,6 @@ function derivarStatusRegistro<T extends RegistroClinicoBruto>(
 
 const ANIMAL_REX_ID = 'b2c3d4e5-0000-0000-0000-000000000001'
 
-// Datas civis relativas ao dia de Itu (o handler de alertas compara com
-// hojeEmItu, como o backend). Partir do dia UTC deslocava tudo em 1 dia entre
-// 21:00 e 23:59 em Itu (datasMock.test.ts).
 function addDiasIso(dias: number): string {
   return adicionarDiasIso(hojeEmItu(), dias)
 }
@@ -821,7 +781,7 @@ function seedVacinacoesMock(): VacinacaoMockInterna[] {
       aplicadoPorId: veterinaria.id,
       aplicadoPorNome: veterinaria.nome,
       dataAplicacao: addDiasIso(-400),
-      dataValidade: addDiasIso(-10), // vencida
+      dataValidade: addDiasIso(-10),
       numeroDose: 1,
       doseQuantidade: 1,
       doseUnidade: 'MILILITRO',
@@ -838,7 +798,7 @@ function seedVacinacoesMock(): VacinacaoMockInterna[] {
       aplicadoPorId: veterinaria.id,
       aplicadoPorNome: veterinaria.nome,
       dataAplicacao: addDiasIso(-360),
-      dataValidade: addDiasIso(5), // a vencer (≤ 7 dias)
+      dataValidade: addDiasIso(5),
       numeroDose: 1,
       doseQuantidade: 1,
       doseUnidade: 'MILILITRO',
@@ -855,7 +815,7 @@ function seedVacinacoesMock(): VacinacaoMockInterna[] {
       aplicadoPorId: veterinaria.id,
       aplicadoPorNome: veterinaria.nome,
       dataAplicacao: addDiasIso(-30),
-      dataValidade: addDiasIso(335), // em dia
+      dataValidade: addDiasIso(335),
       numeroDose: 1,
       doseQuantidade: 1,
       doseUnidade: 'MILILITRO',
@@ -864,8 +824,6 @@ function seedVacinacoesMock(): VacinacaoMockInterna[] {
       retificaId: null,
       criadoEm: `${addDiasIso(-30)}T09:00:00`,
     },
-    // Par retificado: o registro 004 é corrigido pelo 005 (aponta retificaId
-    // de volta para 004) - 004 deve aparecer como "RETIFICADO", 005 "ATIVO".
     {
       id: 'd1000000-0000-0000-0000-000000000004',
       animalId: ANIMAL_REX_ID,
@@ -903,13 +861,9 @@ function seedVacinacoesMock(): VacinacaoMockInterna[] {
   ]
 }
 
-// Seed V5 do backend: toda vacina do catálogo tem intervalo_meses = 12
-// (provisório, pendente de decisão do CCZ - ver docs/regras-negocio-clinico.md).
 const INTERVALO_MESES_SEED_V5 = 12
 
-// Mesmos códigos de StatusAnimal.CODIGOS_FORA_DA_CUSTODIA (RN-A05).
 const STATUS_FORA_DA_CUSTODIA = ['adotado', 'obito_natural', 'obito_eutanasia', 'transferido']
-
 
 let vacinacoesMock: VacinacaoMockInterna[] = seedVacinacoesMock()
 
@@ -917,11 +871,6 @@ export function resetVacinacoesMock() {
   vacinacoesMock = seedVacinacoesMock()
 }
 
-// Catálogo de vacinas (GET/POST/PUT/DELETE /api/vacinas). O estado parte do
-// mesmo CATALOGOS_ANIMAIS_MOCK que /animais/catalogos devolve — não de uma
-// segunda lista copiada —, para a tela de catálogo e o select do modal nunca
-// discordarem no mock. O `id` é derivado do código: estável entre reseeds, o
-// que mantém os testes legíveis.
 function seedVacinasMock(): Vacina[] {
   return CATALOGOS_ANIMAIS_MOCK.vacinas.map((item) => ({
     id: `vac-${item.codigo}`,
@@ -938,7 +887,6 @@ export function resetVacinasMock() {
   vacinasMock = seedVacinasMock()
 }
 
-// Mesma slugificação de VacinaService.derivarCodigo, no backend.
 function derivarCodigoVacina(nome: string): string {
   return nome
     .normalize('NFD')
@@ -984,7 +932,6 @@ function seedProcedimentosMock(): ProcedimentoMockInterno[] {
 
 let procedimentosMock: ProcedimentoMockInterno[] = seedProcedimentosMock()
 
-// F2-007 / RF-A04: exames e anexos do animal (vazios por padrão; os testes semeiam o que precisam).
 type ExameMockInterno = Omit<Exame, 'retificadoPorId' | 'statusRegistro'>
 let examesMock: ExameMockInterno[] = []
 let anexosAnimalMock: AnexoAnimal[] = []
@@ -999,8 +946,6 @@ export function resetProcedimentosMock() {
 
 const MEDICAMENTO_FENOBARBITAL_ID = 'f3000000-0000-0000-0000-000000000001'
 
-// Dados fictícios só do mock (o backend real não tem seed de medicamentos nem
-// de categorias: o CCZ cadastra os reais pela tela de medicamentos).
 function seedMedicamentosMock(): Medicamento[] {
   return [
     { id: MEDICAMENTO_FENOBARBITAL_ID, nome: 'Fenobarbital 30mg', categoriaId: 'cat-1', categoriaNome: 'Anticonvulsivante', ativo: true },
@@ -1056,9 +1001,6 @@ export function resetPrescricoesMock() {
   prescricoesMock = seedPrescricoesMock()
 }
 
-// Alguns eventos "hoje", alguns "ontem", um mais antigo - exercita o
-// agrupamento por dia da tela de Logs (agruparPorDia.ts) sem precisar de
-// fixture dedicada em cada teste.
 function seedAuditoriaMock(): EventoAuditoria[] {
   const agora = Date.now()
   const HORA_MS = 60 * 60 * 1000
@@ -1159,7 +1101,6 @@ export const handlers = [
     return HttpResponse.json({ mensagem: 'Credenciais inválidas' }, { status: 401 })
   }),
 
-  // Sem cookie de sessão nos testes: a aba que abre sem sessão vai para o login.
   http.post(`${API_BASE_URL}/auth/renovar`, () => {
     return HttpResponse.json({ mensagem: 'Sua sessão expirou. Entre novamente para continuar.' }, { status: 401 })
   }),
@@ -1172,8 +1113,6 @@ export const handlers = [
     return new HttpResponse(null, { status: 204 })
   }),
 
-  // Recuperação de senha: 202 para qualquer e-mail institucional (a API não
-  // revela se a conta existe); 429 só para o e-mail reservado ao teste do limite.
   http.post(`${API_BASE_URL}/auth/recuperacao`, async ({ request }) => {
     const body = (await request.json()) as { email: string }
     if (body.email === EMAIL_RECUPERACAO_LIMITADO) {
@@ -1270,8 +1209,6 @@ export const handlers = [
   }),
 
   http.patch(`${API_BASE_URL}/usuarios/me`, async () => {
-    // O backend real também não devolve `telefone` na resposta (só aceita no
-    // PATCH) - o mock replica essa lacuna de propósito.
     return HttpResponse.json(paraUsuarioPublico(usuariosMock[0]))
   }),
 
@@ -1324,10 +1261,6 @@ export const handlers = [
     return HttpResponse.json({ itens, pagina, tamanho, totalItens, totalPaginas })
   }),
 
-  // `vacinas` sai do estado do mock de /api/vacinas, não da constante: espelha
-  // o findByAtivoTrueOrderByNomeAsc do CatalogoAnimalService. Sem isso, uma
-  // vacina cadastrada pelo "+" não apareceria no select do modal, e o mock
-  // mentiria exatamente sobre o fluxo que ele existe para exercitar.
   http.get(`${API_BASE_URL}/animais/catalogos`, () => {
     return HttpResponse.json({
       ...CATALOGOS_ANIMAIS_MOCK,
@@ -1353,8 +1286,6 @@ export const handlers = [
     const body = (await request.json()) as { nome?: string; intervaloMeses?: number }
     const nome = (body.nome ?? '').trim()
     const codigo = derivarCodigoVacina(nome)
-    // Mesmas recusas do VacinaService: nome que não produz código válido, ou
-    // longo demais para a coluna varchar(30), é 422 — nunca truncado.
     if (!codigo || codigo.length > 30) {
       return HttpResponse.json(
         { mensagem: 'Dados invalidos', campos: [{ campo: 'nome', mensagem: 'Nome invalido' }] },
@@ -1393,15 +1324,12 @@ export const handlers = [
     const body = (await request.json()) as { nome?: string; intervaloMeses?: number; ativo?: boolean }
     const vacina = vacinasMock.find((item) => item.id === params.id)
     if (!vacina) return HttpResponse.json({ mensagem: 'Vacina não encontrada.' }, { status: 404 })
-    // O código é imutável: renomear altera só o nome. `ativo: true` é o
-    // caminho de reativação.
     vacina.nome = (body.nome ?? vacina.nome).trim()
     vacina.intervaloMeses = body.intervaloMeses ?? null
     vacina.ativo = body.ativo ?? vacina.ativo
     return HttpResponse.json(vacina)
   }),
 
-  // Soft-delete: a linha permanece, só sai do catálogo clínico.
   http.delete(`${API_BASE_URL}/vacinas/:id`, ({ params }) => {
     const vacina = vacinasMock.find((item) => item.id === params.id)
     if (!vacina) return HttpResponse.json({ mensagem: 'Vacina não encontrada.' }, { status: 404 })
@@ -1425,7 +1353,6 @@ export const handlers = [
     return HttpResponse.json({ itens, pagina, tamanho, totalItens, totalPaginas })
   }),
 
-  // T45: residentes (sob custódia) de todas as baias, como o backend - por nome.
   http.get(`${API_BASE_URL}/baias/residentes`, () => {
     const residentes = animaisMock
       .filter((animal) => animal.baiaId && !STATUS_FORA_DA_CUSTODIA.includes(animal.statusCodigo))
@@ -1490,8 +1417,6 @@ export const handlers = [
       return HttpResponse.json({ mensagem: 'Baia não encontrada.' }, { status: 404 })
     }
 
-    // Espelha o backend real: soft-delete, sempre sucede mesmo com animais
-    // alocados (ver BaiaController#desativar).
     const baiaDesativada: Baia = { ...baia, ativa: false }
     baiasMock = baiasMock.map((item) => (item.id === baia.id ? baiaDesativada : item))
     return HttpResponse.json(baiaDesativada)
@@ -1562,10 +1487,7 @@ export const handlers = [
   }),
 
   http.post(`${API_BASE_URL}/vacinacoes`, async ({ request }) => {
-    // doseUnidade opcional aqui de propósito: o mock precisa aceitar o corpo
-    // sem ela para responder o 422 como o backend real.
     const body = (await request.json()) as Omit<CriarVacinacaoRequest, 'doseUnidade'> & { doseUnidade?: UnidadeDose }
-    // Mesmos 422 do backend: Bean Validation (RN-C05) e VacinacaoService (RN-C06).
     if (!body.doseUnidade) {
       return HttpResponse.json(
         { mensagem: 'Não foi possível salvar. Verifique os campos destacados e tente novamente.', campos: [{ campo: 'doseUnidade', mensagem: 'não deve ser nulo' }] },
@@ -1600,9 +1522,6 @@ export const handlers = [
     return HttpResponse.json(comStatus, { status: 201 })
   }),
 
-  // Espelha GET /api/alertas/vacinas (AlertaVacinalService): só o fim da
-  // cadeia de retificação e a aplicação mais recente de cada (animal, vacina)
-  // (RN-A02), só animais sob custódia (RN-A05), janela até hoje+7 (RN-A01).
   http.get(`${API_BASE_URL}/alertas/vacinas`, () => {
     const hoje = hojeEmItu()
     const vigentes = new Map<string, VacinacaoMockInterna>()
@@ -1665,7 +1584,6 @@ export const handlers = [
     return HttpResponse.json(paginar(filtrados, pagina, tamanho))
   }),
 
-  // F2-007 / RF-A04: exames (registro imutável, correção por retificaId).
   http.get(`${API_BASE_URL}/exames`, ({ request }) => {
     const url = new URL(request.url)
     const animalId = url.searchParams.get('animalId')
@@ -1698,7 +1616,6 @@ export const handlers = [
     return HttpResponse.json(comStatus, { status: 201 })
   }),
 
-  // F2-007 / RF-A04: anexos do animal (metadados; download devolve bytes).
   http.get(`${API_BASE_URL}/animais/:id/anexos`, ({ params }) => {
     return HttpResponse.json(anexosAnimalMock.filter((a) => a.animalId === params.id))
   }),
@@ -1786,7 +1703,6 @@ export const handlers = [
     return HttpResponse.json(comStatus, { status: 201 })
   }),
 
-  // F2-027: catálogo de filtros (toda a trilha) e filtros de servidor na listagem.
   http.get(`${API_BASE_URL}/auditoria/filtros`, () =>
     HttpResponse.json({
       acoes: [...new Set(auditoriaMock.map((e) => e.acao))].sort(),
@@ -1832,15 +1748,12 @@ export const handlers = [
     if (!categoria) {
       return HttpResponse.json({ mensagem: 'Categoria farmacologica informada nao existe' }, { status: 422 })
     }
-    // Sem `ativo` no corpo, espelhando AtualizarMedicamentoRequest: o
-    // medicamento não tem caminho de reativação.
     medicamento.nome = (body.nome ?? medicamento.nome).trim()
     medicamento.categoriaId = categoria.id
     medicamento.categoriaNome = categoria.nome
     return HttpResponse.json(medicamento)
   }),
 
-  // Soft-delete, 200 com corpo. Definitivo: não há PUT que devolva ativo=true.
   http.delete(`${API_BASE_URL}/medicamentos/:id`, ({ params }) => {
     const medicamento = medicamentosMock.find((item) => item.id === params.id)
     if (!medicamento) return HttpResponse.json({ mensagem: 'Medicamento nao encontrado' }, { status: 404 })
@@ -1865,8 +1778,6 @@ export const handlers = [
     return HttpResponse.json(medicamento)
   }),
 
-  // Espelha CategoriaFarmacologicaController: só ativas, por nome; nome
-  // repetido (sem diferenciar maiúsculas) responde 409.
   http.get(`${API_BASE_URL}/categorias-farmacologicas`, () =>
     HttpResponse.json(
       categoriasFarmacologicasMock.filter((item) => item.ativo).sort((a, b) => a.nome.localeCompare(b.nome)),

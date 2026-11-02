@@ -18,23 +18,10 @@ import org.springframework.transaction.support.TransactionTemplate;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 
-// Idempotencia do seed (docs/decisoes/seed-dev.md, SD-2): cada passo — uma
-// chamada de service, como uma requisicao da API — tem uma chave estavel
-// ("animal:017", "processo:12:resultado"...) gravada em seed_controle na MESMA
-// transacao em que o service real grava o registro e a auditoria. Um passo por
-// transacao, como na API: duas chamadas no mesmo contexto de persistencia
-// enxergariam entidades que uma requisicao nova recarregaria do banco.
-// Reexecutar pula o que ja tem chave; uma falha desfaz so o passo em curso e
-// a proxima execucao retoma dali. Nunca ha UPDATE/DELETE em massa.
-//
-// seed_controle e criada aqui (CREATE TABLE IF NOT EXISTS), nao por migration:
-// so existe num banco em que o seed ja rodou, nunca no schema de producao.
 class SeedExecutor {
 
     private static final Logger log = LoggerFactory.getLogger(SeedExecutor.class);
 
-    // pg_advisory_xact_lock: duas instancias com o seed ligado no mesmo banco
-    // se serializam por agregado em vez de duplicar o que nenhuma viu ainda.
     private static final long CHAVE_TRAVA = 0x5EED2026L;
 
     private final JdbcTemplate jdbcTemplate;
@@ -70,7 +57,6 @@ class SeedExecutor {
         return jdbcTemplate.queryForObject(sql, Long.class, parametros);
     }
 
-    // Busca por chave natural (para garantir(..., existente, ...)).
     Optional<UUID> idPorConsulta(String sql, Object... parametros) {
         return jdbcTemplate.queryForList(sql, UUID.class, parametros).stream().findFirst();
     }
@@ -90,9 +76,6 @@ class SeedExecutor {
         return garantir(chave, entidade, Optional::empty, criar);
     }
 
-    // `existente` adota um registro ja gravado pela chave natural (e-mail,
-    // microchip, nome da categoria) quando falta a linha de controle — so
-    // acontece se alguem apagou seed_controle a mao (SD-3).
     UUID garantir(String chave, String entidade, Supplier<Optional<UUID>> existente, Supplier<UUID> criar) {
         try {
             return transacao.execute(status -> {
@@ -119,8 +102,6 @@ class SeedExecutor {
         }
     }
 
-    // Os services nao validam o DTO (o @Valid fica nos controllers): sem isto
-    // o seed gravaria o que a API recusaria com 422.
     <T> T valido(T request) {
         Set<ConstraintViolation<T>> violacoes = validator.validate(request);
         if (!violacoes.isEmpty()) {

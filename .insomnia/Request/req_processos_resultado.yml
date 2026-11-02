@@ -1,0 +1,38 @@
+_id: "req_processos_resultado"
+type: "Request"
+parentId: "fld_processos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/processos/{{ _.processo_id_exemplo }}/resultados"
+name: "Registrar resultado laboratorial"
+description: "Resultado positivo: definitivo (não pode ser retificado) e dispara a notificação por e-mail ao munícipe (RN10). Sem SMTP configurado, o envio só falha no log. Requer PROCESSOS_SANITARIOS:escrita."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "resultado": "positivo",
+      "dataResultado": "2026-10-10",
+      "observacoes": "Resultado fictício.",
+      "desfechoAnimal": "em_acompanhamento"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 9000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

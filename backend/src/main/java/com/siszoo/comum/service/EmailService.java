@@ -24,29 +24,6 @@ import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 
-/**
- * Envio de e-mail do sistema (T35): ponto unico que fala com o SMTP
- * configurado em {@code spring.mail.*} (docs/email.md). O corpo vem pronto
- * de quem chama, normalmente de {@link EmailTemplateService}.
- *
- * <p>Os dois {@code enviar} sao {@link Async}: rodam no executor do
- * {@code @EnableAsync} e devolvem na hora um future. A validacao dos
- * argumentos e o envio acontecem na thread assincrona: argumento invalido ou
- * falha de SMTP aparecem so como future completado com erro, ja logado aqui.
- * Quem nao precisa do resultado pode ignorar o future. <b>Excecao:</b> se o
- * executor recusar a tarefa (ex.: aplicacao encerrando), a
- * {@link org.springframework.core.task.TaskRejectedException} sobe na propria
- * chamada - o proxy submete na thread de quem chama (Spring 7,
- * {@code submitCompletable}; docs/decisoes/T35.md T35-17).
- *
- * <p>Sucesso significa que o servidor SMTP aceitou a mensagem, nao que ela
- * foi entregue ou lida. Nao ha fila nem retentativa.
- *
- * <p>Log (LGPD): destinatario sempre mascarado; nunca assunto, corpo ou
- * credenciais. Na falha, o WARN leva so as classes da excecao - mensagens de
- * erro do SMTP podem repetir o endereco - e o throwable completo vai para o
- * DEBUG, com o mesmo id de envio para correlacionar.
- */
 @Service
 public class EmailService {
 
@@ -67,17 +44,6 @@ public class EmailService {
         this.remetente = remetente.trim();
     }
 
-    /** Envia so HTML (assinatura da issue #36). Ver {@link #enviar(String, String, String, String)}. */
-    @Async
-    public CompletableFuture<Void> enviar(String destinatario, String assunto, String corpoHtml) {
-        return enviar(destinatario, assunto, corpoHtml, null);
-    }
-
-    /**
-     * Com {@code corpoTexto}, a mensagem vai como {@code multipart/alternative}
-     * (texto puro e HTML), melhor para filtros de spam e leitores de texto;
-     * sem ele, como um unico {@code text/html}.
-     */
     @Async
     public CompletableFuture<Void> enviar(String destinatario, String assunto, String corpoHtml, String corpoTexto) {
         String idEnvio = UUID.randomUUID().toString().substring(0, 8);
@@ -116,7 +82,6 @@ public class EmailService {
         return CompletableFuture.failedFuture(ex);
     }
 
-    // Texto puro primeiro: a ultima parte e a preferida (RFC 2046, 5.1.4).
     private static MimeMultipart alternativa(String corpoTexto, String corpoHtml) throws MessagingException {
         MimeBodyPart texto = new MimeBodyPart();
         texto.setText(corpoTexto, CHARSET);
@@ -128,7 +93,6 @@ public class EmailService {
         return alternativa;
     }
 
-    // Depois do send: uma falha aqui nao pode virar "falha de envio".
     private static String idDaMensagem(MimeMessage mensagem) {
         try {
             return mensagem.getMessageID();
@@ -143,11 +107,6 @@ public class EmailService {
         }
     }
 
-    /**
-     * Cadeia de classes da excecao, sem mensagens (podem trazer o endereco).
-     * Inclui as excecoes por mensagem de um {@link MailSendException}, onde o
-     * Spring guarda a causa das falhas depois de conectar.
-     */
     static String classesDaFalha(Throwable ex) {
         List<String> classes = new ArrayList<>();
         Set<Throwable> vistas = Collections.newSetFromMap(new IdentityHashMap<>());
@@ -166,11 +125,6 @@ public class EmailService {
         }
     }
 
-    /**
-     * {@code maria@x.test} vira {@code m***@x.test}; parte local de um
-     * caractere, {@code *@x.test}; sem {@code @}, sem parte local ou sem
-     * dominio, {@code ***}; nulo ou em branco, {@code (vazio)}.
-     */
     public static String mascarar(String email) {
         if (!StringUtils.hasText(email)) {
             return "(vazio)";

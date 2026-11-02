@@ -22,12 +22,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-// Exercita a V14 (resultado do processo sanitario, T34) num schema proprio do
-// mesmo PostgreSQL de teste, no padrao de MigracaoV13ProcessosIT: do zero, por
-// atualizacao a partir da V13 com processos existentes, e as garantias do
-// banco (original unico, correcao unica e do mesmo processo, imutabilidade).
-// Cada comando roda numa transacao JDBC propria, sem o Spring no meio; o
-// erro devolvido traz o SQLSTATE e o nome da constraint.
 class MigracaoV14ResultadoProcessoIT extends AbstractIntegrationTest {
 
     private static final String SCHEMA = "migracao_v14";
@@ -43,8 +37,6 @@ class MigracaoV14ResultadoProcessoIT extends AbstractIntegrationTest {
     void removerSchemaDoTeste() {
         jdbcTemplate.execute("DROP SCHEMA IF EXISTS " + SCHEMA + " CASCADE");
     }
-
-    // ── Aplicacao da migration ───────────────────────────
 
     @Test
     @DisplayName("[T34] V14 aplica do zero sobre V1-V13 e cria resultado_processo vazia")
@@ -74,8 +66,6 @@ class MigracaoV14ResultadoProcessoIT extends AbstractIntegrationTest {
         assertThat(gravado.get("resultado_laboratorial_id"), nullValue());
     }
 
-    // ── Cadeia de correcoes ─────────────────────────────
-
     @Test
     @DisplayName("[T34] um so original por processo; cada resultado corrigido uma vez; cadeia de correcoes aceita")
     void originalUnicoECorrecaoUnica() throws Exception {
@@ -96,7 +86,6 @@ class MigracaoV14ResultadoProcessoIT extends AbstractIntegrationTest {
 
         assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM " + S + "resultado_processo WHERE processo_id = ?",
                 Integer.class, processo), equalTo(3));
-        // Outro processo tem o proprio original.
         UUID outro = processoCompleto(usuario);
         assertThat(transacao(resultado(UUID.randomUUID(), outro, null, "negativo", usuario)), nullValue());
     }
@@ -117,8 +106,6 @@ class MigracaoV14ResultadoProcessoIT extends AbstractIntegrationTest {
         assertViolacao(transacao(resultado(UUID.randomUUID(), processo, UUID.randomUUID(), "positivo", usuario)),
                 "23503", "fk_resultado_processo_retifica");
     }
-
-    // ── Imutabilidade ───────────────────────────────────
 
     @Test
     @DisplayName("[T34] resultado imutavel: UPDATE de qualquer coluna e DELETE recusados, linha intacta")
@@ -165,8 +152,6 @@ class MigracaoV14ResultadoProcessoIT extends AbstractIntegrationTest {
                 "23503", "fk_resultado_processo_registrado_por");
     }
 
-    // ── Apoio ──
-
     private MigrateResult migrarAte(String versao) {
         return Flyway.configure()
                 .dataSource(dataSource)
@@ -177,7 +162,6 @@ class MigracaoV14ResultadoProcessoIT extends AbstractIntegrationTest {
                 .migrate();
     }
 
-    // Executa os comandos numa transacao propria e devolve o erro (ou null se confirmou).
     private SQLException transacao(String... comandos) throws SQLException {
         try (Connection conexao = dataSource.getConnection()) {
             conexao.setAutoCommit(false);
@@ -239,7 +223,6 @@ class MigracaoV14ResultadoProcessoIT extends AbstractIntegrationTest {
                 "migracao." + UUID.randomUUID().toString().substring(0, 8) + "@itu.sp.gov.br");
     }
 
-    // Protocolo so precisa ser unico dentro do schema do teste (varchar(20)).
     private static String protocoloUnico() {
         return "T" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
     }

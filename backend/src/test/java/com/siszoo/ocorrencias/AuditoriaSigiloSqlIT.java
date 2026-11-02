@@ -23,11 +23,6 @@ import com.siszoo.comum.RelogioTesteConfig;
 
 import io.restassured.http.ContentType;
 
-// T26: detalhe e download deixaram de ser readOnly para gravar a VISUALIZACAO.
-// Este teste trava o efeito colateral: as leituras emitem exatamente o INSERT
-// da auditoria (em sigilosa) e nenhum UPDATE — um dirty-check acidental numa
-// entidade carregada apareceria aqui. Mesmo inspector (e mesmo contexto em
-// cache) de AnexoOcorrenciaQueriesIT.
 @Import(RelogioTesteConfig.class)
 @TestPropertySource(properties =
         "spring.jpa.properties.hibernate.session_factory.statement_inspector=com.siszoo.ocorrencias.SqlCapturado")

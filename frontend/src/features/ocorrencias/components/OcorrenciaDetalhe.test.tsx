@@ -85,8 +85,6 @@ describe('OcorrenciaDetalhe', () => {
         leiturasDoDetalhe += 1
         return HttpResponse.json(ocorrenciaSigilosaVisivel())
       }),
-      // Como o backend: a resposta da mutação traz o denunciante mascarado
-      // mesmo para quem tem a permissão.
       http.post(`${API_BASE_URL}/ocorrencias/${OCORRENCIA_SIGILOSA_ID}/notas`, () =>
         HttpResponse.json({ ...ocorrenciaSigilosaVisivel(), denunciante: DENUNCIANTE_MASCARADO }, { status: 201 }),
       ),
@@ -140,8 +138,6 @@ describe('OcorrenciaDetalhe', () => {
     expect(screen.getByText('12/05/2026 · 13:00')).toBeInTheDocument()
   })
 
-  // A04: depois da mutação a tela recarrega o detalhe pelo GET; o handler do
-  // GET devolve o estado que a mutação gravou, como o backend.
   it('encerra a ocorrência: envia a providência e mostra o estado recarregado do backend', async () => {
     const user = userEvent.setup()
     const corpos: unknown[] = []
@@ -178,7 +174,6 @@ describe('OcorrenciaDetalhe', () => {
     renderDetalhe(OCORRENCIA_ABERTA_ID, ['Administrador'])
 
     await screen.findByRole('heading', { name: 'Ocorrência OC 089/2026', level: 1 })
-    // Opções vêm do catálogo (GET /ocorrencias/catalogos).
     await user.selectOptions(
       screen.getByLabelText('Providência tomada'),
       await screen.findByRole('option', { name: 'Sem ação necessária' }),
@@ -201,7 +196,6 @@ describe('OcorrenciaDetalhe', () => {
     renderDetalhe(OCORRENCIA_ABERTA_ID, ['Administrador'])
 
     await screen.findByRole('heading', { name: 'Ocorrência OC 089/2026', level: 1 })
-    // Opções vêm do catálogo (GET /ocorrencias/catalogos).
     await user.selectOptions(
       screen.getByLabelText('Providência tomada'),
       await screen.findByRole('option', { name: 'Sem ação necessária' }),
@@ -281,8 +275,6 @@ describe('OcorrenciaDetalhe', () => {
   })
 
   describe('anexos', () => {
-    // jsdom não implementa createObjectURL/revokeObjectURL: são definidos só
-    // no teste de download e restaurados aqui.
     const urlOriginal = { criar: URL.createObjectURL, revogar: URL.revokeObjectURL }
     afterEach(() => {
       URL.createObjectURL = urlOriginal.criar

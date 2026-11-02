@@ -1,0 +1,10 @@
+_id: "fld_sessao"
+type: "RequestGroup"
+parentId: "wrk_siszoo_api"
+modified: 1750000000000
+created: 1750000000000
+name: "16 - Sessão"
+description: ''
+environment: {}
+metaSortKey: 16000000
+environmentType: "kv"

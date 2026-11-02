@@ -7,8 +7,6 @@ export function EditarAnimal() {
   const { data: animal, isLoading, isError } = useAnimalQuery(id)
   const catalogos = useCatalogosAnimaisQuery()
 
-  // O formulário só monta com os catálogos: um select sem a opção do valor salvo
-  // não mostraria o dado do animal.
   if (isLoading || catalogos.isLoading) {
     return (
       <div className="wizard-shell">

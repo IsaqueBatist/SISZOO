@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Etapa 0 - Extracao do .docx (stdlib apenas).
 
 Saidas em docs/tg/analise_fase1/:
@@ -26,19 +25,16 @@ for d in ['texto', 'quadros', 'figuras', 'figuras/recortes', 'figuras/transcrico
 
 z = zipfile.ZipFile(DOCX)
 
-# --- midia ---
 media = [n for n in z.namelist() if re.match(r'word/media/image\d+\.', n)]
 for n in media:
     with open(os.path.join(ROOT, 'figuras', os.path.basename(n)), 'wb') as f:
         f.write(z.read(n))
 
-# --- rels ---
 rels = {}
 for rel in ET.fromstring(z.read('word/_rels/document.xml.rels')):
     if rel.get('Target', '').startswith('media/'):
         rels[rel.get('Id')] = os.path.basename(rel.get('Target'))
 
-# --- documento ---
 doc = ET.fromstring(z.read('word/document.xml'))
 body = doc.find('w:body', NS)
 
@@ -108,7 +104,6 @@ for el in flatten(body):
 with open(os.path.join(ROOT, 'texto', 'blocos.json'), 'w', encoding='utf-8') as f:
     json.dump(blocks, f, ensure_ascii=False, indent=1)
 
-# --- secao corrente para cada bloco ---
 HEAD = {'2': 1, '3': 2, '4': 3}
 UNSTYLED_HEAD = re.compile(r'^\s*(RESUMO|ABSTRACT|LISTA DE [A-ZÇÃÕÉ ]+|SUM[ÁA]RIO)\s*$')
 section_of = []
@@ -121,7 +116,6 @@ for b in blocks:
             cur = b['text'].strip()
     section_of.append(cur)
 
-# --- indices do sumario / listas (pagina conforme sumario) ---
 def strip_page(t):
     m = re.match(r'^(.*?)(\d{1,3})\s*$', t.strip())
     return (m.group(1).strip(), int(m.group(2))) if m else (t.strip(), None)
@@ -140,7 +134,6 @@ for i in range(lista_qua_idx + 1, intro_idx):
     if re.match(r'^\s*Quadro \d+', t):
         title, pg = strip_page(t)
         lista_quadros.append({'bloco': i, 'num': int(re.match(r'^\s*Quadro (\d+)', t).group(1)), 'titulo': title, 'pagina_sumario': pg, 'fields': blocks[i]['fields']})
-# campos TOC presentes nas listas? (instrText por bloco + fldChar bruto no XML)
 toc_fields = [(i, blocks[i]['fields']) for i in range(0, intro_idx) if blocks[i]['fields']]
 raw = z.read('word/document.xml').decode('utf-8')
 toc_fields.append(('fldChar_total', len(re.findall(r'<w:fldChar ', raw))))
@@ -149,7 +142,6 @@ toc_fields.append(('sdt_total', len(re.findall(r'<w:sdt>', raw))))
 with open(os.path.join(ROOT, 'texto', 'listas_pre_textuais.json'), 'w', encoding='utf-8') as f:
     json.dump({'lista_figuras': lista_figuras, 'lista_quadros': lista_quadros, 'campos_toc': toc_fields}, f, ensure_ascii=False, indent=1)
 
-# --- quadros (corpo) ---
 CAP_Q = re.compile(r'^\s*Quadro (\d+)\s*[–\-—]\s*(.*)$')
 CAP_F = re.compile(r'^\s*Figura (\d+)\s*[–\-—]\s*(.*)$')
 quadros = []
@@ -170,10 +162,9 @@ while i < len(blocks):
                     fonte = t; j += 1; break
                 if CAP_Q.match(t) or CAP_F.match(t) or (nb['style'] in HEAD and t):
                     break
-                if t and tabs:  # texto apos a tabela sem Fonte: encerra
+                if t and tabs:
                     break
             j += 1
-        # consolidar linhas
         rows = []
         for ti in tabs:
             for r in blocks[ti]['rows']:
@@ -191,7 +182,6 @@ while i < len(blocks):
 with open(os.path.join(ROOT, 'quadros', 'quadros.json'), 'w', encoding='utf-8') as f:
     json.dump(quadros, f, ensure_ascii=False, indent=1)
 
-# --- figuras (corpo): legenda ANTES da imagem (ou placeholder), "Fonte:" depois ---
 figuras = []
 cap_idx = [i for i in range(intro_idx, len(blocks)) if blocks[i]['k'] == 'P' and CAP_F.match(blocks[i]['text'].strip())]
 for n, i in enumerate(cap_idx):
@@ -211,7 +201,6 @@ for n, i in enumerate(cap_idx):
             break
         if nb['k'] == 'P' and nb['style'] in HEAD and tt:
             break
-    # imagem antes da legenda? (fallback, sinalizado)
     antes = []
     if not emb and not ph:
         for j in range(i - 1, max(intro_idx, i - 4), -1):
@@ -236,7 +225,6 @@ with open(os.path.join(ROOT, 'figuras', 'mapeamento_figuras.csv'), 'w', encoding
 with open(os.path.join(ROOT, 'figuras', 'figuras.json'), 'w', encoding='utf-8') as f:
     json.dump(figuras, f, ensure_ascii=False, indent=1)
 
-# --- documento completo em markdown ---
 lines = []
 qi = {q['bloco_legenda']: q for q in quadros}
 skip = set()
@@ -269,7 +257,6 @@ for b in blocks:
                     lines.append('| ' + ' | '.join(esc(c) for c in r + [''] * (nc - len(r))) + ' |')
                 lines.append('')
     else:
-        # tabela sem legenda de quadro
         rows = [[c['t'] for c in r] for r in b['rows']]
         nc = max((len(r) for r in rows), default=0)
         lines.append(f'<!-- b{b["i"]} TABELA SEM LEGENDA -->')
@@ -279,7 +266,6 @@ for b in blocks:
 with open(os.path.join(ROOT, 'texto', 'documento_completo.md'), 'w', encoding='utf-8') as f:
     f.write('\n'.join(lines))
 
-# --- resumo ---
 print('blocos:', len(blocks), '| tabelas:', sum(1 for b in blocks if b['k'] == 'TBL'))
 print('midia extraida:', len(media), '| rels media:', len(rels))
 print('quadros no corpo:', len(quadros), '| nums:', sorted(q['num'] for q in quadros) == list(range(1, 95)))

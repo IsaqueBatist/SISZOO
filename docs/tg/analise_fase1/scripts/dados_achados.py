@@ -1,13 +1,11 @@
-# -*- coding: utf-8 -*-
 """Achados da Etapa 2 (verificacoes A-H) e pendencias. Cada item: (verificacao, severidade, tipo, locA, locB, dizA, dizB, problema, correcao).
 Paginas sao acrescentadas automaticamente pelo gerador a partir das listas pre-textuais ("conforme sumario")."""
 
-A = []  # (verif, sev, tipo, locA, locB, dizA, dizB, problema, correcao)
+A = []
 
 def add(verif, sev, tipo, locA, locB, dizA, dizB, problema, correcao):
     A.append(dict(verif=verif, sev=sev, tipo=tipo, locA=locA, locB=locB, dizA=dizA, dizB=dizB, problema=problema, correcao=correcao))
 
-# ===================== A. Requisitos x Casos de uso =====================
 add('A', 'MÉDIA', 'FATO', 'Figura 2 / Figura 6 (diagramas de casos de uso)', 'Quadro 17 / Quadro 18 / Quadro 46 (Apêndice A)',
     'Elipses: "Encerrar Sessão"; "Editar Preferências"; "Visualizar Dashboard"',
     'Títulos: "Encerrar Sessão (Logout)"; "Editar Preferências do Usuário"; "Visualizar Dashboard em Tempo Real"',
@@ -39,7 +37,6 @@ add('A', 'BAIXA', 'FATO', 'Quadro 7 (RF-A05)', 'Quadro 15 (T06) e Quadro 26',
     'A devolução é tratada apenas como fluxo alternativo de "Registrar Adoção", que por sua vez é extensão de "Registrar Saída/Desfecho"; após a devolução o animal volta ao canil, mas não há caso de uso nem fluxo de reentrada (baia, status).',
     'Explicitar a devolução (novo caso de uso ou fluxo em Registrar Adoção com reatribuição de baia e status) – DÚVIDA dos autores.')
 
-# ===================== B. Perfis e permissoes =====================
 add('B', 'MÉDIA', 'INFERÊNCIA', 'Quadro 4 (linha Veterinário)', 'Quadro 7 (RF-A02), Figura 3, Quadro 33 e Quadro 15 (T07)',
     'Veterinário – Módulos com acesso: "Gestão de animais do canil; dashboard; baias e relatórios"',
     'RF-A02: "O Administrador cadastra e edita as baias"; Figura 3: "Gerenciar Baias" ligado só ao Administrador; T07: "Administrador (edição); Veterinário (consulta)"',
@@ -56,7 +53,6 @@ add('B', 'BAIXA', 'INFERÊNCIA', 'Quadro 13 (RN09) e Cap. 3 intro (b357)', 'Figu
     'Dois esquemas de identificação de módulo coexistem (letras de requisito × valores do enum), sem tabela de correspondência; o módulo 1 não tem letra em RN09.',
     'Acrescentar a correspondência letra ↔ enum (C=USUARIOS_ACESSO, A=GESTAO_ANIMAIS, E=OCORRENCIAS_DENUNCIAS, B=PROCESSOS_SANITARIOS, D=RELATORIOS) no texto de RN09 ou na Seção 3.')
 
-# ===================== C. Regras de negocio =====================
 add('C', 'MÉDIA', 'FATO', 'Quadro 13 (RN02), Quadros 8 e 9 (RF-E01, RF-B01), Figura 5 (nota), Quadros 35/40, Seção 5.2 (b562)', 'Figura 26 e Figura 28 (protótipos)',
     'RN02: "formato 0000/AAAA, sequencial, reiniciando em 0001 a cada ano civil"',
     'Fig. 28: "Ocorrência 089/2026" e "Processo Sanitário Vinculado 045/2026"; Fig. 26: "045/2026"',
@@ -123,7 +119,6 @@ add('C', 'BAIXA', 'INFERÊNCIA', 'Quadro 13 (RN02: "reiniciando em 0001")', 'Se�
     'O mecanismo de lock da sequência anual aparece só na seção de tecnologia; a regra não cita a entidade/sequência que o implementa, e nenhum artefato de modelagem (DER, lógico, classes) tem a sequência anual.',
     'Mencionar em RN02 a sequência por ano com bloqueio e, se for tabela/sequence, representá-la no lógico.')
 
-# ===================== D. Modelagem de dados =====================
 add('D', 'CRÍTICA', 'FATO', 'Figura 7 (DER M1: entidade Sessao) e Figura 12 (lógico M1: tabela Sessao)', 'Seção 2.3.1 (b341), Apêndice B.1 (Quadros 52–57) e Figura 17',
     'Fig. 7: entidade "Sessao" (id, token_hash, ip, user_agent, criada_em, expira_em, encerrada_em), relacionamento "abre"; Fig. 12: tabela Sessao com token_hash varchar(512) UQ',
     '2.3.1: "A arquitetura é sem estado (stateless): o servidor não mantém a sessão do usuário em memória nem em banco de dados"; dicionário B.1 e diagrama de classes não têm Sessao',
@@ -200,7 +195,6 @@ add('D', 'MÉDIA', 'DÚVIDA', 'Figura 7 (CargoPermissao desenhada como entidade 
     'A representação de CargoPermissao no DER (relacionamento entre duas entidades) não corresponde à entidade dependente de Cargo dos demais artefatos; a imagem não permite confirmar a segunda entidade (ver Limitações).',
     'Redesenhar CargoPermissao na Figura 7 como entidade ligada só a Cargo, ou confirmar a intenção.')
 
-# ===================== E. Relatorios =====================
 add('E', 'MÉDIA', 'FATO', 'Quadro 10 (RF-D02) e Quadro 49', 'Figura 30 (protótipo T14)',
     'RF-D02: "Gerar, em PDF e CSV, os relatórios..."',
     'Fig. 30: "Geração e exportação de relatórios consolidados · Resultados disponíveis em PDF, CSV e Excel"; Quadro 14 lista apenas OpenPDF para geração',
@@ -212,7 +206,6 @@ add('E', 'BAIXA', 'INFERÊNCIA', 'Quadro 13 (RN11) e Figura 25 (StatusRelatorio)
     'O protótipo sugere comportamento (progresso e download parcial) sem suporte na regra nem no modelo.',
     'Simplificar o protótipo ou acrescentar progresso ao modelo (atributo e regra).')
 
-# ===================== F. Telas =====================
 add('F', 'ALTA', 'FATO', 'Quadro 15 ("Telas do SISZOO": linhas T01 a T17)', 'Apêndice E (Figuras 49–54: "Tela T18" a "Tela T23"), Lista de Figuras e Seção 5.2 (b526)',
     'Quadro 15 termina em T17 "Perfil e Ajuda"',
     'Apêndice E apresenta T18 Relatório anual de processos, T19 Vacinação, T20 Adoções, T21 Procedimentos, T22 Ocupação de baias, T23 Ocorrências por bairro; 5.2: "As telas dos relatórios específicos... encontram-se no Apêndice E"',
@@ -239,7 +232,6 @@ add('F', 'BAIXA', 'FATO', 'Seção 5.2 (b590: tela T16 "ajusta o tema e a densid
     'Descrição da tela incompleta em relação ao requisito que ela realiza.',
     'Completar a descrição da T16.')
 
-# ===================== G. Escopo, tecnologia e coerencia =====================
 add('G', 'MÉDIA', 'FATO', 'Seção 3.4 (b393) e Quadro 11 (Ocorrências por Bairro)', 'Figura 28 (protótipo T10: "LOCALIZAÇÃO APROXIMADA" com mapa e marcador)',
     '3.4: "geolocalização e mapas georreferenciados de doenças" fora do escopo; Quadro 11: "mapa de calor tabular, sem georreferenciamento"',
     'O protótipo da T10 exibe um mapa com localização aproximada da ocorrência',
@@ -265,7 +257,6 @@ add('G', 'BAIXA', 'DÚVIDA', 'Introdução (b275: "95 cães e 15 gatos (segundo 
     'Dois números para a população felina, com fontes diferentes, sem conciliação no texto.',
     'Conciliar ou explicar a diferença (data e fonte) em uma das passagens.')
 
-# ===================== H. Estrutura e ABNT =====================
 add('H', 'ALTA', 'FATO', 'Apêndice D (b1205–b1229: "Figura 49 – Planilha de registro...", "Figura 50 – Continuação...", "Figura 51 – Planilha de controle...", "Figura 52 – Capa de processo...", "Figura 53 – Ficha de notificação...", "Figura 54 – Requisição de exame no GAL")', 'Apêndice E (b1258–b1273: "Figura 49 – Tela T18...", "Figura 50 – Tela T19...", "Figura 51 – Tela T20...", "Figura 52 – Tela T21...", "Figura 53 – Tela T22...", "Figura 54 – Tela T23...")',
     'Seis fotos numeradas 49 a 54', 'Seis telas de relatório também numeradas 49 a 54',
     'Numeração de figuras duplicada (NBR 14724: numeração sequencial única). O Apêndice D continua até a Figura 59 e o Anexo A usa 60–63; as telas do Apêndice E deveriam ser 64–69 (ou vir antes do Apêndice D).',
@@ -317,7 +308,6 @@ add('H', 'BAIXA', 'FATO', 'Lista de Abreviaturas e Siglas (b89–b115)', 'Quadro
     'Lista tem "RF – Requisito Funcional" mas não tem RN, RNF, PK, FK, UQ, NN, UML? (tem), E2E', 'Siglas RN, RNF, PK, FK, UQ e NN são usadas extensivamente',
     'Siglas usadas no texto não constam da lista de abreviaturas (NBR 14724, elemento opcional, mas incompleto quando presente).', 'Acrescentar RN, RNF, PK, FK, UQ, NN (e E2E).')
 
-# ===================== PENDENCIAS (fora da contagem) =====================
 PEND = [
     dict(tipo='PENDÊNCIA', loc='Seção 5.2, Figuras 31–47 (b532–b596)', texto='17 parágrafos "[INSERIR CAPTURA DA TELA T01 – LOGIN]" ... "[INSERIR CAPTURA DA TELA T17 – PERFIL E AJUDA]"', impacto='Nenhuma tela implementada é mostrada no capítulo "Sistema desenvolvido"; as Figuras 31–47 não têm imagem.'),
     dict(tipo='PENDÊNCIA', loc='Apêndice E, Figuras 49–54 (b1259–b1274)', texto='6 parágrafos "[INSERIR CAPTURA DA TELA T18 – ...]" a "[... T23 – ...]"', impacto='Telas de relatório sem imagem.'),

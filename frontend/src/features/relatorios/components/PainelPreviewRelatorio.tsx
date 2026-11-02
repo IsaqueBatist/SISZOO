@@ -25,9 +25,6 @@ interface PainelPreviewRelatorioProps {
   filtro: FiltroRelatorio
 }
 
-// Dispatcher entre o tipo escolhido e o componente de preview correspondente
-// — cada tipo tem colunas/seções diferentes (DER §3.6), um preview genérico
-// perderia fidelidade ao protótipo.
 export function PainelPreviewRelatorio({ nomeExibicao, filtro }: PainelPreviewRelatorioProps) {
   const preview = usePreviewRelatorioQuery<unknown>(filtro)
   const exportar = useExportarRelatorioMutation()
@@ -37,7 +34,6 @@ export function PainelPreviewRelatorio({ nomeExibicao, filtro }: PainelPreviewRe
       const arquivo = await exportar.mutateAsync({ filtro, formato })
       salvarBlob(arquivo.blob, arquivo.nomeArquivo)
     } catch {
-      // Erro já fica em exportar.error e é mostrado abaixo — nada a fazer aqui.
     }
   }
 

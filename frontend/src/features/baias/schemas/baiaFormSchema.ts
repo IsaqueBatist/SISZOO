@@ -1,7 +1,5 @@
 import { z } from 'zod'
 
-// Campos e limites espelham com.siszoo.animais.dto.CriarBaiaRequest /
-// AtualizarBaiaRequest (idênticos).
 export const baiaFormSchema = z.object({
   nome: z.string().trim().min(1, 'Informe o nome da baia.').max(40, 'Máximo de 40 caracteres.'),
   tipoBaia: z.string().min(1, 'Selecione o tipo.'),

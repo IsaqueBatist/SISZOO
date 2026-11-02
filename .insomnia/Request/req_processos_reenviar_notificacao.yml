@@ -1,0 +1,28 @@
+_id: "req_processos_reenviar_notificacao"
+type: "Request"
+parentId: "fld_processos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/processos/{{ _.processo_id_exemplo }}/notificacoes/reenviar"
+name: "Reenviar notificação ao munícipe"
+description: "Reenvio manual quando o primeiro envio falhou: só com resultado notificável vigente e sem notificação confirmada pelo SMTP (senão 422)."
+method: "POST"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 10000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

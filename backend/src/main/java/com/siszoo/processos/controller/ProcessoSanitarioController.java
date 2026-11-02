@@ -34,13 +34,6 @@ import com.siszoo.usuarios.dto.AuditoriaEventoResponse;
 
 import jakarta.validation.Valid;
 
-// Processo sanitario (T25 + T29 + T32 + T34 + T37): criacao completa,
-// listagem, detalhe, catalogos, avanco de status e registro do resultado
-// laboratorial (com desfecho do animal e notificacao ao municipe). Com
-// ocorrenciaId, o POST tambem exige OCORRENCIAS_DENUNCIAS:escrita, checado no
-// service (D33). Resultado e imutavel: sem PUT/PATCH/DELETE em /resultados;
-// a correcao e um novo POST com retificaId. O historico completo (original +
-// correcoes) vem embutido em GET /{id} (ProcessoSanitarioResponse.resultados).
 @RestController
 @RequestMapping("/api/processos")
 public class ProcessoSanitarioController {
@@ -86,8 +79,6 @@ public class ProcessoSanitarioController {
         return processoService.buscarPorId(id);
     }
 
-    // So o Administrador: a autoridade e propria (V30), e a escrita do modulo nao
-    // basta. Ver ProcessoSanitarioService.editar.
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('PROCESSOS_SANITARIOS:edicao_registro:escrita')")
     public ProcessoSanitarioResponse editar(
@@ -115,10 +106,6 @@ public class ProcessoSanitarioController {
         return processoService.registrarResultado(id, request, UsuarioAutenticado.id(authentication));
     }
 
-    // Reenvio manual da notificacao ao municipe (pendencia da T35): so com
-    // resultado positivo vigente e sem data de notificacao ainda gravada
-    // (422 nos dois casos - NotificacaoResultadoService). O envio continua
-    // assincrono; a resposta reflete o processo no instante da chamada.
     @PostMapping("/{id}/notificacoes/reenviar")
     @PreAuthorize("hasAuthority('PROCESSOS_SANITARIOS:escrita')")
     public ProcessoSanitarioResponse reenviarNotificacao(@PathVariable UUID id) {

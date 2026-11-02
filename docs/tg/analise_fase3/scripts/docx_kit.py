@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Fase 3 — kit de edição OOXML do TG (somente stdlib).
 
 Opera sobre o XML do .docx preservando estilos: toda alteração de texto é gravada
@@ -16,9 +15,9 @@ from xml.sax.saxutils import escape
 
 AUTOR = 'Revisão SISZOO'
 DATA = '2026-10-22T18:00:00Z'
-EMU_POR_PX = 9525            # 96 dpi
-LARGURA_MAX_EMU = 5760000    # 16 cm (largura útil A4 ABNT)
-ALTURA_MAX_EMU = 7200000     # 20 cm (deixa espaço para legenda e fonte na mesma página)
+EMU_POR_PX = 9525
+LARGURA_MAX_EMU = 5760000
+ALTURA_MAX_EMU = 7200000
 W = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'
 
 def _esc(t):
@@ -42,7 +41,6 @@ class DocxKit:
         self.log = []
         self.midias_novas = {}
 
-    # ------------------------------------------------------------ utilidades
     def _novo_id(self):
         self.proximo_id += 1
         return self.proximo_id
@@ -80,7 +78,7 @@ class DocxKit:
                 raise ValueError(f'Parágrafo não encontrado: {trecho[:80]!r} (ocorrência {ocorrencia})')
             ini = m.start()
             fim_tag = self.doc.find('>', ini)
-            if self.doc[fim_tag - 1] == '/':      # <w:p .../> vazio
+            if self.doc[fim_tag - 1] == '/':
                 pos = fim_tag + 1
                 continue
             fim = self.doc.find('</w:p>', ini) + len('</w:p>')
@@ -120,14 +118,12 @@ class DocxKit:
     def _run_novo(self, rpr, texto):
         return f'<w:r>{rpr}<w:t xml:space="preserve">{_esc(texto)}</w:t></w:r>'
 
-    # ------------------------------------------------------------ operações
     def substituir_paragrafo(self, trecho_antigo, texto_novo, ocorrencia=1, local='', id_item='', apos=0, exato=False):
         ini, fim = self._achar_paragrafo(trecho_antigo, ocorrencia, apos, exato)
         xml_p = self.doc[ini:fim]
         abertura, ppr, corpo = self._ppr_e_runs(xml_p)
         antigo = _texto_do_paragrafo(xml_p)
         rpr = self._primeiro_rpr(corpo)
-        # runs existentes viram exclusão controlada; texto novo entra como inserção
         runs_del = f'<w:del {self._marca("del")}>{self._para_deltext(corpo)}</w:del>' if corpo.strip() else ''
         run_ins = f'<w:ins {self._marca("ins")}>{self._run_novo(rpr, texto_novo)}</w:ins>'
         novo = f'{abertura}{ppr}{runs_del}{run_ins}</w:p>'
@@ -182,7 +178,6 @@ class DocxKit:
         """Insere um parágrafo de corpo depois da linha 'Fonte:' que segue a tabela do quadro (legenda = 2ª ocorrência, a 1ª é a Lista de Quadros)."""
         ini, fim = self._achar_paragrafo(legenda_quadro, 2)
         pos = fim
-        # pode haver mais de uma tabela em sequência (Quadro 13 fragmentado)
         while True:
             prox_tbl = self.doc.find('<w:tbl>', pos)
             prox_p = self.doc.find('<w:p', pos)
@@ -223,7 +218,7 @@ class DocxKit:
             if p_match:
                 ppr = p_match.group(1) or ''
                 rpr = self._primeiro_rpr(p_match.group(2) or '') or rpr_linha
-            else:                                  # célula com <w:p .../> vazio
+            else:
                 ppr, rpr = '', rpr_linha
             marca_par = f'<w:ins {self._marca("ins")}/>'
             if ppr and '<w:rPr>' in ppr:
@@ -234,9 +229,8 @@ class DocxKit:
                 ppr2 = f'<w:pPr><w:rPr>{marca_par}</w:rPr></w:pPr>'
             novo_tc = f'{abertura_tc}<w:p>{ppr2}<w:ins {self._marca("ins")}>{self._run_novo(rpr, texto)}</w:ins></w:p></w:tc>'
             nova = nova.replace(cx, novo_tc, 1)
-        # marca a linha como inserida
         nova = re.sub(r'^<w:tr(\s[^>]*)?>', lambda m: '<w:tr>', nova, count=1)
-        nova = re.sub(r'<w:p w14:paraId="[^"]*"', '<w:p', nova)   # paraIds duplicados não são permitidos
+        nova = re.sub(r'<w:p w14:paraId="[^"]*"', '<w:p', nova)
         if '<w:trPr>' in nova:
             nova = nova.replace('<w:trPr>', f'<w:trPr><w:ins {self._marca("ins")}/>', 1)
         else:
@@ -244,7 +238,6 @@ class DocxKit:
         self.doc = self.doc[:tr_fim] + nova + self.doc[tr_fim:]
         self.log.append({'op': 'inserir_linha', 'local': local, 'id': id_item, 'antes': f'(após a linha: {trecho_linha_ancora[:60]})', 'depois': ' | '.join(celulas), 'controlado': True})
 
-    # ------------------------------------------------------------ figuras
     _TBL_FIGURA = ('<w:tbl><w:tblPr><w:tblStyle w:val="28"/><w:tblW w:w="8971" w:type="dxa"/><w:jc w:val="center"/><w:tblBorders>'
                    '<w:top w:val="none" w:color="auto" w:sz="0" w:space="0"/><w:left w:val="none" w:color="auto" w:sz="0" w:space="0"/>'
                    '<w:bottom w:val="none" w:color="auto" w:sz="0" w:space="0"/><w:right w:val="none" w:color="auto" w:sz="0" w:space="0"/>'
@@ -277,12 +270,10 @@ class DocxKit:
         ini, fim = self._achar_paragrafo(placeholder)
         xml_p = self.doc[ini:fim]
         abertura, ppr, corpo = self._ppr_e_runs(xml_p)
-        # 1) placeholder: texto e marca de parágrafo excluídos (controlado)
         marca_par_del = f'<w:rPr><w:del {self._marca("del")}/></w:rPr>'
         ppr_del = (re.sub(r'<w:rPr>', f'<w:rPr><w:del {self._marca("del")}/>', ppr, count=1) if '<w:rPr>' in ppr
                    else (ppr.replace('</w:pPr>', marca_par_del + '</w:pPr>') if ppr else f'<w:pPr>{marca_par_del}</w:pPr>'))
         p_del = f'{abertura}{ppr_del}<w:del {self._marca("del")}>{self._para_deltext(corpo)}</w:del></w:p>'
-        # 2) imagem: parte de mídia + relacionamento
         largura_px, altura_px = self._dimensoes_png(caminho_png)
         cx = min(LARGURA_MAX_EMU, largura_px * EMU_POR_PX)
         cy = int(cx * altura_px / largura_px)
@@ -306,7 +297,6 @@ class DocxKit:
                          'depois': f'imagem {nome} ({largura_px}×{altura_px} px; {cx/360000:.1f} × {cy/360000:.1f} cm)', 'controlado': True})
         self.midias_novas[nome] = caminho_png
 
-    # ------------------------------------------------------------ settings / salvar
     def marcar_update_fields(self):
         st = self.partes['word/settings.xml'].decode('utf-8')
         if 'w:updateFields' not in st:

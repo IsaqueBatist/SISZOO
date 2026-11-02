@@ -3,7 +3,6 @@ package com.siszoo.processos.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-// Tamanhos do DER §3.5 (responsavel_processo).
 public record ResponsavelProcessoRequest(
         @NotBlank
         @Size(max = 150)

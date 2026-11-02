@@ -16,7 +16,6 @@ import { hojeEmItu } from '../utils/regrasVacina'
 
 const REX_ID = 'b2c3d4e5-0000-0000-0000-000000000001'
 
-// Catálogo mínimo para os cenários que sobrescrevem GET /animais/catalogos.
 const CATALOGO_BASE: CatalogosAnimal = {
   especies: [],
   status: [],
@@ -38,7 +37,6 @@ function renderAba() {
   }
   definirSessaoEmMemoria({ token: 'token-existente', usuario })
 
-  // Sem retry: o teste de erro do catálogo mostra a falha na primeira resposta.
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
@@ -52,9 +50,6 @@ function renderAba() {
   )
 }
 
-// Espiona o POST sem substituir o handler padrão: o resolver só registra o
-// corpo e não devolve resposta, então o MSW segue para o handler de
-// mocks/handlers.ts (clone(): o corpo continua legível por ele).
 function espionarPostDeVacinacao(): unknown[] {
   const corpos: unknown[] = []
   server.use(
@@ -71,12 +66,10 @@ async function abrirModalDeRegistro(user: ReturnType<typeof userEvent.setup>, op
   await user.click(screen.getByRole('button', { name: /registrar vacina/i }))
   const modal = screen.getByRole('heading', { name: 'Registrar vacina' }).closest<HTMLElement>('.modal')
   if (!modal) throw new Error('modal não encontrado')
-  // O select do catálogo só aparece depois de GET /animais/catalogos.
   await within(modal).findByRole('option', { name: opcaoEsperada })
   return modal
 }
 
-// Preenche todos os obrigatórios, exceto a unidade da dose.
 async function preencherObrigatoriosSemUnidade(
   user: ReturnType<typeof userEvent.setup>,
   modal: HTMLElement,
@@ -100,7 +93,6 @@ describe('ModalRegistrarVacina — validação', () => {
     expect(within(modal).getByLabelText(/^unidade/i)).toHaveClass('error')
     expect(corposEnviados).toHaveLength(0)
 
-    // Controle: só a unidade faltava — com ela o mesmo formulário é enviado.
     await user.selectOptions(within(modal).getByLabelText(/^unidade/i), 'MILILITRO')
     await user.click(within(modal).getByRole('button', { name: /^registrar vacina$/i }))
 
@@ -130,8 +122,6 @@ describe('ModalRegistrarVacina — validação', () => {
     )
     const user = userEvent.setup()
     const modal = await abrirModalDeRegistro(user)
-    // Data válida no cliente: simula o servidor recusando (ex.: relógio do
-    // navegador adiantado em relação ao do backend).
     await preencherObrigatoriosSemUnidade(user, modal, hojeEmItu())
     await user.selectOptions(within(modal).getByLabelText(/^unidade/i), 'MILILITRO')
 
@@ -153,15 +143,11 @@ describe('ModalRegistrarVacina — retifica', () => {
 
     const modal = screen.getByRole('heading', { name: 'Corrigir vacinação' }).closest<HTMLElement>('.modal')
     if (!modal) throw new Error('modal não encontrado')
-    // O select do catálogo só aparece depois de GET /animais/catalogos.
     await within(modal).findByRole('option', { name: 'Antirrábica' })
     expect(within(modal).getByText(/o registro original não será alterado/i)).toBeInTheDocument()
-    // O código gravado no registro original continua selecionado com o
-    // catálogo vindo da API (mesmos códigos da V5 que os rascunhos guardam).
     expect(within(modal).getByLabelText(/^vacina/i)).toHaveValue('v10')
     expect(within(modal).getByLabelText(/número da dose/i)).toHaveValue(1)
 
-    // Número da dose é opcional: apagar o valor não pode travar o submit.
     await user.clear(within(modal).getByLabelText(/número da dose/i))
     await user.clear(within(modal).getByLabelText(/^lote/i))
     await user.type(within(modal).getByLabelText(/^lote/i), 'LOTE-99')
@@ -243,9 +229,6 @@ describe('ModalRegistrarVacina — catálogo de vacinas da API', () => {
 })
 
 describe('ModalRegistrarVacina — previsão do próximo reforço', () => {
-  // É o que explica de onde sai o alerta de vacina vencendo. A conta tem de ser
-  // a mesma do servidor, senão a previsão divergiria da data que a tabela
-  // mostra depois de salvar.
   it('mostra a data do próximo reforço com o intervalo da vacina escolhida', async () => {
     const user = userEvent.setup()
     const modal = await abrirModalDeRegistro(user)
@@ -287,9 +270,6 @@ describe('ModalRegistrarVacina — previsão do próximo reforço', () => {
 })
 
 describe('ModalRegistrarVacina — cadastro rápido pelo "+"', () => {
-  // Cadastra sem sair do registro: o que já foi digitado não corre risco, e a
-  // vacina nova já entra escolhida (mesmo caminho da categoria em
-  // Medicamentos.tsx).
   it('cadastra a vacina sem sair do modal e já a deixa escolhida', async () => {
     const user = userEvent.setup()
     const modal = await abrirModalDeRegistro(user)
@@ -299,13 +279,10 @@ describe('ModalRegistrarVacina — cadastro rápido pelo "+"', () => {
     await user.type(within(modal).getByLabelText(/intervalo de reforço/i), '24')
     await user.click(within(modal).getByRole('button', { name: /^cadastrar vacina$/i }))
 
-    // O select lê o catálogo, que a mutação invalida: a opção nova tem de
-    // existir e estar selecionada quando o cadastro volta.
     const select = within(modal).getByLabelText(/^vacina/i) as HTMLSelectElement
     await waitFor(() => expect(select.value).toBe('vacina_nova_teste'))
     expect(within(modal).getByRole('option', { name: 'Vacina Nova Teste' })).toBeInTheDocument()
 
-    // E a previsão passa a usar o intervalo recém-cadastrado.
     await user.type(within(modal).getByLabelText(/data de aplicação/i), '2026-03-10')
     expect(await within(modal).findByText(/próximo reforço: 10\/03\/2028/i)).toBeInTheDocument()
   })
@@ -334,9 +311,6 @@ describe('ModalRegistrarVacina — cadastro rápido pelo "+"', () => {
 })
 
 describe('AbaVacinas — registrar reforço', () => {
-  // Antes, a única ação na linha era "Corrigir": usá-la para lançar o reforço
-  // criava uma RETIFICAÇÃO, e a aplicação anterior passava a constar como se
-  // nunca tivesse valido. O alerta sumia e escondia o estrago.
   it('oferece o reforço nas linhas vencida e a vencer, e não na que está em dia', async () => {
     renderAba()
 
@@ -371,8 +345,6 @@ describe('AbaVacinas — registrar reforço', () => {
     await user.selectOptions(within(modal).getByLabelText(/^unidade/i), 'MILILITRO')
     await user.click(within(modal).getByRole('button', { name: /^registrar vacina$/i }))
 
-    // Registro independente: o reforço sucede a aplicação anterior, não a
-    // corrige — por isso sem `retificaId`.
     await waitFor(() => expect(corpos).toHaveLength(1))
     expect(corpos[0]).toMatchObject({ vacina: 'v10', dataAplicacao: hojeEmItu() })
     expect(corpos[0]).not.toHaveProperty('retificaId', expect.anything())

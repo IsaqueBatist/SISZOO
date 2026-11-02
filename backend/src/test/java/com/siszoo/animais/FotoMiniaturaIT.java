@@ -36,9 +36,6 @@ import com.siszoo.comum.ApiTesteFixture;
 import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 
-// T45 (V28): as listagens de animais devolvem em fotoUrl a miniatura da foto
-// (avatar), e o detalhe continua com a foto inteira; a Gestao de Baias le os
-// residentes de GET /api/baias/residentes, sem a listagem de 500 animais.
 class FotoMiniaturaIT extends AbstractIntegrationTest {
 
     @Autowired
@@ -70,13 +67,11 @@ class FotoMiniaturaIT extends AbstractIntegrationTest {
         assertThat(naListagem.length(), lessThan(foto.length() / 5));
         assertThat(detalhe(id).getString("fotoUrl"), equalTo(foto));
 
-        // Editar a ficha sem trocar a foto nao refaz a miniatura.
         String miniaturaGravada = miniaturaNoBanco(id);
         atualizar(id, marca + " editado", foto);
         assertThat(miniaturaNoBanco(id), equalTo(miniaturaGravada));
         assertThat(detalhe(id).getString("fotoUrl"), equalTo(foto));
 
-        // Trocar a foto refaz; tirar a foto tira a miniatura.
         String outraFoto = foto(300, 400);
         atualizar(id, marca + " editado", outraFoto);
         assertThat(miniaturaNoBanco(id), not(equalTo(miniaturaGravada)));
@@ -102,7 +97,6 @@ class FotoMiniaturaIT extends AbstractIntegrationTest {
     @DisplayName("[T45] backfill gera a miniatura das fotos gravadas antes da V28, uma vez so")
     void backfillDasFotosAntigas() throws IOException {
         String id = criar(marca, null, null, "disponivel_adocao");
-        // Como uma linha anterior a V28: foto sem miniatura.
         jdbcTemplate.update("UPDATE animal SET foto_url = ?, foto_miniatura = NULL WHERE id = CAST(? AS uuid)",
                 foto(640, 480), id);
 

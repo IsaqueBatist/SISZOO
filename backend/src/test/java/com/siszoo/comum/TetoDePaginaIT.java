@@ -8,10 +8,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 
-// T45 (S4): toda listagem paginada aceita 1 <= tamanho <= 500. Fora disso,
-// 422 no campo `tamanho` em vez de carregar a tabela inteira (tamanho grande)
-// ou de 500 (tamanho 0, IllegalArgumentException do PageRequest). 500 e o
-// maior tamanho que o frontend pede hoje e continua aceito.
 class TetoDePaginaIT extends AbstractIntegrationTest {
 
     @Autowired

@@ -12,8 +12,6 @@ interface RedefinirSenhaModalProps {
   onFechar: () => void
 }
 
-// A senha atual nunca aparece. A nova é temporária: a pessoa troca ao entrar,
-// pelo mesmo caminho do primeiro acesso.
 export function RedefinirSenhaModal({ usuario, onFechar }: RedefinirSenhaModalProps) {
   const [senhaGerada, setSenhaGerada] = useState<string | null>(null)
   const mutation = useRedefinirSenhaMutation()

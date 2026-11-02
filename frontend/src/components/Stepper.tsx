@@ -2,14 +2,10 @@ import { Fragment } from 'react'
 
 interface StepperProps {
   etapas: readonly string[]
-  // 1-based: a etapa em andamento; as anteriores aparecem como concluídas.
   atual: number
-  // Com o callback, as etapas viram botões: útil na edição, em que todas já
-  // foram preenchidas e a pessoa quer ir direto ao campo que precisa mudar.
   onIrPara?: (numero: number) => void
 }
 
-// Indicador de etapas dos formulários em wizard (.stepper).
 export function Stepper({ etapas, atual, onIrPara }: StepperProps) {
   return (
     <div className="stepper">

@@ -25,7 +25,6 @@ function renderAba() {
   }
   definirSessaoEmMemoria({ token: 'token-existente', usuario })
 
-  // Sem retry: o teste de erro do catálogo mostra a falha na primeira resposta.
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
@@ -83,7 +82,6 @@ describe('ModalRegistrarProcedimento', () => {
 
     const modal = screen.getByRole('heading', { name: 'Registrar procedimento' }).closest<HTMLElement>('.modal')
     if (!modal) throw new Error('modal não encontrado')
-    // O select do catálogo só aparece depois de GET /animais/catalogos.
     await within(modal).findByRole('option', { name: 'Castração' })
 
     await user.selectOptions(within(modal).getByLabelText(/tipo de procedimento/i), 'vacinacao')
@@ -104,7 +102,6 @@ describe('ModalRegistrarProcedimento', () => {
 
     const modal = screen.getByRole('heading', { name: 'Registrar procedimento' }).closest<HTMLElement>('.modal')
     if (!modal) throw new Error('modal não encontrado')
-    // O select do catálogo só aparece depois de GET /animais/catalogos.
     await within(modal).findByRole('option', { name: 'Castração' })
     await user.click(within(modal).getByRole('button', { name: /^registrar procedimento$/i }))
 
@@ -127,7 +124,6 @@ describe('ModalRegistrarProcedimento', () => {
     await user.click(screen.getByRole('button', { name: /registrar procedimento/i }))
     const modal = screen.getByRole('heading', { name: 'Registrar procedimento' }).closest<HTMLElement>('.modal')
     if (!modal) throw new Error('modal não encontrado')
-    // O select do catálogo só aparece depois de GET /animais/catalogos.
     await within(modal).findByRole('option', { name: 'Castração' })
 
     await user.selectOptions(within(modal).getByLabelText(/tipo de procedimento/i), 'vacinacao')
@@ -157,7 +153,6 @@ describe('ModalRegistrarProcedimento', () => {
     await user.click(screen.getByRole('button', { name: /registrar procedimento/i }))
     const modal = screen.getByRole('heading', { name: 'Registrar procedimento' }).closest<HTMLElement>('.modal')
     if (!modal) throw new Error('modal não encontrado')
-    // O select do catálogo só aparece depois de GET /animais/catalogos.
     await within(modal).findByRole('option', { name: 'Castração' })
 
     await user.selectOptions(within(modal).getByLabelText(/tipo de procedimento/i), 'vacinacao')
@@ -180,7 +175,6 @@ describe('ModalRegistrarProcedimento', () => {
 
     const modal = screen.getByRole('heading', { name: 'Corrigir procedimento' }).closest<HTMLElement>('.modal')
     if (!modal) throw new Error('modal não encontrado')
-    // O select do catálogo só aparece depois de GET /animais/catalogos.
     await within(modal).findByRole('option', { name: 'Castração' })
     expect(within(modal).getByText(/o registro original não será alterado/i)).toBeInTheDocument()
     expect(within(modal).getByLabelText(/^data/i)).not.toHaveValue('')

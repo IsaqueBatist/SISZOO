@@ -39,10 +39,6 @@ import com.siszoo.usuarios.service.AuditoriaEventoService;
 
 import jakarta.persistence.criteria.Predicate;
 
-// Sem metodo atualizar/excluir: registro clinico imutavel (regra de negocio).
-// Transicoes de status (ATIVA->CONCLUIDA/SUSPENSA/CANCELADA) tambem passam
-// por criar() com `retificaId`, nao ha metodo separado para isso. Ver
-// VacinacaoService para o mecanismo de retificacao.
 @Service
 public class PrescricaoService {
 
@@ -144,9 +140,6 @@ public class PrescricaoService {
         return anterior;
     }
 
-    // Data futura continua aceita (inicio programado e legitimo,
-    // docs/regras-negocio-clinico.md); so a ordem das datas e a coerencia do
-    // status sao conferidas.
     private void validarDatas(CriarPrescricaoRequest request) {
         LocalDate inicio = request.dataInicio();
         if (request.dataFimPrevista() != null && request.dataFimPrevista().isBefore(inicio)) {

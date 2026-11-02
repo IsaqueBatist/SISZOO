@@ -1,0 +1,36 @@
+_id: "req_ocorrencias_encerrar"
+type: "Request"
+parentId: "fld_ocorrencias_vinculo"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/ocorrencias/{{ _.ocorrencia_id_exemplo }}/encerramento"
+name: "Encerrar ocorrência"
+description: "Encerra a ocorrência {{ _.ocorrencia_id_exemplo }} com a providência tomada. Regras: com processo vinculado, ele precisa estar concluído (senão 422; aqui o processo da pasta 13 já foi concluído); a partir de ABERTA, só as providências de encerramento direto. Uma ocorrência encerrada não volta a ser editada."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "providenciaTomada": "abertura_processo",
+      "descricaoEncerramento": "Processo sanitário aberto para acompanhamento."
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 2000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

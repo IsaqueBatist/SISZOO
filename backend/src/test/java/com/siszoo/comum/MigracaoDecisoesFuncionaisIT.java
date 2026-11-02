@@ -25,9 +25,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-// V29 a V33 (decisoes funcionais de 31/10/2026) e V34 (recuperacao de senha)
-// sobre um banco parado na V28 com dados, num schema proprio do PostgreSQL de
-// teste: nada existente pode mudar.
 class MigracaoDecisoesFuncionaisIT extends AbstractIntegrationTest {
 
     private static final String SCHEMA = "migracao_decisoes_funcionais";
@@ -61,13 +58,11 @@ class MigracaoDecisoesFuncionaisIT extends AbstractIntegrationTest {
         assertThat(resultado.success, equalTo(true));
         assertThat(resultado.migrationsExecuted, equalTo(6));
 
-        // V31: false continua false, e true continua true.
         assertThat(esterilizado(dados.castrado()), equalTo(true));
         assertThat(esterilizado(dados.naoCastrado()), equalTo(false));
         assertThat(contatoHumano(dados.amostraSemContato()), equalTo(false));
         assertThat(contatoHumano(dados.amostraComContato()), equalTo(true));
 
-        // V33: aditiva. observacoes intacto, e nenhuma condicao marcada sozinha.
         assertThat(jdbcTemplate.queryForObject("SELECT observacoes FROM " + S + "animal WHERE id = ?", String.class,
                 dados.castrado()), equalTo("Texto antigo"));
         assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM " + S + "animal_condicao_saude", Integer.class),
@@ -77,7 +72,6 @@ class MigracaoDecisoesFuncionaisIT extends AbstractIntegrationTest {
         assertThat(jdbcTemplate.queryForList("SELECT codigo FROM " + S + "condicao_saude", String.class),
                 hasItems("epilepsia", "cardiopatia", "diabetes", "agressividade", "cegueira", "surdez", "outras"));
 
-        // V29: a trilha antiga continua la, e a acao nova passa no CHECK.
         assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM " + S + "auditoria_evento", Integer.class),
                 equalTo(1));
         assertThat(transacao("INSERT INTO " + S + "auditoria_evento (acao, entidade)"
@@ -231,7 +225,6 @@ class MigracaoDecisoesFuncionaisIT extends AbstractIntegrationTest {
                 .migrate();
     }
 
-    // Executa os comandos numa transacao propria e devolve o erro (ou null se confirmou).
     private SQLException transacao(String... comandos) throws SQLException {
         try (Connection conexao = dataSource.getConnection()) {
             conexao.setAutoCommit(false);

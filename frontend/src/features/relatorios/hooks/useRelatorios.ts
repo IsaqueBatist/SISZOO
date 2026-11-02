@@ -12,8 +12,6 @@ export function useTiposRelatorioQuery() {
   return useQuery({ queryKey: ['relatorios', 'tipos'], queryFn: listarTiposRelatorio, staleTime: Infinity })
 }
 
-// `filtro` nulo (nenhum "Gerar Relatório" clicado ainda) desabilita a query —
-// não há tela de relatório sem um tipo+período escolhido pelo usuário.
 export function usePreviewRelatorioQuery<T>(filtro: FiltroRelatorio | null) {
   return useQuery({
     queryKey: ['relatorios', 'preview', filtro],

@@ -6,12 +6,10 @@ interface GraficoOcupacaoBaiaProps {
   dados: OcupacaoBaiaDatum[]
 }
 
-// Mesmas cores semânticas de GestaoBaias.tsx/baias.html: verde até 80%,
-// laranja (atenção) 80–99%, vermelho (superlotada) 100%+.
 const COR_POR_ESTADO: Record<EstadoLotacao, string> = {
-  disponivel: '#2E7D32', // --color-success
-  atencao: '#F57F17', // --color-alert
-  superlotada: '#C62828', // --color-danger
+  disponivel: '#2E7D32',
+  atencao: '#F57F17',
+  superlotada: '#C62828',
 }
 
 export function GraficoOcupacaoBaia({ dados }: GraficoOcupacaoBaiaProps) {

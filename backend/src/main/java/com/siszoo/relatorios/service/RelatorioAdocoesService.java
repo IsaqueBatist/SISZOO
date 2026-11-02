@@ -17,10 +17,6 @@ import com.siszoo.relatorios.dto.PerfilAdocaoResponse;
 import com.siszoo.relatorios.dto.RelatorioAdocoesResponse;
 import com.siszoo.relatorios.entity.TipoRelatorio;
 
-// "Relatório de Adoções" - VERSAO SIMPLIFICADA (DER §3.2 nao tem tabela
-// `adocao` ainda; ver RelatorioAdocoesResponse para o detalhe da decisao).
-// Posicao de Animal.status = 'adotado' na data da geracao: nao ha campo de
-// data de adocao, entao nao ha periodo a filtrar.
 @Service
 public class RelatorioAdocoesService implements GeradorRelatorio<RelatorioAdocoesResponse> {
 

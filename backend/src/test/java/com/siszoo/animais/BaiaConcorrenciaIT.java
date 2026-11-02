@@ -35,13 +35,6 @@ import com.siszoo.comum.ApiTesteFixture;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-// Capacidade da baia sob cadastros simultaneos (DER §3.2: baia_id so em baia
-// com ocupacao < capacidade). Mesma tecnica de OcorrenciaTransacaoIT (T30):
-// uma conexao do teste trava a linha da baia (FOR UPDATE) e so a libera
-// quando pg_stat_activity mostra as N requisicoes esperando por ela ao mesmo
-// tempo. Sem trava no servico, cada requisicao ja contou a ocupacao e para
-// no INSERT do animal (a FK para baia pede FOR KEY SHARE); com a trava, para
-// antes de contar. Liberada a linha, as N disputam a ultima vaga de fato.
 class BaiaConcorrenciaIT extends AbstractIntegrationTest {
 
     private static final int CADASTROS_CONCORRENTES = 4;
@@ -104,8 +97,6 @@ class BaiaConcorrenciaIT extends AbstractIntegrationTest {
             bloqueio.setAutoCommit(false);
             int pidBloqueio = pidDe(bloqueio);
             List<Future<Response>> futuros = new ArrayList<>();
-            // O rollback fica no finally: libera as requisicoes presas tambem
-            // quando a espera falha.
             try {
                 try (PreparedStatement trava = bloqueio.prepareStatement(
                         "SELECT 1 FROM baia WHERE id = ? FOR UPDATE")) {
@@ -149,10 +140,6 @@ class BaiaConcorrenciaIT extends AbstractIntegrationTest {
         }
     }
 
-    // Conta as sessoes presas pela conexao bloqueadora, direta ou
-    // indiretamente: varias sessoes na fila da mesma linha esperam a primeira
-    // da fila (pg_blocking_pids aponta para ela), nao o dono da trava. Uma
-    // requisicao que termina antes nao disputou a vaga com as demais.
     private void aguardarBloqueadas(List<Future<Response>> futuros, int pidBloqueio) throws Exception {
         long limite = System.nanoTime() + TimeUnit.SECONDS.toNanos(TIMEOUT_SEGUNDOS);
         int bloqueadas = 0;

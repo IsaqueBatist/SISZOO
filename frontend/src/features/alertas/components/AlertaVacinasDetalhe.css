@@ -1,6 +1,3 @@
-/* Portado do <style> inline de docs/prototipo/alerta.html (hero de alerta +
-   tiras de KPI), com cores planas nos tokens do design system em vez do
-   gradiente ad-hoc do protótipo — consistente com o resto do app. */
 .alert-hero {
   border-radius: var(--radius-lg);
   padding: 24px 28px;

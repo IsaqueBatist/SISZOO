@@ -14,8 +14,6 @@ import {
 import { API_BASE_URL } from '@/lib/env'
 import { server } from '@/mocks/server'
 
-// Responde ao contador do menu (status=ABERTA, tamanho=1) com `total()` e
-// conta as chamadas; as demais listagens não são usadas aqui.
 function contadorDeAbertas(total: () => number) {
   const chamadas: string[] = []
   server.use(
@@ -101,8 +99,6 @@ describe('Sidebar', () => {
   it('colapsada, os itens de menu continuam com nome acessível (texto visualmente escondido, não removido)', () => {
     renderSidebar(['Administrador'], true)
 
-    // getByRole por nome só encontra se o texto ainda existir no DOM (ainda
-    // que visualmente escondido) — display:none falharia esse teste.
     expect(screen.getByRole('link', { name: /animais/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /usuários/i })).toBeInTheDocument()
   })
@@ -178,7 +174,6 @@ describe('Sidebar', () => {
       renderSidebar(['Veterinário'])
 
       expect(screen.queryByRole('link', { name: /ocorrências/i })).not.toBeInTheDocument()
-      // Dá tempo de uma requisição indevida acontecer antes de conferir.
       await new Promise((resolve) => setTimeout(resolve, 50))
       expect(chamadas).toHaveLength(0)
     })

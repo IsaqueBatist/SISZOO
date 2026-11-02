@@ -2,7 +2,6 @@ package com.siszoo.ocorrencias;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 
@@ -22,8 +21,6 @@ import com.siszoo.comum.ApiTesteFixture;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-// F2-010 / RF-E02 (Fase 3 do TG): filtro por periodo da data de abertura em
-// GET /api/ocorrencias (docs/contratos/ocorrencias-filtro-data.md).
 class OcorrenciaFiltroDataIT extends AbstractIntegrationTest {
 
     @Autowired
@@ -56,7 +53,6 @@ class OcorrenciaFiltroDataIT extends AbstractIntegrationTest {
         assertThat(idsAntigas, hasItem(antiga));
         assertThat(idsAntigas, not(hasItem(recente)));
 
-        // Limite inclusivo: "de" igual a propria data de abertura inclui o registro.
         Response inclusivo = listar("?de=" + fixture.hoje().minusDays(40) + "&ate=" + fixture.hoje().minusDays(40) + "&tamanho=100");
         List<String> idsInclusivo = inclusivo.path("itens.id");
         assertThat(idsInclusivo, hasItem(antiga));
@@ -72,8 +68,6 @@ class OcorrenciaFiltroDataIT extends AbstractIntegrationTest {
     void combinaComOutrosFiltros() {
         Response r = listar("?de=" + fixture.hoje().minusDays(7) + "&tipo=irregular&q=Recente&tamanho=100");
         r.then().statusCode(200);
-        // Cada metodo de teste cria o proprio par de ocorrencias no mesmo banco: a
-        // recente deste teste entra e a antiga fica de fora.
         List<String> ids = r.path("itens.id");
         assertThat(ids, hasItem(recente));
         assertThat(ids, not(hasItem(antiga)));

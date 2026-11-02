@@ -16,9 +16,6 @@ import jakarta.persistence.LockModeType;
 
 public interface SessaoUsuarioRepository extends JpaRepository<SessaoUsuario, UUID> {
 
-    // Conferido a cada requisicao autenticada (JwtAuthenticationFilter), sem
-    // cache: e o que faz logout, revogacao e desativacao valerem na hora. Vazio
-    // = sessao inativa; o valor diz se a senha temporaria ainda nao foi trocada.
     @Query("""
             select case when s.usuario.senhaAlteradaEm is null then true else false end from SessaoUsuario s
             where s.id = :sessaoId and s.usuario.id = :usuarioId and s.usuario.ativo = true
@@ -27,8 +24,6 @@ public interface SessaoUsuarioRepository extends JpaRepository<SessaoUsuario, UU
     Optional<Boolean> senhaTemporariaDaSessaoAtiva(@Param("sessaoId") UUID sessaoId, @Param("usuarioId") UUID usuarioId,
             @Param("limiteInatividade") LocalDateTime limiteInatividade);
 
-    // Lock na linha: duas renovacoes simultaneas do mesmo token (abas, retry)
-    // passam uma de cada vez, e a segunda ja encontra o token rotacionado.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select s from SessaoUsuario s where s.tokenHash = :hash or s.tokenAnteriorHash = :hash")
     Optional<SessaoUsuario> buscarPorHashParaAtualizar(@Param("hash") String hash);

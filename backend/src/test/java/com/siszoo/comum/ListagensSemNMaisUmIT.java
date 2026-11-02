@@ -20,13 +20,6 @@ import com.siszoo.ocorrencias.SqlCapturado;
 import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 
-// T45: as listagens de animais e de auditoria carregam as relacoes que o
-// mapper le numa consulta so (EntityGraph). Sem isso, cada autor/especie
-// distinto da pagina custava uma consulta a mais (N+1). O teste compara o
-// numero de comandos SQL de uma pagina com 1 linha e de uma com varias linhas
-// de autores (e especies) diferentes: tem de ser o mesmo.
-// Mesmas anotacoes de AnexoOcorrenciaQueriesIT/AuditoriaSigiloSqlIT para
-// reaproveitar o contexto em cache que ja tem o SqlCapturado ligado.
 @Import(RelogioTesteConfig.class)
 @TestPropertySource(properties =
         "spring.jpa.properties.hibernate.session_factory.statement_inspector=com.siszoo.ocorrencias.SqlCapturado")
@@ -59,7 +52,6 @@ class ListagensSemNMaisUmIT extends AbstractIntegrationTest {
         String marca = marcaEmLetras();
         String primeiroEmail = email(0, marca);
         String token = null;
-        // Cada login grava um evento LOGIN com o proprio usuario.
         for (int i = 0; i < AUTORES; i++) {
             token = fixture.tokenAdmin(email(i, marca), "Logs" + letra(i));
         }
@@ -68,7 +60,6 @@ class ListagensSemNMaisUmIT extends AbstractIntegrationTest {
         Listagem variosUsuarios = listar(token, "/api/auditoria?acao=LOGIN&tamanho=20");
 
         assertThat(new HashSet<>(umUsuario.itens().getList("itens.usuarioEmail")).size(), equalTo(1));
-        // Sem autores distintos na pagina a comparacao nao provaria nada.
         assertThat(new HashSet<>(variosUsuarios.itens().getList("itens.usuarioEmail")).size(), greaterThan(1));
         assertThat(variosUsuarios.comandos(), equalTo(umUsuario.comandos()));
     }
@@ -76,7 +67,6 @@ class ListagensSemNMaisUmIT extends AbstractIntegrationTest {
     private record Listagem(JsonPath itens, int comandos) {
     }
 
-    // O e-mail institucional so aceita letras minusculas e ponto (LoginRequest).
     private static String marcaEmLetras() {
         StringBuilder marca = new StringBuilder("nmaisum");
         for (char c : UUID.randomUUID().toString().replace("-", "").substring(0, 10).toCharArray()) {

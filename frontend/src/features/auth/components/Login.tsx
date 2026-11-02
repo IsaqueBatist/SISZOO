@@ -44,7 +44,6 @@ export function Login() {
       if (isAxiosError(erro) && erro.response?.status === 401) {
         setSubmitError('E-mail ou senha inválidos. Se o problema continuar, fale com o Administrador do sistema.')
       } else if (isAxiosError(erro) && erro.response?.status === 429) {
-        // Limite de tentativas (LimitadorLogin): vale mesmo com a senha certa.
         setSubmitError(
           mensagemDeRegraDaApi(erro) ?? 'Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente.',
         )
@@ -59,7 +58,6 @@ export function Login() {
     void handleSubmit(onSubmit)(event)
   }
 
-  // Sessão aberta: esta tela não tem o que oferecer.
   if (token) return <Navigate to={destino} replace />
   if (carregandoSessao) return <p role="status" className="carregando-sessao">Carregando sua sessão…</p>
 

@@ -85,9 +85,6 @@ code: |-
   });
   expect(animal.baiaId).to.equal(baia.id);
 
-  // Diferente do que o card T19 presumia, não existe 409/422 de "baia
-  // ocupada": o backend soft-deleta (ativa=false, 200) mesmo com 1/2 animais
-  // alocados. A proteção contra isso é só um aviso no frontend, não uma trava.
   const exclusao = await excluirBaia(adminToken, baia.id);
   expect(exclusao.status).to.equal(200);
   const baiaExcluida = JSON.parse(exclusao.body);

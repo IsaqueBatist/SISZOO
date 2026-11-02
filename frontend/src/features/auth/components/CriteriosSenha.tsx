@@ -3,17 +3,11 @@ import { avaliarSenha, CATEGORIAS_EXIGIDAS, TAMANHO_MINIMO_SENHA, type DonoDaSen
 
 interface CriteriosSenhaProps {
   senha: string
-  // Sem dono (redefinição por link, em que a tela não sabe quem é o usuário),
-  // só os critérios que não dependem dele aparecem; a API confere o resto.
   dono?: DonoDaSenha
 }
 
 type Estado = 'pendente' | 'ok' | 'falha'
 
-// Lista dos critérios da política de senha (docs/decisoes/politica-senha.md),
-// atualizada a cada tecla abaixo do campo. Antes de digitar, tudo fica neutro;
-// depois, cada critério mostra se já foi atendido. As mesmas regras continuam
-// no schema (envio) e no backend (fonte da verdade).
 export function CriteriosSenha({ senha, dono }: CriteriosSenhaProps) {
   const avaliacao = avaliarSenha(senha, dono ?? { email: '', nomeExibicao: '' })
   const vazia = senha.length === 0

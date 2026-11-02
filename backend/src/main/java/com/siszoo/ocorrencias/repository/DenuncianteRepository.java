@@ -13,6 +13,5 @@ public interface DenuncianteRepository extends JpaRepository<Denunciante, UUID> 
 
     Optional<Denunciante> findByOcorrenciaId(UUID ocorrenciaId);
 
-    // Uma consulta por pagina da listagem, em vez de uma por ocorrencia.
     List<Denunciante> findByOcorrenciaIdIn(Collection<UUID> ocorrenciaIds);
 }

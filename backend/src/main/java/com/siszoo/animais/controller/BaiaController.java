@@ -46,9 +46,6 @@ public class BaiaController {
         return baiaService.listar(ativa, pagina, tamanho);
     }
 
-    // T45: residentes de todas as baias de uma vez para a Gestao de Baias,
-    // em vez de GET /api/animais?tamanho=500 com fotos. Mesma autorizacao das
-    // listagens de baias e de animais.
     @GetMapping("/residentes")
     @PreAuthorize("hasAuthority('GESTAO_ANIMAIS:leitura')")
     public List<ResidenteBaiaResponse> listarResidentes() {
@@ -81,11 +78,6 @@ public class BaiaController {
         return baiaService.alterarStatus(id, request, UsuarioAutenticado.id(authentication));
     }
 
-    /**
-     * Executa soft-delete: marca a baia como inativa ({@code ativa=false}).
-     * A linha nunca e removida fisicamente. Para reativar, ver
-     * {@code PATCH /api/baias/{id}/status}.
-     */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('GESTAO_ANIMAIS:exclusao')")
     public BaiaResponse desativar(Authentication authentication, @PathVariable UUID id) {

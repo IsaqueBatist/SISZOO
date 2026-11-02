@@ -1,8 +1,6 @@
 import { useEffect } from 'react'
 import type { RefObject } from 'react'
 
-// Fecha um popover/menu ao clicar fora dele ou pressionar Esc. `ativo` evita
-// registrar os listeners quando o menu já está fechado.
 export function useClickOutside(ref: RefObject<HTMLElement | null>, onFechar: () => void, ativo: boolean) {
   useEffect(() => {
     if (!ativo) return

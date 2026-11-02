@@ -22,9 +22,6 @@ import com.siszoo.comum.ApiTesteFixture;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-// Endpoints de relatorios (T41): GET /tipos, GET /preview, POST /exportar,
-// GET /historico. Os 6 tipos do catalogo estao implementados (PR1: ocupacao_baias
-// e vacinacao; PR2: anual_processos, adocoes, procedimentos, ocorrencias_bairro).
 class RelatorioControllerIT extends AbstractIntegrationTest {
 
     private static final String ROTA = "/api/relatorios";
@@ -56,9 +53,6 @@ class RelatorioControllerIT extends AbstractIntegrationTest {
         given().header("Authorization", "Bearer " + tokenSemAcesso).when().get(ROTA + "/tipos").then().statusCode(403);
     }
 
-    // Regressao: as contagens do relatorio usavam o caminho implicito
-    // o.providenciaTomada.codigo (INNER JOIN) e ignoravam toda ocorrencia
-    // ainda nao encerrada. Dia isolado, sem outras ocorrencias de teste.
     @Test
     @DisplayName("ocorrencias_bairro conta ocorrencias abertas e ignora registro_indevido")
     void ocorrenciasBairroContaAbertasEIgnoraRegistroIndevido() {
@@ -250,8 +244,6 @@ class RelatorioControllerIT extends AbstractIntegrationTest {
                 .extract().response();
 
         byte[] corpo = resposta.asByteArray();
-        // BOM UTF-8 (EF BB BF) no inicio do arquivo, para o Excel PT-BR abrir
-        // a acentuacao corretamente.
         assertThat(corpo[0] & 0xFF, equalTo(0xEF));
         assertThat(corpo[1] & 0xFF, equalTo(0xBB));
         assertThat(corpo[2] & 0xFF, equalTo(0xBF));
@@ -278,11 +270,8 @@ class RelatorioControllerIT extends AbstractIntegrationTest {
                 .extract().asByteArray();
 
         assertThat(pdf.length, greaterThanOrEqualTo(1));
-        // %PDF no inicio do arquivo confirma que e um PDF valido, nao so bytes quaisquer.
         assertThat(new String(pdf, 0, 4, StandardCharsets.US_ASCII), equalTo("%PDF"));
 
-        // Extracao de texto via OpenPDF (ja e dependencia transitiva do Flying
-        // Saucer - sem precisar de Apache PDFBox so pra isso).
         com.lowagie.text.pdf.PdfReader leitor = new com.lowagie.text.pdf.PdfReader(pdf);
         String texto = new com.lowagie.text.pdf.parser.PdfTextExtractor(leitor).getTextFromPage(1)
                 .toLowerCase(java.util.Locale.ROOT);

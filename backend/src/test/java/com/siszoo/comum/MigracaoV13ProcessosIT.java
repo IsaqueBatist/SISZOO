@@ -30,15 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-// Exercita a V13 (processos sanitarios, T29) num schema proprio do mesmo
-// PostgreSQL de teste, no padrao de MigracaoV12AuditoriaIT: do zero, por
-// atualizacao a partir da V12 e recusada com processo minimo legado (DH-3).
-//
-// As constraint triggers adiaveis disparam no COMMIT, entao as transacoes
-// usam conexoes JDBC proprias (autocommit desligado), sem o Spring no meio.
-// A conexao usa o search_path padrao (public, onde a aplicacao tem as mesmas
-// tabelas): o teste tambem prova que as funcoes da V13 consultam o schema em
-// que foram criadas (SET search_path FROM CURRENT).
 class MigracaoV13ProcessosIT extends AbstractIntegrationTest {
 
     private static final String SCHEMA = "migracao_v13";
@@ -54,8 +45,6 @@ class MigracaoV13ProcessosIT extends AbstractIntegrationTest {
     void removerSchemaDoTeste() {
         jdbcTemplate.execute("DROP SCHEMA IF EXISTS " + SCHEMA + " CASCADE");
     }
-
-    // ── Aplicacao da migration ───────────────────────────
 
     @Test
     @DisplayName("[T29] V13 aplica do zero sobre V1-V12 e semeia os catalogos do DER")
@@ -110,8 +99,6 @@ class MigracaoV13ProcessosIT extends AbstractIntegrationTest {
                 equalTo(1));
     }
 
-    // ── 1 responsavel e >= 1 amostra (DH-2) ─────────────
-
     @Test
     @DisplayName("[DH-2] processo completo e aceito; sem amostra ou sem responsavel falha no COMMIT")
     void processoExigeResponsavelEAmostra() throws Exception {
@@ -160,9 +147,6 @@ class MigracaoV13ProcessosIT extends AbstractIntegrationTest {
     }
 
     @Test
-    // Ate a V16 esta transacao passava (os triggers adiaveis da V13 nao cobram
-    // um processo removido). A V17 (RN06) recusa o DELETE do processo, e a
-    // transacao inteira e desfeita.
     @DisplayName("[DH-2/RN06] processo removido inteiro na mesma transacao: recusado com 23514 desde a V17")
     void removerProcessoInteiro() throws Exception {
         migrarAte("17");
@@ -188,9 +172,6 @@ class MigracaoV13ProcessosIT extends AbstractIntegrationTest {
         UUID amostra2 = UUID.randomUUID();
         transacao(processo(processo, usuario), responsavel(processo), amostra(amostra1, processo), amostra(amostra2, processo));
 
-        // As duas removem antes de qualquer COMMIT (as linhas sao diferentes,
-        // nao ha bloqueio no DELETE); depois confirmam juntas. A trava na linha
-        // do processo serializa a verificacao: a segunda ve a remocao da primeira.
         CyclicBarrier removidas = new CyclicBarrier(2);
         CompletableFuture<SQLException> primeira = CompletableFuture.supplyAsync(() -> removerECommitar(amostra1, removidas));
         CompletableFuture<SQLException> segunda = CompletableFuture.supplyAsync(() -> removerECommitar(amostra2, removidas));
@@ -205,8 +186,6 @@ class MigracaoV13ProcessosIT extends AbstractIntegrationTest {
                 Integer.class, processo), equalTo(1));
     }
 
-    // ── Vinculo imutavel (DER regra 15) ─────────────────
-
     @Test
     @DisplayName("[DER 15] vinculo: vazio -> ocorrencia aceito; trocar ou remover recusado; atualizar o resto aceito")
     void vinculoImutavel() throws Exception {
@@ -220,8 +199,6 @@ class MigracaoV13ProcessosIT extends AbstractIntegrationTest {
 
         jdbcTemplate.update("UPDATE " + S + "processo_sanitario SET ocorrencia_id = ?" + onde, ocorrencia);
 
-        // A mensagem do trigger e o texto do RAISE (o nome da constraint vai so
-        // no campo CONSTRAINT do erro, com SQLSTATE 23514).
         assertViolacao(transacao("UPDATE " + S + "processo_sanitario SET ocorrencia_id = '" + outraOcorrencia + "'"
                 + onde), "é imutável");
         assertViolacao(transacao("UPDATE " + S + "processo_sanitario SET ocorrencia_id = NULL" + onde), "é imutável");
@@ -231,8 +208,6 @@ class MigracaoV13ProcessosIT extends AbstractIntegrationTest {
         assertThat(jdbcTemplate.queryForObject("SELECT ocorrencia_id FROM " + S + "processo_sanitario" + onde, UUID.class),
                 equalTo(ocorrencia));
     }
-
-    // ── CHECKs, UNIQUE e PK ─────────────────────────────
 
     @Test
     @DisplayName("[T29] CHECKs da amostra e do responsavel, responsavel unico por processo e sintoma unico por amostra")
@@ -279,8 +254,6 @@ class MigracaoV13ProcessosIT extends AbstractIntegrationTest {
                 "UPDATE " + S + "animal_amostrado SET animal_id = ? WHERE id = ?", UUID.randomUUID(), amostra));
     }
 
-    // ── Apoio ──
-
     private MigrateResult migrarAte(String versao) {
         return Flyway.configure()
                 .dataSource(dataSource)
@@ -291,8 +264,6 @@ class MigracaoV13ProcessosIT extends AbstractIntegrationTest {
                 .migrate();
     }
 
-    // Executa os comandos numa transacao propria e devolve o erro do COMMIT
-    // (ou de um comando), ou null se confirmou.
     private SQLException transacao(String... comandos) throws SQLException {
         try (Connection conexao = dataSource.getConnection()) {
             conexao.setAutoCommit(false);
@@ -376,7 +347,6 @@ class MigracaoV13ProcessosIT extends AbstractIntegrationTest {
         return jdbcTemplate.queryForList("SELECT codigo FROM " + S + tabela, String.class);
     }
 
-    // Protocolo so precisa ser unico dentro do schema do teste (varchar(20)).
     private static String protocoloUnico() {
         return "T" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
     }

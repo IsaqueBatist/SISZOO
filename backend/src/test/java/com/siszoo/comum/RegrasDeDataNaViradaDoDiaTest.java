@@ -48,12 +48,6 @@ import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.repository.UsuarioRepository;
 import com.siszoo.usuarios.service.AuditoriaEventoService;
 
-// Datas de negocio na virada do dia UTC x Itu (DER §5 regra 4; AC-1/AC-2):
-// entre 21:00 e 23:59 em Sao Paulo o dia UTC ja e o seguinte. Cada caso fixa
-// o instante com o fuso do Clock de PRODUCAO (ClockConfig), nao com um fuso
-// escrito no teste: trocar a zona de ClockConfig (ou um servico ler o relogio
-// da JVM) quebra estes testes em qualquer hora em que a suite rode. Os
-// instantes ficam em 2030/2031 para nunca coincidirem com o dia real.
 @ExtendWith(MockitoExtension.class)
 class RegrasDeDataNaViradaDoDiaTest {
 
@@ -67,7 +61,6 @@ class RegrasDeDataNaViradaDoDiaTest {
     @Mock private AlertaVacinalMapper alertaVacinalMapper;
     @Mock private JdbcTemplate jdbcTemplate;
 
-    // instante UTC, dia civil esperado em Itu
     static Stream<Arguments> viradasDoDia() {
         return Stream.of(
                 Arguments.of("20:59 BRT (23:59 UTC, mesmo dia)", "2030-03-15T23:59:00Z", "2030-03-15"),
@@ -135,7 +128,6 @@ class RegrasDeDataNaViradaDoDiaTest {
         assertThat(alertaVacinalService(instante).listarAlertasVacinais()).isEmpty();
     }
 
-    // Protocolo NNN/AAAA: o ano e o do registro em Itu, nao o de UTC.
     @ParameterizedTest(name = "{0} -> protocolo do ano {2}")
     @CsvSource({
             "31/12 21:30 BRT, 2031-01-01T00:30:00Z, 2030",
@@ -174,7 +166,6 @@ class RegrasDeDataNaViradaDoDiaTest {
                 animalId, "antirrabica", dataAplicacao, 1, new BigDecimal("1.000"), UnidadeDose.MILILITRO, "LOTE1", null, null);
     }
 
-    // Reforco anual: validade = aplicacao + 12 meses (AlertaVacinalService#calcularDataValidade).
     private static Vacinacao vacinacaoComValidade(LocalDate validade) {
         Vacina vacina = new Vacina();
         vacina.setIntervaloMeses(12);

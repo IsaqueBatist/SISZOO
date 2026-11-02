@@ -27,11 +27,6 @@ import com.siszoo.comum.AbstractIntegrationTest;
 
 import ch.qos.logback.classic.Level;
 
-// T35: falha REAL de SMTP (nao um mock que lanca) — o JavaMailSender do
-// contexto aponta para uma porta local que acabou de ser liberada, onde nada
-// escuta, e a conexao e recusada. Classe propria porque a porta muda a chave
-// do contexto Spring. A janela entre fechar o ServerSocket e o teste conectar
-// e a unica corrida (outro processo pegar a mesma porta): desprezivel.
 class EmailServiceFalhaSmtpIT extends AbstractIntegrationTest {
 
     private static final int PORTA_FECHADA = portaLivre();
@@ -50,10 +45,8 @@ class EmailServiceFalhaSmtpIT extends AbstractIntegrationTest {
     @DisplayName("[T35] SMTP indisponivel: quem chama nao recebe excecao; future falha e o WARN nao traz o endereco")
     void falhaDeConexaoViraFutureFalhoELogSeguro() {
         try (LogCapturado log = LogCapturado.de(EmailService.class)) {
-            // Nenhuma excecao aqui: o proxy @Async devolve o future na hora.
-            CompletableFuture<Void> envio = emailService.enviar(DESTINATARIO, "Assunto", "<p>corpo</p>");
+            CompletableFuture<Void> envio = emailService.enviar(DESTINATARIO, "Assunto", "<p>corpo</p>", null);
 
-            // Windows repete o SYN antes de desistir (~2 s); timeouts SMTP sao de 5 s.
             ExecutionException falha = assertThrows(ExecutionException.class, () -> envio.get(15, SECONDS));
             assertThat(falha.getCause(), instanceOf(MailSendException.class));
 

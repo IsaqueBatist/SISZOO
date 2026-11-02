@@ -5,10 +5,6 @@ import { adicionarDiasIso } from '@/test/datas'
 import { API_BASE_URL } from '@/lib/env'
 import { resetVacinacoesMock } from './handlers'
 
-// As datas do mock (aplicação, validade) são datas civis relativas a "hoje" e
-// o handler de alertas compara com hojeEmItu, como o backend. Se o mock
-// partisse do dia UTC, entre 21:00 e 23:59 em Itu a vacina "a vencer em 5
-// dias" sairia com 6 dias restantes. Mesmos instantes de hojeNoFusoDeItu.test.ts.
 const VIRADAS = [
   ['20:59 BRT', '2030-03-15T23:59:00Z'],
   ['21:00 BRT', '2030-03-16T00:00:00Z'],

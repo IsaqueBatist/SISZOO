@@ -2,7 +2,6 @@ target/
 .git
 .gitignore
 .gitattributes
-SPEC.md
 *.md
 .idea
 .vscode

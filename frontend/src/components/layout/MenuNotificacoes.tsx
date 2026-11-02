@@ -11,9 +11,6 @@ const ICONE_POR_TOM: Record<NotificacaoResumo['tom'], IconName> = {
   info: 'bell',
 }
 
-// Mesmo padrão de popover acessível do MenuPerfil: foco no primeiro item ao
-// abrir, foco de volta no botão ao fechar, e useClickOutside (que já trata
-// clique fora e Esc).
 export function MenuNotificacoes() {
   const { itens, total, carregando } = useResumoNotificacoes()
   const [aberto, setAberto] = useState(false)
@@ -82,8 +79,6 @@ export function MenuNotificacoes() {
             )
             const classe = `dd-notif-item${item.urgente ? ' urgent' : ''}`
 
-            // Só os tipos com tela própria são navegáveis; os agregados ficam
-            // como texto, para não oferecer um caminho que não existe.
             return item.para ? (
               <Link
                 key={item.id}

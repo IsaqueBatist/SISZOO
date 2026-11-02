@@ -7,8 +7,6 @@ export interface GrupoEventosPorModulo {
   eventos: EventoAuditoria[]
 }
 
-// Mesma técnica de agruparPorDia.ts: Map para preservar a ordem de primeira
-// aparição do módulo na lista recebida, em vez de uma ordem fixa arbitrária.
 export function agruparPorModulo(eventos: EventoAuditoria[]): GrupoEventosPorModulo[] {
   const grupos: GrupoEventosPorModulo[] = []
   const indicePorModulo = new Map<Modulo, number>()

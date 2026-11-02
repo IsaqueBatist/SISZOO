@@ -1,16 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-<!--
-  Estilo proprio para PDF (T41): report.css (docs/prototipo/assets/report.css)
-  usa flexbox e CSS grid para layout (.r-header, .kpi-row, .bar-row, .legend-grid,
-  .r-footer) — nem Flying Saucer nem openhtmltopdf suportam flexbox/grid (ambos
-  sao motores CSS 2.1). Aqui o mesmo layout e refeito com display:table/table-cell,
-  mantendo cores e espacamento do protótipo. Fontes: Lato e IBM Plex Mono
-  (embutidas, OFL) substituem Inter/DM Sans/JetBrains Mono — o Google Fonts so
-  publica essas tres como fonte variavel hoje, que os renderizadores de PDF
-  legados (OpenPDF/iText2) nao leem corretamente.
--->
 <th:block th:fragment="estilo">
 <style>
   * { box-sizing: border-box; }
@@ -82,9 +72,6 @@
     <span class="dir">Página 1 de 1</span>
   </div>
 </div>
-<!-- Variantes para relatorios de mais de 1 pagina (ex.: anual_processos) —
-     cabecalho da pagina 1 com "Páginas: X de Y"; cabecalho de continuacao
-     (pagina 2+) sem h1/subtitulo, so a marca + meta; rodape com a pagina atual. -->
 <div th:fragment="cabecalhoPaginado(titulo, subtitulo, totalPaginas)">
   <div class="r-header">
     <div class="r-brand">

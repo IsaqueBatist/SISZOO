@@ -32,15 +32,6 @@ import jakarta.mail.Message;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 
-// T35-20: SMTPS (TLS implicito, porta 465 em producao) com o GreenMail em
-// SMTPS. So o servidor SMTPS do GreenMail esta no ar: uma mensagem recebida
-// prova que a conexao foi TLS desde o inicio (sem STARTTLS).
-//
-// O GreenMail usa um certificado autoassinado, que nenhum truststore conhece.
-// So neste teste, ssl.trust e checkserveridentity=false aceitam esse
-// certificado; o application.yml nao tem nada disso, e em producao a cadeia
-// e o nome do host sao validados (padrao do Angus 2.0.5). O segundo teste
-// mostra que, sem essa excecao, o mesmo certificado e recusado.
 class EmailServiceSmtpsIT extends AbstractIntegrationTest {
 
     @RegisterExtension
@@ -52,7 +43,6 @@ class EmailServiceSmtpsIT extends AbstractIntegrationTest {
     static void smtpsDoGreenMail(DynamicPropertyRegistry registro) {
         registro.add("spring.mail.host", () -> GREEN_MAIL.getSmtps().getBindTo());
         registro.add("spring.mail.port", () -> GREEN_MAIL.getSmtps().getPort());
-        // O mesmo que SMTP_SSL=true no ambiente.
         registro.add("spring.mail.properties.mail.smtp.ssl.enable", () -> "true");
         registro.add("spring.mail.properties.mail.smtp.ssl.trust", () -> "*");
         registro.add("spring.mail.properties.mail.smtp.ssl.checkserveridentity", () -> "false");
@@ -81,8 +71,6 @@ class EmailServiceSmtpsIT extends AbstractIntegrationTest {
         assertThat(recebidas[0].getSubject(), equalTo("Teste SMTPS"));
     }
 
-    // Sem a excecao do teste (truststore padrao), o certificado autoassinado
-    // e recusado no handshake: o envio falha e nada chega.
     @Test
     @DisplayName("[T35-20] SMTPS valida o certificado: autoassinado sem confianca explicita e recusado")
     void certificadoNaoConfiavelERecusado() {
@@ -97,14 +85,13 @@ class EmailServiceSmtpsIT extends AbstractIntegrationTest {
 
         EmailService servico = new EmailService(semConfianca, "nao-responda@siszoo.test");
         ExecutionException falha = assertThrows(ExecutionException.class,
-                () -> servico.enviar(DESTINATARIO, "Nao deve sair", "<p>x</p>").get(10, SECONDS));
+                () -> servico.enviar(DESTINATARIO, "Nao deve sair", "<p>x</p>", null).get(10, SECONDS));
 
         assertThat(falha.getCause(), instanceOf(MailSendException.class));
         assertThat(temCausa(falha.getCause(), SSLException.class), is(true));
         assertThat(GREEN_MAIL.getReceivedMessages(), arrayWithSize(0));
     }
 
-    // MailSendException guarda a causa por mensagem em getMessageExceptions().
     private static boolean temCausa(Throwable erro, Class<? extends Throwable> tipo) {
         for (Throwable atual = erro; atual != null; atual = atual.getCause()) {
             if (tipo.isInstance(atual)) {

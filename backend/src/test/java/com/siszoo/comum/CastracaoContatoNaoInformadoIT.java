@@ -20,8 +20,6 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 
-// Decisao funcional de 31/10/2026: castracao e contato humano nao exigem resposta,
-// e ausencia de resposta nunca vira "nao".
 @Import(RelogioTesteConfig.class)
 class CastracaoContatoNaoInformadoIT extends AbstractIntegrationTest {
 

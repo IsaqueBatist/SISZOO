@@ -1,0 +1,60 @@
+_id: "req_processos_criar_sem_ocorrencia"
+type: "Request"
+parentId: "fld_processos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/processos"
+name: "Abrir processo sanitário sem ocorrência"
+description: "Processo sem ocorrência na abertura, vinculado depois em \"Vincular processo à ocorrência\". O id fica em {{ _.processo_vinculo_id_exemplo }}."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "dataAbertura": "2026-10-03",
+      "doenca": "esporotricose",
+      "laboratorio": "ial_sorocaba",
+      "responsavel": {
+        "nome": "Responsável Fictício",
+        "telefone": "(11) 90000-0001",
+        "email": "responsavel.ficticio@exemplo.test",
+        "bairroOcorrencia": "Vila Progresso"
+      },
+      "amostras": [
+        {
+          "especie": "felino",
+          "sexo": "femea",
+          "statusClinico": "SINTOMATICO",
+          "tipoAbrigo": "PERIDOMICILIAR",
+          "dataColeta": "2026-10-02",
+          "materialBiologico": "SANGUE",
+          "contatoHumano": false,
+          "sintomas": []
+        }
+      ],
+      "observacoes": "Processo fictício sem ocorrência na abertura."
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 3000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });
+  if (insomnia.response.code === 200) {
+    const corpo = insomnia.response.json();
+    insomnia.environment.set('processo_vinculo_id_exemplo', corpo.id);
+  }

@@ -17,8 +17,6 @@ public record UsuarioResponse(
         LocalDateTime senhaAlteradaEm,
         String telefone) {
 
-    // Para o evento de CRIACAO: a auditoria e imutavel e o telefone nao entra
-    // nela (T43).
     public UsuarioResponse semTelefone() {
         return new UsuarioResponse(id, email, nome, sobrenome, crmv, cargos, ativo, ultimoAcesso, criadoEm,
                 senhaAlteradaEm, null);

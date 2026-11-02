@@ -20,7 +20,7 @@ body:
       "porte": "medio",
       "pesoKg": 13,
       "idadeAprox": "2 anos",
-      "microchip": "CHIP-EXEMPLO-0001",
+      "microchip": "CHIP-EXEMPLO-{{ _.execucao }}",
       "esterilizado": true,
       "status": "em_tratamento",
       "motivoEntrada": "recolhimento",
@@ -34,7 +34,7 @@ headers:
 authentication:
   type: "bearer"
   token: "{{ _.token }}"
-metaSortKey: 13000000
+metaSortKey: 4000
 isPrivate: false
 pathParameters: []
 settingStoreCookies: true
@@ -43,3 +43,7 @@ settingDisableRenderRequestBody: false
 settingEncodeUrl: true
 settingRebuildPath: true
 settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

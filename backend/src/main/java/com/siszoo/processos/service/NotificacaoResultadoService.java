@@ -25,23 +25,6 @@ import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-/**
- * Notificacao de resultado positivo ou inconclusivo ao municipe (RN10 do TG,
- * F2-014; {@link ResultadosNotificaveis}). Chamado so
- * pelo {@code NotificacaoResultadoListener}, depois do commit da escrita —
- * nunca na transacao que grava o resultado (ela nao pode ficar presa
- * esperando SMTP).
- *
- * <p>Municipe: tentativa real pelo {@link EmailService} (T35), com o template
- * {@value #TEMPLATE_EMAIL} em HTML e texto puro; melhor esforco — o envio e
- * assincrono e uma falha so e logada, nunca propaga (docs/decisoes/T37.md,
- * DH-24). Quando o SMTP aceita, grava a data/hora do envio no processo (#37,
- * T35-16). O lancamento do resultado nunca reenvia por si so, porque o
- * positivo e definitivo (T35-15); {@link #reenviarNotificacaoMunicipe}
- * cobre so a falha de envio (e-mail nao aceito pelo SMTP), nunca a correcao
- * do resultado. Vigilancia Epidemiologica de Itu: nao existe endereco real
- * configurado, entao fica mockada (so loga a intencao).
- */
 @Service
 public class NotificacaoResultadoService {
 
@@ -75,8 +58,6 @@ public class NotificacaoResultadoService {
     public void notificarResultado(UUID processoId) {
         ProcessoSanitario processo = processoRepository.findById(processoId).orElse(null);
         if (processo == null) {
-            // A escrita ja comitou antes do evento ser publicado; so chegaria
-            // aqui numa exclusao concorrente, que o modulo nao tem hoje.
             log.warn("Processo {} nao encontrado ao notificar resultado", processoId);
             return;
         }
@@ -85,11 +66,6 @@ public class NotificacaoResultadoService {
         notificarVigilanciaEpidemiologica(processo);
     }
 
-    // Reenvio manual da notificacao ao municipe (pendencia da T35, decisao de
-    // produto): so cobre falha de envio, nunca substitui a imutabilidade do
-    // resultado (T35-15). Chamado pelo controller, fora de qualquer
-    // transacao de escrita do resultado — @Transactional so para a leitura
-    // consistente do processo e do responsavel.
     @Transactional(readOnly = true)
     public void reenviarNotificacaoMunicipe(UUID processoId) {
         ProcessoSanitario processo = processoRepository.findById(processoId)
@@ -111,12 +87,9 @@ public class NotificacaoResultadoService {
                     processo.getProtocolo());
             return;
         }
-        // HashMap: o nome do responsavel pode vir nulo, e Map.of recusa nulos.
         Map<String, Object> variaveis = new HashMap<>();
         variaveis.put("nome", responsavel.getNome());
         variaveis.put("protocolo", processo.getProtocolo());
-        // RN10 (F2-014): o template descreve o resultado vigente (positivo ou
-        // inconclusivo) em minusculas, no meio da frase.
         variaveis.put("resultado", descricaoResultado(processo));
         UUID processoId = processo.getId();
         String protocolo = processo.getProtocolo();
@@ -128,14 +101,10 @@ public class NotificacaoResultadoService {
                     emailTemplateService.renderizarHtml(TEMPLATE_EMAIL, variaveis),
                     emailTemplateService.renderizarTexto(TEMPLATE_EMAIL, variaveis));
         } catch (TaskRejectedException ex) {
-            // T35-17: a recusa do executor (ex.: aplicacao encerrando) sobe na
-            // propria chamada, nao no future. Nada foi enviado nem registrado.
             log.warn("Notificacao ao municipe do processo {} nao submetida: executor recusou a tarefa", protocolo);
             log.debug("Detalhes da recusa da notificacao do processo {}", protocolo, ex);
             return;
         }
-        // Falha de envio ja foi logada pelo EmailService (DH-24) e deixa a data
-        // nula; so o aceite do SMTP grava (T35-16). O resultado ja foi salvo.
         envio.whenComplete((ok, falha) -> {
             if (falha == null) {
                 registrarEnvio(processoId, protocolo);
@@ -143,11 +112,7 @@ public class NotificacaoResultadoService {
         });
     }
 
-    // Dentro do callback, uma excecao sumiria no future: e logada aqui, so com
-    // o protocolo. E-mail aceito sem data gravada = caso ambiguo (T35-16).
     private void registrarEnvio(UUID processoId, String protocolo) {
-        // Microssegundos: a precisao do timestamp do PostgreSQL. Sem truncar,
-        // o banco arredonda e a coluna diverge da data no evento de auditoria.
         LocalDateTime aceitoEm = LocalDateTime.now(clock).truncatedTo(ChronoUnit.MICROS);
         try {
             processoSanitarioService.registrarNotificacaoMunicipe(processoId, aceitoEm);
@@ -158,8 +123,6 @@ public class NotificacaoResultadoService {
         }
     }
 
-    // Nome do catalogo em minusculas ("positivo", "inconclusivo"); sem resultado
-    // vigente (so nos testes unitarios) cai em "registrado".
     private static String descricaoResultado(ProcessoSanitario processo) {
         if (processo.getResultadoLaboratorial() == null || processo.getResultadoLaboratorial().getNome() == null) {
             return "registrado";
@@ -167,9 +130,6 @@ public class NotificacaoResultadoService {
         return processo.getResultadoLaboratorial().getNome().toLowerCase(Locale.ROOT);
     }
 
-    // Mock: nao ha endereco real configurado para a Vigilancia Epidemiologica
-    // de Itu (docs/decisoes/T37.md). So registra a intencao no log. Pendencia
-    // documentada no TG (RN10, trabalho futuro).
     private void notificarVigilanciaEpidemiologica(ProcessoSanitario processo) {
         log.info("[MOCK] notificacao a Vigilancia Epidemiologica de Itu seria enviada para o processo {}",
                 processo.getProtocolo());

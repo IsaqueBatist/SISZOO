@@ -206,8 +206,6 @@ class BaiaControllerIT extends AbstractIntegrationTest {
 
     @Test
     void devePersistirAtualizacaoSemRollbackQuandoOcupacaoAcimaDaCapacidade() {
-        // O cadastro de animal recusa baia cheia (409): a ocupacao acima da
-        // capacidade so acontece reduzindo a capacidade depois, no PUT abaixo.
         String id = criarBaiaViaApi(new CriarBaiaRequest("Baia Ocupacao Acima", "interna", (short) 3, null, null)).path("id");
         criarAnimalNaBaia(id, "disponivel_adocao");
         criarAnimalNaBaia(id, "disponivel_adocao");
@@ -267,7 +265,6 @@ class BaiaControllerIT extends AbstractIntegrationTest {
     }
 
     private void criarAnimalNaBaia(String baiaId, String statusCodigo) {
-        // F2-008: o destino obito_eutanasia exige o laudo do responsavel tecnico.
         String laudo = "obito_eutanasia".equals(statusCodigo) ? "Laudo de teste: quadro irreversivel" : null;
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Animal Teste", "canino", "macho", null, null, null, null, null, null, null,

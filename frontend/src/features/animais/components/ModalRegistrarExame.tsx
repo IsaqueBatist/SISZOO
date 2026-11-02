@@ -15,10 +15,7 @@ import { exameFormSchema, type ExameFormValues } from '../schemas/historicoFormS
 import { useCatalogosAnimaisQuery } from '../hooks/useAnimais'
 import { useCriarExameMutation } from '../hooks/useHistoricoAnimal'
 import type { Exame } from '../types/historico.types'
-
-// F2-007 / RF-A04 (Fase 3 do TG): registro de exame, no mesmo padrão de
-// ModalRegistrarProcedimento (registro imutável; correção = novo registro).
-const semEspacos = (v: unknown) => (typeof v === 'string' ? v.trim() || undefined : v)
+import { semEspacos } from '@/lib/texto'
 
 const MAPA_ERROS_SERVIDOR = mapaDeCampos<ExameFormValues>(Object.keys(exameFormSchema.shape) as (keyof ExameFormValues)[])
 

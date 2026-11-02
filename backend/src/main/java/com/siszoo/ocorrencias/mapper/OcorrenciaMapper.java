@@ -25,9 +25,6 @@ import com.siszoo.usuarios.entity.Usuario;
 @Mapper(componentModel = "spring")
 public interface OcorrenciaMapper {
 
-    // Mascara do denunciante (D14): em ocorrencia sigilosa, quem nao tem
-    // OCORRENCIAS_DENUNCIAS:denunciante_sigiloso:leitura recebe o bloco com
-    // todos os campos null. O denunciado nunca e mascarado.
     DenuncianteResponse DENUNCIANTE_MASCARADO = new DenuncianteResponse(null, null, null, null, null, null, null);
 
     DenuncianteResponse toDenuncianteResponse(Denunciante denunciante);
@@ -54,10 +51,6 @@ public interface OcorrenciaMapper {
         return ocorrencia.isSigilosa() && !podeVerSigilo ? DENUNCIANTE_MASCARADO : toDenuncianteResponse(denunciante);
     }
 
-    // entregaDenunciante = false (respostas de mutacao, A04): em ocorrencia
-    // sigilosa o denunciante sai mascarado ate para quem tem a permissao, que
-    // o recebe no GET do detalhe, auditado (VISUALIZACAO). podeVerDenunciante
-    // continua dizendo se o usuario tem a permissao.
     default OcorrenciaResponse toResponse(Ocorrencia ocorrencia, Denunciante denunciante, Denunciado denunciado,
             ProcessoSanitario processo, List<MovimentacaoOcorrencia> movimentacoes, List<AnexoOcorrencia> anexos,
             boolean podeVerSigilo, boolean entregaDenunciante) {
@@ -95,10 +88,6 @@ public interface OcorrenciaMapper {
                 ocorrencia.getAtualizadoEm());
     }
 
-    // Listagem (T26, revisao da D14): o nome do denunciante de ocorrencia
-    // sigilosa e null para todos os perfis — so o detalhe o entrega, a quem
-    // tem a permissao, e la o acesso e auditado (VISUALIZACAO).
-    // podeVerSigilo segue apenas para o campo podeVerDenunciante.
     default OcorrenciaResumoResponse toResumo(Ocorrencia ocorrencia, Denunciante denunciante,
             ProcessoSanitario processo, boolean podeVerSigilo) {
         String denuncianteNome = denunciante == null || ocorrencia.isSigilosa() ? null : denunciante.getNome();
@@ -118,7 +107,6 @@ public interface OcorrenciaMapper {
                 podeVerSigilo);
     }
 
-    // D23: nenhum dado pessoal do denunciante entra na auditoria.
     default OcorrenciaAuditoriaSnapshot toSnapshot(Ocorrencia ocorrencia, boolean denuncianteAlterado) {
         return new OcorrenciaAuditoriaSnapshot(
                 ocorrencia.getId(),

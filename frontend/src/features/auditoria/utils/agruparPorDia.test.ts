@@ -21,13 +21,12 @@ afterEach(() => {
 describe('agruparPorDia', () => {
   it('agrupa em Hoje, Ontem e data (DD/MM/AAAA), do mais recente ao mais antigo', () => {
     vi.useFakeTimers()
-    // Meio-dia em America/Sao_Paulo (UTC-3) = 15h UTC.
     vi.setSystemTime(new Date('2026-05-20T15:00:00Z'))
 
     const grupos = agruparPorDia([
-      evento({ id: '1', ocorreuEm: '2026-05-20T10:00:00' }), // hoje
-      evento({ id: '2', ocorreuEm: '2026-05-19T10:00:00' }), // ontem
-      evento({ id: '3', ocorreuEm: '2026-05-17T10:00:00' }), // data
+      evento({ id: '1', ocorreuEm: '2026-05-20T10:00:00' }),
+      evento({ id: '2', ocorreuEm: '2026-05-19T10:00:00' }),
+      evento({ id: '3', ocorreuEm: '2026-05-17T10:00:00' }),
     ])
 
     expect(grupos.map((g) => g.rotulo)).toEqual(['Hoje', 'Ontem', '17/05/2026'])
@@ -46,7 +45,6 @@ describe('agruparPorDia', () => {
 
   it('agrupa a hora local em America/Sao_Paulo, não UTC (22h local ainda é o mesmo dia)', () => {
     vi.useFakeTimers()
-    // "Hoje" = 2026-05-20T22:00-03:00 = 2026-05-21T01:00Z.
     vi.setSystemTime(new Date('2026-05-21T01:00:00Z'))
 
     const grupos = agruparPorDia([evento({ id: '1', ocorreuEm: '2026-05-20T22:30:00' })])

@@ -1,8 +1,3 @@
-// Espelha com.siszoo.usuarios.entity.Modulo. O evento de auditoria
-// (AuditoriaEvento) não tem coluna "modulo" — só "entidade" (string livre) —
-// então o mapeamento entidade → módulo é feito aqui, no frontend, a partir
-// das strings literais usadas nas chamadas de AuditoriaEventoService.registrar
-// em cada módulo do backend.
 export type Modulo = 'USUARIOS_ACESSO' | 'GESTAO_ANIMAIS' | 'OCORRENCIAS_DENUNCIAS' | 'PROCESSOS_SANITARIOS' | 'RELATORIOS' | 'OUTRO'
 
 const MODULO_POR_ENTIDADE: Record<string, Modulo> = {
@@ -34,9 +29,6 @@ const ROTULO_POR_MODULO: Record<Modulo, string> = {
   OUTRO: 'Outros',
 }
 
-// Fallback 'OUTRO': o backend não garante que toda entidade futura vai estar
-// mapeada aqui (não existe esse vínculo formal no banco), então uma entidade
-// desconhecida não pode quebrar o agrupamento.
 export function moduloDaEntidade(entidade: string): Modulo {
   return MODULO_POR_ENTIDADE[entidade] ?? 'OUTRO'
 }

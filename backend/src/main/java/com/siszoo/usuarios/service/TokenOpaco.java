@@ -7,10 +7,6 @@ import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HexFormat;
 
-// Tokens opacos apresentados pelo cliente (renovacao de sessao e recuperacao
-// de senha): 32 bytes de SecureRandom em Base64 URL, guardados no banco so
-// como SHA-256 em hexadecimal (64 caracteres). Quem recebe o token compara o
-// hash, nunca o valor.
 final class TokenOpaco {
 
     private static final int BYTES_TOKEN = 32;

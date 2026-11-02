@@ -1,8 +1,3 @@
-/* Portado do <style> inline de docs/prototipo/dashboard.html (grid de Alertas
-   Críticos — os gráficos completos ficam para uma tarefa futura). A grade de
-   KPIs (.kpi-grid) é global, em styles/components.css, porque as pré-visualizações
-   de relatórios também a usam. */
-
 .alerts-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -14,7 +9,6 @@
   }
 }
 
-/* Severidade por ícone + texto (não só cor) nos resumos de alerta */
 .alert-desc-item {
   display: inline-flex;
   align-items: center;

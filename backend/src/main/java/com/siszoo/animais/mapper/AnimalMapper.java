@@ -33,9 +33,6 @@ public interface AnimalMapper {
     @Mapping(target = "condicoes", source = "condicoes", qualifiedByName = "condicoesOrdenadas")
     AnimalResponse toResponse(Animal animal);
 
-    // Listagens (T45): o mesmo DTO, com a miniatura no lugar da foto inteira
-    // em fotoUrl — so avatar na tela. @Named para nunca ser escolhido sozinho
-    // no lugar de toResponse (detalhe, criacao, edicao, auditoria).
     @Named("listagem")
     @InheritConfiguration(name = "toResponse")
     @Mapping(target = "fotoUrl", source = "fotoMiniatura")

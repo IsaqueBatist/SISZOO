@@ -36,12 +36,6 @@ function renderRota(initialEntry = '/processos/novo') {
   )
 }
 
-// PROCESSOS_SANITARIOS:escrita (V3__seed_cargos.sql) é concedida aos 3
-// perfis reais do sistema — diferente de RotaEscritaAnimais/RotaEscritaOcorrencias,
-// não há hoje nenhum perfil real sem escrita para exercitar um caso negativo
-// através do fluxo público de autenticação (roleKeyFromCargos sempre resolve
-// para admin/vet/agente). O teste cobre os 3 perfis reais; a guarda em si
-// nega por padrão (fail-closed) qualquer roleKey fora desse conjunto.
 describe('RotaEscritaProcessos', () => {
   it('Administrador acessa a rota normalmente', () => {
     autenticarComCargos(['Administrador'])

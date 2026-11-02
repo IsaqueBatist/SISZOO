@@ -21,9 +21,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.siszoo.usuarios.entity.AcaoAuditoria;
 
-// Exercita a V12 (acao VISUALIZACAO, T26) num schema proprio do mesmo
-// PostgreSQL de teste, no padrao de MigracaoV7RegistroClinicoIT: do zero e
-// por atualizacao a partir da V11, com eventos das acoes anteriores.
 class MigracaoV12AuditoriaIT extends AbstractIntegrationTest {
 
     private static final String SCHEMA = "migracao_v12";
@@ -58,7 +55,6 @@ class MigracaoV12AuditoriaIT extends AbstractIntegrationTest {
         for (String acao : ACOES_ANTERIORES) {
             inserirEvento(acao);
         }
-        // Antes da V12 a nova acao e recusada pelo CHECK da V2.
         assertThrows(DataIntegrityViolationException.class, () -> inserirEvento("VISUALIZACAO"));
 
         MigrateResult resultado = migrarAte("12");
@@ -84,10 +80,6 @@ class MigracaoV12AuditoriaIT extends AbstractIntegrationTest {
         }
     }
 
-    // O enum Java cresce com as migrations seguintes (ACESSO_NEGADO, V27): a
-    // V12 so precisa aceitar os valores que existiam nela. O alinhamento do
-    // enum inteiro com o CHECK mais recente fica em
-    // MigracaoV27AuditoriaIT#enumECheckAlinhados.
     @Test
     @DisplayName("[T26] os 9 valores de AcaoAuditoria existentes na V12 sao aceitos pelo CHECK da V12")
     void enumECheckAlinhados() {
@@ -109,7 +101,6 @@ class MigracaoV12AuditoriaIT extends AbstractIntegrationTest {
                 .migrate();
     }
 
-    // Grava direto em SQL: o objetivo e provar a constraint, nao o service.
     private void inserirEvento(String acao) {
         jdbcTemplate.update("INSERT INTO " + SCHEMA + ".auditoria_evento (acao, entidade) VALUES (?, 'teste_v12')", acao);
     }

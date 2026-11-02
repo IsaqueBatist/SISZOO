@@ -26,8 +26,6 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 
-// Campo pedido na entrevista de 09/01/2026 (V33): condicoes de saude do animal,
-// com as opcoes do prototipo.
 class CondicoesSaudeAnimalIT extends AbstractIntegrationTest {
 
     @Autowired

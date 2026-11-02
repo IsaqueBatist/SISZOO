@@ -9,7 +9,6 @@ import {
   valoresVazios,
 } from './animalFormMapeamento'
 
-// Formato do GET /animais/{id} (AnimalResponse via Jackson).
 function animal(sobrescrever: Partial<Animal> = {}): Animal {
   return {
     id: 'b2c3d4e5-0000-0000-0000-0000000000a1',
@@ -111,7 +110,6 @@ describe('edição: GET -> formulário -> PUT', () => {
       dataEsterilizacao: '2025-02-01',
       status: 'disponivel_adocao',
       motivoEntrada: 'resgate',
-      // Dia não mudou: a hora original volta inteira.
       dataEntrada: '2026-03-10T14:30:00',
       baiaId: undefined,
       fotoUrl: undefined,

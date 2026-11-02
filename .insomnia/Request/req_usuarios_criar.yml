@@ -5,7 +5,7 @@ modified: 1750000000000
 created: 1750000000000
 url: "{{ _.base_url }}/api/usuarios"
 name: "Criar usuário - caso feliz"
-description: "Requer USUARIOS_ACESSO:escrita (só Administrador). Rodar esta requisição uma segunda vez sem trocar o e-mail demonstra a regra de e-mail único (409 E-mail ja cadastrado) — comportamento esperado, não é erro do exemplo."
+description: "Requer USUARIOS_ACESSO:escrita (só Administrador). O e-mail leva o sufixo da execução ({{ _.execucao_letras }}, gerado no login), então a sequência pode ser repetida. A regra de e-mail único (409) é demonstrada pela suíte ut_usuarios_criar_409_email_duplicado. O id fica em {{ _.usuario_id_exemplo }}."
 method: "POST"
 body:
   mimeType: "application/json"
@@ -13,7 +13,7 @@ body:
     {
       "nome": "Ana",
       "sobrenome": "Exemplo",
-      "email": "ana.exemplo@itu.sp.gov.br",
+      "email": "ana.{{ _.execucao_letras }}@itu.sp.gov.br",
       "cargo": "Agente Sanitário",
       "telefone": "(11) 99999-0000",
       "senhaInicial": "{{ _.senha_teste_padrao }}"
@@ -25,7 +25,7 @@ headers:
 authentication:
   type: "bearer"
   token: "{{ _.token }}"
-metaSortKey: 3000000
+metaSortKey: 2000
 isPrivate: false
 pathParameters: []
 settingStoreCookies: true
@@ -34,3 +34,11 @@ settingDisableRenderRequestBody: false
 settingEncodeUrl: true
 settingRebuildPath: true
 settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });
+  if (insomnia.response.code === 200) {
+    const corpo = insomnia.response.json();
+    insomnia.environment.set('usuario_id_exemplo', corpo.id);
+  }

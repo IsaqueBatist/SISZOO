@@ -3,7 +3,6 @@ import { Switch } from '@/components/Switch'
 import { aplicarMascaraAoDigitar, formatarCpf, formatarTelefone } from '@/lib/mascaras'
 import type { OcorrenciaFormValues } from '../schemas/ocorrenciaFormSchema'
 
-// Card 4 do formulário de ocorrência: o denunciado, só com o seletor ligado.
 export function SecaoDenunciado() {
   const {
     register,

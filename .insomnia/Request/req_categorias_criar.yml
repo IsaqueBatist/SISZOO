@@ -1,0 +1,39 @@
+_id: "req_categorias_criar"
+type: "Request"
+parentId: "fld_catalogos_clinicos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/categorias-farmacologicas"
+name: "Criar categoria farmacológica"
+description: "Cria a categoria usada por \"Criar medicamento\" e guarda o id em {{ _.categoria_farmacologica_id_exemplo }}. Requer GESTAO_ANIMAIS:escrita."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "nome": "Categoria Insomnia {{ _.execucao }}"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 7000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });
+  if (insomnia.response.code === 200) {
+    const corpo = insomnia.response.json();
+    insomnia.environment.set('categoria_farmacologica_id_exemplo', corpo.id);
+  }

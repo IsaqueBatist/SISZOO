@@ -19,8 +19,6 @@ import com.siszoo.processos.entity.StatusClinicoAmostra;
 import com.siszoo.processos.entity.StatusProcesso;
 import com.siszoo.usuarios.service.PoliticaSenha;
 
-// Coerencia das tabelas-plano do seed sem subir banco: o que os services
-// recusariam no meio da execucao falha aqui primeiro.
 class SeedPlanoTest {
 
     private static final Pattern EMAIL_INSTITUCIONAL = Pattern.compile("^[a-z.]+@itu\\.sp\\.gov\\.br$");
@@ -67,9 +65,6 @@ class SeedPlanoTest {
         }
     }
 
-    // Fotos reais (CC0) em src/main/resources/seed/fotos: uma por animal, no
-    // formato que o frontend grava (JPEG, lado maior ate 800 px) e leve o
-    // bastante para 32 data URIs nao pesarem no banco nem na listagem.
     @Test
     void todoAnimalTemFotoJpegLegivelEDentroDoTamanho() throws Exception {
         List<String> nomes = new ArrayList<>();
@@ -107,7 +102,6 @@ class SeedPlanoTest {
             boolean temResultado = processo.status() == StatusProcesso.COM_RESULTADO
                     || processo.status() == StatusProcesso.CONCLUIDO;
             assertThat(processo.resultado() != null).as(processo.chave()).isEqualTo(temResultado);
-            // V21: positivo e definitivo. Correcao so em COM_RESULTADO.
             if (processo.retificacao() != null) {
                 assertThat(processo.resultado()).isNotEqualTo("positivo");
                 assertThat(processo.status()).isEqualTo(StatusProcesso.COM_RESULTADO);
@@ -140,7 +134,6 @@ class SeedPlanoTest {
                 case VINCULADA_PENDENTE -> assertThat(processo.status()).isNotEqualTo(StatusProcesso.CONCLUIDO);
                 default -> assertThat(processo).as(ocorrencia.chave()).isNull();
             }
-            // D32: anonima nao tem denunciante; identificada exige o nome (D19).
             switch (ocorrencia.sigilo()) {
                 case ANONIMA -> assertThat(ocorrencia.denunciante()).isNull();
                 case IDENTIFICADA, SIGILOSA -> assertThat(ocorrencia.denunciante()).isNotBlank();

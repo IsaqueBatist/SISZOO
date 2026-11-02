@@ -73,9 +73,6 @@ class AuthControllerIT extends AbstractIntegrationTest {
     @Value("${siszoo.jwt.secret}")
     private String jwtSecret;
 
-    // Seed sem fixture.tokenComCargo de proposito: ele faria login aqui, e esse
-    // LOGIN extra satisfaria sozinho a asserção de auditoria do login abaixo.
-    // A senha também é o objeto do teste, então fica explícita.
     @BeforeEach
     void seedUsuarioDeTeste() {
         if (usuarioRepository.findByEmail(EMAIL_TESTE).isPresent()) {
@@ -245,9 +242,6 @@ class AuthControllerIT extends AbstractIntegrationTest {
                 .statusCode(422);
     }
 
-    // Politica de senha na troca: os dados de nome e e-mail vem do usuario
-    // autenticado, nao do corpo. Senha recusada => 422 em novaSenha e a senha
-    // atual continua valendo.
     @Test
     void deveRetornar422QuandoNovaSenhaForaDaPoliticaEManterASenhaAtual() {
         String email = "teste.politica.troca@itu.sp.gov.br";
@@ -279,9 +273,6 @@ class AuthControllerIT extends AbstractIntegrationTest {
         assertThat(atual.getSenhaAlteradaEm(), nullValue());
     }
 
-    // O BCrypt recusa mais de 72 bytes (antes: IllegalArgumentException no
-    // encode, resposta 500). O teto e em bytes UTF-8: 40 "é" sao 40
-    // caracteres, mas 80 bytes. Exatamente 72 bytes continua aceito.
     @Test
     void deveRetornar422QuandoNovaSenhaPassaDe72BytesEAceitar72() {
         String email = "teste.trocasenha.bytes@itu.sp.gov.br";

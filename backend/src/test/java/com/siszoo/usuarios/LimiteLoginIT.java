@@ -22,9 +22,6 @@ import com.siszoo.usuarios.repository.AuditoriaEventoRepository;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-// Limite de tentativas do login (PS-8) com valores baixos num contexto
-// proprio: o contexto compartilhado dos demais *IT usa limites altos, porque
-// todos chegam de 127.0.0.1.
 class LimiteLoginIT extends AbstractIntegrationTest {
 
     private static final String SENHA = "SenhaTeste123";
@@ -52,7 +49,6 @@ class LimiteLoginIT extends AbstractIntegrationTest {
     void bloqueiaDepoisDasFalhas() {
         String email = contaAtiva();
         String outroEmail = contaAtiva();
-        // Baseline depois de criar as contas: a fixture faz um login ao cria-las.
         long loginsAntes = loginsAuditados();
 
         for (int i = 0; i < 3; i++) {
@@ -62,9 +58,7 @@ class LimiteLoginIT extends AbstractIntegrationTest {
                 .body("mensagem", startsWith("Muitas tentativas em pouco tempo"));
         login(email, "errada-x").then().statusCode(429);
 
-        // Outro e-mail do mesmo IP continua entrando.
         login(outroEmail, SENHA).then().statusCode(200);
-        // O 429 nao vira LOGIN na auditoria (so o login do outro e-mail).
         assertThat(loginsAuditados() - loginsAntes, equalTo(1L));
     }
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Etapa 2 - cruzamentos mecanicos a partir de texto/blocos.json e quadros/quadros.json.
 Saida: texto/cruzamentos_automaticos.json e impressao em tela."""
 import json, os, re, sys
@@ -20,7 +19,6 @@ apA_idx = next(i for i, b in enumerate(B) if b['k'] == 'P' and b['text'].strip()
 apC_idx = next(i for i, b in enumerate(B) if b['k'] == 'P' and b['text'].strip().startswith('APÊNDICE C'))
 apD_idx = next(i for i, b in enumerate(B) if b['k'] == 'P' and b['text'].strip().startswith('APÊNDICE D'))
 
-# ---------- 1. RF / RNF / RN ----------
 rf = {}
 for n in range(6, 11):
     for r in Q[n]['linhas'][1:]:
@@ -31,7 +29,6 @@ out['rf_ids'] = sorted(rf); out['rnf_ids'] = sorted(rnf); out['rn_ids'] = sorted
 prefix_mod = Counter((k.split('-')[1][0], rf[k]['quadro']) for k in rf)
 out['rf_prefixo_por_quadro'] = {f'{p}->Quadro {q}': c for (p, q), c in prefix_mod.items()}
 
-# ---------- 2. Casos de uso (Quadros 16-51) ----------
 uc = {}
 for n in range(16, 52):
     rows = Q[n]['linhas']
@@ -46,7 +43,6 @@ for n in range(16, 52):
     d['rnf'] = sorted(set(re.findall(r'RNF\d{2}', d['texto'])))
     uc[nome] = d
 out['uc'] = {k: {kk: vv for kk, vv in v.items() if kk != 'texto'} for k, v in uc.items()}
-# RF sem UC / UC sem RF (campo "Requisitos relacionados")
 rf_cobertos = defaultdict(list)
 for k, v in uc.items():
     for r in re.findall(r'RF-[A-E]\d{2}', v.get('Requisitos relacionados', '')):
@@ -56,7 +52,6 @@ out['rf_para_uc'] = {k: v for k, v in sorted(rf_cobertos.items())}
 out['uc_sem_rf'] = [k for k, v in uc.items() if not re.findall(r'RF-[A-E]\d{2}', v.get('Requisitos relacionados', ''))]
 out['rf_referenciados_inexistentes'] = sorted({r for v in uc.values() for r in v['rf']} - set(rf))
 
-# ---------- 3. RN referenciadas em todo o documento ----------
 alltext = ' '.join(b['text'] for b in B) + ' ' + ' '.join(tbl_text(q) for q in Q.values())
 out['rn_referenciadas'] = sorted(set(re.findall(r'\bRN\d{2}\b', alltext)))
 out['rn_referenciadas_inexistentes'] = sorted(set(re.findall(r'\bRN\d{2}\b', alltext)) - set(rn))
@@ -65,7 +60,6 @@ out['rnf_referenciadas_inexistentes'] = sorted(set(re.findall(r'\bRNF\d{2}\b', a
 out['rnf_nunca_referenciadas_fora_quadro12'] = sorted(set(rnf) - set(re.findall(r'\bRNF\d{2}\b', ' '.join(b['text'] for b in B) + ' '.join(tbl_text(q) for n, q in Q.items() if n != 12))))
 out['rf_nunca_referenciados_fora_quadros6a10'] = sorted(set(rf) - set(re.findall(r'RF-[A-E]\d{2}', ' '.join(b['text'] for b in B) + ' '.join(tbl_text(q) for n, q in Q.items() if n not in range(6, 11)))))
 
-# ---------- 4. Telas (Quadro 15) ----------
 telas = {}
 for r in Q[15]['linhas'][1:]:
     telas[r[0].strip()] = {'nome': r[1], 'perfis': r[2], 'req': r[3], 'substitui': r[4]}
@@ -75,7 +69,6 @@ out['telas_em_figuras'] = telas_fig
 out['telas_figura_sem_quadro15'] = sorted(set(telas_fig) - set(telas))
 out['telas_quadro15_sem_figura'] = sorted(set(telas) - set(telas_fig))
 
-# ---------- 5. Figuras/quadros: citacao antes da aparicao, numeracao, Fonte ----------
 def first_mention(kind, num):
     pat = re.compile(rf'\b{kind}s? (?:\d+ (?:a|e|,) )*{num}\b')
     for i in range(intro, len(B)):
@@ -110,10 +103,8 @@ out['fonte_sem_ponto_final'] = [(i, B[i]['text'].strip()) for i in range(intro, 
 out['placeholders'] = [(i, B[i]['text'].strip()) for i in range(0, len(B)) if B[i]['k'] == 'P' and re.search(r'\[[A-ZÇÃÕÉÍÓÚÂÊ][^\]]{8,}\]', B[i]['text'])]
 out['sumario_texto'] = [B[i]['text'] for i in range(0, intro) if 'table of contents' in B[i]['text'].lower()]
 
-# ---------- 6. Citacoes x referencias ----------
 refs = [B[i]['text'].strip() for i in range(ref_idx + 1, apA_idx) if B[i]['k'] == 'P' and B[i]['text'].strip()]
 out['n_referencias'] = len(refs)
-# chave de cada referencia: autor (maiusculas iniciais) + ano
 def ref_key(r):
     m = re.match(r'^([A-ZÀ-Ú][A-ZÀ-Ú\s\.\-]+?)(?:\s*\(.*?\))?[\.,]', r)
     autor = m.group(1).strip() if m else r[:30]
@@ -121,7 +112,6 @@ def ref_key(r):
     return autor, anos
 ref_keys = [(ref_key(r), r[:80]) for r in refs]
 out['referencias_chaves'] = [f'{a} | {",".join(y)} | {t}' for (a, y), t in ref_keys]
-# citacoes no corpo (ate o inicio das referencias) + apendices A/B (sem transcricao C)
 corpo = ' '.join(B[i]['text'] for i in range(intro, ref_idx)) + ' ' + ' '.join(tbl_text(q) for q in Q.values())
 cits = set()
 for m in re.finditer(r'\(([^()]{3,120}?,\s*\[?(?:19|20)\d{2}[a-d]?\]?(?:;[^()]*)?)\)', corpo):
@@ -130,11 +120,9 @@ for m in re.finditer(r'\(([^()]{3,120}?,\s*\[?(?:19|20)\d{2}[a-d]?\]?(?:;[^()]*)
         mm = re.match(r'^([A-ZÀ-Ú][^,]+?)(?:\s+et al\.)?,\s*(\[?(?:19|20)\d{2}[a-d]?\]?)', part)
         if mm:
             cits.add((mm.group(1).strip().upper(), mm.group(2)))
-# citacoes narrativas "Autor (ano)" e "Autor (ano; ano)"
 for m in re.finditer(r'\b([A-ZÀ-Ú][a-zà-ú]+(?: (?:e|;) [A-ZÀ-Ú][a-zà-ú]+)*) \(((?:\[?(?:19|20)\d{2}[a-d]?\]?)(?:;\s*\[?(?:19|20)\d{2}[a-d]?\]?)*)\)', corpo):
     for y in m.group(2).split(';'):
         cits.add((m.group(1).upper(), y.strip()))
-# Fonte do Quadro 1: "Brasil (2016; 2023; ...)" e "São Paulo (2026)"
 out['citacoes_encontradas'] = sorted(f'{a} {y}' for a, y in cits)
 ref_norm = [(a.upper(), set(y.strip('[]') for y in ys)) for (a, ys), _ in ref_keys]
 def ref_match(a, y):
@@ -151,11 +139,9 @@ for a, y in cits:
             cited_refs.add(idx)
 out['referencias_nao_citadas'] = [ref_keys[i][1] for i in range(len(ref_keys)) if i not in cited_refs]
 
-# ---------- 7. Nomes de modulos (variacoes) ----------
 mods = Counter(m.strip() for m in re.findall(r'M[óo]dulo \d\s*[–\-:]\s*[A-ZÁ-Ú][^\.\(\);\n\t|]{3,60}', alltext))
 out['variacoes_nome_modulo'] = {k: v for k, v in mods.most_common()}
 
-# ---------- 8. Dicionario de dados: tabelas, enums ----------
 dic = {}
 for n in range(52, 95):
     tab = Q[n]['titulo'].split('tabela')[-1].strip()

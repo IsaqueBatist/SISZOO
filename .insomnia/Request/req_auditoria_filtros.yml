@@ -1,0 +1,28 @@
+_id: "req_auditoria_filtros"
+type: "Request"
+parentId: "fld_auditoria"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/auditoria/filtros"
+name: "Opções de filtro da auditoria"
+description: "Ações, usuários e módulos disponíveis para filtrar a trilha de auditoria (tela de Logs). Requer USUARIOS_ACESSO:leitura."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 2000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

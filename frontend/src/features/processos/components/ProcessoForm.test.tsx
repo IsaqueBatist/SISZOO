@@ -63,7 +63,6 @@ function renderCadastrar(initialEntry = '/processos/novo', cargos = ADMIN) {
   )
 }
 
-// Captura o corpo do POST /processos e devolve a fixture criada.
 function capturarCriacao() {
   const corpos: unknown[] = []
   server.use(
@@ -294,7 +293,6 @@ describe('ProcessoForm — amostras e envio', () => {
     renderCadastrar()
     await preencherEtapa1SemVinculoEAvancar(user)
     await preencherEtapa2EAvancar(user)
-    // Preenche o modo "animal de campo" e troca para "Já cadastrado".
     await preencherAmostraDeCampo(user)
     const pane = paneDoStep(/^3\. Amostras/)
     await user.click(pane.getByRole('button', { name: 'Já cadastrado' }))

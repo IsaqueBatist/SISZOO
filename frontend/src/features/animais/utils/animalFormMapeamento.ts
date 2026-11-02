@@ -9,9 +9,6 @@ import {
 } from '../schemas/animalFormSchema'
 import type { Animal, AnimalRequest, Pelagem, Porte, Sexo } from '../types/animais.types'
 
-// Conversões do formulário de animal (AnimalForm): valores iniciais, rascunho
-// em IndexedDB e o payload do POST/PUT.
-
 export interface RascunhoAnimalValores {
   nome: string
   especie: string
@@ -25,7 +22,6 @@ export interface RascunhoAnimalValores {
   dataNascimentoAprox: string
   microchip: string
   castracaoOpcao: CastracaoOpcao
-  // F2-004 / F2-008: opcionais no rascunho (rascunhos antigos não os têm)
   numeroMedalha?: string
   dataImplantacaoChip?: string
   procedencia?: string
@@ -35,20 +31,12 @@ export interface RascunhoAnimalValores {
   motivoEntrada: string
   dataEntrada: string
   baiaId: string
-  // T42: a foto NÃO vai mais aqui como data URI. O rascunho guarda só o id do
-  // arquivo na store 'arquivos', onde a imagem comprimida fica como Blob.
-  // Rascunhos gravados antes da T42 ainda têm `fotoUrl` preenchido; ele é
-  // ignorado na restauração (ver rascunhoParaValores).
   fotoArquivoId?: string
   observacoes: string
-  // Opcionais no rascunho: rascunhos anteriores à V33 não os têm.
   condicoes?: string[]
   condicoesOutras?: string
 }
 
-// Valores iniciais do formulário. Diferem do rascunho só na foto: aqui ela é o
-// data URI que a API devolve e recebe (`fotoUrl`, String no DTO); no rascunho é
-// o id do arquivo guardado como Blob.
 export type ValoresIniciaisAnimal = Omit<RascunhoAnimalValores, 'fotoArquivoId'> & { fotoUrl: string }
 
 export function valoresVazios(): ValoresIniciaisAnimal {
@@ -109,9 +97,6 @@ export function valoresDeAnimal(animal: Animal): ValoresIniciaisAnimal {
   }
 }
 
-// Converte o valor do formulário (RHF, com número/undefined) para o formato
-// persistido em IndexedDB (RascunhoAnimalValores, todo em string). A foto entra
-// como id do arquivo na store 'arquivos' — nunca o data URI (T42).
 export function valoresParaRascunho(valores: AnimalFormUiValues, fotoArquivoId: string | null): RascunhoAnimalValores {
   return {
     nome: valores.nome,
@@ -142,12 +127,6 @@ export function valoresParaRascunho(valores: AnimalFormUiValues, fotoArquivoId: 
   }
 }
 
-// Inverso: um rascunho carregado do IndexedDB (todo string) vira valores do
-// formulário RHF. Aceita também um rascunho salvo antes da T42 — o `fotoUrl`
-// que ele traz é ignorado, porque a foto do rascunho agora vem da store de
-// arquivos, de forma assíncrona. `fotoUrlAtual` preserva o que já está na
-// tela, que na edição é a foto do próprio animal. Também converte os valores
-// iniciais da edição (ValoresIniciaisAnimal tem o mesmo formato).
 export function rascunhoParaValores(rascunho: RascunhoAnimalValores, fotoUrlAtual: string | undefined): AnimalFormUiValues {
   return {
     nome: rascunho.nome,
@@ -178,15 +157,11 @@ export function rascunhoParaValores(rascunho: RascunhoAnimalValores, fotoUrlAtua
   }
 }
 
-// dataEntrada é LocalDateTime: o formulário só edita o dia. Se o dia não
-// mudou na edição, reenvia o valor original completo para não zerar a hora;
-// dia novo (ou cadastro) vai como meia-noite, como antes.
 function dataEntradaParaEnvio(dataDoForm: string, original?: string): string {
   if (original && original.slice(0, 10) === dataDoForm) return original
   return `${dataDoForm}T00:00:00`
 }
 
-// Payload do POST/PUT. `dataEntradaOriginal`: a do animal em edição.
 export function paraAnimalRequest(dados: AnimalFormUiValues, dataEntradaOriginal?: string): AnimalRequest {
   return {
     nome: dados.nome,
@@ -205,7 +180,6 @@ export function paraAnimalRequest(dados: AnimalFormUiValues, dataEntradaOriginal
     procedencia: dados.procedencia,
     laudoEutanasia: dados.laudoEutanasia,
     esterilizado: castracaoParaEsterilizado(dados.castracaoOpcao),
-    // Rascunho antigo pode trazer data com "não castrado": não envia.
     dataEsterilizacao: animalCastrado(dados.castracaoOpcao) ? dados.dataEsterilizacao : undefined,
     status: dados.status,
     motivoEntrada: dados.motivoEntrada,
@@ -218,10 +192,6 @@ export function paraAnimalRequest(dados: AnimalFormUiValues, dataEntradaOriginal
   }
 }
 
-// setValueAs dos campos: roda tanto sobre o valor digitado (string, do DOM)
-// quanto sobre o valor inicial vindo de defaultValues/reset/setValue
-// diretamente — que pode já chegar como number/undefined, não só string.
-export const semEspacos = (v: unknown) => (typeof v === 'string' ? v.trim() || undefined : v)
 export const semVazio = (v: unknown) => (typeof v === 'string' ? v || undefined : v)
 export const paraNumeroOuIndefinido = (v: unknown) => {
   if (typeof v === 'number') return Number.isFinite(v) ? v : undefined

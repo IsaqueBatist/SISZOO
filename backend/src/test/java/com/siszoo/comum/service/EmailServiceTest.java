@@ -39,9 +39,6 @@ import ch.qos.logback.classic.Level;
 import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
 
-// T35: ramos do EmailService chamados direto, sem Spring e sem proxy @Async
-// (o envio real, o template e a thread assincrona estao no EmailServiceIT;
-// a falha real de SMTP, no EmailServiceFalhaSmtpIT). Endereco so em .test.
 @ExtendWith(MockitoExtension.class)
 class EmailServiceTest {
 
@@ -67,8 +64,6 @@ class EmailServiceTest {
 
     @Test
     void envioAceitoCompletaOFutureELogaSoODestinatarioMascarado() {
-        // Mock de JavaMailSender devolve null em createMimeMessage(); sem o
-        // send real, o Message-ID fica nulo, e o log tem que aceitar isso.
         mensagemVazia();
 
         CompletableFuture<Void> envio = service.enviar(DESTINATARIO, ASSUNTO, "<p>corpo secreto</p>", "corpo secreto");
@@ -85,7 +80,7 @@ class EmailServiceTest {
 
     @Test
     void destinatarioEmBrancoViraFutureFalhoSemTentarEnviar() {
-        CompletableFuture<Void> envio = service.enviar("  ", ASSUNTO, "<p>corpo</p>");
+        CompletableFuture<Void> envio = service.enviar("  ", ASSUNTO, "<p>corpo</p>", null);
 
         ExecutionException falha = assertThrows(ExecutionException.class, envio::get);
         assertThat(falha.getCause(), instanceOf(IllegalArgumentException.class));
@@ -97,7 +92,7 @@ class EmailServiceTest {
 
     @Test
     void assuntoEmBrancoViraFutureFalhoSemTentarEnviar() {
-        CompletableFuture<Void> envio = service.enviar(DESTINATARIO, "", "<p>corpo</p>");
+        CompletableFuture<Void> envio = service.enviar(DESTINATARIO, "", "<p>corpo</p>", null);
 
         ExecutionException falha = assertThrows(ExecutionException.class, envio::get);
         assertThat(falha.getCause(), instanceOf(IllegalArgumentException.class));
@@ -105,15 +100,13 @@ class EmailServiceTest {
         assertThat(log.textos(Level.INFO), empty());
     }
 
-    // LGPD: a mensagem de um erro SMTP pode repetir o endereco (ex.: 550 com
-    // o destinatario). O WARN so leva as classes; o detalhe fica no DEBUG.
     @Test
     void falhaDoSmtpViraFutureFalhoEOWarnNaoRepeteOEndereco() {
         mensagemVazia();
         MailSendException erro = new MailSendException("550 5.1.1 <" + DESTINATARIO + ">: usuario desconhecido");
         doThrow(erro).when(mailSender).send(any(MimeMessage.class));
 
-        CompletableFuture<Void> envio = service.enviar(DESTINATARIO, ASSUNTO, "<p>corpo</p>");
+        CompletableFuture<Void> envio = service.enviar(DESTINATARIO, ASSUNTO, "<p>corpo</p>", null);
 
         ExecutionException falha = assertThrows(ExecutionException.class, envio::get);
         assertThat(falha.getCause(), is(erro));
@@ -126,9 +119,6 @@ class EmailServiceTest {
         assertThat(log.textos(Level.INFO), empty());
     }
 
-    // T35-17: pelo proxy assincrono (o mesmo interceptor do @EnableAsync), a
-    // tarefa e submetida na thread de quem chama. Executor encerrado recusa,
-    // e a TaskRejectedException sobe na propria chamada — nao no future.
     @Test
     void recusaDoExecutorSobeNaPropriaChamadaSemTentarEnviar() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
@@ -139,7 +129,7 @@ class EmailServiceTest {
         fabrica.addAdvice(new AnnotationAsyncExecutionInterceptor(executor));
         EmailService proxy = (EmailService) fabrica.getProxy();
 
-        assertThrows(TaskRejectedException.class, () -> proxy.enviar(DESTINATARIO, ASSUNTO, "<p>corpo</p>"));
+        assertThrows(TaskRejectedException.class, () -> proxy.enviar(DESTINATARIO, ASSUNTO, "<p>corpo</p>", null));
         verify(mailSender, never()).send(any(MimeMessage.class));
         verify(mailSender, never()).createMimeMessage();
     }
@@ -171,7 +161,6 @@ class EmailServiceTest {
         when(mailSender.createMimeMessage()).thenReturn(new MimeMessage(Session.getInstance(new Properties())));
     }
 
-    // Nenhum evento do nivel traz o endereco completo nem o trecho informado.
     private void semDadosNoLog(Level nivel, String trecho) {
         assertThat(log.textos(nivel), everyItem(not(containsString(DESTINATARIO))));
         assertThat(log.textos(nivel), everyItem(not(containsString(trecho))));

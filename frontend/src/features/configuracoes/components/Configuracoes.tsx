@@ -41,11 +41,6 @@ export function Configuracoes() {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSucesso, setSubmitSucesso] = useState(false)
 
-  // Seed único a partir do servidor, ajustado durante o render (sem efeito):
-  // `form` só é null antes do primeiro carregamento, então essa checagem
-  // nunca reexecuta depois de inicializado — nem quando query.data muda por
-  // um PATCH bem-sucedido (setQueryData) — e assim nunca descarta a escolha
-  // do usuário numa queda de rede.
   if (query.data && !form) {
     setForm({
       tema: query.data.tema,

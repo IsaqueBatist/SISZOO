@@ -26,8 +26,6 @@ export function useCriarCategoriaFarmacologicaMutation() {
   })
 }
 
-// Invalida ['medicamentos'] inteiro: a lista desta tela e o select do modal
-// de prescrição (useMedicamentosAtivosQuery) passam a ver o novo item.
 export function useCriarMedicamentoMutation() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -36,9 +34,6 @@ export function useCriarMedicamentoMutation() {
   })
 }
 
-// Catálogo completo (ativos e inativos) para a tela de gerenciamento. A tela
-// filtra em memória: a faixa de resumo precisa do conjunto inteiro de
-// qualquer jeito.
 export function useMedicamentosQuery() {
   return useQuery({
     queryKey: ['medicamentos', 'catalogo'],
@@ -47,10 +42,6 @@ export function useMedicamentosQuery() {
   })
 }
 
-// Como em useCriarMedicamentoMutation, invalida ['medicamentos'] inteiro: sem
-// isso o select do modal de prescrição (useMedicamentosAtivosQuery, que tem
-// staleTime Infinity) continuaria mostrando o nome antigo ou um medicamento
-// já desativado.
 function useInvalidarMedicamentos() {
   const queryClient = useQueryClient()
   return () => queryClient.invalidateQueries({ queryKey: ['medicamentos'] })

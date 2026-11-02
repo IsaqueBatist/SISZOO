@@ -1,0 +1,40 @@
+_id: "req_auth_senha_primeiro_acesso"
+type: "Request"
+parentId: "fld_auth"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/auth/senha"
+name: "Trocar a própria senha (primeiro acesso)"
+description: "Só no primeiro acesso do administrador: troca admin_password por admin_password_nova e guarda a nova em admin_password. Enquanto a senha temporária não é trocada, a API responde 403 nas demais rotas. Pule esta requisição se a conta já trocou a senha (por exemplo, no ambiente de dados fictícios)."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "senhaAtual": "{{ _.admin_password }}",
+      "novaSenha": "{{ _.admin_password_nova }}",
+      "confirmarSenha": "{{ _.admin_password_nova }}"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 2000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 204', () => {
+    insomnia.expect(insomnia.response.code).to.equal(204);
+  });
+  if (insomnia.response.code === 204) {
+    insomnia.environment.set('admin_password', insomnia.environment.get('admin_password_nova'));
+  }

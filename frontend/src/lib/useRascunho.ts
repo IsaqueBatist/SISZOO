@@ -8,23 +8,10 @@ interface OpcoesRascunho<TForm extends FieldValues, TSalvo> {
   watch: UseFormWatch<TForm>
   reset: UseFormReset<TForm>
   getValues: UseFormGetValues<TForm>
-  // Conversão entre os valores do formulário e o formato gravado (quando o
-  // formato do rascunho não pode mudar, como no cadastro de animal).
   paraRascunho?: (valores: TForm) => TSalvo
   deRascunho?: (salvo: TSalvo) => TForm
 }
 
-// Rascunho automático de formulário react-hook-form em IndexedDB (rede do
-// CCZ é instável: o que foi digitado não pode se perder). Regras, as mesmas
-// que o cadastro de animal já seguia:
-// - confere UMA vez, ao montar, se há rascunho salvo; se houver, oferece
-//   restaurar ou descartar (o formulário não é preenchido sozinho);
-// - só começa a salvar depois dessa checagem — senão um rascunho vazio
-//   gravaria por cima do verdadeiro antes de ele ser lido;
-// - com rascunho à espera de Restaurar ou Descartar, não salva: digitar sem
-//   escolher não pode apagar o que estava guardado;
-// - salva a cada alteração, com o debounce do armazenamento;
-// - depois do envio com sucesso, cancela o salvamento pendente e remove.
 export function useRascunho<TForm extends FieldValues, TSalvo = TForm>({
   armazenamento,
   chave,
@@ -35,15 +22,9 @@ export function useRascunho<TForm extends FieldValues, TSalvo = TForm>({
   deRascunho,
 }: OpcoesRascunho<TForm, TSalvo>) {
   const [rascunhoDisponivel, setRascunhoDisponivel] = useState<TSalvo | null>(null)
-  // Instante do último salvamento, para o aviso dizer de quando é o rascunho.
-  // null também em rascunho gravado antes da T42, que não tem o instante.
   const [rascunhoSalvoEm, setRascunhoSalvoEm] = useState<number | null>(null)
   const [prontoParaAutoSalvar, setProntoParaAutoSalvar] = useState(false)
 
-  // Funções em ref: quem chama costuma passá-las inline, e mudar a cada
-  // render não pode recriar a assinatura do watch nem recarregar o rascunho.
-  // Atualizada num efeito (não no render), declarado antes dos outros para
-  // rodar primeiro no mesmo commit.
   const conversoes = useRef({ armazenamento, paraRascunho, deRascunho })
   useEffect(() => {
     conversoes.current = { armazenamento, paraRascunho, deRascunho }
@@ -72,8 +53,6 @@ export function useRascunho<TForm extends FieldValues, TSalvo = TForm>({
   const aguardandoEscolha = rascunhoDisponivel !== null
 
   useEffect(() => {
-    // O gate envolve a CRIAÇÃO da assinatura, não só o corpo do callback:
-    // checar a flag dentro do callback seria um stale closure.
     if (!prontoParaAutoSalvar || aguardandoEscolha) return
     const inscricao = watch((valoresAtuais) => {
       conversoes.current.armazenamento.agendarSalvar(chave, converterParaRascunho(valoresAtuais as TForm))
@@ -96,16 +75,11 @@ export function useRascunho<TForm extends FieldValues, TSalvo = TForm>({
     await conversoes.current.armazenamento.remover(chave)
   }
 
-  // Salvamento explícito (botão "Salvar rascunho", gravação de um arquivo).
-  // Cancela antes o salvamento ainda agendado: ele foi montado com os valores
-  // de até 800 ms atrás e sobrescreveria este, que é o mais recente.
   function salvarAgora(): Promise<void> {
     conversoes.current.armazenamento.cancelarAgendado?.(chave)
     return conversoes.current.armazenamento.salvar(chave, converterParaRascunho(getValues()))
   }
 
-  // Sem cancelar o agendado, uma tecla digitada até 800 ms antes do envio
-  // regravaria o rascunho depois de removido.
   async function removerAposSucesso() {
     conversoes.current.armazenamento.cancelarAgendado?.(chave)
     await conversoes.current.armazenamento.remover(chave)

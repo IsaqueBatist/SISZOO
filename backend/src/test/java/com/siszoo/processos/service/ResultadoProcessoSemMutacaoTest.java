@@ -15,13 +15,6 @@ import com.siszoo.processos.entity.ProcessoSanitario;
 import com.siszoo.processos.entity.ResultadoProcesso;
 import com.siszoo.processos.repository.ResultadoProcessoRepository;
 
-// Prova por reflection, no modelo de RegistrosClinicosSemMutacaoTest, que o
-// resultado do processo (T34, registro critico imutavel) nao tem caminho de
-// mutacao no codigo: o repositorio so declara finders, a entidade nao tem
-// setter nem metodo de instancia que altere estado, e o unico metodo publico
-// do service sobre resultado e o registro (que so insere). A barreira no
-// banco e o trigger da V14 (ProcessoSanitarioControllerIT e
-// MigracaoV14ResultadoProcessoIT).
 class ResultadoProcessoSemMutacaoTest {
 
     @Test
@@ -57,8 +50,6 @@ class ResultadoProcessoSemMutacaoTest {
                 .containsExactly("registrarResultado");
     }
 
-    // getDeclaredMethods() exclui os herdados (save/delete de JpaRepository):
-    // prova so que nada de mutacao foi adicionado por cima.
     private static Set<String> nomesDosMetodosPublicosDeclarados(Class<?> tipo, boolean estaticos) {
         return Arrays.stream(tipo.getDeclaredMethods())
                 .filter(m -> Modifier.isPublic(m.getModifiers()))

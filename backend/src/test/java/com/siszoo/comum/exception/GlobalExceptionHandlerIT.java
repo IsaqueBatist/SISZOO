@@ -49,7 +49,6 @@ class GlobalExceptionHandlerIT extends AbstractIntegrationTest {
         resposta.then()
                 .statusCode(409)
                 .body("mensagem", equalTo("Não foi possível salvar, porque os dados entram em conflito com um registro existente. Verifique as informações e tente novamente."));
-        // O detalhe do PostgreSQL (SQL, tabela, constraint, valor) fica so no log.
         String corpo = resposta.asString();
         for (String detalheInterno : new String[] {
                 "status_animal", "uq_status_animal_codigo", "INSERT", "SQL", "adotado", "duplicate"}) {
@@ -57,10 +56,6 @@ class GlobalExceptionHandlerIT extends AbstractIntegrationTest {
         }
     }
 
-    // LGPD: o WARN da violacao de integridade leva so constraint e SQLState.
-    // A mensagem do PostgreSQL ("Key (codigo)=(adotado) already exists",
-    // "Failing row contains (...)") pode trazer dado pessoal da linha e fica so
-    // no DEBUG, que nao e o nivel de producao.
     @Test
     void violacaoDeConstraintLogaEmWarnSemValoresDaLinha() {
         try (LogCapturado log = LogCapturado.de(GlobalExceptionHandler.class)) {
@@ -84,8 +79,6 @@ class GlobalExceptionHandlerIT extends AbstractIntegrationTest {
         }
     }
 
-    // Compatibilidade do campo aditivo `campos`: fora de erro de validacao o
-    // corpo continua sendo so {"mensagem": ...}.
     @Test
     void erroForaDeValidacaoNaoDeveIncluirCampos() {
         Map<String, Object> corpo = given()

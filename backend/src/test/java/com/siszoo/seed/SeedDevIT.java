@@ -25,11 +25,6 @@ import com.siszoo.comum.RelogioTesteConfig;
 
 import io.restassured.path.json.JsonPath;
 
-// Seed de dados ficticios ponta a ponta: perfil `seed` + habilitado, num banco
-// so dele (contexto proprio). O seed roda na subida (ApplicationReadyEvent),
-// depois do admin bootstrap do DataSeeder, com o relogio fixo dos testes.
-// Os metodos rodam em ordem: as contagens exatas vem antes de qualquer
-// cenario que crie dados fora do seed.
 @ActiveProfiles("seed")
 @Import(RelogioTesteConfig.class)
 @TestPropertySource(properties = {
@@ -62,10 +57,8 @@ class SeedDevIT extends AbstractIntegrationTest {
         assertThat(contar("SELECT count(*) FROM medicamento")).isEqualTo(CatalogoClinicoSeed.MEDICAMENTOS.size());
         assertThat(contar("SELECT count(*) FROM baia")).isEqualTo(BaiasSeed.PLANO.size());
         assertThat(contar("SELECT count(*) FROM animal")).isEqualTo(AnimaisSeed.PLANO.size());
-        // Toda ficha sai com a foto real e com a miniatura que o AnimalService gera dela.
         assertThat(contar("SELECT count(*) FROM animal WHERE foto_url LIKE 'data:image/jpeg;base64,%'"
                 + " AND foto_miniatura LIKE 'data:image/jpeg;base64,%'")).isEqualTo(AnimaisSeed.PLANO.size());
-        // +1 em cada: a retificacao e um registro novo.
         assertThat(contar("SELECT count(*) FROM vacinacao")).isEqualTo(AnimaisSeed.VACINAS.size() + 1);
         assertThat(contar("SELECT count(*) FROM procedimento")).isEqualTo(procedimentos + 1);
         assertThat(contar("SELECT count(*) FROM prescricao")).isEqualTo(AnimaisSeed.PRESCRICOES.size() + 1);
@@ -74,7 +67,6 @@ class SeedDevIT extends AbstractIntegrationTest {
         assertThat(contar("SELECT count(*) FROM ocorrencia")).isEqualTo(OcorrenciasSeed.PLANO.size());
         assertThat(contar("SELECT count(*) FROM processo_sanitario")).isEqualTo(ProcessosSeed.PLANO.size());
         assertThat(contar("SELECT count(*) FROM relatorio_gerado")).isEqualTo(RelatoriosSeed.PLANO.size());
-        // Auditoria verdadeira, gravada pelos services (nada de evento fabricado).
         assertThat(contar("SELECT count(*) FROM auditoria_evento WHERE entidade = 'animal' AND acao = 'CRIACAO'"))
                 .isEqualTo(AnimaisSeed.PLANO.size());
     }
@@ -104,15 +96,11 @@ class SeedDevIT extends AbstractIntegrationTest {
     @Test
     @Order(4)
     void invariantesDeNegocio() {
-        // Ficha completa calculada pelo FichaCompletaService (RN-AN04), inclusive
-        // quando o microchip entra depois da vacina (animal 018).
         assertThat(fichaCompleta(12)).isTrue();
         assertThat(fichaCompleta(15)).isFalse();
         assertThat(fichaCompleta(18)).isTrue();
         assertThat(fichaCompleta(20)).isFalse();
 
-        // Senha trocada pela AuthService (sem primeiro acesso), exceto o usuario
-        // de primeiro acesso; o agente inativo continua inativo.
         assertThat(contar("SELECT count(*) FROM usuario WHERE email LIKE '%.seed@itu.sp.gov.br'"
                 + " AND senha_alterada_em IS NULL")).isEqualTo(1);
         assertThat(jdbcTemplate.queryForObject("SELECT senha_alterada_em IS NULL FROM usuario WHERE email = ?",
@@ -120,8 +108,6 @@ class SeedDevIT extends AbstractIntegrationTest {
         assertThat(jdbcTemplate.queryForObject("SELECT ativo FROM usuario WHERE email = ?", Boolean.class,
                 "sergio.lacerda" + UsuariosSeed.SUFIXO_EMAIL)).isFalse();
 
-        // SD-4: nenhum processo notificavel tem e-mail do responsavel, e nenhuma
-        // notificacao foi registrada como enviada.
         for (ProcessosSeed.Processo processo : ProcessosSeed.PLANO) {
             if (processo.notificavel()) {
                 assertThat(jdbcTemplate.queryForObject("SELECT r.email FROM seed_controle s"
@@ -132,8 +118,6 @@ class SeedDevIT extends AbstractIntegrationTest {
         assertThat(contar("SELECT count(*) FROM processo_sanitario WHERE data_notificacao_municipe IS NOT NULL"))
                 .isZero();
 
-        // Os 4 status de processo, positivo nunca retificado, ocorrencia vinculada
-        // encerrada so depois do processo concluido (D12).
         assertThat(jdbcTemplate.queryForList("SELECT DISTINCT status_processo FROM processo_sanitario", String.class))
                 .containsExactlyInAnyOrder("ABERTO", "AGUARDANDO_RESULTADO", "COM_RESULTADO", "CONCLUIDO");
         assertThat(contar("SELECT count(*) FROM resultado_processo r JOIN resultado_laboratorial l"
@@ -151,7 +135,6 @@ class SeedDevIT extends AbstractIntegrationTest {
     @Test
     @Order(5)
     void cenarioPelaApiReal() {
-        // Login com a senha documentada prova o hash do PasswordEncoder real.
         String tokenAdmin = fixture.login("marta.siqueira" + UsuariosSeed.SUFIXO_EMAIL, UsuariosSeed.SENHA_FICTICIA);
         String tokenVet = fixture.login("renato.albuquerque" + UsuariosSeed.SUFIXO_EMAIL, UsuariosSeed.SENHA_FICTICIA);
 
@@ -163,15 +146,12 @@ class SeedDevIT extends AbstractIntegrationTest {
         assertThat(kpis.getLong("adocoes.disponiveis")).isPositive();
         assertThat(kpis.getLong("ocorrencias.registradasHoje")).isEqualTo(2);
 
-        // Mais de uma pagina (20) nas tres listagens principais.
         assertThat(get(tokenAdmin, "/api/animais?tamanho=20").getInt("totalPaginas")).isGreaterThanOrEqualTo(2);
         assertThat(get(tokenAdmin, "/api/ocorrencias?tamanho=20").getInt("totalPaginas")).isGreaterThanOrEqualTo(2);
         assertThat(get(tokenAdmin, "/api/processos?tamanho=20").getInt("totalPaginas")).isGreaterThanOrEqualTo(2);
 
-        // RBAC preservado: o Veterinario nao acessa ocorrencias (V11).
         given().header("Authorization", "Bearer " + tokenVet).when().get("/api/ocorrencias").then().statusCode(403);
 
-        // Sigilo preservado: quem le ocorrencias sem denunciante_sigiloso nao ve o denunciante.
         UUID sigilosa = idDaChave(OcorrenciasSeed.chaveOcorrencia(3));
         String tokenLeitor = fixture.tokenLeitorOcorrencias("leitor.seed.it@itu.sp.gov.br", "SeedIt");
         JsonPath detalhe = get(tokenLeitor, "/api/ocorrencias/" + sigilosa);
@@ -200,8 +180,6 @@ class SeedDevIT extends AbstractIntegrationTest {
                 idDaChave(AnimaisSeed.chaveAnimal(animal)));
     }
 
-    // Contagem de todas as tabelas do schema, da auditoria por entidade/acao e
-    // da sequencia de protocolos: qualquer gravacao a mais aparece aqui.
     private Map<String, Object> retratoDoBanco() {
         Map<String, Object> retrato = new TreeMap<>();
         for (String tabela : jdbcTemplate.queryForList("SELECT table_name FROM information_schema.tables"

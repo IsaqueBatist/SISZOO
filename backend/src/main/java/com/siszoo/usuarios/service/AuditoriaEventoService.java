@@ -57,13 +57,6 @@ public class AuditoriaEventoService {
         auditoriaEventoRepository.save(novoEvento(usuario, acao, entidade, entidadeId, payloadAntes, payloadDepois));
     }
 
-    // T43: grava o evento ja (flush), para quem lanca uma excecao logo depois
-    // com noRollbackFor (ACESSO_NEGADO antes do 403). No registrar(), o INSERT
-    // so sai no commit; se falhasse ali, a excecao do commit substituiria a do
-    // chamador e uma violacao de integridade viraria 409. Aqui a falha sai
-    // antes, como FalhaAuditoriaException (500), e desfaz a transacao. So para
-    // transacoes sem outra escrita pendente: o flush levaria junto as escritas
-    // do chamador e a traducao as atribuiria a auditoria.
     @Transactional
     public void registrarImediato(Usuario usuario, AcaoAuditoria acao, String entidade, UUID entidadeId,
             Object payloadAntes, Object payloadDepois) {
@@ -88,13 +81,6 @@ public class AuditoriaEventoService {
         return evento;
     }
 
-    // T43: endereco do socket da requisicao HTTP em curso. O navegador fala
-    // direto com o backend (porta 8080 publicada; o nginx do front so serve o
-    // SPA) e nao ha server.forward-headers-strategy: X-Forwarded-For e
-    // definido pelo cliente e nao e lido, para o IP nao poder ser forjado.
-    // Fora de requisicao (envio assincrono da notificacao, DataSeeder), nulo.
-    // A zona de um IPv6 link-local ("fe80::1%eth0") e so o indice da
-    // interface local, nao parte do endereco, e poderia estourar ip varchar(45).
     private static String ipDaRequisicao() {
         if (!(RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes atributos)) {
             return null;
@@ -107,14 +93,6 @@ public class AuditoriaEventoService {
         return zona < 0 ? ip : ip.substring(0, zona);
     }
 
-    @Transactional(readOnly = true)
-    public PaginaResponse<AuditoriaEventoResponse> listar(int pagina, int tamanho) {
-        return listar(FiltroAuditoria.VAZIO, pagina, tamanho);
-    }
-
-    // F2-027 (Fase 3 do TG): filtros de servidor para a tela de Logs. Sem
-    // parametros, comportamento anterior (so paginacao). `modulo` e derivado da
-    // entidade (auditoria_evento nao guarda modulo): ver MODULO_POR_ENTIDADE.
     @Transactional(readOnly = true)
     public PaginaResponse<AuditoriaEventoResponse> listar(FiltroAuditoria filtro, int pagina, int tamanho) {
         Specification<AuditoriaEvento> spec = (root, query, cb) -> {
@@ -149,14 +127,9 @@ public class AuditoriaEventoService {
                 List.of(Modulo.values()));
     }
 
-    // Filtro da listagem (todos opcionais). `de`/`ate` sao dias inclusivos no fuso do sistema.
     public record FiltroAuditoria(AcaoAuditoria acao, String usuarioEmail, Modulo modulo, LocalDate de, LocalDate ate) {
-        static final FiltroAuditoria VAZIO = new FiltroAuditoria(null, null, null, null, null);
     }
 
-    // Nomes de entidade usados nas chamadas de registrar(...) em cada modulo
-    // (mesmo mapa do frontend, moduloDaEntidade.ts). Entidade nova sem mapa
-    // simplesmente nao aparece no filtro por modulo.
     private static final Map<Modulo, List<String>> ENTIDADES_POR_MODULO = Map.of(
             Modulo.USUARIOS_ACESSO, List.of("usuario", "preferencia_usuario", "sessao_usuario"),
             Modulo.GESTAO_ANIMAIS, List.of("animal", "baia", "vacinacao", "procedimento", "prescricao", "medicamento",
@@ -170,10 +143,6 @@ public class AuditoriaEventoService {
         return ENTIDADES_POR_MODULO.getOrDefault(modulo, List.of("__nenhuma__"));
     }
 
-    // T37: mini trilha de auditoria de uma entidade especifica (ex.: um
-    // processo sanitario), sem paginacao - volume pequeno por entidade. Usado
-    // por modulos que nao tem USUARIOS_ACESSO:leitura (so o Administrador
-    // tem), protegidos pela propria autorizacao do modulo chamador.
     @Transactional(readOnly = true)
     public List<AuditoriaEventoResponse> listarPorEntidade(String entidade, UUID entidadeId) {
         return auditoriaEventoRepository.findByEntidadeAndEntidadeIdOrderByOcorreuEmAsc(entidade, entidadeId).stream()
@@ -182,8 +151,6 @@ public class AuditoriaEventoService {
     }
 
     private String serializar(Object payload) {
-        // Jackson 3: writeValueAsString lança tools.jackson.core.JacksonException,
-        // que é unchecked (extends RuntimeException) - nao precisa de try/catch.
         return payload == null ? null : objectMapper.writeValueAsString(payload);
     }
 }

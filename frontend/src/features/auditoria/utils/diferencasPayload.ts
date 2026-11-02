@@ -1,6 +1,3 @@
-// Antes e depois de um evento de auditoria, em linhas legíveis. Os payloads são
-// JSON de snapshots diferentes por entidade, então a comparação é genérica: cada
-// folha vira um caminho ("responsavel.cpf", "processo.amostras.0.peso").
 export interface DiferencaPayload {
   campo: string
   antes: string
@@ -78,7 +75,6 @@ function folhas(payload: string | null | undefined): Map<string, unknown> {
   return saida
 }
 
-// Códigos e enums dos snapshots, que ninguém deveria ler como estão.
 const CAMPOS_DE_CODIGO = new Set([
   'statusProcesso',
   'statusClinico',
@@ -114,7 +110,6 @@ function rotuloDe(caminho: string): string {
   return grupo ? `${grupo} · ${rotulo}` : rotulo
 }
 
-// Em amostras, `id`, `sintomas.N.codigo` e afins não dizem nada a quem lê.
 function campoRelevante(caminho: string): boolean {
   return !/(^|\.)(id|animalId|protocolo|dataAbertura|ocorrenciaId|codigo|justificativa)$/.test(caminho)
 }

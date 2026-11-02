@@ -91,9 +91,6 @@ describe('ModalRegistrarMedicamento', () => {
     if (!modal) throw new Error('modal não encontrado')
     expect(within(modal).getByText(/também usado.*mudar o status/i)).toBeInTheDocument()
 
-    // O <select> de medicamento é populado por uma query assíncrona
-    // (useMedicamentosAtivosQuery) — a pré-seleção do medicamentoId da
-    // retifica só pode ser confirmada depois que as opções carregarem.
     await waitFor(() => {
       expect(within(modal).getByLabelText(/^medicamento/i)).toHaveValue(MEDICAMENTO_FENOBARBITAL_ID)
     })

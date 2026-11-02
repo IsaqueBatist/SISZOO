@@ -12,9 +12,6 @@ import { ANEXO_CRIADO_FIXTURE, OCORRENCIA_ABERTA_ID, OCORRENCIA_ENCERRADA_ID } f
 import { CadastrarOcorrencia } from './CadastrarOcorrencia'
 import { OcorrenciaDetalhe } from './OcorrenciaDetalhe'
 
-// jsdom não implementa IndexedDB: a pendência gravada numa sessão anterior
-// (D15) é simulada mockando o storage — mesmo padrão de
-// OcorrenciaForm.autosave.test.tsx.
 vi.mock('../storage/rascunhoOcorrenciaStorage', async () => {
   const real =
     await vi.importActual<typeof import('../storage/rascunhoOcorrenciaStorage')>('../storage/rascunhoOcorrenciaStorage')

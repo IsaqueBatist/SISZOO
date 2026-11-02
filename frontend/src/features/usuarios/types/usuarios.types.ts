@@ -29,8 +29,6 @@ export interface AtualizarUsuarioRequest {
   telefone?: string
 }
 
-// Espelha comum/dto/PaginaResponse do backend — envelope de paginação
-// reaproveitado por todo endpoint de listagem.
 export interface PaginaResponse<T> {
   itens: T[]
   pagina: number

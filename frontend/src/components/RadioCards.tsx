@@ -11,14 +11,11 @@ interface RadioCardsProps<T extends string> {
   opcoes: readonly OpcaoRadioCard<T>[]
   valor: T | undefined
   onChange: (valor: T) => void
-  // Colunas fixas na grade (sem o valor, a grade do CSS decide).
   colunas?: number
   'aria-label'?: string
   'aria-labelledby'?: string
 }
 
-// Grupo de cartões de escolha única do design system (.radio-cards), com a
-// semântica de radiogroup.
 export function RadioCards<T extends string>({
   opcoes,
   valor,

@@ -7,7 +7,6 @@ export interface CriarMedicamentoRequest {
   categoriaId: string
 }
 
-// Só as ativas, ordenadas por nome (CategoriaFarmacologicaController).
 export function listarCategoriasFarmacologicas(): Promise<CategoriaFarmacologica[]> {
   return http.get<CategoriaFarmacologica[]>('/categorias-farmacologicas').then((response) => response.data)
 }
@@ -20,10 +19,6 @@ export function criarMedicamento(payload: CriarMedicamentoRequest): Promise<Medi
   return http.post<Medicamento>('/medicamentos', payload).then((response) => response.data)
 }
 
-// Mesmos campos de CriarMedicamentoRequest, em classe separada no backend.
-// Note que NÃO há `ativo`: medicamento não tem caminho de reativação
-// (decisão registrada no Javadoc de MedicamentoController), ao contrário da
-// vacina. Desativar é definitivo.
 export type AtualizarMedicamentoRequest = CriarMedicamentoRequest
 
 export interface MedicamentosFiltro {
@@ -31,12 +26,6 @@ export interface MedicamentosFiltro {
   categoriaId?: string
 }
 
-// Teto de 500 por página (Paginacao, no backend). O catálogo do CCZ tem
-// dezenas de itens, então uma página basta e evita paginar uma tela de apoio.
-//
-// Diferente de `listarMedicamentosAtivos` (features/animais/api/historicoApi),
-// que serve ao select da prescrição e fixa `ativo: true` com teto de 100:
-// a tela de catálogo precisa ver também os inativos e o total verdadeiro.
 const TAMANHO_CATALOGO = 500
 
 export function listarMedicamentos(filtro: MedicamentosFiltro = {}): Promise<PaginaResponse<Medicamento>> {

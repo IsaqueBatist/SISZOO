@@ -39,12 +39,10 @@ public record AnimalResponse(
         String criadoPorNome,
         LocalDateTime criadoEm,
         LocalDateTime atualizadoEm,
-        // F2-004 / F2-008 (Fase 3 do TG)
         String numeroMedalha,
         LocalDate dataImplantacaoChip,
         String procedencia,
         String laudoEutanasia,
-        // V33. Nulo nas listagens: so o detalhe carrega a colecao.
         List<CatalogoItemResponse> condicoes,
         String condicoesOutras) {
 }

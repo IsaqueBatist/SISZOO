@@ -22,14 +22,6 @@ import com.siszoo.ocorrencias.service.AnexoOcorrenciaService;
 import com.siszoo.ocorrencias.service.OcorrenciaService;
 import com.siszoo.ocorrencias.service.PermissoesOcorrencia;
 
-// Ocorrencias pelos services reais (protocolo, movimentacoes, sigilo e
-// auditoria como no POST /api/ocorrencias), registradas por agentes. Cobrem os
-// tres status, todas as providencias (inclusive o encerramento direto de
-// ABERTA permitido pela D5 e o registro_indevido, que sai das contagens),
-// denuncias sigilosas e anonimas, notas internas e anexos. As vinculadas a
-// processo sao encerradas por ProcessosSeed, depois do processo concluido (D12).
-// Dados pessoais 100% ficticios: CPF sempre nulo, telefone invalido de
-// proposito (prefixo 0000) e e-mail no dominio reservado exemplo.test.
 class OcorrenciasSeed {
 
     static final String ESCRITA = PermissoesOcorrencia.ESCRITA;
@@ -38,8 +30,6 @@ class OcorrenciasSeed {
 
     enum Sigilo { IDENTIFICADA, SIGILOSA, ANONIMA }
 
-    // `data` recebe as datas do seed; as vinculadas usam a data do processo
-    // (ProcessosSeed.dataAbertura) para a ocorrencia vir antes dele.
     record Ocorrencia(int numero, String tipo, Function<DatasSeed, LocalDate> data, String hora, String endereco,
             String bairro, String descricao, boolean urgente, Sigilo sigilo, String denunciante, String denunciado,
             Destino destino, String providencia, String descricaoEncerramento, List<String> notas, boolean anexo) {
@@ -83,7 +73,6 @@ class OcorrenciasSeed {
     private static final Sigilo ID = Sigilo.IDENTIFICADA;
 
     static final List<Ocorrencia> PLANO = List.of(
-            // Vinculadas a processo sanitario (ProcessosSeed).
             oc(1, "agressivo", antesDoProcesso(1), "16:20", "Rua das Acácias, 120", "Vila Nova",
                     "Cão solto mordeu pedestre na calçada; vítima encaminhada à UBS.", true, ID, "Lúcia Ferraz",
                     "Morador não identificado", Destino.VINCULADA),
@@ -99,7 +88,6 @@ class OcorrenciasSeed {
             oc(5, "outros", antesDoProcesso(17), "08:45", "Estrada da Chácara Bela Vista, km 3", "Pirapitingui",
                     "Infestação de carrapatos em cães de chácara.", false, ID, "Valéria Moura", null,
                     Destino.VINCULADA_PENDENTE),
-            // Encerradas.
             comNotas(encerrada(oc(6, "irregular", ha(200), "10:15", "Rua das Hortênsias, 72", "São Luiz",
                     "Criação de galinhas e cães em espaço insalubre.", false, ID, "Gilberto Sales",
                     "Morador do imóvel", null), Destino.ENCERRADA, "captura_remocao", null),
@@ -123,7 +111,6 @@ class OcorrenciasSeed {
             encerrada(oc(12, "outros", ha(45), "09:20", "Rua das Violetas, 9", "Itu Novo Centro",
                     "Registro em duplicidade de chamado já atendido.", false, ID, "Henrique Bastos", null, null),
                     Destino.ENCERRADA_DIRETO, "registro_indevido", null),
-            // Em atendimento.
             comNotas(oc(13, "agressivo", ha(30), "17:15", "Rua dos Pinheiros, 300", "Cidade Nova",
                     "Cão bravo ataca outros animais na rua.", true, ID, "Fábio Arantes", null,
                     Destino.EM_ATENDIMENTO), false, "Equipe agendada para vistoria."),
@@ -142,7 +129,6 @@ class OcorrenciasSeed {
             comNotas(oc(18, "irregular", ha(7), "14:25", "Rua dos Flamboyants, 12", "Pirapitingui",
                     "Venda de filhotes sem condições sanitárias.", false, ID, "Regina Lopes", "Vendedor ambulante",
                     Destino.EM_ATENDIMENTO), false, "Aguardando apoio da fiscalização."),
-            // Abertas (duas registradas hoje, para o KPI do dashboard).
             oc(19, "agressivo", ha(0), null, "Rua das Acácias, 410", "Vila Nova",
                     "Cão solto rosnando para crianças na saída da escola.", true, ID, "Tatiane Freitas", null,
                     Destino.ABERTA),
@@ -167,8 +153,6 @@ class OcorrenciasSeed {
                     "Ratos em área de descarte irregular de lixo.", false, ID, "Simone Araújo", null,
                     Destino.ABERTA));
 
-    // Centro aproximado da area urbana de Itu, com deslocamento pequeno por
-    // ocorrencia (o mapa so precisa de pontos plausiveis, nao enderecos reais).
     private static final double LATITUDE_BASE = -23.2640;
     private static final double LONGITUDE_BASE = -47.2990;
 
@@ -185,8 +169,6 @@ class OcorrenciasSeed {
         this.clock = clock;
     }
 
-    // Um passo (chave + transacao propria) por acao, como uma requisicao por
-    // acao na tela: registrar, cada nota, o anexo, iniciar atendimento, encerrar.
     void executar(UsuariosSeed.Atores atores) {
         DatasSeed datas = new DatasSeed(clock);
         for (Ocorrencia plano : PLANO) {
@@ -223,8 +205,6 @@ class OcorrenciasSeed {
         }
     }
 
-    // Encerramento de uma vinculada, chamado por ProcessosSeed com o processo
-    // ja concluido.
     void encerrarVinculada(int numero, SeedAtor agente) {
         UUID id = executor.idObrigatorio(chaveOcorrencia(numero));
         executor.garantir(chaveOcorrencia(numero) + ":encerramento", "ocorrencia_encerramento", () -> {
@@ -261,7 +241,6 @@ class OcorrenciasSeed {
         return new DenunciadoRequest(plano.denunciado(), null, null, plano.endereco(), "Dado ficticio do seed.");
     }
 
-    // Prefixo 0000 nao existe na numeracao brasileira: nunca e um telefone real.
     static String telefone(int numero) {
         return "(11) 0000-" + String.format("%04d", numero);
     }

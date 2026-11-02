@@ -3,13 +3,6 @@ import { procedimentoFormSchema, vacinacaoFormSchema } from '@/features/animais/
 import { processoFormSchema } from '@/features/processos/schemas/processoFormSchema'
 import { hojeEmItu } from './datas'
 
-// "Hoje" do formulário na virada do dia UTC x Itu (DER §5 regra 4; AC-1):
-// entre 21:00 e 23:59 em Itu o dia UTC já é o seguinte. Só o Date é
-// congelado, num instante de 2030/2031 que nunca coincide com o dia real,
-// então o resultado não depende da hora nem do fuso da máquina que roda a
-// suíte. Mesmos instantes de RegrasDeDataNaViradaDoDiaTest (backend).
-
-// caso, instante UTC, dia de Itu, dia seguinte em Itu
 const VIRADAS = [
   ['20:59 BRT (23:59 UTC, mesmo dia)', '2030-03-15T23:59:00Z', '2030-03-15', '2030-03-16'],
   ['21:00 BRT (00:00 UTC do dia seguinte)', '2030-03-16T00:00:00Z', '2030-03-15', '2030-03-16'],

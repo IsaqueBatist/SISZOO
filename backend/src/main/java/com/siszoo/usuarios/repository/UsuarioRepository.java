@@ -18,8 +18,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID>, JpaSpec
 
     Optional<Usuario> findByEmail(String email);
 
-    // Lock nas linhas: dois administradores rebaixando ou desativando um ao
-    // outro ao mesmo tempo nao podem deixar o sistema sem nenhum.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from Usuario u join u.cargos uc where uc.cargo.nome = :cargo and u.ativo = true")
     List<Usuario> travarAtivosDoCargo(@Param("cargo") String cargo);

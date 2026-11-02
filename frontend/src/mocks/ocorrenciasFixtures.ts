@@ -7,13 +7,6 @@ import type {
   ProcessoSanitario,
 } from '@/features/ocorrencias/types/ocorrencias.types'
 
-// Fixtures FIXAS da API de ocorrências, só para os testes (T25, PR2). Os dados
-// são fictícios. Nenhuma regra de negócio é simulada aqui: a máscara de
-// sigilo, as transições e o protocolo são do backend (e testados lá). Cada
-// cenário traz `podeVerDenunciante` e os campos já como o backend os
-// devolveria; quem precisa de outra resposta usa `server.use()` no teste.
-// As datas são LocalDate/LocalDateTime sem fuso, já no horário do CCZ.
-
 export const OCORRENCIA_ABERTA_ID = 'h5000000-0000-0000-0000-000000000001'
 export const OCORRENCIA_SIGILOSA_ID = 'h5000000-0000-0000-0000-000000000002'
 export const OCORRENCIA_ANONIMA_ID = 'h5000000-0000-0000-0000-000000000003'
@@ -37,7 +30,7 @@ export const DENUNCIANTE_MASCARADO: Denunciante = {
   bairroResidencial: null,
 }
 
-export const DENUNCIANTE_SIGILOSO_VISIVEL: Denunciante = {
+const DENUNCIANTE_SIGILOSO_VISIVEL: Denunciante = {
   nome: 'João Pereira Lima',
   cpf: '987.654.321-00',
   telefone: '(11) 91234-5678',
@@ -47,7 +40,6 @@ export const DENUNCIANTE_SIGILOSO_VISIVEL: Denunciante = {
   bairroResidencial: 'Jardim Bela Vista',
 }
 
-// Base com todos os campos do contrato; cada fixture sobrescreve o que muda.
 export function criarOcorrenciaFixture(sobrescrever: Partial<Ocorrencia> = {}): Ocorrencia {
   return {
     id: OCORRENCIA_ABERTA_ID,
@@ -105,10 +97,7 @@ export function criarOcorrenciaFixture(sobrescrever: Partial<Ocorrencia> = {}): 
   }
 }
 
-// Sigilosa como o backend devolve para quem NÃO tem a permissão de sigilo
-// (Vet). Para o cenário com permissão (Admin/Agente), usar
-// `ocorrenciaSigilosaVisivel()`.
-export function ocorrenciaSigilosaMascarada(): Ocorrencia {
+function ocorrenciaSigilosaMascarada(): Ocorrencia {
   return criarOcorrenciaFixture({
     id: OCORRENCIA_SIGILOSA_ID,
     protocolo: '090/2026',
@@ -321,9 +310,6 @@ export function ocorrenciaEncerrada(): Ocorrencia {
   })
 }
 
-// Resposta padrão de GET /ocorrencias/{id}: a sigilosa vem mascarada (o
-// cenário mais restritivo); teste que precise da visão com permissão troca
-// com `server.use()`.
 export function ocorrenciasFixture(): Ocorrencia[] {
   return [
     ocorrenciaAbertaFixture(),
@@ -338,9 +324,6 @@ export function ocorrenciaAbertaFixture(): Ocorrencia {
   return criarOcorrenciaFixture()
 }
 
-// Projeção campo a campo do detalhe para a linha da listagem, como o backend
-// a monta: `denuncianteNome` é nulo em toda sigilosa, para qualquer perfil
-// (T26, revisão da D14), e na anônima (não há denunciante).
 export function paraResumoFixture(ocorrencia: Ocorrencia): OcorrenciaResumo {
   return {
     id: ocorrencia.id,
@@ -359,7 +342,6 @@ export function paraResumoFixture(ocorrencia: Ocorrencia): OcorrenciaResumo {
   }
 }
 
-// Ordem fixa, já como o backend devolveria (urgentes primeiro, D31).
 export function resumosFixture(): OcorrenciaResumo[] {
   const [aberta, sigilosa, anonima, pendente, encerrada] = ocorrenciasFixture()
   return [pendente, sigilosa, aberta, anonima, encerrada].map(paraResumoFixture)
@@ -384,8 +366,7 @@ export const CATALOGOS_OCORRENCIA_FIXTURE: CatalogosOcorrencia = {
   ],
 }
 
-// Resposta fixa do POST /ocorrencias (uma ocorrência nova qualquer).
-export const OCORRENCIA_CRIADA_ID = 'h5000000-0000-0000-0000-000000000099'
+const OCORRENCIA_CRIADA_ID = 'h5000000-0000-0000-0000-000000000099'
 export function ocorrenciaCriadaFixture(): Ocorrencia {
   return criarOcorrenciaFixture({ id: OCORRENCIA_CRIADA_ID, protocolo: '100/2026', anexos: [] })
 }

@@ -20,10 +20,6 @@ export interface EventoTimeline {
   retificado: boolean
 }
 
-// Ordem cronológica correta com merge externo (k-way merge) de 3 fontes já
-// paginadas e ordenadas desc pela API — ver "Contexto" do plano de T22 para
-// o motivo de não fazer só "buscar N de cada e mesclar" (corta errado perto
-// do fim quando uma fonte tem muito mais registros que as outras).
 interface EstadoFonte<T> {
   buffer: T[]
   proximaPagina: number
@@ -67,9 +63,6 @@ function entradaParaEvento(animal: Animal): EventoTimeline {
   return {
     id: `entrada-${animal.id}`,
     tipo: 'entrada',
-    // `Animal.dataEntrada` é LocalDateTime (com hora) — diferente das datas
-    // dos registros clínicos (LocalDate); recortada para o mesmo formato
-    // 'YYYY-MM-DD' usado por `formatarData` em AbaHistorico.tsx.
     data: animal.dataEntrada.slice(0, 10),
     titulo: 'Entrada no CCZ',
     por: animal.criadoPorNome,
@@ -173,11 +166,6 @@ export function useTimelineAnimal(animalId: string | undefined, animal: Animal |
     [animalId, garantirBuffer],
   )
 
-  // Reinício: `refreshKey` muda a cada registro criado com sucesso em
-  // qualquer aba — zera os buffers e recarrega do início para que o novo
-  // registro apareça também na timeline, não só na aba específica. Feito em
-  // efeito (não durante o render) porque mutar refs durante o render não é
-  // seguro sob os double-renders do Strict Mode.
   useEffect(() => {
     if (!animalId || refreshKeyProcessadaRef.current === refreshKey) return
     refreshKeyProcessadaRef.current = refreshKey

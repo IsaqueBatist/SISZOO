@@ -26,8 +26,6 @@ public class AuditoriaController {
         this.auditoriaEventoService = auditoriaEventoService;
     }
 
-    // F2-027 (Fase 3 do TG): filtros opcionais de servidor (docs/contratos/
-    // auditoria-filtros.md). Sem parametros, so paginacao, como antes.
     @GetMapping
     @PreAuthorize("hasAuthority('USUARIOS_ACESSO:leitura')")
     public PaginaResponse<AuditoriaEventoResponse> listar(

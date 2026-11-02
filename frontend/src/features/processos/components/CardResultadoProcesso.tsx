@@ -21,10 +21,6 @@ import {
   useRegistrarResultadoMutation,
 } from '../hooks/useProcessos'
 
-// Depois de lançar um resultado notificável nesta tela, o e-mail sai em segundo plano
-// (depois do commit, T37/T35): por alguns segundos dataNotificacaoMunicipe
-// ainda vem nula. Em vez de acusar "NÃO notificado" na hora, a tela consulta
-// o processo de novo por um tempo (o envio tem timeouts SMTP de 5 s).
 export interface AcompanhamentoEnvio {
   intervaloMs: number
   duracaoMs: number
@@ -38,29 +34,16 @@ interface CardResultadoProcessoProps {
   acompanhamentoEnvio?: AcompanhamentoEnvio
 }
 
-// RN10 do TG (F2-014, 22/10/2026): Positivo e Inconclusivo notificam o
-// munícipe por e-mail — mesmo critério de ResultadosNotificaveis no backend.
-// Dispara inclusive por correção, quando o vigente passa a um deles.
 const RESULTADOS_QUE_NOTIFICAM = ['positivo', 'inconclusivo']
-// T35-15: só o positivo é definitivo (não se corrige) e pede confirmação.
 const RESULTADO_DEFINITIVO = 'positivo'
 
-// DH-25: não existe envio à Vigilância; o backend só registra a intenção. A tela
-// precisa dizer isso: quem lança o resultado é quem pode fazer o contato.
 const AVISO_VIGILANCIA =
   'A Vigilância Epidemiológica de Itu não é avisada pelo SISZOO. Faça esse contato pelo procedimento do CCZ.'
 
-// "2026-05-20T14:32:07.12" -> "20/05/2026 14:32" (LocalDateTime de Itu, sem
-// fuso). Hora por slice, sem import novo: a linha de import de datas e a que
-// a fix/ficha-completa-seed-fuso troca (hojeEmItu), e mexer nela conflitava.
 function formatarDataHoraNotificacao(valor: string): string {
   return `${formatarData(valor)} ${valor.slice(11, 16)}`
 }
 
-// T35-16 (#37): situação do e-mail ao munícipe num resultado notificável (positivo ou inconclusivo). T35
-// (pendência de reenvio): sem data e sem envio em curso, quem pode escrever
-// no processo vê um botão para tentar de novo — bloqueado pelo backend
-// (422) se a notificação já tiver sido confirmada nesse meio tempo.
 function AvisoNotificacao({
   processo,
   enviando,
@@ -136,20 +119,14 @@ function Historico({ resultados }: { resultados: ResultadoProcessoItem[] }) {
 
 interface FormResultadoProps {
   processo: Processo
-  // Presente na correção: o POST aponta `retificaId` para ele, que fica
-  // preservado no histórico (RN-C02).
   retifica?: ResultadoProcessoItem
   onRegistrado: (resultado: string) => void
   onCancelar?: () => void
 }
 
-// Lançamento e correção do resultado: mesmos campos e mesma confirmação do
-// positivo. O resultado é sempre escolhido por quem lança: nada vem marcado, e a
-// data é a do laudo, não a do registro (esta o servidor grava sozinho).
 function FormResultado({ processo, retifica, onRegistrado, onCancelar }: FormResultadoProps) {
   const [erro, setErro] = useState<string | null>(null)
   const [pendente, setPendente] = useState<RegistrarResultadoFormValues | null>(null)
-  // T35-15: positivo é definitivo — confirmação explícita antes de enviar.
   const [cienteDefinitivo, setCienteDefinitivo] = useState(false)
   const mutation = useRegistrarResultadoMutation(processo.id)
   const reconsultar = useReconsultarProcesso(processo.id)
@@ -187,15 +164,10 @@ function FormResultado({ processo, retifica, onRegistrado, onCancelar }: FormRes
     } catch (falha) {
       setPendente(null)
       if (statusHttpDoErro(falha) === 422 && !retifica) {
-        // A escrita anterior pode ter chegado no servidor e a resposta se
-        // perdido na rede (internet instável do CCZ): refaz o GET antes de
-        // mostrar erro — se o resultado já existir, a tela vira somente
-        // leitura no próximo render (sem precisar de mensagem de erro).
         try {
           const atualizado = await reconsultar()
           if (atualizado.resultado) return
         } catch {
-          // Mantém o fluxo de erro abaixo se nem o refetch funcionar.
         }
       }
       setErro(mensagemDeRegraDaApi(falha) ?? 'Não foi possível registrar o resultado. Tente novamente.')
@@ -336,10 +308,6 @@ function FormResultado({ processo, retifica, onRegistrado, onCancelar }: FormRes
   )
 }
 
-// Card do resultado laboratorial do processo. Três estados: aguardando envio
-// das amostras (ABERTO), formulário de lançamento (AGUARDANDO_RESULTADO sem
-// resultado ainda) e somente leitura + histórico (depois de lançado), com a
-// correção do que não é definitivo (DH-28, regra em resultadoACorrigir no backend).
 export function CardResultadoProcesso({
   processo,
   podeEscrever,
@@ -355,8 +323,6 @@ export function CardResultadoProcesso({
   const temEmail = Boolean(processo.responsavel?.email)
   const aguardandoEnvio = acompanhandoEnvio && notifica && temEmail && !processo.dataNotificacaoMunicipe
 
-  // Consulta o processo até a data do envio aparecer ou o prazo acabar; aí o
-  // aviso passa a "notificado" ou a "NÃO notificado".
   const { intervaloMs, duracaoMs } = acompanhamentoEnvio
   useEffect(() => {
     if (!aguardandoEnvio) return
@@ -389,7 +355,6 @@ export function CardResultadoProcesso({
 
   if (processo.resultado) {
     const badge = badgeDeResultado(processo.resultado)
-    // Só o vigente se corrige: o que já foi corrigido por outro fica no histórico.
     const vigente = processo.resultados.find((item) => !processo.resultados.some((outro) => outro.retificaId === item.id))
     const podeCorrigir =
       podeEscrever && processo.statusProcesso === 'COM_RESULTADO' && processo.resultado.codigo !== RESULTADO_DEFINITIVO && vigente

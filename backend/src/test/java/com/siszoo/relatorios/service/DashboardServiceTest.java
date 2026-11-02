@@ -58,10 +58,7 @@ import com.siszoo.relatorios.dto.DashboardKpisResponse;
 class DashboardServiceTest {
 
     private static final ZoneId FUSO = ZoneId.of("America/Sao_Paulo");
-    // 2026-09-10 10:00 em Sao Paulo: horasDecorridas = 10 (>0), fora da virada
-    // do dia, sem ambiguidade de fuso.
     private static final Clock CLOCK_10H = Clock.fixed(Instant.parse("2026-09-10T13:00:00Z"), FUSO);
-    // Mesmo dia, 00:30 em Sao Paulo: horasDecorridas = 0 (virada do dia).
     private static final Clock CLOCK_00H = Clock.fixed(Instant.parse("2026-09-10T03:30:00Z"), FUSO);
     private static final LocalDate HOJE = LocalDate.of(2026, 9, 10);
 
@@ -134,8 +131,8 @@ class DashboardServiceTest {
 
         UUID animalEmDiaId = UUID.randomUUID();
         UUID animalVencidoId = UUID.randomUUID();
-        Vacinacao vigenteNaoVencida = vacinacao(animalEmDiaId, HOJE.minusMonths(11), 12); // valida em HOJE+1 mes
-        Vacinacao vigenteVencida = vacinacao(animalVencidoId, HOJE.minusMonths(13), 12); // validade HOJE-1 mes
+        Vacinacao vigenteNaoVencida = vacinacao(animalEmDiaId, HOJE.minusMonths(11), 12);
+        Vacinacao vigenteVencida = vacinacao(animalVencidoId, HOJE.minusMonths(13), 12);
         when(vacinacaoRepository.findVigentesSobCustodiaParaKpiVacinacao(anyCollection()))
                 .thenReturn(List.of(vigenteNaoVencida, vigenteVencida));
         semAlertas();
@@ -158,7 +155,6 @@ class DashboardServiceTest {
 
         DashboardKpisResponse resposta = service.obterKpis();
 
-        // 1/3 = 33.33...% -> arredonda para 33.
         assertThat(resposta.vacinacao().percentualVacinados()).isEqualTo(33);
     }
 
@@ -182,7 +178,6 @@ class DashboardServiceTest {
 
         DashboardKpisResponse resposta = service.obterKpis();
 
-        // 5 ocorrencias / 10h decorridas (CLOCK_10H) = 0.5.
         assertThat(resposta.ocorrencias().registradasHoje()).isEqualTo(5L);
         assertThat(resposta.ocorrencias().mediaPorHora()).isEqualTo(0.5);
     }
@@ -302,15 +297,9 @@ class DashboardServiceTest {
 
         service.obterGraficos(null);
 
-        // CLOCK_10H esta fixo em 2026-09-10.
         verify(processoSanitarioRepository).contarPorDoenca(2026);
     }
 
-    // Virada do dia UTC x Itu (FS-P7, mesmos instantes de
-    // RegrasDeDataNaViradaDoDiaTest): o dia, a hora e as janelas do dashboard
-    // sao os de Itu, com o fuso do Clock de producao (ClockConfig). As consultas
-    // so comparam colunas de data com esses parametros (sem CURRENT_DATE).
-    // registradasHoje = 42; mediaPorHora = 42 / hora de Itu (null a 0h).
     @ParameterizedTest(name = "{0}: hoje {2}, hora {3}")
     @CsvSource(nullValues = "nula", value = {
             "20:59 BRT, 2030-03-15T23:59:00Z, 2030-03-15, 20, 2.1",
@@ -336,7 +325,6 @@ class DashboardServiceTest {
                 eq(StatusPrescricao.ATIVA), eq(dia), eq(dia.plusDays(7)), anyCollection());
     }
 
-    // Graficos sem ano informado: o ano corrente e o de Itu, nao o de UTC.
     @ParameterizedTest(name = "{0} -> graficos de {2}")
     @CsvSource({
             "31/12 21:30 BRT, 2031-01-01T00:30:00Z, 2030",
@@ -397,9 +385,6 @@ class DashboardServiceTest {
         return projecao;
     }
 
-    // getNome() nao e stubado: o service le codigo/quantidade desta projecao
-    // (Collectors.toMap), e o nome exibido vem do catalogo
-    // (DoencaRepository/EspecieRepository), nunca desta projecao.
     private ContagemCatalogoProjection contagemCatalogo(String codigo, long quantidade) {
         ContagemCatalogoProjection projecao = mock(ContagemCatalogoProjection.class);
         when(projecao.getCodigo()).thenReturn(codigo);

@@ -29,10 +29,6 @@ import com.siszoo.comum.ApiTesteFixture;
 
 import io.restassured.http.ContentType;
 
-// RNF10 / F2-078 e F2-029 (Fase 3 do TG): o cadastro do animal e o da baia sao
-// alteracoes criticas — cada escrita gera AuditoriaEvento com usuario,
-// entidade_id e payload antes/depois. Ate a Fase 2, AnimalService e
-// BaiaService nao auditavam nada (unico modulo sem trilha).
 class AuditoriaAnimaisBaiasIT extends AbstractIntegrationTest {
 
     private static final String EMAIL_ADMIN = "teste.admin.auditoria.animais@itu.sp.gov.br";
@@ -60,14 +56,14 @@ class AuditoriaAnimaisBaiasIT extends AbstractIntegrationTest {
         CriarAnimalRequest criar = new CriarAnimalRequest(
                 "Auditado", "canino", "macho", "SRD", "Preto", "curta", "medio", null, "2 anos", null,
                 microchip, false, null, "em_tratamento", "resgate", fixture.agora(),
-                UUID.fromString(baiaId), null, null);
+                UUID.fromString(baiaId), null, null, null, null, null, null);
         String animalId = given().contentType(ContentType.JSON).header("Authorization", "Bearer " + tokenAdmin)
                 .body(criar).when().post("/api/animais").then().statusCode(200).extract().path("id");
 
         AtualizarAnimalRequest atualizar = new AtualizarAnimalRequest(
                 "Auditado Renomeado", "canino", "macho", "SRD", "Preto", "curta", "medio", null, "2 anos", null,
                 microchip, false, null, "em_tratamento", "resgate", fixture.agora(),
-                UUID.fromString(baiaId), null, "editado");
+                UUID.fromString(baiaId), null, "editado", null, null, null, null);
         given().contentType(ContentType.JSON).header("Authorization", "Bearer " + tokenAdmin)
                 .body(atualizar).when().put("/api/animais/" + animalId).then().statusCode(200);
 

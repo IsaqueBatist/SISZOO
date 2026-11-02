@@ -33,15 +33,12 @@ import io.restassured.specification.RequestSpecification;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
-// Relogio fixo (RelogioTesteConfig): D21 compara dataAbertura com o "hoje" do
-// Clock, e o protocolo usa o ano do Clock (2026).
 @Import(RelogioTesteConfig.class)
 class OcorrenciaControllerIT extends AbstractIntegrationTest {
 
     private static final String ROTA = "/api/ocorrencias";
     private static final LocalDate HOJE = RelogioTesteConfig.HOJE;
 
-    // Assinaturas minimas aceitas pela deteccao de tipo do service.
     private static final byte[] PNG = {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x01};
     private static final byte[] GIF = {0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x00};
 
@@ -57,8 +54,6 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
     private String tokenAdmin;
     private String tokenAgente;
     private String tokenVet;
-    // Le o modulo sem denunciante_sigiloso: o perfil que recebe a mascara (D14).
-    // Nenhum cargo real e assim desde a V11 (Vet sem acesso a ocorrencias).
     private String tokenLeitor;
 
     @BeforeEach
@@ -70,8 +65,6 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
                 ApiTesteFixture.CARGO_VETERINARIO_ID);
         tokenLeitor = fixture.tokenLeitorOcorrencias("leitor.ocorrencias@itu.sp.gov.br", "Ocorrencias");
     }
-
-    // ── Cadastro, leitura e acesso ───────────────────────
 
     @Test
     @DisplayName("Cria ocorrencia sem processo: protocolo NNN/AAAA, ABERTA e movimentacao REGISTRADA")
@@ -139,8 +132,6 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
         criar(tokenAgente, corpo).then().statusCode(422);
     }
 
-    // ── Sigilo (D14) ─────────────────────────────────────
-
     @Test
     @DisplayName("[D14] sigilosa: Admin e Agente veem o denunciante, leitor sem a feature recebe null, Vet 403;"
             + " denunciado nunca e mascarado")
@@ -204,8 +195,6 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
         }
     }
 
-    // ── Edicao (D10) ─────────────────────────────────────
-
     @Test
     @DisplayName("[D10] PUT sem o bloco denunciante mantem os dados; com o bloco, substitui; Vet recebe 403")
     void putSubstituiOuMantemDenunciante() {
@@ -229,8 +218,6 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
 
         atualizar(tokenVet, id, semBloco).then().statusCode(403);
     }
-
-    // ── Status, encerramento e notas (D5, D37) ───────────
 
     @Test
     @DisplayName("[D5] ABERTA -> EM_ATENDIMENTO gera EQUIPE_DESPACHADA; repetir da 422")
@@ -311,8 +298,6 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
         nota(tokenAgente, UUID.randomUUID().toString(), "x").then().statusCode(404);
     }
 
-    // ── Processo vinculado (D12, D31, D33) ───────────────
-
     @Test
     @DisplayName("[D12/T34] processo completo vinculado nao concluido bloqueia o encerramento; concluido libera")
     void encerramentoEsperaProcessoConcluir() {
@@ -326,7 +311,6 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
 
         encerrar(tokenAgente, id, Map.of("providenciaTomada", "abertura_processo")).then().statusCode(422);
 
-        // T34: COM_RESULTADO so pelo lancamento do resultado (substitui a D18).
         alterarStatusProcesso(tokenAgente, processoId, "AGUARDANDO_RESULTADO").then().statusCode(200);
         encerrar(tokenAgente, id, Map.of("providenciaTomada", "abertura_processo")).then().statusCode(422);
         Response comResultado = comToken(tokenAgente).contentType(ContentType.JSON)
@@ -429,8 +413,6 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
         fixture.postarProcesso(tokenAgente, corpo).then().statusCode(422);
     }
 
-    // ── Denuncia anonima (D32) ───────────────────────────
-
     @Test
     @DisplayName("[D32] anonima: sem denunciante passa; qualquer dado do denunciante 422; anonima e sigilosa 422")
     void denunciaAnonimaNoCadastro() {
@@ -479,8 +461,6 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
         atualizar(tokenAgente, id, deVoltaAnonima).then().statusCode(422);
     }
 
-    // ── Listagem (D31, D36) ──────────────────────────────
-
     @Test
     @DisplayName("[D31] listagem traz urgentes primeiro")
     void listagemComUrgentesPrimeiro() {
@@ -502,11 +482,6 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
     @Test
     @DisplayName("[D31/T30] mesma urgencia e mesma data de abertura: desempate pela criacao mais recente, nao pelo texto do protocolo")
     void listagemDesempataPelaCriacao() {
-        // Gravadas direto no banco para fixar protocolo e criado_em. A ordem de
-        // criacao (1000, 998, 999, da mais recente para a mais antiga) difere
-        // do texto do protocolo desc (999, 998, 1000) e do numero desc
-        // (1000, 999, 998): so o desempate por criado_em produz a esperada.
-        // data_abertura antiga e ano 2099 no protocolo isolam estas linhas.
         inserirOcorrencia("999/2099", "2026-01-01 08:00:00");
         inserirOcorrencia("998/2099", "2026-01-01 09:00:00");
         inserirOcorrencia("1000/2099", "2026-01-01 10:00:00");
@@ -529,8 +504,6 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
             assertThat(q, ids, hasItem(id));
         }
     }
-
-    // ── Anexos (D9, D20, D30) ────────────────────────────
 
     @Test
     @DisplayName("[D9] anexo: PNG 200; GIF 422; sexto anexo 422")
@@ -603,8 +576,6 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
                 .when().get(ROTA + "/" + UUID.randomUUID() + "/anexos/" + anexoId).then().statusCode(404);
     }
 
-    // ── Auditoria (D23) ──────────────────────────────────
-
     @Test
     @DisplayName("[D23] snapshot de auditoria sem dados do denunciante e com o endereco da ocorrencia")
     void auditoriaSemDadosDoDenunciante() {
@@ -642,8 +613,6 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
                 }
             }
         }
-        // O endereco e o bairro DA OCORRENCIA continuam no snapshot (D27);
-        // o que sai sao so os dados pessoais do denunciante.
         JsonNode depoisDoPut = objectMapper.readTree((String) eventos.get(1).get("depois"));
         assertThat(depoisDoPut.has("denunciante"), equalTo(false));
         assertThat(depoisDoPut.get("endereco").asString(), equalTo("Rua da Ocorrencia " + marcador));
@@ -652,8 +621,6 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
         assertThat(objectMapper.readTree((String) eventos.get(0).get("depois")).get("denuncianteAlterado").asBoolean(),
                 equalTo(true));
     }
-
-    // ── Apoio ────────────────────────────────────────────
 
     private Map<String, Object> corpo() {
         Map<String, Object> corpo = new HashMap<>();
@@ -670,7 +637,6 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
         return corpo;
     }
 
-    // PUT exige as flags explicitas (D10); parte do corpo usado no cadastro.
     private static Map<String, Object> corpoPut(Map<String, Object> base) {
         return new HashMap<>(base);
     }
@@ -723,7 +689,6 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
         return comToken(token).when().get(ROTA + "/" + id + "/anexos/" + anexoId);
     }
 
-    // Processo urgente = amostra com contato humano (DER regra 18, T29).
     private Response criarProcesso(String token, boolean urgente, String ocorrenciaId) {
         return fixture.postarProcesso(token, ocorrenciaId, urgente);
     }
@@ -741,7 +706,6 @@ class OcorrenciaControllerIT extends AbstractIntegrationTest {
         return jdbcTemplate.queryForObject("SELECT count(*) FROM " + tabela, Integer.class);
     }
 
-    // Ocorrencia nao urgente com data_abertura 2026-01-01 e criado_em explicito.
     private void inserirOcorrencia(String protocolo, String criadoEm) {
         jdbcTemplate.update("INSERT INTO ocorrencia (protocolo, tipo_ocorrencia_id, data_abertura, endereco, bairro,"
                 + " descricao, registrado_por_id, criado_em)"

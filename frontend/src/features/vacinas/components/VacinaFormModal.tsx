@@ -11,13 +11,10 @@ import type { Vacina } from '../types/vacinas.types'
 const MAPA_ERROS_VACINA = mapaDeCampos<VacinaFormValues>(['nome', 'intervaloMeses'])
 
 interface VacinaFormModalProps {
-  // Ausente = cadastro; presente = edição da vacina existente.
   vacina?: Vacina
   onFechar: () => void
 }
 
-// Serve cadastro e edição, como BaiaFormModal faz com baia nova/existente: os
-// campos são os mesmos e a diferença está só no que o servidor recebe.
 export function VacinaFormModal({ vacina, onFechar }: VacinaFormModalProps) {
   const editando = vacina !== undefined
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -42,10 +39,6 @@ export function VacinaFormModal({ vacina, onFechar }: VacinaFormModalProps) {
 
   const salvando = criar.isPending || atualizar.isPending
 
-  // A validade de uma vacinação não é persistida: sai de
-  // `data_aplicacao + intervalo_meses` toda vez que é lida. Mudar o intervalo
-  // aqui portanto reescreve a data de reforço de todas as aplicações já
-  // lançadas desta vacina — a regra que a interface não contava.
   const intervaloDigitado = watch('intervaloMeses')
   const intervaloMudou = editando && (intervaloDigitado ?? null) !== (vacina.intervaloMeses ?? null)
 
@@ -54,8 +47,6 @@ export function VacinaFormModal({ vacina, onFechar }: VacinaFormModalProps) {
       if (editando) {
         await atualizar.mutateAsync({
           id: vacina.id,
-          // `ativo` não é editável aqui: quem muda a situação é a ação da
-          // linha (Desativar/Reativar), então o valor atual é preservado.
           payload: { nome: dados.nome, intervaloMeses: dados.intervaloMeses, ativo: vacina.ativo },
         })
         toast.sucesso(`${dados.nome} atualizada.`)
@@ -113,9 +104,6 @@ export function VacinaFormModal({ vacina, onFechar }: VacinaFormModalProps) {
                 {errors.nome && <span className="err">{errors.nome.message}</span>}
               </div>
 
-              {/* O código nunca aparecia na interface, mas é ele que a mensagem
-                  de conflito cita ("mesmo codigo (v4_felinos)"). Mostrado só na
-                  edição, onde já existe. */}
               {editando && (
                 <div className="field">
                   <label htmlFor="vacina-codigo">Código</label>
@@ -136,8 +124,6 @@ export function VacinaFormModal({ vacina, onFechar }: VacinaFormModalProps) {
                   min={1}
                   step={1}
                   placeholder="Ex: 12"
-                  // Campo numérico opcional: `valueAsNumber` puro transformaria
-                  // o vazio em NaN, que z.number() rejeita mesmo sendo optional.
                   {...register('intervaloMeses', { setValueAs: (v) => (v === '' ? undefined : Number(v)) })}
                 />
                 {errors.intervaloMeses && <span className="err">{errors.intervaloMeses.message}</span>}

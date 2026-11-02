@@ -1,20 +1,14 @@
 import { z } from 'zod'
 import { hojeEmItu } from '../utils/regrasVacina'
 
-// Campos e limites espelham com.siszoo.animais.clinico.dto.CriarVacinacaoRequest.
 export const vacinacaoFormSchema = z.object({
   vacina: z.string().min(1, 'Selecione a vacina.'),
-  // RN-C06: mesma regra do backend (VacinacaoService), com "hoje" no fuso de
-  // Itu. Datas ISO (AAAA-MM-DD) comparam certo como texto. "Hoje" é lido a
-  // cada validação, não fixado no carregamento do módulo.
   dataAplicacao: z
     .string()
     .min(1, 'Informe a data de aplicação.')
     .refine((data) => data <= hojeEmItu(), 'A data de aplicação não pode ser futura.'),
   numeroDose: z.number().int().positive('Deve ser maior que zero.').optional(),
   doseQuantidade: z.number({ message: 'Informe a quantidade da dose.' }).positive('A dose deve ser maior que zero.'),
-  // Obrigatória desde a T24 (RN-C05, @NotNull no backend) — mesma regra e
-  // mensagem da prescrição.
   doseUnidade: z.enum(['MILIGRAMA', 'MICROGRAMA', 'GRAMA', 'MILILITRO', 'UNIDADE_INTERNACIONAL'], {
     message: 'Selecione a unidade da dose.',
   }),
@@ -24,10 +18,8 @@ export const vacinacaoFormSchema = z.object({
 
 export type VacinacaoFormValues = z.infer<typeof vacinacaoFormSchema>
 
-// Campos espelham com.siszoo.animais.clinico.dto.CriarProcedimentoRequest.
 export const procedimentoFormSchema = z.object({
   tipoProcedimento: z.string().min(1, 'Selecione o tipo de procedimento.'),
-  // Fato ocorrido, como a vacinação: mesma regra do ProcedimentoService.
   data: z
     .string()
     .min(1, 'Informe a data.')
@@ -38,9 +30,6 @@ export const procedimentoFormSchema = z.object({
 
 export type ProcedimentoFormValues = z.infer<typeof procedimentoFormSchema>
 
-// F2-007 / RF-A04 — espelha com.siszoo.animais.clinico.dto.CriarExameRequest. Regras
-// entre campos (resultado ⇄ data do resultado; resultado ≥ solicitação) também
-// valem no ExameService, que devolve 422 por campo.
 export const exameFormSchema = z
   .object({
     tipoExame: z.string().min(1, 'Selecione o tipo de exame.'),
@@ -69,9 +58,6 @@ export const exameFormSchema = z
 
 export type ExameFormValues = z.infer<typeof exameFormSchema>
 
-// Campos espelham com.siszoo.animais.clinico.dto.CriarPrescricaoRequest.
-// Data futura é aceita (início programado é legítimo); as regras entre datas
-// e status são as do PrescricaoService. Datas vazias chegam como ''.
 export const prescricaoFormSchema = z
   .object({
     medicamentoId: z.string().min(1, 'Selecione o medicamento.'),

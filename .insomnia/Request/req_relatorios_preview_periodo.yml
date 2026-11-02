@@ -1,0 +1,28 @@
+_id: "req_relatorios_preview_periodo"
+type: "Request"
+parentId: "fld_relatorios"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/relatorios/preview?tipo=vacinacao&periodoInicio=2026-01-01&periodoFim=2026-10-31"
+name: "Pré-visualizar relatório de vacinação"
+description: "Relatório por período: periodoInicio e periodoFim."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 4000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

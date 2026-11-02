@@ -1,0 +1,28 @@
+_id: "req_processos_catalogos"
+type: "Request"
+parentId: "fld_processos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/processos/catalogos"
+name: "Catálogos de processo"
+description: "Doenças, laboratórios, sintomas, resultados laboratoriais e desfechos. Requer PROCESSOS_SANITARIOS:leitura."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 1000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

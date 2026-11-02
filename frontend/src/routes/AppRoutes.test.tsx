@@ -25,7 +25,6 @@ describe('roteamento entre login e dashboard', () => {
     const user = userEvent.setup()
     renderApp()
 
-    // Login é lazy (T45): o formulário aparece quando o chunk carrega.
     expect(await screen.findByLabelText(/e-mail institucional/i)).toBeInTheDocument()
 
     await user.type(screen.getByLabelText(/e-mail institucional/i), CREDENCIAIS_VALIDAS.email)

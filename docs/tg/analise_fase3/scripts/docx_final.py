@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Fase 4 — operações OOXML SEM controle de alterações, sobre o documento já aceito.
 
 Estende DocxKit (docx_kit.py) com: substituição de mídia, remoção de intervalos, legendas com campo SEQ,
@@ -11,10 +10,8 @@ NS_W = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'
 NS_R = 'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"'
 NS_W14 = 'xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml"'
 
-
 class DocxFinal(DocxKit):
 
-    # ------------------------------------------------------------ parágrafos
     def paragrafos(self, apos=0, ate=None):
         """Gera (ini, fim, xml) de cada <w:p> (não auto-fechado) entre apos e ate."""
         pos = apos
@@ -79,7 +76,6 @@ class DocxFinal(DocxKit):
         self.doc = self.doc[:ini] + novo_p + self.doc[fim:]
         return ini, ini + len(novo_p)
 
-    # ------------------------------------------------------------ mídia
     def substituir_midia(self, nome_docpr, caminho_png, local='', id_item=''):
         """Troca a imagem cujo wp:docPr/pic:cNvPr tem name=nome_docpr e recalcula as dimensões."""
         m = re.search(r'<wp:docPr [^>]*name="' + re.escape(nome_docpr) + r'"', self.doc)
@@ -104,7 +100,6 @@ class DocxFinal(DocxKit):
         self.doc = self.doc[:ini_inline] + inline_novo + self.doc[fim_inline:]
         self.log.append({'op': 'midia', 'local': local, 'id': id_item, 'antes': parte, 'depois': f'{os.path.basename(caminho_png)} {largura_px}×{altura_px}px → {cx/360000:.1f}×{cy/360000:.1f} cm', 'controlado': False})
 
-    # ------------------------------------------------------------ remoção de intervalo (Apêndice D)
     def remover_intervalo(self, trecho_inicio, trecho_fim_exclusivo, apos=0, validador=None, local='', id_item=''):
         """Remove todos os parágrafos de [parágrafo que contém trecho_inicio, parágrafo que contém trecho_fim_exclusivo)."""
         ini, _ = self._achar_paragrafo(trecho_inicio, 1, apos)
@@ -126,7 +121,6 @@ class DocxFinal(DocxKit):
         self.log.append({'op': 'remover_intervalo', 'local': local, 'id': id_item, 'antes': ' | '.join(t[:60] for t in textos if t), 'depois': f'(removidos {len(textos)} parágrafos, {len(rids)} imagens)', 'controlado': False})
         return textos
 
-    # ------------------------------------------------------------ legendas SEQ
     def legenda_seq(self, ini, fim, rotulo, numero, titulo, centralizar):
         jc = '<w:jc w:val="center"/>' if centralizar else ''
         ppr = f'<w:pPr><w:pStyle w:val="Caption"/><w:keepNext/>{jc}</w:pPr>'
@@ -142,7 +136,6 @@ class DocxFinal(DocxKit):
                 f'<w:r><w:instrText xml:space="preserve"> {instr} </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r>'
                 f'<w:r><w:t>{_esc(texto_cache)}</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r></w:p>')
 
-    # ------------------------------------------------------------ cabeçalho / seções
     def criar_cabecalho_pagina(self):
         """Cria word/header1.xml com campo PAGE à direita (10 pt) e devolve o rId."""
         modelo = next((n for n in self.partes if re.match(r'word/footer\d+\.xml', n)), None)
@@ -179,7 +172,6 @@ class DocxFinal(DocxKit):
             self.partes['[Content_Types].xml'] = ct.encode('utf-8')
         self.log.append({'op': 'rodapes', 'local': 'sectPr', 'id': 'ABNT paginação', 'antes': f'{len(refs)} footerReference', 'depois': 'removidos', 'controlado': False})
 
-    # ------------------------------------------------------------ estilos
     def estilo_existe(self, style_id):
         return f'w:styleId="{style_id}"' in self.partes['word/styles.xml'].decode('utf-8')
 

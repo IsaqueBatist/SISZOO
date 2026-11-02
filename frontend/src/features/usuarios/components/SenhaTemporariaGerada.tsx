@@ -8,8 +8,6 @@ interface SenhaTemporariaGeradaProps {
   onFechar: () => void
 }
 
-// Última tela depois de criar um usuário ou redefinir a senha: a senha aparece
-// aqui uma vez e não volta em lugar nenhum.
 export function SenhaTemporariaGerada({ titulo, nome, senha, onFechar }: SenhaTemporariaGeradaProps) {
   const [copiada, setCopiada] = useState(false)
 
@@ -18,7 +16,6 @@ export function SenhaTemporariaGerada({ titulo, nome, senha, onFechar }: SenhaTe
       await navigator.clipboard.writeText(senha)
       setCopiada(true)
     } catch {
-      // Sem acesso à área de transferência: a senha segue na tela para copiar à mão.
       setCopiada(false)
     }
   }

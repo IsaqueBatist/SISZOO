@@ -23,8 +23,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// Registro clinico imutavel (regra de negocio): ver Vacinacao para o mecanismo de
-// retificacao (nova linha + `retifica`, nunca UPDATE na linha original).
 @Entity
 @Table(name = "procedimento")
 @Getter

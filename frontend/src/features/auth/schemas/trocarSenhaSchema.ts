@@ -1,8 +1,6 @@
 import { z } from 'zod'
 import { violacaoPoliticaSenha, type DonoDaSenha } from '../utils/politicaSenha'
 
-// A política de senha depende de quem troca (nome da conta e nome de
-// exibição), por isso o schema é montado com o usuário autenticado.
 export function criarTrocarSenhaSchema(dono: DonoDaSenha) {
   return z
     .object({

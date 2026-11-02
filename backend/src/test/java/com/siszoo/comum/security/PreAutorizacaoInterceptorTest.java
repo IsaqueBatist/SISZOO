@@ -11,9 +11,6 @@ import org.springframework.web.method.HandlerMethod;
 
 import fixture.preautorizacao.ControllerComArgumentoNoPreAuthorize;
 
-// O caso fora do suporte do interceptor tem de falhar alto, nunca ser avaliado
-// em silencio com argumentos nulos. O caminho normal (hasAuthority) esta
-// coberto por AutorizacaoAntesDaValidacaoIT, com a seguranca real.
 class PreAutorizacaoInterceptorTest {
 
     private final PreAutorizacaoInterceptor interceptor = new PreAutorizacaoInterceptor(new StaticApplicationContext());

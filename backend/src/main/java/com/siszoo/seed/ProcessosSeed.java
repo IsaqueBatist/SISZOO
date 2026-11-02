@@ -22,22 +22,11 @@ import com.siszoo.processos.entity.StatusProcesso;
 import com.siszoo.processos.entity.TipoAbrigo;
 import com.siszoo.processos.service.ProcessoSanitarioService;
 
-// Processos sanitarios pelos services reais: protocolo, urgencia derivada do
-// contato humano, transicoes de um passo, resultado imutavel com retificacao
-// e auditoria como na API. Cobrem os 4 status, todas as doencas e
-// laboratorios, raiva em cao, gato e morcego (grafico por especie) e febre
-// amarela em primata. Positivo nunca e retificado (V21).
-//
-// E-mail ao municipe (SD-4): processo com resultado notificavel (positivo ou
-// inconclusivo, inclusive o que e retificado depois) tem o responsavel SEM
-// e-mail — NotificacaoResultadoService nao envia nada e o REQUIRES_NEW de
-// registrarNotificacaoMunicipe nunca roda. Os demais usam exemplo.test.
 class ProcessosSeed {
 
     static final String ESCRITA = "PROCESSOS_SANITARIOS:escrita";
     static final Set<String> RESULTADOS_NOTIFICAVEIS = Set.of("positivo", "inconclusivo");
 
-    // Amostra de campo (identificacao propria) ou do canil (animal do seed).
     record Amostra(Integer animalCanil, String especie, String sexo, StatusClinicoAmostra statusClinico,
             TipoAbrigo abrigo, MaterialBiologico material, NivelContato contato, Boolean agrediu,
             List<String> sintomas) {
@@ -58,10 +47,6 @@ class ProcessosSeed {
         }
     }
 
-    // `fracao`: posicao da abertura no ano corrente (DatasSeed.noAnoCorrente).
-    // `retificacao`: resultado que corrige o primeiro (null = sem correcao).
-    // `ocorrencia`: vinculo na criacao; `vincularDepois`: vinculo pelo
-    // POST /ocorrencias/{id}/processo depois de criado.
     record Processo(int numero, String doenca, String laboratorio, double fracao, StatusProcesso status,
             String resultado, String retificacao, String desfecho, Integer ocorrencia, boolean vincularDepois,
             String responsavel, String bairro, List<Amostra> amostras) {
@@ -70,7 +55,6 @@ class ProcessosSeed {
             return "processo:" + String.format("%02d", numero);
         }
 
-        // Set.of recusa contains(null): processo sem resultado nao notifica.
         boolean notificavel() {
             return (resultado != null && RESULTADOS_NOTIFICAVEIS.contains(resultado))
                     || (retificacao != null && RESULTADOS_NOTIFICAVEIS.contains(retificacao));
@@ -106,7 +90,6 @@ class ProcessosSeed {
     private static final StatusClinicoAmostra OBITO = StatusClinicoAmostra.OBITO;
 
     static final List<Processo> PLANO = List.of(
-            // Concluidos (4 vinculados a ocorrencias, encerradas no fim).
             vinculado(p(1, "raiva", "pasteur_sp", 0.05, StatusProcesso.CONCLUIDO, "negativo", "Lúcia Ferraz",
                     "Vila Nova", Amostra.campo("canino", "macho", OBITO, TipoAbrigo.PERIDOMICILIAR,
                             MaterialBiologico.TECIDO_ENCEFALICO).comContato(NivelContato.DIRETA, true)), 1, false),
@@ -129,7 +112,6 @@ class ProcessosSeed {
             p(7, "raiva", "itu_ll01", 0.35, StatusProcesso.CONCLUIDO, "nao_realizado", "Wagner Dutra", "Centro",
                     Amostra.campo("felino", "macho", OBITO, TipoAbrigo.PERIDOMICILIAR,
                             MaterialBiologico.TECIDO_ENCEFALICO)),
-            // Com resultado (duas retificacoes).
             p(8, "raiva", "pasteur_sp", 0.45, StatusProcesso.COM_RESULTADO, "negativo", "Kátia Sobral", "Vila Nova",
                     Amostra.canil(14, ASSINTOMATICO, MaterialBiologico.SORO).comContato(NivelContato.DIRETA, true)),
             retificado(p(9, "febre_amarela", "ial_sorocaba", 0.50, StatusProcesso.COM_RESULTADO, "inconclusivo",
@@ -147,7 +129,6 @@ class ProcessosSeed {
             p(13, "raiva", "pasteur_sp", 0.70, StatusProcesso.COM_RESULTADO, "positivo", "Mirela Cardoso",
                     "Cidade Nova", Amostra.campo("quiroptero", "nao_identificado", OBITO, TipoAbrigo.SILVESTRE,
                             MaterialBiologico.TECIDO_ENCEFALICO)),
-            // Aguardando resultado (um vinculado depois de criado).
             p(14, "esporotricose", "ccz_sp", 1.0, StatusProcesso.AGUARDANDO_RESULTADO, null, "CCZ Itu (canil)",
                     "Centro", Amostra.canil(25, SINTOMATICO, MaterialBiologico.SANGUE, "ulcera_pele", "coriza")),
             p(15, "raiva", "pasteur_sp", 0.80, StatusProcesso.AGUARDANDO_RESULTADO, null, "Adriana Lustosa",
@@ -166,7 +147,6 @@ class ProcessosSeed {
                     "Vila Padre Bento", Amostra.campo("felino", "macho", SINTOMATICO, TipoAbrigo.PERIDOMICILIAR,
                             MaterialBiologico.SALIVA, "alt_comportamental", "salivacao_excessiva")
                             .comContato(NivelContato.INDIRETA, false)),
-            // Abertos.
             p(20, "raiva", "pasteur_sp", 0.93, StatusProcesso.ABERTO, null, "Diogo Vasques", "Cidade Nova",
                     Amostra.campo("quiroptero", "nao_identificado", OBITO, TipoAbrigo.SILVESTRE,
                             MaterialBiologico.TECIDO_ENCEFALICO)),
@@ -182,8 +162,6 @@ class ProcessosSeed {
             p(24, "leptospirose", "itu_ll01", 1.0, StatusProcesso.ABERTO, null, "CCZ Itu (canil)", "Centro",
                     Amostra.canil(28, ASSINTOMATICO, MaterialBiologico.URINA)));
 
-    // Data de abertura de cada processo (tambem usada pelas ocorrencias
-    // vinculadas, que vem 2 dias antes).
     static LocalDate dataAbertura(int numero, DatasSeed datas) {
         Processo processo = PLANO.stream().filter(p -> p.numero() == numero).findFirst().orElseThrow();
         return datas.noAnoCorrente(processo.fracao());
@@ -207,8 +185,6 @@ class ProcessosSeed {
     void executar(UsuariosSeed.Atores atores) {
         DatasSeed datas = new DatasSeed(clock);
         for (Processo processo : PLANO) {
-            // Vincular a ocorrencia exige OCORRENCIAS_DENUNCIAS:escrita (D33):
-            // quem abre o processo vinculado e o agente; os demais, o veterinario.
             SeedAtor autor = processo.ocorrencia() != null
                     ? atores.agente(processo.numero())
                     : atores.veterinario(processo.numero());
@@ -220,10 +196,6 @@ class ProcessosSeed {
         }
     }
 
-    // Um passo (chave + transacao propria) por acao, como uma requisicao por
-    // acao na tela: abrir, vincular, enviar ao laboratorio, lancar resultado,
-    // corrigir, concluir. O resultado de cada passo ja gravado e lido de novo
-    // pelo id em seed_controle numa reexecucao.
     private void avancarPorPassos(Processo plano, SeedAtor autor, SeedAtor veterinario, DatasSeed datas) {
         LocalDate abertura = datas.noAnoCorrente(plano.fracao());
         UUID ocorrenciaNaCriacao = plano.ocorrencia() != null && !plano.vincularDepois()
@@ -281,8 +253,6 @@ class ProcessosSeed {
                         id, executor.valido(new AlterarStatusProcessoRequest(destino)), veterinario.id()).id()));
     }
 
-    // Sem e-mail quando ha resultado notificavel (SD-4) ou o responsavel e o
-    // proprio servico publico.
     static ResponsavelProcessoRequest responsavel(Processo plano) {
         String email = plano.notificavel() || plano.responsavel().startsWith("CCZ")
                 || plano.responsavel().startsWith("Fiscaliza")

@@ -1,31 +1,4 @@
 <!DOCTYPE html>
-<!--/*
-  T35: modelo do e-mail da notificacao de resultado positivo (T36, issue
-  #37; NotificacaoResultadoService). Redesenhado com as cores e a
-  tipografia do design system do SISZOO (docs/prototipo/design-system.html
-  e tokens.css). NAO e comunicacao oficial aprovada pelo CCZ.
-  "Positivo" esta fixo no texto (nao e variavel): regra 19 do DER so
-  dispara esta notificacao quando o resultado vigente e positivo
-  (RESULTADO_QUE_NOTIFICA em ProcessoSanitarioService/NotificacaoResultadoService),
-  entao o template nunca precisa descrever outro resultado. A cor do card
-  do protocolo usa a mesma paleta do badge "positivo" do app (vermelho/danger,
-  components.css .badge-positive), nao a verde: verde no design system
-  identifica "negativo".
-  Variaveis: nome, protocolo, resultado. th:text escapa HTML — os elementos que
-  recebem nome/protocolo nao levam nenhum outro atributo, de proposito:
-  EmailServiceIT e NotificacaoResultadoEmailIT conferem o HTML escapado
-  por essas tags exatas ("Ola, <span>...</span>." e "<strong>...</strong>").
-  Layout em tabelas (compatibilidade com Outlook/clientes de e-mail, que
-  nao suportam flex/grid) e estilo inline (muitos clientes removem <style>
-  do <head>). A pata do cabecalho e um SVG embutido (data URI, branco, mesmo
-  desenho do icone paw do design system/icons.js) em vez do emoji de pata:
-  o emoji depende da fonte do cliente de e-mail e em alguns renderiza em
-  preto/monocromatico sobre o verde do cabecalho, sem contraste (2026-10-22).
-  Endereco e telefones do CCZ: fixos no rodape, extraidos de
-  https://itu.sp.gov.br/saude/zoonoses/ (2026-10-22), sem variavel nova.
-  Este comentario nao sai no e-mail (comentario de parser do Thymeleaf).
-  Versao em texto puro: resultado-processo.txt.
-*/-->
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8">

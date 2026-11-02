@@ -1,0 +1,37 @@
+_id: "req_vacinas_atualizar"
+type: "Request"
+parentId: "fld_catalogos_clinicos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/vacinas/{{ _.vacina_id_exemplo }}"
+name: "Atualizar vacina"
+description: "Altera nome, intervalo de reforço e situação. Requer GESTAO_ANIMAIS:escrita."
+method: "PUT"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "nome": "Vacina Insomnia {{ _.execucao }}",
+      "intervaloMeses": 24,
+      "ativo": true
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 4000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

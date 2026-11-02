@@ -16,9 +16,6 @@ export function badgeDeStatusProcesso(status: StatusProcesso): Badge {
   return STATUS_PROCESSO_BADGE_MAP[status] ?? { classe: 'badge-neutral', label: status }
 }
 
-// Badge do resultado laboratorial (T34), pelo codigo do catalogo
-// (resultadosLaboratoriais de GET /processos/catalogos). "aguardando" so
-// aparece aqui antes do lancamento (nunca e o valor gravado em si).
 const RESULTADO_BADGE_MAP: Record<string, Badge> = {
   aguardando: { classe: 'badge-awaiting', label: 'Aguardando' },
   positivo: { classe: 'badge-positive', label: 'Positivo' },
@@ -32,9 +29,6 @@ export function badgeDeResultado(resultado: CatalogoItem): Badge {
   return RESULTADO_BADGE_MAP[resultado.codigo] ?? { classe: 'badge-neutral', label: resultado.nome }
 }
 
-// Slug da classe CSS `.badge-disease.<slug>` (components.css) pelo código do
-// catálogo `doenca`; diverge do código em três casos. Código sem slug fica
-// com o estilo base do badge.
 const DOENCA_CLASSE_MAP: Record<string, string> = {
   raiva: 'raiva',
   esporotricose: 'esporotricose',

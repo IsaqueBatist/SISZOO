@@ -7,9 +7,6 @@ import org.springframework.stereotype.Component;
 
 import jakarta.servlet.http.HttpServletResponse;
 
-// Cookie do token de renovacao. Path restrito: so /api/auth recebe o cookie, os
-// demais endpoints seguem so com Bearer e a API continua sem superficie de
-// CSRF. Sem Max-Age: morre com o navegador; o prazo real e o do servidor.
 @Component
 public class CookieSessao {
 

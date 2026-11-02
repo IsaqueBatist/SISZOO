@@ -456,7 +456,7 @@ Sem seed (nem de medicamento): o CCZ cadastra os reais. `GET /api/categorias-far
 
 - `atual_ocupacao` = `count(animal where baia_id = X and status fora de StatusAnimal.CODIGOS_FORA_DA_CUSTODIA)` - `adotado`, `obito_natural`, `obito_eutanasia` e `transferido` não ocupam vaga. Não é coluna nem view: é calculado por consulta (`AnimalRepository#countByBaia_IdAndStatus_CodigoNotIn`, `#contarOcupacaoPorBaia`) no `BaiaService` e, ao alocar um animal, no `AnimalService`.
 - Status de superlotação derivado: `atual_ocupacao / capacidade ≥ 1` → `superlotada`; `≥ 0.8` → `proximo_limite`; senão `normal`.
-- **Quem mexe:** Administrador e Veterinário criam e editam baias (`GESTAO_ANIMAIS:escrita`); desativação (`PATCH /status`) e exclusão lógica (`DELETE`) exigem `GESTAO_ANIMAIS:exclusao` (Administrador). Criação, edição, desativação e reativação geram auditoria (`CRIACAO`, `ATUALIZACAO`, `DESATIVACAO`, `REATIVACAO`; `BaiaService`, AT-5). Não há nomes fixos de baia (o CCZ cadastra as suas). `GET /api/animais/residentes` devolve os ocupantes por baia sem listar todos os animais (T45).
+- **Quem mexe:** Administrador e Veterinário criam e editam baias (`GESTAO_ANIMAIS:escrita`); desativação (`PATCH /status`) e exclusão lógica (`DELETE`) exigem `GESTAO_ANIMAIS:exclusao` (Administrador). Criação, edição, desativação e reativação geram auditoria (`CRIACAO`, `ATUALIZACAO`, `DESATIVACAO`, `REATIVACAO`; `BaiaService`, AT-5). Não há nomes fixos de baia (o CCZ cadastra as suas). `GET /api/baias/residentes` devolve os ocupantes por baia sem listar todos os animais (T45).
 
 #### `tipo_baia` (catálogo)
 
@@ -1000,7 +1000,7 @@ consideram só quem está sob custódia (`StatusAnimal.CODIGOS_SOB_CUSTODIA`), e
 
 23. Espécies, status de animal, motivos de entrada, tipos de baia, doenças, laboratórios, sintomas, tipos de ocorrência, providências tomadas, status de processo, resultados laboratoriais, desfechos, vacinas → mantidos pelo administrador via `Catálogos`. Não há mais aba "Parâmetros" nem "Integrações" expostas ao usuário.
     - **Ressalva (01/11/2026):** o catálogo de **vacinas** (`/api/vacinas`, tela `/vacinas`) e o de
-      **medicamentos** usam `GESTAO_ANIMAIS:escrita`, então o **Veterinário** também cadastra e edita — só a
+      **medicamentos** usam `GESTAO_ANIMAIS:escrita`, então o **Veterinário** também cadastra e edita; só a
       desativação é exclusiva do Administrador (`:exclusao`). Restringir a escrita ao Administrador exigiria
       autoridade nova em `cargo_permissao`, e portanto migration. Ver `docs/decisoes/catalogo-vacina.md`
       (CV-3). Os demais catálogos da lista continuam sem tela.

@@ -4,8 +4,6 @@ import { describe, expect, it, vi } from 'vitest'
 import type { DonutDatum } from '../utils/mapearGraficos'
 import { GraficoCasosPorDoenca } from './GraficoCasosPorDoenca'
 
-// ResponsiveContainer não mede corretamente em jsdom (ResizeObserver
-// ausente) — substitui por um contêiner de tamanho fixo só nos testes.
 vi.mock('recharts', async (importOriginal) => {
   const actual = await importOriginal<typeof import('recharts')>()
   return {

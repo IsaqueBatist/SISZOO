@@ -15,8 +15,6 @@ interface CardEncerramentoProps {
 export function CardEncerramento({ ocorrencia, podeEncerrar }: CardEncerramentoProps) {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const mutation = useEncerrarOcorrenciaMutation(ocorrencia.id)
-  // Catálogo com staleTime infinito (useOcorrencias.ts): baixado uma vez por
-  // sessão, o que importa com a internet instável do CCZ.
   const catalogos = useCatalogosOcorrenciaQuery()
 
   const {
@@ -83,8 +81,6 @@ export function CardEncerramento({ ocorrencia, podeEncerrar }: CardEncerramentoP
     )
   }
 
-  // D12: processo vinculado ainda não concluído bloqueia o encerramento (o
-  // backend também recusa com 422).
   const processoPendente =
     ocorrencia.processoVinculado !== null && ocorrencia.processoVinculado.statusProcesso !== 'CONCLUIDO'
 
@@ -115,8 +111,6 @@ export function CardEncerramento({ ocorrencia, podeEncerrar }: CardEncerramentoP
   const providencias = catalogos.data
     ? providenciasPermitidas(ocorrencia.statusOcorrencia, catalogos.data.providencias)
     : []
-  // Sem catálogo (erro ou lista vazia) não há o que escolher: o encerramento
-  // fica travado até a lista carregar, nunca liberado com o select vazio.
   const catalogoIndisponivel = catalogos.isError || (catalogos.isSuccess && providencias.length === 0)
 
   return (

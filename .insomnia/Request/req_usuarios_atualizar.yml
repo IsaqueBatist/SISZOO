@@ -1,0 +1,38 @@
+_id: "req_usuarios_atualizar"
+type: "Request"
+parentId: "fld_usuarios"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/usuarios/{{ _.usuario_id_exemplo }}"
+name: "Atualizar usuário"
+description: "Edita nome, sobrenome, perfil, CRMV e telefone do usuário criado em \"Criar usuário\" ({{ _.usuario_id_exemplo }}). Requer USUARIOS_ACESSO:escrita."
+method: "PUT"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "nome": "Ana",
+      "sobrenome": "Exemplo Atualizada",
+      "cargo": "Agente Sanitário",
+      "telefone": "(11) 98888-0000"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 3000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

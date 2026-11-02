@@ -15,9 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-// Exercita a V18 (backfill de ficha_completa) num schema proprio, no padrao
-// das outras MigracaoV*IT: dados legados gravados em SQL na V15 (ultima da
-// main quando a V18 foi escrita) e a V18 aplicada por cima.
 class MigracaoV18FichaCompletaIT extends AbstractIntegrationTest {
 
     private static final String SCHEMA = "migracao_v18";
@@ -39,22 +36,15 @@ class MigracaoV18FichaCompletaIT extends AbstractIntegrationTest {
         migrarAte("15");
         UUID autor = inserirUsuario();
 
-        // Regra antiga (so microchip) gravou true sem vacinacao: vira false.
         UUID chipSemVacina = inserirAnimal("985000000000001", true, autor);
-        // Microchip e vacinacao: continua true.
         UUID chipComVacina = inserirAnimal("985000000000002", true, autor);
         inserirVacinacao(chipComVacina, autor, null);
-        // Microchip e vacinacao, gravado como false: vira true.
         UUID chipComVacinaIncompleto = inserirAnimal("985000000000003", false, autor);
         inserirVacinacao(chipComVacinaIncompleto, autor, null);
-        // Sem microchip, com vacinacao: false.
         UUID semChip = inserirAnimal(null, false, autor);
         inserirVacinacao(semChip, autor, null);
-        // Microchip so com espacos (dado anterior a normalizacao) conta como
-        // ausente, como o StringUtils.hasText do servico: false.
         UUID chipEmBranco = inserirAnimal("   ", true, autor);
         inserirVacinacao(chipEmBranco, autor, null);
-        // Vacinacao retificada: a correcao e a vigente, o animal continua com vacina.
         UUID chipComRetificacao = inserirAnimal("985000000000004", false, autor);
         UUID original = inserirVacinacao(chipComRetificacao, autor, null);
         inserirVacinacao(chipComRetificacao, autor, original);
@@ -69,9 +59,6 @@ class MigracaoV18FichaCompletaIT extends AbstractIntegrationTest {
         assertThat(fichaCompleta(semChip), equalTo(false));
         assertThat(fichaCompleta(chipEmBranco), equalTo(false));
         assertThat(fichaCompleta(chipComRetificacao), equalTo(true));
-        // So a coluna ficha_completa muda. (O microchip em branco nao e
-        // conferido aqui: a V16 da fix/auditoria-rn, quando estiver na
-        // sequencia, o normaliza para NULL antes da V18.)
         assertThat(atualizadoEm(chipSemVacina), equalTo(atualizadoAntes));
         assertThat(jdbcTemplate.queryForObject("SELECT microchip FROM " + S + "animal WHERE id = ?", String.class,
                 chipSemVacina), equalTo("985000000000001"));

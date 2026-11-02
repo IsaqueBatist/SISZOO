@@ -92,9 +92,6 @@ export function Logs() {
   const deDebounced = useValorComAtraso(deFiltro)
   const ateDebounced = useValorComAtraso(ateFiltro)
 
-  // F2-027 (Fase 3 do TG): os filtros vão ao servidor (GET /api/auditoria com
-  // acao/usuarioEmail/modulo/de/ate) e valem para toda a trilha, não só para
-  // a página carregada. Trocar um filtro volta à primeira página.
   const filtros = useMemo(
     () => ({ acao: acaoFiltro, usuarioEmail: usuarioFiltro, modulo: moduloFiltro, de: deDebounced, ate: ateDebounced }),
     [acaoFiltro, usuarioFiltro, moduloFiltro, deDebounced, ateDebounced],
@@ -104,12 +101,7 @@ export function Logs() {
 
   useManterPaginaNoIntervalo(pagina, data?.totalPaginas, irParaPagina)
 
-  // Memoizado: `data?.itens ?? []` cria um array novo a cada render enquanto
-  // `data` está undefined, o que quebraria a identidade estável exigida
-  // pelos useMemo abaixo.
   const itens = useMemo(() => data?.itens ?? [], [data])
-  // Opções: catálogo do servidor (toda a trilha); enquanto não carrega, os
-  // valores da página atual (mesmo comportamento anterior).
   const acoesDisponiveis = useMemo(() => opcoes?.acoes ?? valoresUnicos(itens.map((e) => e.acao)), [opcoes, itens])
   const usuariosDisponiveis = useMemo(
     () => opcoes?.usuarios ?? valoresUnicos(itens.map((e) => e.usuarioEmail).filter((email): email is string => Boolean(email))),

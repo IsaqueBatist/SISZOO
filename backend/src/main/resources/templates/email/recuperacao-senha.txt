@@ -10,4 +10,3 @@ Se você não pediu a redefinição, ignore esta mensagem: sua senha atual conti
 
 SISZOO - Sistema de Gestão do CCZ de Itu
 Mensagem automática; não é necessário responder.
-/*[- Versao em texto puro de recuperacao-senha.html (RecuperacaoSenhaService). Variaveis: nome, link, validadeMinutos. Comentario de template: nao sai no e-mail. Sem quebra de linha depois dele, para o texto terminar na linha acima. -]*/

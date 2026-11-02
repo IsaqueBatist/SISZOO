@@ -30,7 +30,6 @@ function renderComCargo(cargo: string) {
   )
 }
 
-// O cadastro vive num modal, como nas outras telas de lista.
 async function abrirCadastro(user: ReturnType<typeof userEvent.setup>) {
   await screen.findByText('Fenobarbital 30mg')
   await user.click(screen.getByRole('button', { name: /cadastrar medicamento/i }))
@@ -110,8 +109,6 @@ describe('Medicamentos', () => {
     expect(await screen.findByRole('cell', { name: 'Fenobarbital 100mg' })).toBeInTheDocument()
   })
 
-  // Diferente da vacina, o medicamento não tem endpoint de reativação: a
-  // confirmação precisa dizer que é definitivo.
   it('avisa que desativar medicamento não tem volta', async () => {
     const confirmar = vi.spyOn(window, 'confirm').mockReturnValue(true)
     const user = userEvent.setup()
@@ -145,8 +142,6 @@ describe('Medicamentos', () => {
     expect(await screen.findByText('Nenhum medicamento encontrado')).toBeInTheDocument()
   })
 
-  // Quem digita "antibiotico" sem acento precisa achar "Antibiótico": a busca
-  // usa normalizarBusca dos dois lados.
   it('a busca ignora acento', async () => {
     const user = userEvent.setup()
     renderComCargo('Administrador')

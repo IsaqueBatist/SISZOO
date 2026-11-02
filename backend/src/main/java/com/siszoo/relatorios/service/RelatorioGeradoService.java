@@ -38,13 +38,6 @@ import com.siszoo.usuarios.service.AuditoriaEventoService;
 
 import tools.jackson.databind.ObjectMapper;
 
-// Orquestra os 4 endpoints de relatorios (T41): despacha para o
-// GeradorRelatorio do tipo pedido, gera CSV/PDF e, so em caso de sucesso,
-// grava relatorio_gerado na mesma transacao (doc_id consumido via
-// ProtocoloService ANTES da geracao do conteudo, para o PDF poder exibi-lo no
-// cabecalho). Os 6 tipos de TipoRelatorio tem gerador; a recusa com 422 em
-// gerador(tipo) so dispara se um tipo novo entrar no enum sem o seu
-// GeradorRelatorio.
 @Service
 public class RelatorioGeradoService {
 
@@ -96,7 +89,6 @@ public class RelatorioGeradoService {
         return dadosDoRelatorio(gerador(filtroBruto.tipo()), periodo, veOcorrenciasPorBairro);
     }
 
-    // Antes de gerar e de consumir doc_id: a recusa nao deixa rastro de geracao.
     private static void exigirAcessoAoTipo(TipoRelatorio tipo, boolean veOcorrenciasPorBairro) {
         if (tipo == TipoRelatorio.OCORRENCIAS_BAIRRO && !veOcorrenciasPorBairro) {
             throw new RelatorioSemPermissaoException();
@@ -123,9 +115,6 @@ public class RelatorioGeradoService {
         PeriodoRelatorio periodo = filtroResolver.resolver(filtroBruto);
         Usuario usuario = usuarioRepository.findById(usuarioId).orElseThrow(UsuarioNaoEncontradoException::new);
 
-        // doc_id consumido ANTES do conteudo: o PDF precisa exibi-lo no
-        // cabecalho (mesmo padrao de ProtocoloService - um rollback desfaz o
-        // incremento, entao nao ha doc_id "perdido" se a geracao falhar depois).
         int numero = protocoloService.proximoNumero(ProtocoloService.Entidade.RELATORIO);
         String docId = String.format("DOC-%d-%04d", Year.now(clock).getValue(), numero);
 
@@ -158,9 +147,6 @@ public class RelatorioGeradoService {
         registro.setTamanhoBytes(conteudo.length);
         relatorioGeradoRepository.save(registro);
 
-        // T43: EXPORTACAO na mesma transacao - se o evento nao for gravado, o
-        // commit falha antes de o controller montar a resposta e o arquivo
-        // nao sai. O payload identifica a exportacao; nunca leva o conteudo.
         Map<String, Object> exportacao = new LinkedHashMap<>();
         exportacao.put("docId", docId);
         exportacao.put("tipoRelatorio", tipo.codigo());
@@ -217,8 +203,6 @@ public class RelatorioGeradoService {
         if (filtro.ano() != null) {
             parametros.put("ano", filtro.ano());
         }
-        // Jackson 3: writeValueAsString lança tools.jackson.core.JacksonException,
-        // unchecked - mesmo padrao de AuditoriaEventoService#serializar.
         return objectMapper.writeValueAsString(parametros);
     }
 

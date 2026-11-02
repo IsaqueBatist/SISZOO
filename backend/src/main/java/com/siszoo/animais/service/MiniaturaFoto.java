@@ -18,13 +18,6 @@ import javax.imageio.stream.MemoryCacheImageOutputStream;
 
 import org.springframework.stereotype.Component;
 
-// Miniatura da foto do animal para as listagens (T45, V28). A foto chega do
-// frontend como data URI (JPEG ou PNG, lado maior ate 800 px, ~60-120 KB) e
-// era devolvida inteira em cada linha de GET /api/animais so para virar um
-// avatar de ~40 px. Aqui vira um JPEG de lado maior LADO_MAXIMO, poucos KB.
-//
-// So ImageIO do JDK, sem dependencia nova. Valor que nao e data URI (uma URL
-// externa, por exemplo) ja e leve e e devolvido como esta.
 @Component
 public class MiniaturaFoto {
 
@@ -33,8 +26,6 @@ public class MiniaturaFoto {
     private static final String PREFIXO_DATA_URI = "data:";
     private static final String MARCA_BASE64 = ";base64,";
 
-    // Nulo quando nao ha foto ou quando a data URI nao e uma imagem legivel:
-    // a listagem mostra o avatar sem foto, como para animal sem foto.
     public String gerar(String fotoUrl) {
         if (fotoUrl == null || fotoUrl.isBlank()) {
             return null;
@@ -62,7 +53,6 @@ public class MiniaturaFoto {
         double escala = Math.min(1.0, (double) LADO_MAXIMO / Math.max(imagem.getWidth(), imagem.getHeight()));
         int largura = Math.max(1, (int) Math.round(imagem.getWidth() * escala));
         int altura = Math.max(1, (int) Math.round(imagem.getHeight() * escala));
-        // RGB sem alfa (JPEG nao tem transparencia): PNG transparente vira fundo branco.
         BufferedImage reduzida = new BufferedImage(largura, altura, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = reduzida.createGraphics();
         try {

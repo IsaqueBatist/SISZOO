@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Fase 2 — gera matriz_rastreabilidade.csv, decisoes_pendentes.md e relatorio_fase2.md.
 Entradas: ../analise_fase1/inventario_especificacao.json, ../analise_fase1/achados_fase1.csv,
           ../schema_migrations.json, dados_fase2_a.py, dados_fase2_b.py.
@@ -9,7 +8,7 @@ from collections import Counter, OrderedDict, defaultdict
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(HERE)                       # analise_fase2
+ROOT = os.path.dirname(HERE)
 F1 = os.path.join(os.path.dirname(ROOT), 'analise_fase1')
 sys.path.insert(0, HERE)
 from dados_fase2_a import LINHAS_A, R, SVC, MIG, FE
@@ -22,7 +21,6 @@ TABELAS = schema['tabelas']
 DATA = '22/10/2026'
 COMMIT = 'b3ce1de'
 
-# ------------------------------------------------------------------ utilidades
 def base_tipo(t):
     t = (t or '').strip()
     low = t.lower()
@@ -59,9 +57,8 @@ def entidade_inventario(nome):
 def mod_label(n):
     return f'M{n}' if n else 'Geral'
 
-# ------------------------------------------------------------------ linhas automáticas: entidades e atributos
 ENT_ROWS, ATTR_ROWS, EXTRA_ROWS = [], [], []
-colunas_cobertas = defaultdict(set)   # tabela -> colunas do código referenciadas por algum campo do documento
+colunas_cobertas = defaultdict(set)
 ESF_AUSENTE = {'Adocao': 'G', 'Exame': 'G', 'TipoExame': 'G', 'AnexoExame': 'G', 'AnexoAnimal': 'G', 'AnexoVacinacao': 'G',
                'AnexoProcedimento': 'G', 'DocumentoProcesso': 'G', 'TipoDocumentoProcesso': 'G', 'VacinaEspecie': 'M',
                'AnimalSintoma': 'M', 'Sessao': 'P'}
@@ -97,7 +94,6 @@ for nome, (tabela, mig, jpa, obs) in MAPA_ENTIDADES.items():
                                f'Entidade {nome} inexistente no código', '—', 'SÓ NO DOCUMENTO', 'FATO', f1, dec, f'Segue a decisão da entidade {nome}.', esf, 'Baixo', origem.split(' (')[0], '—'))
         continue
 
-    # entidade existente
     t = TABELAS[tabela]
     mapa = MAPA_COLUNAS.get(nome, {})
     faltantes, divergentes = [], []
@@ -148,7 +144,6 @@ for nome, (tabela, mig, jpa, obs) in MAPA_ENTIDADES.items():
             divergentes.append(campo)
         ATTR_ROWS.append(R('Atributo', mod, f'{nome}.{campo}', origem, trecho_doc, f'{MIG}/{cc["migration"]}__*.sql ({tabela}.{alvo}); {SVC}/{jpa}' if jpa else f'{MIG}/{cc["migration"]}__*.sql ({tabela}.{alvo})',
                            tcod, status, 'FATO', '', 'ATUALIZAR_DOC', just, 'P', 'Baixo', origem.split(' (')[0] if status != 'CONFORME' or notas else '—', '—'))
-    # linha da entidade
     extras = [c for c in t['columns'] if c not in colunas_cobertas[tabela] and c != 'id']
     st = 'CONFORME' if not faltantes and not divergentes else 'PARCIAL'
     resumo = []
@@ -172,7 +167,6 @@ for tb, (mig, just) in TABELAS_SO_CODIGO.items():
     TAB_ROWS.append(R('Entidade', mod_label(modn), f'Tabela {tb} (só no código)', '— (não consta no DER/lógico/dicionário)', '—', f'{MIG}/{mig}', 'Colunas: ' + ', '.join(f'{c} {d["tipo"]}' for c, d in t['columns'].items()) + (f'; triggers: {len(t["triggers"])}' if t['triggers'] else ''),
                        'SÓ NO CÓDIGO', 'FATO', 'F1-022' if tb == 'protocolo_sequencia' else '', 'ATUALIZAR_DOC', just, 'P', 'Baixo', 'DER, lógico e dicionário do módulo; Seção 4.3', '—'))
 
-# ------------------------------------------------------------------ montagem final e IDs
 ORDEM_CAT = ['RF', 'UC', 'RN', 'RNF', 'Perfil', 'Relatório', 'Tela', 'Tecnologia', 'Enum', 'Entidade', 'Atributo']
 doc_rows = [r for r in LINHAS_A + LINHAS_B if r['status'] != 'SÓ NO CÓDIGO'] + ENT_ROWS + ATTR_ROWS
 code_rows = [r for r in LINHAS_A + LINHAS_B if r['status'] == 'SÓ NO CÓDIGO'] + TAB_ROWS + EXTRA_ROWS
@@ -182,7 +176,6 @@ rows = doc_rows + code_rows
 for i, r in enumerate(rows, 1):
     r['id'] = f'F2-{i:03d}'
 
-# ------------------------------------------------------------------ CSV
 COLS = ['ID', 'Categoria', 'Módulo', 'Item', 'Origem no documento', 'Trecho do documento', 'Evidência no código', 'Trecho do código', 'Status',
         'Tipo', 'Achado Fase 1 relacionado', 'Decisão recomendada', 'Justificativa', 'Esforço', 'Risco', 'Locais a alterar no documento',
         'Arquivos a alterar no código', 'decisao_autor', 'observacao_autor']
@@ -192,7 +185,6 @@ with open(os.path.join(ROOT, 'matriz_rastreabilidade.csv'), 'w', encoding='utf-8
     for r in rows:
         w.writerow([r['id'], r['cat'], r['mod'], r['item'], r['orig'], r['tdoc'], r['evid'], r['tcod'], r['status'], r['tipo'], r['f1'], r['dec'], r['just'], r['esf'], r['risco'], r['locdoc'], r['arqcod'], '', ''])
 
-# ------------------------------------------------------------------ estatísticas
 inv_rows = [r for r in rows if r['status'] != 'SÓ NO CÓDIGO']
 by_status = Counter(r['status'] for r in rows)
 by_dec = Counter(r['dec'] for r in rows)
@@ -217,14 +209,11 @@ def find(item_prefix):
 
 TOP15 = ['RN03 ', 'RF-B03 ', 'RF-A05 ', 'RN09 ', 'RN02 ', 'RF-A04 ', 'RF-B06 ', 'RF-D02 ', 'RN12 ', 'RF-A01 ', 'RNF10 ', 'RF-B01 ', 'UC "Editar Dados do Animal"', 'UC "Consultar Trilha de Auditoria"', 'Entidade Sessao']
 
-# esforço em código
 DIAS = {'P': 0.5, 'M': 2.0, 'G': 5.0}
 cod_rec = [r for r in rows if r['dec'] in ('ATUALIZAR_CODIGO', 'AMBOS')]
 cod_dec = [r for r in rows if r['dec'] == 'DECISAO_AUTORES' and r['arqcod'] not in ('—', '')]
 
-# ------------------------------------------------------------------ decisoes_pendentes.md
 pend = [r for r in rows if r['dec'] == 'DECISAO_AUTORES' or (r['dec'] in ('ATUALIZAR_CODIGO', 'AMBOS') and r['esf'] in ('M', 'G'))]
-# só uma linha por "assunto": omitir linhas que apenas remetem a outra ("Ver RF-...") quando a principal já está presente
 principais = [r for r in pend if not re.match(r'^(Ver |Idem|Perfis divergem|Veterinário também acessa|Segue a decisão)', r['just'])]
 with open(os.path.join(ROOT, 'decisoes_pendentes.md'), 'w', encoding='utf-8') as f:
     f.write('# Decisões pendentes dos autores — Fase 2 (SISZOO)\n\n')
@@ -259,7 +248,6 @@ with open(os.path.join(ROOT, 'decisoes_pendentes.md'), 'w', encoding='utf-8') as
         for r in dependentes:
             f.write(f"| {r['id']} | {r['item']} | {r['just']} | {r['status']} |\n")
 
-# ------------------------------------------------------------------ relatorio_fase2.md
 sev = {a['ID']: a['Severidade'] for a in achados}
 loc = {a['ID']: a['Localização A'] for a in achados}
 with open(os.path.join(ROOT, 'relatorio_fase2.md'), 'w', encoding='utf-8') as f:

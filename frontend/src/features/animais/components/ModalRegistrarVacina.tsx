@@ -22,7 +22,6 @@ import { hojeEmItu } from '../utils/regrasVacina'
 import { useCriarVacinacaoMutation } from '../hooks/useHistoricoAnimal'
 import type { Vacinacao } from '../types/historico.types'
 
-// Erros por campo do 422: só os campos que existem no modal.
 const MAPA_ERROS_SERVIDOR = mapaDeCampos<VacinacaoFormValues>(
   Object.keys(vacinacaoFormSchema.shape) as (keyof VacinacaoFormValues)[],
 )
@@ -31,15 +30,8 @@ const ARMAZENAMENTO_RASCUNHO = armazenamentoRascunhoClinico<VacinacaoFormValues>
 
 interface ModalRegistrarVacinaProps {
   animalId: string
-  // Nova aplicação da mesma vacina, pedida pela linha que está vencendo na
-  // aba. É um registro INDEPENDENTE (sem `retifica`): o reforço não corrige a
-  // aplicação anterior, ele sucede a ela.
   reforco?: boolean
-  // Vacina já escolhida ao abrir: usada pelo reforço, que sabe qual é.
   vacinaPreSelecionada?: string
-  // Presente quando a ação é "Corrigir" um registro existente: o POST novo
-  // aponta `retificaId` para ele, em vez de criar uma vacinação
-  // independente (registros clínicos são imutáveis).
   retifica?: Vacinacao
   onFechar: () => void
   onSucesso: () => void
@@ -77,8 +69,6 @@ export function ModalRegistrarVacina({
     reValidateMode: 'onSubmit',
     defaultValues: {
       vacina: vacinaPreSelecionada ?? retifica?.vacinaCodigo ?? '',
-      // No reforço a aplicação é agora: já vem preenchida, e a pessoa troca
-      // se estiver lançando uma aplicação de outro dia.
       dataAplicacao: reforco ? hojeEmItu() : (retifica?.dataAplicacao ?? ''),
       numeroDose: retifica?.numeroDose ?? undefined,
       doseQuantidade: retifica?.doseQuantidade,
@@ -88,8 +78,6 @@ export function ModalRegistrarVacina({
     },
   })
 
-  // Internet instável do CCZ: fechar o modal sem salvar mantém o que foi
-  // digitado; o envio com sucesso remove o rascunho.
   const rascunho = useRascunho<VacinacaoFormValues>({
     armazenamento: ARMAZENAMENTO_RASCUNHO,
     chave: chaveRascunhoClinico(user?.id ?? '', 'vacina', animalId, retifica?.id),
@@ -128,10 +116,6 @@ export function ModalRegistrarVacina({
     void handleSubmit(onSubmit)(event)
   }
 
-  // Previsão do próximo reforço, ao vivo: é o que explica de onde sai o alerta
-  // de vacina vencendo. Usa a mesma aritmética de meses do servidor —
-  // inclusive o truncamento de fim de mês — para a previsão bater com a data
-  // de validade que a tabela mostra depois de salvar.
   const codigoEscolhido = watch('vacina')
   const dataEscolhida = watch('dataAplicacao')
   const vacinaEscolhida = catalogos.data?.vacinas.find((item) => item.codigo === codigoEscolhido)
@@ -140,13 +124,6 @@ export function ModalRegistrarVacina({
       ? adicionarMesesIso(dataEscolhida, vacinaEscolhida.intervaloMeses)
       : null
 
-  // Volta do cadastro rápido: a vacina nova já entra escolhida, como
-  // Medicamentos.tsx faz com a categoria recém-criada.
-  //
-  // A seleção não pode ser feita direto no retorno do POST: o select é
-  // não-controlado (`register`), e a `<option>` nova só existe depois de o
-  // catálogo ser invalidado, refazer a consulta E o React re-renderizar. Um
-  // `setValue` antes disso é descartado pelo DOM, que cai na primeira opção.
   useEffect(() => {
     if (!codigoRecemCadastrado) return
     if (!catalogos.data?.vacinas.some((item) => item.codigo === codigoRecemCadastrado)) return
@@ -202,9 +179,6 @@ export function ModalRegistrarVacina({
                 <label htmlFor="vac-vacina">
                   Vacina <span className="req">*</span>
                 </label>
-                {/* O "+" fica ao lado do select, não substitui o componente:
-                    SelectCatalogoClinico é quem trata carregando/erro/vazio
-                    e só monta com as opções prontas. */}
                 <div className="flex gap-2">
                   <div style={{ flex: 1 }}>
                     <SelectCatalogoClinico
@@ -217,9 +191,6 @@ export function ModalRegistrarVacina({
                       temErro={Boolean(errors.vacina)}
                     />
                   </div>
-                  {/* Sem checagem de papel: a aba só oferece o caminho para
-                      este modal a quem tem escrita, e o backend recusa o POST
-                      de qualquer outro. */}
                   {!cadastrandoVacina && (
                     <button
                       type="button"
@@ -233,8 +204,6 @@ export function ModalRegistrarVacina({
                   )}
                 </div>
                 {errors.vacina && <span className="err">{errors.vacina.message}</span>}
-                {/* Explica de onde vem o alerta de reforço, com a data já
-                    calculada. Só aparece com vacina e data escolhidas. */}
                 {previsaoReforco && (
                   <span className="hint">
                     Próximo reforço: {formatarDataBR(previsaoReforco)} (intervalo de{' '}

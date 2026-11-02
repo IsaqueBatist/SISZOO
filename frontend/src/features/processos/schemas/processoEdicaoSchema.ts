@@ -1,8 +1,6 @@
 import { z } from 'zod'
 import { amostraSchema, responsavelSchema, type ProcessoFormValues } from './processoFormSchema'
 
-// Só o que a edição do Administrador altera (EditarProcessoRequest). Protocolo,
-// abertura, status, resultado e vínculo não passam por este formulário.
 export const processoEdicaoSchema = z.object({
   doenca: z.string().min(1, 'Selecione a doença investigada.'),
   laboratorio: z.string().min(1, 'Selecione o laboratório de destino.'),
@@ -18,5 +16,4 @@ export const processoEdicaoSchema = z.object({
     .max(1000, 'No máximo 1000 caracteres.'),
 })
 
-// Os blocos de campos são os do cadastro, tipados por ProcessoFormValues.
 export type ProcessoEdicaoValues = ProcessoFormValues & { justificativa: string }

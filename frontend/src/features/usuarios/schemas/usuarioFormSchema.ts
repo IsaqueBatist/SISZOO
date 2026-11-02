@@ -27,8 +27,6 @@ export const usuarioFormSchema = z
         message: 'CRMV é obrigatório para o perfil Veterinário.',
       })
     }
-    // Mesma política do backend (senha inicial): nome da conta = e-mail antes
-    // do @; nome de exibição = nome completo.
     const violacao =
       dados.senhaInicial.length >= 8
         ? violacaoPoliticaSenha(dados.senhaInicial, { email: dados.email, nomeExibicao: dados.nomeCompleto })

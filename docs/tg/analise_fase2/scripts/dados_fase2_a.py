@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Fase 2 — linhas MANUAIS da matriz de rastreabilidade (parte A).
 Cobre: requisitos funcionais, casos de uso (Quadros 16–51), regras de negócio (RN01–RN12),
 requisitos não funcionais (RNF01–RNF10), perfis/permissões, relatórios (Quadro 11) e telas (Quadro 15 + Apêndice E).
@@ -207,7 +206,6 @@ RF = [
       'P', 'Baixo', 'Quadro 10 (RF-D02); Quadro 13 (RN11); Quadros 49, 50, 51; Quadro 94; Figura 11/16/25; Seção 5.2 (T14)', '—'),
 ]
 
-# ---------------------------------------------------------------- Casos de uso (Quadros 16–51)
 def UC(mod, quadro, nome, tdoc, evid, tcod, status, tipo, f1, dec, just, esf, risco, locdoc, arqcod='—', opcoes=None):
     return R('UC', mod, f'UC "{nome}" (Quadro {quadro})', f'Quadro {quadro} (Apêndice A)', tdoc, evid, tcod, status, tipo, f1, dec, just, esf, risco, locdoc, arqcod, opcoes)
 
@@ -332,7 +330,6 @@ UCS = [
        f'{SVC}/relatorios/service/RelatorioGeradoService.java:92 (retorna ArquivoRelatorio no POST /exportar)', 'Download direto na exportação; sem URL nem expiração.', 'DIVERGENTE', 'FATO', '', 'ATUALIZAR_DOC', 'Ver RF-D02/RN11.', 'P', 'Baixo', 'Quadro 51'),
 ]
 
-# ---------------------------------------------------------------- Regras de negócio
 def RN(idx, nome, mod, tdoc, evid, tcod, status, tipo, f1, dec, just, esf, risco, locdoc, arqcod='—', opcoes=None):
     return R('RN', mod, f'{idx} {nome}', 'Quadro 13 (p. 32 conforme sumário)', tdoc, evid, tcod, status, tipo, f1, dec, just, esf, risco, locdoc, arqcod, opcoes)
 
@@ -390,7 +387,6 @@ RNS = [
        'DIVERGENTE', 'FATO', '', 'ATUALIZAR_DOC', 'EM_ANDAMENTO não existe e COM_RESULTADO foi acrescentado; o ciclo do código é coerente com o lançamento de resultado e testado (critério 2/5). A segunda frase da RN12 está conforme: exigirPrimeiroResultado (ProcessoSanitarioService.java:498-507) só aceita o primeiro resultado quando o status pode transicionar para COM_RESULTADO, isto é, em AGUARDANDO_RESULTADO; em ABERTO lança TransicaoStatusProcessoInvalidaException. Atualizar RN12, Quadro 44, Figura 24 com os quatro estados reais.', 'P', 'Baixo', 'Quadro 13 (RN12); Quadro 44; Figura 23/24'),
 ]
 
-# ---------------------------------------------------------------- RNFs
 def RNF(idx, nome, tdoc, evid, tcod, status, tipo, f1, dec, just, esf, risco, locdoc, arqcod='—'):
     return R('RNF', 'Geral', f'{idx} {nome}', 'Quadro 12 (p. 32 conforme sumário)', tdoc, evid, tcod, status, tipo, f1, dec, just, esf, risco, locdoc, arqcod)
 
@@ -420,7 +416,6 @@ RNFS = [
         'PARCIAL', 'FATO', 'F1-037', 'ATUALIZAR_CODIGO', 'Edição de animal e de baia são alterações críticas (critério 1): adicionar auditoria nesses dois serviços é P (serviço pronto). IP é opcional (declarar não capturado). entidade_id existe (resolve F1-037).', 'P', 'Médio', 'Quadro 12 (RNF10); Quadro 57 (ip); Figura 12/17', f'{SVC}/animais/service/AnimalService.java; {SVC}/animais/service/BaiaService.java; ITs correspondentes'),
 ]
 
-# ---------------------------------------------------------------- Perfis / permissões
 PERFIS = [
     R('Perfil', 'M1', 'Três perfis: Administrador, Veterinário, Agente Sanitário', 'Quadro 4 (p. 25 conforme sumário); Quadro 20; Seção 2.2',
       'Administrador (Direção) / Veterinário (Veterinária do canil) / Agente Sanitário (Processos de zoonoses e ocorrências); perfil de recepção não incluído.',
@@ -444,7 +439,6 @@ PERFIS = [
       f'{MIG}/V11__remove_acesso_vet_ocorrencias.sql; {FE}/lib/nav.ts:24-31 (vet sem ocorrências)', 'Acesso do Veterinário a OCORRENCIAS_DENUNCIAS zerado na V11; menu sem Ocorrências.', 'CONFORME', 'FATO', 'F1-008', 'ATUALIZAR_DOC', 'Conforme ao documento (os protótipos da Fig. 28 mostrando vet em ocorrências é que divergem — F1-008 confirmado pelo código: protótipo errado).', 'P', 'Baixo', 'Figura 28 (nota)', '—'),
 ]
 
-# ---------------------------------------------------------------- Relatórios (Quadro 11)
 def REL(nome, tdoc, evid, tcod, status, tipo, f1, dec, just, esf, risco, locdoc):
     return R('Relatório', 'M5', f'Relatório "{nome}"', 'Quadro 11 (p. 31 conforme sumário)', tdoc, evid, tcod, status, tipo, f1, dec, just, esf, risco, locdoc, '—')
 
@@ -467,7 +461,6 @@ RELATORIOS = [
       f'{SVC}/relatorios/entity/TipoRelatorio.java; {MIG}/V20 (ck_relatorio_gerado_tipo)', 'Mesmos 6 valores (código lowercase na API).', 'CONFORME', 'FATO', '', 'ATUALIZAR_DOC', 'Conforme.', 'P', 'Baixo', '—', '—'),
 ]
 
-# ---------------------------------------------------------------- Telas (Quadro 15 + Apêndice E)
 def TELA(cod, nome, perfis, req, evid, tcod, status, tipo, f1, dec, just, esf, risco, locdoc, orig='Quadro 15 (p. 79 conforme sumário)'):
     return R('Tela', 'Geral', f'{cod} {nome}', orig, f'Perfis: {perfis}; Requisitos: {req}', evid, tcod, status, tipo, f1, dec, just, esf, risco, locdoc, '—')
 
@@ -495,7 +488,6 @@ TELAS = [
     TELA('T21', 'Relatório de procedimentos', '—', '—', f'{FE}/features/relatorios/components/Relatorios.tsx', 'Preview dentro de /relatorios.', 'DIVERGENTE', 'FATO', 'F1-040', 'ATUALIZAR_DOC', 'Idem T18.', 'P', 'Baixo', 'Quadro 15; Apêndice E', 'Apêndice E / Lista de Figuras (ausente do Quadro 15)'),
     TELA('T22', 'Relatório de ocupação de baias', '—', '—', f'{FE}/features/relatorios/components/Relatorios.tsx', 'Preview dentro de /relatorios.', 'DIVERGENTE', 'FATO', 'F1-040', 'ATUALIZAR_DOC', 'Idem T18.', 'P', 'Baixo', 'Quadro 15; Apêndice E', 'Apêndice E / Lista de Figuras (ausente do Quadro 15)'),
     TELA('T23', 'Relatório de ocorrências por bairro', '—', '—', f'{FE}/features/relatorios/components/Relatorios.tsx', 'Preview dentro de /relatorios.', 'DIVERGENTE', 'FATO', 'F1-040', 'ATUALIZAR_DOC', 'Idem T18.', 'P', 'Baixo', 'Quadro 15; Apêndice E', 'Apêndice E / Lista de Figuras (ausente do Quadro 15)'),
-    # Só no código
     R('Tela', 'Geral', 'Tela /trocar-senha (primeiro acesso)', '— (não consta no Quadro 15)', '—', f'{FE}/routes/AppRoutes.tsx:96; {FE}/routes/RotaProtegida.tsx', 'Troca obrigatória de senha quando senhaAlteradaEm === null.', 'SÓ NO CÓDIGO', 'FATO', '', 'ATUALIZAR_DOC', 'Realiza RF-C01 (troca obrigatória no primeiro acesso): incluir no Quadro 15 e em 5.2.', 'P', 'Baixo', 'Quadro 15; Seção 5.2', '—'),
     R('Tela', 'Geral', 'Tela /medicamentos (catálogo de medicamentos e categorias)', '— (não consta no Quadro 15)', '—', f'{FE}/routes/AppRoutes.tsx:113; {FE}/features/medicamentos/components/Medicamentos.tsx; {SVC}/animais/clinico/controller/MedicamentoController.java:34-69', 'CRUD (soft delete) de medicamentos e categorias farmacológicas.', 'SÓ NO CÓDIGO', 'FATO', '', 'ATUALIZAR_DOC', 'Suporta Prescrever Medicamento (Quadro 30); incluir no Quadro 15 e em 5.2.', 'P', 'Baixo', 'Quadro 15; Seção 5.2; Quadro 74/65', '—'),
     R('Tela', 'Geral', 'Telas de edição: /animais/:id/editar e /ocorrencias/:id/editar', '— (não constam no Quadro 15)', '—', f'{FE}/routes/AppRoutes.tsx:110,122', 'Edição de animal (inclui transferência de baia e microchip posterior) e de ocorrência.', 'SÓ NO CÓDIGO', 'FATO', '', 'ATUALIZAR_DOC', 'Realizam Quadros 24/27 e a edição de ocorrência; incluir no Quadro 15 (ou como variantes de T05/T09).', 'P', 'Baixo', 'Quadro 15; Seção 5.2', '—'),

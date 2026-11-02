@@ -14,25 +14,19 @@ import { PERFIS_USUARIO, type PerfilUsuario, type UsuarioListItem } from '../typ
 import { CriarUsuarioModal } from './CriarUsuarioModal'
 import { EditarUsuarioModal } from './EditarUsuarioModal'
 import { RedefinirSenhaModal } from './RedefinirSenhaModal'
+import { corAvatar } from '@/lib/avatar'
 import './Usuarios.css'
 
 type FiltroStatus = 'Todos' | 'Ativos' | 'Inativos'
 
 const FILTROS_PADRAO = { busca: '', perfil: 'Todos', status: 'Todos' }
 
-// ultimoAcesso e criadoEm são LocalDateTime sem fuso, já no horário de Itu:
-// `new Date(iso)` os leria no fuso do navegador (ver lib/datas.ts).
 function formatarData(iso: string | null, comHora = false): string {
   return comHora ? formatarDataHoraBR(iso) : formatarDataBR(iso)
 }
 
 function iniciais(nome: string, sobrenome: string): string {
   return `${nome[0] ?? ''}${sobrenome[0] ?? ''}`.toUpperCase()
-}
-
-function corAvatar(seed: string): string {
-  const hue = Math.abs([...seed].reduce((acumulado, char) => acumulado + char.charCodeAt(0), 0)) % 360
-  return `hsl(${hue}, 35%, 34%)`
 }
 
 function contarPorPerfil(usuarios: UsuarioListItem[] | undefined): Record<PerfilUsuario, number> {
@@ -210,7 +204,6 @@ export function Usuarios() {
                   const roleKey = roleKeyFromCargos(usuario.cargos)
                   const role = ROLES[roleKey]
                   const nomeCompleto = `${usuario.nome} ${usuario.sobrenome}`
-                  // Na própria conta, senha e acesso têm outro caminho (o backend recusa).
                   const ehOProprioUsuario = usuario.id === user?.id
                   return (
                     <tr key={usuario.id}>

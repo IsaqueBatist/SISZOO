@@ -17,8 +17,6 @@ import com.siszoo.comum.ApiTesteFixture;
 
 import io.restassured.http.ContentType;
 
-// F2-012 (Fase 3 do TG, RF-B01 / limitacao 3.5.2): numeros GAL e SINAN
-// informados manualmente na abertura do processo e devolvidos no detalhe.
 class ProcessoGalSinanIT extends AbstractIntegrationTest {
 
     @Autowired

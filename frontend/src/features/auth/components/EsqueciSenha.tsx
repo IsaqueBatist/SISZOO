@@ -13,9 +13,6 @@ import { useTituloPagina } from '@/lib/useTituloPagina'
 import { PainelMarcaLogin } from './PainelMarcaLogin'
 import './Login.css'
 
-// Primeiro passo da recuperação de senha. A API responde igual para e-mail
-// cadastrado ou não, e a tela repete esse cuidado: a confirmação nunca afirma
-// que a conta existe.
 export function EsqueciSenha() {
   const { token, carregandoSessao } = useAuth()
   useTituloPagina('Esqueci minha senha')

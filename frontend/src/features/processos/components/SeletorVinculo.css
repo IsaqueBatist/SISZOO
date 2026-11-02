@@ -1,12 +1,3 @@
-/* Estilos da linha de busca/seleção de ocorrência↔processo, compartilhados
-   por SeletorOcorrencia.tsx e SeletorProcessoExistente.tsx — movidos de
-   ProcessoForm.css para cá porque esses dois componentes também são usados
-   FORA do wizard (ProcessoDetalhe.tsx, OcorrenciaDetalhe.tsx, vínculo pós-
-   criação), que não carregava aquele CSS e deixava a lista sem nenhum
-   estilo (sem feedback visual de seleção, badge sem respiro, etc.). O
-   import mora no componente que usa as classes, não na página, para que a
-   lista fique estilizada em qualquer lugar onde for renderizada. */
-
 .occur-search {
   display: flex;
   gap: 12px;

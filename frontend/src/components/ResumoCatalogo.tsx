@@ -1,14 +1,8 @@
-// Faixa de contagens acima de uma lista de catálogo. Os números são sempre
-// derivados do conjunto COMPLETO carregado pela tela, não do que está filtrado
-// na tabela — senão o resumo mudaria a cada tecla da busca e deixaria de
-// resumir o catálogo.
 export interface ItemResumo {
-  // Chave estável: o rótulo pode repetir entre telas.
   id: string
   valor: number
   rotulo: string
   descricao: string
-  // Destaca o número quando ele pede ação (ex.: animais em alerta).
   alerta?: boolean
 }
 

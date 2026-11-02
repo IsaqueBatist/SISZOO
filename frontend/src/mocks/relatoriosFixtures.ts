@@ -9,8 +9,6 @@ import type {
   TipoRelatorioInfo,
 } from '@/features/relatorios/types/relatorios.types'
 
-// Os 6 tipos do catalogo (DER §3.6) - nomes e filtros espelham
-// com.siszoo.relatorios.entity.TipoRelatorio.
 export const TIPOS_RELATORIO_FIXTURE: TipoRelatorioInfo[] = [
   { codigo: 'anual_processos', nome: 'Relatório Anual de Processos', filtro: 'ano' },
   { codigo: 'vacinacao', nome: 'Relatório de Vacinação', filtro: 'periodo' },

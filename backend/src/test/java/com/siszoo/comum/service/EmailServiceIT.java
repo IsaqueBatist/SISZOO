@@ -46,12 +46,6 @@ import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 
-// T35: EmailService no contexto real (application.yml, AsyncConfig, mail e
-// Thymeleaf auto-configurados) contra o SMTP falso do GreenMail — nenhum
-// servidor externo, nenhum endereco real (so .test). O GreenMail sobe uma vez
-// por classe numa porta livre (dynamicPort), antes do contexto Spring, que le
-// a porta pelo @DynamicPropertySource; reiniciar por metodo trocaria a porta
-// sob o contexto em cache.
 class EmailServiceIT extends AbstractIntegrationTest {
 
     @RegisterExtension
@@ -69,8 +63,6 @@ class EmailServiceIT extends AbstractIntegrationTest {
     private static final String REMETENTE = "nao-responda@siszoo.test";
     private static final long ESPERA_MS = 5000;
 
-    // Espiao do JavaMailSender real: so o teste de assincronia muda o
-    // comportamento; nos demais, delega ao send real (reset apos cada teste).
     @MockitoSpyBean
     private JavaMailSender mailSender;
 
@@ -115,15 +107,13 @@ class EmailServiceIT extends AbstractIntegrationTest {
     @Test
     @DisplayName("[T35] assinatura da issue (so HTML): parte unica text/html em UTF-8")
     void enviaSoHtml() throws Exception {
-        emailService.enviar(DESTINATARIO, "Somente HTML", "<p>Conteúdo em HTML</p>")
+        emailService.enviar(DESTINATARIO, "Somente HTML", "<p>Conteúdo em HTML</p>", null)
                 .get(ESPERA_MS, MILLISECONDS);
 
         MimeMessage recebida = unicaRecebida();
         assertTexto(recebida, "text/html", "<p>Conteúdo em HTML</p>");
     }
 
-    // Template da notificacao de resultado (T36) com dado dinamico hostil: o
-    // HTML chega escapado; o texto puro leva o valor literal (nao e HTML).
     @Test
     @DisplayName("[T35] template Thymeleaf: dados dinamicos renderizados e HTML escapado")
     void enviaTemplateRenderizado() throws Exception {
@@ -134,8 +124,6 @@ class EmailServiceIT extends AbstractIntegrationTest {
         String html = emailTemplateService.renderizarHtml("email/resultado-processo", variaveis);
         String texto = emailTemplateService.renderizarTexto("email/resultado-processo", variaveis);
 
-        // Quebras normalizadas: com core.autocrlf, o .txt pode estar em CRLF
-        // num checkout Windows (inofensivo no e-mail, que trafega em CRLF).
         assertThat(texto.replace("\r\n", "\n"), equalTo("Olá, <script>alert(1)</script> Ana.\n\n"
                 + "O resultado laboratorial do processo sanitário 007/2026 foi registrado como positivo pelo Centro de Controle de Zoonoses de Itu.\n"
                 + "Entre em contato com o CCZ para mais informações.\n\n"
@@ -153,14 +141,10 @@ class EmailServiceIT extends AbstractIntegrationTest {
         assertThat(htmlRecebido, not(containsString("<script>")));
         assertThat(htmlRecebido, containsString("<strong>007/2026</strong>"));
         assertThat(htmlRecebido, containsString("<meta charset=\"UTF-8\">"));
-        // Comentarios de parser do template nao chegam ao destinatario.
         assertThat(htmlRecebido, not(containsString("NAO e comunicacao oficial")));
         assertThat((String) partes.getBodyPart(0).getContent(), not(containsString("T35")));
     }
 
-    // Sem sleep: o envio fica preso num latch dentro do send. Enquanto preso,
-    // quem chamou ja tem o future de volta, ainda pendente, e o send roda numa
-    // thread do executor do @EnableAsync (prefixo do application.yml).
     @Test
     @DisplayName("[T35] envio assincrono: devolve o future antes do send terminar, em thread siszoo-async-")
     void envioNaoBloqueiaQuemChama() throws Exception {
@@ -176,7 +160,7 @@ class EmailServiceIT extends AbstractIntegrationTest {
             return chamada.callRealMethod();
         }).when(mailSender).send(any(MimeMessage.class));
 
-        CompletableFuture<Void> envio = emailService.enviar(DESTINATARIO, "Assincrono", "<p>corpo</p>");
+        CompletableFuture<Void> envio = emailService.enviar(DESTINATARIO, "Assincrono", "<p>corpo</p>", null);
 
         assertThat(entrou.await(5, SECONDS), is(true));
         assertThat(envio.isDone(), is(false));
@@ -215,8 +199,6 @@ class EmailServiceIT extends AbstractIntegrationTest {
         return new ContentType(parte.getContentType());
     }
 
-    // Content-Type pelo parse (o MimeMessageHelper grava "text/html;charset=UTF-8",
-    // sem espaco), e o conteudo ja decodificado pelo Jakarta Mail.
     private static void assertTexto(Part parte, String mime, String conteudo) throws Exception {
         ContentType tipo = tipo(parte);
         assertThat(parte.getContentType(), tipo.match(mime), is(true));

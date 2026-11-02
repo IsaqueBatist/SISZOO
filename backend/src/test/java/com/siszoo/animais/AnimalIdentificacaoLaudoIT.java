@@ -23,9 +23,6 @@ import com.siszoo.comum.ApiTesteFixture;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-// F2-004 (numero_medalha, data_implantacao_chip, procedencia — V23) e F2-008
-// (laudo_eutanasia — V24), Fase 3 do TG (22/10/2026). As validacoes ficam no
-// AnimalService e respondem 422 com o nome do campo (CampoInvalidoException).
 class AnimalIdentificacaoLaudoIT extends AbstractIntegrationTest {
 
     private static final String EMAIL_ADMIN = "teste.admin.identificacao@itu.sp.gov.br";
@@ -109,8 +106,6 @@ class AnimalIdentificacaoLaudoIT extends AbstractIntegrationTest {
         atualizar(id, corpoAtualizar("Transicao", microchip, "obito_eutanasia", "Laudo: sofrimento irreversivel"))
                 .then().statusCode(200).body("laudoEutanasia", equalTo("Laudo: sofrimento irreversivel"));
 
-        // Registro anterior a V24: ja em eutanasia e sem laudo (gravado direto no
-        // banco). A edicao sem laudo nao pode ser recusada (regra so na transicao).
         jdbcTemplate.update("UPDATE animal SET laudo_eutanasia = NULL WHERE id = CAST(? AS uuid)", id);
         atualizar(id, corpoAtualizar("Transicao editado", microchip, "obito_eutanasia", null))
                 .then().statusCode(200).body("nome", equalTo("Transicao editado")).body("laudoEutanasia", nullValue());
@@ -127,8 +122,6 @@ class AnimalIdentificacaoLaudoIT extends AbstractIntegrationTest {
                 .then().statusCode(200).body("laudoEutanasia", equalTo("Laudo original"));
     }
 
-    // ── Apoio ────────────────────────────────────────────
-
     private Response criar(CriarAnimalRequest corpo) {
         return given().contentType(ContentType.JSON).header("Authorization", "Bearer " + tokenAdmin)
                 .body(corpo).when().post("/api/animais");
@@ -141,7 +134,6 @@ class AnimalIdentificacaoLaudoIT extends AbstractIntegrationTest {
 
     private CriarAnimalRequest corpo(String nome, String microchip, String status, String medalha, LocalDate implantacao,
             String procedencia, String laudo) {
-        // Fora da custodia (obito) o animal nao ocupa baia.
         UUID baia = "obito_eutanasia".equals(status) ? null : baiaId;
         return new CriarAnimalRequest(nome, "canino", "macho", "SRD", "Preto", "curta", "medio", null, "2 anos", null,
                 microchip, false, null, status, "resgate", fixture.agora(), baia, null, null,

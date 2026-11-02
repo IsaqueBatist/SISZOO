@@ -33,8 +33,6 @@ function renderVacinas(cargos: string[] = ['Administrador']) {
   )
 }
 
-// O cadastro vive num modal, como nas outras telas de lista: todo teste de
-// formulário precisa abri-lo antes.
 async function abrirCadastro(user: ReturnType<typeof userEvent.setup>) {
   await screen.findByText('Antirrábica')
   await user.click(screen.getByRole('button', { name: /cadastrar vacina/i }))
@@ -96,8 +94,6 @@ describe('Vacinas', () => {
     expect(within(linha).getByText('Sem reforço')).toBeInTheDocument()
   })
 
-  // Dois nomes diferentes derivam o mesmo código; o usuário não vê o código,
-  // então a mensagem precisa nomear o conflito.
   it('mostra o motivo quando o nome colide com uma vacina existente', async () => {
     const user = userEvent.setup()
     renderVacinas()
@@ -114,7 +110,6 @@ describe('Vacinas', () => {
     renderVacinas()
     const modal = await abrirEdicao(user, 'Giárdia')
 
-    // O código é a chave dos registros já gravados: aparece, mas travado.
     expect(within(modal).getByLabelText(/^código/i)).toBeDisabled()
     expect(within(modal).getByLabelText(/^código/i)).toHaveValue('giardia')
 
@@ -125,8 +120,6 @@ describe('Vacinas', () => {
     expect(await screen.findByText('Giárdia canina')).toBeInTheDocument()
   })
 
-  // A validade não é persistida: sai do intervalo toda vez que é lida, então
-  // mudá-lo reescreve a data de reforço das aplicações já lançadas.
   it('avisa que mudar o intervalo afeta as aplicações já lançadas', async () => {
     const user = userEvent.setup()
     renderVacinas()
@@ -147,7 +140,6 @@ describe('Vacinas', () => {
     const linha = (await screen.findByText('Giárdia')).closest('tr') as HTMLElement
 
     await user.click(within(linha).getByRole('button', { name: /^desativar$/i }))
-    // Some da lista: o filtro abre em "Ativas".
     await waitFor(() => expect(screen.queryByText('Giárdia')).not.toBeInTheDocument())
 
     await user.selectOptions(screen.getByLabelText(/filtrar por situação/i), 'inativas')
@@ -172,8 +164,6 @@ describe('Vacinas', () => {
     expect(await screen.findByText('Nenhuma vacina encontrada')).toBeInTheDocument()
   })
 
-  // O filtro vive no sessionStorage (useFiltrosLista): abrir uma vacina e
-  // voltar não pode devolver a lista ao estado inicial.
   it('a busca e o filtro sobrevivem a sair e voltar da tela', async () => {
     const user = userEvent.setup()
     const { unmount } = renderVacinas()

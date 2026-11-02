@@ -7,17 +7,13 @@ import type { OcorrenciaFormValues } from '../schemas/ocorrenciaFormSchema'
 import { DENUNCIANTE_VAZIO } from '../utils/ocorrenciaFormMapeamento'
 
 interface SecaoDenuncianteProps {
-  // Sigilosa sem permissão: o denunciante não aparece nem é editável (D10).
   mascarado: boolean
   podeAlterarSigilo: boolean
-  // Só no cadastro: a edição não marca anonimato (D32, anônima só vira identificada).
   mostrarAnonimo: boolean
   podeIdentificar: boolean
-  // Marcar o sigilo tira os anexos já guardados do disco (T42).
   onSigilosaMarcada: () => void
 }
 
-// Card 3 do formulário de ocorrência: sigilo, anonimato e dados do denunciante.
 export function SecaoDenunciante({
   mascarado,
   podeAlterarSigilo,
@@ -35,9 +31,6 @@ export function SecaoDenunciante({
   const [sigilosa, anonima] = useWatch({ control, name: ['sigilosa', 'anonima'] })
   const [buscandoCep, setBuscandoCep] = useState(false)
 
-  // Não dispara em ocorrência sigilosa: dado do denunciante não pode ir a um
-  // serviço de terceiro (ViaCEP) nesse caso. Só preenche endereço/bairro se
-  // ainda estiverem vazios — nunca sobrescreve o que o usuário já digitou.
   async function aoMudarCep(valorDigitado: string) {
     if (getValues('sigilosa')) return
     const digitos = valorDigitado.replace(/\D/g, '')
@@ -52,7 +45,6 @@ export function SecaoDenunciante({
     if (!getValues('denunciante.bairroResidencial')) setValue('denunciante.bairroResidencial', endereco.bairro)
   }
 
-  // Em denúncia anônima não há dado do denunciante a guardar nem a enviar.
   function aoMudarAnonima(marcada: boolean, onChange: (valor: boolean) => void) {
     onChange(marcada)
     if (marcada) {
@@ -128,7 +120,6 @@ export function SecaoDenunciante({
               Denúncia anônima: nenhum dado do denunciante é registrado.
             </p>
             {podeIdentificar && (
-              // D32: só o caminho anônima -> identificada existe na interface.
               <button
                 type="button"
                 className="btn btn-outline btn-sm"

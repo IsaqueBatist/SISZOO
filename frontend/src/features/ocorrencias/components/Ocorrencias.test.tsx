@@ -46,9 +46,6 @@ function pagina(itens: OcorrenciaResumo[]) {
   return { itens, pagina: 0, tamanho: 20, totalItens: itens.length, totalPaginas: 1 }
 }
 
-// Registra os query params de cada GET /ocorrencias e responde com a lista
-// fixa - ou com `filtrada` quando o param esperado aparece. O filtro em si é
-// do backend; aqui só se confere o que a tela envia e o que ela exibe.
 function capturarListagem(filtrada?: { param: string; valor: string; itens: OcorrenciaResumo[] }) {
   const chamadas: URLSearchParams[] = []
   server.use(

@@ -1,9 +1,6 @@
 import { formatarDataBR } from '@/lib/datas'
 import type { PreviewAdocoes as DadosAdocoes } from '../../types/relatorios.types'
 
-// Versão simplificada (ver backend com.siszoo.relatorios.dto.RelatorioAdocoesResponse):
-// sem tabela `adocao` no schema hoje, o relatório mostra a posição na data da
-// geração - a nota de limitação explica isso.
 export function PreviewAdocoes({ dados }: { dados: DadosAdocoes }) {
   return (
     <>

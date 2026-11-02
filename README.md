@@ -1,265 +1,413 @@
-# SISZOO - Sistema de Gerenciamento do CCZ de Itu
+# SISZOO
 
 [![CI](https://github.com/IsaqueBatist/SISZOO/actions/workflows/ci.yml/badge.svg)](https://github.com/IsaqueBatist/SISZOO/actions/workflows/ci.yml)
+[![Licença: MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-blue.svg)](LICENSE)
 
-Sistema web interno para o **Centro de Controle de Zoonoses (CCZ) de Itu/SP**, desenvolvido para substituir os controles manuais em papel e planilhas Excel utilizados atualmente na rotina do canil e no acompanhamento de processos sanitários.
+Sistema web de gestão do Centro de Controle de Zoonoses (CCZ) de Itu/SP. Reúne o
+cadastro e o histórico clínico dos animais do canil, o atendimento de denúncias
+e o acompanhamento de processos sanitários de zoonoses, com indicadores e
+relatórios. É de uso interno da equipe do CCZ; não há área pública para o cidadão.
 
-> **TG (Trabalho de Graduação) - Análise e Desenvolvimento de Sistemas (ADS) | FATEC Itu | 2026**
-> Orientador: Prof. Me. Francisco Bianchi
-> Autores: Beatriz Silva de Camargo e Isaque Batista Barbosa
-
----
+Desenvolvido como Trabalho de Graduação do curso de Análise e Desenvolvimento de
+Sistemas da FATEC Itu ([contexto acadêmico](#contexto-acadêmico)).
 
 ## Sumário
 
-- [Sobre o projeto](#sobre-o-projeto)
-- [Módulos](#módulos)
-- [Stack tecnológica](#stack-tecnológica)
-- [Regras de negócio críticas](#regras-de-negócio-críticas)
-- [Perfis de usuário](#perfis-de-usuário)
-- [Restrições de infraestrutura](#restrições-de-infraestrutura)
-- [Como executar](#como-executar)
-- [Dados fictícios](#dados-fictícios)
+- [Contexto](#contexto)
+- [Funcionalidades](#funcionalidades)
+- [Tecnologias](#tecnologias)
+- [Requisitos](#requisitos)
+- [Execução com Docker](#execução-com-docker)
+- [Execução em modo de desenvolvimento](#execução-em-modo-de-desenvolvimento)
+- [Acesso ao sistema](#acesso-ao-sistema)
 - [Variáveis de ambiente](#variáveis-de-ambiente)
-- [Limitações conhecidas](#limitações-conhecidas)
+- [Testes e verificações](#testes-e-verificações)
 - [Estrutura do repositório](#estrutura-do-repositório)
+- [Documentação](#documentação)
+- [Limitações conhecidas](#limitações-conhecidas)
+- [Contexto acadêmico](#contexto-acadêmico)
 - [Licença](#licença)
-- [Autores](#autores)
 
----
+## Contexto
 
-## Sobre o projeto
+O CCZ de Itu registra o canil e os casos de zoonoses em fichas de papel,
+etiquetas de vacina e planilhas. Os dados ficam espalhados, os reforços
+vacinais dependem da memória da equipe e não há indicadores consolidados.
 
-O CCZ de Itu (Vila Progresso) gerencia atualmente o canil e os processos de zoonoses por meio de fichas de papel, etiquetas físicas de vacinas e planilhas Excel multi-página. Esse fluxo gera fragmentação de dados, dependência de memória humana para reforços vacinais e ausência de indicadores automáticos.
+O SISZOO substitui esses registros por um sistema único, acessado pelo
+navegador. Ele considera as condições do órgão: computadores com cerca de 2 GB
+de RAM e conexão instável. Por isso o frontend carrega as telas sob demanda e os
+formulários longos guardam um rascunho no navegador.
 
-O **SISZOO** digitaliza e centraliza esses processos em um sistema web leve, de uso exclusivamente interno (sem portal público para o cidadão), voltado aos funcionários do CCZ.
+## Funcionalidades
 
-## Módulos
+**Animais do canil**
+- Cadastro com microchip, medalha, procedência e foto; baias com controle de ocupação.
+- Histórico clínico de vacinações, procedimentos, prescrições e exames. Os
+  registros não são editados nem apagados: uma correção gera um novo registro
+  que retifica o anterior.
+- Anexos (imagens e PDF), catálogos de vacinas e medicamentos e alertas de
+  reforço vacinal com 7 dias de antecedência.
 
-| Módulo | Descrição |
-|--------|-----------|
-| **A -  Gestão de Animais do Canil** | Cadastro de animais (microchip, medalha, procedência), gestão de baias, histórico clínico imutável (vacinações, procedimentos, prescrições, exames), anexos do animal e alertas de reforço vacinal |
-| **B -  Processos Sanitários** | Registro e acompanhamento de zoonoses (raiva, esporotricose, leishmaniose visceral, leptospirose, febre maculosa, febre amarela): amostras, resultado laboratorial imutável, notificação por e-mail |
-| **C -  Autenticação e Perfis de Acesso** | Login com sessão renovável, expiração por inatividade e limite de tentativas, recuperação de senha por e-mail ("Esqueci minha senha"), perfis com permissões fixas, política de senha e trilha de auditoria consultável |
-| **D -  Dashboard e Relatórios** | Indicadores e gráficos com cache de 5 min, seis relatórios em PDF/CSV com histórico de exportações |
-| **E -  Ocorrências e Denúncias** | Registro com protocolo anual, denunciante sigiloso/anônimo, anexos, movimentações e encerramento com providência |
+**Ocorrências e denúncias**
+- Registro com protocolo anual (`NNN/AAAA`), denunciante identificado, sigiloso
+  ou anônimo, anexos, notas e encerramento com a providência tomada.
+- Em ocorrências sigilosas, os dados do denunciante são mascarados no servidor
+  para quem não tem permissão, e cada acesso é registrado na auditoria.
 
-## Stack tecnológica
+**Processos sanitários**
+- Raiva, esporotricose, leishmaniose visceral, leptospirose, febre maculosa e
+  febre amarela, com amostras, resultado laboratorial e acompanhamento por status.
+- Processos com contato humano-animal são marcados como urgentes.
+- Resultado positivo ou inconclusivo envia notificação por e-mail ao munícipe.
 
-**Backend**
-- Java 21
-- Spring Boot 4
-- Maven
-- Spring Data JPA / Hibernate
+**Dashboard e relatórios**
+- Indicadores e gráficos do ano.
+- Seis relatórios em PDF e CSV (vacinação, procedimentos, adoções, ocupação de
+  baias, ocorrências por bairro e anual de processos), com histórico de exportações.
 
-**Frontend**
-- React 19
-- TypeScript
-- Vite (TanStack Query, React Router, react-hook-form + Zod, Recharts, IndexedDB para rascunhos)
+**Acesso e auditoria**
+- Login com sessão renovável, expiração por inatividade e limite de tentativas.
+- Troca obrigatória da senha no primeiro acesso e recuperação de senha por e-mail.
+- Três perfis com permissões fixas e trilha de auditoria consultável.
 
-**Banco de dados**
-- PostgreSQL 16
+| Perfil | Acesso |
+|---|---|
+| Administrador | Todos os módulos, incluindo usuários, auditoria e dados de denunciante sigiloso |
+| Veterinário | Animais, baias, histórico clínico, processos sanitários e relatórios; não acessa ocorrências |
+| Agente Sanitário | Ocorrências (incluindo denunciante sigiloso), processos sanitários, consulta de animais e relatórios |
 
-**Autenticação**
-- JWT de curta duração com sessão renovável em cookie httpOnly ([decisões](docs/decisoes/sessao.md))
+As regras de negócio completas estão em [docs/DER.md](docs/DER.md).
 
-## Regras de negócio críticas
+## Tecnologias
 
-- **Microchip** (e número da medalha) é identificador único do animal quando informado; o microchip não muda depois de definido.
-- **Protocolo** de ocorrência e de processo segue o formato `NNN/AAAA`, sequencial por ano e por entidade, gerado pelo sistema.
-- **Ocorrências sigilosas:** dados do denunciante são mascarados no servidor para quem não tem a permissão `denunciante_sigiloso` (Administrador e Agente Sanitário a têm); cada acesso e cada recusa geram evento de auditoria (LGPD).
-- **Contato humano-animal:** processos com essa característica são marcados como urgentes e aparecem no topo das listagens.
-- **Imutabilidade:** vacinações, procedimentos, prescrições, exames e resultados laboratoriais nunca são editados ou excluídos - a correção é um novo registro que retifica o anterior, com auditoria; o resultado positivo é definitivo.
-- **Alerta vacinal:** reforços são sinalizados com 7 dias de antecedência.
-- **Resultado "Positivo" ou "Inconclusivo"** em processo sanitário dispara notificação ao munícipe por e-mail (uma vez por resultado; reenvio manual).
-- **Laudo de eutanásia** é obrigatório ao registrar óbito por eutanásia.
+| Camada | Tecnologias |
+|---|---|
+| Backend | Java 21, Spring Boot 4 (Web MVC, Security, Data JPA, Validation, Mail, Cache), Flyway, MapStruct, Lombok |
+| Relatórios e e-mail | Thymeleaf e Flying Saucer (geração de PDF) |
+| Frontend | React 19, TypeScript, Vite, TanStack Query, React Router, React Hook Form, Zod, Recharts |
+| Banco de dados | PostgreSQL 16 |
+| Autenticação | JWT de curta duração e sessão renovável em cookie httpOnly |
+| Testes | JUnit 5, Mockito, Testcontainers, REST Assured e GreenMail no backend; Vitest, Testing Library e MSW no frontend |
+| Infraestrutura | Docker, Docker Compose e GitHub Actions |
 
-## Perfis de usuário
+## Requisitos
 
-| Perfil | Função |
-|--------|--------|
-| Administrador | Acesso total: usuários, trilha de auditoria, animais, ocorrências (inclusive denunciante sigiloso), processos e relatórios |
-| Veterinário | Animais, baias e histórico clínico (leitura e escrita), processos sanitários (leitura e escrita), relatórios; sem acesso a ocorrências |
-| Agente Sanitário | Ocorrências e denúncias (leitura e escrita, inclusive denunciante sigiloso), processos sanitários (leitura e escrita), consulta de animais, relatórios |
+| Ferramenta | Versão | Quando é necessária |
+|---|---|---|
+| [Git](https://git-scm.com/) | recente | Sempre |
+| [Docker](https://docs.docker.com/get-docker/) com Compose v2 | recente | Execução com Docker, banco no modo de desenvolvimento e testes de integração |
+| [Java (JDK)](https://adoptium.net/) | 21 | Backend no modo de desenvolvimento |
+| [Node.js](https://nodejs.org/) | 22.22.2 ou superior na 22, 24.15 ou superior na 24, ou 26+ | Frontend no modo de desenvolvimento |
+| [PostgreSQL](https://www.postgresql.org/download/) | 16 | Só se não for usar o banco do Docker |
 
-## Restrições de infraestrutura
+O Maven não precisa ser instalado, porque o projeto inclui o Maven Wrapper
+(`mvnw` e `mvnw.cmd`). Para conferir as versões instaladas:
 
-- Computadores com **~2 GB de RAM** → o sistema deve ser **leve**.
-- **Internet instável** → formulários devem preservar dados em caso de queda de rede.
-- Acesso **exclusivamente via navegador** (Chrome, Edge ou Firefox).
+```bash
+git --version
+docker compose version
+java -version
+node -v
+```
 
-## Como executar
+Comece clonando o repositório:
 
-> Pré-requisitos: Java 21, Node.js 18+, PostgreSQL 16 e Docker (para os testes
-> de integração com Testcontainers). O Maven não precisa estar instalado à
-> parte - o projeto já traz o Maven Wrapper (`./mvnw`).
+```bash
+git clone https://github.com/IsaqueBatist/SISZOO.git
+cd SISZOO
+```
 
-### Backend
+## Execução com Docker
+
+Sobe banco, backend e frontend em containers. Só exige o Docker.
+
+1. Crie o arquivo `.env` a partir do exemplo:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   No PowerShell: `Copy-Item .env.example .env`.
+
+2. Gere uma chave para o JWT e substitua `troque-por-uma-chave-gerada` em
+   `JWT_SECRET`, no `.env`. A chave precisa ter pelo menos 32 bytes; com o
+   valor do exemplo, o backend não inicia.
+
+   ```bash
+   openssl rand -base64 48
+   ```
+
+   No PowerShell, sem `openssl`:
+
+   ```powershell
+   $b = New-Object byte[] 48; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); [Convert]::ToBase64String($b)
+   ```
+
+3. Suba os serviços:
+
+   ```bash
+   docker compose up --build
+   ```
+
+   O primeiro build baixa as dependências e leva alguns minutos. O sistema fica
+   disponível quando o backend registrar `Started SiszooBackendApplication`.
+
+4. Acesse http://localhost:5173 (veja [Acesso ao sistema](#acesso-ao-sistema)).
+
+Para parar, use `docker compose down`; para apagar também os dados do banco,
+`docker compose down -v`.
+
+### Com dados fictícios
+
+Para explorar o sistema já preenchido, use o arquivo de override de
+desenvolvimento. Ele não precisa de `.env`, porque traz chave JWT e
+administrador próprios para uso local:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.seed.yml up --build
+```
+
+O seed roda depois que o backend inicia. Os dados e os usuários ficam
+disponíveis quando o log mostrar `Seed de dados ficticios concluido`.
+
+Esse ambiente usa containers e volume próprios (projeto `siszoo-seed`), mas as
+mesmas portas: pare um ambiente antes de subir o outro. **Não use o
+`docker-compose.seed.yml` em servidor.** Os usuários criados estão em
+[Dados fictícios](#dados-fictícios).
+
+## Execução em modo de desenvolvimento
+
+Backend e frontend rodam direto na máquina, com recarga automática.
+
+### 1. Banco de dados
+
+A forma mais simples é usar só o container do banco:
+
+```bash
+docker compose up -d db
+```
+
+Ele cria o database `siszoo` (usuário `postgres`, senha `postgres`) na porta 5432.
+
+Para usar um PostgreSQL 16 instalado na máquina, crie um usuário e um database
+vazios com o `psql`, conectado como superusuário:
+
+```sql
+CREATE USER siszoo WITH PASSWORD 'siszoo';
+CREATE DATABASE siszoo OWNER siszoo;
+```
+
+O schema não é criado à mão: na primeira subida do backend, o Flyway aplica as
+migrations de `backend/src/main/resources/db/migration`. Não é preciso instalar
+extensões.
+
+### 2. Backend
+
+Em um terminal, defina as variáveis e inicie o backend (porta 8080):
 
 ```bash
 cd backend
 export DB_URL=jdbc:postgresql://localhost:5432/siszoo
 export DB_USER=postgres
 export DB_PASSWORD=postgres
+export JWT_SECRET="$(openssl rand -base64 48)"
+export ADMIN_SEED_EMAIL=admin.sistema@itu.sp.gov.br
+export ADMIN_SEED_PASSWORD=Ccz-Dev-Itu-2026
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-**E-mail (opcional):** a notificação ao munícipe e o link de recuperação de
-senha saem pelo SMTP de `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`
-e afins. Sem elas, o backend sobe normalmente e cada envio só gera um aviso no
-log. No desenvolvimento, use um SMTP sandbox (Mailtrap/Ethereal), nunca uma
-caixa real. Variáveis, sandbox e testes com GreenMail: [docs/email.md](docs/email.md).
+Com o PostgreSQL instalado na máquina, use `DB_USER=siszoo` e
+`DB_PASSWORD=siszoo` (ou os valores que você definiu).
 
-### Recuperação de senha
+No PowerShell:
 
-Na tela de login, **Esqueci minha senha** pede o e-mail institucional e envia um
-link de uso único, válido por 30 minutos, para `/redefinir-senha?token=...`. A
-resposta é a mesma para e-mail cadastrado ou não; o banco guarda só o hash do
-token; redefinir encerra as sessões abertas e invalida os links anteriores, e há
-limite de tentativas por e-mail e por IP. O link usa `SISZOO_APP_URL` (por padrão,
-a origem do frontend em `SISZOO_CORS_ORIGIN`). Detalhes e decisões:
-[docs/decisoes/recuperacao-senha.md](docs/decisoes/recuperacao-senha.md).
+```powershell
+cd backend
+$env:DB_URL = "jdbc:postgresql://localhost:5432/siszoo"
+$env:DB_USER = "postgres"
+$env:DB_PASSWORD = "postgres"
+$b = New-Object byte[] 48; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b)
+$env:JWT_SECRET = [Convert]::ToBase64String($b)
+$env:ADMIN_SEED_EMAIL = "admin.sistema@itu.sp.gov.br"
+$env:ADMIN_SEED_PASSWORD = "Ccz-Dev-Itu-2026"
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=dev"
+```
 
-### Frontend
+O backend está pronto quando o log mostrar `Started SiszooBackendApplication`.
+Para conferir: http://localhost:8080/api/health deve responder `{"status":"UP"}`.
+
+### 3. Frontend
+
+Em outro terminal, a partir da raiz do repositório:
 
 ```bash
 cd frontend
 npm install
-cp .env.example .env
 npm run dev
 ```
 
-O frontend sobe por padrão em `http://localhost:5173` e consome a API em `http://localhost:8080`.
+O frontend sobe em http://localhost:5173 e usa a API em `http://localhost:8080`.
+Para apontar para outra API, copie `frontend/.env.example` para `frontend/.env` e
+ajuste `VITE_API_BASE_URL`.
 
-## Dados fictícios
+## Acesso ao sistema
 
-O backend tem um **seed de dados fictícios** (`com.siszoo.seed`) para testar o sistema com dados no banco, sem mocks
-na aplicação. Ele chama os mesmos services da API: as regras de negócio, os protocolos, a ficha completa, o sigilo e a
-auditoria são os de verdade. Decisões e detalhes: [docs/decisoes/seed-dev.md](docs/decisoes/seed-dev.md).
+Abra http://localhost:5173 e entre com o administrador definido em
+`ADMIN_SEED_EMAIL` e `ADMIN_SEED_PASSWORD`. Com os valores do exemplo:
 
-**Com Docker (mais simples):** um comando sobe banco, backend e frontend com os dados fictícios, em containers e
-volume próprios (projeto `siszoo-seed`, separado do `docker compose up` normal; pare um antes de subir o outro, porque as
-portas são as mesmas):
+- e-mail: `admin.sistema@itu.sp.gov.br`
+- senha: `Ccz-Dev-Itu-2026`
 
-```bash
-docker compose -f docker-compose.yml -f docker-compose.seed.yml up --build
-# front em http://localhost:5173; para recomeçar do zero: ... down -v
-```
+No primeiro acesso o sistema pede uma nova senha antes de liberar as telas.
+Depois disso, cadastre os demais usuários em **Usuários**; cada um também troca a
+senha temporária no primeiro login.
 
-O `docker-compose.seed.yml` troca o perfil do backend para `dev,seed` e traz chave JWT e admin inicial de
-desenvolvimento. **Nunca use esse arquivo num servidor.**
+O administrador é criado uma única vez, quando ainda não existe. Para recomeçar
+com o banco vazio, use `docker compose down -v` (Docker) ou recrie o database.
 
-**Sem Docker para o backend:** pré-requisitos são PostgreSQL com um database **vazio** (ou já semeado por este seed),
-`JWT_SECRET` e o admin inicial (`ADMIN_SEED_EMAIL`/`ADMIN_SEED_PASSWORD`), que é quem cria os usuários fictícios.
+### Dados fictícios
 
-```bash
-docker compose up -d db                                   # só o Postgres
-docker exec siszoo-db-1 createdb -U postgres siszoo_seed   # database novo para o seed
-cd backend
-export DB_URL=jdbc:postgresql://localhost:5432/siszoo_seed DB_USER=postgres DB_PASSWORD=postgres
-export JWT_SECRET="$(openssl rand -base64 48)"
-export ADMIN_SEED_EMAIL=admin.sistema@itu.sp.gov.br ADMIN_SEED_PASSWORD=Ccz-Dev-Itu-2026
-SISZOO_SEED_HABILITADO=true ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev,seed
-```
-
-No PowerShell: `$env:SISZOO_SEED_HABILITADO = "true"` (e as demais com `$env:`), depois
-`.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=dev,seed"`. O seed roda na subida, depois das migrations, e
-registra no log quantos registros criou.
-
-**Usuários** (todos fictícios, senha única **`Ficticio#2026`**):
+No ambiente com dados fictícios, todos os usuários usam a senha **`Ficticio#2026`**:
 
 | Perfil | E-mail |
 |---|---|
 | Administrador | `marta.siqueira.seed@itu.sp.gov.br` |
 | Veterinário | `renato.albuquerque.seed@itu.sp.gov.br`, `camila.prado.seed@itu.sp.gov.br` |
-| Veterinário (primeiro acesso: o login pede a troca de senha) | `helena.duarte.seed@itu.sp.gov.br` |
+| Veterinário (ainda no primeiro acesso) | `helena.duarte.seed@itu.sp.gov.br` |
 | Agente Sanitário | `paulo.teixeira.seed@itu.sp.gov.br`, `juliana.moreira.seed@itu.sp.gov.br`, `rafael.campos.seed@itu.sp.gov.br` |
 | Agente Sanitário (desativado) | `sergio.lacerda.seed@itu.sp.gov.br` |
 
-**O que é criado:**
-- 6 baias;
-- 32 animais com foto real (fotografias CC0 do Wikimedia Commons, créditos em
-  `backend/src/main/resources/seed/fotos/CREDITOS.md`) e histórico clínico: vacinas vencendo e vencidas,
-  procedimentos, prescrições, exames, anexos e retificações;
-- 26 ocorrências (sigilosas, anônimas, em todos os status);
-- 24 processos sanitários (todos os status e doenças, resultados positivos e retificados);
-- categorias e medicamentos;
-- uma exportação de cada relatório.
+O seed cria 6 baias, 32 animais com foto e histórico clínico, 26 ocorrências,
+24 processos sanitários, medicamentos e uma exportação de cada relatório. Ele
+chama os mesmos serviços da API, então segue as regras reais do sistema.
 
-O suficiente para paginação, filtros, os 7 alertas e os gráficos do dashboard.
+Para gerar os dados fictícios no modo de desenvolvimento, use um database vazio
+separado do principal e acrescente o perfil `seed`:
 
-**Executar de novo:** basta subir o backend com o mesmo perfil. O seed é idempotente: cada passo tem uma chave em
-`seed_controle`, e o que já existe é pulado, sem duplicar nem alterar nada. Para recomeçar do zero, recrie o database
-(`docker exec siszoo-db-1 dropdb -U postgres siszoo_seed` e `createdb` de novo). Registros clínicos, processos e
-auditoria não podem ser apagados (triggers das migrations), então o seed nunca limpa tabelas.
+```bash
+docker compose up -d db
+docker compose exec db createdb -U postgres siszoo_seed
+cd backend
+export DB_URL=jdbc:postgresql://localhost:5432/siszoo_seed DB_USER=postgres DB_PASSWORD=postgres
+export JWT_SECRET="$(openssl rand -base64 48)"
+export ADMIN_SEED_EMAIL=admin.sistema@itu.sp.gov.br ADMIN_SEED_PASSWORD=Ccz-Dev-Itu-2026
+export SISZOO_SEED_HABILITADO=true
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev,seed
+```
 
-**Por que não roda em produção:**
-- o seed só existe com o perfil `seed` **e** `SISZOO_SEED_HABILITADO=true`;
-- o perfil `seed` exige `dev` ou `test` e derruba a subida se `docker` ou `prod` estiver ativo;
-- num banco que já tem dados que não vieram dele, o seed recusa antes de gravar qualquer coisa;
-- o `docker-compose.yml` e o `Dockerfile` não ligam o seed; só o `docker-compose.seed.yml`, de uso local, liga.
-
-**Datas:** as datas de negócio (entrada, vacinação, abertura, resultado) são relativas ao dia da primeira execução e
-congelam ali. Depois de alguns dias, vacinas "vencendo" viram "vencidas" e "registradas hoje" vai a 0; recrie o database
-para renovar.
-
-> **Importante (LGPD):** nunca versione dados reais de munícipes, denunciantes ou animais. O seed usa só dados fictícios:
-> CPF vazio, telefones inválidos de propósito e e-mails no domínio reservado `exemplo.test`.
+Espere pelo log `Seed de dados ficticios concluido` antes de entrar no sistema.
+O seed pode ser executado de novo: o que já existe é pulado. Ele só roda com o
+perfil `seed` e `SISZOO_SEED_HABILITADO=true`, recusa os perfis `docker` e `prod`
+e recusa bancos com dados que não vieram dele. Detalhes em
+[docs/decisoes/seed-dev.md](docs/decisoes/seed-dev.md).
 
 ## Variáveis de ambiente
 
-Exemplos em [`.env.example`](.env.example) (raiz, usado pelo `docker-compose.yml`) e em `frontend/.env.example`.
+O Docker Compose lê o `.env` da raiz ([`.env.example`](.env.example)). No modo de
+desenvolvimento, as variáveis do backend são definidas no terminal, e o frontend
+lê `frontend/.env` ([`frontend/.env.example`](frontend/.env.example)).
 
-| Variável | Onde | Uso |
+| Variável | Obrigatória | Descrição |
 |---|---|---|
-| `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | docker-compose | Banco do container `db` |
-| `DB_URL`, `DB_USER`, `DB_PASSWORD` | backend (`dev`, `docker`, `prod`) | Conexão JDBC |
-| `JWT_SECRET` | backend | Chave do JWT, 32 bytes ou mais (sem ela o backend não sobe) |
-| `ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD` | backend | Admin inicial criado na primeira subida (`DataSeeder`); vazio = não cria. No primeiro login a senha precisa ser trocada: até lá, a API só libera a troca (vale também para a coleção do Insomnia) |
-| `SISZOO_SEED_HABILITADO` | backend (perfil `seed`) | `true` liga o seed de dados fictícios (só com `dev`) |
-| `SISZOO_CORS_ORIGIN` | backend | Única origem do frontend aceita pela API |
-| `SISZOO_COOKIE_SECURE`, `SISZOO_COOKIE_SAMESITE` | backend | Cookie da sessão; use `SISZOO_COOKIE_SECURE=true` em produção com HTTPS ([docs/decisoes/sessao.md](docs/decisoes/sessao.md)) |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_AUTH`, `SMTP_STARTTLS*`, `SMTP_SSL` | backend | E-mail ao munícipe ([docs/email.md](docs/email.md)) |
-| `SISZOO_MAIL_FROM` | backend | Remetente dos e-mails |
-| `SISZOO_APP_URL` | backend | Endereço do frontend nos links enviados por e-mail (recuperação de senha); opcional, padrão = `SISZOO_CORS_ORIGIN` |
-| `VITE_API_BASE_URL` | frontend (build) | URL da API |
-| `VITE_USE_MOCK_KPIS`, `VITE_USE_MOCK_GRAFICOS` | frontend (build) | Só `"true"` liga dados de demonstração no dashboard (com selo); ausente = dados reais |
+| `DB_URL`, `DB_USER`, `DB_PASSWORD` | sim | Conexão JDBC com o PostgreSQL |
+| `JWT_SECRET` | sim | Chave de assinatura do JWT, com 32 bytes ou mais |
+| `ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD` | não | Administrador criado na subida, se ainda não existir; vazias, nenhum é criado. O e-mail precisa ter só letras minúsculas e pontos antes de `@itu.sp.gov.br`, senão o backend não inicia |
+| `SISZOO_CORS_ORIGIN` | não | Origem do frontend aceita pela API; padrão `http://localhost:5173` |
+| `SISZOO_APP_URL` | não | Endereço do frontend nos links enviados por e-mail; padrão igual a `SISZOO_CORS_ORIGIN` |
+| `SISZOO_COOKIE_SECURE`, `SISZOO_COOKIE_SAMESITE` | não | Cookie de sessão; em produção com HTTPS, use `SISZOO_COOKIE_SECURE=true` |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_AUTH`, `SMTP_STARTTLS`, `SMTP_STARTTLS_REQUIRED`, `SMTP_SSL` | não | Servidor de e-mail. Sem ele, o sistema funciona e cada envio só gera um aviso no log |
+| `SISZOO_MAIL_FROM` | não | Remetente dos e-mails |
+| `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | não | Banco criado pelo container `db` do Docker Compose |
+| `VITE_API_BASE_URL` | não | Endereço da API usado no build do frontend; padrão `http://localhost:8080` |
+| `VITE_USE_MOCK_KPIS`, `VITE_USE_MOCK_GRAFICOS` | não | Só o valor `true` mostra dados de demonstração no dashboard, sempre identificados |
 
-## Limitações conhecidas
+Os valores do `.env.example` são para uso local. Em qualquer outro ambiente,
+troque todas as senhas e a chave JWT. Para testar e-mails, use um SMTP sandbox
+(Mailtrap ou Ethereal), nunca uma caixa real; veja [docs/email.md](docs/email.md).
 
-- **Adoções:** o dashboard e o relatório mostram a posição na data da consulta (animais adotados e disponíveis). Não há
-  "adoções no mês" nem meta mensal, porque a tabela `adocao` do DER não foi implementada.
-- **Ocupação de Baias:** o relatório mostra a posição na data da geração; não há histórico diário de ocupação.
-- **Busca global:** não há busca global no topo das telas; cada listagem tem os próprios filtros.
-- **Catálogos:** vacinas, tipos de procedimento e de exame, doenças, laboratórios e demais catálogos vêm das migrations;
-  não há tela de cadastro deles.
-- **Medicamentos:** não há edição ou desativação de medicamento na interface (só cadastro e listagem).
-- **Seed:** o "Tempo médio (h)" do relatório Ocorrências por Bairro fica ≈0 h para as ocorrências encerradas pelo seed,
-  porque o registro e o encerramento são gravados no mesmo momento, com o horário real.
+## Testes e verificações
+
+Backend, a partir de `backend/` (no Windows, `.\mvnw.cmd` no lugar de `./mvnw`):
+
+```bash
+./mvnw test     # testes unitários
+./mvnw verify   # testes unitários e de integração
+```
+
+Os testes de integração usam um PostgreSQL real criado pelo Testcontainers, por
+isso exigem o Docker em execução.
+
+Frontend, a partir de `frontend/`:
+
+```bash
+npm run lint    # análise estática (oxlint)
+npm run test    # testes de componentes e hooks (Vitest)
+npm run build   # checagem de tipos e build de produção
+```
+
+O [CI](.github/workflows/ci.yml) roda esses comandos a cada push e pull request
+na `main`. Para testes manuais da API, há uma coleção do Insomnia em `.insomnia/`
+([como usar](docs/insomnia/README.md)) e um
+[roteiro de testes manuais](docs/roteiro-testes-manuais.md).
 
 ## Estrutura do repositório
 
 ```
-siszoo/
-├── backend/            # API Spring Boot (Java 21 + Maven)
-├── frontend/           # Aplicação React 19 + TypeScript + Vite
-├── docs/               # Documentação: DER, DBML, decisões, contratos, protótipo (índice em docs/README.md)
-├── docs/tg/            # TG: análises de alinhamento, capturas, diagramas e scripts (o .docx fica fora do git)
-├── docker-compose.yml  # Postgres, backend (perfil docker) e frontend
-├── docker-compose.seed.yml # Override local: o mesmo stack com dados fictícios (perfis dev,seed)
-├── .env.example        # Variáveis do docker-compose
-├── .gitignore
-├── LICENSE
-└── README.md
+SISZOO/
+├── backend/                  API REST (Spring Boot)
+│   └── src/main/
+│       ├── java/com/siszoo/  um pacote por módulo: animais, ocorrencias, processos, relatorios, usuarios...
+│       └── resources/
+│           ├── db/migration/ migrations Flyway (schema do banco)
+│           └── templates/    modelos de e-mail e dos relatórios em PDF
+├── frontend/                 aplicação web (React)
+│   └── src/features/         uma pasta por módulo, com telas, chamadas à API e testes
+├── docs/                     modelo de dados, decisões, contratos de API e protótipo
+├── .insomnia/                coleção do Insomnia para testar a API
+├── .github/workflows/        pipeline de CI
+├── docker-compose.yml        banco, backend e frontend
+├── docker-compose.seed.yml   override de desenvolvimento com dados fictícios
+└── .env.example              variáveis de ambiente do Docker Compose
 ```
+
+## Documentação
+
+| Documento | Conteúdo |
+|---|---|
+| [docs/README.md](docs/README.md) | Índice da documentação e orientações de manutenção |
+| [docs/DER.md](docs/DER.md) | Modelo de dados e regras de negócio numeradas |
+| [docs/decisoes/](docs/decisoes/) | Decisões de projeto, por tema |
+| [docs/contratos/](docs/contratos/) | Contratos de endpoints entre frontend e backend |
+| [docs/integracao-frontend-api.md](docs/integracao-frontend-api.md) | Relação entre telas, chamadas, endpoints e tabelas |
+| [docs/regras-negocio-clinico.md](docs/regras-negocio-clinico.md) | Regras de vacinação, procedimentos, prescrições, exames e alertas |
+| [docs/email.md](docs/email.md) | Configuração de SMTP, modelos e notificações |
+| [docs/insomnia/README.md](docs/insomnia/README.md) | Uso da coleção do Insomnia |
+| [docs/roteiro-testes-manuais.md](docs/roteiro-testes-manuais.md) | Roteiro de testes manuais por área |
+| [docs/prototipo/](docs/prototipo/) | Protótipo navegável e design system |
+
+## Limitações conhecidas
+
+- O dashboard e o relatório de adoções mostram a posição na data da consulta; não
+  há contagem de adoções por mês, porque a tabela `adocao` do modelo de dados
+  ainda não foi implementada.
+- O relatório de ocupação de baias mostra a posição na data da geração, sem
+  histórico diário.
+- Não há busca global; cada listagem tem os próprios filtros.
+- Vacinas e medicamentos têm tela de cadastro. Os demais catálogos (tipos de
+  procedimento e de exame, doenças, laboratórios) vêm das migrations.
+- Nos dados fictícios, o tempo médio de atendimento do relatório de ocorrências
+  por bairro fica perto de zero, porque o seed registra e encerra cada ocorrência
+  no mesmo momento.
+
+## Contexto acadêmico
+
+O SISZOO é o Trabalho de Graduação de Beatriz Silva de Camargo e Isaque Batista
+Barbosa no curso de Análise e Desenvolvimento de Sistemas da FATEC Itu (2026),
+com orientação do Prof. Me. Francisco Bianchi. Os requisitos foram levantados
+com a equipe do CCZ de Itu. O material do trabalho (análises, capturas de tela e
+diagramas) está em [docs/tg/](docs/tg/README.md).
 
 ## Licença
 
-Distribuído sob a licença **MIT**. Consulte o arquivo [LICENSE](LICENSE) para mais detalhes.
-
-## Autores
-
-- **Beatriz Silva de Camargo**
-- **Isaque Batista Barbosa**
-
-Trabalho de Graduação (TG) apresentado ao curso de Análise e Desenvolvimento de Sistemas da FATEC Itu, sob orientação do Prof. Me. Francisco Bianchi (2026).
+Distribuído sob a licença [MIT](LICENSE).

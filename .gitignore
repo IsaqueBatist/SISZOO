@@ -1,4 +1,3 @@
-# Java / Maven
 target/
 *.class
 *.jar
@@ -6,30 +5,25 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 .mvn/timing.properties
 
-# Spring Boot
 application-local.properties
 application-*.yml
-!application.yml
 
-# Node / React / Vite
 node_modules/
 dist/
 dist-ssr/
 *.local
 .vite/
+coverage/
 
-# Build / dependências
-/backend/target/
-/frontend/node_modules/
-/frontend/dist/
-
-# Ambiente / segredos
 .env
 .env.*
 !.env.example
-*.env.local
 
-# IDE
+*.tmp
+*.bak
+*.orig
+*.rej
+
 .idea/
 .vscode/
 *.iml
@@ -37,24 +31,21 @@ dist-ssr/
 .classpath
 .project
 
-# SO
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# Logs
 *.log
 logs/
 
-# Python (scripts de análise do TG)
 __pycache__/
 *.pyc
+.venv/
 
-# Documento do TG: binários ficam fora do git (ver docs/tg/README.md)
 docs/tg/**/*.docx
 docs/tg/**/*.pdf
 docs/tg/build/
 docs/tg/**/~$*
-# Cópias das imagens do .docx e recortes da análise (grandes; regeráveis pelos scripts)
 docs/tg/analise_fase1/figuras/*.png
 docs/tg/analise_fase1/figuras/*.jpeg
 docs/tg/analise_fase1/figuras/recortes/

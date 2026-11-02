@@ -1,7 +1,3 @@
-// Compressão client-side da foto do animal via FileReader + canvas (API
-// nativa, sem dependência nova — ambiente do CCZ tem ~2GB RAM). O backend não
-// tem endpoint de upload: o resultado (data URI) vai direto no campo
-// `fotoUrl` existente do DTO.
 const TAMANHO_MAXIMO_ENTRADA_BYTES = 5 * 1024 * 1024
 const TIPOS_ACEITOS = ['image/jpeg', 'image/png']
 const DIMENSAO_MAXIMA_PX = 800
@@ -9,7 +5,7 @@ const QUALIDADE_JPEG = 0.7
 
 export class ImagemInvalidaError extends Error {}
 
-export function validarArquivoFoto(arquivo: File): void {
+function validarArquivoFoto(arquivo: File): void {
   if (!TIPOS_ACEITOS.includes(arquivo.type)) {
     throw new ImagemInvalidaError('Envie uma imagem JPG ou PNG.')
   }
@@ -18,11 +14,6 @@ export function validarArquivoFoto(arquivo: File): void {
   }
 }
 
-// T42: a foto vai para o rascunho em IndexedDB como Blob (binário), nunca como
-// base64 — o data URI tem ~33% de excesso e o rascunho de ocorrência já pode
-// ocupar 25 MB numa máquina de 2 GB. Converte o resultado da compressão que já
-// foi feita, sem comprimir de novo. Devolve null se o valor não for um data URI
-// (um animal cuja foto seja uma URL remota não tem bytes para guardar).
 export function dataUriParaBlob(dataUri: string): Blob | null {
   const separador = dataUri.indexOf(',')
   if (!dataUri.startsWith('data:') || separador === -1) return null
@@ -38,8 +29,6 @@ export function dataUriParaBlob(dataUri: string): Blob | null {
   }
 }
 
-// Caminho inverso, na restauração do rascunho: `fotoUrl` é String no DTO e
-// `text` na coluna foto_url, então o data URI precisa existir no envio.
 export function blobParaDataUri(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const leitor = new FileReader()

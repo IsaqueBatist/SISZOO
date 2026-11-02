@@ -5,15 +5,12 @@ interface ModalConfirmacaoProps {
   titulo: string
   children: ReactNode
   rotuloConfirmar: string
-  // Ação que tira acesso ou registro de circulação: o botão usa a cor de perigo.
   perigo?: boolean
   processando?: boolean
   onConfirmar: () => void
   onFechar: () => void
 }
 
-// Confirmação de ação de risco. Substitui window.confirm: o texto segue o tema,
-// o botão diz o que vai acontecer e o foco fica no diálogo.
 export function ModalConfirmacao({ titulo, children, rotuloConfirmar, perigo, processando, onConfirmar, onFechar }: ModalConfirmacaoProps) {
   return (
     <Modal titulo={titulo} onFechar={onFechar}>

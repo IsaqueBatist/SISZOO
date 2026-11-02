@@ -24,8 +24,6 @@ import com.siszoo.comum.RelogioTesteConfig;
 
 import io.restassured.http.ContentType;
 
-// D9: o conteudo dos anexos (bytea) fica em anexo_ocorrencia_conteudo e so e
-// lido no download. Listagem e detalhe nunca podem consulta-lo.
 @Import(RelogioTesteConfig.class)
 @TestPropertySource(properties =
         "spring.jpa.properties.hibernate.session_factory.statement_inspector=com.siszoo.ocorrencias.SqlCapturado")

@@ -18,10 +18,6 @@ import com.siszoo.comum.AbstractIntegrationTest;
 import com.siszoo.comum.ApiTesteFixture;
 import com.siszoo.usuarios.entity.Usuario;
 
-// @Transactional mantém a sessão Hibernate aberta durante o teste, necessário
-// para acessar os proxies @ManyToOne(LAZY) de Animal (especie/status/etc.)
-// depois do save/find, já que cada chamada de repositório do Spring Data
-// abre e fecha sua própria transação por padrão.
 @Transactional
 class AnimalRepositoryIT extends AbstractIntegrationTest {
 

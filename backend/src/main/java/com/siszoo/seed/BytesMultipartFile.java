@@ -8,8 +8,6 @@ import java.nio.file.Files;
 
 import org.springframework.web.multipart.MultipartFile;
 
-// Arquivo em memoria para chamar os services de anexo como o upload do
-// controller faria (MockMultipartFile so existe no classpath de teste).
 record BytesMultipartFile(String nomeOriginal, String tipo, byte[] conteudo) implements MultipartFile {
 
     @Override

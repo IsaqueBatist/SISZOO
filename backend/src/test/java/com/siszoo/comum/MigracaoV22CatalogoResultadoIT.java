@@ -22,9 +22,6 @@ import org.postgresql.util.PSQLException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-// Exercita a V22 (T35-19: codigo de resultado_laboratorial imutavel) num
-// schema proprio, no padrao de MigracaoV21PositivoDefinitivoIT. Sem a V22,
-// renomear "positivo" por SQL contornaria o trigger da V21.
 class MigracaoV22CatalogoResultadoIT extends AbstractIntegrationTest {
 
     private static final String SCHEMA = "migracao_v22";
@@ -58,8 +55,6 @@ class MigracaoV22CatalogoResultadoIT extends AbstractIntegrationTest {
 
         assertViolacao(transacao("UPDATE " + S + "resultado_laboratorial SET codigo = 'positivo_antigo'"
                 + " WHERE codigo = 'positivo'"));
-        // Trocar dois codigos de lugar (positivo <-> negativo) exige renomear
-        // ao menos um: tambem recusado.
         assertViolacao(transacao(
                 "UPDATE " + S + "resultado_laboratorial SET codigo = 'temporario' WHERE codigo = 'negativo'",
                 "UPDATE " + S + "resultado_laboratorial SET codigo = 'negativo' WHERE codigo = 'positivo'"));
@@ -70,8 +65,6 @@ class MigracaoV22CatalogoResultadoIT extends AbstractIntegrationTest {
                 "negativo", "positivo"));
     }
 
-    // So o codigo e imutavel: nome e ativo continuam alteraveis, e um UPDATE
-    // que regrava o mesmo codigo (ex.: SET codigo = codigo) nao dispara.
     @Test
     @DisplayName("[T35-19] V22 aceita alterar nome e ativo e regravar o mesmo codigo")
     void v22AceitaAlterarNomeEAtivo() throws Exception {
@@ -84,7 +77,6 @@ class MigracaoV22CatalogoResultadoIT extends AbstractIntegrationTest {
                 + " WHERE codigo = 'positivo'", String.class), equalTo("Positivo (reagente)"));
     }
 
-    // Antes da V22 o banco aceitava o renome: e o contorno que a V22 fecha.
     @Test
     @DisplayName("[T35-19] ate a V21 o renome do codigo era aceito (contorno fechado pela V22)")
     void v21AceitavaRenomearCodigo() throws Exception {
@@ -93,8 +85,6 @@ class MigracaoV22CatalogoResultadoIT extends AbstractIntegrationTest {
         assertThat(transacao("UPDATE " + S + "resultado_laboratorial SET codigo = 'positivo_antigo'"
                 + " WHERE codigo = 'positivo'"), nullValue());
     }
-
-    // ── Apoio (como em MigracaoV21PositivoDefinitivoIT) ──
 
     private MigrateResult migrarAte(String versao) {
         return Flyway.configure()
@@ -106,7 +96,6 @@ class MigracaoV22CatalogoResultadoIT extends AbstractIntegrationTest {
                 .migrate();
     }
 
-    // Executa os comandos numa transacao propria e devolve o erro (ou null se confirmou).
     private SQLException transacao(String... comandos) throws SQLException {
         try (Connection conexao = dataSource.getConnection()) {
             conexao.setAutoCommit(false);
@@ -125,8 +114,6 @@ class MigracaoV22CatalogoResultadoIT extends AbstractIntegrationTest {
         }
     }
 
-    // RAISE ... USING CONSTRAINT poe o nome no campo proprio da mensagem do
-    // servidor, nao no texto.
     private static void assertViolacao(SQLException erro) {
         assertThat("esperava check_violation de " + CONSTRAINT, erro == null ? null : erro.getSQLState(),
                 equalTo("23514"));

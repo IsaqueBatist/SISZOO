@@ -14,10 +14,6 @@ import type {
   StatusProcesso,
 } from '../types/ocorrencias.types'
 
-// API real de ocorrências (T25). Sem perfil no front: sigilo e permissões
-// são decididos pelo backend, que devolve `podeVerDenunciante` e responde
-// 403/422 quando a ação não é permitida.
-
 export async function listarOcorrencias(
   filtro: OcorrenciasFiltro,
   signal?: AbortSignal,
@@ -37,8 +33,6 @@ export async function listarOcorrencias(
   return data
 }
 
-// T45: contagem por bairro de todo o histórico, para o gráfico e as sugestões
-// de bairro (antes, 500 ocorrências baixadas só para contar no cliente).
 export async function contarOcorrenciasPorBairro(): Promise<QuantidadePorBairro[]> {
   const { data } = await http.get<QuantidadePorBairro[]>('/ocorrencias/estatisticas/bairro')
   return data
@@ -64,7 +58,6 @@ export async function atualizarOcorrencia(id: string, payload: AtualizarOcorrenc
   return data
 }
 
-// D5: por este endpoint só ABERTA -> EM_ATENDIMENTO.
 export async function iniciarAtendimento(id: string): Promise<Ocorrencia> {
   const { data } = await http.patch<Ocorrencia>(`/ocorrencias/${id}/status`, { status: 'EM_ATENDIMENTO' })
   return data
@@ -87,16 +80,11 @@ export async function enviarAnexo(id: string, arquivo: File): Promise<AnexoOcorr
   return data
 }
 
-// O download precisa do token (não dá para usar um <a href> direto): baixa o
-// conteúdo como Blob e quem chama cria e revoga o object URL.
 export async function baixarAnexo(id: string, anexoId: string): Promise<Blob> {
   const { data } = await http.get<Blob>(`/ocorrencias/${id}/anexos/${anexoId}`, { responseType: 'blob' })
   return data
 }
 
-// D40: o status do processo vinculado é avançado pela tela da ocorrência. A
-// abertura do processo saiu daqui na T29 (o backend passou a exigir o processo
-// completo) e volta pelo wizard de processos (T32/T33).
 export async function avancarStatusProcesso(processoId: string, status: StatusProcesso): Promise<ProcessoSanitario> {
   const { data } = await http.patch<ProcessoSanitario>(`/processos/${processoId}/status`, { status })
   return data

@@ -1,8 +1,3 @@
-/* Portado de docs/prototipo/relatorios.html (bloco <style> da tela) */
-
-/* minmax(0, 1fr): as colunas não podem crescer além do contêiner por causa da
-   largura mínima dos inputs de data (em 1366 px a grade transbordava a tela).
-   Abaixo de 1440 px os dois inputs de data não cabem em três colunas. */
 .reports-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

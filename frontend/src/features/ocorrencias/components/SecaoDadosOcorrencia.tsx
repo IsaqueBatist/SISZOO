@@ -3,17 +3,12 @@ import { useFormContext } from 'react-hook-form'
 import type { OcorrenciaFormValues } from '../schemas/ocorrenciaFormSchema'
 import { useSugestoesBairroQuery } from '../hooks/useSugestoesBairro'
 
-// Card 2 do formulário de ocorrência: quando, onde e o que aconteceu.
 export function SecaoDadosOcorrencia() {
   const {
     register,
     formState: { errors },
   } = useFormContext<OcorrenciaFormValues>()
 
-  // Sugestão de preenchimento (datalist nativo) com bairros já usados em
-  // ocorrências existentes — reduz grafias divergentes do mesmo bairro sem
-  // travar o campo (continua texto livre) nem exigir catálogo no backend.
-  // Falha ao carregar não afeta o formulário: o campo segue editável.
   const { data: bairrosConhecidos } = useSugestoesBairroQuery()
 
   return (

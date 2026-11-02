@@ -53,7 +53,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Rex", "canino", "macho", "SRD", "Preto", "curta", "medio", null, "2 anos", null,
                 fixture.microchipUnico(), false, null, "disponivel_adocao", "resgate", fixture.agora(),
-                baia.getId(), null, null);
+                baia.getId(), null, null, null, null, null, null);
 
         given()
                 .contentType(ContentType.JSON)
@@ -68,7 +68,6 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .body("motivoEntradaNome", equalTo("Resgate"))
                 .body("baiaNome", equalTo("Baia AnimalControllerIT 1"))
                 .body("tipoBaiaNome", equalTo("Interna"))
-                // DER §3.2: microchip sem nenhuma vacinacao ainda nao completa a ficha.
                 .body("fichaCompleta", equalTo(false));
     }
 
@@ -90,10 +89,6 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .body("fichaCompleta", equalTo(true));
     }
 
-    // RN-AN04: a ficha e recalculada na edicao do animal (FichaCompletaService
-    // via AnimalService#atualizar) e a retificacao de uma vacinacao nao a
-    // desfaz (a retificadora passa a ser a vigente). Exclusao de vacinacao nao
-    // existe (V17).
     @Test
     @DisplayName("[RN-AN04] ficha completa na edicao (microchip definido depois da vacina) e apos retificacao")
     void fichaCompletaNaEdicaoENaRetificacao() {
@@ -109,7 +104,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .body(new AtualizarAnimalRequest(
                         "Rex", "canino", "macho", null, null, null, null, null, null, null,
                         fixture.microchipUnico(), false, null, "disponivel_adocao", "resgate", fixture.agora(),
-                        null, null, null))
+                        null, null, null, null, null, null, null))
                 .when()
                 .put("/api/animais/" + id)
                 .then()
@@ -126,7 +121,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     void deveRetornar422ComCampoQuandoDataDeEntradaFutura() {
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                null, false, null, "disponivel_adocao", "resgate", fixture.agora().plusDays(1), null, null, null);
+                null, false, null, "disponivel_adocao", "resgate", fixture.agora().plusDays(1), null, null, null, null, null, null, null);
 
         postarAnimal(request)
                 .then()
@@ -135,8 +130,6 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .body("campos[0].campo", equalTo("dataEntrada"));
     }
 
-    // Decisao de 31/10/2026, que supera a FS-6: a resposta de castracao e
-    // opcional, e a ausencia fica como nao informado.
     @Test
     @DisplayName("cadastro sem esterilizado e aceito e fica como nao informado")
     void deveAceitarCadastroSemEsterilizado() {
@@ -171,7 +164,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     void deveRetornar422ComCampoQuandoDataDeCastracaoSemCastracao() {
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                null, false, fixture.hoje(), "disponivel_adocao", "resgate", fixture.agora(), null, null, null);
+                null, false, fixture.hoje(), "disponivel_adocao", "resgate", fixture.agora(), null, null, null, null, null, null, null);
 
         postarAnimal(request)
                 .then()
@@ -240,7 +233,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     void deveRetornar422QuandoEspecieInvalida() {
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Rex", "especie-inexistente", "macho", null, null, null, null, null, null, null,
-                null, false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null);
+                null, false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null, null, null, null, null);
 
         given()
                 .contentType(ContentType.JSON)
@@ -256,7 +249,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     void deveRetornar422QuandoStatusInvalido() {
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                null, false, null, "status-inexistente", "resgate", fixture.agora(), null, null, null);
+                null, false, null, "status-inexistente", "resgate", fixture.agora(), null, null, null, null, null, null, null);
 
         given()
                 .contentType(ContentType.JSON)
@@ -272,7 +265,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     void deveRetornar422QuandoMotivoEntradaInvalido() {
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                null, false, null, "disponivel_adocao", "motivo-inexistente", fixture.agora(), null, null, null);
+                null, false, null, "disponivel_adocao", "motivo-inexistente", fixture.agora(), null, null, null, null, null, null, null);
 
         given()
                 .contentType(ContentType.JSON)
@@ -288,7 +281,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     void deveRetornar422QuandoBaiaInvalida() {
         CriarAnimalRequest request = new CriarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                null, false, null, "disponivel_adocao", "resgate", fixture.agora(), UUID.randomUUID(), null, null);
+                null, false, null, "disponivel_adocao", "resgate", fixture.agora(), UUID.randomUUID(), null, null, null, null, null, null);
 
         given()
                 .contentType(ContentType.JSON)
@@ -304,10 +297,10 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     void deveListarComFiltroStatusEEspecie() {
         criarAnimalViaApi(new CriarAnimalRequest(
                 "Mimi", "felino", "femea", null, null, null, null, null, null, null,
-                fixture.microchipUnico(), false, null, "em_quarentena", "abandono", fixture.agora(), null, null, null));
+                fixture.microchipUnico(), false, null, "em_quarentena", "abandono", fixture.agora(), null, null, null, null, null, null, null));
         criarAnimalViaApi(new CriarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                fixture.microchipUnico(), false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null));
+                fixture.microchipUnico(), false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null, null, null, null, null));
 
         given()
                 .header("Authorization", "Bearer " + tokenAdmin)
@@ -325,8 +318,6 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .body("pagina", equalTo(0))
                 .body("tamanho", equalTo(20));
     }
-
-    // ── Normalizacao do microchip (RN01) ─────────────────
 
     @Test
     @DisplayName("[RN01] microchip com espacos e gravado sem eles e colide com o mesmo numero sem espacos (409)")
@@ -388,7 +379,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                     .header("Authorization", "Bearer " + tokenAdmin)
                     .body(new AtualizarAnimalRequest(
                             "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                            microchip, false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null))
+                            microchip, false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null, null, null, null, null))
                     .when()
                     .put("/api/animais/" + id)
                     .then()
@@ -417,7 +408,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
 
         AtualizarAnimalRequest atualizacao = new AtualizarAnimalRequest(
                 "Rex Atualizado", "canino", "macho", null, null, null, null, null, null, null,
-                null, false, null, "em_tratamento", "resgate", fixture.agora(), null, null, null);
+                null, false, null, "em_tratamento", "resgate", fixture.agora(), null, null, null, null, null, null, null);
 
         given()
                 .contentType(ContentType.JSON)
@@ -446,7 +437,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
 
         AtualizarAnimalRequest atualizacao = new AtualizarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                fixture.microchipUnico(), false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null);
+                fixture.microchipUnico(), false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null, null, null, null, null);
 
         given()
                 .contentType(ContentType.JSON)
@@ -473,7 +464,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
 
         AtualizarAnimalRequest atualizacao = new AtualizarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                novoMicrochip, false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null);
+                novoMicrochip, false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null, null, null, null, null);
 
         given()
                 .contentType(ContentType.JSON)
@@ -530,15 +521,6 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .body("tiposBaia.size()", equalTo(3));
     }
 
-    // Os codigos sao os do seed da V5 — os mesmos que o front grava nos
-    // rascunhos dos modais de vacina/procedimento.
-    //
-    // `hasItems` e nao `containsInAnyOrder` para as vacinas: desde que existe
-    // POST /api/vacinas, outros ITs cadastram vacinas no mesmo banco (a JVM
-    // compartilha o Postgres do Testcontainers, sem rollback). Exigir conjunto
-    // exato tornaria este teste dependente da ordem de execucao. O que ele
-    // afirma — que o seed da V5 esta exposto no catalogo — continua intacto.
-    // Tipos de procedimento seguem exatos: nada na aplicacao os cria.
     @Test
     void deveListarVacinasETiposDeProcedimentoDaV5() {
         given()
@@ -553,13 +535,6 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                         "atendimento_clinico", "castracao", "cirurgia_maior", "vacinacao"));
     }
 
-    // O catalogo leva o intervalo de reforco adiante (VacinaCatalogoResponse)
-    // para o formulario de vacinacao conseguir prever a proxima aplicacao sem
-    // uma segunda consulta.
-    //
-    // Assertivas so sobre uma vacina do seed, nunca sobre a lista toda:
-    // intervalo nulo e valido (vacina sem reforco, RN-A03) e outros ITs
-    // cadastram vacinas neste mesmo banco.
     @Test
     void catalogoDeVacinasLevaOIntervaloDeReforco() {
         given()
@@ -574,7 +549,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     private CriarAnimalRequest animalMinimo(String microchip) {
         return new CriarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                microchip, false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null);
+                microchip, false, null, "disponivel_adocao", "resgate", fixture.agora(), null, null, null, null, null, null, null);
     }
 
     private io.restassured.response.Response criarAnimalViaApi(CriarAnimalRequest request) {
@@ -590,8 +565,6 @@ class AnimalControllerIT extends AbstractIntegrationTest {
                 .response();
     }
 
-    // Resposta crua: o chamador decide o status esperado (422, 409...).
-    // JSON cru, sem a chave "esterilizado" (o record serializaria o campo).
     private String jsonAnimalSemEsterilizado() {
         return """
                 {"nome": "Rex", "especie": "canino", "sexo": "macho", "status": "disponivel_adocao",
@@ -611,7 +584,7 @@ class AnimalControllerIT extends AbstractIntegrationTest {
     private CriarAnimalRequest animalNaBaia(UUID baiaId) {
         return new CriarAnimalRequest(
                 "Rex", "canino", "macho", null, null, null, null, null, null, null,
-                null, false, null, "disponivel_adocao", "resgate", fixture.agora(), baiaId, null, null);
+                null, false, null, "disponivel_adocao", "resgate", fixture.agora(), baiaId, null, null, null, null, null, null);
     }
 
     private Baia criarBaia(String nome) {

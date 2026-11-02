@@ -22,7 +22,6 @@ import jakarta.persistence.LockModeType;
 
 public interface OcorrenciaRepository extends JpaRepository<Ocorrencia, UUID>, JpaSpecificationExecutor<Ocorrencia> {
 
-    // Relacoes to-one usadas pelo mapper da listagem; sem isto, N+1 por linha.
     @Override
     @EntityGraph(attributePaths = {"tipoOcorrencia"})
     Page<Ocorrencia> findAll(Specification<Ocorrencia> spec, Pageable pageable);
@@ -31,29 +30,14 @@ public interface OcorrenciaRepository extends JpaRepository<Ocorrencia, UUID>, J
     @Query("SELECT o FROM Ocorrencia o WHERE o.id = :id")
     Optional<Ocorrencia> findDetalheById(@Param("id") UUID id);
 
-    // Toda escrita que depende do estado atual (status, contagem de anexos,
-    // vinculo) trava a ocorrencia primeiro (D24). Ordem global de locks:
-    // ocorrencia antes de processo (ver OcorrenciaService).
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT o FROM Ocorrencia o WHERE o.id = :id")
     Optional<Ocorrencia> findByIdForUpdate(@Param("id") UUID id);
 
-    // KPI "ocorrencias" do dashboard (com.siszoo.relatorios, T38): registro
-    // duplicado/indevido (providencia "registro_indevido") e excluido por
-    // decisao de produto registrada no comentario de
-    // V10__schema_ocorrencias.sql ("O dashboard deve exclui-la das
-    // contagens") — vale pra qualquer contagem de ocorrencias do dashboard,
-    // nao so esta.
-    // LEFT JOIN explicito em todas estas consultas: o caminho implicito
-    // o.providenciaTomada.codigo vira INNER JOIN e descartava toda ocorrencia
-    // sem providencia (ABERTA e EM_ATENDIMENTO), deixando o "IS NULL" morto.
     @Query("SELECT COUNT(o) FROM Ocorrencia o LEFT JOIN o.providenciaTomada pt WHERE o.dataAbertura = :hoje "
             + "AND (pt IS NULL OR pt.codigo <> 'registro_indevido')")
     long contarRegistradasEm(@Param("hoje") LocalDate hoje);
 
-    // Relatorio "Ocorrências por Bairro" (T41) — mesma exclusao de
-    // 'registro_indevido' de contarRegistradasEm, aplicada a qualquer
-    // contagem de ocorrencias (comentario de V10__schema_ocorrencias.sql).
     @Query("SELECT COUNT(o) FROM Ocorrencia o LEFT JOIN o.providenciaTomada pt "
             + "WHERE o.dataAbertura BETWEEN :inicio AND :fim "
             + "AND (pt IS NULL OR pt.codigo <> 'registro_indevido')")
@@ -76,11 +60,6 @@ public interface OcorrenciaRepository extends JpaRepository<Ocorrencia, UUID>, J
             + "GROUP BY o.bairro ORDER BY COUNT(o) DESC")
     List<ContagemPorBairroProjection> contarPorBairro(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
-    // Grafico de distribuicao e sugestoes de bairro da tela de ocorrencias
-    // (T45, docs/contratos/distribuicao-ocorrencias-bairro.md): todo o
-    // historico, sem o recorte do relatorio (periodo, registro_indevido) —
-    // o mesmo universo que a tela contava ao baixar a listagem. Agrupa pela
-    // grafia gravada; a juncao de grafias ("Centro"/"centro") segue no cliente.
     @Query("SELECT o.bairro AS bairro, COUNT(o) AS quantidade FROM Ocorrencia o "
             + "WHERE o.bairro IS NOT NULL AND TRIM(o.bairro) <> '' "
             + "GROUP BY o.bairro ORDER BY COUNT(o) DESC, o.bairro")
@@ -98,11 +77,6 @@ public interface OcorrenciaRepository extends JpaRepository<Ocorrencia, UUID>, J
             + "GROUP BY o.tipoOcorrencia.codigo, o.tipoOcorrencia.nome ORDER BY COUNT(o) DESC")
     List<ContagemCatalogoProjection> contarPorTipo(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
-    // "Tempo médio (h)" (T41): registro -> encerramento (criadoEm sempre tem
-    // hora cheia; horaAbertura e opcional, por isso nao e usada aqui) — so
-    // ocorrencias ENCERRADAS no periodo entram. Uma linha por ocorrencia; o
-    // service agrupa/calcula a media em Java (JPQL nao tem diferenca de
-    // datas em horas de forma portavel).
     @Query("SELECT o.bairro AS bairro, o.criadoEm AS criadoEm, o.encerradaEm AS encerradaEm FROM Ocorrencia o "
             + "LEFT JOIN o.providenciaTomada pt WHERE o.dataAbertura BETWEEN :inicio AND :fim "
             + "AND o.statusOcorrencia = 'ENCERRADA' "

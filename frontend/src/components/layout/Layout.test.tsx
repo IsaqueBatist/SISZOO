@@ -77,8 +77,6 @@ describe('Layout', () => {
   })
 })
 
-// T42: o aviso de conexão fica no Layout, visível em qualquer tela
-// autenticada, e a varredura de rascunhos vencidos roda uma vez por carga.
 describe('Layout — conexão e manutenção dos rascunhos', () => {
   afterEach(() => {
     vi.unstubAllGlobals()

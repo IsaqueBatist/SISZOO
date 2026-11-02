@@ -11,7 +11,7 @@ body: {}
 parameters: []
 headers: []
 authentication: {}
-metaSortKey: -2000000
+metaSortKey: 1000
 isPrivate: false
 pathParameters: []
 settingStoreCookies: true
@@ -20,3 +20,7 @@ settingDisableRenderRequestBody: false
 settingEncodeUrl: true
 settingRebuildPath: true
 settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

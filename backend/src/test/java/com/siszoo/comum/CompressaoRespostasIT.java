@@ -10,9 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import io.restassured.config.DecoderConfig;
 import io.restassured.config.RestAssuredConfig;
 
-// T45: o navegador chama a API direto (sem o nginx no meio), e o JSON
-// trafegava sem compressao. server.compression: JSON a partir de 1 KB sai em
-// gzip para quem aceita; resposta pequena e cliente sem Accept-Encoding nao.
 class CompressaoRespostasIT extends AbstractIntegrationTest {
 
     @Autowired
@@ -22,13 +19,10 @@ class CompressaoRespostasIT extends AbstractIntegrationTest {
     void jsonGrandeSaiComGzipParaQuemAceita() {
         String token = fixture.tokenAdmin("admin.compressao@itu.sp.gov.br", "Compressao");
 
-        // Catalogos de animais: alguns KB de JSON.
         given().header("Authorization", "Bearer " + token).header("Accept-Encoding", "gzip")
                 .when().get("/api/animais/catalogos")
                 .then().statusCode(200).header("Content-Encoding", equalTo("gzip"));
 
-        // Sem decodificadores o RestAssured nao anuncia Accept-Encoding (por
-        // padrao ele manda gzip,deflate): cliente que nao aceita recebe cru.
         given().config(SEM_ACCEPT_ENCODING).header("Authorization", "Bearer " + token)
                 .when().get("/api/animais/catalogos")
                 .then().statusCode(200).header("Content-Encoding", nullValue());

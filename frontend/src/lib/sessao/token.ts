@@ -1,5 +1,3 @@
-// `exp` do JWT, em milissegundos. Serve só para adiantar a renovação: quem valida
-// o token é a API. Token sem esse formato não é renovado antes da hora.
 export function expiracaoDoToken(token: string): number | null {
   try {
     const carga = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Dados transcritos manualmente das imagens (Figuras 1-30) e de trechos do texto.
 Fonte unica: docs/tg/SISZOO_versao_limpa.docx. Ver figuras/transcricoes/*.md para a transcricao integral."""
 
@@ -37,7 +36,6 @@ PERFIS = {
     "enum_TipoAcesso_fig17": ["LEITURA", "ESCRITA", "EXCLUSAO"],
 }
 
-# ---------------- Casos de uso nos diagramas ----------------
 UC_DIAGRAMAS = {
     "Figura 1": {"origem": "Figura 1 (p. 38 conforme sumário)", "elipses": ["Módulo 1 - Autenticação e Controle de Acesso", "Módulo 2 - Gestão de Animais do Canil", "Módulo 3 - Ocorrências e Denúncias", "Módulo 4 - Processos Sanitários", "Módulo 5 - Dashboard e Relatórios"],
                  "associacoes": {"Veterinário": ["Módulo 2", "Módulo 1", "Módulo 5"], "Agente Sanitário": ["Módulo 1", "Módulo 5", "Módulo 3", "Módulo 4"], "Administrador": []}},
@@ -65,8 +63,6 @@ UC_NOME_DIAGRAMA_VS_QUADRO = [
     {"diagrama": "Visualizar Dashboard", "quadro": "Visualizar Dashboard em Tempo Real", "quadro_num": 46},
 ]
 
-# ---------------- DER conceitual (Fig. 7-11) ----------------
-# atributos: nome (sufixo '*' = identificador, '?' = opcional/tracejado)
 DER = {
     "Figura 7": {"origem": "Figura 7 (p. 45)", "modulo": 1, "entidades": {
         "Usuario": ["id*", "email", "senha", "nome", "sobrenome", "crmv?", "telefone?", "ativo", "ultimo_acesso?", "criado_em", "senha_alterada_em?", "desativado_em?", "data_modificacao"],
@@ -130,8 +126,6 @@ DER = {
         "relacionamentos": [{"nome": "gera", "entre": ["RelatorioGerado", "Usuario"], "cardinalidades": {"junto a RelatorioGerado": "(1,1)", "junto a Usuario": "(0,1)"}}]},
 }
 
-# ---------------- Diagrama logico (Fig. 12-16) ----------------
-# colunas: "nome tipo [PK] [FK] [UQ] [NN]" ; '(?)' = leitura incerta
 LOGICO = {
     "Figura 12": {"origem": "Figura 12 (p. 51)", "modulo": 1, "tabelas": {
         "Usuario": ["id uuid PK NN", "email varchar(255) UQ NN", "senha varchar(255) NN", "nome varchar(100) NN", "sobrenome varchar(100) NN", "crmv varchar(20)", "telefone varchar(20)", "ativo boolean NN", "ultimo_acesso timestamp", "criado_em timestamp NN", "senha_alterada_em timestamp", "desativado_em timestamp", "data_modificacao timestamp NN"],
@@ -178,7 +172,6 @@ LOGICO = {
         "RelatorioGerado": ["id uuid PK NN", "gerado_por uuid FK NN", "tipo_relatorio TipoRelatorio E NN", "periodo_inicio date", "periodo_fim date", "parametros_jsonb jsonb", "gerado_em timestamp NN", "status StatusRelatorio E NN", "arquivo_url varchar(500)", "url_expira_em timestamp", "tamanho_bytes bigint"], "Usuario": ["id uuid PK NN"]}},
 }
 
-# ---------------- Diagrama de classes (Fig. 17-25) ----------------
 CLASSES = {
     "Figura 17": {"origem": "Figura 17 (p. 58)", "modulo": 1, "classes": {
         "Usuario": {"atributos": ["UUID id", "String email", "String senhaHash", "String nome", "String sobrenome", "String crmv", "String telefone", "Boolean ativo", "LocalDateTime ultimoAcesso", "LocalDateTime criadoEm", "LocalDateTime senhaAlteradaEm", "LocalDateTime desativadoEm", "LocalDateTime dataModificacao"],
@@ -275,7 +268,7 @@ RELATORIOS = {"origem": "Quadro 11 (p. 31 conforme sumário)", "itens": [
     {"relatorio": "Vacinação", "conteudo": "Animais vacinados, vacinas vencidas e próximas a vencer, por espécie, baia e veterinário responsável.", "requisito": "RF-D02", "enum": "VACINACAO", "tela": "T19 (Fig. 50, Ap. E)", "prototipo_fig30": "Relatório de Vacinação"}],
     "formatos": {"RF-D02": "PDF e CSV", "Fig. 30 (protótipo)": "PDF, CSV e Excel"}}
 
-TELAS_FIGURAS = {  # codigo -> figuras/protótipos
+TELAS_FIGURAS = {
     "T01": {"figura_cap5": "Fig. 31 (placeholder)"}, "T02": {"figura_cap5": "Fig. 32 (placeholder)", "prototipo": "Fig. 26"}, "T03": {"figura_cap5": "Fig. 33 (placeholder)"},
     "T04": {"figura_cap5": "Fig. 34 (placeholder)"}, "T05": {"figura_cap5": "Fig. 35 (placeholder)"}, "T06": {"figura_cap5": "Fig. 36 (placeholder)", "prototipo": "Fig. 27"},
     "T07": {"figura_cap5": "Fig. 37 (placeholder)", "prototipo": "Fig. 29"}, "T08": {"figura_cap5": "Fig. 38 (placeholder)"}, "T09": {"figura_cap5": "Fig. 39 (placeholder)"},

@@ -45,7 +45,7 @@ class RelatorioAnualProcessosServiceTest {
         when(processoSanitarioRepository.countByDataAberturaBetweenAndResultadoLaboratorial_Codigo(
                 PERIODO.inicio(), PERIODO.fim(), "positivo")).thenReturn(14L);
         when(animalAmostradoRepository.contarProcessosComContatoHumano(PERIODO.inicio(), PERIODO.fim())).thenReturn(9L);
-        List<TempoResolucaoProjection> tempos = List.of(tempoResolucao(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 12))); // 11 dias
+        List<TempoResolucaoProjection> tempos = List.of(tempoResolucao(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 12)));
         when(processoSanitarioRepository.listarTemposDeResolucao(any(), any())).thenReturn(tempos);
         when(processoSanitarioRepository.contarPorDoenca(2025)).thenReturn(List.of());
         ResultadosLaboratoriaisProjection raiva = resultadoDetalhado("Raiva", 28, 2, 24, 1, 1);
@@ -63,12 +63,12 @@ class RelatorioAnualProcessosServiceTest {
         assertThat(resposta.ano()).isEqualTo(2025);
         assertThat(resposta.kpis().processosAbertos()).isEqualTo(87);
         assertThat(resposta.kpis().confirmadosPositivos()).isEqualTo(14);
-        assertThat(resposta.kpis().percentualPositividade()).isEqualTo(16); // 14/87 = 16.09 -> 16
+        assertThat(resposta.kpis().percentualPositividade()).isEqualTo(16);
         assertThat(resposta.kpis().comContatoHumano()).isEqualTo(9);
         assertThat(resposta.kpis().tempoMedioDias()).isEqualTo(11.0);
 
         assertThat(resposta.resultadosPorDoenca()).hasSize(1);
-        assertThat(resposta.resultadosPorDoenca().get(0).percentualPositividade()).isEqualTo(7); // 2/28 = 7.1
+        assertThat(resposta.resultadosPorDoenca().get(0).percentualPositividade()).isEqualTo(7);
         assertThat(resposta.totalResultados().doenca()).isEqualTo("TOTAL");
         assertThat(resposta.totalResultados().investigados()).isEqualTo(28);
         assertThat(resposta.totalResultados().positivos()).isEqualTo(2);
@@ -88,7 +88,6 @@ class RelatorioAnualProcessosServiceTest {
 
         RelatorioAnualProcessosResponse resposta = service.gerarPreview(PERIODO);
 
-        // 11 bairros com ocorrencia: 9 no top + 1 "Outros (2 bairros)" + 1 "Sem ocorrência vinculada".
         assertThat(resposta.bairros()).hasSize(11);
         assertThat(resposta.bairros().get(9).bairro()).isEqualTo("Outros (2 bairros)");
         assertThat(resposta.bairros().get(10).bairro()).isEqualTo("Sem ocorrência vinculada");
@@ -124,12 +123,9 @@ class RelatorioAnualProcessosServiceTest {
 
         List<BlocoCsv> blocos = service.blocosCsv(PERIODO);
         BlocoCsv blocoBairros = blocos.stream().filter(b -> b.titulo().equals("Bairros com mais ocorrências")).findFirst().orElseThrow();
-        assertThat(blocoBairros.linhas()).hasSize(11); // sem agregacao "Outros"
+        assertThat(blocoBairros.linhas()).hasSize(11);
     }
 
-    // lenient: cada teste usa so um subconjunto (blocosCsv nao chama os
-    // metodos de KPI, por exemplo) — stub nao usado aqui e esperado, nao um
-    // erro de teste (ao contrario do UnnecessaryStubbingException padrao).
     private void stubsBasicosVazios() {
         org.mockito.Mockito.lenient().when(processoSanitarioRepository.countByDataAberturaBetween(any(), any())).thenReturn(0L);
         org.mockito.Mockito.lenient().when(processoSanitarioRepository.countByDataAberturaBetweenAndResultadoLaboratorial_Codigo(any(), any(), eq("positivo"))).thenReturn(0L);
@@ -152,9 +148,6 @@ class RelatorioAnualProcessosServiceTest {
         return projecao;
     }
 
-    // "codigo" nao e lido pelo service (paraResultadoResponse so usa nome e
-    // os contadores) — nao stubado, de proposito, pra nao disparar
-    // UnnecessaryStubbingException.
     private ResultadosLaboratoriaisProjection resultadoDetalhado(
             String nome, long investigados, long positivos, long negativos, long inconclusivos, long aguardando) {
         ResultadosLaboratoriaisProjection projecao = mock(ResultadosLaboratoriaisProjection.class);

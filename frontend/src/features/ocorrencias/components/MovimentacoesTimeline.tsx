@@ -25,11 +25,6 @@ const ICONE_MOVIMENTACAO: Record<TipoMovimentacao, IconName> = {
   NOTA_INTERNA: 'edit',
 }
 
-// `.timeline-item.{classe}` (components.css) só define cor de bullet para
-// vacina/exame/cirurgia/medicamento/entrada — não existe classe própria para
-// os 6 tipos de movimentação de ocorrência. Reaproveita as cores existentes
-// por proximidade semântica (mesmo tipo de decisão documentada em
-// animais/Timeline.tsx para "procedimento" → "cirurgia").
 const CLASSE_CSS: Record<TipoMovimentacao, string> = {
   REGISTRADA: 'entrada',
   EQUIPE_DESPACHADA: 'exame',
@@ -39,10 +34,6 @@ const CLASSE_CSS: Record<TipoMovimentacao, string> = {
   NOTA_INTERNA: 'entrada',
 }
 
-// Ordena por data desc (mais recente primeiro) — mesma convenção de
-// animais/Timeline.tsx e do protótipo docs/prototipo/ocorrencia.html. As datas
-// são LocalDateTime sem fuso no mesmo formato, então a ordem da string é a
-// ordem cronológica.
 function ordenarPorDataDesc(movimentacoes: MovimentacaoOcorrencia[]): MovimentacaoOcorrencia[] {
   return [...movimentacoes].sort((a, b) => (a.data < b.data ? 1 : a.data > b.data ? -1 : 0))
 }

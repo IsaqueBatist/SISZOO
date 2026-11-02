@@ -34,20 +34,9 @@ import com.siszoo.usuarios.service.AuditoriaEventoService;
 
 import io.restassured.http.ContentType;
 
-// Rollback tardio do registro de resultado (T34) com resultado positivo, que
-// notifica (regra 19, T34-4). Dois pontos de falha dentro da transacao,
-// depois do INSERT em resultado_processo e do UPDATE do vigente (ambos com
-// flush no service):
-//   - na auditoria, antes de o evento da notificacao ser publicado;
-//   - na montagem da resposta, DEPOIS do publishEvent: so este caso prova a
-//     fase do listener — com AFTER_COMMIT nada e enviado num rollback; com um
-//     listener sincrono ou fora da transacao, a notificacao sairia.
-// Classe propria (como ProcessoSemAmostraIT): os spies mudam a chave do
-// contexto Spring. A notificacao e um mock (sem SMTP).
 @Import(RelogioTesteConfig.class)
 class ResultadoProcessoTransacaoIT extends AbstractIntegrationTest {
 
-    // O listener e @Async: a ausencia de chamada e conferida depois de uma espera.
     private static final long ESPERA_NOTIFICACAO_MS = 1500;
 
     @MockitoSpyBean
@@ -78,13 +67,10 @@ class ResultadoProcessoTransacaoIT extends AbstractIntegrationTest {
     void falhaNaAuditoriaDesfazHistoricoEVigente() {
         String processoId = processoAguardandoResultado();
         int eventosAntes = eventosDeAtualizacao(processoId);
-        // So a partir daqui: criacao e avanco acima auditam normalmente.
         doThrow(new IllegalStateException("falha simulada na auditoria")).when(auditoriaEventoService)
                 .registrar(any(), eq(AcaoAuditoria.ATUALIZACAO), eq("processo_sanitario"), any(), any(), any());
 
         lancarPositivo(processoId).then().statusCode(500);
-        // A falha veio do ultimo passo (PATCH acima + POST), depois do INSERT
-        // e do UPDATE, ambos com flush no service.
         verify(auditoriaEventoService, times(2))
                 .registrar(any(), eq(AcaoAuditoria.ATUALIZACAO), eq("processo_sanitario"), any(), any(), any());
 
@@ -97,8 +83,6 @@ class ResultadoProcessoTransacaoIT extends AbstractIntegrationTest {
     void falhaDepoisDoEventoNaoNotifica() {
         String processoId = processoAguardandoResultado();
         int eventosAntes = eventosDeAtualizacao(processoId);
-        // findByProcessoId so roda em toResponse, depois da auditoria e do
-        // publishEvent, ainda dentro da transacao do registro.
         doThrow(new IllegalStateException("falha simulada na resposta")).when(resultadoProcessoRepository)
                 .findByProcessoId(UUID.fromString(processoId));
 
@@ -133,8 +117,6 @@ class ResultadoProcessoTransacaoIT extends AbstractIntegrationTest {
         assertThat(processo.get("status_processo"), equalTo("AGUARDANDO_RESULTADO"));
         assertThat(processo.get("resultado_laboratorial_id"), nullValue());
         assertThat(processo.get("data_resultado"), nullValue());
-        // T35-16: sem commit nao ha envio, entao nem data de notificacao (so o
-        // callback do envio a grava; o listener nunca roda, verificado abaixo).
         assertThat(processo.get("data_notificacao_municipe"), nullValue());
         assertThat(eventosDeAtualizacao(processoId), equalTo(eventosAntes));
     }

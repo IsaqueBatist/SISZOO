@@ -1,0 +1,28 @@
+_id: "req_vacinas_buscar_por_id"
+type: "Request"
+parentId: "fld_catalogos_clinicos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/vacinas/{{ _.vacina_id_exemplo }}"
+name: "Buscar vacina por id"
+description: "Vacina criada em \"Criar vacina no catálogo\". Requer GESTAO_ANIMAIS:leitura."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 3000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });

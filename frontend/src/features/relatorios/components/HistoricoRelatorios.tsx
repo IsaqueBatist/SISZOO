@@ -14,10 +14,6 @@ function formatarTamanho(bytes: number | null): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-// parametrosJson e o filtro bruto original (RelatorioGeradoService#serializarParametros)
-// - necessario porque periodoInicio/periodoFim do historico ja vem resolvidos
-// (ex.: "ano" virou 01/01..31/12); reenviar so o periodo resolvido quebraria
-// a validacao do backend para o tipo que usa "ano".
 function filtroDeParametros(item: RelatorioGeradoItem): FiltroRelatorio | null {
   if (ehRelatorioDePosicao(item.tipo)) return { tipo: item.tipo }
   try {
@@ -33,9 +29,6 @@ interface HistoricoRelatoriosProps {
   onGerarNovamente: (filtro: FiltroRelatorio, nomeExibicao: string) => void
 }
 
-// "Relatórios recentes" (docs/prototipo/relatorios.html). Sem persistência de
-// arquivo nesta versão: a ação da linha é "Gerar novamente" (reexecuta a
-// exportação com os mesmos parâmetros, gerando um novo doc_id), não "Baixar".
 export function HistoricoRelatorios({ onGerarNovamente }: HistoricoRelatoriosProps) {
   const tipos = useTiposRelatorioQuery()
   const [pagina, setPagina] = useState(0)
@@ -79,8 +72,6 @@ export function HistoricoRelatorios({ onGerarNovamente }: HistoricoRelatoriosPro
             </thead>
             <tbody>
               {data.itens.map((item) => {
-                // O histórico é de todos: quem não tem acesso ao tipo vê o registro,
-                // mas não gera de novo (GET /relatorios/tipos já vem filtrado).
                 const filtro = tipos.data?.some((tipo) => tipo.codigo === item.tipo) ? filtroDeParametros(item) : null
                 return (
                   <tr key={item.docId}>

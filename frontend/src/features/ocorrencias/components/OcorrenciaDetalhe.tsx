@@ -21,8 +21,6 @@ import { formatarProtocoloOcorrencia } from '../utils/protocolo'
 import { useIniciarAtendimentoMutation, useOcorrenciaQuery } from '../hooks/useOcorrencias'
 import { useAnexosPendentes } from '../hooks/useAnexosPendentes'
 
-// D15: anexos que não subiram no cadastro desta ocorrência (ficaram no
-// IndexedDB deste navegador) podem ser reenviados daqui também.
 function AnexosPendentesDaOcorrencia({ ocorrenciaId }: { ocorrenciaId: string }) {
   const queryClient = useQueryClient()
   const { pendencia, falhas, reenvioInutil, enviando, enviar, descartar } = useAnexosPendentes()
@@ -47,11 +45,6 @@ function AnexosPendentesDaOcorrencia({ ocorrenciaId }: { ocorrenciaId: string })
   )
 }
 
-// Botão próprio (não inline em OcorrenciaDetalhe) porque a mutation só pode
-// ser chamada depois que `ocorrencia` já existe — mesmo motivo de
-// CardEncerramento ser um componente à parte: chamar o hook direto em
-// OcorrenciaDetalhe violaria a regra dos hooks (ele fica depois do
-// early-return de loading/erro).
 function BotaoIniciarAtendimento({ ocorrencia, podeEscrever }: { ocorrencia: Ocorrencia; podeEscrever: boolean }) {
   const [erro, setErro] = useState<string | null>(null)
   const mutation = useIniciarAtendimentoMutation(ocorrencia.id)
@@ -82,8 +75,6 @@ function formatarTamanho(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-// Anexo de ocorrência sigilosa é restrito a quem pode ver o denunciante (o
-// backend responde 403 para os demais): o cadeado só antecipa isso na tela.
 function ListaAnexos({ ocorrencia }: { ocorrencia: Ocorrencia }) {
   const [erro, setErro] = useState<string | null>(null)
   const restrito = ocorrencia.sigilosa && !ocorrencia.podeVerDenunciante

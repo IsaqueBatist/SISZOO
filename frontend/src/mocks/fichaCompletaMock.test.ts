@@ -4,10 +4,6 @@ import { criarVacinacao } from '@/features/animais/api/historicoApi'
 import type { AnimalRequest } from '@/features/animais/types/animais.types'
 import { hojeEmItu } from '@/lib/datas'
 
-// O mock precisa seguir a regra do backend (FichaCompletaService, DER §3.2):
-// microchip com texto e ao menos uma vacinação vigente. Antes ele gravava
-// fichaCompleta = "tem microchip", a regra anterior à V18.
-
 const ANIMAL: AnimalRequest = {
   nome: 'Teste Ficha',
   especie: 'canino',

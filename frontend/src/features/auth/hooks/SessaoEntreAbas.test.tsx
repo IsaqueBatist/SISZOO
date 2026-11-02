@@ -27,8 +27,6 @@ const USUARIO: Usuario = {
   senhaAlteradaEm: '2026-01-10T12:00:00Z',
 }
 
-// BroadcastChannel entre "abas" dentro do mesmo teste: a aba simulada publica
-// e a aba de verdade (o AuthProvider) recebe; a instância não ouve a si mesma.
 class CanalSimulado {
   static instancias: CanalSimulado[] = []
   private ouvintes = new Set<(evento: MessageEvent) => void>()

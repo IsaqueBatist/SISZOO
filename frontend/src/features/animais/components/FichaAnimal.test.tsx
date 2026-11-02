@@ -12,7 +12,6 @@ import type { Usuario } from '@/features/auth/types/auth.types'
 import { FichaAnimal } from './FichaAnimal'
 
 const REX_ID = 'b2c3d4e5-0000-0000-0000-000000000001'
-// Microchip sem vacinação no mock: ficha incompleta (fichaCompletaMock).
 const LUNA_ID = 'b2c3d4e5-0000-0000-0000-000000000002'
 
 function renderFicha(cargos: string[] = ['Veterinário'], animalId = REX_ID) {
@@ -72,8 +71,6 @@ describe('FichaAnimal', () => {
     expect(await screen.findByRole('heading', { name: 'Rex', level: 1 })).toBeInTheDocument()
     expect(screen.getByText('985121234567890')).toBeInTheDocument()
     expect(screen.getByText('Baia 3')).toBeInTheDocument()
-    // "Canino" aparece 2x: o badge de espécie no cabeçalho e o valor na
-    // kv-list do painel de identidade.
     expect(screen.getAllByText('Canino')).toHaveLength(2)
     expect(screen.getByText('Disponível').closest('.badge')).toHaveClass('badge-available')
   })
@@ -185,7 +182,6 @@ describe('FichaAnimal', () => {
     await user.selectOptions(within(modal).getByLabelText(/^vacina/i), 'v8')
     fireEvent.change(within(modal).getByLabelText(/data de aplicação/i), { target: { value: '2026-05-01' } })
     await user.type(within(modal).getByLabelText(/quantidade da dose/i), '1')
-    // Unidade obrigatória desde a T24 (RN-C05).
     await user.selectOptions(within(modal).getByLabelText(/^unidade/i), 'MILILITRO')
     await user.click(within(modal).getByRole('button', { name: /^registrar vacina$/i }))
 

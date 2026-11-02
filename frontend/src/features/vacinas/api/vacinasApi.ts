@@ -2,8 +2,6 @@ import { http } from '@/lib/http'
 import type { PaginaResponse } from '@/features/usuarios/types/usuarios.types'
 import type { AtualizarVacinaRequest, CriarVacinaRequest, Vacina } from '../types/vacinas.types'
 
-// Teto de 500 por página (Paginacao, no backend). O catálogo do CCZ tem
-// dezenas de itens, então uma página basta e evita paginar uma tela de apoio.
 const TAMANHO_CATALOGO = 500
 
 export function listarVacinas(ativo?: boolean): Promise<PaginaResponse<Vacina>> {

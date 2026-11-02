@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Gera recortes dos diagramas na resolucao original (sem upscale), lado maior <= MAX px.
 Saida: figuras/recortes/figNN_rCcC.png (linha/coluna) + figuras/recortes/indice_recortes.csv
 """
@@ -6,13 +5,13 @@ import csv, json, math, os
 from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MAX = 1400       # lado maior do recorte
-OVER = 120       # sobreposicao entre recortes (px) para nao cortar texto
+MAX = 1400
+OVER = 120
 figs = json.load(open(os.path.join(ROOT, 'figuras', 'figuras.json'), encoding='utf-8'))
 out = os.path.join(ROOT, 'figuras', 'recortes')
 rows = []
 for f in figs:
-    if not f['arquivos'] or f['num'] > 30:   # so diagramas e prototipos (Fig. 1-30)
+    if not f['arquivos'] or f['num'] > 30:
         continue
     path = os.path.join(ROOT, 'figuras', f['arquivos'][0])
     im = Image.open(path)

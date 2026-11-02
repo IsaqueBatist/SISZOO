@@ -9,9 +9,6 @@ import java.util.UUID;
 
 import com.siszoo.ocorrencias.entity.StatusOcorrencia;
 
-// podeVerDenunciante (P-D, opcao b): calculado pelo servidor a partir de
-// OCORRENCIAS_DENUNCIAS:denunciante_sigiloso:leitura. O front usa o campo para
-// decidir o que exibir; o backend continua sendo a fonte da verdade.
 public record OcorrenciaResponse(
         UUID id,
         String protocolo,

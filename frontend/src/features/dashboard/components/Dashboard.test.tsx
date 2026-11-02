@@ -98,8 +98,6 @@ describe('Dashboard', () => {
     const cardAdocoes = screen.getByText('Animais Adotados').closest('.kpi') as HTMLElement
     expect(within(cardAdocoes).getByText('3')).toBeInTheDocument()
     expect(within(cardAdocoes).getByText('1 disponível para adoção')).toBeInTheDocument()
-    // Os gráficos têm flag própria (VITE_USE_MOCK_GRAFICOS, ligada no setup):
-    // aqui só os KPIs e o cabeçalho dos alertas importam.
     const gradeKpis = cardAdocoes.closest('.kpi-grid') as HTMLElement
     expect(within(gradeKpis).queryByText('Dados de demonstração')).not.toBeInTheDocument()
     const cabecalhoAlertas = screen.getByRole('heading', { name: /Alertas Críticos/ }).parentElement as HTMLElement
@@ -202,8 +200,6 @@ describe('Dashboard', () => {
   })
 
   it('card de processos urgentes some (estado vazio) quando não há nenhum urgente', async () => {
-    // Como o backend: com ?urgente=true (T45), o único processo, não urgente,
-    // fica de fora.
     server.use(
       http.get(`${API_BASE_URL}/processos`, ({ request }) => {
         const pedeUrgentes = new URL(request.url).searchParams.get('urgente') === 'true'

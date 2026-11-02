@@ -10,8 +10,6 @@ import { perfilFormSchema, type PerfilFormValues } from '../schemas/perfilFormSc
 import { useAtualizarTelefoneMutation, usePerfilQuery } from '../hooks/usePerfil'
 import './Perfil.css'
 
-// criadoEm é LocalDateTime sem fuso, já no horário de Itu: `new Date(iso)` o
-// leria no fuso do navegador (ver lib/datas.ts).
 const formatarData = formatarDataBR
 
 export function Perfil() {
@@ -32,10 +30,6 @@ export function Perfil() {
     defaultValues: { telefone: '' },
   })
 
-  // O backend hoje não devolve `telefone` em GET /usuarios/me (só aceita no
-  // PATCH), então o campo começa vazio — não há valor de servidor para
-  // sincronizar. Em caso de erro de rede o estado local não é limpo, então o
-  // que foi digitado continua no campo e pode ser reenviado.
   async function onSubmit(dados: PerfilFormValues) {
     try {
       await mutation.mutateAsync({ telefone: dados.telefone })

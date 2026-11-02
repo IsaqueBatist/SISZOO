@@ -8,6 +8,7 @@ data:
   base_url: "http://localhost:8080"
   admin_email: ''
   admin_password: ''
+  admin_password_nova: ''
   token: ''
   senha_teste_padrao: "SenhaForte123"
   usuario_id_exemplo: ''
@@ -18,6 +19,17 @@ data:
   prescricao_id_exemplo: ''
   medicamento_id_exemplo: ''
   categoria_farmacologica_id_exemplo: ''
+  execucao: ''
+  execucao_letras: ''
+  vacina_id_exemplo: ''
+  exame_id_exemplo: ''
+  anexo_animal_id_exemplo: ''
+  ocorrencia_id_exemplo: ''
+  ocorrencia_vinculo_id_exemplo: ''
+  anexo_ocorrencia_id_exemplo: ''
+  processo_id_exemplo: ''
+  processo_vinculo_id_exemplo: ''
+  amostra_id_exemplo: ''
 color: null
 isPrivate: false
 metaSortKey: 1750000000000

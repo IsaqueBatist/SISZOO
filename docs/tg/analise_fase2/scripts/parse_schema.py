@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 """Reconstroi o schema final a partir das migrations Flyway (V1..V22), em ordem.
 Saida: docs/tg/analise_fase2/schema_migrations.json
 Cobre: CREATE TABLE (colunas, tipo, NOT NULL, DEFAULT), ALTER TABLE ADD COLUMN, DROP TABLE,
 CONSTRAINT UNIQUE/CHECK/FK/PK (nomes e texto), CREATE UNIQUE INDEX, CREATE TRIGGER, INSERT seeds (codigos)."""
 import json, os, re, glob
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # analise_fase2
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REPO = os.path.abspath(os.path.join(ROOT, '..', '..', '..'))
 MIG = os.path.join(REPO, 'backend', 'src', 'main', 'resources', 'db', 'migration')
 
@@ -25,14 +24,13 @@ def split_top_level(s):
     if cur.strip(): parts.append(cur)
     return [p.strip() for p in parts]
 
-tables = {}   # name -> {'columns': {col: {...}}, 'constraints': [], 'indexes': [], 'triggers': [], 'migration': 'Vn'}
-seeds = {}    # table -> list of (codigo,...)
+tables = {}
+seeds = {}
 order = []
 files = sorted(glob.glob(os.path.join(MIG, 'V*__*.sql')), key=lambda p: int(re.search(r'V(\d+)__', os.path.basename(p)).group(1)))
 for path in files:
     ver = re.search(r'(V\d+)__', os.path.basename(path)).group(1)
     sql = strip_comments(open(path, encoding='utf-8').read())
-    # CREATE TABLE
     for m in re.finditer(r'CREATE TABLE (\w+)\s*\((.*?)\);', sql, flags=re.S):
         name, body = m.group(1), m.group(2)
         t = {'columns': {}, 'constraints': [], 'indexes': [], 'triggers': [], 'migration': ver}
@@ -45,7 +43,6 @@ for path in files:
                     col, typ, rest = cm.group(1), cm.group(2), cm.group(3)
                     t['columns'][col] = {'tipo': typ, 'not_null': 'NOT NULL' in rest.upper(), 'default': (re.search(r'DEFAULT\s+([^\s,]+(?:\([^)]*\))?)', rest, flags=re.I) or [None, None])[1] if re.search(r'DEFAULT', rest, flags=re.I) else None, 'migration': ver}
         tables[name] = t; order.append(name)
-    # ALTER TABLE ... ADD COLUMN / ADD CONSTRAINT / DROP CONSTRAINT
     for m in re.finditer(r'ALTER TABLE (\w+)\s+(.*?);', sql, flags=re.S):
         name, body = m.group(1), m.group(2)
         if name not in tables: continue

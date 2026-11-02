@@ -248,11 +248,7 @@ describe('Relatorios', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Gerar novamente' }))
 
-    // level: 2 para o cabeçalho do painel de preview - distinto do h3 do card
-    // e do texto puro da linha do histórico, que também têm o mesmo nome.
     expect(await screen.findByRole('heading', { level: 2, name: 'Relatório de Vacinação' })).toBeInTheDocument()
-    // "487" (vacinas aplicadas) é único na tela - "Antirrábica" aparece duas
-    // vezes (tabela de vacinas e de animais com vacina vencida).
     expect(await screen.findByText('487')).toBeInTheDocument()
   })
 })

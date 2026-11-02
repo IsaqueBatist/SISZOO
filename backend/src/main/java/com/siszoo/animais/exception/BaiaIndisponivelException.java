@@ -4,8 +4,6 @@ import org.springframework.http.HttpStatus;
 
 import com.siszoo.comum.exception.ErroNegocioException;
 
-// A baia existe, mas nao pode receber o animal agora: esta inativa ou ja
-// atingiu a capacidade (DER §3.2, regra de baia_id; DER §5, regra 6).
 public class BaiaIndisponivelException extends ErroNegocioException {
 
     private BaiaIndisponivelException(String mensagem) {

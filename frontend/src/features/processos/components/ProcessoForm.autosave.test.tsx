@@ -7,10 +7,6 @@ import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/Auth
 import type { Usuario } from '@/features/auth/types/auth.types'
 import { CadastrarProcesso } from './CadastrarProcesso'
 
-// jsdom não implementa IndexedDB — mesmo padrão de
-// AnimalForm.autosave.test.tsx / OcorrenciaForm.autosave.test.tsx: mocka o
-// módulo de storage para testar QUANDO ele é chamado (gate de hidratação,
-// troca de etapa), não a mecânica de IndexedDB em si.
 vi.mock('../storage/rascunhoProcessoStorage', async () => {
   const real = await vi.importActual<typeof import('../storage/rascunhoProcessoStorage')>('../storage/rascunhoProcessoStorage')
   return {
@@ -103,9 +99,6 @@ describe('ProcessoForm — autosave do rascunho', () => {
     )
   })
 
-  // O autosave com debounce roda a cada tecla depois da troca de etapa: se ele
-  // gravasse a etapa de quando a assinatura nasceu, o próximo campo digitado
-  // desfaria o salvamento da troca e o rascunho reabriria na etapa 1.
   it('o autosave depois de trocar de etapa grava a etapa atual, não a de quando começou', async () => {
     vi.mocked(carregarRascunhoProcesso).mockResolvedValue(null)
     const user = userEvent.setup()
@@ -127,8 +120,6 @@ describe('ProcessoForm — autosave do rascunho', () => {
 
   function rascunhoComVinculo() {
     return {
-      // T42: o instante do salvamento acompanha o rascunho, para o aviso dizer
-      // de quando ele é.
       salvoEm: Date.now(),
       etapaAtual: 3 as const,
       valores: {

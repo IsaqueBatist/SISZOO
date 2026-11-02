@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Gera inventario_especificacao.json, achados_fase1.csv e relatorio_fase1_analise_documental.md."""
 import csv, json, os, re, sys
 from collections import Counter, OrderedDict
@@ -29,7 +28,6 @@ def com_pagina(s):
         return f'{m.group(0)} (p. {p} conforme sumário)' if p else m.group(0)
     return re.sub(r'\b(Quadros?|Figuras?|Fig\.) (\d+)\b', rq, s)
 
-# ---------------- INVENTARIO ----------------
 rf, rnf, rn, uc, telas, dic = bruto['rf'], bruto['rnf'], bruto['rn'], bruto['uc'], bruto['telas'], bruto['dicionario']
 def mod_of_rf(k): return {'C': 1, 'A': 2, 'E': 3, 'B': 4, 'D': 5}[k.split('-')[1][0]]
 inv = OrderedDict()
@@ -85,7 +83,6 @@ inv['figuras_mapeamento'] = [{'figura': f['num'], 'titulo': f['titulo'], 'secao'
 inv['cruzamentos_automaticos'] = {k: cruz[k] for k in ['rf_para_uc', 'rf_sem_uc', 'uc_sem_rf', 'rn_referenciadas', 'telas_figura_sem_quadro15', 'figuras_duplicadas', 'lista_figuras_ausentes', 'referencias_nao_citadas', 'variacoes_nome_modulo']}
 json.dump(inv, open(os.path.join(ROOT, 'inventario_especificacao.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 
-# ---------------- ACHADOS ----------------
 ordem = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
 sev_rank = {'CRÍTICA': 0, 'ALTA': 1, 'MÉDIA': 2, 'BAIXA': 3}
 ach = sorted(AC.A, key=lambda a: (ordem.index(a['verif']), sev_rank[a['sev']]))
@@ -99,7 +96,6 @@ with open(os.path.join(ROOT, 'achados_fase1.csv'), 'w', encoding='utf-8-sig', ne
     for i, p in enumerate(AC.PEND, 1):
         w.writerow([f'P-{i:03d}', 'PENDÊNCIA', '—', 'PENDÊNCIA', com_pagina(p['loc']), '—', p['texto'], '—', p['impacto'], 'Preencher antes da entrega'])
 
-# ---------------- RELATORIO ----------------
 nomes_verif = {'A': 'Requisitos × Casos de uso', 'B': 'Perfis e permissões', 'C': 'Regras de negócio', 'D': 'Modelagem de dados (DER × lógico × dicionário × classes)', 'E': 'Relatórios', 'F': 'Telas', 'G': 'Escopo, tecnologia e coerência geral', 'H': 'Estrutura e ABNT'}
 sem_div = {
     'A': ['Todo RF (20) tem ao menos um caso de uso que o cita em "Requisitos relacionados" e todo caso de uso (36) cita ao menos um RF (verificação automática, cruzamentos_automaticos.json: rf_sem_uc = [], uc_sem_rf = []).',
@@ -201,7 +197,6 @@ L.append('- `quadros/quadro_01.csv` … `quadro_94.csv`, `quadros/quadros.json`'
 L.append('- `figuras/image1–46`, `figuras/mapeamento_figuras.csv`, `figuras/figuras.json`, `figuras/recortes/`, `figuras/transcricoes/`')
 open(os.path.join(ROOT, 'relatorio_fase1_analise_documental.md'), 'w', encoding='utf-8').write('\n'.join(L))
 
-# ---------------- verificacao de completude ----------------
 print('achados:', len(ach), dict(by_sev), dict(by_ver), '| pendencias:', len(AC.PEND))
 print('top10:', top10)
 print('csv quadros:', len([f for f in os.listdir(os.path.join(ROOT, 'quadros')) if f.endswith('.csv')]))

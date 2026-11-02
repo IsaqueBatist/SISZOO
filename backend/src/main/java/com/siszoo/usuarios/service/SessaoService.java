@@ -18,9 +18,6 @@ import com.siszoo.usuarios.entity.Usuario;
 import com.siszoo.usuarios.exception.SessaoExpiradaException;
 import com.siszoo.usuarios.repository.SessaoUsuarioRepository;
 
-// Sessao com renovacao deslizante (docs/decisoes/sessao.md). O prazo de
-// inatividade conta de ultima_atividade_em, que so avanca em renovacao com
-// atividade declarada: sem renovacao, a sessao morre sozinha no servidor.
 @Service
 public class SessaoService {
 
@@ -48,7 +45,6 @@ public class SessaoService {
         this.toleranciaTokenAnterior = Duration.ofSeconds(toleranciaSegundos);
     }
 
-    // tokenRenovacao e nulo quando o token do cookie continua valendo.
     public record SessaoRenovada(SessaoUsuario sessao, String tokenRenovacao) {
     }
 
@@ -68,8 +64,6 @@ public class SessaoService {
         return new SessaoRenovada(sessaoRepository.save(sessao), token);
     }
 
-    // noRollbackFor: encerrar por inatividade ou reuso precisa ser gravado
-    // mesmo com a recusa ao cliente.
     @Transactional(noRollbackFor = SessaoExpiradaException.class)
     public SessaoRenovada renovar(String token, boolean houveAtividade) {
         if (token == null || token.isBlank()) {
@@ -111,7 +105,6 @@ public class SessaoService {
         return new SessaoRenovada(sessao, novoToken);
     }
 
-    // Logout: nao recusa cookie vencido nem ausente; o objetivo e so sair.
     @Transactional
     public Optional<Usuario> encerrarPeloToken(String token) {
         if (token == null || token.isBlank()) {
@@ -125,7 +118,6 @@ public class SessaoService {
                 });
     }
 
-    // sessaoMantida: a sessao de quem esta agindo, quando ela deve continuar.
     @Transactional
     public void encerrarDoUsuario(UUID usuarioId, MotivoEncerramentoSessao motivo, UUID sessaoMantida) {
         LocalDateTime agora = agora();

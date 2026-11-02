@@ -8,12 +8,6 @@ import {
   resumosFixture,
 } from './ocorrenciasFixtures'
 
-// Handlers de ocorrências (T25, PR2) com respostas FIXAS - sem estado e sem
-// regra de negócio (máscara, transições, protocolo e D12 são do backend).
-// Cada mutação devolve a fixture da ocorrência como está; o teste que precisa
-// ver o estado depois da ação, ou forçar 403/404/409/413/422, sobrescreve o
-// handler com `server.use()`.
-
 function buscarFixture(id: string) {
   return ocorrenciasFixture().find((item) => item.id === id) ?? null
 }
@@ -23,10 +17,8 @@ function naoEncontrada() {
 }
 
 export const ocorrenciasHandlers = [
-  // Antes de `/ocorrencias/:id` para "catalogos" não virar um id.
   http.get(`${API_BASE_URL}/ocorrencias/catalogos`, () => HttpResponse.json(CATALOGOS_OCORRENCIA_FIXTURE)),
 
-  // T45: contagem por grafia de bairro, como o backend (mais frequente primeiro).
   http.get(`${API_BASE_URL}/ocorrencias/estatisticas/bairro`, () => {
     const contagem = new Map<string, number>()
     for (const { bairro } of resumosFixture()) {
@@ -41,7 +33,6 @@ export const ocorrenciasHandlers = [
     const url = new URL(request.url)
     const pagina = Number(url.searchParams.get('pagina') ?? '0')
     const tamanho = Number(url.searchParams.get('tamanho') ?? '20')
-    // F2-010: período da data de abertura (dias inclusivos), como no backend.
     const de = url.searchParams.get('de')
     const ate = url.searchParams.get('ate')
     const status = url.searchParams.get('status')?.split(',')

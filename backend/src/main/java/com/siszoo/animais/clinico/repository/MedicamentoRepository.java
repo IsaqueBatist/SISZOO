@@ -13,9 +13,6 @@ import com.siszoo.animais.clinico.entity.Medicamento;
 
 public interface MedicamentoRepository extends JpaRepository<Medicamento, UUID>, JpaSpecificationExecutor<Medicamento> {
 
-    // categoria e carregada via getter no MedicamentoMapper (nao so o id): sem
-    // isto, listar() sofre N+1 (mesma correcao ja aplicada em
-    // Vacinacao/Procedimento/PrescricaoRepository).
     @Override
     @EntityGraph(attributePaths = {"categoria"})
     Page<Medicamento> findAll(Specification<Medicamento> spec, Pageable pageable);

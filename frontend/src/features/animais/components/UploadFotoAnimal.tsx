@@ -9,8 +9,6 @@ interface UploadFotoAnimalProps {
   onArquivo: (event: ChangeEvent<HTMLInputElement>) => void
 }
 
-// Área de envio da foto (etapa 3). A compressão e o rascunho da foto ficam em
-// quem usa.
 export function UploadFotoAnimal({ fotoUrl, carregando, erro, aviso, onArquivo }: UploadFotoAnimalProps) {
   return (
     <div className="field full" style={{ marginBottom: 'var(--space-5)' }}>

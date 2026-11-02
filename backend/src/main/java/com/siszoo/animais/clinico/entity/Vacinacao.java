@@ -26,8 +26,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// Registro clinico imutavel (regra de negocio): sem setters de negocio chamados apos
-// o insert original. Correcao = nova linha com `retifica` apontando para esta.
 @Entity
 @Table(name = "vacinacao")
 @Getter
@@ -62,9 +60,6 @@ public class Vacinacao {
     @Column(name = "dose_quantidade", nullable = false, precision = 8, scale = 3)
     private BigDecimal doseQuantidade;
 
-    // Sem nullable=false de proposito: registros legados (anteriores a T24)
-    // podem nao ter unidade (V7, CHECK NOT VALID). Todo registro novo e
-    // obrigado a ter — @NotNull em CriarVacinacaoRequest e o CHECK do banco.
     @Enumerated(EnumType.STRING)
     @Column(name = "dose_unidade", length = 30)
     private UnidadeDose doseUnidade;
@@ -75,8 +70,6 @@ public class Vacinacao {
     @Column(columnDefinition = "text")
     private String observacoes;
 
-    // Auto-referencia: preenchida so no INSERT da linha que corrige esta.
-    // Nunca atualizada depois de gravada (ver com.siszoo.animais.clinico.service.VacinacaoService).
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "retifica_id")
     private Vacinacao retifica;
@@ -85,10 +78,6 @@ public class Vacinacao {
     @Column(name = "criado_em", nullable = false, updatable = false)
     private LocalDateTime criadoEm;
 
-    // DER.md: data_validade = data_aplicacao + intervalo da vacina (RN-A01).
-    // Fonte unica da regra para ficha, alerta vacinal, dashboard e relatorio
-    // (antes, 4 copias). Nao e coluna persistida (um campo derivado ficaria
-    // desatualizado); null se a vacina ainda nao tiver intervalo_meses.
     public LocalDate calcularDataValidade() {
         if (vacina == null || vacina.getIntervaloMeses() == null || dataAplicacao == null) {
             return null;

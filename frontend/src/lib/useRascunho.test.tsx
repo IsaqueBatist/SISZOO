@@ -8,7 +8,6 @@ interface Valores {
   lote: string
 }
 
-// 24/10/2026 19:42 no fuso de Itu, para a asserção da data no aviso.
 const SALVO_EM = new Date('2026-10-24T22:42:00Z').getTime()
 
 function armazenamentoFalso(salvo: Valores | null, salvoEm: number | null = SALVO_EM) {

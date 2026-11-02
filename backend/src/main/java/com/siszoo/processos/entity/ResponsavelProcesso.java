@@ -16,8 +16,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// Municipe responsavel pelo animal investigado (DER §3.5), 1:1 com o processo.
-// Dados pessoais: nao entram nos snapshots de auditoria (como a D23).
 @Entity
 @Table(name = "responsavel_processo")
 @Getter

@@ -26,18 +26,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-// Ordem das migrations V15 (T34 follow-up, PR #98) -> V16 e V17 (auditoria
-// de regras de negocio; docs/decisoes/auditoria-rn.md, AR-8), num schema
-// proprio do PostgreSQL de teste:
-//   - banco limpo: V1..V17 aplicadas em ordem, sem lacuna;
-//   - atualizacao: banco parado na V15 com dados de todos os modulos tocados
-//     (animais com microchip, registros clinicos, processo com responsavel,
-//     amostra e resultado), V16 e V17 aplicadas por cima;
-//   - atualizacao recusada: duplicata de microchip na V15 para a V16 sem
-//     tocar nos dados e sem aplicar a V17.
-// A base da atualizacao e um schema migrado ate a V15 pelas proprias
-// migrations: o banco de desenvolvimento esta na V12 com processo minimo da
-// T25, que a V13 recusa por decisao (DH-3).
 class MigracaoOrdemV15V16V17IT extends AbstractIntegrationTest {
 
     private static final String SCHEMA = "migracao_ordem_v17";
@@ -80,7 +68,6 @@ class MigracaoOrdemV15V16V17IT extends AbstractIntegrationTest {
         assertThat(versoesAplicadasEmOrdem(), equalTo(IntStream.rangeClosed(1, 17).boxed().toList()));
         assertThat(contarTabelas(), equalTo(contagemAntes));
 
-        // V16: dados normalizados e unicidade por indice parcial.
         assertThat(microchipDe(dados.comEspacos), equalTo("985"));
         assertThat(microchipDe(dados.soEspacos), nullValue());
         assertThat(microchipDe(dados.normal), equalTo("ABC123"));
@@ -93,13 +80,11 @@ class MigracaoOrdemV15V16V17IT extends AbstractIntegrationTest {
                 containsString("WHERE (microchip IS NOT NULL)"));
         assertViolacao(transacao(animal(UUID.randomUUID(), dados.usuario, "985")), "23505", "uq_animal_microchip");
 
-        // V17: exclusao recusada nas quatro tabelas, inclusive o processo com resultado.
         for (String tabela : SEM_EXCLUSAO) {
             assertViolacao(transacao("DELETE FROM " + S + tabela), "23514", "não pode ser excluído");
             assertViolacao(transacao("TRUNCATE " + S + tabela + " CASCADE"), "23514", "não podem ser excluídos");
         }
 
-        // V14/V15 continuam valendo depois de V16 e V17.
         assertViolacao(transacao("DELETE FROM " + S + "resultado_processo"), "23514", "é imutável");
         assertViolacao(transacao("TRUNCATE " + S + "resultado_processo"), "23514", "imutável");
         assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM pg_constraint c JOIN pg_namespace n"
@@ -108,7 +93,6 @@ class MigracaoOrdemV15V16V17IT extends AbstractIntegrationTest {
         assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM pg_indexes WHERE schemaname = ?"
                 + " AND indexname = 'ix_resultado_processo_processo_id'", Integer.class, SCHEMA), equalTo(1));
 
-        // UPDATE continua permitido no processo (status e vigente mudam).
         assertThat(transacao("UPDATE " + S + "processo_sanitario SET status_processo = 'CONCLUIDO' WHERE id = '"
                 + dados.processo + "'"), nullValue());
         assertThat(contarTabelas(), equalTo(contagemAntes));
@@ -134,13 +118,9 @@ class MigracaoOrdemV15V16V17IT extends AbstractIntegrationTest {
                 + " AND t.tgname LIKE '%_sem_exclusao'", Integer.class, SCHEMA), equalTo(0));
     }
 
-    // ── Apoio ──
-
     private record Dados(UUID usuario, UUID comEspacos, UUID soEspacos, UUID normal, UUID semMicrochip, UUID processo) {
     }
 
-    // Um registro de cada modulo tocado por V15, V16 e V17, inserido com o
-    // schema na V15.
     private Dados inserirDadosNaV15() throws SQLException {
         UUID usuario = inserirUsuario();
         UUID comEspacos = UUID.randomUUID();
@@ -225,7 +205,6 @@ class MigracaoOrdemV15V16V17IT extends AbstractIntegrationTest {
                 .migrate();
     }
 
-    // Executa os comandos numa transacao propria e devolve o erro (ou null se confirmou).
     private SQLException transacao(String... comandos) throws SQLException {
         try (Connection conexao = dataSource.getConnection()) {
             conexao.setAutoCommit(false);

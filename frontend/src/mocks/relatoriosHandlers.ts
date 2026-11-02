@@ -11,8 +11,6 @@ import {
   TIPOS_RELATORIO_FIXTURE,
 } from './relatoriosFixtures'
 
-// Handlers de relatorios (T41) com respostas FIXAS, para os 6 tipos do
-// catálogo (PR1: ocupacao_baias, vacinacao; PR2: os outros 4).
 export const relatoriosHandlers = [
   http.get(`${API_BASE_URL}/relatorios/tipos`, () => HttpResponse.json(TIPOS_RELATORIO_FIXTURE)),
 

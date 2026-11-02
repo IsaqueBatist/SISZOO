@@ -40,9 +40,6 @@ import com.siszoo.usuarios.service.AuditoriaEventoService;
 
 import jakarta.persistence.criteria.Predicate;
 
-// Sem metodo atualizar/excluir: registro clinico imutavel (regra de negocio).
-// Correcao = novo POST com `retificaId` apontando para o registro anterior
-// (ver validarRetificacao). Ver RegistrosClinicosSemMutacaoTest.
 @Service
 public class VacinacaoService {
 
@@ -81,10 +78,6 @@ public class VacinacaoService {
         Usuario usuarioAutenticado = usuarioRepository.findById(usuarioAutenticadoId)
                 .orElseThrow(UsuarioNaoEncontradoException::new);
 
-        // RN-C06: vale tambem para retificacao (mesmo caminho). Validado aqui
-        // com o Clock do projeto, nao com @PastOrPresent (relogio proprio do
-        // Bean Validation, que ignoraria o fuso de ClockConfig e o Clock fixo
-        // dos testes).
         if (request.dataAplicacao().isAfter(LocalDate.now(clock))) {
             throw new DataAplicacaoFuturaException();
         }
@@ -106,8 +99,6 @@ public class VacinacaoService {
         vacinacao.setRetifica(anterior);
 
         vacinacaoRepository.save(vacinacao);
-        // DER §3.2: a primeira vacinacao pode completar a ficha. A consulta do
-        // calculo dispara o flush, entao ja enxerga a vacinacao recem-gravada.
         animal.setFichaCompleta(fichaCompletaService.calcular(animal));
         VacinacaoResponse response = vacinacaoMapper.toResponse(vacinacao, null);
 
@@ -155,21 +146,6 @@ public class VacinacaoService {
         return anterior;
     }
 
-    /**
-     * Resolve a vacina pelo codigo do catalogo. Vacina inativa nao aceita
-     * registro NOVO (RN-C09) — mesmo idioma de
-     * {@code ExameService.resolverTipoExame} e da decisao DH-22 da T37:
-     * catalogo inativo e invalido para registro novo.
-     *
-     * <p>A excecao e a retificacao da MESMA vacina do registro original: um
-     * registro clinico so se corrige por um POST novo com {@code retificaId}
-     * (RN06), e recusar aqui tornaria impossivel corrigir um historico cuja
-     * vacina saiu do catalogo depois.
-     *
-     * <p>Filtra em memoria, e nao com {@code findByCodigoAndAtivoTrue}: os
-     * testes unitarios mockam {@code findByCodigo}, e trocar a assinatura
-     * faria esses mocks devolverem vazio silenciosamente.
-     */
     private Vacina resolverVacina(String codigo, Vacinacao retificada) {
         Vacina vacina = vacinaRepository.findByCodigo(codigo).orElseThrow(VacinaInvalidaException::new);
 
