@@ -6,7 +6,7 @@ Entrada: build/v3_campos.docx  →  Saída: SISZOO_v3_final.docx e SISZOO_v3_fin
 import os, shutil, sys
 import win32com.client
 
-RAIZ = r'C:\Users\isaqu\Desktop\codigo\SISZOO\docs\tg'
+RAIZ = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
 ENT = os.path.join(RAIZ, 'build', 'v3_campos.docx')
 TMP = os.path.join(RAIZ, 'build', 'v3_trabalho.docx')
 DOCX = os.path.join(RAIZ, 'SISZOO_v3_final.docx')

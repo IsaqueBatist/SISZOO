@@ -10,7 +10,7 @@ import sys; sys.path.insert(0, sys_path)
 from docx_final import DocxFinal
 from docx_kit import _esc
 
-RAIZ = r'C:\Users\isaqu\Desktop\codigo\SISZOO\docs\tg'
+RAIZ = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
 ORIG = os.path.join(RAIZ, 'build', 'v3_aceito.docx')
 DEST = os.path.join(RAIZ, 'build', 'v3_campos.docx')
 CAP = os.path.join(RAIZ, 'analise_fase3', 'capturas')

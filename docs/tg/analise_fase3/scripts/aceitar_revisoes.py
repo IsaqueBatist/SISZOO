@@ -7,7 +7,7 @@ Saída:   docs/tg/build/v3_aceito.docx
 import os, shutil, zipfile, re, sys
 import win32com.client
 
-RAIZ = r'C:\Users\isaqu\Desktop\codigo\SISZOO\docs\tg'
+RAIZ = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
 ORIG = os.path.join(RAIZ, 'SISZOO_v2_alinhado.docx')
 BUILD = os.path.join(RAIZ, 'build')
 COPIA = os.path.join(BUILD, 'v2_copia_sem_updatefields.docx')

@@ -11,7 +11,7 @@ import os, sys, json, datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from docx_kit import DocxKit
 
-RAIZ = r'C:\Users\isaqu\Desktop\codigo\SISZOO\docs\tg'
+RAIZ = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
 ORIG = os.path.join(RAIZ, 'SISZOO_versao_limpa.docx')
 DEST = os.path.join(RAIZ, 'SISZOO_v2_alinhado.docx')
 CAP = os.path.join(RAIZ, 'analise_fase3', 'capturas')
