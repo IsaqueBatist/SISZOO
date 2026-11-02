@@ -1,5 +1,10 @@
 import { http, HttpResponse } from 'msw'
-import type { AlertaVacinalAnimal, AlertaVacinalItem } from '@/features/alertas/types/alertas.types'
+import type {
+  AlertaEsterilizacaoAnimal,
+  AlertaVacinalAnimal,
+  AlertaVacinalItem,
+} from '@/features/alertas/types/alertas.types'
+import { HORAS_A_DISPOSICAO_DO_RESPONSAVEL } from '@/features/alertas/utils/tempoDesdeEntrada'
 import type { Animal, AnimalRequest, AnexoAnimal, Baia, BaiaRequest, CatalogosAnimal } from '@/features/animais/types/animais.types'
 import type { CriarExameRequest, Exame } from '@/features/animais/types/historico.types'
 import type { Vacina } from '@/features/vacinas/types/vacinas.types'
@@ -1522,6 +1527,29 @@ export const handlers = [
     return HttpResponse.json(comStatus, { status: 201 })
   }),
 
+  http.get(`${API_BASE_URL}/alertas/esterilizacao`, () => {
+    const agora = Date.parse(agoraEmItu())
+    const alertas: AlertaEsterilizacaoAnimal[] = animaisMock
+      .filter((animal) => animal.esterilizado === false && animalSobCustodia(animal))
+      .map((animal) => ({
+        animal,
+        horasDesdeEntrada: Math.floor((agora - Date.parse(animal.dataEntrada)) / 3_600_000),
+      }))
+      .filter(({ horasDesdeEntrada }) => horasDesdeEntrada > HORAS_A_DISPOSICAO_DO_RESPONSAVEL)
+      .sort((a, b) => b.horasDesdeEntrada - a.horasDesdeEntrada)
+      .map(({ animal, horasDesdeEntrada }) => ({
+        animalId: animal.id,
+        animalNome: animal.nome,
+        animalMicrochip: animal.microchip,
+        animalEspecieNome: animal.especieNome,
+        animalSexo: animal.sexo,
+        animalBaiaNome: animal.baiaNome,
+        animalStatusNome: animal.statusNome,
+        dataEntrada: animal.dataEntrada,
+        horasDesdeEntrada,
+      }))
+    return HttpResponse.json(alertas)
+  }),
   http.get(`${API_BASE_URL}/alertas/vacinas`, () => {
     const hoje = hojeEmItu()
     const vigentes = new Map<string, VacinacaoMockInterna>()

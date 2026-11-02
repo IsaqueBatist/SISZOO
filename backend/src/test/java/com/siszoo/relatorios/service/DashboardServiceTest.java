@@ -28,6 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.siszoo.alertas.dto.AlertaVacinalAnimalResponse;
 import com.siszoo.alertas.dto.AlertaVacinalItemResponse;
 import com.siszoo.alertas.dto.SeveridadeAlerta;
+import com.siszoo.alertas.service.AlertaEsterilizacaoService;
 import com.siszoo.alertas.service.AlertaVacinalService;
 import com.siszoo.animais.clinico.entity.StatusPrescricao;
 import com.siszoo.animais.clinico.entity.Vacina;
@@ -82,6 +83,8 @@ class DashboardServiceTest {
     private EspecieRepository especieRepository;
     @Mock
     private AlertaVacinalService alertaVacinalService;
+    @Mock
+    private AlertaEsterilizacaoService alertaEsterilizacaoService;
 
     private DashboardService service;
 
@@ -94,7 +97,7 @@ class DashboardServiceTest {
         return new DashboardService(
                 animalRepository, vacinacaoRepository, prescricaoRepository, baiaRepository,
                 ocorrenciaRepository, processoSanitarioRepository, animalAmostradoRepository,
-                doencaRepository, especieRepository, alertaVacinalService, clock);
+                doencaRepository, especieRepository, alertaVacinalService, alertaEsterilizacaoService, clock);
     }
 
     @Test
@@ -212,10 +215,11 @@ class DashboardServiceTest {
                 eq(StatusPrescricao.ATIVA), any(), any(), anyCollection())).thenReturn(4L);
         when(animalRepository.countByFichaCompletaFalseAndStatus_CodigoNotIn(anyCollection())).thenReturn(1L);
         when(animalRepository.countByEsterilizadoFalseAndStatus_Codigo("disponivel_adocao")).thenReturn(3L);
+        when(alertaEsterilizacaoService.contarAlertasEsterilizacao()).thenReturn(5L);
 
         DashboardKpisResponse resposta = service.obterKpis();
 
-        assertThat(resposta.alertas()).hasSize(7);
+        assertThat(resposta.alertas()).hasSize(8);
         assertThat(totalDoAlerta(resposta, "vacina_vencendo")).isEqualTo(1L);
         assertThat(totalDoAlerta(resposta, "vacina_vencida")).isEqualTo(2L);
         assertThat(totalDoAlerta(resposta, "sem_avaliacao_30d")).isEqualTo(2L);
@@ -223,6 +227,7 @@ class DashboardServiceTest {
         assertThat(totalDoAlerta(resposta, "medicacao_ativa")).isEqualTo(4L);
         assertThat(totalDoAlerta(resposta, "ficha_incompleta")).isEqualTo(1L);
         assertThat(totalDoAlerta(resposta, "nao_castrado")).isEqualTo(3L);
+        assertThat(totalDoAlerta(resposta, "esterilizacao_72h")).isEqualTo(5L);
     }
 
     @Test

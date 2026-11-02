@@ -851,7 +851,7 @@ Um sintoma aparece no máximo uma vez por amostra (a API ignora códigos repetid
 
 | Campo         | Tipo      | Observações                                                                                                                         |
 | ------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `tipo_alerta` | enum      | `vacina_vencendo`, `vacina_vencida`, `sem_avaliacao_30d`, `baia_superlotada`, `medicacao_ativa`, `ficha_incompleta`, `nao_castrado` |
+| `tipo_alerta` | enum      | `vacina_vencendo`, `vacina_vencida`, `sem_avaliacao_30d`, `baia_superlotada`, `medicacao_ativa`, `ficha_incompleta`, `nao_castrado`, `esterilizacao_72h` |
 | `severidade`  | enum      | `info`, `atencao`, `critico`                                                                                                        |
 | `titulo`      | string    | "5 vacinas vencem em 7 dias"                                                                                                        |
 | `descricao`   | string    |                                                                                                                                     |
@@ -875,6 +875,7 @@ Um sintoma aparece no máximo uma vez por amostra (a API ignora códigos repetid
 - `medicacao_ativa`: `prescricao WHERE status = 'ATIVA' AND data_fim_prevista BETWEEN now() AND now() + 7d`
 - `ficha_incompleta`: `animal WHERE ficha_completa = false`
 - `nao_castrado`: `animal WHERE esterilizado = false AND status = 'disponivel_adocao'` (`NULL`, não informado, não entra)
+- `esterilizacao_72h`: `animal WHERE esterilizado = false AND data_entrada < now() - 72h AND status NOT IN (adotado, obito_natural, obito_eutanasia, transferido)` - Lei estadual nº 12.916/2008, art. 5º; lista em `GET /api/alertas/esterilizacao` (`AlertaEsterilizacaoService`, constante `HORAS_A_DISPOSICAO_DO_RESPONSAVEL`). Animais em tratamento ou apreendidos entram até o CCZ definir o critério.
 
 **Implementado (T38)** em `GET /api/dashboard/kpis` (`DashboardService#calcularAlertas`,
 `docs/contratos/dashboard-kpis.md`): `vacina_vencendo`/`vacina_vencida` reaproveitam

@@ -93,18 +93,18 @@ class DashboardControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("kpis.alertas sempre tem os 7 tipos do DER §3.7 (vacina_vencendo e vacina_vencida separados)")
-    void kpisDeveTrazerOsSeteTiposDeAlerta() {
+    @DisplayName("kpis.alertas sempre tem os 8 tipos do DER §3.7 (vacina_vencendo e vacina_vencida separados)")
+    void kpisDeveTrazerOsOitoTiposDeAlerta() {
         List<String> tipos = given()
                 .header("Authorization", "Bearer " + tokenAdmin)
                 .when().get(ROTA_KPIS)
                 .then().statusCode(200)
                 .extract().jsonPath().getList("alertas.tipo", String.class);
 
-        assertThat(tipos, hasSize(7));
+        assertThat(tipos, hasSize(8));
         assertThat(tipos, containsInAnyOrder(
                 "vacina_vencendo", "vacina_vencida", "sem_avaliacao_30d", "baia_superlotada",
-                "medicacao_ativa", "ficha_incompleta", "nao_castrado"));
+                "medicacao_ativa", "ficha_incompleta", "nao_castrado", "esterilizacao_72h"));
     }
 
     @Test

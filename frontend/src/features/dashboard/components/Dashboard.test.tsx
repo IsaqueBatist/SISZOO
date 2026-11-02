@@ -211,4 +211,41 @@ describe('Dashboard', () => {
 
     expect(await screen.findByText('Nenhum processo urgente em aberto.')).toBeInTheDocument()
   })
+
+  it('card de esterilização pendente mostra o tempo desde a entrada e leva à ficha do animal', async () => {
+    server.use(
+      http.get(`${API_BASE_URL}/alertas/esterilizacao`, () =>
+        HttpResponse.json([
+          {
+            animalId: 'a1',
+            animalNome: 'Bidu',
+            animalMicrochip: null,
+            animalEspecieNome: 'Canino',
+            animalSexo: 'macho',
+            animalBaiaNome: null,
+            animalStatusNome: 'Em tratamento',
+            dataEntrada: '2026-01-01T09:00:00',
+            horasDesdeEntrada: 100,
+          },
+        ]),
+      ),
+    )
+    renderDashboard()
+
+    const link = await screen.findByRole('link', { name: 'Bidu' })
+    expect(link).toHaveAttribute('href', '/animais/a1')
+    expect(link.closest('.alert')).toHaveTextContent('Bidu (há 4 dias)')
+    expect(screen.getByRole('link', { name: /recolhido há mais de 72 horas sem esterilização/ })).toHaveAttribute(
+      'href',
+      '/alertas/esterilizacao',
+    )
+  })
+
+  it('card de esterilização pendente não aparece quando nenhum animal passou de 72 horas', async () => {
+    server.use(http.get(`${API_BASE_URL}/alertas/esterilizacao`, () => HttpResponse.json([])))
+    renderDashboard()
+
+    await screen.findByText('147')
+    expect(screen.queryByText(/sem esterilização/)).not.toBeInTheDocument()
+  })
 })

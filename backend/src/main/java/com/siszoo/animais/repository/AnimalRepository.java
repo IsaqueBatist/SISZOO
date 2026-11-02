@@ -1,6 +1,7 @@
 package com.siszoo.animais.repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -49,6 +50,23 @@ public interface AnimalRepository extends JpaRepository<Animal, UUID>, JpaSpecif
     long countByFichaCompletaFalseAndStatus_CodigoNotIn(Collection<String> codigosForaDaCustodia);
 
     long countByEsterilizadoFalseAndStatus_Codigo(String statusCodigo);
+
+    long countByEsterilizadoFalseAndDataEntradaBeforeAndStatus_CodigoNotIn(
+            LocalDateTime entradaLimite, Collection<String> codigosForaDaCustodia);
+
+    @Query("""
+            SELECT a FROM Animal a
+            JOIN FETCH a.especie
+            JOIN FETCH a.status
+            LEFT JOIN FETCH a.baia
+            WHERE a.esterilizado = false
+              AND a.dataEntrada < :entradaLimite
+              AND a.status.codigo NOT IN :codigosForaDaCustodia
+            ORDER BY a.dataEntrada, a.id
+            """)
+    List<Animal> listarNaoEsterilizadosComEntradaAntesDe(
+            @Param("entradaLimite") LocalDateTime entradaLimite,
+            @Param("codigosForaDaCustodia") Collection<String> codigosForaDaCustodia);
 
     @Query("""
             SELECT COUNT(a) FROM Animal a

@@ -88,6 +88,7 @@ A unidade de uma vacinação legada é informada por **retificação** (RN-C02):
 - Status permitidos no cadastro do animal (ver "Regras consideradas e rejeitadas").
 - Baia de animal fora da custódia: hoje não é conferida (RN-AN02).
 - Hora da entrada: o formulário só edita o dia; mudar o dia grava 00:00.
+- Alerta de esterilização após 72 horas (`esterilizacao_72h`): se animais em tratamento ou apreendidos devem ficar fora. Hoje entram todos os não esterilizados sob custódia. Como a hora da entrada vira 00:00 quando só o dia é editado, o prazo pode aparecer até um dia antes para esses animais.
 - Lista inicial de medicamentos e categorias farmacológicas (não há seed); quem pode cadastrar categoria (hoje Administrador e Veterinária, como o medicamento) e se acento/maiúscula distinguem categorias.
 
 ## Revisão de 22/10/2026 — exames, anexos do animal, medalha e laudo (alinhamento com o TG)

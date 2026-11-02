@@ -6,6 +6,10 @@ import type { ProcessoResumo } from '@/features/processos/types/processos.types'
 
 const PROCESSOS_URGENTES_NO_RESUMO = 5
 
+const PAGINA_POR_TIPO_DE_ALERTA: Record<string, string> = {
+  esterilizacao_72h: '/alertas/esterilizacao',
+}
+
 export interface NotificacaoResumo {
   id: string
   titulo: string
@@ -17,13 +21,14 @@ export interface NotificacaoResumo {
 
 function paraNotificacao(alerta: AlertaCritico): NotificacaoResumo {
   const ehVacina = alerta.tipo === 'vacina_vencendo' || alerta.tipo === 'vacina_vencida'
+  const destino = ehVacina ? '/alertas/vacinas' : PAGINA_POR_TIPO_DE_ALERTA[alerta.tipo]
   return {
     id: alerta.tipo,
     titulo: alerta.titulo,
     descricao: alerta.descricao,
     tom: TOM_POR_SEVERIDADE_ALERTA[alerta.severidade] ?? 'info',
     urgente: alerta.severidade === 'critico',
-    para: ehVacina ? '/alertas/vacinas' : undefined,
+    para: destino,
   }
 }
 

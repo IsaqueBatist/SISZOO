@@ -31,6 +31,11 @@ const Dashboard = lazy(() =>
 const AlertaVacinasDetalhe = lazy(() =>
   import('@/features/alertas/components/AlertaVacinasDetalhe').then((m) => ({ default: m.AlertaVacinasDetalhe })),
 )
+const AlertaEsterilizacaoDetalhe = lazy(() =>
+  import('@/features/alertas/components/AlertaEsterilizacaoDetalhe').then((m) => ({
+    default: m.AlertaEsterilizacaoDetalhe,
+  })),
+)
 const Animais = lazy(() => import('@/features/animais/components/Animais').then((m) => ({ default: m.Animais })))
 const FichaAnimal = lazy(() =>
   import('@/features/animais/components/FichaAnimal').then((m) => ({ default: m.FichaAnimal })),
@@ -114,6 +119,7 @@ export function AppRoutes() {
             >
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/alertas/vacinas" element={<AlertaVacinasDetalhe />} />
+              <Route path="/alertas/esterilizacao" element={<AlertaEsterilizacaoDetalhe />} />
               <Route path="/animais" element={<Animais />} />
               <Route path="/animais/:id" element={<FichaAnimal />} />
               <Route element={<RotaEscritaAnimais />}>

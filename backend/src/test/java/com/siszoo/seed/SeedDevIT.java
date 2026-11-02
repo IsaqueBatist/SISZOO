@@ -140,7 +140,7 @@ class SeedDevIT extends AbstractIntegrationTest {
 
         JsonPath kpis = get(tokenAdmin, "/api/dashboard/kpis");
         List<Map<String, Object>> alertas = kpis.getList("alertas");
-        assertThat(alertas).hasSize(7).allSatisfy(alerta ->
+        assertThat(alertas).hasSize(8).allSatisfy(alerta ->
                 assertThat(((Number) alerta.get("total")).longValue()).as((String) alerta.get("tipo")).isPositive());
         assertThat(kpis.getLong("adocoes.adotados")).isEqualTo(6);
         assertThat(kpis.getLong("adocoes.disponiveis")).isPositive();

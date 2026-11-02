@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.siszoo.alertas.dto.AlertaVacinalAnimalResponse;
 import com.siszoo.alertas.dto.SeveridadeAlerta;
+import com.siszoo.alertas.service.AlertaEsterilizacaoService;
 import com.siszoo.alertas.service.AlertaVacinalService;
 import com.siszoo.animais.clinico.entity.StatusPrescricao;
 import com.siszoo.animais.clinico.entity.Vacinacao;
@@ -70,6 +71,7 @@ public class DashboardService {
     private final DoencaRepository doencaRepository;
     private final EspecieRepository especieRepository;
     private final AlertaVacinalService alertaVacinalService;
+    private final AlertaEsterilizacaoService alertaEsterilizacaoService;
     private final Clock clock;
 
     public DashboardService(
@@ -83,6 +85,7 @@ public class DashboardService {
             DoencaRepository doencaRepository,
             EspecieRepository especieRepository,
             AlertaVacinalService alertaVacinalService,
+            AlertaEsterilizacaoService alertaEsterilizacaoService,
             Clock clock) {
         this.animalRepository = animalRepository;
         this.vacinacaoRepository = vacinacaoRepository;
@@ -94,6 +97,7 @@ public class DashboardService {
         this.doencaRepository = doencaRepository;
         this.especieRepository = especieRepository;
         this.alertaVacinalService = alertaVacinalService;
+        this.alertaEsterilizacaoService = alertaEsterilizacaoService;
         this.clock = clock;
     }
 
@@ -236,6 +240,13 @@ public class DashboardService {
                 "nao_castrado", "info",
                 naoCastrado + " animal(is) disponível(is) para adoção não castrado(s)",
                 "Animais disponíveis para adoção que ainda não foram esterilizados.", naoCastrado));
+
+        long esterilizacaoPendente = alertaEsterilizacaoService.contarAlertasEsterilizacao();
+        alertas.add(new AlertaCriticoResponse(
+                "esterilizacao_72h", "atencao",
+                esterilizacaoPendente + " animal(is) recolhido(s) há mais de 72 horas sem esterilização",
+                "Animais sob custódia com entrada há mais de 72 horas que ainda não foram esterilizados.",
+                esterilizacaoPendente));
 
         return alertas;
     }

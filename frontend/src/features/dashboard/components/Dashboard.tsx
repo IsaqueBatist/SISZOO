@@ -8,7 +8,11 @@ import { SeloDadosMock } from '@/components/layout/SeloDadosMock'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import type { SeveridadeAlerta } from '@/features/alertas/types/alertas.types'
 import { podeAcessar, type RoleKey } from '@/lib/nav'
-import { useAlertasVacinaisQuery } from '@/features/alertas/hooks/useAlertas'
+import { useAlertasEsterilizacaoQuery, useAlertasVacinaisQuery } from '@/features/alertas/hooks/useAlertas'
+import {
+  formatarTempoDesdeEntrada,
+  HORAS_A_DISPOSICAO_DO_RESPONSAVEL,
+} from '@/features/alertas/utils/tempoDesdeEntrada'
 import { kpisUsamMock } from '../api/dashboardApi'
 import { useKpisDashboardQuery } from '../hooks/useDashboardKpis'
 import { useProcessosUrgentesQuery } from '../hooks/useAlertaProcessosUrgentes'
@@ -132,6 +136,54 @@ function AlertaCriticoVacinas() {
   )
 }
 
+function AlertaEsterilizacaoPendente() {
+  const { data, isLoading, isError, refetch } = useAlertasEsterilizacaoQuery()
+
+  if (isLoading) {
+    return <Skeleton width="100%" height={64} />
+  }
+
+  if (isError) {
+    return (
+      <ErroComRetry mensagem="Não foi possível carregar o alerta de esterilização." onTentarNovamente={refetch} />
+    )
+  }
+
+  const animais = data ?? []
+  if (animais.length === 0) {
+    return null
+  }
+
+  const exibidos = animais.slice(0, RESUMO_MAX_ITENS)
+  const excedente = animais.length - exibidos.length
+
+  return (
+    <div className="alert warning">
+      <span className="bullet" />
+      <div className="alert-content">
+        <Link to="/alertas/esterilizacao" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <strong>
+            {animais.length} {animais.length === 1 ? 'animal' : 'animais'}
+          </strong>{' '}
+          — recolhido{animais.length === 1 ? '' : 's'} há mais de {HORAS_A_DISPOSICAO_DO_RESPONSAVEL} horas sem
+          esterilização
+        </Link>
+        <div className="alert-desc">
+          {exibidos.map((animal, indice) => (
+            <span key={animal.animalId}>
+              <Link to={`/animais/${animal.animalId}`}>{animal.animalNome}</Link> (
+              {formatarTempoDesdeEntrada(animal.horasDesdeEntrada)})
+              {indice < exibidos.length - 1 ? '; ' : ''}
+            </span>
+          ))}
+          {excedente > 0 && <span> e mais {excedente}</span>}{' '}
+          <Link to="/alertas/esterilizacao">ver todos →</Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function AlertaProcessosUrgentes() {
   const { data, isLoading, isError, refetch } = useProcessosUrgentesQuery()
 
@@ -184,7 +236,7 @@ function AlertaProcessosUrgentes() {
   )
 }
 
-const TIPOS_JA_EXIBIDOS_EM_CARD_DEDICADO = new Set(['vacina_vencendo', 'vacina_vencida'])
+const TIPOS_JA_EXIBIDOS_EM_CARD_DEDICADO = new Set(['vacina_vencendo', 'vacina_vencida', 'esterilizacao_72h'])
 
 const TOM_POR_TIPO_DE_ALERTA: Record<string, string> = {
   sem_avaliacao_30d: 'alert-yellow',
@@ -290,6 +342,7 @@ export function Dashboard() {
         <div className="alerts-grid">
           <AlertaCriticoVacinas />
           <AlertaProcessosUrgentes />
+          <AlertaEsterilizacaoPendente />
           {!kpisCarregando &&
             !kpisComErro &&
             alertasCriticos.map((alerta) => <AlertaCriticoGenerico key={alerta.tipo} alerta={alerta} linkBaias={linkBaias} />)}

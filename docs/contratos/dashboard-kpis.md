@@ -50,7 +50,8 @@ Sem parâmetros. "Hoje"/"mês corrente" são calculados no fuso
     { "tipo": "baia_superlotada", "severidade": "critico", "titulo": "...", "descricao": "...", "total": 0 },
     { "tipo": "medicacao_ativa", "severidade": "info", "titulo": "...", "descricao": "...", "total": 1 },
     { "tipo": "ficha_incompleta", "severidade": "info", "titulo": "...", "descricao": "...", "total": 5 },
-    { "tipo": "nao_castrado", "severidade": "info", "titulo": "...", "descricao": "...", "total": 9 }
+    { "tipo": "nao_castrado", "severidade": "info", "titulo": "...", "descricao": "...", "total": 9 },
+    { "tipo": "esterilizacao_72h", "severidade": "atencao", "titulo": "...", "descricao": "...", "total": 2 }
   ]
 }
 ```
@@ -89,6 +90,7 @@ tarefa. Cada entrada sempre aparece, mesmo com `total: 0`.
 | `medicacao_ativa` | Prescrição `ATIVA` com `dataFimPrevista` entre hoje e hoje+7d |
 | `ficha_incompleta` | `Animal.fichaCompleta = false` |
 | `nao_castrado` | `Animal.esterilizado = false` e `status = disponivel_adocao` |
+| `esterilizacao_72h` | `Animal.esterilizado = false`, `dataEntrada` há mais de 72 horas e status sob custódia (fora de óbito, adoção e transferência). Lista em `GET /api/alertas/esterilizacao` (`AlertaEsterilizacaoService`) |
 
 Todos os alertas consideram só animais/baias sob custódia
 (`StatusAnimal.CODIGOS_SOB_CUSTODIA`), exceto `baia_superlotada` (todas as
@@ -135,3 +137,19 @@ O sino **reusa** a chave `['dashboard','kpis']` em vez de declarar consulta
 própria, e por isso não acrescenta requisição nenhuma. Declarar outra consulta
 na mesma chave com `queryFn` diferente faria o cache depender de quem montasse
 primeiro — sino e dashboard passariam a mostrar números diferentes.
+
+### `esterilizacao_72h` (auditoria de conformidade, 02/11/2026)
+
+Oitava entrada do array. Base: Lei estadual nº 12.916/2008, art. 5º (o animal
+recolhido fica 72 horas à disposição do responsável; depois disso, deve ser
+esterilizado). O limite é a constante
+`AlertaEsterilizacaoService.HORAS_A_DISPOSICAO_DO_RESPONSAVEL = 72`, repetida no
+frontend em `features/alertas/utils/tempoDesdeEntrada.ts` para os textos.
+
+- O dashboard conta (`AnimalRepository#countByEsterilizadoFalseAndDataEntradaBeforeAndStatus_CodigoNotIn`);
+  o card e a tela `/alertas/esterilizacao` usam a lista de
+  `GET /api/alertas/esterilizacao` (`GESTAO_ANIMAIS:leitura`), com
+  `horasDesdeEntrada` para o texto "há N dias" e o link para a ficha.
+- `esterilizado = NULL` (não informado) não entra, como em `nao_castrado`.
+- Animais em tratamento ou apreendidos **entram**: o critério de exclusão
+  ainda não foi definido pelo CCZ (ver `regras-negocio-clinico.md`, pendentes).
