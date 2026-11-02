@@ -30,6 +30,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-}
       # Mesmo padrao do application.yml (origem do frontend publicado em 5173).
       SISZOO_CORS_ORIGIN: ${SISZOO_CORS_ORIGIN:-http://localhost:5173}
+      SISZOO_APP_URL: ${SISZOO_APP_URL:-${SISZOO_CORS_ORIGIN:-http://localhost:5173}}
       # Cookie da sessao (docs/decisoes/sessao.md); em HTTPS, Secure=true.
       SISZOO_COOKIE_SECURE: ${SISZOO_COOKIE_SECURE:-false}
       SISZOO_COOKIE_SAMESITE: ${SISZOO_COOKIE_SAMESITE:-Strict}
