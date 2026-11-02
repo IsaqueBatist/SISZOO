@@ -253,7 +253,7 @@ obrigação: a aplicabilidade da Lei nº 13.460/2017, art. 12, V, a denúncias
 sanitárias ficou inconclusiva, e os textos não afirmam que o envio é exigido.
 
 - Quando: encerramento de ocorrência não anônima cujo denunciante tem e-mail.
-  `OcorrenciaService#encerrar` publica `OcorrenciaEncerradaEvent`;
+  `AndamentoOcorrenciaService#encerrar` publica `OcorrenciaEncerradaEvent`;
   `AvisoEncerramentoListener` (`@Async`, depois do commit) chama
   `AvisoEncerramentoService`.
 - Template `email/encerramento-ocorrencia` (HTML e texto), variáveis `nome`,

@@ -128,3 +128,25 @@ citava `claude/prompt_lei_14228_eutanasia.md`, que não existe no repositório.
   diz que o sistema registra o laudo e que a decisão técnica é do veterinário.
 - **Em aberto com o CCZ:** a administradora registra eutanásia? Se sim, precisa do
   cargo de Veterinário e de CRMV cadastrado.
+
+## Divisão do OcorrenciaService (responsabilidade única)
+
+Depois dos itens 3 e 5, o `OcorrenciaService` chegou a 15 dependências no construtor e
+juntava cadastro, andamento (status, encerramento, notas) e vínculos (processo e
+animal). Ele foi dividido sem mudar regra nem contrato da API, seguindo a separação
+que o módulo já tinha (`OcorrenciaConsultaService`, `AnexoOcorrenciaService`,
+`MontadorRespostaOcorrencia`, `AuditoriaSigiloOcorrencia`):
+
+| Classe | Responsabilidade | Dependências |
+| --- | --- | --- |
+| `OcorrenciaService` | criar e editar a ocorrência | 10 |
+| `AndamentoOcorrenciaService` | iniciar atendimento, encerrar (e publicar o evento do aviso), notas internas | 9 |
+| `VinculoOcorrenciaService` | vínculo com processo sanitário e com animal; regras de urgência e de processo pendente que vêm do vínculo | 7 |
+| `PartesOcorrencia` | validação e gravação de denunciante e denunciado | 2 |
+| `RegistroMovimentacaoOcorrencia` | linha do tempo (`movimentacao_ocorrencia`) | 2 |
+| `AuditoriaOcorrencia` | snapshot e evento de auditoria da ocorrência e da nota | 2 |
+
+O cadastro continua com 10 dependências porque criar uma ocorrência de fato toca
+protocolo, catálogo de tipo, autor, partes, animal, linha do tempo, auditoria e
+resposta; reduzir mais exigiria agrupar colaboradores sem afinidade. Fica como
+candidato a revisão se o cadastro crescer.

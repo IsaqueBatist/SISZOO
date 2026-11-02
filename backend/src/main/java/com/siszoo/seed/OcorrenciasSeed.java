@@ -18,6 +18,7 @@ import com.siszoo.ocorrencias.dto.DenunciadoRequest;
 import com.siszoo.ocorrencias.dto.DenuncianteRequest;
 import com.siszoo.ocorrencias.dto.EncerrarOcorrenciaRequest;
 import com.siszoo.ocorrencias.entity.StatusOcorrencia;
+import com.siszoo.ocorrencias.service.AndamentoOcorrenciaService;
 import com.siszoo.ocorrencias.service.AnexoOcorrenciaService;
 import com.siszoo.ocorrencias.service.OcorrenciaService;
 import com.siszoo.ocorrencias.service.PermissoesOcorrencia;
@@ -158,13 +159,16 @@ class OcorrenciasSeed {
 
     private final SeedExecutor executor;
     private final OcorrenciaService ocorrenciaService;
+    private final AndamentoOcorrenciaService andamentoService;
     private final AnexoOcorrenciaService anexoService;
     private final Clock clock;
 
-    OcorrenciasSeed(SeedExecutor executor, OcorrenciaService ocorrenciaService, AnexoOcorrenciaService anexoService,
+    OcorrenciasSeed(SeedExecutor executor, OcorrenciaService ocorrenciaService,
+            AndamentoOcorrenciaService andamentoService, AnexoOcorrenciaService anexoService,
             Clock clock) {
         this.executor = executor;
         this.ocorrenciaService = ocorrenciaService;
+        this.andamentoService = andamentoService;
         this.anexoService = anexoService;
         this.clock = clock;
     }
@@ -179,7 +183,7 @@ class OcorrenciasSeed {
             for (int i = 0; i < plano.notas().size(); i++) {
                 String nota = plano.notas().get(i);
                 executor.garantir(plano.chave() + ":nota:" + (i + 1), "ocorrencia_nota", () -> agente.executar(
-                        ESCRITA, () -> ocorrenciaService.adicionarNota(
+                        ESCRITA, () -> andamentoService.adicionarNota(
                                 id, executor.valido(new CriarNotaRequest(nota)), permissoes).id()));
             }
             if (plano.anexo()) {
@@ -194,12 +198,12 @@ class OcorrenciasSeed {
             };
             if (passaPorAtendimento) {
                 executor.garantir(plano.chave() + ":atendimento", "ocorrencia_status", () -> agente.executar(
-                        ESCRITA, () -> ocorrenciaService.alterarStatus(id, executor.valido(
+                        ESCRITA, () -> andamentoService.alterarStatus(id, executor.valido(
                                 new AlterarStatusOcorrenciaRequest(StatusOcorrencia.EM_ATENDIMENTO)), permissoes).id()));
             }
             if (plano.destino() == Destino.ENCERRADA || plano.destino() == Destino.ENCERRADA_DIRETO) {
                 executor.garantir(plano.chave() + ":encerramento", "ocorrencia_encerramento", () -> agente.executar(
-                        ESCRITA, () -> ocorrenciaService.encerrar(id, executor.valido(new EncerrarOcorrenciaRequest(
+                        ESCRITA, () -> andamentoService.encerrar(id, executor.valido(new EncerrarOcorrenciaRequest(
                                 plano.providencia(), plano.descricaoEncerramento())), permissoes).id()));
             }
         }
@@ -209,7 +213,7 @@ class OcorrenciasSeed {
         UUID id = executor.idObrigatorio(chaveOcorrencia(numero));
         executor.garantir(chaveOcorrencia(numero) + ":encerramento", "ocorrencia_encerramento", () -> {
             PermissoesOcorrencia permissoes = agente.permissoes();
-            return agente.executar(ESCRITA, () -> ocorrenciaService.encerrar(id, executor.valido(
+            return agente.executar(ESCRITA, () -> andamentoService.encerrar(id, executor.valido(
                     new EncerrarOcorrenciaRequest("abertura_processo", "Processo sanitário concluído.")),
                     permissoes).id());
         });

@@ -38,10 +38,12 @@ import com.siszoo.ocorrencias.dto.QuantidadePorBairroResponse;
 import com.siszoo.ocorrencias.dto.VincularAnimalRequest;
 import com.siszoo.ocorrencias.dto.VincularProcessoRequest;
 import com.siszoo.ocorrencias.entity.StatusOcorrencia;
+import com.siszoo.ocorrencias.service.AndamentoOcorrenciaService;
 import com.siszoo.ocorrencias.service.AnexoOcorrenciaService;
 import com.siszoo.ocorrencias.service.OcorrenciaConsultaService;
 import com.siszoo.ocorrencias.service.OcorrenciaService;
 import com.siszoo.ocorrencias.service.PermissoesOcorrencia;
+import com.siszoo.ocorrencias.service.VinculoOcorrenciaService;
 
 import jakarta.validation.Valid;
 
@@ -50,12 +52,17 @@ import jakarta.validation.Valid;
 public class OcorrenciaController {
 
     private final OcorrenciaService ocorrenciaService;
+    private final AndamentoOcorrenciaService andamentoService;
+    private final VinculoOcorrenciaService vinculoService;
     private final OcorrenciaConsultaService consultaService;
     private final AnexoOcorrenciaService anexoService;
 
-    public OcorrenciaController(OcorrenciaService ocorrenciaService, OcorrenciaConsultaService consultaService,
+    public OcorrenciaController(OcorrenciaService ocorrenciaService, AndamentoOcorrenciaService andamentoService,
+            VinculoOcorrenciaService vinculoService, OcorrenciaConsultaService consultaService,
             AnexoOcorrenciaService anexoService) {
         this.ocorrenciaService = ocorrenciaService;
+        this.andamentoService = andamentoService;
+        this.vinculoService = vinculoService;
         this.consultaService = consultaService;
         this.anexoService = anexoService;
     }
@@ -109,35 +116,35 @@ public class OcorrenciaController {
     @PreAuthorize("hasAuthority('OCORRENCIAS_DENUNCIAS:escrita')")
     public OcorrenciaResponse alterarStatus(
             Authentication authentication, @PathVariable UUID id, @Valid @RequestBody AlterarStatusOcorrenciaRequest request) {
-        return ocorrenciaService.alterarStatus(id, request, PermissoesOcorrencia.de(authentication));
+        return andamentoService.alterarStatus(id, request, PermissoesOcorrencia.de(authentication));
     }
 
     @PostMapping("/{id}/encerramento")
     @PreAuthorize("hasAuthority('OCORRENCIAS_DENUNCIAS:escrita')")
     public OcorrenciaResponse encerrar(
             Authentication authentication, @PathVariable UUID id, @Valid @RequestBody EncerrarOcorrenciaRequest request) {
-        return ocorrenciaService.encerrar(id, request, PermissoesOcorrencia.de(authentication));
+        return andamentoService.encerrar(id, request, PermissoesOcorrencia.de(authentication));
     }
 
     @PostMapping("/{id}/processo")
     @PreAuthorize("hasAuthority('OCORRENCIAS_DENUNCIAS:escrita')")
     public OcorrenciaResponse vincularProcesso(
             Authentication authentication, @PathVariable UUID id, @Valid @RequestBody VincularProcessoRequest request) {
-        return ocorrenciaService.vincularProcesso(id, request.processoId(), PermissoesOcorrencia.de(authentication));
+        return vinculoService.vincularProcesso(id, request.processoId(), PermissoesOcorrencia.de(authentication));
     }
 
     @PutMapping("/{id}/animal")
     @PreAuthorize("hasAuthority('OCORRENCIAS_DENUNCIAS:escrita')")
     public OcorrenciaResponse vincularAnimal(
             Authentication authentication, @PathVariable UUID id, @Valid @RequestBody VincularAnimalRequest request) {
-        return ocorrenciaService.vincularAnimal(id, request.animalId(), PermissoesOcorrencia.de(authentication));
+        return vinculoService.vincularAnimal(id, request.animalId(), PermissoesOcorrencia.de(authentication));
     }
 
     @PostMapping("/{id}/notas")
     @PreAuthorize("hasAuthority('OCORRENCIAS_DENUNCIAS:escrita')")
     public OcorrenciaResponse adicionarNota(
             Authentication authentication, @PathVariable UUID id, @Valid @RequestBody CriarNotaRequest request) {
-        return ocorrenciaService.adicionarNota(id, request, PermissoesOcorrencia.de(authentication));
+        return andamentoService.adicionarNota(id, request, PermissoesOcorrencia.de(authentication));
     }
 
     @PostMapping(path = "/{id}/anexos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
