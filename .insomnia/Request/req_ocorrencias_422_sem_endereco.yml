@@ -1,0 +1,38 @@
+_id: "req_ocorrencias_422_sem_endereco"
+type: "Request"
+parentId: "fld_ocorrencias"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/ocorrencias"
+name: "422 - registrar ocorrência sem endereço"
+description: "Endereço, bairro, tipo, data e descrição são obrigatórios."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "tipoOcorrencia": "zoonose",
+      "dataAbertura": "2026-10-01",
+      "bairro": "Vila Progresso",
+      "descricao": "Sem endereço."
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 12000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 422', () => {
+    insomnia.expect(insomnia.response.code).to.equal(422);
+  });

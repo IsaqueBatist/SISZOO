@@ -1,0 +1,36 @@
+_id: "req_ocorrencias_422_encerrar_com_processo_aberto"
+type: "Request"
+parentId: "fld_ocorrencias_vinculo"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/ocorrencias/{{ _.ocorrencia_vinculo_id_exemplo }}/encerramento"
+name: "422 - encerrar ocorrência com processo vinculado em aberto"
+description: "A ocorrência {{ _.ocorrencia_vinculo_id_exemplo }} está ligada a um processo ainda ABERTO: não pode ser encerrada."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "providenciaTomada": "abertura_processo",
+      "descricaoEncerramento": "Tentativa de encerramento."
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 2000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 422', () => {
+    insomnia.expect(insomnia.response.code).to.equal(422);
+  });

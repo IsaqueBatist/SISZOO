@@ -13,7 +13,7 @@ headers: []
 authentication:
   type: "bearer"
   token: "{{ _.token }}"
-metaSortKey: 8000
+metaSortKey: 10000
 isPrivate: false
 pathParameters: []
 settingStoreCookies: true

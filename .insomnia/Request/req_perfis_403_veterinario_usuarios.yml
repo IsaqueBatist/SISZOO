@@ -1,0 +1,28 @@
+_id: "req_perfis_403_veterinario_usuarios"
+type: "Request"
+parentId: "fld_perfis"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/usuarios"
+name: "403 - veterinário não lista usuários"
+description: "Gestão de usuários é exclusiva do Administrador (USUARIOS_ACESSO)."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token_veterinario }}"
+metaSortKey: 8000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 403', () => {
+    insomnia.expect(insomnia.response.code).to.equal(403);
+  });

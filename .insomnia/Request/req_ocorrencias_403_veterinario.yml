@@ -1,0 +1,28 @@
+_id: "req_ocorrencias_403_veterinario"
+type: "Request"
+parentId: "fld_ocorrencias"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/ocorrencias"
+name: "403 - veterinário não acessa ocorrências"
+description: "O Veterinário não tem acesso ao módulo de ocorrências."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token_veterinario }}"
+metaSortKey: 14000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 403', () => {
+    insomnia.expect(insomnia.response.code).to.equal(403);
+  });

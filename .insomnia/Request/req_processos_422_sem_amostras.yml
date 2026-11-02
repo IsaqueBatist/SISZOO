@@ -1,0 +1,41 @@
+_id: "req_processos_422_sem_amostras"
+type: "Request"
+parentId: "fld_processos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/processos"
+name: "422 - abrir processo sem amostras"
+description: "O processo exige ao menos uma amostra."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "dataAbertura": "2026-10-02",
+      "doenca": "raiva",
+      "laboratorio": "ial_sorocaba",
+      "responsavel": {
+        "nome": "Responsável Fictício"
+      },
+      "amostras": []
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 12000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 422', () => {
+    insomnia.expect(insomnia.response.code).to.equal(422);
+  });

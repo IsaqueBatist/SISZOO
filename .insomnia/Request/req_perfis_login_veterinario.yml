@@ -1,0 +1,38 @@
+_id: "req_perfis_login_veterinario"
+type: "Request"
+parentId: "fld_perfis"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/auth/login"
+name: "Login do veterinário de teste"
+description: "Guarda o token em {{ _.token_veterinario }}."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "email": "vera.{{ _.execucao_letras }}@itu.sp.gov.br",
+      "senha": "{{ _.senha_teste_padrao }}"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication: {}
+metaSortKey: 3000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 200', () => {
+    insomnia.expect(insomnia.response.code).to.equal(200);
+  });
+  if (insomnia.response.code === 200) {
+    const corpo = insomnia.response.json();
+    insomnia.environment.set('token_veterinario', corpo.token);
+  }

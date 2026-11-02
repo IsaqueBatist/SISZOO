@@ -1,0 +1,39 @@
+_id: "req_usuarios_409_email_duplicado"
+type: "Request"
+parentId: "fld_usuarios"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/usuarios"
+name: "409 - criar usuário com e-mail já cadastrado"
+description: "Repete o e-mail de \"Criar usuário - caso feliz\"."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "nome": "Ana",
+      "sobrenome": "Duplicada",
+      "email": "ana.{{ _.execucao_letras }}@itu.sp.gov.br",
+      "cargo": "Agente Sanitário",
+      "senhaInicial": "{{ _.senha_teste_padrao }}"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 4000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 409', () => {
+    insomnia.expect(insomnia.response.code).to.equal(409);
+  });

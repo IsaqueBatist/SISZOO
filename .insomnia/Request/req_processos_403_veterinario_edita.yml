@@ -1,0 +1,41 @@
+_id: "req_processos_403_veterinario_edita"
+type: "Request"
+parentId: "fld_processos"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/processos/{{ _.processo_vinculo_id_exemplo }}"
+name: "403 - veterinário não edita registro de processo"
+description: "A edição do registro (PUT) é exclusiva do Administrador."
+method: "PUT"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "doenca": "raiva",
+      "laboratorio": "pasteur_sp",
+      "responsavel": {
+        "nome": "Responsável Fictício"
+      },
+      "amostras": [],
+      "justificativa": "Tentativa de edição sem permissão."
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token_veterinario }}"
+metaSortKey: 14000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 403', () => {
+    insomnia.expect(insomnia.response.code).to.equal(403);
+  });

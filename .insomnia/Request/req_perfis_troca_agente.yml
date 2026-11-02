@@ -1,0 +1,37 @@
+_id: "req_perfis_troca_agente"
+type: "Request"
+parentId: "fld_perfis"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/auth/senha"
+name: "Agente troca a senha temporária"
+description: "Primeiro acesso do agente de teste."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "senhaAtual": "{{ _.senha_teste_padrao }}",
+      "novaSenha": "{{ _.senha_teste_nova }}",
+      "confirmarSenha": "{{ _.senha_teste_nova }}"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token_agente }}"
+metaSortKey: 7000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 204', () => {
+    insomnia.expect(insomnia.response.code).to.equal(204);
+  });

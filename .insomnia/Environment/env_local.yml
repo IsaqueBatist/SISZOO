@@ -30,6 +30,12 @@ data:
   processo_id_exemplo: ''
   processo_vinculo_id_exemplo: ''
   amostra_id_exemplo: ''
+  senha_teste_nova: "OutraSenha456"
+  id_inexistente: "00000000-0000-4000-8000-000000000000"
+  token_veterinario: ''
+  token_agente: ''
+  usuario_veterinario_id_exemplo: ''
+  usuario_agente_id_exemplo: ''
 color: null
 isPrivate: false
 metaSortKey: 1750000000000

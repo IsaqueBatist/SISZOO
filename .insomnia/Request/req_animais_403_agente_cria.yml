@@ -1,0 +1,40 @@
+_id: "req_animais_403_agente_cria"
+type: "Request"
+parentId: "fld_animais"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/animais"
+name: "403 - agente não cadastra animal"
+description: "Cadastro de animal exige GESTAO_ANIMAIS:escrita (Administrador ou Veterinário)."
+method: "POST"
+body:
+  mimeType: "application/json"
+  text: |-
+    {
+      "nome": "Animal do agente",
+      "especie": "canino",
+      "sexo": "macho",
+      "status": "disponivel_adocao",
+      "motivoEntrada": "recolhimento",
+      "dataEntrada": "2026-08-30T09:00:00"
+    }
+parameters: []
+headers:
+  - name: "Content-Type"
+    value: "application/json"
+authentication:
+  type: "bearer"
+  token: "{{ _.token_agente }}"
+metaSortKey: 12000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 403', () => {
+    insomnia.expect(insomnia.response.code).to.equal(403);
+  });

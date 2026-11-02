@@ -1,0 +1,28 @@
+_id: "req_ocorrencias_404_inexistente"
+type: "Request"
+parentId: "fld_ocorrencias"
+modified: 1750000000000
+created: 1750000000000
+url: "{{ _.base_url }}/api/ocorrencias/{{ _.id_inexistente }}"
+name: "404 - buscar ocorrência inexistente"
+description: "Usa {{ _.id_inexistente }}."
+method: "GET"
+body: {}
+parameters: []
+headers: []
+authentication:
+  type: "bearer"
+  token: "{{ _.token }}"
+metaSortKey: 13000
+isPrivate: false
+pathParameters: []
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: "global"
+afterResponseScript: |-
+  insomnia.test('Status 404', () => {
+    insomnia.expect(insomnia.response.code).to.equal(404);
+  });
