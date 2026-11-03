@@ -14,6 +14,8 @@ import com.siszoo.usuarios.entity.Usuario;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -86,6 +88,35 @@ public class Animal {
 
     @Column(name = "laudo_eutanasia", columnDefinition = "text")
     private String laudoEutanasia;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "laudo_eutanasia_responsavel_id")
+    private Usuario laudoEutanasiaResponsavel;
+
+    @Column(name = "laudo_eutanasia_crmv", length = 20)
+    private String laudoEutanasiaCrmv;
+
+    @Column(name = "laudo_eutanasia_metodo", length = 120)
+    private String laudoEutanasiaMetodo;
+
+    @Column(name = "laudo_eutanasia_insensibilizacao_previa")
+    private Boolean laudoEutanasiaInsensibilizacaoPrevia;
+
+    @Column(name = "laudo_eutanasia_registrado_em")
+    private LocalDateTime laudoEutanasiaRegistradoEm;
+
+    @Column(name = "destino_transferencia", length = 200)
+    private String destinoTransferencia;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_destino_transferencia", length = 40)
+    private TipoDestinoTransferencia tipoDestinoTransferencia;
+
+    @Column(name = "data_saida")
+    private LocalDateTime dataSaida;
+
+    @Column(name = "documento_transferencia", length = 120)
+    private String documentoTransferencia;
 
     @Column
     private Boolean esterilizado;

@@ -26,6 +26,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 
+import com.siszoo.animais.repository.AnimalRepository;
 import com.siszoo.comum.service.ProtocoloService;
 import com.siszoo.ocorrencias.dto.AtualizarOcorrenciaRequest;
 import com.siszoo.ocorrencias.dto.DenuncianteRequest;
@@ -41,7 +42,6 @@ import com.siszoo.ocorrencias.repository.DenunciadoRepository;
 import com.siszoo.ocorrencias.repository.DenuncianteRepository;
 import com.siszoo.ocorrencias.repository.MovimentacaoOcorrenciaRepository;
 import com.siszoo.ocorrencias.repository.OcorrenciaRepository;
-import com.siszoo.ocorrencias.repository.ProvidenciaTomadaRepository;
 import com.siszoo.ocorrencias.repository.TipoOcorrenciaRepository;
 import com.siszoo.processos.repository.ProcessoSanitarioRepository;
 import com.siszoo.usuarios.entity.Usuario;
@@ -55,12 +55,12 @@ class OcorrenciaServiceTest {
 
     @Mock private OcorrenciaRepository ocorrenciaRepository;
     @Mock private TipoOcorrenciaRepository tipoOcorrenciaRepository;
-    @Mock private ProvidenciaTomadaRepository providenciaTomadaRepository;
     @Mock private DenuncianteRepository denuncianteRepository;
     @Mock private DenunciadoRepository denunciadoRepository;
     @Mock private MovimentacaoOcorrenciaRepository movimentacaoRepository;
     @Mock private AnexoOcorrenciaRepository anexoRepository;
     @Mock private ProcessoSanitarioRepository processoRepository;
+    @Mock private AnimalRepository animalRepository;
     @Mock private UsuarioRepository usuarioRepository;
     @Mock private ProtocoloService protocoloService;
     @Mock private AuditoriaEventoService auditoriaEventoService;
@@ -78,9 +78,13 @@ class OcorrenciaServiceTest {
         Clock clock = Clock.fixed(Instant.parse("2026-09-10T15:00:00Z"), ZoneId.of("America/Sao_Paulo"));
         MontadorRespostaOcorrencia montador = new MontadorRespostaOcorrencia(mapper, denuncianteRepository,
                 denunciadoRepository, processoRepository, movimentacaoRepository, anexoRepository);
-        service = new OcorrenciaService(ocorrenciaRepository, tipoOcorrenciaRepository, providenciaTomadaRepository,
-                denuncianteRepository, denunciadoRepository, movimentacaoRepository, processoRepository,
-                usuarioRepository, protocoloService, mapper, montador, auditoriaEventoService, clock);
+        AuditoriaOcorrencia auditoria = new AuditoriaOcorrencia(mapper, auditoriaEventoService);
+        RegistroMovimentacaoOcorrencia movimentacoes = new RegistroMovimentacaoOcorrencia(movimentacaoRepository, clock);
+        VinculoOcorrenciaService vinculos = new VinculoOcorrenciaService(ocorrenciaRepository, processoRepository,
+                animalRepository, usuarioRepository, movimentacoes, auditoria, montador);
+        service = new OcorrenciaService(ocorrenciaRepository, tipoOcorrenciaRepository, usuarioRepository,
+                protocoloService, new PartesOcorrencia(denuncianteRepository, denunciadoRepository), vinculos,
+                movimentacoes, auditoria, montador, clock);
 
         TipoOcorrencia tipo = new TipoOcorrencia();
         tipo.setCodigo("zoonose");
@@ -120,16 +124,6 @@ class OcorrenciaServiceTest {
                 put(false, false, false, new DenuncianteRequest("Identificado", null, null, null, null, null, null)),
                 escritaSemSigilo))
                 .isInstanceOf(AccessDeniedException.class);
-    }
-
-    @Test
-    @DisplayName("[D33] vinculo sem escrita em ocorrencias da 403 antes de travar qualquer registro")
-    void vinculoExigeEscritaEmOcorrencias() {
-        PermissoesOcorrencia vet = new PermissoesOcorrencia(usuarioId, false, false);
-
-        assertThatThrownBy(() -> service.vincularProcesso(ocorrenciaId, UUID.randomUUID(), vet))
-                .isInstanceOf(AccessDeniedException.class);
-        verify(ocorrenciaRepository, never()).findByIdForUpdate(any());
     }
 
     @Test

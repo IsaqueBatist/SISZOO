@@ -4,10 +4,21 @@ import {
   CONDICAO_OUTRAS,
   castracaoParaEsterilizado,
   esterilizadoParaCastracao,
+  STATUS_OBITO_EUTANASIA,
+  STATUS_TRANSFERIDO,
   type AnimalFormUiValues,
   type CastracaoOpcao,
 } from '../schemas/animalFormSchema'
-import type { Animal, AnimalRequest, Pelagem, Porte, Sexo } from '../types/animais.types'
+import type {
+  Animal,
+  AnimalRequest,
+  EutanasiaRequest,
+  Pelagem,
+  Porte,
+  Sexo,
+  TipoDestinoTransferencia,
+  TransferenciaRequest,
+} from '../types/animais.types'
 
 export interface RascunhoAnimalValores {
   nome: string
@@ -26,6 +37,12 @@ export interface RascunhoAnimalValores {
   dataImplantacaoChip?: string
   procedencia?: string
   laudoEutanasia?: string
+  tipoDestinoTransferencia?: TipoDestinoTransferencia | ''
+  destinoTransferencia?: string
+  dataSaida?: string
+  documentoTransferencia?: string
+  metodoEutanasia?: string
+  insensibilizacaoPrevia?: boolean
   dataEsterilizacao: string
   status: string
   motivoEntrada: string
@@ -56,6 +73,12 @@ export function valoresVazios(): ValoresIniciaisAnimal {
     dataImplantacaoChip: '',
     procedencia: '',
     laudoEutanasia: '',
+    tipoDestinoTransferencia: '',
+    destinoTransferencia: '',
+    dataSaida: '',
+    documentoTransferencia: '',
+    metodoEutanasia: '',
+    insensibilizacaoPrevia: false,
     castracaoOpcao: 'nao_informado',
     dataEsterilizacao: '',
     status: '',
@@ -84,6 +107,12 @@ export function valoresDeAnimal(animal: Animal): ValoresIniciaisAnimal {
     dataImplantacaoChip: animal.dataImplantacaoChip ?? '',
     procedencia: animal.procedencia ?? '',
     laudoEutanasia: animal.laudoEutanasia ?? '',
+    tipoDestinoTransferencia: animal.tipoDestinoTransferencia ?? '',
+    destinoTransferencia: animal.destinoTransferencia ?? '',
+    dataSaida: animal.dataSaida?.slice(0, 16) ?? '',
+    documentoTransferencia: animal.documentoTransferencia ?? '',
+    metodoEutanasia: animal.laudoEutanasiaMetodo ?? '',
+    insensibilizacaoPrevia: animal.laudoEutanasiaInsensibilizacaoPrevia ?? false,
     castracaoOpcao: esterilizadoParaCastracao(animal.esterilizado, animal.sexo),
     dataEsterilizacao: animal.dataEsterilizacao ?? '',
     status: animal.statusCodigo,
@@ -114,6 +143,12 @@ export function valoresParaRascunho(valores: AnimalFormUiValues, fotoArquivoId: 
     dataImplantacaoChip: valores.dataImplantacaoChip ?? '',
     procedencia: valores.procedencia ?? '',
     laudoEutanasia: valores.laudoEutanasia ?? '',
+    tipoDestinoTransferencia: valores.tipoDestinoTransferencia ?? '',
+    destinoTransferencia: valores.destinoTransferencia ?? '',
+    dataSaida: valores.dataSaida ?? '',
+    documentoTransferencia: valores.documentoTransferencia ?? '',
+    metodoEutanasia: valores.metodoEutanasia ?? '',
+    insensibilizacaoPrevia: valores.insensibilizacaoPrevia ?? false,
     castracaoOpcao: valores.castracaoOpcao,
     dataEsterilizacao: valores.dataEsterilizacao ?? '',
     status: valores.status,
@@ -144,6 +179,12 @@ export function rascunhoParaValores(rascunho: RascunhoAnimalValores, fotoUrlAtua
     dataImplantacaoChip: rascunho.dataImplantacaoChip || undefined,
     procedencia: rascunho.procedencia || undefined,
     laudoEutanasia: rascunho.laudoEutanasia || undefined,
+    tipoDestinoTransferencia: rascunho.tipoDestinoTransferencia || undefined,
+    destinoTransferencia: rascunho.destinoTransferencia || undefined,
+    dataSaida: rascunho.dataSaida || undefined,
+    documentoTransferencia: rascunho.documentoTransferencia || undefined,
+    metodoEutanasia: rascunho.metodoEutanasia || undefined,
+    insensibilizacaoPrevia: rascunho.insensibilizacaoPrevia ?? false,
     castracaoOpcao: rascunho.castracaoOpcao,
     dataEsterilizacao: rascunho.dataEsterilizacao || undefined,
     status: rascunho.status,
@@ -162,7 +203,38 @@ function dataEntradaParaEnvio(dataDoForm: string, original?: string): string {
   return `${dataDoForm}T00:00:00`
 }
 
-export function paraAnimalRequest(dados: AnimalFormUiValues, dataEntradaOriginal?: string): AnimalRequest {
+type RegistroOriginal = Pick<Animal, 'dataSaida' | 'documentoTransferencia' | 'laudoEutanasia'>
+
+function transferenciaParaEnvio(
+  dados: AnimalFormUiValues,
+  original?: RegistroOriginal,
+): TransferenciaRequest | undefined {
+  if (original?.dataSaida) {
+    const documento = dados.documentoTransferencia?.trim()
+    return !original.documentoTransferencia && documento ? { documento } : undefined
+  }
+  if (dados.status !== STATUS_TRANSFERIDO) return undefined
+  return {
+    tipoDestino: dados.tipoDestinoTransferencia,
+    destino: dados.destinoTransferencia,
+    dataSaida: dados.dataSaida ? `${dados.dataSaida.slice(0, 16)}:00` : undefined,
+    documento: dados.documentoTransferencia || undefined,
+  }
+}
+
+function eutanasiaParaEnvio(dados: AnimalFormUiValues, original?: RegistroOriginal): EutanasiaRequest | undefined {
+  if (original?.laudoEutanasia || dados.status !== STATUS_OBITO_EUTANASIA) return undefined
+  return {
+    metodo: dados.metodoEutanasia || undefined,
+    insensibilizacaoPrevia: dados.insensibilizacaoPrevia === true,
+  }
+}
+
+export function paraAnimalRequest(
+  dados: AnimalFormUiValues,
+  dataEntradaOriginal?: string,
+  registroOriginal?: RegistroOriginal,
+): AnimalRequest {
   return {
     nome: dados.nome,
     especie: dados.especie,
@@ -189,6 +261,8 @@ export function paraAnimalRequest(dados: AnimalFormUiValues, dataEntradaOriginal
     observacoes: dados.observacoes,
     condicoes: dados.condicoes,
     condicoesOutras: dados.condicoes.includes(CONDICAO_OUTRAS) ? dados.condicoesOutras : undefined,
+    transferencia: transferenciaParaEnvio(dados, registroOriginal),
+    eutanasia: eutanasiaParaEnvio(dados, registroOriginal),
   }
 }
 

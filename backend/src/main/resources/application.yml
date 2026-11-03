@@ -53,6 +53,8 @@ siszoo:
     cookie-same-site: ${SISZOO_COOKIE_SAMESITE:Strict}
   notificacoes:
     remetente: ${SISZOO_MAIL_FROM:nao-responda@itu.sp.gov.br}
+  ocorrencia:
+    aviso-encerramento: ${SISZOO_AVISO_ENCERRAMENTO:true}
   app:
     url: ${SISZOO_APP_URL:${SISZOO_CORS_ORIGIN:http://localhost:5173}}
   login:

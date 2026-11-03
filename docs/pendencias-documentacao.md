@@ -22,7 +22,7 @@ Notas de divergências entre o código real e os documentos de modelagem, regist
 
 - **Seed oficial criava ocorrências encerradas antes da abertura** (tempo médio negativo no relatório "Ocorrências por
   Bairro", `docs/tg/analise_fase3/relatorio_fase4.md` P4-06) — o `scripts/seed-test-data.mjs` foi substituído em
-  25/10/2026 pelo seed Java (`com.siszoo.seed`), que encerra pelo `OcorrenciaService` com o Clock: o encerramento nunca é
+  25/10/2026 pelo seed Java (`com.siszoo.seed`), que encerra pelo `AndamentoOcorrenciaService` com o Clock: o encerramento nunca é
   anterior ao registro (`docs/decisoes/seed-dev.md`).
 
 - **`AcaoAuditoria` sem `VISUALIZACAO` no DBML** — resolvida na T43 (`VISUALIZACAO`, `ACESSO_NEGADO`, `entidade_id`).

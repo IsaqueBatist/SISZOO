@@ -1,0 +1,5 @@
+ALTER TABLE auditoria_evento DROP CONSTRAINT ck_auditoria_evento_acao;
+ALTER TABLE auditoria_evento ADD CONSTRAINT ck_auditoria_evento_acao CHECK (acao IN (
+    'CRIACAO', 'ATUALIZACAO', 'DESATIVACAO', 'REATIVACAO', 'LOGIN', 'LOGOUT', 'EXPORTACAO', 'ENCERRAMENTO',
+    'VISUALIZACAO', 'ACESSO_NEGADO', 'SESSAO_REVOGADA', 'NOTIFICACAO'
+));

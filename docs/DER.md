@@ -4,7 +4,7 @@
 
 > Documento de referência derivado das **15 telas + Design System** do protótipo navegável. Use-o para comparar com seu schema atual e validar cobertura.
 
-> **Estado do schema (V34, 01/11/2026).** Todas as tabelas descritas nas seções 3.1 a 3.8 existem **como nas migrations** (`backend/src/main/resources/db/migration`, V1–V34), salvo as marcadas como **modelo-alvo**: `adocao` (§3.2), `documento_processo` (§3.5) e os anexos por registro clínico (`anexo_vacinacao`, `anexo_procedimento`, `anexo_exame`), além de `vacina_especie` e `animal_sintoma` dos DBML antigos - todos decididos como **trabalho futuro** no alinhamento com o TG (`docs/decisoes/alinhamento-tg.md`, AT-7, AT-8, AT-13). Histórico das migrations: V11 corrige a matriz de permissões (§3.1); V12 acrescenta `VISUALIZACAO` (§3.8); V13 completa o processo sanitário (T29); V14/V15 criam e garantem o histórico de resultados (T34); V16 normaliza o microchip; V17 recusa a exclusão de registros críticos; V18 recalcula `ficha_completa`; V19 índices do dashboard; V20 `relatorio_gerado` (§3.6, T41); V21 `positivo` definitivo + `data_notificacao_municipe`; V22 código do catálogo de resultado imutável; **V23** `numero_medalha`, `data_implantacao_chip`, `procedencia` (§3.2, AT-6); **V24** `laudo_eutanasia` (§3.2, AT-7); **V25** `tipo_exame` e `exame` (§3.2, AT-8); **V26** `anexo_animal` + `anexo_animal_conteudo` (§3.2, AT-8); **V27** `ACESSO_NEGADO` e `auditoria_evento` imutável (§3.8, T43); **V28** `animal.foto_miniatura` (T45); **V29** `sessao_usuario` e `SESSAO_REVOGADA` (§3.1, `decisoes/sessao.md`); **V30** permissão `edicao_registro` de processos ao Administrador; **V31** castração e contato humano "não informado"; **V32** relatório de ocorrências por bairro; **V33** `condicao_saude` e `animal_condicao_saude` (§3.2); **V34** `token_recuperacao_senha` (§3.1, `decisoes/recuperacao-senha.md`).
+> **Estado do schema (V38, 02/11/2026).** Todas as tabelas descritas nas seções 3.1 a 3.8 existem **como nas migrations** (`backend/src/main/resources/db/migration`, V1–V38), salvo as marcadas como **modelo-alvo**: `adocao` (§3.2), `documento_processo` (§3.5) e os anexos por registro clínico (`anexo_vacinacao`, `anexo_procedimento`, `anexo_exame`), além de `vacina_especie` e `animal_sintoma` dos DBML antigos - todos decididos como **trabalho futuro** no alinhamento com o TG (`docs/decisoes/alinhamento-tg.md`, AT-7, AT-8, AT-13). Histórico das migrations: V11 corrige a matriz de permissões (§3.1); V12 acrescenta `VISUALIZACAO` (§3.8); V13 completa o processo sanitário (T29); V14/V15 criam e garantem o histórico de resultados (T34); V16 normaliza o microchip; V17 recusa a exclusão de registros críticos; V18 recalcula `ficha_completa`; V19 índices do dashboard; V20 `relatorio_gerado` (§3.6, T41); V21 `positivo` definitivo + `data_notificacao_municipe`; V22 código do catálogo de resultado imutável; **V23** `numero_medalha`, `data_implantacao_chip`, `procedencia` (§3.2, AT-6); **V24** `laudo_eutanasia` (§3.2, AT-7); **V25** `tipo_exame` e `exame` (§3.2, AT-8); **V26** `anexo_animal` + `anexo_animal_conteudo` (§3.2, AT-8); **V27** `ACESSO_NEGADO` e `auditoria_evento` imutável (§3.8, T43); **V28** `animal.foto_miniatura` (T45); **V29** `sessao_usuario` e `SESSAO_REVOGADA` (§3.1, `decisoes/sessao.md`); **V30** permissão `edicao_registro` de processos ao Administrador; **V31** castração e contato humano "não informado"; **V32** relatório de ocorrências por bairro; **V33** `condicao_saude` e `animal_condicao_saude` (§3.2); **V34** `token_recuperacao_senha` (§3.1, `decisoes/recuperacao-senha.md`); **V35** `ocorrencia.animal_id` (§3.3, `decisoes/conformidade-auditoria.md`); **V36** destino da transferência do animal (§3.2); **V37** ação de auditoria `NOTIFICACAO` (§3.8); **V38** responsável técnico do laudo de eutanásia e feature `eutanasia` (§3.1, §3.2).
 
 **Convenções**
 
@@ -145,6 +145,7 @@ erDiagram
 - Apenas cargo `Administrador` pode criar / desativar usuários.
 - Veterinário **não acessa** o módulo de ocorrências e denúncias (nem leitura) nem os agregados por bairro dos relatórios (V32, `decisoes-funcionais.md`): todos os endpoints de `/api/ocorrencias` respondem 403, e o front oculta o menu e bloqueia as rotas (V11).
 - Dados de denunciante em ocorrências sigilosas: só quem tem a permissão `OCORRENCIAS_DENUNCIAS:denunciante_sigiloso:leitura` - Administrador e Agente Sanitário (V10).
+- Registro do laudo de eutanásia: só quem tem `GESTAO_ANIMAIS:eutanasia:escrita` (feature `eutanasia`, só o Veterinário, V38) **e** CRMV preenchido; Administrador sem o cargo de Veterinário não registra (403), mesmo com CRMV (§3.2, `decisoes/conformidade-auditoria.md`).
 - Nenhum usuário, incluindo Administrador, pode desativar a si mesmo (bloqueado no backend, HTTP 422).
 
 #### `cargo`
@@ -186,6 +187,7 @@ A feature `geral` gera a autoridade do módulo inteiro (`MODULO:leitura|escrita|
 | Módulo      | Admin | Vet | Agente |
 | ----------- | ----- | --- | ------ |
 | animais     | RWD   | RW  | R      |
+| animais: eutanásia (feature `eutanasia`, V38) | - | W | - |
 | ocorrencias | RWD   | -   | RW     |
 | processos   | RWD   | RW  | RW     |
 | relatorios  | R     | R   | R      |
@@ -253,7 +255,16 @@ A feature `geral` gera a autoridade do módulo inteiro (`MODULO:leitura|escrita|
 | `numero_medalha`        | varchar(30)         | ?      | Plaqueta de identificação. Único quando informado (`uq_animal_numero_medalha`, parcial, V23); normalizado sem espaços; vazio = NULL (AT-6) |
 | `data_implantacao_chip` | date                | ?      | Data em que o chip foi implantado (RN01). `CHECK ck_animal_implantacao_exige_microchip` (só com `microchip`); não futura pelo `Clock` (V23) |
 | `procedencia`           | varchar(200)        | ?      | Origem do animal na entrada, texto livre, complementar a `motivo_entrada` (V23) |
-| `laudo_eutanasia`       | text                | ?      | Laudo do responsável técnico (Lei nº 14.228/2021). **Obrigatório só na transição** para `obito_eutanasia` (criação nesse status ou edição que muda para ele), validado no `AnimalService`, sem `CHECK` - registros anteriores à V24 continuam válidos; laudo gravado é mantido se a edição vier sem o campo (AT-7) |
+| `laudo_eutanasia`       | text                | ?      | Laudo do responsável técnico (Lei nº 14.228/2021). **Obrigatório só na transição** para `obito_eutanasia` (criação nesse status ou edição que muda para ele), validado no `AnimalService` - registros anteriores à V24 continuam válidos; laudo gravado é mantido se a edição vier sem o campo e não pode ser alterado (AT-7, V38) |
+| `laudo_eutanasia_responsavel_id` | FK `usuario` | ?   | V38: veterinário que registrou o laudo; `ON DELETE RESTRICT`                        |
+| `laudo_eutanasia_crmv`  | varchar(20)         | ?      | V38: CRMV copiado de `usuario.crmv` no registro; não acompanha mudanças posteriores |
+| `laudo_eutanasia_metodo` | varchar(120)       | ?      | V38: método informado pelo responsável técnico                                      |
+| `laudo_eutanasia_insensibilizacao_previa` | boolean | ? | V38: só `true` é aceito (Lei estadual nº 11.977/2005, art. 12, parágrafo único)   |
+| `laudo_eutanasia_registrado_em` | timestamp   | ?      | V38: momento do registro, pelo `Clock` do servidor                                  |
+| `tipo_destino_transferencia` | varchar(40)    | ?      | V36: `ORGAO_PUBLICO`, `ENTIDADE_PROTECAO`, `OUTRO_CCZ`, `OUTRO` (`CHECK`); sem tipo "adotante" nem destino para experimentação |
+| `destino_transferencia` | varchar(200)        | ?      | V36: órgão ou entidade que recebeu o animal                                         |
+| `data_saida`            | timestamp           | ?      | V36: saída do animal na transferência; não futura nem anterior à entrada           |
+| `documento_transferencia` | varchar(120)      | ?      | V36: número do ofício ou referência ao anexo do animal; opcional                    |
 | `foto_miniatura`        | text                | ?      | Miniatura da foto para as listagens (V28, T45) |
 | `condicoes_outras`      | varchar(500)        | ?      | Texto de "Outras"; as demais condições ficam em `animal_condicao_saude` (V33, catálogo `condicao_saude`) |
 | `esterilizado`          | boolean             | ?      | `true` sim, `false` não, `NULL` não informado (V31, `decisoes-funcionais.md`)       |
@@ -271,11 +282,14 @@ A feature `geral` gera a autoridade do módulo inteiro (`MODULO:leitura|escrita|
 
 **Regras**
 
-- Animal sai do canil **pela mudança de `status_id`** (`adotado`, `obito_natural`, `obito_eutanasia`, `transferido`); **não existe `data_saida`** nem registro do adotante (`adocao` é modelo-alvo - AT-7/AT-13; o TG descreve a ausência da data de saída como limitação).
+- Animal sai do canil **pela mudança de `status_id`** (`adotado`, `obito_natural`, `obito_eutanasia`, `transferido`). Não há registro do adotante (`adocao` é modelo-alvo - AT-7/AT-13). `data_saida` existe só para a transferência (V36).
+- **Transferência** (Portaria MS 1.138/2014, inc. XIII; Lei estadual nº 11.977/2005, art. 31): ao entrar em `transferido`, `tipo_destino_transferencia`, `destino_transferencia` e `data_saida` são obrigatórios e `documento_transferencia` é opcional (422 com o campo, `AnimalService#aplicarTransferencia`); `CHECK` no banco exige os três juntos. A vaga da baia é liberada porque `transferido` está fora da custódia. Depois de registrada, a transferência é **imutável**: alterar tipo, destino ou data dá 422 (`TransferenciaImutavelException`); só o documento pode ser informado se ficou vazio. A regra fica no serviço, porque o projeto não tem imutabilidade genérica por campo. Animais que já estavam `transferido` antes da V36 continuam válidos sem destino.
+- **Laudo de eutanásia com responsável técnico** (Lei nº 14.228/2021, art. 2º, § 1º; Lei estadual nº 11.977/2005, art. 12, parágrafo único; V38): ao entrar em `obito_eutanasia` (ou ao preencher o laudo de um registro antigo que ficou sem ele), o autor precisa da autoridade `GESTAO_ANIMAIS:eutanasia:escrita` e de CRMV preenchido, senão 403 (`EutanasiaSemResponsavelTecnicoException`). Laudo, método e insensibilização prévia são obrigatórios (422 com o campo); `insensibilizacao_previa = false` é recusado. O serviço grava responsável, CRMV copiado e data do registro (`AnimalService#aplicarLaudoEutanasia`); o `CHECK ck_animal_laudo_eutanasia_completo` exige os campos juntos. Depois de gravado, o laudo é **imutável** (422, `LaudoEutanasiaImutavelException`); edição sem o laudo mantém o que foi gravado. Laudos anteriores à V38 continuam sem responsável e também não mudam.
 - Cadastro e edição do animal geram evento de auditoria `CRIACAO`/`ATUALIZACAO` com snapshot antes/depois (`AnimalService`, AT-5, `AuditoriaAnimaisBaiasIT`).
 - `baia_id` deve apontar para baia **ativa** com `atual_ocupacao < capacidade`. Implementado em `AnimalService#resolverBaia` (409 "Baia informada esta inativa" / "Baia informada ja atingiu a capacidade"), conferido **só quando o animal passa a ocupar a baia**: cadastro, troca de baia ou volta à custódia, e só se o status novo for de custódia. Quem já ocupa a baia não é barrado por ela ter sido desativada ou ter tido a capacidade reduzida depois (o `BaiaService` permite as duas coisas com animais dentro). Quem passa a ocupar trava a linha da baia (`BaiaRepository#findByIdForUpdate`) até o commit, então cadastros simultâneos não passam da capacidade (`BaiaConcorrenciaIT`). Não há "alerta gerado se ultrapassar": o cadastro é recusado. Decisões: `docs/decisoes/animais-clinico-correcoes.md` (AC-3, AC-4).
 - `ficha_completa` (`FichaCompletaService#calcular`): microchip com texto **e** ao menos uma vacinação que nenhuma outra retifica - equivale a "ao menos 1 vacinação registrada"; não considera validade/vencimento. Recalculada no cadastro e na edição do animal e a cada vacinação. A V18 recalcula os dados existentes (antes, só o microchip contava). Decisão: AC-5.
 - Datas do animal não podem ser futuras (entrada, nascimento, castração); nascimento não pode ser posterior à entrada; data de castração só com `esterilizado = true` (422 com `campos`). Decisão: AC-6.
+- Procedimento `castracao` marca `esterilizado = true` e `data_esterilizacao` = data do procedimento na mesma transação, com auditoria do animal; animal já esterilizado mantém a data gravada, salvo se estava vazia ou se a castração registrada é anterior (`ProcedimentoService`, RN-AN05).
 
 #### `especie` (catálogo)
 
@@ -492,6 +506,7 @@ Sem seed (nem de medicamento): o CCZ cadastra os reais. `GET /api/categorias-far
 | `descricao_encerramento` | text                    | ?      | obrigatório quando providência = `outro`                                      |
 | `encerrada_em`           | timestamp               | ?      | data de negócio, gravada pelo servidor com o `Clock` do projeto               |
 | `encerrada_por_id`       | FK `usuario`            | ?      | `ON DELETE RESTRICT`                                                          |
+| `animal_id`              | FK `animal`             | ?      | animal recolhido (V35); índice único: uma ocorrência por animal e um animal por ocorrência |
 | `criado_em`              | timestamp               | \*     |                                                                               |
 | `atualizado_em`          | timestamp               | \*     |                                                                               |
 
@@ -500,6 +515,9 @@ Sem seed (nem de medicamento): o CCZ cadastra os reais. `GET /api/categorias-far
 `CHECK` de encerramento: os campos de encerramento existem se, e somente se, a ocorrência está encerrada - `ENCERRADA` exige `providencia_tomada_id`, `encerrada_em` e `encerrada_por_id`; os demais status exigem os três nulos e `descricao_encerramento` nula.
 
 **Regras**
+
+- **Animal recolhido** (`animal_id`, V35): opcional, definido na criação (`animalId` em `POST /api/ocorrencias`) ou depois (`PUT /api/ocorrencias/{id}/animal`, `OCORRENCIAS_DENUNCIAS:escrita`), com auditoria `ATUALIZACAO` (antes/depois com `animalId`). Em ocorrência aberta ou em atendimento o animal pode ser trocado; em ocorrência **encerrada** só pode ser definido se ainda estiver vazio, uma única vez (409 na troca) - exceção à regra de que encerrada não se edita, porque o animal costuma ser cadastrado no canil depois do encerramento com "Captura e remoção" (`docs/decisoes/conformidade-auditoria.md`). Animal inexistente dá 404; animal já vinculado a outra ocorrência dá 409. A ficha do animal lê a origem em `GET /api/animais/{id}/origem` (`GESTAO_ANIMAIS:leitura`): em ocorrência sigilosa só protocolo; nunca dados do denunciante. 1:1 por enquanto; ninhada (vários animais por ocorrência) vira tabela N:N se o CCZ precisar.
+- **Aviso ao denunciante no encerramento** (boa prática; a aplicabilidade da Lei nº 13.460/2017, art. 12, V, a denúncias sanitárias ficou inconclusiva): se a ocorrência não é anônima e o denunciante tem e-mail, o encerramento dispara um e-mail com protocolo, data de encerramento e providência adotada - nunca endereço ou nome do denunciado nem o texto da denúncia. Envio assíncrono depois do commit; falha de SMTP não desfaz o encerramento e fica em `auditoria_evento` (§3.8). Desligável por `siszoo.ocorrencia.aviso-encerramento` (`SISZOO_AVISO_ENCERRAMENTO`).
 
 - **Status** só muda pelos endpoints de status e de encerramento, e toda mudança grava uma linha em `movimentacao_ocorrencia` na mesma transação. Transições permitidas:
 
@@ -850,7 +868,7 @@ Um sintoma aparece no máximo uma vez por amostra (a API ignora códigos repetid
 
 | Campo         | Tipo      | Observações                                                                                                                         |
 | ------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `tipo_alerta` | enum      | `vacina_vencendo`, `vacina_vencida`, `sem_avaliacao_30d`, `baia_superlotada`, `medicacao_ativa`, `ficha_incompleta`, `nao_castrado` |
+| `tipo_alerta` | enum      | `vacina_vencendo`, `vacina_vencida`, `sem_avaliacao_30d`, `baia_superlotada`, `medicacao_ativa`, `ficha_incompleta`, `nao_castrado`, `esterilizacao_72h` |
 | `severidade`  | enum      | `info`, `atencao`, `critico`                                                                                                        |
 | `titulo`      | string    | "5 vacinas vencem em 7 dias"                                                                                                        |
 | `descricao`   | string    |                                                                                                                                     |
@@ -874,6 +892,7 @@ Um sintoma aparece no máximo uma vez por amostra (a API ignora códigos repetid
 - `medicacao_ativa`: `prescricao WHERE status = 'ATIVA' AND data_fim_prevista BETWEEN now() AND now() + 7d`
 - `ficha_incompleta`: `animal WHERE ficha_completa = false`
 - `nao_castrado`: `animal WHERE esterilizado = false AND status = 'disponivel_adocao'` (`NULL`, não informado, não entra)
+- `esterilizacao_72h`: `animal WHERE esterilizado = false AND data_entrada < now() - 72h AND status NOT IN (adotado, obito_natural, obito_eutanasia, transferido)` - Lei estadual nº 12.916/2008, art. 5º; lista em `GET /api/alertas/esterilizacao` (`AlertaEsterilizacaoService`, constante `HORAS_A_DISPOSICAO_DO_RESPONSAVEL`). Animais em tratamento ou apreendidos entram até o CCZ definir o critério.
 
 **Implementado (T38)** em `GET /api/dashboard/kpis` (`DashboardService#calcularAlertas`,
 `docs/contratos/dashboard-kpis.md`): `vacina_vencendo`/`vacina_vencida` reaproveitam
@@ -896,7 +915,7 @@ consideram só quem está sob custódia (`StatusAnimal.CODIGOS_SOB_CUSTODIA`), e
 | ---------------- | ------------ | ------ | ------------------------------------------------------------------------------------------------- |
 | `id`             | uuid PK      | \*     |
 | `usuario_id`     | FK `usuario` | ?      | nulo se o usuário for excluído (ON DELETE SET NULL)                                                |
-| `acao`           | enum         | \*     | `CRIACAO`, `ATUALIZACAO`, `DESATIVACAO`, `REATIVACAO`, `LOGIN`, `LOGOUT`, `EXPORTACAO`, `ENCERRAMENTO`, `VISUALIZACAO` (V12), `ACESSO_NEGADO` (V27) · `varchar(20)` + `CHECK ck_auditoria_evento_acao` |
+| `acao`           | enum         | \*     | `CRIACAO`, `ATUALIZACAO`, `DESATIVACAO`, `REATIVACAO`, `LOGIN`, `LOGOUT`, `EXPORTACAO`, `ENCERRAMENTO`, `VISUALIZACAO` (V12), `ACESSO_NEGADO` (V27), `SESSAO_REVOGADA` (V29), `NOTIFICACAO` (V37) · `varchar(20)` + `CHECK ck_auditoria_evento_acao` |
 | `entidade`       | varchar(100) | \*     | nome da tabela do registro auditado (ex.: `ocorrencia`, `anexo_ocorrencia`, `denunciante`, `usuario`) |
 | `entidade_id`    | uuid         | ?      | id do registro de `entidade` (V9). Polimórfica, **sem FK**: o alvo é o par (`entidade`, `entidade_id`). Nula nos eventos anteriores à V9 (sem backfill) |
 | `payload_antes`  | jsonb        | ?      | snapshot pré-alteração (estado gravado antes da operação)                                          |
@@ -912,6 +931,7 @@ consideram só quem está sob custódia (`StatusAnimal.CODIGOS_SOB_CUSTODIA`), e
 - **Login (T43):** `LOGIN` só no login bem-sucedido (`AuthService.login`, um evento por login, sem payload). Login recusado não gera evento (decisão T43-5). `POST /api/auth/logout` emite `LOGOUT` (sessões, V29). Reuso de token de renovação emite `SESSAO_REVOGADA` em `sessao_usuario`, com o motivo no payload. Redefinir a senha pelo link de recuperação (V34) emite `ATUALIZACAO` em `usuario` com `senhaAlteradaEm` e `recuperacaoPorEmail: true`; a solicitação do link não gera evento.
 - **Exportação (T43, `EXPORTACAO`):** `POST /api/relatorios/exportar` bem-sucedido → `entidade = 'relatorio_gerado'`, `entidade_id` = id da linha de `relatorio_gerado` (§3.6), `payload_depois = {docId, tipoRelatorio, formato, periodoInicio, periodoFim, tamanhoBytes}` - nunca o conteúdo do arquivo. Mesma transação: se o evento falha, a resposta é 500 sem o arquivo e sem `relatorio_gerado`.
 - **Nota interna (T43):** `POST /api/ocorrencias/{id}/notas` → `CRIACAO` em `movimentacao_ocorrencia` (id da movimentação), `payload_depois = {ocorrenciaId, tipoMovimentacao}` - sem o texto da nota (texto livre, que pode citar dado pessoal e já fica imutável na própria movimentação).
+- **Aviso de encerramento (V37, `NOTIFICACAO`):** depois do commit do encerramento de uma ocorrência não anônima cujo denunciante tem e-mail, `AvisoEncerramentoService` envia o aviso e registra o resultado com `entidade = 'aviso_encerramento_ocorrencia'`, `entidade_id` = id da ocorrência e `payload_depois = {protocolo, destinatario (mascarado), resultado}`, com `resultado` `ENVIADO`, `FALHA` ou `NAO_SUBMETIDO`. Não há evento quando nada é enviado (anônima, sem e-mail ou `siszoo.ocorrencia.aviso-encerramento=false`).
 - **Imutabilidade (V27, T43):** triggers recusam `UPDATE`, `DELETE` e `TRUNCATE` em `auditoria_evento` com `check_violation` (23514, `ck_auditoria_evento_imutavel`), para qualquer usuário e caminho. Única exceção: a ação `ON DELETE SET NULL` de `usuario_id` - o `UPDATE` só passa se `usuario_id` vai de um valor para nulo, nenhuma outra coluna muda, o usuário já não existe e o comando vem de dentro de um trigger (a ação referencial). Quem é dono das tabelas (ou superusuário) ainda pode desabilitar os triggers; hoje a aplicação conecta com esse mesmo usuário - recomendação de roles em `docs/decisoes/T43.md` (T43-13).
 - **Leitura:** `GET /api/auditoria` e `/filtros` exigem `USUARIOS_ACESSO:leitura` (só o Administrador); a aplicação não altera nem exclui eventos. **Filtros de servidor (AT-9, 22/10/2026):** `acao`, `entidade`, `usuarioEmail`, `modulo`, `de`, `ate` (datas ISO, dias inclusivos), combináveis, por `Specification`; `GET /api/auditoria/filtros` devolve ações, entidades e usuários distintos. O filtro por módulo usa o mapa `ENTIDADES_POR_MODULO`: `USUARIOS_ACESSO` → usuario, preferencia_usuario; `GESTAO_ANIMAIS` → animal, baia, vacinacao, procedimento, prescricao, medicamento, exame, anexo_animal; `OCORRENCIAS_DENUNCIAS` → ocorrencia, denunciante, anexo_ocorrencia, movimentacao_ocorrencia; `PROCESSOS_SANITARIOS` → processo_sanitario; `RELATORIOS` → relatorio_gerado. A tela de Logs (`/logs`, T26 do TG) usa esses filtros. Teste: `AuditoriaFiltrosIT`.
 - **Animais e baias (AT-5):** `CRIACAO`/`ATUALIZACAO` de `animal` e `CRIACAO`/`ATUALIZACAO`/`DESATIVACAO`/`REATIVACAO` de `baia` geram evento com snapshot (sem dado pessoal), além de `exame` e `anexo_animal` (AT-8).
@@ -1035,8 +1055,8 @@ consideram só quem está sob custódia (`StatusAnimal.CODIGOS_SOB_CUSTODIA`), e
 
 33. O Agente Sanitário **mantém** `GESTAO_ANIMAIS:leitura` no banco (`cargo_permissao`, V3), mas **não tem o módulo
     de animais na interface**: o item "Animais" sai do menu lateral e o guard `RotaLeituraAnimais` (front) barra
-    `/animais`, `/animais/:id` e `/alertas/vacinas`, redirecionando para `/dashboard`. A leitura na API é preservada
-    porque o formulário de processo sanitário busca animais do canil por `GET /api/animais` (amostra com
+    `/animais`, `/animais/:id`, `/alertas/vacinas` e `/alertas/esterilizacao`, redirecionando para `/dashboard`. A leitura na API é preservada
+    porque o formulário de processo sanitário e o card "Animal recolhido" da ocorrência buscam animais do canil por `GET /api/animais` (amostra com
     `origem = canil`), fluxo que o Agente executa. **Consequência a declarar:** este limite é de interface, não de
     API - o JWT do Agente continua autorizando `GET /api/animais` e `GET /api/animais/{id}`, então não é um controle
     de sigilo. Um limite real exigiria uma feature própria em `cargo_permissao`

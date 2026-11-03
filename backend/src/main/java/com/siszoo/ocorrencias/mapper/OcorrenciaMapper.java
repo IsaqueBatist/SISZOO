@@ -6,7 +6,9 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
+import com.siszoo.animais.entity.Animal;
 import com.siszoo.ocorrencias.dto.AnexoOcorrenciaResponse;
+import com.siszoo.ocorrencias.dto.AnimalVinculadoResponse;
 import com.siszoo.ocorrencias.dto.DenunciadoResponse;
 import com.siszoo.ocorrencias.dto.DenuncianteResponse;
 import com.siszoo.ocorrencias.dto.MovimentacaoOcorrenciaResponse;
@@ -44,6 +46,11 @@ public interface OcorrenciaMapper {
         return usuario == null ? null : usuario.nomeCompleto();
     }
 
+    default AnimalVinculadoResponse animalVinculado(Ocorrencia ocorrencia) {
+        Animal animal = ocorrencia.getAnimal();
+        return animal == null ? null : new AnimalVinculadoResponse(animal.getId(), animal.getNome(), animal.getMicrochip());
+    }
+
     default DenuncianteResponse denuncianteVisivel(Ocorrencia ocorrencia, Denunciante denunciante, boolean podeVerSigilo) {
         if (denunciante == null) {
             return null;
@@ -79,6 +86,7 @@ public interface OcorrenciaMapper {
                 ocorrencia.getEncerradaEm(),
                 nomeCompleto(ocorrencia.getEncerradaPor()),
                 processo == null ? null : toProcessoVinculadoResponse(processo),
+                animalVinculado(ocorrencia),
                 denuncianteVisivel(ocorrencia, denunciante, podeVerSigilo && entregaDenunciante),
                 denunciado == null ? null : toDenunciadoResponse(denunciado),
                 movimentacoes.stream().map(this::toMovimentacaoResponse).toList(),
@@ -127,6 +135,7 @@ public interface OcorrenciaMapper {
                 ocorrencia.getProvidenciaTomada() == null ? null : ocorrencia.getProvidenciaTomada().getCodigo(),
                 ocorrencia.getDescricaoEncerramento(),
                 ocorrencia.getEncerradaEm(),
+                ocorrencia.getAnimal() == null ? null : ocorrencia.getAnimal().getId(),
                 denuncianteAlterado);
     }
 }

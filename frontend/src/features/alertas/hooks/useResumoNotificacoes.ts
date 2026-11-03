@@ -8,6 +8,10 @@ import { podeAcessar } from '@/lib/nav'
 
 const PROCESSOS_URGENTES_NO_RESUMO = 5
 
+const PAGINA_POR_TIPO_DE_ALERTA: Record<string, string> = {
+  esterilizacao_72h: '/alertas/esterilizacao',
+}
+
 export interface NotificacaoResumo {
   id: string
   titulo: string
@@ -21,15 +25,20 @@ function ehAlertaDeVacina(alerta: AlertaCritico): boolean {
   return alerta.tipo === 'vacina_vencendo' || alerta.tipo === 'vacina_vencida'
 }
 
+function abreTelaDeAnimais(alerta: AlertaCritico): boolean {
+  return ehAlertaDeVacina(alerta) || alerta.tipo in PAGINA_POR_TIPO_DE_ALERTA
+}
+
 function paraNotificacao(alerta: AlertaCritico): NotificacaoResumo {
   const ehVacina = ehAlertaDeVacina(alerta)
+  const destino = ehVacina ? '/alertas/vacinas' : PAGINA_POR_TIPO_DE_ALERTA[alerta.tipo]
   return {
     id: alerta.tipo,
     titulo: alerta.titulo,
     descricao: alerta.descricao,
     tom: TOM_POR_SEVERIDADE_ALERTA[alerta.severidade] ?? 'info',
     urgente: alerta.severidade === 'critico',
-    para: ehVacina ? '/alertas/vacinas' : undefined,
+    para: destino,
   }
 }
 
@@ -62,7 +71,7 @@ export function useResumoNotificacoes(): ResumoNotificacoes {
   const acessaAnimais = podeAcessar(roleKey, 'animais')
   const alertas = (kpis.data?.alertas ?? [])
     .filter((alerta) => alerta.total > 0)
-    .filter((alerta) => acessaAnimais || !ehAlertaDeVacina(alerta))
+    .filter((alerta) => acessaAnimais || !abreTelaDeAnimais(alerta))
     .map(paraNotificacao)
   const processos = urgentesParaNotificacao(urgentes.data?.itens ?? [], urgentes.data?.totalUrgentes ?? 0)
 

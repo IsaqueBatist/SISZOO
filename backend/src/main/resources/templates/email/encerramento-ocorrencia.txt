@@ -1,0 +1,11 @@
+Olá, [(${nome})].
+
+A ocorrência [(${protocolo})], que você registrou no Centro de Controle de Zoonoses de Itu, foi encerrada em [(${dataEncerramento})].
+Providência adotada: [(${providencia})].
+
+Para mais informações, entre em contato com o CCZ informando o número do protocolo.
+
+CCZ "São Francisco de Assis"
+Avenida Sete Quedas, 1038 - Vila Progresso
+Fone: (11) 4023-1505 / WhatsApp: (11) 93231-9925
+Segunda a sexta, das 8h às 17h

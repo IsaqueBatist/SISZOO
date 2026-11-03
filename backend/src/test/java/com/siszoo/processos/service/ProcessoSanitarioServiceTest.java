@@ -48,8 +48,8 @@ import com.siszoo.animais.repository.AnimalRepository;
 import com.siszoo.animais.repository.EspecieRepository;
 import com.siszoo.comum.service.ProtocoloService;
 import com.siszoo.ocorrencias.exception.DataAberturaFuturaException;
-import com.siszoo.ocorrencias.service.OcorrenciaService;
 import com.siszoo.ocorrencias.service.PermissoesOcorrencia;
+import com.siszoo.ocorrencias.service.VinculoOcorrenciaService;
 import com.siszoo.processos.dto.AlterarStatusProcessoRequest;
 import com.siszoo.processos.dto.AmostraAnimalRequest;
 import com.siszoo.processos.dto.CriarProcessoRequest;
@@ -111,7 +111,7 @@ class ProcessoSanitarioServiceTest {
     @Mock private EspecieRepository especieRepository;
     @Mock private AnimalRepository animalRepository;
     @Mock private UsuarioRepository usuarioRepository;
-    @Mock private OcorrenciaService ocorrenciaService;
+    @Mock private VinculoOcorrenciaService vinculoOcorrenciaService;
     @Mock private ProtocoloService protocoloService;
     @Mock private AuditoriaEventoService auditoriaEventoService;
     @Mock private ApplicationEventPublisher eventPublisher;
@@ -131,7 +131,7 @@ class ProcessoSanitarioServiceTest {
                 sintomaRepository);
         processoService = new ProcessoSanitarioService(processoRepository, responsavelRepository, amostraRepository,
                 doencaRepository, laboratorioRepository, sintomaRepository, resultadoRepository,
-                resultadoProcessoRepository, desfechoRepository, usuarioRepository, ocorrenciaService,
+                resultadoProcessoRepository, desfechoRepository, usuarioRepository, vinculoOcorrenciaService,
                 protocoloService, auditoriaEventoService, eventPublisher, jdbcTemplate,
                 Mappers.getMapper(ProcessoSanitarioMapper.class), amostraFactory, clock);
         lenient().when(usuarioRepository.findById(usuarioId)).thenReturn(Optional.of(new Usuario()));
@@ -429,7 +429,7 @@ class ProcessoSanitarioServiceTest {
         when(doencaRepository.findByCodigo("raiva")).thenReturn(Optional.of(doenca()));
         when(laboratorioRepository.findByCodigo("pasteur_sp")).thenReturn(Optional.of(laboratorio()));
         doThrow(new AccessDeniedException("sem escrita"))
-                .when(ocorrenciaService).exigirEscritaEmOcorrencias(vet);
+                .when(vinculoOcorrenciaService).exigirEscritaEmOcorrencias(vet);
 
         assertThatThrownBy(() -> processoService.criar(request(HOJE, ocorrenciaId, amostraDeCampo()), vet))
                 .isInstanceOf(AccessDeniedException.class);
@@ -478,7 +478,7 @@ class ProcessoSanitarioServiceTest {
     void amostraInvalidaNaoCriaProcesso(String caso, AmostraAnimalRequest amostra, Class<? extends Throwable> erro) {
         assertThatThrownBy(() -> processoService.criar(request(HOJE, null, amostra), agente()))
                 .isInstanceOf(erro);
-        verifyNoInteractions(protocoloService, processoRepository, doencaRepository, ocorrenciaService);
+        verifyNoInteractions(protocoloService, processoRepository, doencaRepository, vinculoOcorrenciaService);
     }
 
     static Stream<Arguments> contatosDasAmostras() {

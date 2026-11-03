@@ -22,6 +22,7 @@ const DESCRICOES: Record<AcaoAuditoria, DescricaoAcao> = {
   VISUALIZACAO: { verbo: 'visualizou', rotulo: 'Visualização de dado sigiloso', icone: 'eye', tom: 'danger' },
   ACESSO_NEGADO: { verbo: 'teve acesso negado a', rotulo: 'Acesso negado', icone: 'lock', tom: 'danger' },
   SESSAO_REVOGADA: { verbo: 'teve revogada', rotulo: 'Sessão revogada', icone: 'lock', tom: 'danger' },
+  NOTIFICACAO: { verbo: 'enviou aviso por e-mail sobre', rotulo: 'Aviso por e-mail', icone: 'mail', tom: 'info' },
 }
 
 export function descricaoAcao(acao: AcaoAuditoria): DescricaoAcao {

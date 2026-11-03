@@ -55,6 +55,15 @@ export const ocorrenciasHandlers = [
     return ocorrencia ? HttpResponse.json(ocorrencia) : naoEncontrada()
   }),
 
+  http.put(`${API_BASE_URL}/ocorrencias/:id/animal`, async ({ params, request }) => {
+    const ocorrencia = buscarFixture(params.id as string)
+    if (!ocorrencia) return naoEncontrada()
+    const { animalId } = (await request.json()) as { animalId: string }
+    return HttpResponse.json({ ...ocorrencia, animalVinculado: { id: animalId, nome: 'Animal vinculado', microchip: null } })
+  }),
+
+  http.get(`${API_BASE_URL}/animais/:id/origem`, () => HttpResponse.json([])),
+
   http.patch(`${API_BASE_URL}/ocorrencias/:id/status`, ({ params }) => {
     const ocorrencia = buscarFixture(params.id as string)
     return ocorrencia ? HttpResponse.json(ocorrencia) : naoEncontrada()

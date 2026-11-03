@@ -26,8 +26,10 @@ import com.siszoo.animais.clinico.exception.TipoProcedimentoInvalidoException;
 import com.siszoo.animais.clinico.mapper.ProcedimentoMapper;
 import com.siszoo.animais.clinico.repository.ProcedimentoRepository;
 import com.siszoo.animais.clinico.repository.TipoProcedimentoRepository;
+import com.siszoo.animais.dto.AnimalResponse;
 import com.siszoo.animais.entity.Animal;
 import com.siszoo.animais.exception.AnimalNaoEncontradoException;
+import com.siszoo.animais.mapper.AnimalMapper;
 import com.siszoo.animais.repository.AnimalRepository;
 import com.siszoo.comum.dto.PaginaResponse;
 import com.siszoo.comum.exception.CampoInvalidoException;
@@ -43,11 +45,14 @@ import jakarta.persistence.criteria.Predicate;
 @Service
 public class ProcedimentoService {
 
+    static final String TIPO_CASTRACAO = "castracao";
+
     private final ProcedimentoRepository procedimentoRepository;
     private final TipoProcedimentoRepository tipoProcedimentoRepository;
     private final AnimalRepository animalRepository;
     private final UsuarioRepository usuarioRepository;
     private final ProcedimentoMapper procedimentoMapper;
+    private final AnimalMapper animalMapper;
     private final AuditoriaEventoService auditoriaEventoService;
     private final Clock clock;
 
@@ -57,6 +62,7 @@ public class ProcedimentoService {
             AnimalRepository animalRepository,
             UsuarioRepository usuarioRepository,
             ProcedimentoMapper procedimentoMapper,
+            AnimalMapper animalMapper,
             AuditoriaEventoService auditoriaEventoService,
             Clock clock) {
         this.procedimentoRepository = procedimentoRepository;
@@ -64,6 +70,7 @@ public class ProcedimentoService {
         this.animalRepository = animalRepository;
         this.usuarioRepository = usuarioRepository;
         this.procedimentoMapper = procedimentoMapper;
+        this.animalMapper = animalMapper;
         this.auditoriaEventoService = auditoriaEventoService;
         this.clock = clock;
     }
@@ -102,7 +109,28 @@ public class ProcedimentoService {
             auditoriaEventoService.registrar(usuarioAutenticado, AcaoAuditoria.CRIACAO, "procedimento", procedimento.getId(), null, response);
         }
 
+        if (TIPO_CASTRACAO.equals(procedimento.getTipoProcedimento().getCodigo())) {
+            marcarEsterilizado(animal, procedimento.getData(), usuarioAutenticado);
+        }
+
         return response;
+    }
+
+    private void marcarEsterilizado(Animal animal, LocalDate dataCastracao, Usuario autor) {
+        boolean jaEsterilizado = Boolean.TRUE.equals(animal.getEsterilizado());
+        LocalDate dataAtual = animal.getDataEsterilizacao();
+        boolean atualizaData = dataAtual == null || dataCastracao.isBefore(dataAtual);
+        if (jaEsterilizado && !atualizaData) {
+            return;
+        }
+        AnimalResponse antes = animalMapper.toResponse(animal);
+        animal.setEsterilizado(true);
+        if (atualizaData) {
+            animal.setDataEsterilizacao(dataCastracao);
+        }
+        animalRepository.save(animal);
+        auditoriaEventoService.registrar(autor, AcaoAuditoria.ATUALIZACAO, "animal", animal.getId(),
+                antes, animalMapper.toResponse(animal));
     }
 
     @Transactional(readOnly = true)

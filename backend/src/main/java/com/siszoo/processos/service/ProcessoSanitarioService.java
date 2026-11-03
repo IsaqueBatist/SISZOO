@@ -31,8 +31,8 @@ import com.siszoo.comum.util.Paginacao;
 import com.siszoo.comum.util.Textos;
 import com.siszoo.ocorrencias.entity.Ocorrencia;
 import com.siszoo.ocorrencias.exception.DataAberturaFuturaException;
-import com.siszoo.ocorrencias.service.OcorrenciaService;
 import com.siszoo.ocorrencias.service.PermissoesOcorrencia;
+import com.siszoo.ocorrencias.service.VinculoOcorrenciaService;
 import com.siszoo.processos.dto.AlterarStatusProcessoRequest;
 import com.siszoo.processos.dto.AmostraAnimalRequest;
 import com.siszoo.processos.dto.AmostraAnimalResponse;
@@ -118,7 +118,7 @@ public class ProcessoSanitarioService {
     private final ResultadoProcessoRepository resultadoProcessoRepository;
     private final DesfechoAnimalRepository desfechoRepository;
     private final UsuarioRepository usuarioRepository;
-    private final OcorrenciaService ocorrenciaService;
+    private final VinculoOcorrenciaService vinculoOcorrenciaService;
     private final ProtocoloService protocoloService;
     private final AuditoriaEventoService auditoriaEventoService;
     private final ApplicationEventPublisher eventPublisher;
@@ -138,7 +138,7 @@ public class ProcessoSanitarioService {
             ResultadoProcessoRepository resultadoProcessoRepository,
             DesfechoAnimalRepository desfechoRepository,
             UsuarioRepository usuarioRepository,
-            OcorrenciaService ocorrenciaService,
+            VinculoOcorrenciaService vinculoOcorrenciaService,
             ProtocoloService protocoloService,
             AuditoriaEventoService auditoriaEventoService,
             ApplicationEventPublisher eventPublisher,
@@ -156,7 +156,7 @@ public class ProcessoSanitarioService {
         this.resultadoProcessoRepository = resultadoProcessoRepository;
         this.desfechoRepository = desfechoRepository;
         this.usuarioRepository = usuarioRepository;
-        this.ocorrenciaService = ocorrenciaService;
+        this.vinculoOcorrenciaService = vinculoOcorrenciaService;
         this.protocoloService = protocoloService;
         this.auditoriaEventoService = auditoriaEventoService;
         this.eventPublisher = eventPublisher;
@@ -185,8 +185,8 @@ public class ProcessoSanitarioService {
 
         Ocorrencia ocorrencia = null;
         if (request.ocorrenciaId() != null) {
-            ocorrenciaService.exigirEscritaEmOcorrencias(permissoes);
-            ocorrencia = ocorrenciaService.travarParaVinculo(request.ocorrenciaId());
+            vinculoOcorrenciaService.exigirEscritaEmOcorrencias(permissoes);
+            ocorrencia = vinculoOcorrenciaService.travarParaVinculo(request.ocorrenciaId());
         }
 
         ProcessoSanitario processo = new ProcessoSanitario();
@@ -209,7 +209,7 @@ public class ProcessoSanitarioService {
         verificarConstraintsAdiadas();
 
         if (ocorrencia != null) {
-            ocorrenciaService.vincular(ocorrencia, processo, autor);
+            vinculoOcorrenciaService.vincular(ocorrencia, processo, autor);
         }
 
         List<AmostraAnimalResponse> amostras = amostrasDe(processo);

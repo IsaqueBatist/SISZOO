@@ -20,3 +20,15 @@ export interface AlertaVacinalAnimal {
   animalBaiaNome: string | null
   vacinas: AlertaVacinalItem[]
 }
+
+export interface AlertaEsterilizacaoAnimal {
+  animalId: string
+  animalNome: string
+  animalMicrochip: string | null
+  animalEspecieNome: string
+  animalSexo: string
+  animalBaiaNome: string | null
+  animalStatusNome: string
+  dataEntrada: string
+  horasDesdeEntrada: number
+}

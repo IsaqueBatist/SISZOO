@@ -34,6 +34,7 @@ public record OcorrenciaResponse(
         LocalDateTime encerradaEm,
         String encerradaPorNome,
         ProcessoVinculadoResponse processoVinculado,
+        AnimalVinculadoResponse animalVinculado,
         DenuncianteResponse denunciante,
         DenunciadoResponse denunciado,
         List<MovimentacaoOcorrenciaResponse> movimentacoes,

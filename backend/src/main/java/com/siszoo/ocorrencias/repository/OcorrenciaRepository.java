@@ -26,13 +26,18 @@ public interface OcorrenciaRepository extends JpaRepository<Ocorrencia, UUID>, J
     @EntityGraph(attributePaths = {"tipoOcorrencia"})
     Page<Ocorrencia> findAll(Specification<Ocorrencia> spec, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"tipoOcorrencia", "registradoPor", "providenciaTomada", "encerradaPor"})
+    @EntityGraph(attributePaths = {"tipoOcorrencia", "registradoPor", "providenciaTomada", "encerradaPor", "animal"})
     @Query("SELECT o FROM Ocorrencia o WHERE o.id = :id")
     Optional<Ocorrencia> findDetalheById(@Param("id") UUID id);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT o FROM Ocorrencia o WHERE o.id = :id")
     Optional<Ocorrencia> findByIdForUpdate(@Param("id") UUID id);
+
+    Optional<Ocorrencia> findByAnimal_Id(UUID animalId);
+
+    @EntityGraph(attributePaths = {"tipoOcorrencia"})
+    List<Ocorrencia> findByAnimal_IdOrderByDataAberturaDesc(UUID animalId);
 
     @Query("SELECT COUNT(o) FROM Ocorrencia o LEFT JOIN o.providenciaTomada pt WHERE o.dataAbertura = :hoje "
             + "AND (pt IS NULL OR pt.codigo <> 'registro_indevido')")

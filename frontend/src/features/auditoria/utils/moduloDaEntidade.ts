@@ -17,6 +17,7 @@ const MODULO_POR_ENTIDADE: Record<string, Modulo> = {
   ocorrencia: 'OCORRENCIAS_DENUNCIAS',
   anexo_ocorrencia: 'OCORRENCIAS_DENUNCIAS',
   movimentacao_ocorrencia: 'OCORRENCIAS_DENUNCIAS',
+  aviso_encerramento_ocorrencia: 'OCORRENCIAS_DENUNCIAS',
   processo_sanitario: 'PROCESSOS_SANITARIOS',
 }
 

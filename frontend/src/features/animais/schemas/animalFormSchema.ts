@@ -44,6 +44,9 @@ export function esterilizadoParaCastracao(esterilizado: boolean | null, sexo: st
   return sexo === 'femea' ? 'osh' : 'orquiectomia'
 }
 
+export const STATUS_TRANSFERIDO = 'transferido'
+export const STATUS_OBITO_EUTANASIA = 'obito_eutanasia'
+
 export const animalFormSchema = z.object({
   nome: z.string().trim().min(1, 'Informe o nome do animal.').max(80, 'Máximo de 80 caracteres.'),
   especie: z.string().min(1, 'Selecione a espécie.'),
@@ -66,6 +69,15 @@ export const animalFormSchema = z.object({
     .optional(),
   procedencia: z.string().trim().max(200, 'Máximo de 200 caracteres.').optional(),
   laudoEutanasia: z.string().trim().max(4000, 'Máximo de 4000 caracteres.').optional(),
+  tipoDestinoTransferencia: z.enum(['ORGAO_PUBLICO', 'ENTIDADE_PROTECAO', 'OUTRO_CCZ', 'OUTRO']).optional(),
+  destinoTransferencia: z.string().trim().max(200, 'Máximo de 200 caracteres.').optional(),
+  dataSaida: z
+    .string()
+    .refine((valor) => naoEhFutura(valor.slice(0, 10)), 'A data de saída não pode ser futura.')
+    .optional(),
+  documentoTransferencia: z.string().trim().max(120, 'Máximo de 120 caracteres.').optional(),
+  metodoEutanasia: z.string().trim().max(120, 'Máximo de 120 caracteres.').optional(),
+  insensibilizacaoPrevia: z.boolean().optional(),
   esterilizado: z.boolean().nullable(),
   dataEsterilizacao: z
     .string()
@@ -99,6 +111,23 @@ export const animalFormUiSchema = animalFormSchema
         path: ['dataNascimentoAprox'],
         message: 'A data de nascimento não pode ser posterior à data de entrada.',
       })
+    }
+    if (dados.status === STATUS_TRANSFERIDO) {
+      if (!dados.tipoDestinoTransferencia) {
+        ctx.addIssue({ code: 'custom', path: ['tipoDestinoTransferencia'], message: 'Selecione o tipo de destino.' })
+      }
+      if (!dados.destinoTransferencia?.trim()) {
+        ctx.addIssue({ code: 'custom', path: ['destinoTransferencia'], message: 'Informe o órgão ou a entidade de destino.' })
+      }
+      if (!dados.dataSaida) {
+        ctx.addIssue({ code: 'custom', path: ['dataSaida'], message: 'Informe a data de saída.' })
+      } else if (dados.dataEntrada && dados.dataSaida.slice(0, 10) < dados.dataEntrada) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['dataSaida'],
+          message: 'A data de saída não pode ser anterior à data de entrada.',
+        })
+      }
     }
   })
 export type AnimalFormUiValues = z.infer<typeof animalFormUiSchema>

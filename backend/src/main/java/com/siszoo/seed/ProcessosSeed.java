@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import com.siszoo.ocorrencias.service.OcorrenciaService;
 import com.siszoo.ocorrencias.service.PermissoesOcorrencia;
+import com.siszoo.ocorrencias.service.VinculoOcorrenciaService;
 import com.siszoo.processos.dto.AlterarStatusProcessoRequest;
 import com.siszoo.processos.dto.AmostraAnimalRequest;
 import com.siszoo.processos.dto.CriarProcessoRequest;
@@ -169,15 +169,16 @@ class ProcessosSeed {
 
     private final SeedExecutor executor;
     private final ProcessoSanitarioService processoService;
-    private final OcorrenciaService ocorrenciaService;
+    private final VinculoOcorrenciaService vinculoOcorrenciaService;
     private final OcorrenciasSeed ocorrenciasSeed;
     private final Clock clock;
 
-    ProcessosSeed(SeedExecutor executor, ProcessoSanitarioService processoService, OcorrenciaService ocorrenciaService,
+    ProcessosSeed(SeedExecutor executor, ProcessoSanitarioService processoService,
+            VinculoOcorrenciaService vinculoOcorrenciaService,
             OcorrenciasSeed ocorrenciasSeed, Clock clock) {
         this.executor = executor;
         this.processoService = processoService;
-        this.ocorrenciaService = ocorrenciaService;
+        this.vinculoOcorrenciaService = vinculoOcorrenciaService;
         this.ocorrenciasSeed = ocorrenciasSeed;
         this.clock = clock;
     }
@@ -213,7 +214,7 @@ class ProcessosSeed {
         if (plano.vincularDepois()) {
             UUID ocorrenciaId = executor.idObrigatorio(OcorrenciasSeed.chaveOcorrencia(plano.ocorrencia()));
             executor.garantir(plano.chave() + ":vinculo", "processo_vinculo", () -> autor.executar(
-                    OcorrenciasSeed.ESCRITA, () -> ocorrenciaService.vincularProcesso(ocorrenciaId, id, permissoes))
+                    OcorrenciasSeed.ESCRITA, () -> vinculoOcorrenciaService.vincularProcesso(ocorrenciaId, id, permissoes))
                     .id());
         }
         if (plano.status() == StatusProcesso.ABERTO) {

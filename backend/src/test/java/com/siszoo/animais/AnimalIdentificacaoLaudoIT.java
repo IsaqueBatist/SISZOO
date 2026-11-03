@@ -16,6 +16,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.siszoo.animais.dto.AtualizarAnimalRequest;
 import com.siszoo.animais.dto.CriarAnimalRequest;
+import com.siszoo.animais.dto.EutanasiaRequest;
 import com.siszoo.animais.dto.CriarBaiaRequest;
 import com.siszoo.comum.AbstractIntegrationTest;
 import com.siszoo.comum.ApiTesteFixture;
@@ -34,11 +35,13 @@ class AnimalIdentificacaoLaudoIT extends AbstractIntegrationTest {
     private JdbcTemplate jdbcTemplate;
 
     private String tokenAdmin;
+    private String tokenVet;
     private UUID baiaId;
 
     @BeforeEach
     void preparar() {
         tokenAdmin = fixture.tokenAdmin(EMAIL_ADMIN, "Identificacao");
+        tokenVet = fixture.tokenVeterinario("teste.vet.identificacao@itu.sp.gov.br", "Identificacao");
         baiaId = UUID.fromString(given().contentType(ContentType.JSON).header("Authorization", "Bearer " + tokenAdmin)
                 .body(new CriarBaiaRequest("Baia Ident " + UUID.randomUUID().toString().substring(0, 8), "interna", (short) 5, null, null))
                 .when().post("/api/baias").then().statusCode(200).extract().path("id"));
@@ -106,7 +109,10 @@ class AnimalIdentificacaoLaudoIT extends AbstractIntegrationTest {
         atualizar(id, corpoAtualizar("Transicao", microchip, "obito_eutanasia", "Laudo: sofrimento irreversivel"))
                 .then().statusCode(200).body("laudoEutanasia", equalTo("Laudo: sofrimento irreversivel"));
 
-        jdbcTemplate.update("UPDATE animal SET laudo_eutanasia = NULL WHERE id = CAST(? AS uuid)", id);
+        jdbcTemplate.update("UPDATE animal SET laudo_eutanasia = NULL, laudo_eutanasia_responsavel_id = NULL,"
+                + " laudo_eutanasia_crmv = NULL, laudo_eutanasia_metodo = NULL,"
+                + " laudo_eutanasia_insensibilizacao_previa = NULL, laudo_eutanasia_registrado_em = NULL"
+                + " WHERE id = CAST(? AS uuid)", id);
         atualizar(id, corpoAtualizar("Transicao editado", microchip, "obito_eutanasia", null))
                 .then().statusCode(200).body("nome", equalTo("Transicao editado")).body("laudoEutanasia", nullValue());
     }
@@ -123,13 +129,21 @@ class AnimalIdentificacaoLaudoIT extends AbstractIntegrationTest {
     }
 
     private Response criar(CriarAnimalRequest corpo) {
-        return given().contentType(ContentType.JSON).header("Authorization", "Bearer " + tokenAdmin)
+        return given().contentType(ContentType.JSON).header("Authorization", "Bearer " + tokenPara(corpo.status()))
                 .body(corpo).when().post("/api/animais");
     }
 
     private Response atualizar(String id, AtualizarAnimalRequest corpo) {
-        return given().contentType(ContentType.JSON).header("Authorization", "Bearer " + tokenAdmin)
+        return given().contentType(ContentType.JSON).header("Authorization", "Bearer " + tokenPara(corpo.status()))
                 .body(corpo).when().put("/api/animais/" + id);
+    }
+
+    private String tokenPara(String status) {
+        return "obito_eutanasia".equals(status) ? tokenVet : tokenAdmin;
+    }
+
+    private static EutanasiaRequest eutanasia(String laudo) {
+        return laudo == null ? null : new EutanasiaRequest("Anestesia seguida de barbitúrico intravenoso", true);
     }
 
     private CriarAnimalRequest corpo(String nome, String microchip, String status, String medalha, LocalDate implantacao,
@@ -137,13 +151,13 @@ class AnimalIdentificacaoLaudoIT extends AbstractIntegrationTest {
         UUID baia = "obito_eutanasia".equals(status) ? null : baiaId;
         return new CriarAnimalRequest(nome, "canino", "macho", "SRD", "Preto", "curta", "medio", null, "2 anos", null,
                 microchip, false, null, status, "resgate", fixture.agora(), baia, null, null,
-                medalha, implantacao, procedencia, laudo);
+                medalha, implantacao, procedencia, laudo, null, null, null, eutanasia(laudo));
     }
 
     private AtualizarAnimalRequest corpoAtualizar(String nome, String microchip, String status, String laudo) {
         UUID baia = "obito_eutanasia".equals(status) ? null : baiaId;
         return new AtualizarAnimalRequest(nome, "canino", "macho", "SRD", "Preto", "curta", "medio", null, "2 anos", null,
                 microchip, false, null, status, "resgate", fixture.agora(), baia, null, null,
-                null, null, null, laudo);
+                null, null, null, laudo, null, null, null, eutanasia(laudo));
     }
 }

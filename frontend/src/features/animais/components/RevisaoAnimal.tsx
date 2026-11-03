@@ -1,7 +1,16 @@
 import { useFormContext, useWatch } from 'react-hook-form'
-import { formatarDataBR } from '@/lib/datas'
+import { formatarDataBR, formatarDataHoraBR } from '@/lib/datas'
 import { useBaiasAtivasQuery, useCatalogosAnimaisQuery } from '../hooks/useAnimais'
-import { CASTRACAO_OPCOES, CONDICAO_OUTRAS, PELAGEM_OPCOES, PORTE_OPCOES, SEXO_OPCOES, type AnimalFormUiValues } from '../schemas/animalFormSchema'
+import {
+  CASTRACAO_OPCOES,
+  CONDICAO_OUTRAS,
+  PELAGEM_OPCOES,
+  PORTE_OPCOES,
+  SEXO_OPCOES,
+  STATUS_TRANSFERIDO,
+  type AnimalFormUiValues,
+} from '../schemas/animalFormSchema'
+import { formatarTipoDestinoTransferencia } from '../utils/rotulosAnimal'
 import { nomeNoCatalogo } from '@/lib/catalogos'
 
 export function RevisaoAnimal() {
@@ -108,6 +117,16 @@ export function RevisaoAnimal() {
           <div className="review-row" style={{ gridColumn: '1 / -1' }}>
             <span className="k">Laudo de eutanásia</span>
             <span className="v">{valores.laudoEutanasia}</span>
+          </div>
+        )}
+        {valores.status === STATUS_TRANSFERIDO && valores.destinoTransferencia && (
+          <div className="review-row" style={{ gridColumn: '1 / -1' }}>
+            <span className="k">Destino da transferência</span>
+            <span className="v">
+              {formatarTipoDestinoTransferencia(valores.tipoDestinoTransferencia)} · {valores.destinoTransferencia}
+              {valores.dataSaida ? ` · saída em ${formatarDataHoraBR(valores.dataSaida)}` : ''}
+              {valores.documentoTransferencia ? ` · ${valores.documentoTransferencia}` : ''}
+            </span>
           </div>
         )}
         <div className="review-row" style={{ gridColumn: '1 / -1' }}>

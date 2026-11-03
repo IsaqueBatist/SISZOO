@@ -2,17 +2,19 @@ import { useState, type KeyboardEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { diasCivisAteHoje, formatarDataBR } from '@/lib/datas'
+import { diasCivisAteHoje, formatarDataBR, formatarDataHoraBR } from '@/lib/datas'
 import { AbaExames } from './AbaExames'
 import { AbaHistorico } from './AbaHistorico'
 import { AbaMedicamentos } from './AbaMedicamentos'
 import { AbaProcedimentos } from './AbaProcedimentos'
 import { AbaVacinas } from './AbaVacinas'
 import { AnexosAnimal } from './AnexosAnimal'
+import { LaudoEutanasiaRegistrado } from './CamposEutanasia'
+import { OrigemAnimal } from './OrigemAnimal'
 import './FichaAnimal.css'
 import { badgeDeEspecie, badgeDeStatus } from '../utils/statusBadge'
 import { useAnimalQuery } from '../hooks/useAnimais'
-import { formatarPorte, formatarSexo } from '../utils/rotulosAnimal'
+import { formatarPorte, formatarSexo, formatarTipoDestinoTransferencia } from '../utils/rotulosAnimal'
 
 type TabKey = 'historico' | 'vacinas' | 'procedimentos' | 'medicamentos' | 'exames'
 
@@ -154,11 +156,26 @@ export function FichaAnimal() {
                 <span className="k">Procedência</span>
                 <span className="v">{animal.procedencia ?? '—'}</span>
               </div>
-              {animal.statusCodigo === 'obito_eutanasia' && (
-                <div className="kv-row">
-                  <span className="k">Laudo de eutanásia</span>
-                  <span className="v">{animal.laudoEutanasia ?? '— (não informado)'}</span>
-                </div>
+              {animal.statusCodigo === 'obito_eutanasia' && <LaudoEutanasiaRegistrado laudo={animal} />}
+              {animal.statusCodigo === 'transferido' && (
+                <>
+                  <div className="kv-row">
+                    <span className="k">Destino</span>
+                    <span className="v">
+                      {animal.destinoTransferencia
+                        ? `${animal.destinoTransferencia} (${formatarTipoDestinoTransferencia(animal.tipoDestinoTransferencia)})`
+                        : '— (não informado)'}
+                    </span>
+                  </div>
+                  <div className="kv-row">
+                    <span className="k">Saída</span>
+                    <span className="v mono">{formatarDataHoraBR(animal.dataSaida)}</span>
+                  </div>
+                  <div className="kv-row">
+                    <span className="k">Documento</span>
+                    <span className="v">{animal.documentoTransferencia ?? '—'}</span>
+                  </div>
+                </>
               )}
               <div className="kv-row">
                 <span className="k">Espécie</span>
@@ -233,6 +250,8 @@ export function FichaAnimal() {
               </div>
             </div>
           </div>
+
+          <OrigemAnimal animalId={id} />
 
           <AnexosAnimal animalId={id} podeEscrever={podeEscrever} />
         </div>

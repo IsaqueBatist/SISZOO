@@ -57,6 +57,13 @@ const KPIS_REAIS_MOCK: DashboardKpisApi = {
       descricao: 'Animais disponíveis para adoção que ainda não foram esterilizados.',
       total: 10,
     },
+    {
+      tipo: 'esterilizacao_72h',
+      severidade: 'atencao',
+      titulo: '2 animal(is) recolhido(s) há mais de 72 horas sem esterilização',
+      descricao: 'Animais sob custódia com entrada há mais de 72 horas que ainda não foram esterilizados.',
+      total: 2,
+    },
   ],
 }
 

@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 
+import com.siszoo.animais.clinico.dto.CriarProcedimentoRequest;
 import com.siszoo.animais.clinico.entity.CategoriaFarmacologica;
 import com.siszoo.animais.clinico.entity.Medicamento;
 import com.siszoo.animais.clinico.entity.Prescricao;
@@ -92,18 +93,18 @@ class DashboardControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("kpis.alertas sempre tem os 7 tipos do DER §3.7 (vacina_vencendo e vacina_vencida separados)")
-    void kpisDeveTrazerOsSeteTiposDeAlerta() {
+    @DisplayName("kpis.alertas sempre tem os 8 tipos do DER §3.7 (vacina_vencendo e vacina_vencida separados)")
+    void kpisDeveTrazerOsOitoTiposDeAlerta() {
         List<String> tipos = given()
                 .header("Authorization", "Bearer " + tokenAdmin)
                 .when().get(ROTA_KPIS)
                 .then().statusCode(200)
                 .extract().jsonPath().getList("alertas.tipo", String.class);
 
-        assertThat(tipos, hasSize(7));
+        assertThat(tipos, hasSize(8));
         assertThat(tipos, containsInAnyOrder(
                 "vacina_vencendo", "vacina_vencida", "sem_avaliacao_30d", "baia_superlotada",
-                "medicacao_ativa", "ficha_incompleta", "nao_castrado"));
+                "medicacao_ativa", "ficha_incompleta", "nao_castrado", "esterilizacao_72h"));
     }
 
     @Test
@@ -212,6 +213,26 @@ class DashboardControllerIT extends AbstractIntegrationTest {
         Map<String, Long> aposAdotar = kpisAdocoes();
         assertThat(aposAdotar.get("disponiveis"), equalTo(antes.get("disponiveis")));
         assertThat(aposAdotar.get("adotados"), equalTo(antes.get("adotados") + 1));
+    }
+
+    @Test
+    @DisplayName("castracao registrada marca o animal como esterilizado e o tira de nao_castrado")
+    void castracaoRegistradaTiraOAnimalDeNaoCastrado() {
+        String animalId = fixture.criarAnimal(tokenAdmin);
+        Map<String, Long> antes = totalPorTipoDeAlerta(tokenAdmin);
+
+        given().contentType(ContentType.JSON).header("Authorization", "Bearer " + tokenAdmin)
+                .body(new CriarProcedimentoRequest(UUID.fromString(animalId), "castracao", HOJE.minusDays(1), null, null, null))
+                .when().post("/api/procedimentos")
+                .then().statusCode(200);
+
+        given().header("Authorization", "Bearer " + tokenAdmin)
+                .when().get("/api/animais/" + animalId)
+                .then().statusCode(200)
+                .body("esterilizado", equalTo(true))
+                .body("dataEsterilizacao", equalTo(HOJE.minusDays(1).toString()));
+        Map<String, Long> depois = totalPorTipoDeAlerta(tokenAdmin);
+        assertThat(depois.get("nao_castrado"), equalTo(antes.get("nao_castrado") - 1));
     }
 
     @Test

@@ -1,0 +1,165 @@
+# Conformidade legal - decisões da auditoria de 02/11/2026
+
+Implementação dos itens da auditoria estática de conformidade sobre `b6d7209`
+(branch `feat/conformidade-auditoria`, um commit por item). Este arquivo registra o
+que o prompt da auditoria pedia e o código contradizia, as decisões tomadas e os
+pontos que continuam em aberto com o CCZ.
+
+## Divergências entre o prompt e o código
+
+- **Numeração das migrations.** O prompt citava `V24` como a última; o repositório
+  estava na `V34` (a `V24` é a do `laudo_eutanasia`). As novas seguem da `V35`.
+- **TODOs no código.** O prompt pedia `TODO` para os critérios ainda não definidos
+  pelo CCZ (itens 2 e 3). O código do SISZOO não leva comentários (decisão da equipe
+  de 02/11/2026); os pontos em aberto ficam neste arquivo e em
+  `docs/regras-negocio-clinico.md` (pendentes).
+- **Liberar a vaga na baia ao transferir (item 4).** Não há liberação explícita: a
+  ocupação é calculada pelos status fora da custódia
+  (`StatusAnimal.CODIGOS_FORA_DA_CUSTODIA`), que já incluem `transferido`.
+- **Ocorrência encerrada não se edita** (`Ocorrencia#exigirAberta`), mas o animal
+  costuma ser cadastrado no canil depois do encerramento com "Captura e remoção".
+  Decisão no item 3, abaixo.
+
+## Item 1 - castração marca o animal como esterilizado
+
+RN-AN05 em `docs/regras-negocio-clinico.md`. A retificação de uma castração não
+desfaz a marcação: o animal continua esterilizado, e uma correção da ficha é feita
+pela edição do animal, que gera a própria auditoria.
+
+## Item 2 - alerta de esterilização após 72 horas
+
+Base: Lei estadual nº 12.916/2008, art. 5º. Regra em `docs/contratos/dashboard-kpis.md`
+(`esterilizacao_72h`).
+
+- `esterilizado = NULL` (não informado) não entra, como em `nao_castrado`; o prompt
+  pedia `esterilizado = false`.
+- **Em aberto com o CCZ:** animais em tratamento ou apreendidos devem ficar fora do
+  alerta? Hoje entram todos os não esterilizados sob custódia.
+
+## Item 3 - vínculo entre ocorrência e animal recolhido
+
+Base: Portaria MS nº 1.138/2014, inc. X (rastreabilidade solicitação, recolhimento,
+animal). Coluna `ocorrencia.animal_id` (V35), regra no DER §3.3.
+
+- **1:1 por enquanto.** Índice único em `animal_id`: uma ocorrência aponta para no
+  máximo um animal e um animal tem no máximo uma ocorrência de origem. Ninhada
+  (vários animais por ocorrência) vira tabela N:N se o CCZ precisar; a resposta de
+  `GET /api/animais/{id}/origem` já é uma lista.
+- **Vínculo em ocorrência encerrada (decisão da equipe em 02/11/2026).** Permitido
+  como exceção auditada, com estas condições: só `animal_id`, nenhum outro campo; só
+  se ainda estiver vazio (uma vez, sem troca); mesma permissão de quem edita
+  ocorrência (`OCORRENCIAS_DENUNCIAS:escrita`); auditoria `ATUALIZACAO` com antes e
+  depois; ocorrência sigilosa continua mascarada. Motivo: nenhuma norma proíbe, a
+  regra de imutabilidade é do projeto ("só atualizado com log") e, sem a exceção, a
+  maioria das ocorrências de recolhimento ficaria sem animal no uso real. Em
+  ocorrência aberta ou em atendimento o animal pode ser trocado.
+- **Frontend.** O vínculo é feito no card "Animal recolhido" do detalhe da
+  ocorrência (busca por nome ou microchip, reaproveitando `BuscaAnimalCanil`); a
+  API também aceita `animalId` na criação. A ficha do animal mostra a seção
+  "Origem": em ocorrência sigilosa só o protocolo; para quem não acessa o módulo de
+  ocorrências (Veterinário, V11), o protocolo aparece sem link.
+- **Em aberto com o CCZ:** se preferem mudar o fluxo e cadastrar o animal antes de
+  encerrar (decisão de processo deles; o sistema não força); se uma ocorrência pode
+  gerar mais de um animal recolhido (ninhada).
+
+## Item 4 - destino da transferência
+
+Base: Portaria MS nº 1.138/2014, inc. XIII; Lei estadual nº 11.977/2005, art. 31
+(proíbe enviar animais do CCZ para experimentação; sem destino registrado isso não é
+demonstrável). Colunas em `animal` (V36), regra RN-AN06.
+
+- **Imutabilidade no serviço.** O projeto não tem mecanismo genérico de
+  imutabilidade por campo nem "novo registro" para a ficha do animal. A transferência
+  registrada é protegida em `AnimalService#exigirTransferenciaInalterada`: tipo,
+  destino e data não mudam (422); o documento pode ser preenchido uma vez, se ficou
+  em branco, como o microchip. A correção de um erro fica pendente com o CCZ.
+- **Vaga da baia.** Nada novo: `transferido` já está fora da custódia.
+- **Adoção fora do escopo.** Não há tipo de destino "adotante".
+- **Animais já transferidos antes da V36** continuam válidos sem destino; o
+  formulário pede o destino quando um deles é editado.
+- **Documento.** Texto livre (número do ofício ou nome do anexo); o arquivo vai nos
+  anexos da ficha (`anexo_animal`), sem vínculo de chave.
+- **Em aberto com o CCZ:** lista de destinos usados na prática; como corrigir uma
+  transferência registrada com erro; o que fazer quando um animal transferido volta
+  ao CCZ (hoje o status pode mudar e o destino gravado permanece).
+
+## Item 5 - aviso de encerramento ao denunciante identificado
+
+Base: Lei nº 13.460/2017, art. 12, V, com aplicabilidade **inconclusiva** a
+denúncias sanitárias; implementado como boa prática, reaproveitando o padrão do
+e-mail de resultado positivo. Detalhes em `docs/email.md`.
+
+- **Registro do resultado.** A notificação ao munícipe grava a data do envio no
+  processo; a ocorrência não tem coluna para isso. O resultado vai para
+  `auditoria_evento` com a ação nova `NOTIFICACAO` (V37 amplia o `CHECK`), uma
+  linha por tentativa, com o resultado.
+- **Conteúdo mínimo.** Protocolo, data do encerramento e nome da providência. A
+  descrição do encerramento fica de fora por ser texto livre, que pode citar
+  terceiros.
+- **Ocorrência sigilosa com denunciante identificado recebe o aviso**: o sigilo
+  protege o denunciante perante terceiros, e o e-mail vai só para ele.
+- **Em aberto com o CCZ:** texto do e-mail.
+
+## Item 6 - laudo de eutanásia com responsável técnico
+
+Base: Lei nº 14.228/2021, art. 2º, § 1º; Lei estadual nº 11.977/2005, art. 12,
+parágrafo único. Versão enxuta: responsável técnico, método, restrição de quem
+registra e imutabilidade. A entidade `laudo_eutanasia` completa, ofertas a entidades
+de proteção, dossiê e regras por doença ficam para decisão posterior; o prompt
+citava `claude/prompt_lei_14228_eutanasia.md`, que não existe no repositório.
+
+- **Permissão.** A matriz é por módulo e feature, então a ação virou a feature
+  `eutanasia` de `GESTAO_ANIMAIS`, só escrita, só para o Veterinário (V38). A
+  autoridade gerada é `GESTAO_ANIMAIS:eutanasia:escrita` (o prompt escrevia
+  `GESTAO_ANIMAIS:eutanasia`; o sufixo da ação vem do padrão do
+  `AutoridadeService`). O serviço resolve as autoridades a partir dos cargos do
+  autor, então a regra vale também para o seed e para chamadas diretas à API.
+- **403 em vez de 422 para quem não pode registrar**, antes de conferir os campos.
+  Administrador com CRMV mas sem o cargo de Veterinário também recebe 403.
+- **CRMV copiado.** `laudo_eutanasia_crmv` guarda o CRMV do momento do registro; a
+  edição posterior do usuário não muda o laudo.
+- **Imutabilidade no serviço**, como na transferência: não há "novo registro" para a
+  ficha do animal. Laudo, método e insensibilização não mudam depois de gravados
+  (422). Laudos anteriores à V38 ficam sem responsável e também não mudam; um
+  registro antigo em eutanásia **sem** laudo ainda pode recebê-lo, já com as regras
+  novas.
+- **Frontend.** A opção "Óbito eutanásia" fica desabilitada, com explicação, para
+  quem não é Veterinário com CRMV (o CRMV vem de `GET /api/usuarios/me`). O texto
+  diz que o sistema registra o laudo e que a decisão técnica é do veterinário.
+- **Em aberto com o CCZ:** a administradora registra eutanásia? Se sim, precisa do
+  cargo de Veterinário e de CRMV cadastrado.
+
+## Divisão do OcorrenciaService (responsabilidade única)
+
+Depois dos itens 3 e 5, o `OcorrenciaService` chegou a 15 dependências no construtor e
+juntava cadastro, andamento (status, encerramento, notas) e vínculos (processo e
+animal). Ele foi dividido sem mudar regra nem contrato da API, seguindo a separação
+que o módulo já tinha (`OcorrenciaConsultaService`, `AnexoOcorrenciaService`,
+`MontadorRespostaOcorrencia`, `AuditoriaSigiloOcorrencia`):
+
+| Classe | Responsabilidade | Dependências |
+| --- | --- | --- |
+| `OcorrenciaService` | criar e editar a ocorrência | 10 |
+| `AndamentoOcorrenciaService` | iniciar atendimento, encerrar (e publicar o evento do aviso), notas internas | 9 |
+| `VinculoOcorrenciaService` | vínculo com processo sanitário e com animal; regras de urgência e de processo pendente que vêm do vínculo | 7 |
+| `PartesOcorrencia` | validação e gravação de denunciante e denunciado | 2 |
+| `RegistroMovimentacaoOcorrencia` | linha do tempo (`movimentacao_ocorrencia`) | 2 |
+| `AuditoriaOcorrencia` | snapshot e evento de auditoria da ocorrência e da nota | 2 |
+
+O cadastro continua com 10 dependências porque criar uma ocorrência de fato toca
+protocolo, catálogo de tipo, autor, partes, animal, linha do tempo, auditoria e
+resposta; reduzir mais exigiria agrupar colaboradores sem afinidade. Fica como
+candidato a revisão se o cadastro crescer.
+
+## Encontro com a restrição de animais ao Agente Sanitário (PR 125)
+
+A `main` tirou o módulo de animais da interface do Agente Sanitário
+(`docs/decisoes/restricao-animais-agente.md`, DER regra 33). No merge, as telas novas
+desta branch seguem a mesma regra:
+
+- `/alertas/esterilizacao` fica dentro do `RotaLeituraAnimais`; o card de
+  esterilização do dashboard e a notificação correspondente no sino não aparecem para
+  quem não acessa o módulo de animais, como o alerta de vacinas.
+- No card "Animal recolhido" da ocorrência, o Agente continua buscando e vinculando o
+  animal (a busca usa `GET /api/animais`, que a API ainda permite), mas vê o nome sem
+  link para a ficha, como no badge "Animal do canil" do processo.
