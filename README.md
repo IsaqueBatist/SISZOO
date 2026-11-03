@@ -278,9 +278,16 @@ No ambiente com dados fictícios, todos os usuários usam a senha **`Ficticio#20
 | Agente Sanitário | `paulo.teixeira.seed@itu.sp.gov.br`, `juliana.moreira.seed@itu.sp.gov.br`, `rafael.campos.seed@itu.sp.gov.br` |
 | Agente Sanitário (desativado) | `sergio.lacerda.seed@itu.sp.gov.br` |
 
-O seed cria 6 baias, 32 animais com foto e histórico clínico, 26 ocorrências,
-24 processos sanitários, medicamentos e uma exportação de cada relatório. Ele
+O seed cria 9 baias, 50 animais com foto e histórico clínico, 36 ocorrências,
+29 processos sanitários, medicamentos e uma exportação de cada relatório. Ele
 chama os mesmos serviços da API, então segue as regras reais do sistema.
+
+Os animais cobrem as quatro espécies do catálogo (caninos, felinos, quirópteros e
+primatas) e os cenários-limite das regras de negócio: esterilização nos três
+estados, entrada dos dois lados do prazo de 72 horas, vacinas vencendo e
+vencidas, condições de saúde, transferências nos quatro tipos de destino e
+ocorrências com animal recolhido. Os detalhes estão em
+[docs/decisoes/seed-dev.md](docs/decisoes/seed-dev.md).
 
 Para gerar os dados fictícios no modo de desenvolvimento, use um database vazio
 separado do principal e acrescente o perfil `seed`:

@@ -18,6 +18,9 @@ class BaiasSeed {
     static final String GATIL_G1 = "baia:04";
     static final String QUARENTENA_Q1 = "baia:05";
     static final String CANIL_C9 = "baia:06";
+    static final String ISOLAMENTO_I1 = "baia:07";
+    static final String CANIL_A3 = "baia:08";
+    static final String GATIL_G2 = "baia:09";
 
     static final List<PlanoBaia> PLANO = List.of(
             new PlanoBaia(CANIL_A1, "Canil A1", "interna", 8, "Adoção", false),
@@ -25,7 +28,13 @@ class BaiasSeed {
             new PlanoBaia(CANIL_EXTERNO_B1, "Canil Externo B1", "externa", 2, "Cães de grande porte", false),
             new PlanoBaia(GATIL_G1, "Gatil G1", "gatil", 8, "Felinos", false),
             new PlanoBaia(QUARENTENA_Q1, "Quarentena Q1", "interna", 3, "Quarentena", false),
-            new PlanoBaia(CANIL_C9, "Canil C9", "externa", 4, "Reserva", true));
+            new PlanoBaia(CANIL_C9, "Canil C9", "externa", 4, "Reserva", true),
+            // As seis baias acima não têm vaga para os animais novos sem virar superlotada e
+            // desfigurar os indicadores de ocupação. Silvestres (quirópteros e primatas) também não
+            // dividem recinto com cães e gatos: o isolamento é o destino real desses animais.
+            new PlanoBaia(ISOLAMENTO_I1, "Isolamento I1", "interna", 4, "Animais silvestres em observação", false),
+            new PlanoBaia(CANIL_A3, "Canil A3", "interna", 8, "Adoção", false),
+            new PlanoBaia(GATIL_G2, "Gatil G2", "gatil", 6, "Felinos", false));
 
     private final SeedExecutor executor;
     private final BaiaService baiaService;

@@ -33,10 +33,19 @@ class OcorrenciasSeed {
 
     record Ocorrencia(int numero, String tipo, Function<DatasSeed, LocalDate> data, String hora, String endereco,
             String bairro, String descricao, boolean urgente, Sigilo sigilo, String denunciante, String denunciado,
-            Destino destino, String providencia, String descricaoEncerramento, List<String> notas, boolean anexo) {
+            Destino destino, String providencia, String descricaoEncerramento, List<String> notas, int anexos,
+            Integer animal) {
 
         String chave() {
             return chaveOcorrencia(numero);
+        }
+
+        /**
+         * O primeiro anexo mantém a chave antiga ({@code :anexo}), sem sufixo: trocá-la faria um
+         * banco já semeado ganhar um anexo duplicado na reexecução.
+         */
+        String chaveAnexo(int ordem) {
+            return ordem == 1 ? chave() + ":anexo" : chave() + ":anexo:" + ordem;
         }
     }
 
@@ -56,19 +65,26 @@ class OcorrenciasSeed {
             String bairro, String descricao, boolean urgente, Sigilo sigilo, String denunciante, String denunciado,
             Destino destino) {
         return new Ocorrencia(n, tipo, data, hora, endereco, bairro, descricao, urgente, sigilo, denunciante,
-                denunciado, destino, null, null, List.of(), false);
+                denunciado, destino, null, null, List.of(), 0, null);
     }
 
     private static Ocorrencia encerrada(Ocorrencia base, Destino destino, String providencia, String descricao) {
         return new Ocorrencia(base.numero(), base.tipo(), base.data(), base.hora(), base.endereco(), base.bairro(),
                 base.descricao(), base.urgente(), base.sigilo(), base.denunciante(), base.denunciado(), destino,
-                providencia, descricao, base.notas(), base.anexo());
+                providencia, descricao, base.notas(), base.anexos(), base.animal());
     }
 
-    private static Ocorrencia comNotas(Ocorrencia base, boolean anexo, String... notas) {
+    private static Ocorrencia comNotas(Ocorrencia base, int anexos, String... notas) {
         return new Ocorrencia(base.numero(), base.tipo(), base.data(), base.hora(), base.endereco(), base.bairro(),
                 base.descricao(), base.urgente(), base.sigilo(), base.denunciante(), base.denunciado(), base.destino(),
-                base.providencia(), base.descricaoEncerramento(), List.of(notas), anexo);
+                base.providencia(), base.descricaoEncerramento(), List.of(notas), anexos, base.animal());
+    }
+
+    /** Animal recolhido na ocorrência (V35). O vínculo é 1:1 nos dois sentidos. */
+    private static Ocorrencia comAnimal(Ocorrencia base, int numeroAnimal) {
+        return new Ocorrencia(base.numero(), base.tipo(), base.data(), base.hora(), base.endereco(), base.bairro(),
+                base.descricao(), base.urgente(), base.sigilo(), base.denunciante(), base.denunciado(), base.destino(),
+                base.providencia(), base.descricaoEncerramento(), base.notas(), base.anexos(), numeroAnimal);
     }
 
     private static final Sigilo ID = Sigilo.IDENTIFICADA;
@@ -92,14 +108,14 @@ class OcorrenciasSeed {
             comNotas(encerrada(oc(6, "irregular", ha(200), "10:15", "Rua das Hortênsias, 72", "São Luiz",
                     "Criação de galinhas e cães em espaço insalubre.", false, ID, "Gilberto Sales",
                     "Morador do imóvel", null), Destino.ENCERRADA, "captura_remocao", null),
-                    true, "Vistoria realizada; animais em condições precárias."),
+                    1, "Vistoria realizada; animais em condições precárias."),
             encerrada(oc(7, "agressivo", ha(150), "18:40", "Rua dos Cedros, 15", "Centro",
                     "Cão de grande porte solto avançando em pedestres.", true, Sigilo.ANONIMA, null, null, null),
                     Destino.ENCERRADA, "captura_remocao", null),
             comNotas(encerrada(oc(8, "irregular", ha(120), "13:05", "Rua das Magnólias, 230", "Vila Padre Bento",
                     "Acúmulo de animais em residência, com mau cheiro.", false, Sigilo.SIGILOSA, "Denise Paiva",
                     "Moradora do imóvel", null), Destino.ENCERRADA, "encaminhamento_gepar", null),
-                    false, "Contato com a equipe do GEPAR.", "Caso encaminhado ao GEPAR."),
+                    0, "Contato com a equipe do GEPAR.", "Caso encaminhado ao GEPAR."),
             encerrada(oc(9, "outros", ha(95), "15:50", "Rua das Violetas, 9", "Itu Novo Centro",
                     "Cão encontrado vagando, aparentemente com tutor.", false, ID, "Henrique Bastos", null, null),
                     Destino.ENCERRADA, "outro", "Animal devolvido ao tutor após identificação pelo microchip."),
@@ -114,13 +130,13 @@ class OcorrenciasSeed {
                     Destino.ENCERRADA_DIRETO, "registro_indevido", null),
             comNotas(oc(13, "agressivo", ha(30), "17:15", "Rua dos Pinheiros, 300", "Cidade Nova",
                     "Cão bravo ataca outros animais na rua.", true, ID, "Fábio Arantes", null,
-                    Destino.EM_ATENDIMENTO), false, "Equipe agendada para vistoria."),
+                    Destino.EM_ATENDIMENTO), 0, "Equipe agendada para vistoria."),
             comNotas(oc(14, "irregular", ha(25), "12:40", "Rua das Begônias, 18", "Brasil",
                     "Cães presos em correntes curtas, sem abrigo.", false, Sigilo.SIGILOSA, "Patrícia Leme",
-                    "Morador do imóvel", Destino.EM_ATENDIMENTO), true),
+                    "Morador do imóvel", Destino.EM_ATENDIMENTO), 1),
             comNotas(oc(15, "zoonose", ha(20), "16:00", "Rua dos Manacás, 66", "Vila Nova",
                     "Gato com lesões na face, em contato com crianças.", false, ID, "Sandra Teles", null,
-                    Destino.EM_ATENDIMENTO), false, "Orientado a manter o animal isolado."),
+                    Destino.EM_ATENDIMENTO), 0, "Orientado a manter o animal isolado."),
             oc(16, "morcegos", ha(15), "20:10", "Rua das Tipuanas, 201", "São Luiz",
                     "Morcegos saindo de vão no telhado ao anoitecer.", false, Sigilo.ANONIMA, null, null,
                     Destino.EM_ATENDIMENTO),
@@ -129,7 +145,7 @@ class OcorrenciasSeed {
                     Destino.EM_ATENDIMENTO),
             comNotas(oc(18, "irregular", ha(7), "14:25", "Rua dos Flamboyants, 12", "Pirapitingui",
                     "Venda de filhotes sem condições sanitárias.", false, ID, "Regina Lopes", "Vendedor ambulante",
-                    Destino.EM_ATENDIMENTO), false, "Aguardando apoio da fiscalização."),
+                    Destino.EM_ATENDIMENTO), 0, "Aguardando apoio da fiscalização."),
             oc(19, "agressivo", ha(0), null, "Rua das Acácias, 410", "Vila Nova",
                     "Cão solto rosnando para crianças na saída da escola.", true, ID, "Tatiane Freitas", null,
                     Destino.ABERTA),
@@ -152,7 +168,52 @@ class OcorrenciasSeed {
                     Destino.ABERTA),
             oc(26, "zoonose", ha(8), "11:15", "Avenida dos Jequitibás, 500", "Itu Novo Centro",
                     "Ratos em área de descarte irregular de lixo.", false, ID, "Simone Araújo", null,
-                    Destino.ABERTA));
+                    Destino.ABERTA),
+
+            // ── Ocorrências com animal recolhido (V35): vínculo 1:1 com o animal do canil ──
+            comAnimal(oc(27, "agressivo", ha(0), "07:50", "Rua das Acácias, 512", "Vila Nova",
+                    "Cadela solta e arisca recolhida na calçada da escola.", true, ID, "Nair Pontes", null,
+                    Destino.EM_ATENDIMENTO), 38),
+            comAnimal(oc(28, "outros", ha(2), "16:30", "Rua dos Manacás, 240", "Vila Nova",
+                    "Cão caramelo recolhido após denúncia de abandono na praça.", false, ID, "Elias Vasques", null,
+                    Destino.EM_ATENDIMENTO), 39),
+            comAnimal(oc(29, "zoonose", ha(3), "09:05", "Rua das Tipuanas, 64", "São Luiz",
+                    "Gata branca recolhida com secreção ocular, próxima a creche.", false, ID, "Marta Belloni", null,
+                    Destino.EM_ATENDIMENTO), 40),
+            comAnimal(encerrada(oc(30, "irregular", ha(9), "11:45", "Rua dos Flamboyants, 88", "Pirapitingui",
+                    "Cão mantido em quintal sem água nem abrigo; tutor ausente.", false, Sigilo.SIGILOSA,
+                    "Odete Marcondes", "Morador do imóvel", null),
+                    Destino.ENCERRADA, "captura_remocao", "Animal recolhido e encaminhado ao canil."), 41),
+            comAnimal(oc(31, "outros", ha(7), "13:20", "Rua das Hortênsias, 410", "Cachoeira",
+                    "Gata malhada recolhida em terreno baldio, sem identificação.", false, Sigilo.ANONIMA, null,
+                    null, Destino.EM_ATENDIMENTO), 42),
+            // O protocolo é sempre do ano corrente (Year.now), então a data de abertura fica no ano
+            // corrente também: uma ocorrência de 2025 com protocolo /2026 confundiria a apresentação.
+            comAnimal(encerrada(oc(32, "outros", ha(12), "10:10",
+                    "Avenida Dr. Otaviano Pereira Mendes, 1200", "Vila Nova",
+                    "Filhote de gato recolhido em caixa de papelão na calçada, sem identificação.", false, ID,
+                    "Roberto Ancelmo", null, null),
+                    Destino.ENCERRADA, "captura_remocao", "Animal recolhido; mantido em observação no gatil."), 47),
+
+            // ── Prontuário visual cheio: 5 anexos (o limite é 5 por ocorrência) e 3 notas ──
+            comNotas(oc(33, "irregular", antesDoProcesso(26), "08:15", "Estrada do Varjão, km 7", "Varjão",
+                    "Criação de cães em canis improvisados, com acúmulo de dejetos.", false, ID, "Célia Nogaro",
+                    "Proprietário do sítio", Destino.VINCULADA_PENDENTE), 5,
+                    "Primeira vistoria: 14 cães contados, sem água limpa.",
+                    "Notificado o proprietário para adequação em 15 dias.",
+                    "Reinspeção agendada com apoio da vigilância sanitária."),
+
+            // ── Demais tipos e bairros novos, mantendo a mistura de sigilo ──
+            oc(34, "morcegos", ha(0), "19:55", "Rua dos Cedros, 701", "Cachoeira",
+                    "Colônia de morcegos no vão do telhado da igreja.", false, ID, "Inácio Peregrino", null,
+                    Destino.ABERTA),
+            oc(35, "zoonose", ha(4), "15:40", "Rua das Begônias, 333", "Varjão",
+                    "Equinos com carrapatos em propriedade rural; suspeita de febre maculosa.", true,
+                    Sigilo.SIGILOSA, "Alzira Benedito", null, Destino.ABERTA),
+            encerrada(oc(36, "outros", ha(12), "12:05", "Rua dos Girassóis, 777", "Jardim Novo Itu",
+                    "Munícipe solicita orientação sobre guarda responsável de felinos.", false, ID,
+                    "Teodoro Lacerda", null, null),
+                    Destino.ENCERRADA_DIRETO, "orientacao_municipe", null));
 
     private static final double LATITUDE_BASE = -23.2640;
     private static final double LONGITUDE_BASE = -47.2990;
@@ -186,10 +247,11 @@ class OcorrenciasSeed {
                         ESCRITA, () -> andamentoService.adicionarNota(
                                 id, executor.valido(new CriarNotaRequest(nota)), permissoes).id()));
             }
-            if (plano.anexo()) {
-                BytesMultipartFile foto = new BytesMultipartFile("foto-local.png", "image/png",
-                        ArquivosFicticios.png(0x8D6E63 + plano.numero() * 0x050505));
-                executor.garantir(plano.chave() + ":anexo", "anexo_ocorrencia", () -> agente.executar(
+            for (int ordem = 1; ordem <= plano.anexos(); ordem++) {
+                String nome = ordem == 1 ? "foto-local.png" : "foto-local-" + ordem + ".png";
+                BytesMultipartFile foto = new BytesMultipartFile(nome, "image/png",
+                        ArquivosFicticios.png(0x8D6E63 + plano.numero() * 0x050505 + ordem * 0x001133));
+                executor.garantir(plano.chaveAnexo(ordem), "anexo_ocorrencia", () -> agente.executar(
                         ESCRITA, () -> anexoService.adicionarAnexo(id, foto, permissoes).id()));
             }
             boolean passaPorAtendimento = switch (plano.destino()) {
@@ -226,7 +288,8 @@ class OcorrenciasSeed {
                 plano.endereco(), plano.bairro(), null, plano.descricao(), plano.urgente(),
                 plano.sigilo() == Sigilo.SIGILOSA, plano.sigilo() == Sigilo.ANONIMA,
                 coordenada(LATITUDE_BASE, plano.numero(), 7), coordenada(LONGITUDE_BASE, plano.numero(), 11),
-                denunciante(plano), denunciado(plano), null));
+                denunciante(plano), denunciado(plano),
+                plano.animal() == null ? null : executor.idObrigatorio(AnimaisSeed.chaveAnimal(plano.animal()))));
         return agente.executar(ESCRITA, () -> ocorrenciaService.criar(request, permissoes).id());
     }
 

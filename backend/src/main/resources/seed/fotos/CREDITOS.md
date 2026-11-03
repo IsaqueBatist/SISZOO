@@ -51,3 +51,16 @@ Observações:
   `ArquivosFicticios.nomeDaFoto`), mantenha JPEG com lado maior de até 800 px e atualize esta tabela. `SeedPlanoTest`
   confere que todo animal do plano tem um arquivo legível e dentro do tamanho.
 - A seed é idempotente por chave (`seed_controle`): um banco já semeado não recebe a foto nova; recrie o banco.
+
+## Fotos provisórias — animais 033 a 050 (02/11/2026)
+
+Os 18 animais acrescentados pela SD-10 do `seed-dev.md` **ainda não têm fotografia real**. Os arquivos
+`033-sombra.jpg` a `050-canela.jpg` são **imagens geradas em código**, 640×480, com a legenda "FOTO PROVISORIA" e o
+nome do arquivo escritos sobre um fundo de ruído — ruído porque cor plana comprime para menos de 10 KB e reprovaria
+no `SeedPlanoTest`. Elas existem só para o `./mvnw verify` e o seed rodarem; não retratam nenhum animal, não têm
+autor e não têm licença a declarar.
+
+Para substituir cada uma por uma fotografia CC0 do Wikimedia Commons, a lista com espécie, raça, coloração, pelagem
+e porte de cada animal está em [`docs/decisoes/fotos-seed-pendentes.md`](../../../../../../docs/decisoes/fotos-seed-pendentes.md).
+Ao trocar: mantenha o nome do arquivo, acrescente a linha correspondente na tabela de créditos acima e remova o
+animal da lista de pendentes.

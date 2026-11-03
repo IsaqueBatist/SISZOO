@@ -29,21 +29,43 @@ class ProcessosSeed {
 
     record Amostra(Integer animalCanil, String especie, String sexo, StatusClinicoAmostra statusClinico,
             TipoAbrigo abrigo, MaterialBiologico material, NivelContato contato, Boolean agrediu,
-            List<String> sintomas) {
+            List<String> sintomas, Boolean contatoHumano, String raca, String coloracao, String pelagem,
+            String idadeAprox, String alteracaoComportamental, String observacoes) {
 
         static Amostra campo(String especie, String sexo, StatusClinicoAmostra status, TipoAbrigo abrigo,
                 MaterialBiologico material, String... sintomas) {
-            return new Amostra(null, especie, sexo, status, abrigo, material, null, null, List.of(sintomas));
+            return new Amostra(null, especie, sexo, status, abrigo, material, null, null, List.of(sintomas),
+                    false, null, null, null, null, null, null);
         }
 
         static Amostra canil(int animal, StatusClinicoAmostra status, MaterialBiologico material, String... sintomas) {
-            return new Amostra(animal, null, null, status, TipoAbrigo.INTRADOMICILIAR, material, null, null,
-                    List.of(sintomas));
+            return canil(animal, status, TipoAbrigo.INTRADOMICILIAR, material, sintomas);
+        }
+
+        static Amostra canil(int animal, StatusClinicoAmostra status, TipoAbrigo abrigo, MaterialBiologico material,
+                String... sintomas) {
+            return new Amostra(animal, null, null, status, abrigo, material, null, null, List.of(sintomas),
+                    false, null, null, null, null, null, null);
         }
 
         Amostra comContato(NivelContato nivel, boolean agrediuHumano) {
             return new Amostra(animalCanil, especie, sexo, statusClinico, abrigo, material, nivel, agrediuHumano,
-                    sintomas);
+                    sintomas, true, raca, coloracao, pelagem, idadeAprox, alteracaoComportamental, observacoes);
+        }
+
+        /**
+         * Terceiro estado de {@code animal_amostrado.contato_humano} (V31): "não informado". Só esse
+         * valor alimenta o KPI {@code contatoNaoInformado} do relatório anual; {@code false} não.
+         */
+        Amostra contatoNaoInformado() {
+            return new Amostra(animalCanil, especie, sexo, statusClinico, abrigo, material, null, null,
+                    sintomas, null, raca, coloracao, pelagem, idadeAprox, alteracaoComportamental, observacoes);
+        }
+
+        /** Identificação completa do animal de campo, que o restante do plano deixa nula. */
+        Amostra identificado(String racaAnimal, String cor, String pelo, String idade, String alteracao, String obs) {
+            return new Amostra(animalCanil, especie, sexo, statusClinico, abrigo, material, contato, agrediu,
+                    sintomas, contatoHumano, racaAnimal, cor, pelo, idade, alteracao, obs);
         }
     }
 
@@ -160,7 +182,42 @@ class ProcessosSeed {
                     "Pirapitingui", Amostra.campo("pnh", "femea", OBITO, TipoAbrigo.SILVESTRE,
                             MaterialBiologico.SANGUE)),
             p(24, "leptospirose", "itu_ll01", 1.0, StatusProcesso.ABERTO, null, "CCZ Itu (canil)", "Centro",
-                    Amostra.canil(28, ASSINTOMATICO, MaterialBiologico.URINA)));
+                    Amostra.canil(28, ASSINTOMATICO, MaterialBiologico.URINA)),
+
+            // Contato humano "não informado": único valor que alimenta o KPI contatoNaoInformado do
+            // relatório anual. Não torna o processo urgente (a regra exige contatoHumano == true).
+            p(25, "raiva", "pasteur_sp", 0.40, StatusProcesso.AGUARDANDO_RESULTADO, null, "Nair Pontes",
+                    "Cachoeira", Amostra.campo("canino", "macho", OBITO, TipoAbrigo.PERIDOMICILIAR,
+                            MaterialBiologico.TECIDO_ENCEFALICO).contatoNaoInformado()),
+
+            // Amostra de campo com identificação completa e o único sintoma do catálogo nunca usado.
+            // Vinculado à ocorrência 33, a de prontuário mais cheio (3 notas e 5 anexos).
+            vinculado(p(26, "febre_maculosa", "ial_sorocaba", 0.875, StatusProcesso.COM_RESULTADO, "negativo",
+                    "Célia Nogaro", "Varjão", Amostra.campo("canino", "femea", SINTOMATICO,
+                            TipoAbrigo.PERIDOMICILIAR, MaterialBiologico.SANGUE, "apatia", "hemorragia_interna",
+                            "emagrecimento")
+                            .identificado("Pastor (mestiço)", "Preta e castanha", "curta", "5 anos",
+                                    "Prostração e recusa de alimento desde a véspera da coleta.",
+                                    "Animal de um dos canis improvisados vistoriados na propriedade.")), 33, false),
+
+            // Raiva em quiróptero do canil: até agora só havia morcego de campo. Animal vivo em
+            // isolamento, então saliva e desfecho coerentes com o status do animal.
+            comDesfecho(p(27, "raiva", "pasteur_sp", 0.93, StatusProcesso.CONCLUIDO, "negativo", "CCZ Itu (canil)",
+                    "Jardim Paraíso", Amostra.canil(34, ASSINTOMATICO, TipoAbrigo.PERIDOMICILIAR,
+                            MaterialBiologico.SALIVA)), "em_acompanhamento"),
+
+            // Contato humano com agressão: deixa o processo urgente (RN04) e alimenta o card do
+            // dashboard. Desfecho de óbito natural, nunca usado pelo seed.
+            comDesfecho(p(28, "raiva", "itu_ll01", 0.96, StatusProcesso.CONCLUIDO, "negativo", "Alzira Benedito",
+                    "Varjão", Amostra.campo("canino", "macho", OBITO, TipoAbrigo.PERIDOMICILIAR,
+                            MaterialBiologico.TECIDO_ENCEFALICO).comContato(NivelContato.DIRETA, true)),
+                    "obito_natural"),
+
+            // Último desfecho do catálogo sem uso.
+            comDesfecho(p(29, "leptospirose", "ccz_sp", 0.98, StatusProcesso.COM_RESULTADO, "negativo",
+                    "Teodoro Lacerda", "Jardim Novo Itu", Amostra.campo("canino", "femea", SINTOMATICO,
+                            TipoAbrigo.INTRADOMICILIAR, MaterialBiologico.URINA, "vomito", "diarreia", "apatia")),
+                    "obito_outro"));
 
     static LocalDate dataAbertura(int numero, DatasSeed datas) {
         Processo processo = PLANO.stream().filter(p -> p.numero() == numero).findFirst().orElseThrow();
@@ -268,12 +325,14 @@ class ProcessosSeed {
         return plano.amostras().stream().map(a -> {
             UUID animalId = a.animalCanil() == null ? null : executor.idObrigatorio(AnimaisSeed.chaveAnimal(a.animalCanil()));
             boolean doCanil = animalId != null;
-            boolean contato = a.contato() != null;
             return new AmostraAnimalRequest(animalId,
-                    doCanil ? null : a.especie(), doCanil ? null : a.sexo(), null, null, null, null,
+                    doCanil ? null : a.especie(), doCanil ? null : a.sexo(),
+                    doCanil ? null : a.raca(), doCanil ? null : a.coloracao(),
+                    doCanil ? null : a.pelagem(), doCanil ? null : a.idadeAprox(),
                     doCanil ? null : pesoDeCampo(a.especie()),
-                    a.statusClinico(), a.abrigo(), null, abertura.minusDays(1), a.material(), contato,
-                    a.contato(), a.agrediu(), null, a.sintomas().isEmpty() ? null : a.sintomas());
+                    a.statusClinico(), a.abrigo(), a.alteracaoComportamental(), abertura.minusDays(1), a.material(),
+                    a.contatoHumano(), a.contato(), a.agrediu(), a.observacoes(),
+                    a.sintomas().isEmpty() ? null : a.sintomas());
         }).toList();
     }
 
