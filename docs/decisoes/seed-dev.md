@@ -130,11 +130,15 @@ fictícios (25/10/2026). Substitui o `scripts/seed-test-data.mjs` (SQL direto) e
   - **Chaves de `seed_controle` compatíveis.** O primeiro anexo de ocorrência mantém a chave sem sufixo
     (`ocorrencia:06:anexo`) e exames e anexos de animal passam a ter `ordem`, com `ordem = 1` reproduzindo a chave
     antiga (`exame:012.1`). Um banco semeado com a versão anterior não ganha registro duplicado na reexecução.
-  - **Fotos provisórias.** Os 18 animais novos entram com imagem **gerada em código** (ruído com a legenda "FOTO
-    PROVISORIA"), e não com fotografia CC0: a pesquisa e a verificação de licença no Wikimedia Commons ficaram para
-    os autores. A escolha foi commitar as provisórias para `verify` e seed continuarem verdes, em vez de deixar a
-    branch vermelha. Trocar cada uma é só substituir o arquivo mantendo o nome — não há código a mexer. A lista com
-    espécie, raça e cor de cada animal está em `fotos-seed-pendentes.md`, e a ressalva de licença, no `CREDITOS.md`.
+  - **Fotos reais dos 18 animais novos**, pela mesma receita da SD-9: fotografias **CC0 1.0** do Wikimedia Commons,
+    redimensionadas para lado maior de 640 px e recomprimidas em JPEG 75% (23–72 KB cada). Fonte e autor de cada uma
+    na tabela do `CREDITOS.md`, que passa a ter as 50 linhas.
+  - A seleção foi feita com o filtro `incategory:CC-Zero` da busca do Commons — a busca textual pura devolvia muito
+    arquivo com licença incompatível — e **cada foto foi conferida visualmente** antes de entrar. A conferência não é
+    burocracia: a busca devolveu um urso polar catalogado como "White Samoyed dog", grafite de rua classificado como
+    cão e retratos de pessoas de sobrenome "Beagle". Também foram descartadas fotos em que o animal aparecia distante
+    demais para o card da listagem, e aquelas cuja cor ou pelagem divergia do registro do animal no plano.
+  - As 18 são de autores diferentes dos das 32 anteriores e nenhum arquivo-fonte se repete entre os 50.
 
 ## Massa
 
