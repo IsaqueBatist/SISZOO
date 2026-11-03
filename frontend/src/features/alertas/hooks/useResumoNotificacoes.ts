@@ -1,8 +1,10 @@
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useKpisDashboardQuery } from '@/features/dashboard/hooks/useDashboardKpis'
 import { useProcessosUrgentesQuery } from '@/features/dashboard/hooks/useAlertaProcessosUrgentes'
 import { TOM_POR_SEVERIDADE_ALERTA } from '@/features/dashboard/utils/tonsDeAlerta'
 import type { AlertaCritico } from '@/features/dashboard/types/dashboard.types'
 import type { ProcessoResumo } from '@/features/processos/types/processos.types'
+import { podeAcessar } from '@/lib/nav'
 
 const PROCESSOS_URGENTES_NO_RESUMO = 5
 
@@ -19,8 +21,16 @@ export interface NotificacaoResumo {
   para?: string
 }
 
+function ehAlertaDeVacina(alerta: AlertaCritico): boolean {
+  return alerta.tipo === 'vacina_vencendo' || alerta.tipo === 'vacina_vencida'
+}
+
+function abreTelaDeAnimais(alerta: AlertaCritico): boolean {
+  return ehAlertaDeVacina(alerta) || alerta.tipo in PAGINA_POR_TIPO_DE_ALERTA
+}
+
 function paraNotificacao(alerta: AlertaCritico): NotificacaoResumo {
-  const ehVacina = alerta.tipo === 'vacina_vencendo' || alerta.tipo === 'vacina_vencida'
+  const ehVacina = ehAlertaDeVacina(alerta)
   const destino = ehVacina ? '/alertas/vacinas' : PAGINA_POR_TIPO_DE_ALERTA[alerta.tipo]
   return {
     id: alerta.tipo,
@@ -54,10 +64,15 @@ export interface ResumoNotificacoes {
 }
 
 export function useResumoNotificacoes(): ResumoNotificacoes {
+  const { roleKey } = useAuth()
   const kpis = useKpisDashboardQuery()
   const urgentes = useProcessosUrgentesQuery()
 
-  const alertas = (kpis.data?.alertas ?? []).filter((alerta) => alerta.total > 0).map(paraNotificacao)
+  const acessaAnimais = podeAcessar(roleKey, 'animais')
+  const alertas = (kpis.data?.alertas ?? [])
+    .filter((alerta) => alerta.total > 0)
+    .filter((alerta) => acessaAnimais || !abreTelaDeAnimais(alerta))
+    .map(paraNotificacao)
   const processos = urgentesParaNotificacao(urgentes.data?.itens ?? [], urgentes.data?.totalUrgentes ?? 0)
 
   const itens = [...processos, ...alertas.filter((item) => item.urgente), ...alertas.filter((item) => !item.urgente)]

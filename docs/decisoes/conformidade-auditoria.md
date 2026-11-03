@@ -150,3 +150,16 @@ O cadastro continua com 10 dependências porque criar uma ocorrência de fato to
 protocolo, catálogo de tipo, autor, partes, animal, linha do tempo, auditoria e
 resposta; reduzir mais exigiria agrupar colaboradores sem afinidade. Fica como
 candidato a revisão se o cadastro crescer.
+
+## Encontro com a restrição de animais ao Agente Sanitário (PR 125)
+
+A `main` tirou o módulo de animais da interface do Agente Sanitário
+(`docs/decisoes/restricao-animais-agente.md`, DER regra 33). No merge, as telas novas
+desta branch seguem a mesma regra:
+
+- `/alertas/esterilizacao` fica dentro do `RotaLeituraAnimais`; o card de
+  esterilização do dashboard e a notificação correspondente no sino não aparecem para
+  quem não acessa o módulo de animais, como o alerta de vacinas.
+- No card "Animal recolhido" da ocorrência, o Agente continua buscando e vinculando o
+  animal (a busca usa `GET /api/animais`, que a API ainda permite), mas vê o nome sem
+  link para a ficha, como no badge "Animal do canil" do processo.

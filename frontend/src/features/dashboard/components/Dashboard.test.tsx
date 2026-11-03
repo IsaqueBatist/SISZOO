@@ -59,6 +59,14 @@ describe('Dashboard', () => {
     expect(within(cabecalhoAlertas).getByText('Dados de demonstração')).toBeInTheDocument()
   })
 
+  it('Agente Sanitário não vê o card de alerta de vacinas; o de processos urgentes continua', async () => {
+    renderDashboard('agente')
+
+    expect(await screen.findByRole('heading', { name: /Alertas Críticos/ })).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByText(/vacina\(s\)/i)).not.toBeInTheDocument())
+    expect(screen.queryByRole('link', { name: /ver detalhes/i })).not.toBeInTheDocument()
+  })
+
   it('mostra skeleton enquanto os dados carregam e some depois', async () => {
     const { container } = renderDashboard()
 
@@ -239,6 +247,21 @@ describe('Dashboard', () => {
       'href',
       '/alertas/esterilizacao',
     )
+  })
+
+  it('Agente Sanitário não vê o card de esterilização pendente', async () => {
+    let consultou = false
+    server.use(
+      http.get(`${API_BASE_URL}/alertas/esterilizacao`, () => {
+        consultou = true
+        return HttpResponse.json([])
+      }),
+    )
+    renderDashboard('agente')
+
+    expect(await screen.findByRole('heading', { name: /Alertas Críticos/ })).toBeInTheDocument()
+    expect(screen.queryByText(/sem esterilização/)).not.toBeInTheDocument()
+    expect(consultou).toBe(false)
   })
 
   it('card de esterilização pendente não aparece quando nenhum animal passou de 72 horas', async () => {

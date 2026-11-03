@@ -25,7 +25,7 @@ function renderRota(initialEntry = '/animais/novo') {
       <MemoryRouter initialEntries={[initialEntry]}>
         <AuthProvider>
           <Routes>
-            <Route path="/animais" element={<div>Lista de animais</div>} />
+            <Route path="/dashboard" element={<div>Dashboard</div>} />
             <Route element={<RotaEscritaAnimais />}>
               <Route path="/animais/novo" element={<div>Formulário de cadastro</div>} />
             </Route>
@@ -37,12 +37,12 @@ function renderRota(initialEntry = '/animais/novo') {
 }
 
 describe('RotaEscritaAnimais', () => {
-  it('Agente Sanitário é redirecionado para /animais (só tem leitura no backend)', () => {
+  it('Agente Sanitário é redirecionado para /dashboard (não acessa o módulo de animais na UI)', () => {
     autenticarComCargos(['Agente Sanitário'])
 
     renderRota()
 
-    expect(screen.getByText('Lista de animais')).toBeInTheDocument()
+    expect(screen.getByText('Dashboard')).toBeInTheDocument()
     expect(screen.queryByText('Formulário de cadastro')).not.toBeInTheDocument()
   })
 

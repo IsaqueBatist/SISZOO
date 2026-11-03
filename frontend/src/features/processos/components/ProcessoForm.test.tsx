@@ -310,6 +310,27 @@ describe('ProcessoForm — amostras e envio', () => {
     }
   })
 
+  // Regressão da restrição de 02/11/2026: o Agente Sanitário perdeu o módulo "animais" na UI, mas
+  // mantém GESTAO_ANIMAIS:leitura na API justamente para este fluxo. Se o autocomplete quebrar aqui,
+  // a restrição foi longe demais.
+  it('Agente Sanitário, sem acesso ao módulo de animais na UI, ainda busca e seleciona animal do canil', async () => {
+    const corpos = capturarCriacao()
+    const user = userEvent.setup()
+    renderCadastrar('/processos/novo', AGENTE)
+    await preencherEtapa1SemVinculoEAvancar(user)
+    await preencherEtapa2EAvancar(user)
+    await preencherAmostraDeCampo(user)
+    const pane = paneDoStep(/^3\. Amostras/)
+    await user.click(pane.getByRole('button', { name: 'Já cadastrado' }))
+    await user.type(pane.getByLabelText(/Buscar animal do canil/i), 'Rex')
+    await user.click(await pane.findByText('Rex'))
+
+    await avancarERegistrar(user)
+
+    await waitFor(() => expect(corpos).toHaveLength(1))
+    expect((corpos[0] as { amostras: Record<string, unknown>[] }).amostras[0].animalId).toBe(REX_ID)
+  })
+
   it('vinculado pela ocorrência, envia o ocorrenciaId', async () => {
     const corpos = capturarCriacao()
     const user = userEvent.setup()

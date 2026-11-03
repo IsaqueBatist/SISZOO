@@ -1051,6 +1051,18 @@ consideram só quem está sob custódia (`StatusAnimal.CODIGOS_SOB_CUSTODIA`), e
 
 32. A matriz de permissões do código prevalece: Veterinário escreve em processos sanitários; Agente Sanitário lê animais e tem `denunciante_sigiloso` (AT-3, AT-4). Cadastro/edição de animal e baia são auditados (AT-5).
 
+### Acesso e segurança (adendo 4 - restrição de animais ao Agente Sanitário, 02/11/2026)
+
+33. O Agente Sanitário **mantém** `GESTAO_ANIMAIS:leitura` no banco (`cargo_permissao`, V3), mas **não tem o módulo
+    de animais na interface**: o item "Animais" sai do menu lateral e o guard `RotaLeituraAnimais` (front) barra
+    `/animais`, `/animais/:id`, `/alertas/vacinas` e `/alertas/esterilizacao`, redirecionando para `/dashboard`. A leitura na API é preservada
+    porque o formulário de processo sanitário e o card "Animal recolhido" da ocorrência buscam animais do canil por `GET /api/animais` (amostra com
+    `origem = canil`), fluxo que o Agente executa. **Consequência a declarar:** este limite é de interface, não de
+    API - o JWT do Agente continua autorizando `GET /api/animais` e `GET /api/animais/{id}`, então não é um controle
+    de sigilo. Um limite real exigiria uma feature própria em `cargo_permissao`
+    (ex.: `GESTAO_ANIMAIS:acervo:leitura`) e um endpoint enxuto de busca (`GET /api/animais/resumo`), ambos
+    modelo-alvo. Decisões: `docs/decisoes/restricao-animais-agente.md`.
+
 ---
 
 ## 6. Catálogos exigidos pelo frontend (resumo)

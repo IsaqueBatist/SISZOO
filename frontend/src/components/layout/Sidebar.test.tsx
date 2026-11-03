@@ -96,6 +96,20 @@ describe('Sidebar', () => {
     expect(screen.queryByRole('link', { name: /usuários/i })).not.toBeInTheDocument()
   })
 
+  it('perfil agente não vê o item de menu "Animais", mas mantém Ocorrências e Processos', () => {
+    renderSidebar(['Agente Sanitário'])
+
+    expect(screen.queryByRole('link', { name: /^animais$/i })).not.toBeInTheDocument()
+    expect(linkOcorrencias()).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /processos sanitários/i })).toBeInTheDocument()
+  })
+
+  it.each([['Administrador'], ['Veterinário']])('perfil %s continua vendo o item de menu "Animais"', (cargo) => {
+    renderSidebar([cargo])
+
+    expect(screen.getByRole('link', { name: /^animais$/i })).toBeInTheDocument()
+  })
+
   it('colapsada, os itens de menu continuam com nome acessível (texto visualmente escondido, não removido)', () => {
     renderSidebar(['Administrador'], true)
 

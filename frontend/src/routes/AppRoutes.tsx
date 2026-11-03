@@ -8,6 +8,7 @@ import { RotaEscritaAnimais } from './RotaEscritaAnimais'
 import { RotaEscritaOcorrencias } from './RotaEscritaOcorrencias'
 import { RotaEscritaProcessos } from './RotaEscritaProcessos'
 import { RotaGestaoBaias } from './RotaGestaoBaias'
+import { RotaLeituraAnimais } from './RotaLeituraAnimais'
 import { RotaLeituraOcorrencias } from './RotaLeituraOcorrencias'
 import { RotaProtegida } from './RotaProtegida'
 import { RouteErrorBoundary } from './RouteErrorBoundary'
@@ -118,13 +119,15 @@ export function AppRoutes() {
               }
             >
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/alertas/vacinas" element={<AlertaVacinasDetalhe />} />
-              <Route path="/alertas/esterilizacao" element={<AlertaEsterilizacaoDetalhe />} />
-              <Route path="/animais" element={<Animais />} />
-              <Route path="/animais/:id" element={<FichaAnimal />} />
-              <Route element={<RotaEscritaAnimais />}>
-                <Route path="/animais/novo" element={<CadastrarAnimal />} />
-                <Route path="/animais/:id/editar" element={<EditarAnimal />} />
+              <Route element={<RotaLeituraAnimais />}>
+                <Route path="/alertas/vacinas" element={<AlertaVacinasDetalhe />} />
+                <Route path="/alertas/esterilizacao" element={<AlertaEsterilizacaoDetalhe />} />
+                <Route path="/animais" element={<Animais />} />
+                <Route path="/animais/:id" element={<FichaAnimal />} />
+                <Route element={<RotaEscritaAnimais />}>
+                  <Route path="/animais/novo" element={<CadastrarAnimal />} />
+                  <Route path="/animais/:id/editar" element={<EditarAnimal />} />
+                </Route>
               </Route>
               <Route path="/medicamentos" element={<Medicamentos />} />
               <Route path="/vacinas" element={<Vacinas />} />

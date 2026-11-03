@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { mensagemDeRegraDaApi } from '@/lib/erroApi'
+import { podeAcessar } from '@/lib/nav'
 import type { Animal } from '@/features/animais/types/animais.types'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import { BuscaAnimalCanil } from '@/features/processos/components/BuscaAnimalCanil'
 import '@/features/processos/components/ProcessoForm.css'
 import type { Ocorrencia } from '../types/ocorrencias.types'
@@ -17,6 +19,8 @@ export function CardAnimalRecolhido({ ocorrencia, podeVincular }: CardAnimalReco
   const [trocando, setTrocando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const vincular = useVincularAnimalMutation(ocorrencia.id)
+  const { roleKey } = useAuth()
+  const podeVerFichaAnimal = podeAcessar(roleKey, 'animais')
   const vinculado = ocorrencia.animalVinculado
   const encerrada = ocorrencia.statusOcorrencia === 'ENCERRADA'
   const podeEscolher = podeVincular && (!vinculado || (!encerrada && trocando))
@@ -44,7 +48,7 @@ export function CardAnimalRecolhido({ ocorrencia, podeVincular }: CardAnimalReco
             <div className="kv-row">
               <span className="k">Animal</span>
               <span className="v">
-                <Link to={`/animais/${vinculado.id}`}>{vinculado.nome}</Link>
+                {podeVerFichaAnimal ? <Link to={`/animais/${vinculado.id}`}>{vinculado.nome}</Link> : vinculado.nome}
               </span>
             </div>
             <div className="kv-row">

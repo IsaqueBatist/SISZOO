@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
+import { AuthContext, type AuthContextValue } from '@/features/auth/hooks/authContextValue'
 import { API_BASE_URL } from '@/lib/env'
 import { server } from '@/mocks/server'
 import { criarOcorrenciaFixture } from '@/mocks/ocorrenciasFixtures'
@@ -22,12 +23,14 @@ const VINCULADO = { id: ANIMAL.id, nome: ANIMAL.nome, microchip: ANIMAL.microchi
 
 const ROTULO_BUSCA = 'Buscar animal recolhido por nome ou microchip'
 
-function renderCard(ocorrencia: Ocorrencia, podeVincular = true) {
+function renderCard(ocorrencia: Ocorrencia, podeVincular = true, roleKey: AuthContextValue['roleKey'] = 'admin') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter>
-        <CardAnimalRecolhido ocorrencia={ocorrencia} podeVincular={podeVincular} />
+        <AuthContext.Provider value={{ roleKey } as AuthContextValue}>
+          <CardAnimalRecolhido ocorrencia={ocorrencia} podeVincular={podeVincular} />
+        </AuthContext.Provider>
       </MemoryRouter>
     </QueryClientProvider>,
   )
@@ -69,6 +72,13 @@ describe('CardAnimalRecolhido', () => {
 
     expect(screen.getByRole('link', { name: 'Caramelo' })).toHaveAttribute('href', '/animais/animal-1')
     expect(screen.getByRole('button', { name: 'Trocar animal' })).toBeInTheDocument()
+  })
+
+  it('para quem não acessa o módulo de animais mostra o nome sem link para a ficha', () => {
+    renderCard(criarOcorrenciaFixture({ animalVinculado: VINCULADO }), true, 'agente')
+
+    expect(screen.getByText('Caramelo')).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Caramelo' })).not.toBeInTheDocument()
   })
 
   it('em ocorrência encerrada sem animal permite vincular uma vez, avisando que não poderá trocar', () => {
