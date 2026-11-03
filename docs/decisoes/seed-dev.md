@@ -86,21 +86,103 @@ fictícios (25/10/2026). Substitui o `scripts/seed-test-data.mjs` (SQL direto) e
     código.
   - Idempotência inalterada: um banco já semeado não recebe as fotos; recrie o banco.
 
+- **SD-10 Cobertura das lacunas de catálogo e de limites (revisão de 02/11/2026).**
+  - Motivo: a massa era grande, mas havia funcionalidade real que **nenhum registro exercitava**. O critério desta
+    revisão foi fechar essas lacunas, não aumentar volume: cada registro novo existe para tornar demonstrável uma
+    regra, um estado de coluna ou um limite temporal que antes não aparecia em tela nenhuma.
+  - **Espécies**: entram 3 quirópteros e 2 primatas. Antes, `quiroptero` não tinha nenhum animal no canil (só amostra
+    de campo) e `pnh` tinha um. As 4 espécies do catálogo passam a ter animal, com baia de isolamento própria —
+    silvestre não divide recinto com cão e gato.
+  - **Três estados de `animal.esterilizado`** (V31): o plano passava sempre `true`/`false` e nunca `null`. O novo
+    `castracaoNaoInformada()` cobre o "não informado". Isso **expõe de propósito** uma divergência real do código: o
+    alerta de 72 h (`listarNaoEsterilizadosComEntradaAntesDe`) e o KPI `nao_castrado`
+    (`countByEsterilizadoFalseAndStatus_Codigo`) filtram por `= false`, então o animal "não informado" não aparece em
+    nenhum dos dois. A massa demonstra o comportamento; a divergência fica como pendência, não é corrigida aqui.
+  - **Limites de 72 h** (`AlertaEsterilizacaoService`): o `DatasSeed` só tinha granularidade de dias, e nenhum animal
+    ficava perto do limite. Novo `entradaHorasAtras(int)` posiciona animais com 6 h e 60 h (fora do alerta) e 73 h e
+    200 h (dentro). **O limite é de 72 horas, não de 72 dias** — não existe prazo de castração em dias no sistema,
+    nem agendamento, nem data de vencimento de castração.
+    Prazo de validade das janelas estreitas, pela SD-5: o alerta recalcula o limite a cada requisição com a hora
+    corrente, então o animal de 60 h entra no alerta 12 h depois da execução do seed e o de 6 h, 66 h depois. Para
+    renovar, recrie o banco.
+  - **Limites das outras janelas**: vacinas com validade em 0, +7 e +8 dias (a de +8 fica fora da janela de 7 dias do
+    `AlertaVacinalService`, provando o corte) e −1 dia (vencida); prescrições ATIVAS terminando em +7 (entra em
+    `medicacao_ativa`) e +8 (não entra).
+  - **Colunas que eram mortas na massa**: `data_nascimento_aprox`, `animal_condicao_saude` + `condicoes_outras`
+    (V33), `ocorrencia.animal_id` (V35, 6 ocorrências com animal recolhido — acende o `CardAnimalRecolhido` e o
+    `OrigemAnimalController`), os 4 tipos de `tipo_destino_transferencia` (antes só `ENTIDADE_PROTECAO`),
+    `animal_amostrado.contato_humano IS NULL` (alimenta o KPI `contatoNaoInformado` do relatório anual, que ficava em
+    zero) e a identificação completa da amostra de campo (`raca`, `coloracao`, `pelagem`, `idade_aprox`,
+    `alteracao_comportamental`, `observacoes`).
+  - **Catálogo sem uso**: `vacina.gripe_canina`, `tipo_procedimento.vacinacao`, `tipo_exame.ultrassonografia`,
+    `sintoma.hemorragia_interna`, `desfecho_animal.obito_natural` e `obito_outro`, `ViaAdministracao.TOPICA` e
+    `INTRAVENOSA`, `UnidadeDose.UNIDADE_INTERNACIONAL`. Continuam sem uso, de propósito:
+    `resultado_laboratorial.aguardando` (o service recusa lançá-lo) e o medicamento inativo (o `PrescricaoService`
+    não checa `ativo`, e prescrevê-lo pareceria defeito numa apresentação).
+  - **Desfecho só em amostra de campo.** `registrarResultado` grava `desfecho_animal` no processo e **não** altera o
+    animal. Um desfecho de óbito num processo cuja amostra é do canil deixaria o animal vivo no canil e morto no
+    processo. Por isso os desfechos de óbito ficam em amostras de campo, e o processo de raiva no quiróptero do canil
+    (vivo, em isolamento) usa saliva e `em_acompanhamento`.
+  - **Anexos perto do limite**: 5 num animal (limite 10) e 5 numa ocorrência (limite exato, o 6º daria 4xx).
+  - **Capacidade das baias.** As 6 baias antigas tinham 4 vagas livres no total, e ocupá-las deixaria Gatil G1,
+    Canil A1 e Canil A2 superlotados, desfigurando os indicadores de ocupação. Entram 3 baias (Isolamento I1,
+    Canil A3 e Gatil G2); Canil Externo B1 e Quarentena Q1 seguem lotadas de propósito.
+  - **Chaves de `seed_controle` compatíveis.** O primeiro anexo de ocorrência mantém a chave sem sufixo
+    (`ocorrencia:06:anexo`) e exames e anexos de animal passam a ter `ordem`, com `ordem = 1` reproduzindo a chave
+    antiga (`exame:012.1`). Um banco semeado com a versão anterior não ganha registro duplicado na reexecução.
+  - **Fotos reais dos 18 animais novos**, pela mesma receita da SD-9: fotografias **CC0 1.0** do Wikimedia Commons,
+    redimensionadas para lado maior de 640 px e recomprimidas em JPEG 75% (23–72 KB cada). Fonte e autor de cada uma
+    na tabela do `CREDITOS.md`, que passa a ter as 50 linhas.
+  - A seleção foi feita com o filtro `incategory:CC-Zero` da busca do Commons — a busca textual pura devolvia muito
+    arquivo com licença incompatível — e **cada foto foi conferida visualmente** antes de entrar. A conferência não é
+    burocracia: a busca devolveu um urso polar catalogado como "White Samoyed dog", grafite de rua classificado como
+    cão e retratos de pessoas de sobrenome "Beagle". Também foram descartadas fotos em que o animal aparecia distante
+    demais para o card da listagem, e aquelas cuja cor ou pelagem divergia do registro do animal no plano.
+  - As 18 são de autores diferentes dos das 32 anteriores e nenhum arquivo-fonte se repete entre os 50.
+
 ## Massa
+
+Estado em 02/11/2026 (SD-10). As quantidades exatas vêm das tabelas-plano (`*Seed.PLANO`, `VACINAS`,
+`PRESCRICOES`…), e o `SeedDevIT` as confere derivando dos planos, sem número cravado.
 
 | Entidade | Quantidade | Cobertura |
 |---|---|---|
-| Usuários | 8 (+ admin inicial) | 1 admin, 3 veterinários (1 em primeiro acesso), 4 agentes (1 desativado). Senha única `Ficticio#2026`, com hash do `PasswordEncoder` |
+| Usuários | 8 (+ admin inicial) | 1 admin, 3 veterinários (1 em primeiro acesso), 4 agentes (1 desativado). Senha única `Ficticio#2026`, com hash do `PasswordEncoder`. **Inalterados pela SD-10** |
 | Categorias / medicamentos | 4 / 8 | 1 medicamento inativo |
-| Baias | 6 | uma lotada (alerta), uma perto do limite, um gatil, uma quarentena, uma inativa |
-| Animais | 32 | 21 sob custódia (2 páginas na listagem) e 11 fora (6 adotados, transferido, óbitos, eutanásia com laudo); todos com foto real CC0 (SD-9) |
-| Vacinações / procedimentos / prescrições / exames | 38 / 35 / 12 / 11 | vencendo e vencidas, sem avaliação há 30 dias, prescrições terminando em 7 dias, 1 retificação de cada |
-| Anexos de animal | 3 | PNG e PDF gerados em código |
-| Ocorrências | 26 | 8 abertas (2 de hoje), 7 em atendimento, 11 encerradas (todas as providências, inclusive `registro_indevido`); sigilosas, anônimas, notas, anexos |
-| Processos | 24 | 4 status, 6 doenças, 4 laboratórios, raiva em cão, gato e morcego; positivos (nunca retificados), 2 retificações, 5 vínculos com ocorrência |
+| Baias | 9 | duas lotadas (alerta), uma perto do limite, dois gatis, uma quarentena, um isolamento de silvestres, uma inativa |
+| Animais | 50 | **28 caninos, 16 felinos, 3 quirópteros, 3 primatas** — as 4 espécies do catálogo. 35 sob custódia e 15 fora (6 adotados, 4 transferidos nos 4 tipos de destino, 3 óbitos naturais, 2 eutanásias com laudo). Esterilização nos 3 estados (`true`/`false`/não informado) e limites de 72 h nos dois lados |
+| Vacinações / procedimentos / prescrições / exames | 48 / 53 / 16 / 16 | validade em 0, +7, +8 e −1 dia (o +8 prova o corte da janela de 7 dias); sem avaliação há 30 dias; prescrições ATIVAS terminando em +7 e +8; 1 retificação de cada |
+| Anexos de animal | 8 | até 5 num mesmo animal (limite 10); PNG e PDF gerados em código |
+| Ocorrências | 36 | 10 abertas (2 de hoje), 12 em atendimento, 14 encerradas (todas as 7 providências, inclusive `registro_indevido`); sigilosas, anônimas, 9 notas, 7 anexos (até 5 numa só), **6 com animal recolhido** |
+| Processos | 29 | 4 status, 6 doenças, 4 laboratórios, raiva em cão, gato e morcego (de campo **e do canil**); positivos (nunca retificados), 2 retificações, 6 vínculos com ocorrência, os 4 desfechos, contato humano nos 3 estados, 12 de 12 sintomas |
 | Relatórios gerados | 6 | 1 por tipo, PDF e CSV |
 
-As quantidades exatas vêm das tabelas-plano (`*Seed.PLANO`, `VACINAS`, `PRESCRICOES`…), e o `SeedDevIT` as confere.
+## Cenários que a massa não representa porque o sistema não os tem
+
+Levantado em 02/11/2026, ao desenhar a SD-10. Nada foi acrescentado ao sistema para acomodar estes pedidos; ficam
+aqui para não serem descritos como existentes numa apresentação ou no TG.
+
+- **Prazo, SLA, data limite ou atraso de ocorrência**: não existe em nenhuma camada (migrations V1–V38, backend e
+  frontend). As únicas datas da ocorrência são abertura, hora de abertura, encerramento e os carimbos de auditoria.
+  O único tempo medido é retrospectivo — `criado_em → encerrada_em` das já encerradas, no relatório de bairros, sem
+  meta de comparação. Logo, "ocorrência com prazo próximo" e "ocorrência atrasada" são irrepresentáveis.
+- **Prioridade com níveis** (alta/média/baixa): não existe. Só os booleanos `ocorrencia.urgente` e
+  `processo_sanitario.urgente`. A listagem ordena por `urgente DESC`, então o urgente sobe ao topo — é tudo.
+- **Castração agendada, pendente, próxima do vencimento ou vencida**: não existe. O sistema tem `esterilizado`
+  (3 estados), `data_esterilizacao` (não futura, só quando `esterilizado = true`), o procedimento `castracao` (que
+  marca `esterilizado = true` e guarda a data mais antiga), o alerta de **72 horas** desde a entrada e o KPI
+  `nao_castrado`. Não há data de vencimento nem agendamento.
+- **Status "resolvida" ou "pendente"** de ocorrência: os únicos são `ABERTA`, `EM_ATENDIMENTO` e `ENCERRADA`.
+  "Pendentes" é um filtro de interface, equivalente a ABERTA + EM_ATENDIMENTO.
+- **Origem da ocorrência** (telefone, balcão, 156, e-mail): não existe campo.
+- **Tratamento concluído automaticamente**: `prescricao.status` vem do cliente e nenhum job o transiciona. Uma
+  prescrição esquecida em `ATIVA` fica `ATIVA`. "Em andamento" e "concluído" são o valor gravado, nada derivado.
+- **Alerta de dashboard de ocorrência ou de processo**: os 8 alertas do backend são todos de animais, baias e
+  prescrições. O card de processos urgentes é montado no frontend (`useAlertaProcessosUrgentes`) filtrando
+  `urgente=true`, sem olhar status — conta até os concluídos.
+- **Tabela de alertas**: não existe. Todo alerta é calculado em runtime, sem persistência, sem reconhecer/silenciar
+  e sem histórico.
+- **Tempo médio do relatório de bairros ≈ 0 h**: consequência conhecida da SD-5, já documentada acima.
 
 ## Testes
 

@@ -3,8 +3,11 @@ package com.siszoo.seed;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 
@@ -43,6 +46,23 @@ class SeedDevIT extends AbstractIntegrationTest {
 
     @Autowired
     private ApiTesteFixture fixture;
+
+    @Autowired
+    private Clock clock;
+
+    private static long ocorrenciasCom(OcorrenciasSeed.Destino... destinos) {
+        Set<OcorrenciasSeed.Destino> alvos = Set.of(destinos);
+        return OcorrenciasSeed.PLANO.stream().filter(o -> alvos.contains(o.destino())).count();
+    }
+
+    /** O KPI conta só o dia corrente e exclui as encerradas como registro indevido. */
+    private long ocorrenciasDeHoje() {
+        DatasSeed datas = new DatasSeed(clock);
+        return OcorrenciasSeed.PLANO.stream()
+                .filter(o -> !"registro_indevido".equals(o.providencia()))
+                .filter(o -> o.data().apply(datas).equals(datas.hoje()))
+                .count();
+    }
 
     @Test
     @Order(1)
@@ -124,16 +144,79 @@ class SeedDevIT extends AbstractIntegrationTest {
                 + " ON l.id = r.resultado_laboratorial_id WHERE r.retifica_id IS NOT NULL AND EXISTS ("
                 + " SELECT 1 FROM resultado_processo o JOIN resultado_laboratorial ol ON ol.id = o.resultado_laboratorial_id"
                 + " WHERE o.id = r.retifica_id AND ol.codigo = 'positivo')")).isZero();
-        assertThat(contar("SELECT count(*) FROM resultado_processo WHERE retifica_id IS NOT NULL")).isEqualTo(2);
+        assertThat(contar("SELECT count(*) FROM resultado_processo WHERE retifica_id IS NOT NULL"))
+                .isEqualTo(ProcessosSeed.PLANO.stream().filter(p -> p.retificacao() != null).count());
         assertThat(jdbcTemplate.queryForList("SELECT o.status_ocorrencia FROM ocorrencia o"
                 + " JOIN processo_sanitario p ON p.ocorrencia_id = o.id WHERE p.status_processo <> 'CONCLUIDO'",
                 String.class)).containsOnly("EM_ATENDIMENTO");
-        assertThat(contar("SELECT count(*) FROM ocorrencia WHERE status_ocorrencia = 'ABERTA'")).isEqualTo(8);
-        assertThat(contar("SELECT count(*) FROM ocorrencia WHERE status_ocorrencia = 'ENCERRADA'")).isEqualTo(11);
+        assertThat(contar("SELECT count(*) FROM ocorrencia WHERE status_ocorrencia = 'ABERTA'"))
+                .isEqualTo(ocorrenciasCom(OcorrenciasSeed.Destino.ABERTA));
+        // VINCULADA é encerrada pelo ProcessosSeed quando o processo conclui.
+        assertThat(contar("SELECT count(*) FROM ocorrencia WHERE status_ocorrencia = 'ENCERRADA'"))
+                .isEqualTo(ocorrenciasCom(OcorrenciasSeed.Destino.ENCERRADA,
+                        OcorrenciasSeed.Destino.ENCERRADA_DIRETO, OcorrenciasSeed.Destino.VINCULADA));
+
+        // Vínculo ocorrência↔animal (V35): 1:1 nos dois sentidos.
+        long comAnimal = OcorrenciasSeed.PLANO.stream().filter(o -> o.animal() != null).count();
+        assertThat(contar("SELECT count(*) FROM ocorrencia WHERE animal_id IS NOT NULL")).isEqualTo(comAnimal)
+                .isPositive();
+        assertThat(contar("SELECT count(DISTINCT animal_id) FROM ocorrencia WHERE animal_id IS NOT NULL"))
+                .isEqualTo(comAnimal);
+
+        // Três estados de esterilização (V31) e de contato humano na amostra.
+        assertThat(contar("SELECT count(*) FROM animal WHERE esterilizado IS NULL")).isPositive();
+        assertThat(contar("SELECT count(*) FROM animal WHERE esterilizado IS FALSE")).isPositive();
+        assertThat(contar("SELECT count(*) FROM animal WHERE esterilizado IS TRUE")).isPositive();
+        assertThat(contar("SELECT count(*) FROM animal_amostrado WHERE contato_humano IS NULL")).isPositive();
+
+        // Todas as espécies do catálogo têm animal no canil.
+        assertThat(jdbcTemplate.queryForList(
+                "SELECT DISTINCT e.codigo FROM animal a JOIN especie e ON e.id = a.especie_id", String.class))
+                .containsExactlyInAnyOrder("canino", "felino", "quiroptero", "pnh");
+
+        // Condições de saúde (V33) e data de nascimento aproximada deixaram de ser colunas mortas.
+        assertThat(contar("SELECT count(*) FROM animal_condicao_saude")).isPositive();
+        assertThat(contar("SELECT count(*) FROM animal WHERE condicoes_outras IS NOT NULL")).isPositive();
+        assertThat(contar("SELECT count(*) FROM animal WHERE data_nascimento_aprox IS NOT NULL")).isPositive();
+
+        // Os quatro tipos de destino de transferência.
+        assertThat(jdbcTemplate.queryForList(
+                "SELECT DISTINCT tipo_destino_transferencia FROM animal WHERE data_saida IS NOT NULL", String.class))
+                .containsExactlyInAnyOrder("ENTIDADE_PROTECAO", "ORGAO_PUBLICO", "OUTRO_CCZ", "OUTRO");
     }
 
     @Test
     @Order(5)
+    void alertasRespeitamOsLimitesDeDataDoPlano() {
+        String token = fixture.login("marta.siqueira" + UsuariosSeed.SUFIXO_EMAIL, UsuariosSeed.SENHA_FICTICIA);
+
+        // 72 h de esterilização: entra quem tem `esterilizado = false` e entrada anterior ao limite.
+        List<String> nomes = get(token, "/api/alertas/esterilizacao").getList("animalNome");
+        assertThat(nomes).contains("Nuvem", "Teimoso")
+                .doesNotContain("Pretinha", "Caramelo")   // dentro das 72 h
+                .doesNotContain("Pinta");                 // esterilizado = NULL não entra na query
+
+        // Janela de 7 dias do alerta vacinal, pela validade derivada (aplicação + intervalo).
+        JsonPath vacinas = get(token, "/api/alertas/vacinas");
+        assertThat(vacinas.getList("animalNome", String.class))
+                .contains("Lola", "Branca", "Canela")     // validade em 0, +7 e -1 dia
+                .doesNotContain("Jeca");                  // validade em +8 dias fica fora
+        assertThat(vacinas.getList("vacinas.flatten().severidade", String.class))
+                .contains("A_VENCER", "VENCIDA");
+    }
+
+    @Test
+    @Order(6)
+    void contatoNaoInformadoApareceNoRelatorioAnual() {
+        String token = fixture.login("marta.siqueira" + UsuariosSeed.SUFIXO_EMAIL, UsuariosSeed.SENHA_FICTICIA);
+        JsonPath preview = get(token, "/api/relatorios/preview?tipo=anual_processos&ano="
+                + LocalDate.now(clock).getYear());
+        assertThat(preview.getLong("kpis.contatoNaoInformado")).isPositive();
+        assertThat(preview.getLong("kpis.comContatoHumano")).isPositive();
+    }
+
+    @Test
+    @Order(7)
     void cenarioPelaApiReal() {
         String tokenAdmin = fixture.login("marta.siqueira" + UsuariosSeed.SUFIXO_EMAIL, UsuariosSeed.SENHA_FICTICIA);
         String tokenVet = fixture.login("renato.albuquerque" + UsuariosSeed.SUFIXO_EMAIL, UsuariosSeed.SENHA_FICTICIA);
@@ -142,9 +225,10 @@ class SeedDevIT extends AbstractIntegrationTest {
         List<Map<String, Object>> alertas = kpis.getList("alertas");
         assertThat(alertas).hasSize(8).allSatisfy(alerta ->
                 assertThat(((Number) alerta.get("total")).longValue()).as((String) alerta.get("tipo")).isPositive());
-        assertThat(kpis.getLong("adocoes.adotados")).isEqualTo(6);
+        assertThat(kpis.getLong("adocoes.adotados"))
+                .isEqualTo(AnimaisSeed.PLANO.stream().filter(a -> "adotado".equals(a.destino)).count());
         assertThat(kpis.getLong("adocoes.disponiveis")).isPositive();
-        assertThat(kpis.getLong("ocorrencias.registradasHoje")).isEqualTo(2);
+        assertThat(kpis.getLong("ocorrencias.registradasHoje")).isEqualTo(ocorrenciasDeHoje());
 
         assertThat(get(tokenAdmin, "/api/animais?tamanho=20").getInt("totalPaginas")).isGreaterThanOrEqualTo(2);
         assertThat(get(tokenAdmin, "/api/ocorrencias?tamanho=20").getInt("totalPaginas")).isGreaterThanOrEqualTo(2);

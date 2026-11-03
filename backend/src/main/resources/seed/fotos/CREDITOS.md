@@ -42,6 +42,24 @@ a foto só precisa ser coerente com a espécie e, quando possível, com a cor e 
 | `030-sol.jpg` | Sol, canino caramelo | [Cachorro esperando na adoção 5 20240623-DSC03735 04.jpg](https://commons.wikimedia.org/wiki/File:Cachorro_esperando_na_ado%C3%A7%C3%A3o_5_20240623-DSC03735_04.jpg) | Tet | CC0 1.0 |
 | `031-pacoca.jpg` | Paçoca, canino caramelo de porte médio | [Boxer dog posing on the grass.jpg](https://commons.wikimedia.org/wiki/File:Boxer_dog_posing_on_the_grass.jpg) | Joselodos | CC0 1.0 |
 | `032-bela.jpg` | Bela, canino branca e preta | [Panting-dog-No.3.jpg](https://commons.wikimedia.org/wiki/File:Panting-dog-No.3.jpg) | Raffael Herrmann | CC0 1.0 |
+| `033-sombra.jpg` | Sombra, quiróptero hematófago | [Desmodus rotundus - Carlos Henrique Russi - 178025487.jpeg](https://commons.wikimedia.org/wiki/File:Desmodus_rotundus_-_Carlos_Henrique_Russi_-_178025487.jpeg) | Carlos Henrique Russi | CC0 1.0 |
+| `034-breu.jpg` | Breu, quiróptero insetívoro | [Molossus rufus segurado por luva.jpg](https://commons.wikimedia.org/wiki/File:Molossus_rufus_segurado_por_luva.jpg) | Laisers | CC0 1.0 |
+| `035-noite.jpg` | Noite, quiróptero insetívoro marrom | [Eptesicus brasiliensis 438774524.jpg](https://commons.wikimedia.org/wiki/File:Eptesicus_brasiliensis_438774524.jpg) | Carlos Henrique Russi | CC0 1.0 |
+| `036-tiao.jpg` | Tião, sagui-de-tufo-preto | [Callithrix penicillata 236576580.jpg](https://commons.wikimedia.org/wiki/File:Callithrix_penicillata_236576580.jpg) | Tiago Lubiana | CC0 1.0 |
+| `037-juca.jpg` | Juca, sagui-de-tufo-branco | [Callithrix jacchus, Pão de Açúcar, Rio de Janeiro, Brazil.jpg](https://commons.wikimedia.org/wiki/File:Callithrix_jacchus,_P%C3%A3o_de_A%C3%A7%C3%BAcar,_Rio_de_Janeiro,_Brazil.jpg) | Wilfredor | CC0 1.0 |
+| `038-pretinha.jpg` | Pretinha, canino preta | [Perro vigilante.jpg](https://commons.wikimedia.org/wiki/File:Perro_vigilante.jpg) | Salfe100 | CC0 1.0 |
+| `039-caramelo.jpg` | Caramelo, canino caramelo | [DogBrown.jpg](https://commons.wikimedia.org/wiki/File:DogBrown.jpg) | Frank-3 | CC0 1.0 |
+| `040-nuvem.jpg` | Nuvem, felino branca | [White sleepy cat.jpg](https://commons.wikimedia.org/wiki/File:White_sleepy_cat.jpg) | ABCDéLTDP | CC0 1.0 |
+| `041-teimoso.jpg` | Teimoso, canino malhado de porte pequeno | [Cute Small Senior Mixed-Breed Dog.jpg](https://commons.wikimedia.org/wiki/File:Cute_Small_Senior_Mixed-Breed_Dog.jpg) | Twawri | CC0 1.0 |
+| `042-pinta.jpg` | Pinta, felino malhada | [Tabby cat-3337027.jpg](https://commons.wikimedia.org/wiki/File:Tabby_cat-3337027.jpg) | pasja1000 | CC0 1.0 |
+| `043-lola.jpg` | Lola, Beagle mestiça tricolor | [Beagle-dog.jpg](https://commons.wikimedia.org/wiki/File:Beagle-dog.jpg) | Karen Arnold | CC0 1.0 |
+| `044-thiago.jpg` | Thiago, felino laranja e branca | [Stray orange cat..jpg](https://commons.wikimedia.org/wiki/File:Stray_orange_cat..jpg) | Inpacod2 | CC0 1.0 |
+| `045-branca.jpg` | Branca, canino branca de pelagem longa | [White Swiss Shepherd Dog.jpg](https://commons.wikimedia.org/wiki/File:White_Swiss_Shepherd_Dog.jpg) | Avietar | CC0 1.0 |
+| `046-jeca.jpg` | Jeca, canino caramelo | [Sleeping Brown Dog.jpg](https://commons.wikimedia.org/wiki/File:Sleeping_Brown_Dog.jpg) | Nikkaella | CC0 1.0 |
+| `047-morena.jpg` | Morena, felino preta | [Black cat looks to the side.jpg](https://commons.wikimedia.org/wiki/File:Black_cat_looks_to_the_side.jpg) | Roc0ast3r | CC0 1.0 |
+| `048-tufao.jpg` | Tufão, Husky mestiço cinza e branca | [Siberian Husky (Unsplash).jpg](https://commons.wikimedia.org/wiki/File:Siberian_Husky_(Unsplash).jpg) | Ellie Lord ellie_lord | CC0 1.0 |
+| `049-serena.jpg` | Serena, felino cinza | [Grey Domestic Cat.jpg](https://commons.wikimedia.org/wiki/File:Grey_Domestic_Cat.jpg) | gayulo | CC0 1.0 |
+| `050-canela.jpg` | Canela, Boxer mestiça caramelo | [Boxer dog in iran.jpg](https://commons.wikimedia.org/wiki/File:Boxer_dog_in_iran.jpg) | Mostafameraji | CC0 1.0 |
 
 Observações:
 

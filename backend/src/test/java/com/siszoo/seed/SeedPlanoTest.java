@@ -15,6 +15,7 @@ import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Test;
 
 import com.siszoo.animais.clinico.entity.StatusPrescricao;
+import com.siszoo.animais.entity.TipoDestinoTransferencia;
 import com.siszoo.processos.entity.StatusClinicoAmostra;
 import com.siszoo.processos.entity.StatusProcesso;
 import com.siszoo.usuarios.service.PoliticaSenha;
@@ -63,6 +64,75 @@ class SeedPlanoTest {
                 assertThat(animal.diasCastracao).as(animal.chave()).isLessThanOrEqualTo(animal.diasEntrada);
             }
         }
+    }
+
+    @Test
+    void castracaoTemOsTresEstadosEONaoInformadoNaoTemData() {
+        for (AnimaisSeed.Animal animal : AnimaisSeed.PLANO) {
+            if (animal.castracaoNaoInformada) {
+                assertThat(animal.diasCastracao).as(animal.chave()).isNull();
+                assertThat(animal.esterilizado()).as(animal.chave()).isNull();
+            } else {
+                assertThat(animal.esterilizado()).as(animal.chave()).isEqualTo(animal.diasCastracao != null);
+            }
+        }
+        // O alerta de 72 h e o KPI nao_castrado filtram por `esterilizado = false`: os três estados
+        // só são demonstráveis se cada um tiver pelo menos um animal no plano.
+        assertThat(AnimaisSeed.PLANO).anyMatch(a -> Boolean.TRUE.equals(a.esterilizado()))
+                .anyMatch(a -> Boolean.FALSE.equals(a.esterilizado()))
+                .anyMatch(a -> a.esterilizado() == null);
+    }
+
+    @Test
+    void nascimentoNaoEhPosteriorAEntradaEEntradaUsaUmaUnidadeSo() {
+        for (AnimaisSeed.Animal animal : AnimaisSeed.PLANO) {
+            if (animal.horasEntrada != null) {
+                assertThat(animal.diasEntrada).as(animal.chave() + ": entrada em dias e em horas").isZero();
+                assertThat(animal.diasNascimento).as(animal.chave()).isNotNull();
+            }
+            if (animal.diasNascimento != null) {
+                int diasDeEntrada = animal.horasEntrada == null
+                        ? animal.diasEntrada
+                        : animal.horasEntrada / 24;
+                assertThat(animal.diasNascimento).as(animal.chave() + ": nascimento depois da entrada")
+                        .isGreaterThanOrEqualTo(diasDeEntrada);
+            }
+        }
+    }
+
+    @Test
+    void condicoesDeSaudeSaoCoerentesComOCodigoOutras() {
+        for (AnimaisSeed.Animal animal : AnimaisSeed.PLANO) {
+            boolean marcouOutras = animal.condicoes != null && animal.condicoes.contains("outras");
+            assertThat(animal.condicoesOutras != null).as(animal.chave()).isEqualTo(marcouOutras);
+            if (animal.condicoes != null) {
+                assertThat(animal.condicoes).as(animal.chave()).isNotEmpty().doesNotHaveDuplicates();
+            }
+        }
+        assertThat(AnimaisSeed.PLANO).anyMatch(a -> a.condicoes != null);
+    }
+
+    @Test
+    void todasAsEspeciesDoCatalogoTemAnimal() {
+        assertThat(AnimaisSeed.PLANO).extracting(a -> a.especie)
+                .contains("canino", "felino", "quiroptero", "pnh");
+    }
+
+    @Test
+    void transferidosTemTipoDeDestinoEOsQuatroTiposAparecem() {
+        List<String> tipos = AnimaisSeed.PLANO.stream()
+                .filter(a -> "transferido".equals(a.destino))
+                .map(a -> a.tipoDestino)
+                .toList();
+        assertThat(tipos).containsExactlyInAnyOrder(
+                TipoDestinoTransferencia.ENTIDADE_PROTECAO.name(),
+                TipoDestinoTransferencia.ORGAO_PUBLICO.name(),
+                TipoDestinoTransferencia.OUTRO_CCZ.name(),
+                TipoDestinoTransferencia.OUTRO.name());
+        // O documento é o único dado da transferência que o service aceita preencher depois.
+        assertThat(AnimaisSeed.PLANO).filteredOn(a -> a.documentoDepois)
+                .allMatch(a -> "transferido".equals(a.destino))
+                .hasSize(1);
     }
 
     @Test
@@ -152,7 +222,13 @@ class SeedPlanoTest {
         AnimaisSeed.PLANO.forEach(a -> AnimaisSeed.procedimentosDo(a).forEach(p -> chaves.add(p.chave())));
         AnimaisSeed.PRESCRICOES.forEach(p -> chaves.add(p.chave()));
         AnimaisSeed.EXAMES.forEach(e -> chaves.add(e.chave()));
-        OcorrenciasSeed.PLANO.forEach(o -> chaves.add(o.chave()));
+        AnimaisSeed.ANEXOS.forEach(a -> chaves.add(a.chave()));
+        OcorrenciasSeed.PLANO.forEach(o -> {
+            chaves.add(o.chave());
+            for (int ordem = 1; ordem <= o.anexos(); ordem++) {
+                chaves.add(o.chaveAnexo(ordem));
+            }
+        });
         ProcessosSeed.PLANO.forEach(p -> chaves.add(p.chave()));
         RelatoriosSeed.PLANO.forEach(r -> chaves.add(r.chave()));
 
