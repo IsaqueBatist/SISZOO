@@ -171,7 +171,6 @@ export function EditarUsuarioModal({ usuario, ehOProprioUsuario, onFechar }: Edi
 
             {mudaraOPerfil && (
               <div className="alert warning" role="status">
-                <span className="bullet" />
                 <div className="alert-content">
                   Mudar o perfil encerra as sessões de {usuario.nome}, que precisará entrar de novo.
                 </div>

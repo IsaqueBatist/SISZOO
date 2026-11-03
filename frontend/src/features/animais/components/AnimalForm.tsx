@@ -69,7 +69,7 @@ const CAMPOS_STEP: Record<1 | 2 | 3, (keyof AnimalFormUiValues)[]> = {
   3: [],
 }
 
-const ETAPAS = ['Dados Básicos', 'Saúde & Baia', 'Foto & Revisão'] as const
+const ETAPAS = ['Dados básicos', 'Saúde e baia', 'Foto e revisão'] as const
 
 const CARGO_VETERINARIO = 'Veterinário'
 
@@ -253,10 +253,10 @@ export function AnimalForm({ animal }: AnimalFormProps) {
     <div className="wizard-shell">
       <div className="page-header">
         <div className="title-block">
-          <Link to={destinoVoltar} className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}>
+          <Link to={destinoVoltar} className="link-voltar">
             {animal ? '← Voltar para a ficha' : '← Voltar para Animais'}
           </Link>
-          <h1>{animal ? `Editar ${animal.nome}` : 'Cadastrar Novo Animal'}</h1>
+          <h1>{animal ? `Editar ${animal.nome}` : 'Cadastrar novo animal'}</h1>
           <p className="subtitle">
             {animal ? 'Altere o que precisar e salve de qualquer etapa.' : 'Preencha as informações em 3 etapas. Você poderá editar depois.'}
           </p>
@@ -279,7 +279,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
 
           <div className={`card step-pane${step === 1 ? ' active' : ''}`}>
             <div className="card-header">
-              <h3>Dados Básicos</h3>
+              <h3>Dados básicos</h3>
               <span className="sub">
                 Campos com <span style={{ color: 'var(--color-danger)' }}>*</span> são obrigatórios
               </span>
@@ -300,14 +300,14 @@ export function AnimalForm({ animal }: AnimalFormProps) {
                 </button>
               )}
               <button type="button" className="btn btn-primary" onClick={() => void avancarDaEtapa(1)}>
-                Próximo: Saúde &amp; Baia →
+                Próximo: Saúde e baia →
               </button>
             </div>
           </div>
 
           <div className={`card step-pane${step === 2 ? ' active' : ''}`}>
             <div className="card-header">
-              <h3>Saúde &amp; Baia</h3>
+              <h3>Saúde e baia</h3>
             </div>
             <div className="card-body">
               <CamposSaudeBaia
@@ -330,7 +330,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
                   </button>
                 )}
                 <button type="button" className="btn btn-primary" onClick={() => void avancarDaEtapa(2)}>
-                  Próximo: Foto &amp; Revisão →
+                  Próximo: Foto e revisão →
                 </button>
               </div>
             </div>
@@ -338,7 +338,7 @@ export function AnimalForm({ animal }: AnimalFormProps) {
 
           <div className={`card step-pane${step === 3 ? ' active' : ''}`}>
             <div className="card-header">
-              <h3>Foto &amp; Revisão</h3>
+              <h3>Foto e revisão</h3>
             </div>
             <div className="card-body">
               <UploadFotoAnimal

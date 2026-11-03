@@ -22,7 +22,6 @@ export function AvisoAnexosPendentes({
   const temRecusaDefinitiva = falhas.some((falha) => falha.definitiva)
   return (
     <div className="alert warning" role="alert">
-      <span className="bullet" />
       <div className="alert-content">
         Há anexos pendentes da ocorrência {formatarProtocoloOcorrencia(pendencia.protocolo)}
         <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>

@@ -73,3 +73,13 @@ export function diasCivisAteHoje(iso: string): number {
   const [anoHoje, mesHoje, diaHoje] = hojeEmItu().split('-').map(Number)
   return Math.round((Date.UTC(anoHoje, mesHoje - 1, diaHoje) - Date.UTC(ano, mes - 1, dia)) / 86_400_000)
 }
+
+export function hojePorExtensoEmItu(): string {
+  return new Intl.DateTimeFormat('pt-BR', {
+    timeZone: FUSO_ITU,
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date())
+}

@@ -69,7 +69,7 @@ describe('aviso de anexos pendentes (D15)', () => {
 
     expect(await screen.findByText(/Há anexos pendentes da ocorrência OC 089\/2026/)).toBeInTheDocument()
     expect(screen.getByText('b.png')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Registrar Ocorrência' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Registrar ocorrência' })).toBeDisabled()
   })
 
   it('no cadastro: "Descartar" remove a pendência e libera o registro', async () => {
@@ -80,7 +80,7 @@ describe('aviso de anexos pendentes (D15)', () => {
 
     expect(removerAnexosPendentes).toHaveBeenCalledTimes(1)
     expect(screen.queryByText(/Há anexos pendentes/)).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Registrar Ocorrência' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Registrar ocorrência' })).toBeEnabled()
   })
 
   it('no detalhe da ocorrência dona dos anexos: mostra o aviso e "Reenviar" sobe só o pendente', async () => {
@@ -115,13 +115,13 @@ describe('aviso de anexos pendentes (D15)', () => {
     expect(await screen.findByText('b.png: Envie um arquivo JPG, PNG ou PDF com até 5 MB.')).toBeInTheDocument()
     expect(screen.getByText(/reenviar não vai resolver/)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Reenviar' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Registrar Ocorrência' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Registrar ocorrência' })).toBeDisabled()
 
     await user.click(screen.getByRole('button', { name: 'Descartar' }))
 
     expect(removerAnexosPendentes).toHaveBeenCalledTimes(1)
     expect(screen.queryByText(/Há anexos pendentes/)).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Registrar Ocorrência' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Registrar ocorrência' })).toBeEnabled()
   })
 
   it('413 no reenvio (tamanho): também é recusa definitiva', async () => {

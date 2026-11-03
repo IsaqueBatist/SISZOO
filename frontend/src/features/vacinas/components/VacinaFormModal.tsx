@@ -84,7 +84,6 @@ export function VacinaFormModal({ vacina, onFechar }: VacinaFormModalProps) {
             <div className="form-grid cols-1">
               {submitError && (
                 <div className="alert danger" role="alert">
-                  <span className="bullet" />
                   <div className="alert-content">{submitError}</div>
                 </div>
               )}
@@ -135,7 +134,6 @@ export function VacinaFormModal({ vacina, onFechar }: VacinaFormModalProps) {
 
               {intervaloMudou && (
                 <div className="alert warning" role="status">
-                  <span className="bullet" />
                   <div className="alert-content">
                     Isto muda a validade das aplicações já lançadas desta vacina.
                     <div className="alert-desc">

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -57,7 +57,8 @@ describe('OcorrenciaDetalhe', () => {
     expect(await screen.findByRole('heading', { name: 'Ocorrência OC 070/2026', level: 1 })).toBeInTheDocument()
     expect(screen.getByText('Escola Municipal Parque das Flores')).toBeInTheDocument()
     expect(screen.getByText('Foto do animal.jpg')).toBeInTheDocument()
-    expect(screen.getByText('10/05/2026 · 08:00', { selector: '.mono' })).toBeInTheDocument()
+    const campoDataHora = screen.getByText('Data / hora').closest('.field') as HTMLElement
+    expect(within(campoDataHora).getByText('10/05/2026 · 08:00')).toBeInTheDocument()
   })
 
   it('mostra o placeholder "Sigiloso" quando o backend nega a visão do denunciante (podeVerDenunciante=false)', async () => {
@@ -231,7 +232,7 @@ describe('OcorrenciaDetalhe', () => {
     await screen.findByRole('heading', { name: 'Ocorrência OC 092/2026', level: 1 })
     expect(screen.getByText('PS 045/2026')).toBeInTheDocument()
     expect(screen.getByText('Aguardando resultado')).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /Processo Sanitário Vinculado/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /Processo sanitário vinculado/ })).not.toBeInTheDocument()
   })
 
   it('inicia o atendimento: envia EM_ATENDIMENTO, o badge muda e a transição entra na timeline', async () => {

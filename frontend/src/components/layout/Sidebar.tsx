@@ -9,10 +9,17 @@ interface SidebarProps {
   collapsed: boolean
   onToggleCollapsed: () => void
   menuAberto?: boolean
+  modoGaveta?: boolean
   onFecharMenu?: () => void
 }
 
-export function Sidebar({ collapsed, onToggleCollapsed, menuAberto = false, onFecharMenu }: SidebarProps) {
+export function Sidebar({
+  collapsed,
+  onToggleCollapsed,
+  menuAberto = false,
+  modoGaveta = false,
+  onFecharMenu,
+}: SidebarProps) {
   const { user, roleKey } = useAuth()
   const sair = useSair()
   const role = ROLES[roleKey]
@@ -27,33 +34,41 @@ export function Sidebar({ collapsed, onToggleCollapsed, menuAberto = false, onFe
 
   return (
     <aside
+      id="menu-lateral"
       className={`sidebar${menuAberto ? ' aberta' : ''}`}
+      aria-label={modoGaveta ? 'Menu' : undefined}
       onKeyDown={(event) => {
         if (event.key === 'Escape') onFecharMenu?.()
       }}
     >
       <div className="sidebar-header">
-        <NavLink to="/dashboard" className="sidebar-logo" style={{ textDecoration: 'none' }}>
+        <NavLink to="/dashboard" className="sidebar-logo">
           <div className="wordmark">
             <span className="mark">
-              <Icon name="paw" size={16} />
+              <Icon name="paw" size={15} />
             </span>
             <span className={classeOculta.trim() || undefined}>SISZOO</span>
           </div>
           <div className={`tagline${classeOculta}`}>CCZ Itu</div>
         </NavLink>
-        <button
-          type="button"
-          className="sidebar-toggle"
-          title={collapsed ? 'Expandir' : 'Recolher'}
-          aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
-          aria-expanded={!collapsed}
-          onClick={onToggleCollapsed}
-        >
-          <span className={`sidebar-toggle-icon${collapsed ? ' collapsed' : ''}`}>
-            <Icon name="chevronLeft" />
-          </span>
-        </button>
+        {modoGaveta ? (
+          <button type="button" className="sidebar-toggle" aria-label="Fechar menu" onClick={onFecharMenu}>
+            <Icon name="x" />
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="sidebar-toggle"
+            title={collapsed ? 'Expandir' : 'Recolher'}
+            aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
+            aria-expanded={!collapsed}
+            onClick={onToggleCollapsed}
+          >
+            <span className={`sidebar-toggle-icon${collapsed ? ' collapsed' : ''}`}>
+              <Icon name="chevronLeft" />
+            </span>
+          </button>
+        )}
       </div>
 
       <nav className="sidebar-nav" aria-label="Menu principal" onClick={onFecharMenu}>

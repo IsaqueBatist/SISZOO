@@ -100,7 +100,6 @@ export function PreviewOcorrenciasBairro({ dados }: { dados: DadosOcorrenciasBai
       </div>
 
       <div className="alert info" role="note">
-        <span className="bullet" />
         <div className="alert-content">{dados.notaFocoGeografico}</div>
       </div>
     </>

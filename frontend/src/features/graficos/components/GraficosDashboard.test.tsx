@@ -27,16 +27,16 @@ describe('GraficosDashboard', () => {
   it('renderiza os 4 gráficos juntos (ocupação de baia real + 3 mockados com selo)', async () => {
     renderGraficosDashboard()
 
-    expect(await screen.findByText('Ocupação por Baia')).toBeInTheDocument()
-    expect(await screen.findByText('Resultados Laboratoriais')).toBeInTheDocument()
-    expect(await screen.findByText('Casos Suspeitos')).toBeInTheDocument()
-    expect(await screen.findByText('Raiva por Espécie')).toBeInTheDocument()
-    expect(await screen.findByText('Por Patologia')).toBeInTheDocument()
+    expect(await screen.findByText('Ocupação por baia')).toBeInTheDocument()
+    expect(await screen.findByText('Resultados laboratoriais')).toBeInTheDocument()
+    expect(await screen.findByText('Casos suspeitos')).toBeInTheDocument()
+    expect(await screen.findByText('Raiva por espécie')).toBeInTheDocument()
+    expect(await screen.findByText('Por patologia')).toBeInTheDocument()
 
     const selos = await screen.findAllByText('Dados de demonstração')
     expect(selos).toHaveLength(2)
 
-    const cardBaia = screen.getByText('Ocupação por Baia').closest('.card') as HTMLElement
+    const cardBaia = screen.getByText('Ocupação por baia').closest('.card') as HTMLElement
     expect(cardBaia.textContent).not.toContain('Dados de demonstração')
   })
 })

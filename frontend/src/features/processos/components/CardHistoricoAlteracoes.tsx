@@ -27,7 +27,7 @@ export function CardHistoricoAlteracoes({ processoId }: { processoId: string }) 
                 <div style={{ fontSize: 13 }}>
                   <strong>{evento.usuarioEmail ?? 'Sistema'}</strong> {descricaoAcao(evento.acao).verbo} o processo
                 </div>
-                <div className="mono" style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
+                <div className="texto-auxiliar">
                   {formatarDataHoraBR(evento.ocorreuEm)}
                 </div>
                 {justificativa && (

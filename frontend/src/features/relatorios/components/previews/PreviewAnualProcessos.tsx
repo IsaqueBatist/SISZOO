@@ -78,7 +78,7 @@ export function PreviewAnualProcessos({ dados }: { dados: DadosAnualProcessos })
       </div>
 
       <div className="section-header" style={{ marginTop: 'var(--space-4)' }}>
-        <h2>3. Resultados Laboratoriais</h2>
+        <h2>3. Resultados laboratoriais</h2>
       </div>
       <div className="table-wrap">
         <table className="data">
@@ -211,7 +211,6 @@ export function PreviewAnualProcessos({ dados }: { dados: DadosAnualProcessos })
       </div>
 
       <div className="alert info" role="note">
-        <span className="bullet" />
         <div className="alert-content">
           <strong>Observação LGPD:</strong> Este relatório consolida dados de forma anonimizada.
         </div>

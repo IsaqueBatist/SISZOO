@@ -1,54 +1,17 @@
 import { useState } from 'react'
-import { Icon, type IconName } from '@/components/layout/Icon'
+import { Icon } from '@/components/layout/Icon'
 import { formatarDataBR, hojeEmItu } from '@/lib/datas'
 import { validarFiltro } from '../utils/filtroRelatorio'
 import type { FiltroRelatorio, TipoRelatorioInfo } from '../types/relatorios.types'
 
-interface InfoVisualCard {
-  icone: IconName
-  cor: string
-  corFundo: string
-  descricao: string
-}
-
-const INFO_VISUAL: Record<string, InfoVisualCard> = {
-  anual_processos: {
-    icone: 'fileText',
-    cor: 'var(--color-info)',
-    corFundo: 'var(--color-info-bg)',
-    descricao:
-      'Distribuição de investigações sanitárias por doença, espécie e bairro. Inclui taxas de positividade e tempo médio de resolução.',
-  },
-  vacinacao: {
-    icone: 'syringe',
-    cor: 'var(--color-success)',
-    corFundo: 'var(--color-success-bg)',
-    descricao: 'Animais vacinados, vacinas vencidas e próximas a vencer. Por espécie, baia e veterinário responsável.',
-  },
-  adocoes: {
-    icone: 'heart',
-    cor: '#6A1B9A',
-    corFundo: '#F3E5F5',
-    descricao: 'Animais adotados e perfil por espécie e porte, pela situação atual do cadastro.',
-  },
-  procedimentos: {
-    icone: 'scissors',
-    cor: 'var(--color-warning)',
-    corFundo: 'var(--color-warning-bg)',
-    descricao: 'Castrações, cirurgias e atendimentos clínicos consolidados. Inclui produtividade por veterinário.',
-  },
-  ocupacao_baias: {
-    icone: 'inbox',
-    cor: '#2E7D32',
-    corFundo: '#E8F5E9',
-    descricao: 'Ocupação atual por baia, baias no limite ou superlotadas e capacidade total.',
-  },
-  ocorrencias_bairro: {
-    icone: 'map',
-    cor: 'var(--color-danger)',
-    corFundo: 'var(--color-danger-bg)',
-    descricao: 'Mapa de calor de ocorrências por bairro, tipos de denúncia mais frequentes e tempo médio de atendimento.',
-  },
+const DESCRICAO_RELATORIO: Record<string, string> = {
+  anual_processos:
+    'Distribuição de investigações sanitárias por doença, espécie e bairro. Inclui taxas de positividade e tempo médio de resolução.',
+  vacinacao: 'Animais vacinados, vacinas vencidas e próximas a vencer. Por espécie, baia e veterinário responsável.',
+  adocoes: 'Animais adotados e perfil por espécie e porte, pela situação atual do cadastro.',
+  procedimentos: 'Castrações, cirurgias e atendimentos clínicos consolidados. Inclui produtividade por veterinário.',
+  ocupacao_baias: 'Ocupação atual por baia, baias no limite ou superlotadas e capacidade total.',
+  ocorrencias_bairro: 'Mapa de calor de ocorrências por bairro, tipos de denúncia mais frequentes e tempo médio de atendimento.',
 }
 
 function periodoPadrao() {
@@ -72,7 +35,6 @@ export function CardRelatorio({ info, onGerar }: CardRelatorioProps) {
   const [periodoFim, setPeriodoFim] = useState(periodo.fim)
   const [erro, setErro] = useState<string | null>(null)
 
-  const visual = INFO_VISUAL[info.codigo]
 
   function montarFiltro(): FiltroRelatorio {
     if (info.filtro === 'ano') return { tipo: info.codigo, ano }
@@ -93,11 +55,8 @@ export function CardRelatorio({ info, onGerar }: CardRelatorioProps) {
 
   return (
     <div className="report-card">
-      <div className="r-ico" style={{ background: visual.corFundo, color: visual.cor }}>
-        <Icon name={visual.icone} size={28} />
-      </div>
       <h3>{info.nome}</h3>
-      <p className="desc">{visual.descricao}</p>
+      <p className="desc">{DESCRICAO_RELATORIO[info.codigo]}</p>
 
       {info.filtro === 'ano' && (
         <div className="period-row">
@@ -105,7 +64,6 @@ export function CardRelatorio({ info, onGerar }: CardRelatorioProps) {
           <select
             id={`ano-${info.codigo}`}
             className="select"
-            style={{ height: 34, flex: 1 }}
             value={ano}
             onChange={(event) => setAno(Number(event.target.value))}
           >
@@ -116,24 +74,22 @@ export function CardRelatorio({ info, onGerar }: CardRelatorioProps) {
         </div>
       )}
 
-      {info.filtro === 'posicao' && <div className="period-row">Posição em {formatarDataBR(hojeEmItu())}</div>}
+      {info.filtro === 'posicao' && <div className="period-row posicao">Posição em {formatarDataBR(hojeEmItu())}</div>}
 
       {info.filtro === 'periodo' && (
         <div className="period-row">
           <label htmlFor={`periodo-inicio-${info.codigo}`}>Período</label>
           <input
             id={`periodo-inicio-${info.codigo}`}
-            className="input mono"
+            className="input"
             type="date"
-            style={{ height: 34, flex: 1 }}
             value={periodoInicio}
             onChange={(event) => setPeriodoInicio(event.target.value)}
             aria-label="Data inicial"
           />
           <input
-            className="input mono"
+            className="input"
             type="date"
-            style={{ height: 34, flex: 1 }}
             value={periodoFim}
             onChange={(event) => setPeriodoFim(event.target.value)}
             aria-label="Data final"
@@ -142,15 +98,17 @@ export function CardRelatorio({ info, onGerar }: CardRelatorioProps) {
       )}
 
       {erro && (
-        <p className="desc" style={{ color: 'var(--color-danger)' }}>
+        <p className="err" role="alert">
           {erro}
         </p>
       )}
 
-      <button type="button" className="btn btn-primary" onClick={gerar}>
-        <Icon name="download" size={14} />
-        Gerar Relatório
-      </button>
+      <div className="report-acoes">
+        <button type="button" className="btn btn-secondary" onClick={gerar}>
+          <Icon name="download" size={14} />
+          Gerar relatório
+        </button>
+      </div>
     </div>
   )
 }

@@ -10,6 +10,7 @@ import { classeDoFiltro, useFiltrosLista } from '@/lib/useFiltrosLista'
 import { useAtualizarVacinaMutation, useDesativarVacinaMutation, useVacinasQuery } from '../hooks/useVacinas'
 import type { Vacina } from '../types/vacinas.types'
 import { VacinaFormModal } from './VacinaFormModal'
+import { useLinhaClicavel } from '@/lib/useLinhaClicavel'
 
 type FiltroSituacao = 'ativas' | 'inativas' | 'todas'
 
@@ -130,7 +131,6 @@ export function Vacinas() {
 
       {isError && (
         <div className="alert danger" role="alert">
-          <span className="bullet" />
           <div className="alert-content">Não foi possível carregar as vacinas. Tente novamente.</div>
         </div>
       )}
@@ -233,6 +233,7 @@ function LinhaVacina({
 }) {
   const desativar = useDesativarVacinaMutation()
   const atualizar = useAtualizarVacinaMutation()
+  const propsDaLinha = useLinhaClicavel()
 
   function handleDesativar() {
     const confirmado = window.confirm(
@@ -266,7 +267,7 @@ function LinhaVacina({
   }
 
   return (
-    <tr>
+    <tr {...(podeEscrever ? propsDaLinha(onEditar) : {})}>
       <td>{vacina.nome}</td>
       <td>
         {vacina.intervaloMeses === null ? (

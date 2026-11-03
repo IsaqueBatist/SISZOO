@@ -99,7 +99,6 @@ export function MedicamentoFormModal({ medicamento, onFechar }: MedicamentoFormM
             <div className="form-grid cols-1">
               {submitError && (
                 <div className="alert danger" role="alert">
-                  <span className="bullet" />
                   <div className="alert-content">{submitError}</div>
                 </div>
               )}
@@ -226,7 +225,6 @@ function CadastroCategoria({
 
       {erro && (
         <div className="alert danger" role="alert" style={{ marginTop: 'var(--space-2)' }}>
-          <span className="bullet" />
           <div className="alert-content">{erro}</div>
         </div>
       )}

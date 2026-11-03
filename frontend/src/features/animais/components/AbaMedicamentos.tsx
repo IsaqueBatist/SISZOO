@@ -44,7 +44,6 @@ export function AbaMedicamentos({ animalId, onRegistroCriado }: AbaMedicamentosP
 
       {isError && (
         <div className="alert danger" role="alert">
-          <span className="bullet" />
           <div className="alert-content">Não foi possível carregar as prescrições.</div>
         </div>
       )}
@@ -72,7 +71,7 @@ export function AbaMedicamentos({ animalId, onRegistroCriado }: AbaMedicamentosP
             {data.itens.map((prescricao) => (
               <div key={prescricao.id} className="med-card">
                 <h4>
-                  <Icon name="syringe" size={14} />
+                  <Icon name="pill" size={14} />
                   {prescricao.medicamentoNome}
                   {prescricao.statusRegistro === 'RETIFICADO' && (
                     <span className="badge badge-neutral" style={{ marginLeft: 6 }}>
@@ -93,16 +92,16 @@ export function AbaMedicamentos({ animalId, onRegistroCriado }: AbaMedicamentosP
                 </div>
                 <div className="kv">
                   <span className="k">Início:</span>
-                  <span className="mono">{formatarDataBR(prescricao.dataInicio)}</span>
+                  <span>{formatarDataBR(prescricao.dataInicio)}</span>
                 </div>
                 <div className="kv">
                   <span className="k">Término previsto:</span>
-                  <span className="mono">{formatarDataBR(prescricao.dataFimPrevista)}</span>
+                  <span>{formatarDataBR(prescricao.dataFimPrevista)}</span>
                 </div>
                 {prescricao.dataFimReal && (
                   <div className="kv">
                     <span className="k">Encerrado em:</span>
-                    <span className="mono">{formatarDataBR(prescricao.dataFimReal)}</span>
+                    <span>{formatarDataBR(prescricao.dataFimReal)}</span>
                   </div>
                 )}
                 <div className="kv">
@@ -129,13 +128,13 @@ export function AbaMedicamentos({ animalId, onRegistroCriado }: AbaMedicamentosP
             <div className="pager">
               <button
                 type="button"
-                className="btn btn-ghost btn-sm"
+                className="btn btn-outline btn-sm"
                 disabled={pagina === 0}
                 onClick={() => setPagina((atual) => atual - 1)}
               >
                 Anterior
               </button>
-              <span className="mono" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+              <span className="pager-posicao">
                 Página {pagina + 1} de {totalPaginas}
               </span>
               <button

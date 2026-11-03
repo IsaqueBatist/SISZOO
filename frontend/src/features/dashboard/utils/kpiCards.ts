@@ -1,13 +1,13 @@
-import type { IconName } from '@/components/layout/Icon'
 import type { DashboardKpis } from '../types/dashboard.types'
 
 export interface KpiCardData {
-  tone: 'kpi-info' | 'kpi-success' | 'kpi-alert' | 'kpi-danger'
-  icon: IconName
   label: string
   value: string
   unit?: string
   foot: string
+  para?: string
+  modulo?: string
+  rotuloLink?: string
   isMock?: boolean
 }
 
@@ -21,36 +21,40 @@ function rodapeDeEspecies({ animais }: DashboardKpis): string {
 export function mapearKpisParaCards(kpis: DashboardKpis, usaMock = false): KpiCardData[] {
   const cards: KpiCardData[] = [
     {
-      tone: 'kpi-info',
-      icon: 'paw',
       label: 'Animais sob custódia',
       value: String(kpis.animais.total),
       foot: rodapeDeEspecies(kpis),
+      para: '/animais?status=sob_custodia',
+      modulo: 'animais',
+      rotuloLink: 'Ver animais sob custódia',
     },
     {
-      tone: 'kpi-success',
-      icon: 'syringe',
       label: 'Vacinados',
       value: String(kpis.vacinacao.percentualVacinados),
       unit: '%',
       foot: `${kpis.vacinacao.vacinados} de ${kpis.vacinacao.total} animais`,
+      para: '/alertas/vacinas',
+      modulo: 'animais',
+      rotuloLink: 'Ver reforços pendentes',
     },
     {
-      tone: 'kpi-alert',
-      icon: 'heart',
-      label: 'Animais Adotados',
-      value: String(kpis.adocoes.adotados),
-      foot: `${kpis.adocoes.disponiveis} ${kpis.adocoes.disponiveis === 1 ? 'disponível' : 'disponíveis'} para adoção`,
-    },
-    {
-      tone: 'kpi-danger',
-      icon: 'alert',
-      label: 'Ocorrências',
+      label: 'Ocorrências hoje',
       value: String(kpis.ocorrencias.registradasHoje),
       foot:
         kpis.ocorrencias.mediaPorHora != null
-          ? `Registradas hoje · média ${kpis.ocorrencias.mediaPorHora} a cada hora`
-          : 'Registradas hoje',
+          ? `Registradas desde 0h · média de ${kpis.ocorrencias.mediaPorHora.toLocaleString('pt-BR')} por hora`
+          : 'Registradas desde 0h',
+      para: '/ocorrencias?de={hoje}&ate={hoje}',
+      modulo: 'ocorrencias',
+      rotuloLink: 'Ver ocorrências de hoje',
+    },
+    {
+      label: 'Animais adotados',
+      value: String(kpis.adocoes.adotados),
+      foot: `${kpis.adocoes.disponiveis} ${kpis.adocoes.disponiveis === 1 ? 'disponível' : 'disponíveis'} para adoção`,
+      para: '/animais?status=adotado',
+      modulo: 'animais',
+      rotuloLink: 'Ver animais adotados',
     },
   ]
   return usaMock ? cards.map((card) => ({ ...card, isMock: true })) : cards

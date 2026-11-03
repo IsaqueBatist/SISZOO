@@ -20,11 +20,23 @@ function renderDashboard(roleKey: AuthContextValue['roleKey'] = 'admin') {
           <Route path="/processos" element={<p>Tela de processos</p>} />
           <Route path="/processos/:id" element={<p>Detalhe do processo</p>} />
           <Route path="/alertas/vacinas" element={<p>Tela de alertas de vacina</p>} />
+          <Route path="/animais" element={<p>Tela de animais</p>} />
         </Routes>
         </AuthContext.Provider>
       </MemoryRouter>
     </QueryClientProvider>,
   )
+}
+
+function baia(sobrescrever: Record<string, unknown>) {
+  return {
+    tipoBaiaCodigo: 'interna',
+    tipoBaiaNome: 'Interna',
+    finalidade: null,
+    ativa: true,
+    observacoes: null,
+    ...sobrescrever,
+  }
 }
 
 function processoResumo(sobrescrever: Record<string, unknown>) {
@@ -44,27 +56,40 @@ afterEach(() => {
 })
 
 describe('Dashboard', () => {
-  it('com o mock de desenvolvimento ligado (setup) mostra o selo de demonstração em todos os cards e nos alertas', async () => {
+  it('com o mock de desenvolvimento ligado (setup) mostra o selo de demonstração em todos os cards e nos indicadores', async () => {
     renderDashboard()
 
     expect(await screen.findByText('147')).toBeInTheDocument()
     expect(screen.getByText('84')).toBeInTheDocument()
     expect(screen.getByText('8')).toBeInTheDocument()
 
-    for (const rotulo of ['Animais sob custódia', 'Vacinados', 'Animais Adotados', 'Ocorrências']) {
+    for (const rotulo of ['Animais sob custódia', 'Vacinados', 'Ocorrências hoje', 'Animais adotados']) {
       const card = screen.getByText(rotulo).closest('.kpi') as HTMLElement
       expect(within(card).getByText('Dados de demonstração')).toBeInTheDocument()
     }
-    const cabecalhoAlertas = screen.getByRole('heading', { name: /Alertas Críticos/ }).parentElement as HTMLElement
+    const cabecalhoAlertas = screen.getByRole('heading', { name: 'Indicadores' }).parentElement as HTMLElement
     expect(within(cabecalhoAlertas).getByText('Dados de demonstração')).toBeInTheDocument()
   })
 
-  it('Agente Sanitário não vê o card de alerta de vacinas; o de processos urgentes continua', async () => {
+  it('Agente Sanitário não vê nem consulta vacinas e pendências de animais; os processos urgentes continuam', async () => {
+    const consultas: string[] = []
+    server.use(
+      http.get(`${API_BASE_URL}/alertas/vacinas`, ({ request }) => {
+        consultas.push(request.url)
+        return HttpResponse.json([])
+      }),
+      http.get(`${API_BASE_URL}/animais`, ({ request }) => {
+        consultas.push(request.url)
+        return HttpResponse.json({ itens: [], pagina: 0, tamanho: 3, totalItens: 7, totalPaginas: 1 })
+      }),
+    )
     renderDashboard('agente')
 
-    expect(await screen.findByRole('heading', { name: /Alertas Críticos/ })).toBeInTheDocument()
-    await waitFor(() => expect(screen.queryByText(/vacina\(s\)/i)).not.toBeInTheDocument())
-    expect(screen.queryByRole('link', { name: /ver detalhes/i })).not.toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: '045/2026 (Raiva)' })).toBeInTheDocument()
+    expect(screen.queryByText(/reforço pendente/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/ficha incompleta/)).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /ver situação vacinal/i })).not.toBeInTheDocument()
+    expect(consultas).toHaveLength(0)
   })
 
   it('mostra skeleton enquanto os dados carregam e some depois', async () => {
@@ -103,55 +128,81 @@ describe('Dashboard', () => {
     expect(await screen.findByText('10')).toBeInTheDocument()
     expect(chamadas).toBe(2)
 
-    const cardAdocoes = screen.getByText('Animais Adotados').closest('.kpi') as HTMLElement
+    const cardAdocoes = screen.getByText('Animais adotados').closest('.kpi') as HTMLElement
     expect(within(cardAdocoes).getByText('3')).toBeInTheDocument()
     expect(within(cardAdocoes).getByText('1 disponível para adoção')).toBeInTheDocument()
     const gradeKpis = cardAdocoes.closest('.kpi-grid') as HTMLElement
     expect(within(gradeKpis).queryByText('Dados de demonstração')).not.toBeInTheDocument()
-    const cabecalhoAlertas = screen.getByRole('heading', { name: /Alertas Críticos/ }).parentElement as HTMLElement
+    const cabecalhoAlertas = screen.getByRole('heading', { name: 'Indicadores' }).parentElement as HTMLElement
     expect(within(cabecalhoAlertas).queryByText('Dados de demonstração')).not.toBeInTheDocument()
   })
 
-  it('renderiza os alertas críticos genéricos (DER §3.7) vindos de kpis.alertas, sem duplicar o alerta de vacina', async () => {
-    renderDashboard()
-
-    expect(await screen.findByText(/baia\(s\) superlotada/)).toBeInTheDocument()
-    expect(screen.getByText(/anima(l|is).*ficha incompleta/i)).toBeInTheDocument()
-    expect(screen.getByText(/não castrado/)).toBeInTheDocument()
-  })
-
-  it('não renderiza o alerta genérico quando o total é 0', async () => {
-    vi.stubEnv('VITE_USE_MOCK_KPIS', 'false')
+  it('baia superlotada vem da lista de baias e mostra o nome e a ocupação', async () => {
     server.use(
-      http.get(`${API_BASE_URL}/dashboard/kpis`, () =>
+      http.get(`${API_BASE_URL}/baias`, () =>
         HttpResponse.json({
-          animais: { total: 10, caninos: 7, felinos: 3 },
-          vacinacao: { percentualVacinados: 50, vacinados: 5, total: 10 },
-          ocorrencias: { registradasHoje: 0 },
-          adocoes: { adotados: 0, disponiveis: 0 },
-          alertas: [
-            {
-              tipo: 'baia_superlotada',
-              severidade: 'critico',
-              titulo: '0 baia(s) superlotada(s)',
-              descricao: 'Baias com ocupação igual ou acima da capacidade.',
-              total: 0,
-            },
+          itens: [
+            baia({ id: 'b1', nome: 'Canil Lotado', capacidade: 2, ocupacaoAtual: 2, superlotada: true }),
+            baia({ id: 'b2', nome: 'Canil Livre', capacidade: 5, ocupacaoAtual: 1, superlotada: false }),
+            baia({ id: 'b3', nome: 'Canil Inativo', capacidade: 1, ocupacaoAtual: 3, superlotada: true, ativa: false }),
           ],
+          pagina: 0,
+          tamanho: 500,
+          totalItens: 3,
+          totalPaginas: 1,
         }),
       ),
     )
-
     renderDashboard()
 
-    await screen.findByText('10')
-    expect(screen.queryByText(/baia\(s\) superlotada/)).not.toBeInTheDocument()
+    const titulo = await screen.findByRole('link', { name: '1 baia superlotada' })
+    expect(titulo).toHaveAttribute('href', '/baias?lotacao=superlotada')
+    const item = titulo.closest('li.pendencia') as HTMLElement
+    expect(item).toHaveTextContent('Canil Lotado (2/2)')
+    expect(item).not.toHaveTextContent('Canil Inativo')
+  })
+
+  it('pendência de animal mostra a quantidade da API, os nomes e leva à lista filtrada', async () => {
+    server.use(
+      http.get(`${API_BASE_URL}/animais`, ({ request }) => {
+        const pendencia = new URL(request.url).searchParams.get('pendencia')
+        const itens = pendencia === 'ficha_incompleta' ? [{ id: 'x1', nome: 'Tobias' }, { id: 'x2', nome: 'Pipoca' }] : []
+        return HttpResponse.json({ itens, pagina: 0, tamanho: 3, totalItens: pendencia === 'ficha_incompleta' ? 5 : 0, totalPaginas: 1 })
+      }),
+    )
+    const user = userEvent.setup()
+    renderDashboard()
+
+    const titulo = await screen.findByRole('link', { name: '5 animais com ficha incompleta' })
+    expect(titulo).toHaveAttribute('href', '/animais?pendencia=ficha_incompleta')
+    const item = titulo.closest('li.pendencia') as HTMLElement
+    expect(within(item).getByRole('link', { name: 'Tobias' })).toHaveAttribute('href', '/animais/x1')
+    expect(item).toHaveTextContent('e mais 3')
+    expect(screen.queryByText(/sem avaliação clínica/)).not.toBeInTheDocument()
+
+    await user.click(within(item).getByText(/sem microchip ou sem vacinação vigente/))
+    expect(await screen.findByText('Tela de animais')).toBeInTheDocument()
+  })
+
+  it('perfil sem acesso a ocorrências não consulta nem mostra pendências de ocorrência', async () => {
+    const consultas: string[] = []
+    server.use(
+      http.get(`${API_BASE_URL}/ocorrencias`, ({ request }) => {
+        consultas.push(request.url)
+        return HttpResponse.json({ itens: [], pagina: 0, tamanho: 3, totalItens: 9, totalPaginas: 1 })
+      }),
+    )
+    renderDashboard('vet')
+
+    await screen.findByText('147')
+    expect(consultas).toHaveLength(0)
+    expect(screen.queryByText(/ocorrências abertas/)).not.toBeInTheDocument()
   })
 
   it('alerta de vacina mostra a severidade com ícone e texto (vencida antes de a vencer)', async () => {
     const { container } = renderDashboard()
 
-    await screen.findByText(/vacina/)
+    await screen.findByText(/com reforço pendente/)
     await waitFor(() => expect(container.querySelector('.severidade-vencida')).not.toBeNull())
     expect(container.querySelector('.severidade-a-vencer')).not.toBeNull()
   })
@@ -162,7 +213,7 @@ describe('Dashboard', () => {
     const link = await screen.findByRole('link', { name: '045/2026 (Raiva)' })
     expect(link).toHaveAttribute('href', expect.stringContaining('/processos/'))
 
-    const alertaProcessos = link.closest('.alert') as HTMLElement
+    const alertaProcessos = link.closest('.pendencia') as HTMLElement
     expect(within(alertaProcessos).queryByText(/telefone|cpf|email|respons[aá]vel/i)).not.toBeInTheDocument()
   })
 
@@ -207,7 +258,7 @@ describe('Dashboard', () => {
     expect(await screen.findByText(/e mais 2/)).toBeInTheDocument()
   })
 
-  it('card de processos urgentes some (estado vazio) quando não há nenhum urgente', async () => {
+  it('processos urgentes somem da lista quando não há nenhum urgente', async () => {
     server.use(
       http.get(`${API_BASE_URL}/processos`, ({ request }) => {
         const pedeUrgentes = new URL(request.url).searchParams.get('urgente') === 'true'
@@ -217,7 +268,9 @@ describe('Dashboard', () => {
     )
     renderDashboard()
 
-    expect(await screen.findByText('Nenhum processo urgente em aberto.')).toBeInTheDocument()
+    await screen.findByText('147')
+    await waitFor(() => expect(screen.queryByText(/carregando/i)).not.toBeInTheDocument())
+    expect(screen.queryByText(/processos? urgentes?/)).not.toBeInTheDocument()
   })
 
   it('card de esterilização pendente mostra o tempo desde a entrada e leva à ficha do animal', async () => {
@@ -240,9 +293,10 @@ describe('Dashboard', () => {
     )
     renderDashboard()
 
-    const link = await screen.findByRole('link', { name: 'Bidu' })
-    expect(link).toHaveAttribute('href', '/animais/a1')
-    expect(link.closest('.alert')).toHaveTextContent('Bidu (há 4 dias)')
+    const titulo = await screen.findByRole('link', { name: /recolhido há mais de 72 horas sem esterilização/ })
+    const item = titulo.closest('li.pendencia') as HTMLElement
+    expect(within(item).getByRole('link', { name: 'Bidu' })).toHaveAttribute('href', '/animais/a1')
+    expect(item).toHaveTextContent('Bidu (há 4 dias)')
     expect(screen.getByRole('link', { name: /recolhido há mais de 72 horas sem esterilização/ })).toHaveAttribute(
       'href',
       '/alertas/esterilizacao',
@@ -259,7 +313,7 @@ describe('Dashboard', () => {
     )
     renderDashboard('agente')
 
-    expect(await screen.findByRole('heading', { name: /Alertas Críticos/ })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: '045/2026 (Raiva)' })).toBeInTheDocument()
     expect(screen.queryByText(/sem esterilização/)).not.toBeInTheDocument()
     expect(consultou).toBe(false)
   })

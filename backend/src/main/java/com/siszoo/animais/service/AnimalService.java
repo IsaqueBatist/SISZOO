@@ -18,6 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.siszoo.animais.clinico.entity.Prescricao;
+import com.siszoo.animais.clinico.entity.Procedimento;
+import com.siszoo.animais.clinico.entity.StatusPrescricao;
 import com.siszoo.animais.dto.AnimalResponse;
 import com.siszoo.animais.dto.AtualizarAnimalRequest;
 import com.siszoo.animais.dto.CriarAnimalRequest;
@@ -61,7 +64,11 @@ import com.siszoo.usuarios.repository.UsuarioRepository;
 import com.siszoo.usuarios.service.AuditoriaEventoService;
 import com.siszoo.usuarios.service.AutoridadeService;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 
 @Service
 public class AnimalService {
@@ -196,8 +203,10 @@ public class AnimalService {
 
     @Transactional(readOnly = true)
     public PaginaResponse<AnimalResponse> listar(
-            String status, Boolean custodia, String especie, UUID baiaId, String q, int pagina, int tamanho) {
-        Specification<Animal> filtro = construirFiltro(status, custodia, especie, baiaId, q);
+            String status, Boolean custodia, String especie, UUID baiaId, String q, String pendencia,
+            int pagina, int tamanho) {
+        PendenciaAnimal pendenciaAnimal = resolverPendencia(pendencia);
+        Specification<Animal> filtro = construirFiltro(status, custodia, especie, baiaId, q, pendenciaAnimal);
         Page<Animal> paginaAnimais = animalRepository.findAll(filtro, Paginacao.pagina(pagina, tamanho, ORDEM_LISTAGEM));
         return PaginaResponse.de(paginaAnimais.map(animalMapper::toResponseListagem));
     }
@@ -503,9 +512,22 @@ public class AnimalService {
         }
     }
 
-    private Specification<Animal> construirFiltro(String status, Boolean custodia, String especie, UUID baiaId, String q) {
+    private PendenciaAnimal resolverPendencia(String pendencia) {
+        if (!StringUtils.hasText(pendencia)) {
+            return null;
+        }
+        return PendenciaAnimal.doCodigo(pendencia)
+                .orElseThrow(() -> new CampoInvalidoException("pendencia", "Pendência de animal desconhecida."));
+    }
+
+    private Specification<Animal> construirFiltro(
+            String status, Boolean custodia, String especie, UUID baiaId, String q, PendenciaAnimal pendencia) {
         return (root, query, cb) -> {
             List<Predicate> predicados = new ArrayList<>();
+
+            if (pendencia != null) {
+                predicados.add(predicadoDaPendencia(pendencia, root, query, cb));
+            }
 
             if (StringUtils.hasText(status)) {
                 predicados.add(cb.equal(root.get("status").get("codigo"), status));
@@ -535,6 +557,40 @@ public class AnimalService {
             }
 
             return cb.and(predicados.toArray(new Predicate[0]));
+        };
+    }
+
+    private Predicate predicadoDaPendencia(
+            PendenciaAnimal pendencia, Root<Animal> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+        LocalDate hoje = LocalDate.now(clock);
+        Predicate sobCustodia = cb.not(root.get("status").get("codigo").in(StatusAnimal.CODIGOS_FORA_DA_CUSTODIA));
+        return switch (pendencia) {
+            case FICHA_INCOMPLETA -> cb.and(sobCustodia, cb.isFalse(root.get("fichaCompleta")));
+            case NAO_CASTRADO -> cb.and(
+                    cb.equal(root.get("status").get("codigo"), PendenciaAnimal.STATUS_DISPONIVEL_ADOCAO),
+                    cb.isFalse(root.get("esterilizado")));
+            case SEM_AVALIACAO_30D -> {
+                Subquery<UUID> avaliacaoRecente = query.subquery(UUID.class);
+                Root<Procedimento> procedimento = avaliacaoRecente.from(Procedimento.class);
+                Subquery<UUID> retificacao = avaliacaoRecente.subquery(UUID.class);
+                Root<Procedimento> retificador = retificacao.from(Procedimento.class);
+                retificacao.select(retificador.get("id")).where(cb.equal(retificador.get("retifica"), procedimento));
+                avaliacaoRecente.select(procedimento.get("id")).where(
+                        cb.equal(procedimento.get("animal"), root),
+                        cb.greaterThanOrEqualTo(procedimento.get("data"), hoje.minusDays(PendenciaAnimal.DIAS_SEM_AVALIACAO)),
+                        cb.not(cb.exists(retificacao)));
+                yield cb.and(sobCustodia, cb.not(cb.exists(avaliacaoRecente)));
+            }
+            case MEDICACAO_TERMINANDO -> {
+                Subquery<UUID> prescricaoTerminando = query.subquery(UUID.class);
+                Root<Prescricao> prescricao = prescricaoTerminando.from(Prescricao.class);
+                prescricaoTerminando.select(prescricao.get("id")).where(
+                        cb.equal(prescricao.get("animal"), root),
+                        cb.equal(prescricao.get("status"), StatusPrescricao.ATIVA),
+                        cb.between(prescricao.get("dataFimPrevista"), hoje,
+                                hoje.plusDays(PendenciaAnimal.DIAS_ANTECEDENCIA_MEDICACAO)));
+                yield cb.and(sobCustodia, cb.exists(prescricaoTerminando));
+            }
         };
     }
 }

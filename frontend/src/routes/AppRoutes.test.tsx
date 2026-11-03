@@ -32,7 +32,7 @@ describe('roteamento entre login e dashboard', () => {
     await user.click(screen.getByRole('button', { name: /^entrar$/i }))
 
     expect(
-      await screen.findByRole('heading', { name: /dashboard operacional/i }),
+      await screen.findByRole('heading', { name: /^início$/i }),
     ).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /siszoo/i })).toBeInTheDocument()
   })
@@ -71,7 +71,7 @@ describe('roteamento entre login e dashboard', () => {
     renderApp('/dashboard')
 
     expect(
-      await screen.findByRole('heading', { name: /dashboard operacional/i }),
+      await screen.findByRole('heading', { name: /^início$/i }),
     ).toBeInTheDocument()
   })
 })

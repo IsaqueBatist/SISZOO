@@ -6,7 +6,6 @@ interface ErroComRetryProps {
 export function ErroComRetry({ mensagem, onTentarNovamente }: ErroComRetryProps) {
   return (
     <div className="alert danger" role="alert">
-      <span className="bullet" />
       <div className="alert-content">
         {mensagem}
         <div className="alert-desc">

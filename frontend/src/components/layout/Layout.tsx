@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { BannerOffline } from '@/components/BannerOffline'
 import { tituloDaRota } from '@/lib/nav'
 import { limparRascunhosExpirados } from '@/lib/rascunhoDb'
+import { useTabelasResponsivas } from '@/lib/tabelasResponsivas'
 import { useTelaEstreita } from '@/lib/useTelaEstreita'
 import { useTituloPagina } from '@/lib/useTituloPagina'
 import { Sidebar } from './Sidebar'
@@ -10,7 +11,7 @@ import { Topbar } from './Topbar'
 
 const CHAVE_SIDEBAR_COLAPSADA = 'siszoo:sidebar-collapsed'
 
-const CONSULTA_MENU_RECOLHIDO = '(max-width: 1100px)'
+const CONSULTA_MENU_RECOLHIDO = '(max-width: 1024px)'
 
 function lerCollapsedInicial(): boolean {
   try {
@@ -33,8 +34,37 @@ export function Layout() {
   const [menuAberto, setMenuAberto] = useState(false)
   const telaEstreita = useTelaEstreita()
   const { pathname } = useLocation()
+  const botaoMenuRef = useRef<HTMLButtonElement>(null)
+  const gavetaAberta = menuAberto && telaEstreita
+
+  const fecharMenu = useCallback(() => {
+    setMenuAberto((aberto) => {
+      if (aberto) requestAnimationFrame(() => botaoMenuRef.current?.focus())
+      return false
+    })
+  }, [])
+
+  useEffect(() => {
+    fecharMenu()
+  }, [pathname, fecharMenu])
+
+  useEffect(() => {
+    if (!gavetaAberta) return
+    document.querySelector<HTMLElement>('#menu-lateral .sidebar-toggle')?.focus()
+    const overflowAnterior = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    function aoPressionarTecla(evento: KeyboardEvent) {
+      if (evento.key === 'Escape') fecharMenu()
+    }
+    document.addEventListener('keydown', aoPressionarTecla)
+    return () => {
+      document.body.style.overflow = overflowAnterior
+      document.removeEventListener('keydown', aoPressionarTecla)
+    }
+  }, [gavetaAberta, fecharMenu])
 
   useTituloPagina(tituloDaRota(pathname))
+  useTabelasResponsivas()
 
   useEffect(() => {
     void limparRascunhosExpirados()
@@ -42,7 +72,7 @@ export function Layout() {
 
   function alternarCollapsed() {
     if (telaEstreita) {
-      setMenuAberto(false)
+      fecharMenu()
       return
     }
     setCollapsed((valorAnterior) => {
@@ -63,11 +93,12 @@ export function Layout() {
         collapsed={recolhido}
         onToggleCollapsed={alternarCollapsed}
         menuAberto={menuAberto}
-        onFecharMenu={() => setMenuAberto(false)}
+        modoGaveta={telaEstreita}
+        onFecharMenu={fecharMenu}
       />
-      {menuAberto && <div className="sidebar-fundo" onClick={() => setMenuAberto(false)} />}
-      <div className="main">
-        <Topbar onAbrirMenu={() => setMenuAberto(true)} />
+      {gavetaAberta && <div className="sidebar-fundo" onClick={fecharMenu} />}
+      <div className="main" inert={gavetaAberta || undefined}>
+        <Topbar onAbrirMenu={() => setMenuAberto(true)} menuAberto={gavetaAberta} botaoMenuRef={botaoMenuRef} />
         <main className="page" id="conteudo" tabIndex={-1}>
           <BannerOffline />
           <Outlet />

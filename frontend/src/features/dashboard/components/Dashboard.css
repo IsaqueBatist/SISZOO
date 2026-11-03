@@ -1,11 +1,16 @@
-.alerts-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-3);
+.dashboard-data::first-letter {
+  text-transform: uppercase;
 }
-@media (max-width: 1280px) {
-  .alerts-grid {
-    grid-template-columns: repeat(2, 1fr);
+
+.dashboard-pendencias {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+@media (max-width: 1024px) {
+  .dashboard-pendencias {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -13,9 +18,6 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-}
-.alert-desc-item + .alert-desc-item {
-  margin-left: 6px;
 }
 .alert-desc-item.severidade-vencida {
   color: var(--color-danger);

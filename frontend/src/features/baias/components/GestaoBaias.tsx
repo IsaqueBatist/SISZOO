@@ -7,7 +7,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { toast } from '@/components/toast/toast'
 import { mensagemDeRegraDaApi } from '@/lib/erroApi'
 import { normalizarBusca } from '@/lib/texto'
-import { classeDoFiltro, useFiltrosLista } from '@/lib/useFiltrosLista'
+import { classeDoFiltro, useFiltroDeLink, useFiltrosLista } from '@/lib/useFiltrosLista'
 import {
   useAlterarStatusBaiaMutation,
   useBaiasQuery,
@@ -66,7 +66,12 @@ export function GestaoBaias() {
     return mapa
   }, [residentes])
 
-  const { filtros, definirFiltros, limparFiltros, filtrosAtivos } = useFiltrosLista('baias', FILTROS_PADRAO)
+  const lotacaoDoLink = useFiltroDeLink('lotacao')
+  const { filtros, definirFiltros, limparFiltros, filtrosAtivos } = useFiltrosLista(
+    'baias',
+    FILTROS_PADRAO,
+    lotacaoDoLink ? { lotacao: lotacaoDoLink } : undefined,
+  )
   const { busca, tipo: tipoFiltro } = filtros
   const lotacaoFiltro = filtros.lotacao as FiltroLotacao
   const statusFiltro = filtros.status as FiltroStatus
@@ -148,7 +153,7 @@ export function GestaoBaias() {
           <div className="actions">
             <button type="button" className="btn btn-primary" onClick={() => setBaiaEmEdicao('nova')}>
               <Icon name="plus" size={14} />
-              Adicionar Baia
+              Adicionar baia
             </button>
           </div>
         )}

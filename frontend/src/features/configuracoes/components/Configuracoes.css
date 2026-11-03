@@ -5,7 +5,7 @@
   align-items: start;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 1024px) {
   .config-grid {
     grid-template-columns: 1fr;
   }
@@ -20,26 +20,25 @@
 }
 
 .config-nav .cn-section {
-  font-size: 10px;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
   color: var(--color-text-muted);
-  font-weight: 700;
-  padding: 12px 12px 6px;
+  font-weight: 600;
+  padding: 0 10px 6px;
 }
 
 .config-nav-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  font-size: 13px;
+  min-height: 34px;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
   color: var(--color-text-secondary);
   background: transparent;
   border: none;
-  border-left: 3px solid transparent;
-  margin-left: -3px;
   cursor: pointer;
   text-align: left;
   font-family: inherit;
@@ -53,7 +52,6 @@
 .config-nav-item.active {
   background: var(--color-primary-light);
   color: var(--color-primary);
-  border-left-color: var(--color-primary);
   font-weight: 600;
 }
 
@@ -79,7 +77,7 @@
 }
 
 .pref-row .title {
-  font-size: 14px;
+  font-size: var(--text-sm);
   font-weight: 600;
 }
 
@@ -95,21 +93,43 @@
 }
 
 .pal-chip {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  border: 2px solid var(--color-border);
+  height: var(--control-height);
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: var(--text-sm);
   cursor: pointer;
-  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
-
+.pal-chip .amostra {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid var(--color-border-strong);
+}
 .pal-chip.active {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(27, 94, 32, 0.12);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
 }
 
 .config-footer {
   display: flex;
   justify-content: flex-end;
   margin-top: var(--space-4);
+}
+
+.aviso-visualizacao {
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-info-bg);
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
 }

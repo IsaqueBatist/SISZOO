@@ -33,6 +33,7 @@ import com.siszoo.animais.repository.BaiaRepository;
 import com.siszoo.animais.repository.ContagemPorEspecieProjection;
 import com.siszoo.animais.repository.EspecieRepository;
 import com.siszoo.animais.repository.OcupacaoBaiaProjection;
+import com.siszoo.animais.service.PendenciaAnimal;
 import com.siszoo.comum.dto.CatalogoItemResponse;
 import com.siszoo.comum.repository.ContagemCatalogoProjection;
 import com.siszoo.ocorrencias.repository.OcorrenciaRepository;
@@ -54,8 +55,6 @@ import com.siszoo.relatorios.dto.ResultadoPorDoencaResponse;
 @Service
 public class DashboardService {
 
-    private static final int DIAS_ANTECEDENCIA_MEDICACAO = 7;
-    private static final int DIAS_SEM_AVALIACAO = 30;
     private static final String STATUS_DISPONIVEL_ADOCAO = "disponivel_adocao";
     private static final String STATUS_ADOTADO = "adotado";
     private static final String ESPECIE_CANINO = "canino";
@@ -210,7 +209,7 @@ public class DashboardService {
                 vacinaVencida + " vacina(s) vencida(s)",
                 "Reforços vacinais já vencidos.", vacinaVencida));
 
-        long semAvaliacao = animalRepository.countSemAvaliacaoDesde(foraDaCustodia, hoje.minusDays(DIAS_SEM_AVALIACAO));
+        long semAvaliacao = animalRepository.countSemAvaliacaoDesde(foraDaCustodia, hoje.minusDays(PendenciaAnimal.DIAS_SEM_AVALIACAO));
         alertas.add(new AlertaCriticoResponse(
                 "sem_avaliacao_30d", "atencao",
                 semAvaliacao + " animal(is) sem avaliação clínica há mais de 30 dias",
@@ -223,7 +222,7 @@ public class DashboardService {
                 "Baias com ocupação igual ou acima da capacidade.", baiaSuperlotada));
 
         long medicacaoAtiva = prescricaoRepository.countByStatusAndDataFimPrevistaBetweenAndAnimal_Status_CodigoNotIn(
-                StatusPrescricao.ATIVA, hoje, hoje.plusDays(DIAS_ANTECEDENCIA_MEDICACAO), foraDaCustodia);
+                StatusPrescricao.ATIVA, hoje, hoje.plusDays(PendenciaAnimal.DIAS_ANTECEDENCIA_MEDICACAO), foraDaCustodia);
         alertas.add(new AlertaCriticoResponse(
                 "medicacao_ativa", "info",
                 medicacaoAtiva + " prescrição(ões) ativa(s) terminando em até 7 dias",
@@ -235,7 +234,7 @@ public class DashboardService {
                 fichaIncompleta + " animal(is) com ficha incompleta",
                 "Animais sob custódia sem microchip e/ou sem vacinação vigente.", fichaIncompleta));
 
-        long naoCastrado = animalRepository.countByEsterilizadoFalseAndStatus_Codigo(STATUS_DISPONIVEL_ADOCAO);
+        long naoCastrado = animalRepository.countByEsterilizadoFalseAndStatus_Codigo(PendenciaAnimal.STATUS_DISPONIVEL_ADOCAO);
         alertas.add(new AlertaCriticoResponse(
                 "nao_castrado", "info",
                 naoCastrado + " animal(is) disponível(is) para adoção não castrado(s)",

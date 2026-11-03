@@ -1,40 +1,45 @@
 :root {
-  --color-primary: #1B5E20;
-  --color-primary-hover: #2E7D32;
-  --color-primary-light: #E8F5E9;
-  --color-primary-mid: #4CAF50;
+  --color-primary: #1E5C3A;
+  --color-primary-hover: #174A2E;
+  --color-primary-light: #EAF2EC;
+  --color-primary-mid: #3C8A5C;
 
-  --color-bg: #F4F6F8;
+  --color-bg: #F2F4F2;
   --color-surface: #FFFFFF;
-  --color-surface-alt: #F9FAFB;
-  --color-border: #E0E4EA;
-  --color-border-strong: #C5CDD8;
+  --color-surface-alt: #F7F8F7;
+  --color-border: #DFE4E0;
+  --color-border-strong: #C3CCC5;
+  --color-hover-linha: #EDF5EF;
 
-  --color-text-primary: #1A2332;
-  --color-text-secondary: #5A6A7E;
-  --color-text-muted: #5F6F82;
+  --color-text-primary: #1B2430;
+  --color-text-secondary: #4E5A68;
+  --color-text-muted: #646F7D;
   --color-text-inverse: #FFFFFF;
   --color-on-primary: #FFFFFF;
 
-  --color-danger: #C62828;
-  --color-danger-bg: #FFEBEE;
-  --color-danger-border: #EF9A9A;
+  --color-danger: #B91C1C;
+  --color-danger-bg: #FDECEC;
+  --color-danger-border: #F0B4B4;
 
-  --color-warning: #B84300;
-  --color-warning-bg: #FFF3E0;
-  --color-warning-border: #FFCC80;
+  --color-warning: #9A5B00;
+  --color-warning-bg: #FFF2D9;
+  --color-warning-border: #EFC67A;
 
-  --color-alert: #F57F17;
-  --color-alert-bg: #FFFDE7;
-  --color-alert-border: #FFF176;
+  --color-alert: #B7791F;
+  --color-alert-bg: #FFF7E3;
+  --color-alert-border: #EED79A;
 
-  --color-info: #1565C0;
-  --color-info-bg: #E3F2FD;
-  --color-info-border: #90CAF9;
+  --color-info: #1D5FB0;
+  --color-info-bg: #E6F0FB;
+  --color-info-border: #AFCBEE;
 
-  --color-success: #2E7D32;
-  --color-success-bg: #E8F5E9;
-  --color-success-border: #A5D6A7;
+  --color-success: #17784A;
+  --color-success-bg: #E3F4EA;
+  --color-success-border: #A6D8B9;
+
+  --color-accent: #6243B0;
+  --color-accent-bg: #EFEAFA;
+  --color-accent-border: #CDBFEE;
 
   --disease-raiva: #C62828;
   --disease-leishmaniose: #F57F17;
@@ -43,33 +48,40 @@
   --disease-febre-maculosa: #B84300;
   --disease-febre-amarela: #F9A825;
 
-  --sidebar-bg: #1B5E20;
-  --sidebar-item-hover: rgba(255,255,255,0.10);
-  --sidebar-item-active: rgba(255,255,255,0.18);
-  --sidebar-text: rgba(255,255,255,0.85);
-  --sidebar-icon: rgba(255,255,255,0.65);
-  --sidebar-border: rgba(255,255,255,0.10);
+  --sidebar-bg: #173F2B;
+  --sidebar-item-hover: rgba(255, 255, 255, 0.08);
+  --sidebar-item-active: rgba(255, 255, 255, 0.14);
+  --sidebar-text: #D3E6DA;
+  --sidebar-text-strong: #FFFFFF;
+  --sidebar-icon: #A3C9B1;
+  --sidebar-muted: #93BBA2;
+  --sidebar-accent: #8FD4A8;
+  --sidebar-border: rgba(255, 255, 255, 0.10);
 
-  --font-display: 'DM Sans', system-ui, sans-serif;
-  --font-body: 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: var(--font-body);
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', monospace;
 
-  --text-xs: 11px;
+  --text-xs: 12px;
+  --text-sm: 13px;
   --text-base: 14px;
   --text-md: 15px;
-  --text-lg: 18px;
-  --text-xl: 22px;
-  --text-2xl: 28px;
-  --text-3xl: 36px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-2xl: 22px;
+  --text-3xl: 28px;
 
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06);
-  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 12px rgba(10, 30, 40, 0.10), 0 1px 3px rgba(10, 30, 40, 0.06);
+  --shadow-lg: 0 12px 32px rgba(10, 30, 40, 0.16), 0 2px 6px rgba(10, 30, 40, 0.06);
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
   --radius-full: 9999px;
+
+  --control-height: 36px;
+  --control-height-sm: 30px;
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--color-primary) 25%, transparent);
 
   --space-1: 4px;
   --space-2: 8px;
@@ -80,6 +92,6 @@
   --space-8: 32px;
   --space-12: 48px;
 
-  --sidebar-width: 260px;
-  --topbar-height: 64px;
+  --sidebar-width: 232px;
+  --topbar-height: 56px;
 }

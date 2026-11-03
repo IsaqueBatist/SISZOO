@@ -44,7 +44,6 @@ export function AbaExames({ animalId, onRegistroCriado }: AbaExamesProps) {
 
       {isError && (
         <div className="alert danger" role="alert">
-          <span className="bullet" />
           <div className="alert-content">Não foi possível carregar os exames.</div>
         </div>
       )}
@@ -96,7 +95,7 @@ export function AbaExames({ animalId, onRegistroCriado }: AbaExamesProps) {
               <tbody>
                 {data.itens.map((exame) => (
                   <tr key={exame.id}>
-                    <td className="mono">{formatarDataBR(exame.dataSolicitacao)}</td>
+                    <td>{formatarDataBR(exame.dataSolicitacao)}</td>
                     <td>
                       {exame.tipoExameNome}
                       {exame.statusRegistro === 'RETIFICADO' && (
@@ -113,7 +112,7 @@ export function AbaExames({ animalId, onRegistroCriado }: AbaExamesProps) {
                       {exame.dataResultado ? (
                         <>
                           <div>{exame.resultado ?? '—'}</div>
-                          <div className="mono" style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
+                          <div className="texto-auxiliar">
                             {formatarDataBR(exame.dataResultado)}
                           </div>
                         </>
@@ -140,10 +139,10 @@ export function AbaExames({ animalId, onRegistroCriado }: AbaExamesProps) {
               Mostrando <strong>{data.itens.length}</strong> de <strong>{data.totalItens}</strong> registros
             </span>
             <div className="pager">
-              <button type="button" className="btn btn-ghost btn-sm" disabled={pagina === 0} onClick={() => setPagina((atual) => atual - 1)}>
+              <button type="button" className="btn btn-outline btn-sm" disabled={pagina === 0} onClick={() => setPagina((atual) => atual - 1)}>
                 Anterior
               </button>
-              <span className="mono" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+              <span className="pager-posicao">
                 Página {pagina + 1} de {totalPaginas}
               </span>
               <button

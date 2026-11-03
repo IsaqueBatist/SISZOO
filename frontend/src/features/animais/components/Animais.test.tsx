@@ -9,7 +9,7 @@ import { server } from '@/mocks/server'
 import { AuthProvider, definirSessaoEmMemoria } from '@/features/auth/hooks/AuthContext'
 import type { Usuario } from '@/features/auth/types/auth.types'
 import { Animais } from './Animais'
-import { badgeDeEspecie, badgeDeStatus } from '../utils/statusBadge'
+import { badgeDeStatus } from '../utils/statusBadge'
 
 function renderAnimais(initialEntry = '/animais') {
   const usuario: Usuario = {
@@ -64,19 +64,23 @@ describe('badgeDeStatus', () => {
   })
 })
 
-describe('badgeDeEspecie', () => {
-  it('mapeia canino e felino para as classes dedicadas', () => {
-    expect(badgeDeEspecie('canino', 'Canino')).toEqual({ classe: 'badge-canine', label: 'Canino' })
-    expect(badgeDeEspecie('felino', 'Felino')).toEqual({ classe: 'badge-feline', label: 'Felino' })
-  })
-
-  it('cai no fallback neutro para espécies sem badge dedicado', () => {
-    expect(badgeDeEspecie('quiroptero', 'Quiróptero')).toEqual({ classe: 'badge-neutral', label: 'Quiróptero' })
-    expect(badgeDeEspecie('pnh', 'Primata não-humano')).toEqual({ classe: 'badge-neutral', label: 'Primata não-humano' })
-  })
-})
-
 describe('Animais', () => {
+  it('link com pendência envia o filtro para a API e explica a regra na tela', async () => {
+    const pendencias: (string | null)[] = []
+    server.use(
+      http.get(`${API_BASE_URL}/animais`, ({ request }) => {
+        pendencias.push(new URL(request.url).searchParams.get('pendencia'))
+        return HttpResponse.json({ itens: [], pagina: 0, tamanho: 20, totalItens: 0, totalPaginas: 1 })
+      }),
+    )
+    renderAnimais('/animais?pendencia=ficha_incompleta')
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Ficha incompleta: Animais sob custódia sem microchip ou sem vacinação vigente.')
+    expect(screen.getByRole('combobox', { name: 'Filtrar por pendência' })).toHaveValue('ficha_incompleta')
+    expect(await screen.findByText('Nenhum animal com esta pendência no momento.')).toBeInTheDocument()
+    expect(pendencias).toContain('ficha_incompleta')
+  })
+
   it('lista os animais carregados da API', async () => {
     renderAnimais()
 

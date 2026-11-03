@@ -207,10 +207,10 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular, denuncianteDaOcorr
     <div className="wizard-shell">
       <div className="page-header">
         <div className="title-block">
-          <Link to={destinoVoltar} className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}>
+          <Link to={destinoVoltar} className="link-voltar">
             ← Voltar
           </Link>
-          <h1>Novo Processo Sanitário</h1>
+          <h1>Novo processo sanitário</h1>
           <p className="subtitle">Protocolo será gerado automaticamente ao registrar.</p>
         </div>
       </div>
@@ -219,14 +219,12 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular, denuncianteDaOcorr
 
       {erroCatalogos && (
         <div className="alert danger" role="alert">
-          <span className="bullet" />
           <div className="alert-content">Não foi possível carregar doenças, laboratórios e sintomas. Recarregue a página.</div>
         </div>
       )}
 
       {conflitoRascunho && (
         <div className="alert warning" role="alert">
-          <span className="bullet" />
           <div className="alert-content">
             Há um rascunho salvo com um vínculo de ocorrência diferente do que você está abrindo agora.
             <div className="flex gap-2" style={{ marginTop: 8 }}>
@@ -360,7 +358,7 @@ export function ProcessoForm({ ocorrenciaDaUrl, podeVincular, denuncianteDaOcorr
                   ← Voltar
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={mutation.isPending}>
-                  {mutation.isPaused ? 'Aguardando conexão…' : mutation.isPending ? 'Registrando…' : 'Registrar Processo Sanitário'}
+                  {mutation.isPaused ? 'Aguardando conexão…' : mutation.isPending ? 'Registrando…' : 'Registrar processo sanitário'}
                 </button>
               </div>
             </div>

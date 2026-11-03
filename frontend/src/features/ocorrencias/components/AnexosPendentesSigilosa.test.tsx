@@ -78,7 +78,7 @@ describe('ocorrência sigilosa no IndexedDB', () => {
     expect(await screen.findByText(/anexos não são guardados no rascunho/)).toBeInTheDocument()
     expect(await conteudo('arquivos')).toEqual({})
 
-    await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
+    await user.click(screen.getByRole('button', { name: 'Registrar ocorrência' }))
     await screen.findByText(/Há anexos pendentes/)
 
     const store = await conteudo('ocorrencias')
@@ -91,7 +91,7 @@ describe('ocorrência sigilosa no IndexedDB', () => {
     sessionStorage.clear()
     renderCadastroComo(USUARIO_B)
 
-    const registrar = await screen.findByRole('button', { name: 'Registrar Ocorrência' })
+    const registrar = await screen.findByRole('button', { name: 'Registrar ocorrência' })
     await waitFor(() => expect(registrar).toBeEnabled())
     expect(screen.queryByText(/Há anexos pendentes/)).not.toBeInTheDocument()
   }, 15000)

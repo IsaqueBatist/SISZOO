@@ -20,14 +20,14 @@ describe('mapearKpisParaCards', () => {
     expect(cards).toHaveLength(4)
     expect(cards[0]).toMatchObject({ label: 'Animais sob custódia', value: '147', foot: '123 cães · 24 gatos' })
     expect(cards[1]).toMatchObject({ label: 'Vacinados', value: '84', unit: '%', foot: '123 de 147 animais' })
-    expect(cards[2]).toMatchObject({ label: 'Animais Adotados', value: '8', foot: '12 disponíveis para adoção' })
-    expect(cards[3]).toMatchObject({ label: 'Ocorrências', value: '4' })
+    expect(cards[2]).toMatchObject({ label: 'Ocorrências hoje', value: '4' })
+    expect(cards[3]).toMatchObject({ label: 'Animais adotados', value: '8', foot: '12 disponíveis para adoção' })
   })
 
   it('usa o singular quando há 1 animal disponível para adoção', () => {
     const cards = mapearKpisParaCards(kpisBase({ adocoes: { adotados: 0, disponiveis: 1 } }))
 
-    expect(cards[2]).toMatchObject({ value: '0', foot: '1 disponível para adoção' })
+    expect(cards[3]).toMatchObject({ value: '0', foot: '1 disponível para adoção' })
   })
 
   it('com dados reais nenhum card é marcado como mock', () => {
@@ -42,24 +42,24 @@ describe('mapearKpisParaCards', () => {
     expect(cards.every((card) => card.isMock)).toBe(true)
   })
 
-  it('mostra "Registradas hoje" sem a média quando mediaPorHora está ausente', () => {
+  it('mostra só "Registradas desde 0h" sem a média quando mediaPorHora está ausente', () => {
     const cards = mapearKpisParaCards(kpisBase({ ocorrencias: { registradasHoje: 4 } }))
-    const ocorrencias = cards.find((card) => card.label === 'Ocorrências')
+    const ocorrencias = cards.find((card) => card.label === 'Ocorrências hoje')
 
-    expect(ocorrencias?.foot).toBe('Registradas hoje')
+    expect(ocorrencias?.foot).toBe('Registradas desde 0h')
   })
 
-  it('mostra "Registradas hoje" sem a média quando a API devolve mediaPorHora null (virada do dia)', () => {
+  it('mostra só "Registradas desde 0h" sem a média quando a API devolve mediaPorHora null (virada do dia)', () => {
     const cards = mapearKpisParaCards(kpisBase({ ocorrencias: { registradasHoje: 0, mediaPorHora: null } }))
-    const ocorrencias = cards.find((card) => card.label === 'Ocorrências')
+    const ocorrencias = cards.find((card) => card.label === 'Ocorrências hoje')
 
-    expect(ocorrencias?.foot).toBe('Registradas hoje')
+    expect(ocorrencias?.foot).toBe('Registradas desde 0h')
   })
 
   it('mostra a média por hora quando presente', () => {
     const cards = mapearKpisParaCards(kpisBase({ ocorrencias: { registradasHoje: 4, mediaPorHora: 0.5 } }))
-    const ocorrencias = cards.find((card) => card.label === 'Ocorrências')
+    const ocorrencias = cards.find((card) => card.label === 'Ocorrências hoje')
 
-    expect(ocorrencias?.foot).toBe('Registradas hoje · média 0.5 a cada hora')
+    expect(ocorrencias?.foot).toBe('Registradas desde 0h · média de 0,5 por hora')
   })
 })

@@ -19,7 +19,6 @@ export function AnexosOcorrenciaForm({ anexos, erro, aviso, onAdicionar, onRemov
       <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {erro && (
           <div className="alert danger" role="alert">
-            <span className="bullet" />
             <div className="alert-content">{erro}</div>
           </div>
         )}

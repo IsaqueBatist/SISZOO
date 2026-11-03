@@ -114,7 +114,7 @@ async function preencherAmostraDeCampo(user: Usuario_, status = 'ASSINTOMATICO')
 
 async function avancarERegistrar(user: Usuario_) {
   await user.click(paneDoStep(/^3\. Amostras/).getByRole('button', { name: 'Continuar →' }))
-  await user.click(paneDoStep(/^4\. Revisão/).getByRole('button', { name: /Registrar Processo Sanitário/ }))
+  await user.click(paneDoStep(/^4\. Revisão/).getByRole('button', { name: /Registrar processo sanitário/ }))
 }
 
 describe('ProcessoForm — etapa 1 (vínculo com ocorrência)', () => {

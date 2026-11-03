@@ -243,14 +243,14 @@ describe('Ocorrencias', () => {
     expect(await screen.findByText('Não foi possível carregar as ocorrências.')).toBeInTheDocument()
   })
 
-  it('não mostra o botão "Registrar Ocorrência" para o perfil Veterinário', async () => {
+  it('não mostra o botão "Registrar ocorrência" para o perfil Veterinário', async () => {
     renderLista(['Veterinário'])
     await screen.findByText('OC 089/2026')
 
     expect(screen.queryByRole('link', { name: /registrar ocorrência/i })).not.toBeInTheDocument()
   })
 
-  it('mostra o botão "Registrar Ocorrência" para Administrador e Agente Sanitário', async () => {
+  it('mostra o botão "Registrar ocorrência" para Administrador e Agente Sanitário', async () => {
     renderLista(['Agente Sanitário'])
     await screen.findByText('OC 089/2026')
 

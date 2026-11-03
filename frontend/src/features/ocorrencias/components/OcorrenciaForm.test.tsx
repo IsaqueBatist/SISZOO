@@ -51,7 +51,7 @@ describe('OcorrenciaForm', () => {
     const user = userEvent.setup()
     renderForm()
 
-    await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
+    await user.click(screen.getByRole('button', { name: 'Registrar ocorrência' }))
 
     expect(await screen.findByText('Informe o endereço da ocorrência.')).toBeInTheDocument()
     expect(screen.getByText('Informe o bairro.')).toBeInTheDocument()
@@ -63,11 +63,11 @@ describe('OcorrenciaForm', () => {
     renderForm()
 
     await preencherCamposObrigatorios(user)
-    await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
+    await user.click(screen.getByRole('button', { name: 'Registrar ocorrência' }))
     expect(await screen.findByText(MENSAGEM_NOME_OBRIGATORIO)).toBeInTheDocument()
 
     await user.click(screen.getByLabelText('Ocorrência sigilosa'))
-    await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
+    await user.click(screen.getByRole('button', { name: 'Registrar ocorrência' }))
 
     await waitFor(() => expect(screen.queryByText(MENSAGEM_NOME_OBRIGATORIO)).not.toBeInTheDocument())
   })
@@ -78,7 +78,7 @@ describe('OcorrenciaForm', () => {
 
     await preencherCamposObrigatorios(user)
     await user.click(screen.getByLabelText('Denunciante anônimo'))
-    await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
+    await user.click(screen.getByRole('button', { name: 'Registrar ocorrência' }))
 
     expect(await screen.findByText('Detalhe da ocorrência recém-criada')).toBeInTheDocument()
   })
@@ -160,7 +160,7 @@ describe('OcorrenciaForm', () => {
 
     await preencherCamposObrigatorios(user)
     await user.type(screen.getByLabelText(/Nome completo/i), 'Fulano de Tal')
-    await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
+    await user.click(screen.getByRole('button', { name: 'Registrar ocorrência' }))
 
     expect(await screen.findByText('Detalhe da ocorrência recém-criada')).toBeInTheDocument()
   })
@@ -179,7 +179,7 @@ describe('OcorrenciaForm', () => {
     await preencherCamposObrigatorios(user)
     await user.click(screen.getByLabelText('Urgente (contato humano-animal)'))
     await user.click(screen.getByLabelText('Denunciante anônimo'))
-    await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
+    await user.click(screen.getByRole('button', { name: 'Registrar ocorrência' }))
 
     await screen.findByText('Detalhe da ocorrência recém-criada')
     expect(corpos).toHaveLength(1)
@@ -199,7 +199,7 @@ describe('OcorrenciaForm', () => {
 
     await preencherCamposObrigatorios(user)
     await user.type(screen.getByLabelText(/Nome completo/i), 'Fulano de Tal')
-    await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
+    await user.click(screen.getByRole('button', { name: 'Registrar ocorrência' }))
 
     expect(await screen.findByText('A data de abertura não pode ser futura.')).toBeInTheDocument()
   })
@@ -231,7 +231,7 @@ describe('OcorrenciaForm', () => {
         new File(['a'], 'a.png', { type: 'image/png' }),
         new File(['b'], 'b.png', { type: 'image/png' }),
       ])
-      await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
+      await user.click(screen.getByRole('button', { name: 'Registrar ocorrência' }))
     }
 
     it('falha no 2º anexo: avisa, e o reenvio manda só o pendente, sem novo POST /ocorrencias', async () => {
@@ -245,7 +245,7 @@ describe('OcorrenciaForm', () => {
       expect(within(aviso).getByText('b.png')).toBeInTheDocument()
       expect(within(aviso).queryByText('a.png')).not.toBeInTheDocument()
       expect(screen.getByText(/b\.png: Não foi possível enviar o anexo/)).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'Registrar Ocorrência' })).toBeDisabled()
+      expect(screen.getByRole('button', { name: 'Registrar ocorrência' })).toBeDisabled()
       expect(contagem).toEqual({ cadastros: 1, uploads: 2, camposArquivo: 2 })
 
       await user.click(screen.getByRole('button', { name: 'Reenviar' }))
@@ -285,7 +285,7 @@ describe('OcorrenciaForm', () => {
       await user.click(await screen.findByRole('button', { name: 'Descartar' }))
 
       expect(screen.queryByText(/Há anexos pendentes/)).not.toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'Registrar Ocorrência' })).toBeEnabled()
+      expect(screen.getByRole('button', { name: 'Registrar ocorrência' })).toBeEnabled()
       expect(contagem.uploads).toBe(2)
     })
   })
@@ -398,7 +398,7 @@ describe('OcorrenciaForm — classificação e datas', () => {
     await screen.findByRole('radiogroup', { name: 'Tipo de ocorrência' })
     for (const radio of screen.getAllByRole('radio')) expect(radio).toHaveAttribute('aria-checked', 'false')
 
-    await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
+    await user.click(screen.getByRole('button', { name: 'Registrar ocorrência' }))
     expect(await screen.findByText('Selecione o tipo da ocorrência.')).toBeInTheDocument()
   })
 
@@ -409,7 +409,7 @@ describe('OcorrenciaForm — classificação e datas', () => {
     const data = await screen.findByLabelText(/Data de abertura/)
     await user.clear(data)
     await user.type(data, '2099-01-01')
-    await user.click(screen.getByRole('button', { name: 'Registrar Ocorrência' }))
+    await user.click(screen.getByRole('button', { name: 'Registrar ocorrência' }))
 
     expect(await screen.findByText('A data de abertura não pode ser futura.')).toBeInTheDocument()
     expect(data).toHaveAttribute('aria-invalid', 'true')

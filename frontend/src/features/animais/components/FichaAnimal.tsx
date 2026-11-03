@@ -12,7 +12,7 @@ import { AnexosAnimal } from './AnexosAnimal'
 import { LaudoEutanasiaRegistrado } from './CamposEutanasia'
 import { OrigemAnimal } from './OrigemAnimal'
 import './FichaAnimal.css'
-import { badgeDeEspecie, badgeDeStatus } from '../utils/statusBadge'
+import { badgeDeStatus } from '../utils/statusBadge'
 import { useAnimalQuery } from '../hooks/useAnimais'
 import { formatarPorte, formatarSexo, formatarTipoDestinoTransferencia } from '../utils/rotulosAnimal'
 
@@ -66,41 +66,38 @@ export function FichaAnimal() {
     return (
       <>
         <div className="alert danger" role="alert">
-          <span className="bullet" />
           <div className="alert-content">Não foi possível carregar este animal.</div>
         </div>
-        <Link to="/animais" className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}>
+        <Link to="/animais" className="link-voltar">
           ← Voltar para Animais
         </Link>
       </>
     )
   }
 
-  const especieBadge = badgeDeEspecie(animal.especieCodigo, animal.especieNome)
   const statusBadge = badgeDeStatus(animal.statusCodigo, animal.statusNome)
 
   return (
     <>
       <div className="page-header">
         <div className="title-block">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-            <Link to="/animais" className="btn btn-ghost btn-sm">
-              ← Voltar
-            </Link>
-            <span className={`badge ${especieBadge.classe}`}>{especieBadge.label}</span>
+          <Link to="/animais" className="link-voltar">
+            ← Voltar
+          </Link>
+          <div className="titulo-com-status">
+            <h1>{animal.nome}</h1>
             <span className={`badge ${statusBadge.classe}`}>
-              <span className="badge-dot" aria-hidden="true" style={{ background: 'currentColor' }} />
+              <span className="badge-dot" aria-hidden="true" />
               {statusBadge.label}
             </span>
           </div>
-          <h1>{animal.nome}</h1>
           <p className="subtitle">
             {animal.fichaCompleta ? (
               'Ficha completa'
             ) : (
               <strong style={{ color: 'var(--color-warning)' }}>Ficha incompleta</strong>
             )}{' '}
-            · No CCZ desde {formatarData(animal.dataEntrada)} · Última atualização {formatarRelativo(animal.atualizadoEm)}
+            · {animal.especieNome} · No CCZ desde {formatarData(animal.dataEntrada)} · Última atualização {formatarRelativo(animal.atualizadoEm)}
           </p>
         </div>
         {podeEscrever && (
@@ -120,19 +117,16 @@ export function FichaAnimal() {
               <img
                 src={animal.fotoUrl}
                 alt=""
-                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                <Icon name="paw" size={64} />
-              </div>
+              <Icon name="paw" size={48} />
             )}
           </div>
           <div className="id-info">
             <div className="name-row">
               <div>
-                <h2>{animal.nome}</h2>
-                <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2 }}>
+                <div className="id-resumo">
                   {[animal.raca, animal.coloracao, animal.pelagem === 'curta' ? 'Pelagem curta' : animal.pelagem === 'longa' ? 'Pelagem longa' : null]
                     .filter(Boolean)
                     .join(' · ') || '—'}
@@ -142,7 +136,7 @@ export function FichaAnimal() {
             <div className="kv-list">
               <div className="kv-row">
                 <span className="k">Microchip</span>
-                <span className="v mono">{animal.microchip ?? '—'}</span>
+                <span className={animal.microchip ? 'v mono' : 'v'}>{animal.microchip ?? '—'}</span>
               </div>
               <div className="kv-row">
                 <span className="k">Implantação do chip</span>
@@ -150,7 +144,7 @@ export function FichaAnimal() {
               </div>
               <div className="kv-row">
                 <span className="k">Medalha</span>
-                <span className="v mono">{animal.numeroMedalha ?? '—'}</span>
+                <span className={animal.numeroMedalha ? 'v mono' : 'v'}>{animal.numeroMedalha ?? '—'}</span>
               </div>
               <div className="kv-row">
                 <span className="k">Procedência</span>
@@ -169,7 +163,7 @@ export function FichaAnimal() {
                   </div>
                   <div className="kv-row">
                     <span className="k">Saída</span>
-                    <span className="v mono">{formatarDataHoraBR(animal.dataSaida)}</span>
+                    <span className="v">{formatarDataHoraBR(animal.dataSaida)}</span>
                   </div>
                   <div className="kv-row">
                     <span className="k">Documento</span>
@@ -195,7 +189,7 @@ export function FichaAnimal() {
               </div>
               <div className="kv-row">
                 <span className="k">Nasc. aprox.</span>
-                <span className="v mono">{animal.dataNascimentoAprox ? formatarData(animal.dataNascimentoAprox) : animal.idadeAprox ?? '—'}</span>
+                <span className="v">{animal.dataNascimentoAprox ? formatarData(animal.dataNascimentoAprox) : animal.idadeAprox ?? '—'}</span>
               </div>
               <div className="kv-row">
                 <span className="k">Baia atual</span>
@@ -246,7 +240,7 @@ export function FichaAnimal() {
               </div>
               <div className="kv-row">
                 <span className="k">Data</span>
-                <span className="v mono">{formatarData(animal.dataEntrada)}</span>
+                <span className="v">{formatarData(animal.dataEntrada)}</span>
               </div>
             </div>
           </div>

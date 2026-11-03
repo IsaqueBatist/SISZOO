@@ -165,7 +165,7 @@ describe('abrir processo (D33, T29)', () => {
 
     await user.click(abrir)
 
-    expect(await screen.findByRole('heading', { name: 'Novo Processo Sanitário' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Novo processo sanitário' })).toBeInTheDocument()
     expect(within(await screen.findByTestId('vinculo-travado')).getByText(/OC 089\/2026/)).toBeInTheDocument()
   })
 

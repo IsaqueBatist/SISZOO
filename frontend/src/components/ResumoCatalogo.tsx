@@ -8,7 +8,7 @@ export interface ItemResumo {
 
 export function ResumoCatalogo({ itens }: { itens: ItemResumo[] }) {
   return (
-    <div className="grid grid-4" style={{ gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
+    <div className="resumo-grid">
       {itens.map((item) => (
         <div key={item.id} className={`resumo-card${item.alerta && item.valor > 0 ? ' alerta' : ''}`}>
           <span className="num">{item.valor}</span>

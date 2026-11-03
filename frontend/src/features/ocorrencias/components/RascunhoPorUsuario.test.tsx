@@ -75,7 +75,7 @@ describe('rascunho e anexos pendentes têm escopo por usuário', () => {
 
     expect(await screen.findByText(/Encontramos um rascunho salvo/)).toBeInTheDocument()
     expect(await screen.findByText(/Há anexos pendentes da ocorrência OC 089\/2026/)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Registrar Ocorrência' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Registrar ocorrência' })).toBeDisabled()
   })
 
   it('outro usuário do mesmo navegador não vê nem é bloqueado pelo rascunho/pendência do primeiro', async () => {
@@ -85,7 +85,7 @@ describe('rascunho e anexos pendentes têm escopo por usuário', () => {
     const user = userEvent.setup()
     renderCadastroComo(USUARIO_B)
 
-    const registrar = await screen.findByRole('button', { name: 'Registrar Ocorrência' })
+    const registrar = await screen.findByRole('button', { name: 'Registrar ocorrência' })
     await esperarChecagemInicial(user, USUARIO_B)
 
     expect(screen.queryByText(/Encontramos um rascunho salvo/)).not.toBeInTheDocument()
@@ -100,7 +100,7 @@ describe('rascunho e anexos pendentes têm escopo por usuário', () => {
     const user = userEvent.setup()
     renderCadastroComo(USUARIO_A)
 
-    const registrar = await screen.findByRole('button', { name: 'Registrar Ocorrência' })
+    const registrar = await screen.findByRole('button', { name: 'Registrar ocorrência' })
     await esperarChecagemInicial(user, USUARIO_A)
 
     expect(screen.queryByText(/Encontramos um rascunho salvo/)).not.toBeInTheDocument()

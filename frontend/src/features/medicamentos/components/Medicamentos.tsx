@@ -13,6 +13,7 @@ import {
   useMedicamentosQuery,
 } from '../hooks/useMedicamentos'
 import { MedicamentoFormModal } from './MedicamentoFormModal'
+import { useLinhaClicavel } from '@/lib/useLinhaClicavel'
 
 type FiltroSituacao = 'ativos' | 'inativos' | 'todos'
 
@@ -126,7 +127,6 @@ export function Medicamentos() {
 
       {isError && (
         <div className="alert danger" role="alert">
-          <span className="bullet" />
           <div className="alert-content">Não foi possível carregar os medicamentos. Tente novamente.</div>
         </div>
       )}
@@ -223,6 +223,8 @@ function LinhaMedicamento({
 }) {
   const desativar = useDesativarMedicamentoMutation()
 
+  const propsDaLinha = useLinhaClicavel()
+
   function handleDesativar() {
     const confirmado = window.confirm(
       `Desativar o medicamento ${medicamento.nome}?\n\n` +
@@ -239,7 +241,7 @@ function LinhaMedicamento({
   }
 
   return (
-    <tr>
+    <tr {...(podeEscrever && medicamento.ativo ? propsDaLinha(onEditar) : {})}>
       <td>{medicamento.nome}</td>
       <td>{medicamento.categoriaNome}</td>
       <td>

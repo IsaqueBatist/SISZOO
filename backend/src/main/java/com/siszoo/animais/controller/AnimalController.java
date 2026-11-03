@@ -40,9 +40,10 @@ public class AnimalController {
             @RequestParam(required = false) String especie,
             @RequestParam(required = false) UUID baiaId,
             @RequestParam(required = false) String q,
+            @RequestParam(required = false) String pendencia,
             @RequestParam(defaultValue = "0") int pagina,
             @RequestParam(defaultValue = "20") int tamanho) {
-        return animalService.listar(status, custodia, especie, baiaId, q, pagina, tamanho);
+        return animalService.listar(status, custodia, especie, baiaId, q, pendencia, pagina, tamanho);
     }
 
     @GetMapping("/{id}")

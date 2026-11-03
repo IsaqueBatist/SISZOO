@@ -126,7 +126,7 @@ export function PreviewProcedimentos({ dados }: { dados: DadosProcedimentos }) {
           <tbody>
             {dados.cirurgias.map((linha, indice) => (
               <tr key={`${linha.animal}-${indice}`}>
-                <td className="mono">{formatarData(linha.data)}</td>
+                <td>{formatarData(linha.data)}</td>
                 <td>{linha.animal}</td>
                 <td>{linha.procedimento}</td>
                 <td>{linha.veterinario}</td>

@@ -156,7 +156,6 @@ export function EditarProcesso() {
     const naoEncontrado = statusHttpDoErro(error) === 404
     return (
       <div className="alert danger" role="alert">
-        <span className="bullet" />
         <div className="alert-content">
           {naoEncontrado ? 'Processo sanitário não encontrado.' : 'Não foi possível carregar este processo sanitário. Tente novamente.'}
         </div>
@@ -168,7 +167,7 @@ export function EditarProcesso() {
     <>
       <div className="page-header">
         <div className="title-block">
-          <Link to={`/processos/${processo.id}`} className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}>
+          <Link to={`/processos/${processo.id}`} className="link-voltar">
             ← Voltar para o processo
           </Link>
           <h1>Editar processo {formatarProtocoloProcesso(processo.protocolo)}</h1>

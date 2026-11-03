@@ -18,9 +18,9 @@ function rotulosPorGrupo(entradas: NavEntry[]): Record<string, string[]> {
 describe('ordem do menu lateral', () => {
   it('mantém os grupos e ordena os itens de cada grupo de A a Z pelo nome exibido', () => {
     expect(rotulosPorGrupo(NAV_ALL)).toEqual({
-      PRINCIPAL: ['Animais', 'Dashboard', 'Ocorrências', 'Processos Sanitários', 'Relatórios'],
+      PRINCIPAL: ['Animais', 'Início', 'Ocorrências', 'Processos Sanitários', 'Relatórios'],
       CADASTROS: ['Gestão de Baias', 'Medicamentos', 'Vacinas'],
-      ADMINISTRAÇÃO: ['Logs', 'Usuários'],
+      ADMINISTRAÇÃO: ['Histórico de ações', 'Usuários'],
       SISTEMA: ['Configurações'],
     })
   })
@@ -41,12 +41,12 @@ describe('ordem do menu lateral', () => {
 
   it('cada perfil continua vendo só os módulos permitidos, já em ordem alfabética', () => {
     expect(rotulosPorGrupo(getNavForRole('vet'))).toEqual({
-      PRINCIPAL: ['Animais', 'Dashboard', 'Processos Sanitários', 'Relatórios'],
+      PRINCIPAL: ['Animais', 'Início', 'Processos Sanitários', 'Relatórios'],
       CADASTROS: ['Gestão de Baias', 'Medicamentos', 'Vacinas'],
       SISTEMA: ['Configurações'],
     })
     expect(rotulosPorGrupo(getNavForRole('agente'))).toEqual({
-      PRINCIPAL: ['Dashboard', 'Ocorrências', 'Processos Sanitários', 'Relatórios'],
+      PRINCIPAL: ['Início', 'Ocorrências', 'Processos Sanitários', 'Relatórios'],
       CADASTROS: ['Medicamentos', 'Vacinas'],
       SISTEMA: ['Configurações'],
     })

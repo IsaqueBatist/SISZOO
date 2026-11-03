@@ -78,7 +78,6 @@ export function AnexosAnimal({ animalId, podeEscrever }: AnexosAnimalProps) {
       <div className="section-pad" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {erro && (
           <div className="alert danger" role="alert">
-            <span className="bullet" />
             <div className="alert-content">{erro}</div>
           </div>
         )}

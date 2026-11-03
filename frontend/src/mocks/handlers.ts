@@ -1242,10 +1242,19 @@ export const handlers = [
     const especie = url.searchParams.get('especie')
     const baiaId = url.searchParams.get('baiaId')
     const q = url.searchParams.get('q')?.trim().toLowerCase()
+    const pendencia = url.searchParams.get('pendencia')
     const pagina = Number(url.searchParams.get('pagina') ?? '0')
     const tamanho = Number(url.searchParams.get('tamanho') ?? '20')
 
+    const combinaPendencia = (animal: Animal) => {
+      if (!pendencia) return true
+      if (pendencia === 'ficha_incompleta') return animalSobCustodia(animal) && !animal.fichaCompleta
+      if (pendencia === 'nao_castrado') return animal.statusCodigo === 'disponivel_adocao' && animal.esterilizado === false
+      return false
+    }
+
     const filtrados = animaisMock.filter((animal) => {
+      if (!combinaPendencia(animal)) return false
       const combinaStatus = !status || animal.statusCodigo === status
       const combinaCustodia = !custodia || animalSobCustodia(animal)
       const combinaEspecie = !especie || animal.especieCodigo === especie
