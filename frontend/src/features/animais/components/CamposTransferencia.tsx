@@ -66,7 +66,7 @@ export function CamposTransferencia({ registrada }: CamposTransferenciaProps) {
           </div>
           <div className="kv-row">
             <span className="k">Saída</span>
-            <span className="v mono">{formatarDataHoraBR(registrada.dataSaida)}</span>
+            <span className="v">{formatarDataHoraBR(registrada.dataSaida)}</span>
           </div>
         </div>
         {campoDocumento}

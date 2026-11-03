@@ -86,18 +86,32 @@ export function CardAnimalRecolhido({ ocorrencia, podeVincular }: CardAnimalReco
                   type="button"
                   className="btn btn-primary btn-sm"
                   disabled={vincular.isPending}
+                  aria-busy={vincular.isPending || undefined}
                   onClick={() => void confirmar()}
                 >
-                  Vincular animal
+                  {vincular.isPending ? 'Vinculando…' : 'Vincular animal'}
                 </button>
               </div>
+            )}
+            {trocando && (
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                style={{ marginTop: 8 }}
+                onClick={() => {
+                  setTrocando(false)
+                  setSelecionado(null)
+                  setErro(null)
+                }}
+              >
+                Cancelar troca
+              </button>
             )}
           </div>
         )}
 
         {erro && (
           <div className="alert danger" role="alert" style={{ marginTop: 8 }}>
-            <span className="bullet" />
             <div className="alert-content">{erro}</div>
           </div>
         )}

@@ -56,7 +56,7 @@ export function MenuPerfil() {
           <div className="menu-perfil-header">
             <div className="menu-perfil-nome">{nomeCompleto}</div>
             <div className="menu-perfil-email">{user?.email ?? ''}</div>
-            <span className={`badge role-pill ${role.badgeCls}`}>{role.short}</span>
+            <span className="badge badge-neutral">{role.short}</span>
           </div>
           <Link ref={primeiroItemRef} to="/perfil" role="menuitem" className="menu-perfil-item" onClick={fechar}>
             <Icon name="user" size={14} />

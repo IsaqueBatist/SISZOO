@@ -63,7 +63,6 @@ export function Perfil() {
           <h1>Meu Perfil</h1>
         </div>
         <div className="alert danger" role="alert">
-          <span className="bullet" />
           <div className="alert-content">Não foi possível carregar seu perfil. Tente novamente.</div>
         </div>
       </div>
@@ -102,7 +101,7 @@ export function Perfil() {
             <h2>{nomeCompleto}</h2>
             <div className="email">{usuario.email}</div>
             <div>
-              <span className={`badge ${role.badgeCls}`}>{role.label.toUpperCase()}</span>
+              <span className="badge badge-neutral">{role.label}</span>
             </div>
           </div>
 
@@ -112,11 +111,11 @@ export function Perfil() {
             </div>
             <div className="card-body" style={{ padding: 0 }}>
               <div className="kv-list" style={{ padding: 16 }}>
-                <div className="kv-row">
+                <div className="kv-row empilhado">
                   <span className="k">
                     <Icon name="mail" size={14} /> E-mail
                   </span>
-                  <span className="v mono">{usuario.email}</span>
+                  <span className="v">{usuario.email}</span>
                 </div>
                 {usuario.crmv && (
                   <div className="kv-row">
@@ -126,7 +125,7 @@ export function Perfil() {
                 )}
                 <div className="kv-row">
                   <span className="k">No SISZOO</span>
-                  <span className="v mono">Desde {formatarData(usuario.criadoEm)}</span>
+                  <span className="v">Desde {formatarData(usuario.criadoEm)}</span>
                 </div>
               </div>
             </div>
@@ -140,7 +139,6 @@ export function Perfil() {
               <AlertaErroEnvio mensagem={submitError} />
               {submitSucesso && !submitError && (
                 <div className="alert success" role="status">
-                  <span className="bullet" />
                   <div className="alert-content">Telefone atualizado com sucesso.</div>
                 </div>
               )}

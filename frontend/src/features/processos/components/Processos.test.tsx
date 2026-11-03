@@ -204,11 +204,11 @@ describe('Processos — listagem', () => {
   })
 
   it.each(['Administrador', 'Veterinário', 'Agente Sanitário'])(
-    '%s vê "Novo Processo" (PROCESSOS_SANITARIOS:escrita)',
+    '%s vê "Novo processo" (PROCESSOS_SANITARIOS:escrita)',
     async (cargo) => {
       renderProcessos([cargo])
 
-      expect(await screen.findByRole('link', { name: /Novo Processo/ })).toHaveAttribute('href', '/processos/novo')
+      expect(await screen.findByRole('link', { name: /Novo processo/ })).toHaveAttribute('href', '/processos/novo')
     },
   )
 })

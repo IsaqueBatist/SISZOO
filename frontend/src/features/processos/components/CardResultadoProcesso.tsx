@@ -62,7 +62,6 @@ function AvisoNotificacao({
   if (processo.dataNotificacaoMunicipe) {
     return (
       <div className="alert success" role="status" style={{ marginTop: 'var(--space-3)' }}>
-        <span className="bullet" />
         <div className="alert-content">
           Munícipe notificado em {formatarDataHoraNotificacao(processo.dataNotificacaoMunicipe)}
         </div>
@@ -72,14 +71,12 @@ function AvisoNotificacao({
   if (enviando) {
     return (
       <div className="alert info" role="status" style={{ marginTop: 'var(--space-3)' }}>
-        <span className="bullet" />
         <div className="alert-content">Enviando a notificação por e-mail ao munícipe…</div>
       </div>
     )
   }
   return (
     <div className="alert danger" role="alert" style={{ marginTop: 'var(--space-3)' }}>
-      <span className="bullet" />
       <div className="alert-content">
         <strong>Munícipe NÃO notificado por e-mail — contatar por outro meio</strong>
         {erroReenvio && <div style={{ marginTop: 'var(--space-2)' }}>{erroReenvio}</div>}
@@ -272,14 +269,12 @@ function FormResultado({ processo, retifica, onRegistrado, onCancelar }: FormRes
         <Modal titulo="Confirmar lançamento do resultado" onFechar={() => setPendente(null)}>
           <div className="modal-body">
             <div className="alert danger" role="alert">
-              <span className="bullet" />
               <div className="alert-content">
                 <strong>O resultado positivo é definitivo:</strong> depois de confirmado, não poderá ser corrigido —
                 nem para outro resultado, nem para positivo de novo.
               </div>
             </div>
             <div className="alert warning" style={{ marginTop: 'var(--space-3)' }}>
-              <span className="bullet" />
               <div className="alert-content">
                 Ao confirmar, o sistema tentará avisar o responsável pelo animal por e-mail. {AVISO_VIGILANCIA}
               </div>
@@ -362,22 +357,22 @@ export function CardResultadoProcesso({
     return (
       <div className="card">
         <div className="card-header">
-          <h3>Resultado Laboratorial</h3>
+          <h3>Resultado laboratorial</h3>
         </div>
         <div className="card-body">
           <div className="form-grid">
             <div className="field">
-              <label>Resultado</label>
+              <span className="dado-rotulo">Resultado</span>
               <div>
                 <span className={`badge ${badge.classe}`}>{badge.label}</span>
               </div>
             </div>
             <div className="field">
-              <label>Data do resultado</label>
-              <div className="mono">{processo.dataResultado ? formatarData(processo.dataResultado) : '—'}</div>
+              <span className="dado-rotulo">Data do resultado</span>
+              <div>{processo.dataResultado ? formatarData(processo.dataResultado) : '—'}</div>
             </div>
             <div className="field full">
-              <label>Desfecho do animal</label>
+              <span className="dado-rotulo">Desfecho do animal</span>
               <div>{processo.desfechoAnimal ? processo.desfechoAnimal.nome : '—'}</div>
             </div>
           </div>
@@ -393,7 +388,6 @@ export function CardResultadoProcesso({
           )}
           {notifica && (
             <div className="alert warning" style={{ marginTop: 'var(--space-3)' }}>
-              <span className="bullet" />
               <div className="alert-content">{AVISO_VIGILANCIA}</div>
             </div>
           )}
@@ -421,7 +415,7 @@ export function CardResultadoProcesso({
     return (
       <div className="card">
         <div className="card-header">
-          <h3>Resultado Laboratorial</h3>
+          <h3>Resultado laboratorial</h3>
         </div>
         <div className="card-body">
           <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
@@ -436,7 +430,7 @@ export function CardResultadoProcesso({
     return (
       <div className="card">
         <div className="card-header">
-          <h3>Resultado Laboratorial</h3>
+          <h3>Resultado laboratorial</h3>
         </div>
         <div className="card-body">
           <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Aguardando resultado do laboratório.</p>

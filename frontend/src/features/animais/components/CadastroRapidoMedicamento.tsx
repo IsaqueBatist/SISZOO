@@ -57,7 +57,6 @@ export function CadastroRapidoMedicamento({ onCadastrado, onCancelar }: Cadastro
 
       {submitError && (
         <div className="alert danger" role="alert" style={{ marginTop: 'var(--space-2)' }}>
-          <span className="bullet" />
           <div className="alert-content">{submitError}</div>
         </div>
       )}

@@ -8,10 +8,9 @@ function Recusa({ mensagem, voltarPara }: { mensagem: string; voltarPara: string
   return (
     <>
       <div className="alert danger" role="alert">
-        <span className="bullet" />
         <div className="alert-content">{mensagem}</div>
       </div>
-      <Link to={voltarPara} className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}>
+      <Link to={voltarPara} className="link-voltar">
         ← Voltar
       </Link>
     </>

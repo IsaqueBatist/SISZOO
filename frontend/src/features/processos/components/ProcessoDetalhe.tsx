@@ -19,7 +19,7 @@ import { useProcessoQuery, useVincularOcorrenciaMutation } from '../hooks/usePro
 function Campo({ rotulo, valor, mono, full }: { rotulo: string; valor: string | null | undefined; mono?: boolean; full?: boolean }) {
   return (
     <div className={`field${full ? ' full' : ''}`}>
-      <label>{rotulo}</label>
+      <span className="dado-rotulo">{rotulo}</span>
       <div className={mono ? 'mono' : undefined}>{valor || '—'}</div>
     </div>
   )
@@ -56,10 +56,10 @@ function CardAmostra({
           <Campo rotulo="Coloração" valor={amostra.coloracao} />
           <Campo rotulo="Pelagem" valor={amostra.pelagem ? labelDe(PELAGEM_OPCOES, amostra.pelagem) : null} />
           <Campo rotulo="Idade aprox." valor={amostra.idadeAprox} />
-          <Campo rotulo="Peso (kg)" valor={amostra.pesoKg == null ? null : amostra.pesoKg.toFixed(2)} mono />
+          <Campo rotulo="Peso (kg)" valor={amostra.pesoKg == null ? null : amostra.pesoKg.toFixed(2)} />
           <Campo rotulo="Status clínico" valor={labelDe(STATUS_CLINICO_OPCOES, amostra.statusClinico)} />
           <Campo rotulo="Tipo de abrigo" valor={labelDe(TIPO_ABRIGO_OPCOES, amostra.tipoAbrigo)} />
-          <Campo rotulo="Data da coleta" valor={formatarData(amostra.dataColeta)} mono />
+          <Campo rotulo="Data da coleta" valor={formatarData(amostra.dataColeta)} />
           <Campo rotulo="Material biológico" valor={labelDe(MATERIAL_BIOLOGICO_OPCOES, amostra.materialBiologico)} />
           <Campo rotulo="Alteração comportamental" valor={amostra.alteracaoComportamental} full />
           <Campo
@@ -71,7 +71,6 @@ function CardAmostra({
         </div>
         {amostra.contatoHumano ? (
           <div className="alert danger" style={{ marginTop: 'var(--space-3)' }}>
-            <span className="bullet" />
             <div className="alert-content">
               <strong>Contato humano-animal confirmado</strong> — contato {labelDe(NIVEL_CONTATO_OPCOES, amostra.nivelContato).toLowerCase()}.
               {amostra.agrediuHumano ? ' O animal agrediu o munícipe.' : ' O animal não agrediu o munícipe.'}
@@ -132,7 +131,7 @@ function CardVincularOcorrencia({ processo }: { processo: Processo }) {
 
 function Voltar() {
   return (
-    <Link to="/processos" className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}>
+    <Link to="/processos" className="link-voltar">
       ← Voltar para Processos
     </Link>
   )
@@ -156,7 +155,6 @@ export function ProcessoDetalhe() {
     return (
       <>
         <div className="alert danger" role="alert">
-          <span className="bullet" />
           <div className="alert-content">
             {naoEncontrado ? 'Processo sanitário não encontrado.' : 'Não foi possível carregar este processo sanitário. Tente novamente.'}
           </div>
@@ -174,8 +172,8 @@ export function ProcessoDetalhe() {
       <div className="page-header">
         <div className="title-block">
           <Voltar />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '4px 0' }}>
-            <span className={`badge badge-disease ${classeDeDoenca(processo.doenca.codigo)}`}>{processo.doenca.nome}</span>
+          <div className="titulo-com-status">
+            <h1>Processo {formatarProtocoloProcesso(processo.protocolo)}</h1>
             <span className={`badge ${statusBadge.classe}`}>{statusBadge.label}</span>
             {processo.urgente && (
               <span className="badge badge-urgent">
@@ -183,8 +181,8 @@ export function ProcessoDetalhe() {
               </span>
             )}
           </div>
-          <h1 style={{ fontFamily: 'var(--font-mono)', letterSpacing: 0 }}>Processo {formatarProtocoloProcesso(processo.protocolo)}</h1>
           <p className="subtitle">
+            <span className={`badge-disease ${classeDeDoenca(processo.doenca.codigo)}`}>{processo.doenca.nome}</span> ·{' '}
             {processo.laboratorio.nome} · Aberto em {formatarData(processo.dataAbertura)}
           </p>
         </div>
@@ -199,7 +197,6 @@ export function ProcessoDetalhe() {
 
       {processo.urgente && (
         <div className="alert danger" role="alert">
-          <span className="bullet" />
           <div className="alert-content">
             <strong>Atenção — contato humano-animal confirmado.</strong> Ao menos uma amostra deste processo registrou contato
             humano-animal.
@@ -211,7 +208,7 @@ export function ProcessoDetalhe() {
         <div className="col gap-4">
           <div className="card">
             <div className="card-header">
-              <h3>Dados do Processo</h3>
+              <h3>Dados do processo</h3>
             </div>
             <div className="card-body">
               <div className="form-grid">
@@ -221,7 +218,7 @@ export function ProcessoDetalhe() {
                 <Campo rotulo="Laboratório de destino" valor={processo.laboratorio.nome} />
                 <Campo rotulo="Nº GAL" valor={processo.galNumero ?? null} mono />
                 <Campo rotulo="Nº SINAN" valor={processo.sinanNumero ?? null} mono />
-                <Campo rotulo="Data de abertura" valor={formatarData(processo.dataAbertura)} mono />
+                <Campo rotulo="Data de abertura" valor={formatarData(processo.dataAbertura)} />
                 <Campo rotulo="Observações" valor={processo.observacoes} full />
               </div>
             </div>
@@ -229,7 +226,7 @@ export function ProcessoDetalhe() {
 
           <div className="card">
             <div className="card-header">
-              <h3>Ocorrência Vinculada</h3>
+              <h3>Ocorrência vinculada</h3>
             </div>
             <div className="card-body">
               {processo.ocorrenciaId ? (
@@ -257,16 +254,16 @@ export function ProcessoDetalhe() {
 
           <div className="card">
             <div className="card-header">
-              <h3>Responsável / Munícipe</h3>
+              <h3>Responsável / munícipe</h3>
             </div>
             <div className="card-body">
               {responsavel ? (
                 <div className="form-grid">
                   <Campo rotulo="Nome" valor={responsavel.nome} />
-                  <Campo rotulo="CPF" valor={responsavel.cpf} mono />
-                  <Campo rotulo="Telefone" valor={responsavel.telefone} mono />
+                  <Campo rotulo="CPF" valor={responsavel.cpf} />
+                  <Campo rotulo="Telefone" valor={responsavel.telefone} />
                   <Campo rotulo="E-mail" valor={responsavel.email} />
-                  <Campo rotulo="CEP" valor={responsavel.cep} mono />
+                  <Campo rotulo="CEP" valor={responsavel.cep} />
                   <Campo rotulo="Endereço" valor={responsavel.endereco} full />
                   <Campo rotulo="Bairro residencial" valor={responsavel.bairroResidencial} />
                   <Campo rotulo="Bairro da ocorrência" valor={responsavel.bairroOcorrencia} />

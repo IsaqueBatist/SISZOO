@@ -29,7 +29,6 @@ export function CardProcessoVinculado({ ocorrencia, podeAbrir, podeAvancar }: Ca
 
   const alertaErro = erro && (
     <div className="alert danger" role="alert" style={{ marginTop: 8 }}>
-      <span className="bullet" />
       <div className="alert-content">{erro}</div>
     </div>
   )
@@ -39,7 +38,7 @@ export function CardProcessoVinculado({ ocorrencia, podeAbrir, podeAvancar }: Ca
     const acao = ACAO_DE_AVANCO_PROCESSO[processo.statusProcesso]
     return (
       <div className="vinc-card" style={{ display: 'block' }}>
-        <h4>Processo Sanitário Vinculado</h4>
+        <h4>Processo sanitário vinculado</h4>
         <div className="proto-big">{formatarProtocoloProcesso(processo.protocolo)}</div>
         <Link to={`/processos/${processo.id}`} className="btn btn-ghost btn-sm" style={{ marginTop: 6 }}>
           Ver processo
@@ -79,7 +78,7 @@ export function CardProcessoVinculado({ ocorrencia, podeAbrir, podeAvancar }: Ca
   return (
     <div className="card">
       <div className="card-header">
-        <h3>Processo Sanitário</h3>
+        <h3>Processo sanitário</h3>
       </div>
       <div className="card-body">
         <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 10 }}>

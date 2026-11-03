@@ -44,6 +44,28 @@ describe('Configuracoes', () => {
     expect(document.documentElement.style.getPropertyValue('--space-4')).toBe('12px')
   })
 
+  it('escolher o tema aplica na hora, não grava e volta ao salvo ao sair sem salvar', async () => {
+    let gravacoes = 0
+    server.use(
+      http.patch(`${API_BASE_URL}/usuarios/me/preferencias`, () => {
+        gravacoes += 1
+        return HttpResponse.json({})
+      }),
+    )
+    const user = userEvent.setup()
+    const { unmount } = renderConfiguracoes()
+
+    await screen.findByText('Densidade da interface')
+    await user.click(screen.getByRole('button', { name: 'Escuro' }))
+
+    expect(document.documentElement.dataset.tema).toBe('escuro')
+    expect(screen.getByRole('status')).toHaveTextContent(/Salvar alterações/)
+    expect(gravacoes).toBe(0)
+
+    unmount()
+    expect(document.documentElement.dataset.tema).toBe('claro')
+  })
+
   it('mantém a seleção do usuário quando salvar falha', async () => {
     server.use(
       http.patch(`${API_BASE_URL}/usuarios/me/preferencias`, () => {

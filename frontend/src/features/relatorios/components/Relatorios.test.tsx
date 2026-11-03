@@ -32,7 +32,7 @@ describe('Relatorios', () => {
     expect(screen.getByRole('heading', { level: 3, name: 'Ocorrências por Bairro' })).toBeInTheDocument()
   })
 
-  it('bloqueia "Gerar Relatório" com período invertido e não chama a API', async () => {
+  it('bloqueia "Gerar relatório" com período invertido e não chama a API', async () => {
     const user = userEvent.setup()
     let chamouPreview = false
     server.use(
@@ -52,7 +52,7 @@ describe('Relatorios', () => {
     await user.clear(fim)
     await user.type(fim, '2026-01-01')
 
-    await user.click(within(cardVacinacao).getByRole('button', { name: 'Gerar Relatório' }))
+    await user.click(within(cardVacinacao).getByRole('button', { name: 'Gerar relatório' }))
 
     expect(await within(cardVacinacao).findByText(/data final deve ser maior ou igual/i)).toBeInTheDocument()
     expect(chamouPreview).toBe(false)
@@ -102,7 +102,7 @@ describe('Relatorios', () => {
     const cardAnual = (
       await screen.findByRole('heading', { level: 3, name: /anual/i })
     ).closest('.report-card') as HTMLElement
-    await user.click(within(cardAnual).getByRole('button', { name: 'Gerar Relatório' }))
+    await user.click(within(cardAnual).getByRole('button', { name: 'Gerar relatório' }))
 
     expect(await screen.findByRole('heading', { name: /laboratórios utilizados/i })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: /bairros com mais ocorrências/i })).not.toBeInTheDocument()
@@ -115,7 +115,7 @@ describe('Relatorios', () => {
     const cardOcupacao = (
       await screen.findByRole('heading', { level: 3, name: 'Ocupação de Baias' })
     ).closest('.report-card') as HTMLElement
-    await user.click(within(cardOcupacao).getByRole('button', { name: 'Gerar Relatório' }))
+    await user.click(within(cardOcupacao).getByRole('button', { name: 'Gerar relatório' }))
 
     expect(await screen.findByText('Baia 3')).toBeInTheDocument()
     expect(screen.getByText('Superlotada')).toBeInTheDocument()
@@ -146,7 +146,7 @@ describe('Relatorios', () => {
       expect(card.querySelector('input, select')).toBeNull()
     }
 
-    await user.click(within(cardOcupacao).getByRole('button', { name: 'Gerar Relatório' }))
+    await user.click(within(cardOcupacao).getByRole('button', { name: 'Gerar relatório' }))
 
     await screen.findByText('Baia 3')
     expect([...pedidos[0].keys()]).toEqual(['tipo'])
@@ -200,7 +200,7 @@ describe('Relatorios', () => {
     const cardAdocoes = (
       await screen.findByRole('heading', { level: 3, name: 'Relatório de Adoções' })
     ).closest('.report-card') as HTMLElement
-    await user.click(within(cardAdocoes).getByRole('button', { name: 'Gerar Relatório' }))
+    await user.click(within(cardAdocoes).getByRole('button', { name: 'Gerar relatório' }))
 
     expect(await screen.findByText(/não é um histórico por período/i)).toBeInTheDocument()
     expect(screen.getByText('Posição em 10/09/2026')).toBeInTheDocument()
@@ -230,7 +230,7 @@ describe('Relatorios', () => {
       const cardOcupacao = (
         await screen.findByRole('heading', { level: 3, name: 'Ocupação de Baias' })
       ).closest('.report-card') as HTMLElement
-      await user.click(within(cardOcupacao).getByRole('button', { name: 'Gerar Relatório' }))
+      await user.click(within(cardOcupacao).getByRole('button', { name: 'Gerar relatório' }))
       await screen.findByText('Baia 3')
 
       await user.click(screen.getByRole('button', { name: 'Baixar CSV' }))

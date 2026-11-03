@@ -19,7 +19,7 @@ function CardOcupacaoBaia() {
   return (
     <div className="card">
       <div className="card-header">
-        <h3>Ocupação por Baia</h3>
+        <h3>Ocupação por baia</h3>
         <span className="sub">Ordenado por % de ocupação</span>
       </div>
       <div className="card-body">
@@ -43,7 +43,7 @@ function CardResultadosLaboratoriais({ query }: CardComDadosDeGraficosProps) {
   return (
     <div className="card">
       <div className="card-header">
-        <h3>Resultados Laboratoriais</h3>
+        <h3>Resultados laboratoriais</h3>
         {graficosUsamMock() && <SeloDadosMock />}
       </div>
       <div className="card-body">
@@ -65,7 +65,7 @@ function CardCasosSuspeitos({ query }: CardComDadosDeGraficosProps) {
   return (
     <div className="card">
       <div className="card-header">
-        <h3>Casos Suspeitos</h3>
+        <h3>Casos suspeitos</h3>
         {graficosUsamMock() && <SeloDadosMock />}
       </div>
       <div className="card-body">
@@ -76,11 +76,11 @@ function CardCasosSuspeitos({ query }: CardComDadosDeGraficosProps) {
         {!isLoading && !isError && data && (
           <div className="donuts-pair">
             <div className="donut-block">
-              <div className="donut-title">Raiva por Espécie</div>
+              <div className="donut-title">Raiva por espécie</div>
               <GraficoRaivaPorEspecie dados={mapearRaivaPorEspecie(data.casosRaivaPorEspecie)} />
             </div>
             <div className="donut-block">
-              <div className="donut-title">Por Patologia</div>
+              <div className="donut-title">Por patologia</div>
               <GraficoCasosPorDoenca dados={mapearCasosPorDoenca(data.casosPorDoenca)} />
             </div>
           </div>

@@ -14,7 +14,7 @@ export function PaginaNaoEncontrada() {
         O endereço <span className="mono">{location.pathname}</span> não existe. Confira o link ou volte ao início.
       </p>
       <Link to="/dashboard" className="btn btn-primary">
-        Ir para o Dashboard
+        Ir para o início
       </Link>
     </div>
   )

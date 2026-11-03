@@ -1,40 +1,33 @@
 .alert-hero {
   border-radius: var(--radius-lg);
-  padding: 24px 28px;
+  padding: var(--space-4) var(--space-5);
   display: flex;
   align-items: flex-start;
-  gap: 18px;
+  gap: var(--space-3);
   border: 1px solid var(--color-border);
   background: var(--color-surface);
 }
 .alert-hero.danger {
-  background: var(--color-danger-bg);
-  border-color: var(--color-danger);
+  border-left: 3px solid var(--color-danger);
 }
 .alert-hero.warning {
-  background: var(--color-warning-bg);
-  border-color: var(--color-warning);
+  border-left: 3px solid var(--color-warning);
 }
 .alert-hero .ah-ico {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.6);
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
   flex-shrink: 0;
+  padding-top: 2px;
   color: var(--color-danger);
 }
 .alert-hero.warning .ah-ico {
   color: var(--color-warning);
 }
 .alert-hero h2 {
-  font-size: 20px;
-  margin-bottom: 4px;
+  font-size: var(--text-lg);
+  margin-bottom: 2px;
 }
 .alert-hero p {
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: var(--color-text-secondary);
 }
 .alert-hero .ah-kpis {
@@ -47,14 +40,12 @@
   font-size: 13px;
 }
 .alert-hero .ah-kpi .v {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 22px;
+  font-weight: 600;
+  font-size: var(--text-xl);
   display: block;
+  font-variant-numeric: tabular-nums;
 }
 .alert-hero .ah-kpi .l {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-size: var(--text-xs);
   color: var(--color-text-secondary);
 }

@@ -118,13 +118,13 @@ describe('ProcessoDetalhe — dados', () => {
     renderDetalhe(PROCESSO_PENDENTE_ID)
     await esperarDetalhe('045/2026')
 
-    const dados = cardDe('Dados do Processo')
+    const dados = cardDe('Dados do processo')
     expect(dados.getByText('A82')).toBeInTheDocument()
     expect(dados.getByText('Pasteur — SP')).toBeInTheDocument()
     expect(dados.getByText('18/05/2026')).toBeInTheDocument()
     expect(dados.getByText('Animal recolhido em via pública')).toBeInTheDocument()
 
-    const responsavel = cardDe('Responsável / Munícipe')
+    const responsavel = cardDe('Responsável / munícipe')
     for (const valor of ['Maria da Conceição', '123.456.789-09', '(11) 99999-0000', 'maria@exemplo.com', '13300-000',
       'Rua das Flores, 10', 'Centro', 'Vila Nova']) {
       expect(responsavel.getByText(valor)).toBeInTheDocument()
@@ -203,7 +203,7 @@ describe('ProcessoDetalhe — ocorrência vinculada', () => {
     renderDetalhe(PROCESSO_PENDENTE_ID, cargos)
     await esperarDetalhe('045/2026')
 
-    const card = cardDe('Ocorrência Vinculada')
+    const card = cardDe('Ocorrência vinculada')
     expect(card.getByText('OC 092/2026')).toBeInTheDocument()
     expect(card.getByRole('link', { name: 'Ver ocorrência' })).toHaveAttribute('href', `/ocorrencias/${OCORRENCIA_PROCESSO_PENDENTE_ID}`)
     expect(card.getByText('O vínculo com a ocorrência não pode ser alterado.')).toBeInTheDocument()
@@ -214,7 +214,7 @@ describe('ProcessoDetalhe — ocorrência vinculada', () => {
     renderDetalhe(PROCESSO_PENDENTE_ID, VET)
     await esperarDetalhe('045/2026')
 
-    const card = cardDe('Ocorrência Vinculada')
+    const card = cardDe('Ocorrência vinculada')
     expect(card.getByText('OC 092/2026')).toBeInTheDocument()
     expect(card.queryByRole('link', { name: 'Ver ocorrência' })).not.toBeInTheDocument()
     const destinos = screen.getAllByRole('link').map((link) => link.getAttribute('href') ?? '')
@@ -254,8 +254,8 @@ describe('ProcessoDetalhe — ocorrência vinculada', () => {
     await user.click(screen.getByRole('button', { name: 'Vincular uma ocorrência já cadastrada' }))
     await user.click(await screen.findByText('OC 089/2026'))
 
-    expect(await cardDe('Ocorrência Vinculada').findByText('O vínculo com a ocorrência não pode ser alterado.')).toBeInTheDocument()
-    expect(cardDe('Ocorrência Vinculada').getByText('OC 089/2026')).toBeInTheDocument()
+    expect(await cardDe('Ocorrência vinculada').findByText('O vínculo com a ocorrência não pode ser alterado.')).toBeInTheDocument()
+    expect(cardDe('Ocorrência vinculada').getByText('OC 089/2026')).toBeInTheDocument()
     expect(corpos).toEqual([{ processoId: PROCESSO_SEM_VINCULO_ID }])
   })
 
@@ -374,7 +374,7 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
     renderDetalhe(PROCESSO_SEM_VINCULO_ID)
     await esperarDetalhe('046/2026')
 
-    expect(cardDe('Resultado Laboratorial').getByText('Aguardando o envio das amostras ao laboratório.')).toBeInTheDocument()
+    expect(cardDe('Resultado laboratorial').getByText('Aguardando o envio das amostras ao laboratório.')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Registrar resultado' })).not.toBeInTheDocument()
   })
 
@@ -402,10 +402,10 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
     await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
 
     expect(screen.queryByText('Confirmar lançamento do resultado')).not.toBeInTheDocument()
-    expect(await cardDe('Resultado Laboratorial').findByText('Negativo', { selector: 'span' })).toBeInTheDocument()
+    expect(await cardDe('Resultado laboratorial').findByText('Negativo', { selector: 'span' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Registrar resultado' })).not.toBeInTheDocument()
-    expect(await cardDe('Resultado Laboratorial').findByText(/Lançado/)).toBeInTheDocument()
-    expect(cardDe('Resultado Laboratorial').getByText(/registrado por Agente Processos/)).toBeInTheDocument()
+    expect(await cardDe('Resultado laboratorial').findByText(/Lançado/)).toBeInTheDocument()
+    expect(cardDe('Resultado laboratorial').getByText(/registrado por Agente Processos/)).toBeInTheDocument()
   })
 
   it('resultado positivo: mostra confirmação antes de enviar e o envio da notificação em andamento depois', async () => {
@@ -423,7 +423,7 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     expect(
-      await cardDe('Resultado Laboratorial').findByText('Enviando a notificação por e-mail ao munícipe…'),
+      await cardDe('Resultado laboratorial').findByText('Enviando a notificação por e-mail ao munícipe…'),
     ).toBeInTheDocument()
   })
 
@@ -438,9 +438,9 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
     await user.click(screen.getByRole('button', { name: 'Registrar resultado' }))
 
     expect(screen.queryByText('Confirmar lançamento do resultado')).not.toBeInTheDocument()
-    expect(await cardDe('Resultado Laboratorial').findByText('Inconclusivo', { selector: 'span' })).toBeInTheDocument()
+    expect(await cardDe('Resultado laboratorial').findByText('Inconclusivo', { selector: 'span' })).toBeInTheDocument()
     expect(
-      await cardDe('Resultado Laboratorial').findByText('Enviando a notificação por e-mail ao munícipe…'),
+      await cardDe('Resultado laboratorial').findByText('Enviando a notificação por e-mail ao munícipe…'),
     ).toBeInTheDocument()
   })
 
@@ -505,8 +505,8 @@ describe('ProcessoDetalhe — resultado laboratorial (T37)', () => {
     renderDetalhe(PROCESSO_PENDENTE_ID)
     await esperarDetalhe('045/2026')
 
-    expect(cardDe('Resultado Laboratorial').getByText('Positivo', { selector: 'span' })).toBeInTheDocument()
-    expect(cardDe('Resultado Laboratorial').getByText('Óbito — Eutanásia')).toBeInTheDocument()
+    expect(cardDe('Resultado laboratorial').getByText('Positivo', { selector: 'span' })).toBeInTheDocument()
+    expect(cardDe('Resultado laboratorial').getByText('Óbito — Eutanásia')).toBeInTheDocument()
     expect(screen.queryByLabelText('Resultado laboratorial')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Registrar resultado' })).not.toBeInTheDocument()
   })

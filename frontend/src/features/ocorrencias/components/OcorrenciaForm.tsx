@@ -170,14 +170,13 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
         <div className="title-block">
           <Link
             to={ocorrencia ? `/ocorrencias/${ocorrencia.id}` : '/ocorrencias'}
-            className="btn btn-ghost btn-sm"
-            style={{ alignSelf: 'flex-start' }}
+            className="link-voltar"
           >
             ← Voltar
           </Link>
           {ocorrencia ? (
             <>
-              <h1>Editar Ocorrência</h1>
+              <h1>Editar ocorrência</h1>
               <p className="subtitle">
                 <span className="mono">{formatarProtocoloOcorrencia(ocorrencia.protocolo)}</span> · registrada por{' '}
                 {ocorrencia.registradoPorNome}
@@ -185,7 +184,7 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
             </>
           ) : (
             <>
-              <h1>Registrar Ocorrência</h1>
+              <h1>Registrar ocorrência</h1>
               <p className="subtitle">
                 Protocolo será gerado automaticamente ao registrar, registrada por {user?.nome} {user?.sobrenome}.
               </p>
@@ -289,7 +288,7 @@ export function OcorrenciaForm({ ocorrencia }: OcorrenciaFormProps) {
                     disabled={mutation.isPending || anexosPendentes.enviando || anexosPendentes.pendencia !== null}
                     title={anexosPendentes.pendencia ? 'Resolva os anexos pendentes antes de registrar outra ocorrência' : undefined}
                   >
-                    {mutation.isPaused ? 'Aguardando conexão…' : mutation.isPending ? 'Registrando…' : 'Registrar Ocorrência'}
+                    {mutation.isPaused ? 'Aguardando conexão…' : mutation.isPending ? 'Registrando…' : 'Registrar ocorrência'}
                   </button>
                 )}
               </div>

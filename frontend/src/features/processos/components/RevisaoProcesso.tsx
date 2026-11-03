@@ -1,3 +1,4 @@
+import { Icon } from '@/components/layout/Icon'
 import { useCatalogosAnimaisQuery } from '@/features/animais/hooks/useAnimais'
 import { formatarDataBR } from '@/lib/datas'
 import { SEXO_OPCOES } from '@/features/animais/schemas/animalFormSchema'
@@ -25,10 +26,16 @@ export function RevisaoProcesso({ valores, catalogos, onEditar }: RevisaoProcess
           <h3>Dados do processo</h3>
         </div>
         <div className="card-body">
-          {urgente && <span className="badge badge-urgent" style={{ marginBottom: 10, display: 'inline-block' }}>🚨 URGENTE</span>}
+          {urgente && (
+            <p style={{ marginBottom: 'var(--space-3)' }}>
+              <span className="badge badge-urgent">
+                <Icon name="alert" size={12} /> Urgente
+              </span>
+            </p>
+          )}
           <div className="kv-list">
             <div className="field">
-              <label>Vínculo com ocorrência</label>
+              <span className="dado-rotulo">Vínculo com ocorrência</span>
               <div>
                 {valores.vinculoDecisao === 'vinculado' && ocorrencia
                   ? `${formatarProtocoloOcorrencia(ocorrencia.protocolo)} — ${ocorrencia.tipoOcorrenciaNome}`
@@ -36,28 +43,28 @@ export function RevisaoProcesso({ valores, catalogos, onEditar }: RevisaoProcess
               </div>
             </div>
             <div className="field">
-              <label>Data de abertura</label>
+              <span className="dado-rotulo">Data de abertura</span>
               <div>{formatarDataBR(valores.dataAbertura)}</div>
             </div>
             <div className="field">
-              <label>Doença investigada</label>
+              <span className="dado-rotulo">Doença investigada</span>
               <div>{nomeNoCatalogo(catalogos?.doencas, valores.doenca)}</div>
             </div>
             <div className="field">
-              <label>Laboratório de destino</label>
+              <span className="dado-rotulo">Laboratório de destino</span>
               <div>{nomeNoCatalogo(catalogos?.laboratorios, valores.laboratorio)}</div>
             </div>
             <div className="field">
-              <label>Nº GAL</label>
+              <span className="dado-rotulo">Nº GAL</span>
               <div className="mono">{valores.galNumero || '—'}</div>
             </div>
             <div className="field">
-              <label>Nº SINAN</label>
+              <span className="dado-rotulo">Nº SINAN</span>
               <div className="mono">{valores.sinanNumero || '—'}</div>
             </div>
             {valores.observacoes?.trim() && (
               <div className="field full">
-                <label>Observações</label>
+                <span className="dado-rotulo">Observações</span>
                 <div>{valores.observacoes}</div>
               </div>
             )}
@@ -75,30 +82,30 @@ export function RevisaoProcesso({ valores, catalogos, onEditar }: RevisaoProcess
         <div className="card-body">
           <div className="kv-list">
             <div className="field">
-              <label>Nome</label>
+              <span className="dado-rotulo">Nome</span>
               <div>{valores.responsavel.nome}</div>
             </div>
             <div className="field">
-              <label>CPF</label>
+              <span className="dado-rotulo">CPF</span>
               <div className="mono">{valores.responsavel.cpf || '—'}</div>
             </div>
             <div className="field">
-              <label>Telefone</label>
+              <span className="dado-rotulo">Telefone</span>
               <div className="mono">{valores.responsavel.telefone || '—'}</div>
             </div>
             <div className="field">
-              <label>E-mail</label>
+              <span className="dado-rotulo">E-mail</span>
               <div>{valores.responsavel.email || '—'}</div>
             </div>
             <div className="field full">
-              <label>Endereço</label>
+              <span className="dado-rotulo">Endereço</span>
               <div>
                 {valores.responsavel.endereco || '—'}
                 {valores.responsavel.bairroResidencial ? ` · ${valores.responsavel.bairroResidencial}` : ''}
               </div>
             </div>
             <div className="field">
-              <label>Bairro da ocorrência</label>
+              <span className="dado-rotulo">Bairro da ocorrência</span>
               <div>{valores.responsavel.bairroOcorrencia || '—'}</div>
             </div>
           </div>
@@ -124,7 +131,7 @@ export function RevisaoProcesso({ valores, catalogos, onEditar }: RevisaoProcess
               </div>
               <div className="kv-list">
                 <div className="field">
-                  <label>Identificação</label>
+                  <span className="dado-rotulo">Identificação</span>
                   <div>
                     {amostra.origem === 'canil'
                       ? `${amostra.animalDescricao || '—'} (dados da ficha)`
@@ -132,23 +139,23 @@ export function RevisaoProcesso({ valores, catalogos, onEditar }: RevisaoProcess
                   </div>
                 </div>
                 <div className="field">
-                  <label>Status clínico</label>
+                  <span className="dado-rotulo">Status clínico</span>
                   <div>{labelDe(STATUS_CLINICO_OPCOES, amostra.statusClinico)}</div>
                 </div>
                 <div className="field">
-                  <label>Tipo de abrigo</label>
+                  <span className="dado-rotulo">Tipo de abrigo</span>
                   <div>{labelDe(TIPO_ABRIGO_OPCOES, amostra.tipoAbrigo)}</div>
                 </div>
                 <div className="field">
-                  <label>Material biológico</label>
+                  <span className="dado-rotulo">Material biológico</span>
                   <div>{labelDe(MATERIAL_BIOLOGICO_OPCOES, amostra.materialBiologico)}</div>
                 </div>
                 <div className="field">
-                  <label>Data de coleta</label>
+                  <span className="dado-rotulo">Data de coleta</span>
                   <div>{formatarDataBR(amostra.dataColeta)}</div>
                 </div>
                 <div className="field">
-                  <label>Contato</label>
+                  <span className="dado-rotulo">Contato</span>
                   <div>
                     {amostra.contatoHumano === null
                       ? 'Não informado'
@@ -159,18 +166,18 @@ export function RevisaoProcesso({ valores, catalogos, onEditar }: RevisaoProcess
                 </div>
                 {amostra.alteracaoComportamental?.trim() && (
                   <div className="field full">
-                    <label>Alteração comportamental</label>
+                    <span className="dado-rotulo">Alteração comportamental</span>
                     <div>{amostra.alteracaoComportamental}</div>
                   </div>
                 )}
                 {amostra.observacoes?.trim() && (
                   <div className="field full">
-                    <label>Observações</label>
+                    <span className="dado-rotulo">Observações</span>
                     <div>{amostra.observacoes}</div>
                   </div>
                 )}
                 <div className="field full">
-                  <label>Sintomas</label>
+                  <span className="dado-rotulo">Sintomas</span>
                   <div>
                     {amostra.statusClinico === 'SINTOMATICO' && amostra.sintomas.length
                       ? amostra.sintomas.map((codigo) => nomeNoCatalogo(catalogos?.sintomas, codigo)).join(', ')

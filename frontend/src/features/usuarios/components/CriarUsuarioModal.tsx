@@ -83,7 +83,7 @@ export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
   }
 
   return (
-    <Modal titulo="Adicionar Usuário" onFechar={onFechar}>
+    <Modal titulo="Adicionar usuário" onFechar={onFechar}>
       <form onSubmit={aoEnviar} noValidate>
         <div className="modal-body">
           <div className="form-grid cols-1">
@@ -182,7 +182,7 @@ export function CriarUsuarioModal({ onFechar }: CriarUsuarioModalProps) {
             Cancelar
           </button>
           <button type="submit" className="btn btn-primary" disabled={mutation.isPending}>
-            {mutation.isPending ? 'Criando…' : 'Criar Usuário'}
+            {mutation.isPending ? 'Criando…' : 'Criar usuário'}
           </button>
         </div>
       </form>

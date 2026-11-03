@@ -49,11 +49,12 @@ export function useContagemPorBairroQuery<T>(select: (linhas: QuantidadePorBairr
   })
 }
 
-export function useOcorrenciasQuery(filtro: OcorrenciasFiltro) {
+export function useOcorrenciasQuery(filtro: OcorrenciasFiltro, habilitada = true) {
   return useQuery({
     queryKey: ['ocorrencias', 'lista', filtro],
     queryFn: () => listarOcorrencias(filtro),
     placeholderData: (dadosAnteriores) => dadosAnteriores,
+    enabled: habilitada,
   })
 }
 

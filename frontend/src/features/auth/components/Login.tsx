@@ -74,7 +74,6 @@ export function Login() {
 
           {sessaoExpirada && !submitError && (
             <div className="alert warning" role="status">
-              <span className="bullet" />
               <div className="alert-content">
                 {expirouPorInatividade ? 'Sua sessão expirou por inatividade.' : 'Sua sessão expirou.'} Entre de novo para continuar de onde parou.
               </div>
@@ -142,7 +141,7 @@ export function Login() {
           </p>
 
           <div className="login-foot">
-            SISZOO <span className="version">v 1.2.0</span> · © 2026 Prefeitura Municipal de Itu
+            SISZOO v 1.2.0 · © 2026 Prefeitura Municipal de Itu
           </div>
         </form>
       </section>

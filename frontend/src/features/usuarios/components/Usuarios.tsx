@@ -8,14 +8,14 @@ import { formatarDataBR, formatarDataHoraBR } from '@/lib/datas'
 import { mensagemDeRegraDaApi } from '@/lib/erroApi'
 import { normalizarBusca } from '@/lib/texto'
 import { classeDoFiltro, useFiltrosLista } from '@/lib/useFiltrosLista'
-import { ROLES, roleKeyFromCargos } from '@/lib/nav'
 import { useAlterarStatusUsuarioMutation, useUsuariosQuery } from '../hooks/useUsuarios'
 import { PERFIS_USUARIO, type PerfilUsuario, type UsuarioListItem } from '../types/usuarios.types'
 import { CriarUsuarioModal } from './CriarUsuarioModal'
 import { EditarUsuarioModal } from './EditarUsuarioModal'
 import { RedefinirSenhaModal } from './RedefinirSenhaModal'
-import { corAvatar } from '@/lib/avatar'
+import { MenuAcoes } from '@/components/MenuAcoes'
 import './Usuarios.css'
+import { useLinhaClicavel } from '@/lib/useLinhaClicavel'
 
 type FiltroStatus = 'Todos' | 'Ativos' | 'Inativos'
 
@@ -27,6 +27,12 @@ function formatarData(iso: string | null, comHora = false): string {
 
 function iniciais(nome: string, sobrenome: string): string {
   return `${nome[0] ?? ''}${sobrenome[0] ?? ''}`.toUpperCase()
+}
+
+const ROTULO_PLURAL_PERFIL: Record<PerfilUsuario, [string, string]> = {
+  Administrador: ['administrador', 'administradores'],
+  Veterinário: ['veterinário', 'veterinários'],
+  'Agente Sanitário': ['agente sanitário', 'agentes sanitários'],
 }
 
 function contarPorPerfil(usuarios: UsuarioListItem[] | undefined): Record<PerfilUsuario, number> {
@@ -52,6 +58,7 @@ export function Usuarios() {
   const [usuarioEmEdicao, setUsuarioEmEdicao] = useState<UsuarioListItem | null>(null)
   const [usuarioRedefinindoSenha, setUsuarioRedefinindoSenha] = useState<UsuarioListItem | null>(null)
   const { filtros, definirFiltros, limparFiltros, filtrosAtivos } = useFiltrosLista('usuarios', FILTROS_PADRAO)
+  const propsDaLinha = useLinhaClicavel()
   const { busca } = filtros
   const perfilFiltro = filtros.perfil as PerfilUsuario | 'Todos'
   const statusFiltro = filtros.status as FiltroStatus
@@ -95,34 +102,21 @@ export function Usuarios() {
       <div className="page-header">
         <div className="title-block">
           <h1>
-            Usuários do Sistema <span className="counter">{usuarios?.length ?? 0} usuários</span>
+            Usuários <span className="counter">{usuarios?.length ?? 0} contas</span>
           </h1>
-          <p className="subtitle">Gerencie acessos e perfis · Apenas Administradores podem criar, editar e desativar usuários</p>
+          <p className="subtitle">
+            {PERFIS_USUARIO.map((perfil) => {
+              const total = contagemPorPerfil[perfil]
+              return `${total} ${ROTULO_PLURAL_PERFIL[perfil][total === 1 ? 0 : 1]}`
+            }).join(' · ')}
+          </p>
         </div>
         <div className="actions">
           <button type="button" className="btn btn-primary" onClick={() => setModalAberto(true)}>
             <Icon name="plus" size={14} />
-            Adicionar Usuário
+            Adicionar usuário
           </button>
         </div>
-      </div>
-
-      <div className="grid grid-4" style={{ gap: 'var(--space-3)' }}>
-        {PERFIS_USUARIO.map((perfil) => {
-          const roleKey = roleKeyFromCargos([perfil])
-          const role = ROLES[roleKey]
-          return (
-            <div className="role-card" key={perfil}>
-              <span className="num">{contagemPorPerfil[perfil]}</span>
-              <div>
-                <h4 style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  {perfil} <span className={`badge ${role.badgeCls}`}>{role.short}</span>
-                </h4>
-                <p>{role.label}</p>
-              </div>
-            </div>
-          )
-        })}
       </div>
 
       <div className="filter-bar">
@@ -196,34 +190,32 @@ export function Usuarios() {
                   <th>Status</th>
                   <th>Último acesso</th>
                   <th>Criado em</th>
-                  <th>Ações</th>
+                  <th className="col-acoes">
+                    <span className="visually-hidden">Ações</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {usuariosFiltrados.map((usuario) => {
-                  const roleKey = roleKeyFromCargos(usuario.cargos)
-                  const role = ROLES[roleKey]
                   const nomeCompleto = `${usuario.nome} ${usuario.sobrenome}`
                   const ehOProprioUsuario = usuario.id === user?.id
                   return (
-                    <tr key={usuario.id}>
+                    <tr key={usuario.id} {...propsDaLinha(() => setUsuarioEmEdicao(usuario))}>
                       <td>
                         <div className="animal-cell">
-                          <div
-                            className="avatar-i"
-                            style={{ background: corAvatar(`${usuario.nome} ${usuario.sobrenome}`) }}
-                          >
+                          <div className="avatar-iniciais" aria-hidden="true">
                             {iniciais(usuario.nome, usuario.sobrenome)}
                           </div>
                           <div>
                             <div className="name">
                               {usuario.nome} {usuario.sobrenome}
                             </div>
+                            <span className="sec">{usuario.email}</span>
                           </div>
                         </div>
                       </td>
                       <td>
-                        <span className={`badge ${role.badgeCls}`}>{usuario.cargos.join(', ')}</span>
+                        <span className="badge badge-neutral">{usuario.cargos.join(', ')}</span>
                       </td>
                       <td>
                         {usuario.ativo ? (
@@ -239,17 +231,13 @@ export function Usuarios() {
                         )}
                       </td>
                       <td>
-                        <span className="mono" style={{ fontSize: 12 }}>
-                          {formatarData(usuario.ultimoAcesso, true)}
-                        </span>
+                        {formatarData(usuario.ultimoAcesso, true)}
                       </td>
                       <td>
-                        <span className="mono" style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-                          {formatarData(usuario.criadoEm)}
-                        </span>
+                        {formatarData(usuario.criadoEm)}
                       </td>
-                      <td>
-                        <div className="flex gap-1">
+                      <td className="col-acoes">
+                        <div className="acoes-linha">
                           <button
                             type="button"
                             className="btn btn-ghost btn-sm"
@@ -259,23 +247,22 @@ export function Usuarios() {
                             Editar
                           </button>
                           {!ehOProprioUsuario && (
-                            <>
-                              <button
-                                type="button"
-                                className="btn btn-ghost btn-sm"
-                                aria-label={`Redefinir senha de ${nomeCompleto}`}
-                                onClick={() => setUsuarioRedefinindoSenha(usuario)}
-                              >
-                                Redefinir senha
-                              </button>
-                              <button
-                                type="button"
-                                className="btn btn-ghost btn-sm"
-                                onClick={() => setUsuarioEmConfirmacao(usuario)}
-                              >
-                                {usuario.ativo ? 'Desativar' : 'Reativar'}
-                              </button>
-                            </>
+                            <MenuAcoes
+                              rotulo={`Mais ações para ${nomeCompleto}`}
+                              acoes={[
+                                {
+                                  rotulo: 'Redefinir senha',
+                                  rotuloAcessivel: `Redefinir senha de ${nomeCompleto}`,
+                                  onSelecionar: () => setUsuarioRedefinindoSenha(usuario),
+                                },
+                                {
+                                  rotulo: usuario.ativo ? 'Desativar' : 'Reativar',
+                                  rotuloAcessivel: `${usuario.ativo ? 'Desativar' : 'Reativar'} ${nomeCompleto}`,
+                                  perigo: usuario.ativo,
+                                  onSelecionar: () => setUsuarioEmConfirmacao(usuario),
+                                },
+                              ]}
+                            />
                           )}
                         </div>
                       </td>

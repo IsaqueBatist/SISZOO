@@ -3,6 +3,7 @@ import { FiltroPeriodo } from '@/components/FiltroPeriodo'
 import { ErroComRetry } from '@/components/layout/ErroComRetry'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useLinhaClicavel } from '@/lib/useLinhaClicavel'
 import {
   classeDoFiltro,
   useFiltroDeLink,
@@ -34,7 +35,9 @@ function Cabecalho() {
         <th>Status</th>
         <th>Data de abertura</th>
         <th>Ocorrência vinculada</th>
-        <th style={{ width: 80 }}>Ações</th>
+        <th className="col-acoes">
+          <span className="visually-hidden">Ações</span>
+        </th>
       </tr>
     </thead>
   )
@@ -45,11 +48,17 @@ export function Processos() {
   const podeEscrever = roleKey === 'admin' || roleKey === 'vet' || roleKey === 'agente'
 
   const urgentesDoLink = useFiltroDeLink('urgente')
+  const statusDoLink = useFiltroDeLink('status')
+  const filtrosDoLink = {
+    ...(urgentesDoLink ? { urgencia: 'urgentes' } : {}),
+    ...(statusDoLink ? { status: statusDoLink } : {}),
+  }
   const { filtros, pagina, definirFiltros, irParaPagina, limparFiltros, filtrosAtivos } = useFiltrosLista(
     'processos',
     FILTROS_PADRAO,
-    urgentesDoLink ? { urgencia: 'urgentes' } : undefined,
+    Object.keys(filtrosDoLink).length > 0 ? filtrosDoLink : undefined,
   )
+  const propsDaLinha = useLinhaClicavel()
   const { doenca: doencaFiltro, status: statusFiltro, urgencia: urgenciaFiltro, de: deFiltro, ate: ateFiltro } = filtros
   const buscaDebounced = useValorComAtraso(filtros.busca).trim()
   const deDebounced = useValorComAtraso(deFiltro)
@@ -87,7 +96,7 @@ export function Processos() {
           <div className="actions">
             <Link to="/processos/novo" className="btn btn-primary">
               <Icon name="plus" size={14} />
-              Novo Processo
+              Novo processo
             </Link>
           </div>
         )}
@@ -195,16 +204,22 @@ export function Processos() {
                   const statusBadge = badgeDeStatusProcesso(processo.statusProcesso)
                   const protocolo = formatarProtocoloProcesso(processo.protocolo)
                   return (
-                    <tr key={processo.id} className={processo.urgente ? 'urgent' : undefined}>
+                    <tr
+                      key={processo.id}
+                      {...propsDaLinha(`/processos/${processo.id}`)}
+                      className={`linha-clicavel${processo.urgente ? ' urgent' : ''}`}
+                    >
                       <td>
-                        <span className="mono" style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                          {protocolo}
-                        </span>
-                        {processo.urgente && (
-                          <span className="badge badge-urgent" style={{ marginLeft: 6, gap: 4 }}>
-                            <Icon name="alert" size={10} /> Urgente
-                          </span>
-                        )}
+                        <div className="celula-protocolo">
+                          <Link to={`/processos/${processo.id}`} className="protocolo">
+                            {protocolo}
+                          </Link>
+                          {processo.urgente && (
+                            <span className="badge badge-urgent">
+                              <Icon name="alert" size={12} /> Urgente
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td>
                         <span className={`badge badge-disease ${classeDeDoenca(processo.doenca.codigo)}`}>{processo.doenca.nome}</span>
@@ -212,21 +227,15 @@ export function Processos() {
                       <td>
                         <span className={`badge ${statusBadge.classe}`}>{statusBadge.label}</span>
                       </td>
-                      <td>
-                        <span className="mono" style={{ fontSize: 12 }}>
-                          {formatarData(processo.dataAbertura)}
-                        </span>
-                      </td>
+                      <td>{formatarData(processo.dataAbertura)}</td>
                       <td>
                         {processo.ocorrenciaProtocolo ? (
-                          <span className="mono" style={{ fontWeight: 600 }}>
-                            {formatarProtocoloOcorrencia(processo.ocorrenciaProtocolo)}
-                          </span>
+                          <span className="protocolo">{formatarProtocoloOcorrencia(processo.ocorrenciaProtocolo)}</span>
                         ) : (
                           <span className="muted">—</span>
                         )}
                       </td>
-                      <td>
+                      <td className="col-acoes">
                         <Link
                           to={`/processos/${processo.id}`}
                           className="btn btn-ghost btn-sm btn-icon-only"
@@ -253,13 +262,13 @@ export function Processos() {
             <div className="pager">
               <button
                 type="button"
-                className="btn btn-ghost btn-sm"
+                className="btn btn-outline btn-sm"
                 disabled={pagina === 0}
                 onClick={() => irParaPagina(pagina - 1)}
               >
                 Anterior
               </button>
-              <span className="mono" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+              <span className="pager-posicao">
                 Página {pagina + 1} de {totalPaginas}
               </span>
               <button

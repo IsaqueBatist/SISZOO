@@ -130,7 +130,7 @@ export function LaudoEutanasiaRegistrado({ laudo }: { laudo: LaudoRegistrado }) 
       </div>
       <div className="kv-row">
         <span className="k">Registrado em</span>
-        <span className="v mono">{formatarDataHoraBR(laudo.laudoEutanasiaRegistradoEm)}</span>
+        <span className="v">{formatarDataHoraBR(laudo.laudoEutanasiaRegistradoEm)}</span>
       </div>
     </>
   )

@@ -76,7 +76,6 @@ export function PainelPreviewRelatorio({ nomeExibicao, filtro }: PainelPreviewRe
 
       {exportar.isError && (
         <div className="alert danger" role="alert">
-          <span className="bullet" />
           <div className="alert-content">
             {mensagemDeRegraDaApi(exportar.error) ?? 'Não foi possível baixar o arquivo. Tente novamente.'}
           </div>

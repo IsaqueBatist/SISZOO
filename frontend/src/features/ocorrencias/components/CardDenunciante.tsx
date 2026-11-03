@@ -37,23 +37,23 @@ export function CardDenunciante({ mascarado, anonima, denunciante }: CardDenunci
         ) : (
           <div className="form-grid">
             <div className="field">
-              <label>Nome</label>
+              <span className="dado-rotulo">Nome</span>
               <div>{valorCampo(denunciante.nome, mascarado)}</div>
             </div>
             <div className="field">
-              <label>CPF</label>
-              <div className="mono">{valorCampo(denunciante.cpf, mascarado)}</div>
+              <span className="dado-rotulo">CPF</span>
+              <div>{valorCampo(denunciante.cpf, mascarado)}</div>
             </div>
             <div className="field">
-              <label>Telefone</label>
-              <div className="mono">{valorCampo(denunciante.telefone, mascarado)}</div>
+              <span className="dado-rotulo">Telefone</span>
+              <div>{valorCampo(denunciante.telefone, mascarado)}</div>
             </div>
             <div className="field">
-              <label>E-mail</label>
+              <span className="dado-rotulo">E-mail</span>
               <div>{valorCampo(denunciante.email, mascarado)}</div>
             </div>
             <div className="field full">
-              <label>Endereço residencial</label>
+              <span className="dado-rotulo">Endereço residencial</span>
               <div>{valorEndereco(denunciante, mascarado)}</div>
             </div>
           </div>

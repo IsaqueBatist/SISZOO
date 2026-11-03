@@ -9,7 +9,6 @@ export function PreviewAdocoes({ dados }: { dados: DadosAdocoes }) {
       </p>
 
       <div className="alert warning" role="note">
-        <span className="bullet" />
         <div className="alert-content">{dados.notaLimitacao}</div>
       </div>
 

@@ -44,7 +44,6 @@ export function AbaProcedimentos({ animalId, onRegistroCriado }: AbaProcedimento
 
       {isError && (
         <div className="alert danger" role="alert">
-          <span className="bullet" />
           <div className="alert-content">Não foi possível carregar os procedimentos.</div>
         </div>
       )}
@@ -96,7 +95,7 @@ export function AbaProcedimentos({ animalId, onRegistroCriado }: AbaProcedimento
               <tbody>
                 {data.itens.map((procedimento) => (
                   <tr key={procedimento.id}>
-                    <td className="mono">{formatarDataBR(procedimento.data)}</td>
+                    <td>{formatarDataBR(procedimento.data)}</td>
                     <td>
                       {procedimento.tipoProcedimentoNome}
                       {procedimento.statusRegistro === 'RETIFICADO' && (
@@ -135,13 +134,13 @@ export function AbaProcedimentos({ animalId, onRegistroCriado }: AbaProcedimento
             <div className="pager">
               <button
                 type="button"
-                className="btn btn-ghost btn-sm"
+                className="btn btn-outline btn-sm"
                 disabled={pagina === 0}
                 onClick={() => setPagina((atual) => atual - 1)}
               >
                 Anterior
               </button>
-              <span className="mono" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+              <span className="pager-posicao">
                 Página {pagina + 1} de {totalPaginas}
               </span>
               <button

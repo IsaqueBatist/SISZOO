@@ -95,7 +95,7 @@ export function BaiaFormModal({ baia, onFechar }: BaiaFormModalProps) {
   }
 
   return (
-    <Modal titulo={editando ? 'Editar Baia' : 'Adicionar Baia'} onFechar={onFechar}>
+    <Modal titulo={editando ? 'Editar baia' : 'Adicionar baia'} onFechar={onFechar}>
       <form onSubmit={aoEnviar} noValidate>
         <div className="modal-body">
           <div className="form-grid cols-1">

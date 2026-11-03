@@ -12,6 +12,7 @@ import { descricaoAcao, type TomAcao } from '../utils/descricaoAcao'
 import { diferencasDoEvento, justificativaDoEvento } from '../utils/diferencasPayload'
 import { labelModulo, moduloDaEntidade, type Modulo } from '../utils/moduloDaEntidade'
 import type { EventoAuditoria } from '../types/auditoria.types'
+import './Logs.css'
 
 const TAMANHO_PAGINA = 20
 const FILTROS_PADRAO = { acao: '', usuario: '', modulo: '', de: '', ate: '' }
@@ -30,29 +31,18 @@ function valoresUnicos<T>(itens: T[]): T[] {
 function LinhaEvento({ evento }: { evento: EventoAuditoria }) {
   const descricao = descricaoAcao(evento.acao)
   return (
-    <li
-      style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        gap: 'var(--space-3)',
-        padding: 'var(--space-3) 0',
-        borderBottom: '1px solid var(--color-border)',
-      }}
-    >
-      <span style={{ color: COR_POR_TOM[descricao.tom], flexShrink: 0 }} aria-hidden="true">
-        <Icon name={descricao.icone} size={16} />
+    <li className="log-item">
+      <span className="log-hora">{formatarHora(evento.ocorreuEm.slice(11))}</span>
+      <span className="log-ico" style={{ color: COR_POR_TOM[descricao.tom] }} aria-hidden="true">
+        <Icon name={descricao.icone} size={15} />
       </span>
-      <span style={{ flex: 1 }}>
-        <strong>{evento.usuarioEmail ?? 'Sistema'}</strong> {descricao.verbo}{' '}
-        <span className="mono" style={{ fontSize: 12 }}>
-          {evento.entidade}
+      <div className="log-texto">
+        <span>
+          <strong>{evento.usuarioEmail ?? 'Sistema'}</strong> {descricao.verbo}{' '}
+          <span className="log-entidade">{evento.entidade}</span>
         </span>
-      </span>
-      <span className="mono" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-        {formatarHora(evento.ocorreuEm.slice(11))}
-      </span>
-      <DetalhesEvento evento={evento} />
+        <DetalhesEvento evento={evento} />
+      </div>
     </li>
   )
 }
@@ -63,16 +53,16 @@ function DetalhesEvento({ evento }: { evento: EventoAuditoria }) {
   if (!justificativa && diferencas.length === 0) return null
 
   return (
-    <details style={{ flexBasis: '100%', fontSize: 12 }}>
-      <summary style={{ cursor: 'pointer', color: 'var(--color-text-secondary)' }}>Ver detalhes</summary>
-      <div className="col gap-1" style={{ marginTop: 'var(--space-2)' }}>
+    <details className="log-detalhes">
+      <summary>Ver detalhes</summary>
+      <div className="col gap-1">
         {justificativa && (
           <div>
             <strong>Motivo:</strong> {justificativa}
           </div>
         )}
         {diferencas.length > 0 && (
-          <ul style={{ margin: 0, paddingLeft: 16 }}>
+          <ul>
             {diferencas.map((diferenca) => (
               <li key={diferenca.campo}>
                 {diferenca.campo}: {diferenca.antes} → {diferenca.depois}
@@ -120,8 +110,8 @@ export function Logs() {
     <>
       <div className="page-header">
         <div className="title-block">
-          <h1>Logs do Sistema</h1>
-          <p className="subtitle">Ações registradas pelos usuários do SISZOO</p>
+          <h1>Histórico de ações</h1>
+          <p className="subtitle">Quem fez o quê no SISZOO, com data e hora.</p>
         </div>
       </div>
 
@@ -174,7 +164,7 @@ export function Logs() {
       </div>
 
       {filtroAtivo && data && (
-        <p className="subtitle" style={{ marginBottom: 'var(--space-3)' }}>
+        <p className="subtitle">
           {data.totalItens} evento(s) encontrado(s) em toda a trilha.
         </p>
       )}
@@ -185,7 +175,7 @@ export function Logs() {
       {!isLoading && !isError && data?.totalItens === 0 && (
         <div className="empty">
           <span className="ico">
-            <Icon name="eye" size={28} />
+            <Icon name="history" size={28} />
           </span>
           <h3>Nenhum evento encontrado</h3>
           <p>{filtroAtivo ? 'Nenhum resultado com estes filtros.' : 'Ainda não há eventos registrados.'}</p>
@@ -200,38 +190,34 @@ export function Logs() {
       {!isLoading &&
         !isError &&
         grupos.map((grupo) => (
-          <div key={grupo.rotulo} style={{ marginBottom: 'var(--space-5)' }}>
-            <h2 className="uppercase-label" style={{ marginBottom: 'var(--space-3)' }}>
-              {grupo.rotulo}
-            </h2>
+          <section key={grupo.rotulo} className="card log-dia">
+            <div className="card-header">
+              <h2>{grupo.rotulo}</h2>
+            </div>
             {agruparPorModulo(grupo.eventos).map((grupoModulo) => (
-              <div key={grupoModulo.modulo} style={{ marginBottom: 'var(--space-3)' }}>
-                <h3
-                  style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 'var(--space-2)' }}
-                >
-                  {grupoModulo.rotulo}
-                </h3>
-                <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+              <div key={grupoModulo.modulo} className="log-modulo">
+                <h3>{grupoModulo.rotulo}</h3>
+                <ul>
                   {grupoModulo.eventos.map((evento) => (
                     <LinhaEvento key={evento.id} evento={evento} />
                   ))}
                 </ul>
               </div>
             ))}
-          </div>
+          </section>
         ))}
 
       {!isLoading && !isError && data && (
         <div className="pager">
           <button
             type="button"
-            className="btn btn-ghost btn-sm"
+            className="btn btn-outline btn-sm"
             disabled={pagina === 0}
             onClick={() => irParaPagina(pagina - 1)}
           >
             Anterior
           </button>
-          <span className="mono" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+          <span className="pager-posicao">
             Página {pagina + 1} de {totalPaginas}
           </span>
           <button

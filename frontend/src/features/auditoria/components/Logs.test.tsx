@@ -63,7 +63,7 @@ describe('Logs', () => {
   it('como Admin, renderiza a lista de eventos agrupada por dia', async () => {
     renderLogs()
 
-    expect(await screen.findByRole('heading', { name: 'Logs do Sistema' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Histórico de ações' })).toBeInTheDocument()
     const linhas = await screen.findAllByText('stephanie.lima@itu.sp.gov.br', { selector: 'strong' })
     expect(linhas.length).toBeGreaterThan(0)
   })
@@ -72,7 +72,7 @@ describe('Logs', () => {
     renderLogs(['Agente Sanitário'])
 
     expect(await screen.findByText('Tela de dashboard')).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Logs do Sistema' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Histórico de ações' })).not.toBeInTheDocument()
   })
 
   it('filtrar por ação envia o parâmetro ao servidor e mostra o total da trilha só com filtro ativo', async () => {

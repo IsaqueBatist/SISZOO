@@ -18,7 +18,6 @@ export function AlertaErroEnvio({ mensagem, estilo }: AlertaErroEnvioProps) {
 
   return (
     <div ref={alerta} className="alert danger" role="alert" tabIndex={-1} style={estilo}>
-      <span className="bullet" />
       <div className="alert-content">{mensagem}</div>
     </div>
   )

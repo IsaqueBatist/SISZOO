@@ -5,7 +5,6 @@ export type RoleKey = 'admin' | 'vet' | 'agente' | 'sem_perfil'
 export interface Role {
   label: string
   short: string
-  badgeCls: string
   access: string[]
 }
 
@@ -13,25 +12,21 @@ export const ROLES: Record<RoleKey, Role> = {
   admin: {
     label: 'Administrador',
     short: 'ADMIN',
-    badgeCls: 'badge-role-admin',
     access: ['dashboard', 'animais', 'ocorrencias', 'processos', 'relatorios', 'medicamentos', 'vacinas', 'baias', 'usuarios', 'logs', 'config'],
   },
   vet: {
     label: 'Veterinário(a)',
     short: 'VET',
-    badgeCls: 'badge-role-vet',
     access: ['dashboard', 'animais', 'processos', 'relatorios', 'medicamentos', 'vacinas', 'baias', 'config'],
   },
   agente: {
     label: 'Agente Sanitário',
     short: 'AGENTE',
-    badgeCls: 'badge-role-agent',
     access: ['dashboard', 'ocorrencias', 'processos', 'relatorios', 'medicamentos', 'vacinas', 'config'],
   },
   sem_perfil: {
     label: 'Sem perfil reconhecido',
     short: 'SEM PERFIL',
-    badgeCls: 'badge-neutral',
     access: [],
   },
 }
@@ -55,9 +50,9 @@ function isNavGroup(entry: NavEntry): entry is NavGroup {
 
 const NAV_DECLARADA: NavEntry[] = [
   { group: 'PRINCIPAL' },
-  { id: 'dashboard', label: 'Dashboard', to: '/dashboard', icon: 'home' },
+  { id: 'dashboard', label: 'Início', to: '/dashboard', icon: 'home' },
   { id: 'animais', label: 'Animais', to: '/animais', icon: 'paw' },
-  { id: 'ocorrencias', label: 'Ocorrências', to: '/ocorrencias', icon: 'alert' },
+  { id: 'ocorrencias', label: 'Ocorrências', to: '/ocorrencias', icon: 'inbox' },
   { id: 'processos', label: 'Processos Sanitários', to: '/processos', icon: 'clipboard' },
   { id: 'relatorios', label: 'Relatórios', to: '/relatorios', icon: 'chart' },
   { group: 'CADASTROS' },
@@ -66,7 +61,7 @@ const NAV_DECLARADA: NavEntry[] = [
   { id: 'baias', label: 'Gestão de Baias', to: '/baias', icon: 'grid' },
   { group: 'ADMINISTRAÇÃO' },
   { id: 'usuarios', label: 'Usuários', to: '/usuarios', icon: 'users' },
-  { id: 'logs', label: 'Logs', to: '/logs', icon: 'eye' },
+  { id: 'logs', label: 'Histórico de ações', to: '/logs', icon: 'history' },
   { group: 'SISTEMA' },
   { id: 'config', label: 'Configurações', to: '/configuracoes', icon: 'cog' },
 ]

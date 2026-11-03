@@ -76,13 +76,13 @@ export function HistoricoRelatorios({ onGerarNovamente }: HistoricoRelatoriosPro
                 return (
                   <tr key={item.docId}>
                     <td>{item.tipoNomeExibicao}</td>
-                    <td className="mono">
+                    <td>
                       {ehRelatorioDePosicao(item.tipo)
                         ? `Posição em ${formatarData(item.geradoEm)}`
                         : `${formatarData(item.periodoInicio)}–${formatarData(item.periodoFim)}`}
                     </td>
                     <td>{item.geradoPorNome}</td>
-                    <td className="mono">{formatarData(item.geradoEm)}</td>
+                    <td>{formatarData(item.geradoEm)}</td>
                     <td>{formatarTamanho(item.tamanhoBytes)}</td>
                     <td>
                       <span className="badge badge-available">
@@ -109,13 +109,13 @@ export function HistoricoRelatorios({ onGerarNovamente }: HistoricoRelatoriosPro
             </tbody>
           </table>
           <div className="table-footer">
-            <span>
+            <span className="pager-posicao">
               Página {pagina + 1} de {Math.max(data.totalPaginas, 1)}
             </span>
             <div className="pager">
               <button
                 type="button"
-                className="btn btn-ghost btn-sm"
+                className="btn btn-outline btn-sm"
                 disabled={pagina === 0}
                 onClick={() => setPagina((atual) => atual - 1)}
               >

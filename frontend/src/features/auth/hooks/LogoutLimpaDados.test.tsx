@@ -119,7 +119,7 @@ describe('logout limpa cache e IndexedDB', () => {
     await waitFor(() => expect(queryClient.getQueryData(['dados-de-a'])).toBeUndefined())
 
     await user.click(screen.getByRole('button', { name: 'Entrar como B' }))
-    expect(await screen.findByRole('button', { name: 'Registrar Ocorrência' })).toBeEnabled()
+    expect(await screen.findByRole('button', { name: 'Registrar ocorrência' })).toBeEnabled()
     expect(screen.queryByText(/Encontramos um rascunho salvo/)).not.toBeInTheDocument()
     expect(queryClient.getQueryData(['dados-de-a'])).toBeUndefined()
   })

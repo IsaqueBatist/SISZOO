@@ -95,7 +95,6 @@ export function RedefinirSenha() {
           <p className="lead">Sua nova senha já está valendo. Entre com ela para continuar.</p>
         </div>
         <div className="alert success" role="status">
-          <span className="bullet" />
           <div className="alert-content">
             Por segurança, as sessões abertas anteriormente com esta conta foram encerradas.
           </div>

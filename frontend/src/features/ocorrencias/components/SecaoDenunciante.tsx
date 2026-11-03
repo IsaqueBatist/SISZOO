@@ -103,7 +103,6 @@ export function SecaoDenunciante({
         )}
         {sigilosa && (
           <div className="alert warning" role="alert" style={{ marginBottom: 12 }}>
-            <span className="bullet" />
             <div className="alert-content">
               Os dados do denunciante só serão exibidos a Administradores e Agentes Sanitários.
             </div>

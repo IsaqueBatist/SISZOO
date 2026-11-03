@@ -1,4 +1,5 @@
-import { useEffect, useId, useState, type KeyboardEvent } from 'react'
+import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
+import { useClickOutside } from '@/components/layout/useClickOutside'
 import { useAnimaisQuery } from '@/features/animais/hooks/useAnimais'
 import type { Animal } from '@/features/animais/types/animais.types'
 
@@ -16,6 +17,11 @@ export function BuscaAnimalCanil({ numero, rotulo, erro, onSelecionar }: BuscaAn
   const [mostrarSugestoes, setMostrarSugestoes] = useState(false)
   const [ativa, setAtiva] = useState(-1)
   const idLista = useId()
+  const containerRef = useRef<HTMLDivElement>(null)
+  const fecharSugestoes = useCallback(() => {
+    setMostrarSugestoes(false)
+    setAtiva(-1)
+  }, [])
 
   const [buscaDebounced, setBuscaDebounced] = useState('')
   useEffect(() => {
@@ -26,10 +32,18 @@ export function BuscaAnimalCanil({ numero, rotulo, erro, onSelecionar }: BuscaAn
   const sugestoes = resultado?.itens ?? []
   const listaAberta = mostrarSugestoes && sugestoes.length > 0
 
+  useClickOutside(containerRef, fecharSugestoes, listaAberta)
+
+  function selecionar(animal: Animal) {
+    setBusca(animal.nome)
+    fecharSugestoes()
+    onSelecionar(animal)
+  }
+
   function aoPressionarTecla(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === 'Escape') {
-      setMostrarSugestoes(false)
-      setAtiva(-1)
+      event.preventDefault()
+      fecharSugestoes()
       return
     }
     if (sugestoes.length === 0) return
@@ -40,12 +54,12 @@ export function BuscaAnimalCanil({ numero, rotulo, erro, onSelecionar }: BuscaAn
       setAtiva((atual) => (atual + passo + sugestoes.length) % sugestoes.length)
     } else if (event.key === 'Enter' && listaAberta && ativa >= 0) {
       event.preventDefault()
-      onSelecionar(sugestoes[ativa])
+      selecionar(sugestoes[ativa])
     }
   }
 
   return (
-    <div className="animal-search-wrap">
+    <div className="animal-search-wrap" ref={containerRef}>
       <input
         className={`input${erro ? ' error' : ''}`}
         type="search"
@@ -75,7 +89,7 @@ export function BuscaAnimalCanil({ numero, rotulo, erro, onSelecionar }: BuscaAn
               role="option"
               aria-selected={indice === ativa}
               className={`sug${indice === ativa ? ' ativa' : ''}`}
-              onClick={() => onSelecionar(animal)}
+              onClick={() => selecionar(animal)}
             >
               <span className="name">{animal.nome}</span>
               <span className="chip">{animal.microchip ?? 'sem microchip'}</span>

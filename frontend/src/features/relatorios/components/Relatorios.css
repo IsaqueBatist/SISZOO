@@ -3,19 +3,14 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-4);
 }
-@media (max-width: 1440px) {
+@media (max-width: 1280px) {
   .reports-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .reports-grid {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .report-card input,
-  .report-card select {
-    min-width: 0;
-    max-width: 100%;
   }
 }
 
@@ -23,52 +18,51 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  padding: var(--space-5);
+  padding: var(--space-4) var(--space-5);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  min-width: 0;
 }
-
-.report-card .r-ico {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 4px;
-}
-
 .report-card h3 {
-  font-size: 16px;
+  font-size: var(--text-base);
 }
-
 .report-card .desc {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--color-text-secondary);
   flex: 1;
   line-height: 1.5;
 }
-
 .report-card .period-row {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   align-items: center;
+  min-height: var(--control-height);
 }
-
 .report-card .period-row > .input,
 .report-card .period-row > .select {
+  flex: 1;
   min-width: 0;
 }
-
 .report-card .period-row label {
-  font-size: 11px;
+  font-size: var(--text-sm);
   color: var(--color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-weight: 600;
-  min-width: 50px;
+  min-width: 56px;
+}
+.report-card .period-row.posicao {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+.report-card .err {
+  font-size: var(--text-xs);
+  color: var(--color-danger);
+  font-weight: 500;
+}
+.report-acoes {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
 }
 
 .recent-section {

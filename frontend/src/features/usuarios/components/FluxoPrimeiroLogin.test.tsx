@@ -39,7 +39,7 @@ describe('fluxo completo: admin cria usuário → 1º login força troca de senh
     const user = userEvent.setup()
     renderApp()
 
-    await screen.findByRole('heading', { name: /usuários do sistema/i })
+    await screen.findByRole('heading', { name: /^usuários/i })
     await user.click(screen.getByRole('button', { name: /adicionar usuário/i }))
 
     await user.type(screen.getByLabelText(/nome completo/i), 'Fernanda Rocha')
@@ -62,13 +62,13 @@ describe('fluxo completo: admin cria usuário → 1º login força troca de senh
     await user.click(screen.getByRole('button', { name: /^entrar$/i }))
 
     expect(await screen.findByRole('heading', { name: /troque sua senha/i })).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: /dashboard operacional/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /^início$/i })).not.toBeInTheDocument()
 
     await user.type(screen.getByLabelText(/^nova senha/i), 'senha-definitiva-456')
     await user.type(screen.getByLabelText(/confirmar nova senha/i), 'senha-definitiva-456')
     await user.click(screen.getByRole('button', { name: /salvar nova senha/i }))
 
-    expect(await screen.findByRole('heading', { name: /dashboard operacional/i })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /^início$/i })).toBeInTheDocument()
 
     vi.restoreAllMocks()
   }, 15000)

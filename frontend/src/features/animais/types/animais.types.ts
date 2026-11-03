@@ -118,12 +118,15 @@ export interface BaiaRequest {
   observacoes?: string
 }
 
+export type PendenciaAnimal = 'ficha_incompleta' | 'sem_avaliacao_30d' | 'nao_castrado' | 'medicacao_ativa'
+
 export interface AnimaisFiltro {
   status?: string
   custodia?: boolean
   especie?: string
   baiaId?: string
   q?: string
+  pendencia?: PendenciaAnimal
   pagina: number
   tamanho: number
 }

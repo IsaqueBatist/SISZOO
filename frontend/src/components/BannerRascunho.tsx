@@ -9,7 +9,6 @@ interface BannerRascunhoProps {
 export function BannerRascunho({ onRestaurar, onDescartar, salvoEm }: BannerRascunhoProps) {
   return (
     <div className="alert info" role="alert">
-      <span className="bullet" />
       <div className="alert-content">
         Encontramos um rascunho salvo deste formulário.
         {typeof salvoEm === 'number' && <div className="alert-desc">Salvo em {formatarInstanteBR(salvoEm)}.</div>}

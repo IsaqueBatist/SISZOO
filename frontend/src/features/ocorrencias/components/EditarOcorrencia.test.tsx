@@ -86,7 +86,7 @@ describe('EditarOcorrencia', () => {
   it('carrega os dados da ocorrência no formulário', async () => {
     renderEm(`/ocorrencias/${OCORRENCIA_ABERTA_ID}/editar`)
 
-    expect(await screen.findByRole('heading', { name: 'Editar Ocorrência' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Editar ocorrência' })).toBeInTheDocument()
     expect(screen.getByText('OC 089/2026')).toBeInTheDocument()
     expect(screen.getByLabelText(/Endereço da ocorrência/i)).toHaveValue('Rua das Acácias, 145')
     expect(screen.getByLabelText('Hora aproximada')).toHaveValue('10:32')
@@ -223,7 +223,7 @@ describe('EditarOcorrencia', () => {
     await salvar(user)
 
     expect(await screen.findByText('Urgencia definida pelo processo sanitario vinculado')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Editar Ocorrência' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Editar ocorrência' })).toBeInTheDocument()
   })
 
   it('salva o rascunho da edição na chave da própria ocorrência', async () => {
@@ -240,7 +240,7 @@ describe('EditarOcorrencia', () => {
     renderEm(`/ocorrencias/${OCORRENCIA_ENCERRADA_ID}/editar`)
 
     expect(await screen.findByRole('heading', { name: 'Ocorrência OC 070/2026', level: 1 })).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Editar Ocorrência' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Editar ocorrência' })).not.toBeInTheDocument()
   })
 
   describe('botão "Editar" no detalhe', () => {

@@ -7,11 +7,13 @@ import { formatarDataHoraBR } from '@/lib/datas'
 import { normalizarBusca } from '@/lib/texto'
 import { useFiltrosLista } from '@/lib/useFiltrosLista'
 import { formatarSexo } from '@/features/animais/utils/rotulosAnimal'
+import { useLinhaClicavel } from '@/lib/useLinhaClicavel'
 
 const FILTROS_PADRAO = { busca: '' }
 
 export function AlertaEsterilizacaoDetalhe() {
   const { data, isLoading, isError } = useAlertasEsterilizacaoQuery()
+  const propsDaLinha = useLinhaClicavel()
   const { filtros, definirFiltros, limparFiltros, filtrosAtivos } = useFiltrosLista(
     'alertas-esterilizacao',
     FILTROS_PADRAO,
@@ -31,8 +33,8 @@ export function AlertaEsterilizacaoDetalhe() {
     <>
       <div className="page-header">
         <div className="title-block">
-          <Link to="/dashboard" className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start', marginBottom: 4 }}>
-            ← Voltar para Dashboard
+          <Link to="/dashboard" className="link-voltar">
+            ← Voltar para o início
           </Link>
           <h1>Esterilização pendente</h1>
           <p className="subtitle">
@@ -44,7 +46,6 @@ export function AlertaEsterilizacaoDetalhe() {
 
       {isError && (
         <div className="alert danger" role="alert">
-          <span className="bullet" />
           <div className="alert-content">Não foi possível carregar o alerta de esterilização.</div>
         </div>
       )}
@@ -136,7 +137,7 @@ export function AlertaEsterilizacaoDetalhe() {
                     </thead>
                     <tbody>
                       {animaisFiltrados.map((animal) => (
-                        <tr key={animal.animalId}>
+                        <tr key={animal.animalId} {...propsDaLinha(`/animais/${animal.animalId}`)}>
                           <td>
                             <Link to={`/animais/${animal.animalId}`} style={{ fontWeight: 600 }}>
                               {animal.animalNome}
@@ -147,7 +148,7 @@ export function AlertaEsterilizacaoDetalhe() {
                           </td>
                           <td>{animal.animalStatusNome}</td>
                           <td>{animal.animalBaiaNome ?? '—'}</td>
-                          <td className="mono">
+                          <td>
                             {formatarDataHoraBR(animal.dataEntrada)} · {formatarTempoDesdeEntrada(animal.horasDesdeEntrada)}
                           </td>
                         </tr>

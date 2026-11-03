@@ -59,7 +59,6 @@ export function CardStatusProcesso({ processo, podeEscrever }: CardStatusProcess
         )}
         {erro && (
           <div className="alert danger" role="alert" style={{ marginTop: 8 }}>
-            <span className="bullet" />
             <div className="alert-content">{erro}</div>
           </div>
         )}

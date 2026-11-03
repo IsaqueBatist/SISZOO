@@ -353,6 +353,6 @@ describe('AnimalForm — etapas', () => {
     await user.click(await screen.findByRole('button', { name: /Próximo: Saúde/ }))
 
     expect(await screen.findByText('Informe o nome do animal.')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Dados Básicos' }).closest('.step-pane')).toHaveClass('active')
+    expect(screen.getByRole('heading', { name: 'Dados básicos' }).closest('.step-pane')).toHaveClass('active')
   })
 })

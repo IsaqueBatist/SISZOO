@@ -1,9 +1,10 @@
 .login-shell {
   display: grid;
-  grid-template-columns: 45% 55%;
+  grid-template-columns: minmax(360px, 40%) 1fr;
   min-height: 100vh;
+  background: var(--color-surface);
 }
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .login-shell {
     grid-template-columns: 1fr;
   }
@@ -13,129 +14,90 @@
 }
 
 .login-brand {
-  background: linear-gradient(160deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
-  color: #fff;
-  padding: 56px;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  padding: 40px 48px;
   display: flex;
   flex-direction: column;
-  position: relative;
-  overflow: hidden;
 }
-.login-brand::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    radial-gradient(circle at 15% 90%, rgba(255, 255, 255, 0.06) 0%, transparent 30%),
-    radial-gradient(circle at 85% 10%, rgba(255, 255, 255, 0.05) 0%, transparent 35%);
-}
-.login-brand .paws {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-.login-brand .paws svg {
-  position: absolute;
+:root[data-tema='escuro'] .login-brand {
+  background: var(--color-surface-alt);
+  color: var(--color-text-primary);
+  border-right: 1px solid var(--color-border);
 }
 .login-brand .head {
-  position: relative;
-  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 .login-brand .head .wm {
-  font-family: var(--font-display);
   font-weight: 700;
-  font-size: 28px;
-  letter-spacing: 0.04em;
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
+  font-size: 18px;
+  letter-spacing: 0.02em;
 }
-.login-brand .head .wm .mark {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+.login-brand .head .mark {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.14);
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
-.login-brand .head .tagline {
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.65);
-  margin: 4px 0 0 56px;
-}
 .login-brand .center {
   margin: auto 0;
-  position: relative;
-  z-index: 2;
 }
 .login-brand .center .login-marca {
-  color: #fff;
-  font-family: var(--font-display);
-  font-size: 36px;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-  max-width: 440px;
-  margin-bottom: 16px;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  max-width: 400px;
+  margin-bottom: 12px;
 }
-.login-brand .center p {
-  color: rgba(255, 255, 255, 0.78);
-  font-size: 15px;
+.login-brand .center p:not(.login-marca) {
+  opacity: 0.82;
+  font-size: var(--text-base);
   line-height: 1.6;
-  max-width: 420px;
+  max-width: 380px;
 }
 .login-brand .footer {
-  position: relative;
-  z-index: 2;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.55);
+  font-size: var(--text-xs);
+  opacity: 0.7;
   display: flex;
   justify-content: space-between;
-  margin-top: auto;
 }
 
 .login-form-area {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 32px;
+  padding: 32px 24px;
 }
 .login-card {
   width: 100%;
-  max-width: 420px;
+  max-width: 380px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-4);
 }
 .login-card .login-titulo {
-  font-size: 26px;
+  font-size: var(--text-2xl);
   margin-bottom: 4px;
 }
 .login-card .lead {
   color: var(--color-text-secondary);
-  font-size: 14px;
-}
-.login-card .field {
-  gap: 8px;
+  font-size: var(--text-sm);
 }
 
 .login-ajuda {
   text-align: center;
-  font-size: 13px;
-  margin: -4px 0 0;
-}
-.login-ajuda a {
-  color: var(--color-primary);
+  font-size: var(--text-sm);
 }
 
 .login-foot {
   text-align: center;
-  font-size: 11px;
+  font-size: var(--text-xs);
   color: var(--color-text-muted);
-}
-.login-foot .version {
-  font-family: var(--font-mono);
+  margin-top: var(--space-4);
 }

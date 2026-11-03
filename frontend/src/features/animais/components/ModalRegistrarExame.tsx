@@ -101,7 +101,6 @@ export function ModalRegistrarExame({ animalId, retifica, onFechar, onSucesso }:
             <AlertaErroEnvio mensagem={submitError} />
             {retifica && (
               <div className="alert info" role="alert">
-                <span className="bullet" />
                 <div className="alert-content">
                   O registro original não será alterado — esta correção cria um novo registro vinculado a ele.
                 </div>

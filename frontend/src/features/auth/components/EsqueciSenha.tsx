@@ -72,7 +72,6 @@ export function EsqueciSenha() {
             </div>
 
             <div className="alert info" role="status">
-              <span className="bullet" />
               <div className="alert-content">
                 O link vale por 30 minutos e só pode ser usado uma vez. Se a mensagem não chegar, confira a caixa
                 de spam ou fale com o Administrador do sistema.

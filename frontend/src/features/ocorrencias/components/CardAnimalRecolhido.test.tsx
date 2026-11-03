@@ -51,6 +51,20 @@ async function escolherAnimal(busca: string) {
 }
 
 describe('CardAnimalRecolhido', () => {
+  it('fecha a lista de sugestões ao escolher o animal e mostra o escolhido no campo', async () => {
+    buscaDevolveAnimal()
+    renderCard(criarOcorrenciaFixture())
+
+    const busca = screen.getByRole('combobox', { name: ROTULO_BUSCA })
+    await userEvent.type(busca, 'Cara')
+    await userEvent.click(await screen.findByRole('option', { name: /Caramelo/ }))
+
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+    expect(busca).toHaveValue('Caramelo')
+    expect(busca).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.getByRole('button', { name: 'Vincular animal' })).toBeInTheDocument()
+  })
+
   it('busca o animal por microchip e envia o vínculo', async () => {
     buscaDevolveAnimal()
     let corpo: unknown = null

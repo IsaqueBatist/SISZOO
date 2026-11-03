@@ -3,6 +3,7 @@ import { ErroComRetry } from '@/components/layout/ErroComRetry'
 import { Icon } from '@/components/layout/Icon'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { formatarDataBR } from '@/lib/datas'
+import { useLinhaClicavel } from '@/lib/useLinhaClicavel'
 import {
   classeDoFiltro,
   useFiltroDeLink,
@@ -11,15 +12,15 @@ import {
   useValorComAtraso,
 } from '@/lib/useFiltrosLista'
 import { useAnimaisQuery, useBaiasQuery, useCatalogosAnimaisQuery } from '../hooks/useAnimais'
-import { badgeDeEspecie, badgeDeStatus } from '../utils/statusBadge'
+import { badgeDeStatus } from '../utils/statusBadge'
 import type { Animal, Pelagem } from '../types/animais.types'
+import { CODIGOS_PENDENCIA_ANIMAL, ehPendenciaAnimal, PENDENCIAS_ANIMAL } from '../utils/pendenciasAnimal'
 import { formatarPorte, formatarSexo } from '../utils/rotulosAnimal'
-import { corAvatar } from '@/lib/avatar'
 
 const TAMANHO_PAGINA = 20
 const LINHAS_SKELETON = [0, 1, 2, 3, 4]
 const COLUNAS_TABELA = ['animal', 'especie', 'baia', 'status', 'sexo', 'porte', 'entrada', 'castrado', 'acoes']
-const FILTROS_PADRAO = { busca: '', status: '', especie: '', baia: '' }
+const FILTROS_PADRAO = { busca: '', status: '', especie: '', baia: '', pendencia: '' }
 const STATUS_SOB_CUSTODIA = 'sob_custodia'
 const ROTULOS_STATUS_FILTRO: Record<string, string> = { disponivel_adocao: 'Disponível p/ adoção' }
 
@@ -35,12 +36,21 @@ export function Animais() {
   const { roleKey } = useAuth()
   const podeEscrever = roleKey === 'admin' || roleKey === 'vet'
   const baiaDaUrl = useFiltroDeLink('baiaId')
+  const pendenciaDaUrl = useFiltroDeLink('pendencia')
+  const statusDaUrl = useFiltroDeLink('status')
+  const filtrosDaUrl = {
+    ...(baiaDaUrl ? { baia: baiaDaUrl } : {}),
+    ...(ehPendenciaAnimal(pendenciaDaUrl) ? { pendencia: pendenciaDaUrl } : {}),
+    ...(statusDaUrl ? { status: statusDaUrl } : {}),
+  }
   const { filtros, pagina, definirFiltros, irParaPagina, limparFiltros, filtrosAtivos } = useFiltrosLista(
     'animais',
     FILTROS_PADRAO,
-    baiaDaUrl ? { baia: baiaDaUrl } : undefined,
+    Object.keys(filtrosDaUrl).length > 0 ? filtrosDaUrl : undefined,
   )
   const { status: statusFiltro, especie: especieFiltro, baia: baiaFiltro } = filtros
+  const pendenciaFiltro = ehPendenciaAnimal(filtros.pendencia) ? filtros.pendencia : undefined
+  const propsDaLinha = useLinhaClicavel()
   const buscaDebounced = useValorComAtraso(filtros.busca).trim()
   const sobCustodia = statusFiltro === STATUS_SOB_CUSTODIA
 
@@ -50,6 +60,7 @@ export function Animais() {
     especie: especieFiltro || undefined,
     baiaId: baiaFiltro || undefined,
     q: buscaDebounced || undefined,
+    pendencia: pendenciaFiltro,
     pagina,
     tamanho: TAMANHO_PAGINA,
   })
@@ -70,7 +81,7 @@ export function Animais() {
           <h1>
             Animais {data && <span className="counter">{data.totalItens} animais</span>}
           </h1>
-          <p className="subtitle">Listagem de animais cadastrados no CCZ</p>
+          <p className="subtitle">Clique em um animal para abrir a ficha.</p>
         </div>
         {podeEscrever && (
           <div className="actions">
@@ -133,12 +144,34 @@ export function Animais() {
             </option>
           ))}
         </select>
+        <select
+          className={`${classeDoFiltro(filtros.pendencia)} filtro-largo`}
+          aria-label="Filtrar por pendência"
+          value={filtros.pendencia}
+          onChange={(event) => definirFiltros({ pendencia: event.target.value })}
+        >
+          <option value="">Pendência: Todas</option>
+          {CODIGOS_PENDENCIA_ANIMAL.map((codigo) => (
+            <option key={codigo} value={codigo}>
+              {PENDENCIAS_ANIMAL[codigo].rotulo}
+            </option>
+          ))}
+        </select>
         {filtrosAtivos && (
           <button type="button" className="btn btn-ghost btn-sm" onClick={limparFiltros}>
             Limpar filtros
           </button>
         )}
       </div>
+
+      {pendenciaFiltro && (
+        <p className="aviso-filtro" role="status">
+          <Icon name="alert" size={14} />
+          <span>
+            <strong>{PENDENCIAS_ANIMAL[pendenciaFiltro].rotulo}:</strong> {PENDENCIAS_ANIMAL[pendenciaFiltro].regra}
+          </span>
+        </p>
+      )}
 
       {isError && <ErroComRetry mensagem="Não foi possível carregar os animais." onTentarNovamente={() => void refetch()} />}
 
@@ -156,7 +189,9 @@ export function Animais() {
                   <th>Porte</th>
                   <th>Entrada</th>
                   <th>Castrado</th>
-                  <th>Ações</th>
+                  <th className="col-acoes">
+                    <span className="visually-hidden">Ações</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -181,7 +216,13 @@ export function Animais() {
             <Icon name="paw" size={28} />
           </span>
           <h3>Nenhum animal encontrado</h3>
-          <p>{filtrosAtivos ? 'Nenhum resultado com estes filtros.' : 'Ainda não há animais cadastrados.'}</p>
+          <p>
+            {pendenciaFiltro
+              ? 'Nenhum animal com esta pendência no momento.'
+              : filtrosAtivos
+                ? 'Nenhum resultado com estes filtros.'
+                : 'Ainda não há animais cadastrados. Use "Novo animal" para registrar a primeira entrada.'}
+          </p>
           {filtrosAtivos && (
             <button type="button" className="btn btn-outline btn-sm" onClick={limparFiltros}>
               Limpar filtros
@@ -204,26 +245,24 @@ export function Animais() {
                   <th>Porte</th>
                   <th>Entrada</th>
                   <th>Castrado</th>
-                  <th>Ações</th>
+                  <th className="col-acoes">
+                    <span className="visually-hidden">Ações</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {data.itens.map((animal: Animal) => {
                   const statusBadge = badgeDeStatus(animal.statusCodigo, animal.statusNome)
-                  const especieBadge = badgeDeEspecie(animal.especieCodigo, animal.especieNome)
                   return (
-                    <tr key={animal.id}>
+                    <tr key={animal.id} {...propsDaLinha(`/animais/${animal.id}`)}>
                       <td>
                         <div className="animal-cell">
-                          <div
-                            className="animal-avatar"
-                            style={animal.fotoUrl ? undefined : { background: corAvatar(animal.id), color: '#fff' }}
-                          >
+                          <div className="animal-avatar">
                             {animal.fotoUrl ? (
                               <img
                                 src={animal.fotoUrl}
                                 alt=""
-                                style={{ width: '100%', height: '100%', borderRadius: 'inherit', objectFit: 'cover' }}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                               />
                             ) : (
                               <Icon name="paw" size={16} />
@@ -241,36 +280,32 @@ export function Animais() {
                         </div>
                       </td>
                       <td>
-                        <span className={`badge ${especieBadge.classe}`}>{especieBadge.label}</span>
+                        {animal.especieNome}
                       </td>
                       <td>
-                        <span className="mono" style={{ fontSize: 12 }}>
-                          {animal.baiaNome ?? '—'}
-                        </span>
+                        {animal.baiaNome ?? <span className="muted">—</span>}
                       </td>
                       <td>
                         <span className={`badge ${statusBadge.classe}`}>
-                          <span className="badge-dot" aria-hidden="true" style={{ background: 'currentColor' }} />
+                          <span className="badge-dot" aria-hidden="true" />
                           {statusBadge.label}
                         </span>
                       </td>
                       <td>{formatarSexo(animal.sexo)}</td>
                       <td title={formatarPelagem(animal.pelagem) || undefined}>{formatarPorte(animal.porte)}</td>
                       <td>
-                        <span className="mono" style={{ fontSize: 12 }}>
-                          {formatarData(animal.dataEntrada)}
-                        </span>
+                        {formatarData(animal.dataEntrada)}
                       </td>
                       <td>
                         {animal.esterilizado === null ? (
-                          <span style={{ color: 'var(--color-text-muted)' }}>Não informado</span>
+                          <span className="muted">Não informado</span>
                         ) : animal.esterilizado ? (
-                          <span style={{ color: 'var(--color-success)' }}>● Sim</span>
+                          'Sim'
                         ) : (
-                          <span style={{ color: 'var(--color-text-muted)' }}>○ Não</span>
+                          'Não'
                         )}
                       </td>
-                      <td>
+                      <td className="col-acoes">
                         {podeEscrever && (
                           <Link
                             to={`/animais/${animal.id}/editar`}
@@ -298,13 +333,13 @@ export function Animais() {
             <div className="pager">
               <button
                 type="button"
-                className="btn btn-ghost btn-sm"
+                className="btn btn-outline btn-sm"
                 disabled={pagina === 0}
                 onClick={() => irParaPagina(pagina - 1)}
               >
                 Anterior
               </button>
-              <span className="mono" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+              <span className="pager-posicao">
                 Página {pagina + 1} de {totalPaginas}
               </span>
               <button

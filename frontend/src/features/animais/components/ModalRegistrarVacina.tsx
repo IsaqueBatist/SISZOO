@@ -151,7 +151,6 @@ export function ModalRegistrarVacina({
             <AlertaErroEnvio mensagem={submitError} />
             {reforco && (
               <div className="alert info" role="status">
-                <span className="bullet" />
                 <div className="alert-content">
                   Nova aplicação desta vacina.
                   <div className="alert-desc">
@@ -163,7 +162,6 @@ export function ModalRegistrarVacina({
             )}
             {retifica && (
               <div className="alert info" role="alert">
-                <span className="bullet" />
                 <div className="alert-content">
                   O registro original não será alterado — esta correção cria um novo registro vinculado a ele.
                   <div className="alert-desc">

@@ -7,9 +7,9 @@ export interface Badge {
 }
 
 const STATUS_BADGE_MAP: Record<string, Badge> = {
-  ABERTA: { classe: 'badge-process-open', label: 'Aberta' },
-  EM_ATENDIMENTO: { classe: 'badge-process-awaiting', label: 'Em atendimento' },
-  ENCERRADA: { classe: 'badge-process-closed', label: 'Encerrada' },
+  ABERTA: { classe: 'badge-pendente', label: 'Aberta' },
+  EM_ATENDIMENTO: { classe: 'badge-andamento', label: 'Em atendimento' },
+  ENCERRADA: { classe: 'badge-sucesso', label: 'Encerrada' },
 }
 
 export function badgeDeStatus(status: string): Badge {

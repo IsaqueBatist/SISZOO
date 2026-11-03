@@ -67,7 +67,7 @@ export function CardEncerramento({ ocorrencia, podeEncerrar }: CardEncerramentoP
             )}
             <div className="kv-row">
               <span className="k">Encerrada em</span>
-              <span className="v mono">{ocorrencia.encerradaEm ? formatarData(ocorrencia.encerradaEm) : '—'}</span>
+              <span className="v">{ocorrencia.encerradaEm ? formatarData(ocorrencia.encerradaEm) : '—'}</span>
             </div>
             {ocorrencia.encerradaPorNome && (
               <div className="kv-row">
@@ -122,7 +122,6 @@ export function CardEncerramento({ ocorrencia, podeEncerrar }: CardEncerramentoP
         <form onSubmit={aoEnviar} noValidate>
           {catalogoIndisponivel && (
             <div className="alert danger" role="alert" style={{ marginBottom: 12 }}>
-              <span className="bullet" />
               <div className="alert-content">
                 Não foi possível carregar a lista de providências.
                 <div style={{ marginTop: 8 }}>
@@ -140,7 +139,6 @@ export function CardEncerramento({ ocorrencia, podeEncerrar }: CardEncerramentoP
           )}
           {submitError && (
             <div className="alert danger" role="alert" style={{ marginBottom: 12 }}>
-              <span className="bullet" />
               <div className="alert-content">{submitError}</div>
             </div>
           )}

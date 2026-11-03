@@ -71,7 +71,7 @@ describe('FichaAnimal', () => {
     expect(await screen.findByRole('heading', { name: 'Rex', level: 1 })).toBeInTheDocument()
     expect(screen.getByText('985121234567890')).toBeInTheDocument()
     expect(screen.getByText('Baia 3')).toBeInTheDocument()
-    expect(screen.getAllByText('Canino')).toHaveLength(2)
+    expect(screen.getByText('Canino')).toBeInTheDocument()
     expect(screen.getByText('Disponível').closest('.badge')).toHaveClass('badge-available')
   })
 

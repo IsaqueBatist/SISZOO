@@ -121,7 +121,7 @@ describe('Usuarios', () => {
       renderUsuarios()
 
       await screen.findByText('Stéphanie Lima')
-      expect(screen.queryByRole('button', { name: 'Redefinir senha de Stéphanie Lima' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Mais ações para Stéphanie Lima' })).not.toBeInTheDocument()
 
       await user.click(screen.getByRole('button', { name: 'Editar Stéphanie Lima' }))
 
@@ -141,7 +141,8 @@ describe('Usuarios', () => {
       )
       renderUsuarios()
 
-      await user.click(await screen.findByRole('button', { name: 'Redefinir senha de Paulo Henriques' }))
+      await user.click(await screen.findByRole('button', { name: 'Mais ações para Paulo Henriques' }))
+      await user.click(screen.getByRole('menuitem', { name: 'Redefinir senha de Paulo Henriques' }))
       const dialogo = screen.getByRole('dialog')
       expect(within(dialogo).getByText(/perderá a senha atual/i)).toBeInTheDocument()
       await user.click(within(dialogo).getByRole('button', { name: 'Redefinir senha' }))
@@ -159,7 +160,8 @@ describe('Usuarios', () => {
       server.use(http.post(`${API_BASE_URL}/usuarios/:id/senha`, () => HttpResponse.json({}, { status: 500 })))
       renderUsuarios()
 
-      await user.click(await screen.findByRole('button', { name: 'Redefinir senha de Paulo Henriques' }))
+      await user.click(await screen.findByRole('button', { name: 'Mais ações para Paulo Henriques' }))
+      await user.click(screen.getByRole('menuitem', { name: 'Redefinir senha de Paulo Henriques' }))
       await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Redefinir senha' }))
 
       expect(await screen.findByText(/não foi possível redefinir a senha de paulo henriques/i)).toBeInTheDocument()
@@ -290,7 +292,8 @@ describe('Usuarios', () => {
     const linha = (await screen.findByText('Carlos Martins')).closest('tr')
     if (!linha) throw new Error('linha não encontrada')
 
-    await user.click(within(linha).getByRole('button', { name: /desativar/i }))
+    await user.click(within(linha).getByRole('button', { name: /mais ações/i }))
+    await user.click(within(linha).getByRole('menuitem', { name: /desativar/i }))
     const dialogo = await screen.findByRole('dialog', { name: 'Desativar usuário' })
     await user.click(within(dialogo).getByRole('button', { name: 'Desativar' }))
 
@@ -306,7 +309,8 @@ describe('Usuarios', () => {
     const linha = (await screen.findByText('Rafael Santos')).closest('tr')
     if (!linha) throw new Error('linha não encontrada')
 
-    await user.click(within(linha).getByRole('button', { name: /desativar/i }))
+    await user.click(within(linha).getByRole('button', { name: /mais ações/i }))
+    await user.click(within(linha).getByRole('menuitem', { name: /desativar/i }))
     const dialogo = await screen.findByRole('dialog', { name: 'Desativar usuário' })
     await user.click(within(dialogo).getByRole('button', { name: 'Desativar' }))
 
@@ -336,7 +340,8 @@ describe('Usuarios', () => {
     const linha = (await screen.findByText('Rafael Santos')).closest('tr')
     if (!linha) throw new Error('linha não encontrada')
 
-    await user.click(within(linha).getByRole('button', { name: /desativar/i }))
+    await user.click(within(linha).getByRole('button', { name: /mais ações/i }))
+    await user.click(within(linha).getByRole('menuitem', { name: /desativar/i }))
     const dialogo = await screen.findByRole('dialog', { name: 'Desativar usuário' })
     await user.click(within(dialogo).getByRole('button', { name: 'Cancelar' }))
 

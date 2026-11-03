@@ -5,9 +5,16 @@ import { FiltroPeriodo } from '@/components/FiltroPeriodo'
 import { Icon } from '@/components/layout/Icon'
 import { Skeleton } from '@/components/layout/Skeleton'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { classeDoFiltro, useFiltrosLista, useManterPaginaNoIntervalo, useValorComAtraso } from '@/lib/useFiltrosLista'
+import {
+  classeDoFiltro,
+  useFiltroDeLink,
+  useFiltrosLista,
+  useManterPaginaNoIntervalo,
+  useValorComAtraso,
+} from '@/lib/useFiltrosLista'
+import { useLinhaClicavel } from '@/lib/useLinhaClicavel'
 import type { OcorrenciaResumo, StatusOcorrencia, TipoOcorrencia } from '../types/ocorrencias.types'
-import { badgeDeStatus, iconeDeTipo } from '../utils/statusBadge'
+import { badgeDeStatus } from '../utils/statusBadge'
 import { formatarData } from '../utils/datas'
 import { formatarProtocoloOcorrencia, formatarProtocoloProcesso } from '../utils/protocolo'
 import { useCatalogosOcorrenciaQuery, useOcorrenciasQuery } from '../hooks/useOcorrencias'
@@ -27,9 +34,8 @@ const STATUS_PENDENTES = 'PENDENTES'
 const STATUS_NAO_ENCERRADOS: StatusOcorrencia[] = ['ABERTA', 'EM_ATENDIMENTO']
 
 function ColunaDenunciante({ ocorrencia }: { ocorrencia: OcorrenciaResumo }) {
-  const textoMudo = { fontStyle: 'italic', color: 'var(--color-text-muted)' } as const
-  if (ocorrencia.anonima) return <span style={textoMudo}>Anônima</span>
-  if (ocorrencia.sigilosa) return <span style={textoMudo}>Sigiloso</span>
+  if (ocorrencia.anonima) return <span className="texto-ausente">Anônima</span>
+  if (ocorrencia.sigilosa) return <span className="texto-ausente">Sigiloso</span>
   return <>{ocorrencia.denuncianteNome ?? '—'}</>
 }
 
@@ -37,7 +43,20 @@ export function Ocorrencias() {
   const { roleKey } = useAuth()
   const podeEscrever = roleKey === 'admin' || roleKey === 'agente'
 
-  const { filtros, pagina, definirFiltros, irParaPagina, limparFiltros, filtrosAtivos } = useFiltrosLista('ocorrencias', FILTROS_PADRAO)
+  const statusDoLink = useFiltroDeLink('status')
+  const deDoLink = useFiltroDeLink('de')
+  const ateDoLink = useFiltroDeLink('ate')
+  const filtrosDoLink = {
+    ...(statusDoLink ? { status: statusDoLink } : {}),
+    ...(deDoLink ? { de: deDoLink } : {}),
+    ...(ateDoLink ? { ate: ateDoLink } : {}),
+  }
+  const { filtros, pagina, definirFiltros, irParaPagina, limparFiltros, filtrosAtivos } = useFiltrosLista(
+    'ocorrencias',
+    FILTROS_PADRAO,
+    Object.keys(filtrosDoLink).length > 0 ? filtrosDoLink : undefined,
+  )
+  const propsDaLinha = useLinhaClicavel()
   const buscaDebounced = useValorComAtraso(filtros.busca).trim()
   const { tipo: tipoFiltro, status: statusFiltro, de: deFiltro, ate: ateFiltro } = filtros
   const deDebounced = useValorComAtraso(deFiltro)
@@ -74,7 +93,7 @@ export function Ocorrencias() {
           <div className="actions">
             <Link to="/ocorrencias/novo" className="btn btn-primary">
               <Icon name="plus" size={14} />
-              Registrar Ocorrência
+              Registrar ocorrência
             </Link>
           </div>
         )}
@@ -140,8 +159,10 @@ export function Ocorrencias() {
                   <th>Bairro</th>
                   <th>Denunciante</th>
                   <th>Status</th>
-                  <th>Processo Vinc.</th>
-                  <th style={{ width: 80 }}>Ações</th>
+                  <th>Processo</th>
+                  <th className="col-acoes">
+                    <span className="visually-hidden">Ações</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -163,7 +184,7 @@ export function Ocorrencias() {
       {!isLoading && !isError && data && data.totalItens === 0 && (
         <div className="empty">
           <span className="ico">
-            <Icon name="alert" size={28} />
+            <Icon name="inbox" size={28} />
           </span>
           <h3>Nenhuma ocorrência encontrada</h3>
           <p>{filtrosAtivos ? 'Nenhum resultado com estes filtros.' : 'Ainda não há ocorrências registradas.'}</p>
@@ -187,35 +208,32 @@ export function Ocorrencias() {
                   <th>Bairro</th>
                   <th>Denunciante</th>
                   <th>Status</th>
-                  <th>Processo Vinc.</th>
-                  <th style={{ width: 80 }}>Ações</th>
+                  <th>Processo</th>
+                  <th className="col-acoes">
+                    <span className="visually-hidden">Ações</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {data.itens.map((ocorrencia) => {
                   const statusBadge = badgeDeStatus(ocorrencia.statusOcorrencia)
                   return (
-                    <tr key={ocorrencia.id}>
+                    <tr key={ocorrencia.id} {...propsDaLinha(`/ocorrencias/${ocorrencia.id}`)}>
                       <td>
-                        <span className="mono" style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                          {formatarProtocoloOcorrencia(ocorrencia.protocolo)}
-                        </span>
-                        {ocorrencia.urgente && (
-                          <span className="badge badge-urgent" style={{ marginLeft: 6, gap: 4 }}>
-                            <Icon name="alert" size={10} /> Urgente
-                          </span>
-                        )}
+                        <div className="celula-protocolo">
+                          <Link to={`/ocorrencias/${ocorrencia.id}`} className="protocolo">
+                            {formatarProtocoloOcorrencia(ocorrencia.protocolo)}
+                          </Link>
+                          {ocorrencia.urgente && (
+                            <span className="badge badge-urgent">
+                              <Icon name="alert" size={12} /> Urgente
+                            </span>
+                          )}
+                        </div>
                       </td>
+                      <td>{formatarData(ocorrencia.dataAbertura)}</td>
                       <td>
-                        <span className="mono" style={{ fontSize: 12 }}>
-                          {formatarData(ocorrencia.dataAbertura)}
-                        </span>
-                      </td>
-                      <td>
-                        <span className="occur-type" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
-                          <Icon name={iconeDeTipo(ocorrencia.tipoOcorrencia)} size={14} />
-                          {ocorrencia.tipoOcorrenciaNome}
-                        </span>
+                        {ocorrencia.tipoOcorrenciaNome}
                       </td>
                       <td>{ocorrencia.bairro}</td>
                       <td>
@@ -225,15 +243,13 @@ export function Ocorrencias() {
                         <span className={`badge ${statusBadge.classe}`}>{statusBadge.label}</span>
                       </td>
                       <td>
-                                                {ocorrencia.processoProtocolo ? (
-                          <span className="mono" style={{ fontWeight: 600 }}>
-                            {formatarProtocoloProcesso(ocorrencia.processoProtocolo)}
-                          </span>
+                        {ocorrencia.processoProtocolo ? (
+                          <span className="protocolo">{formatarProtocoloProcesso(ocorrencia.processoProtocolo)}</span>
                         ) : (
                           <span className="muted">—</span>
                         )}
                       </td>
-                      <td>
+                      <td className="col-acoes">
                         <Link
                           to={`/ocorrencias/${ocorrencia.id}`}
                           className="btn btn-ghost btn-sm btn-icon-only"
@@ -260,13 +276,13 @@ export function Ocorrencias() {
             <div className="pager">
               <button
                 type="button"
-                className="btn btn-ghost btn-sm"
+                className="btn btn-outline btn-sm"
                 disabled={pagina === 0}
                 onClick={() => irParaPagina(pagina - 1)}
               >
                 Anterior
               </button>
-              <span className="mono" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+              <span className="pager-posicao">
                 Página {pagina + 1} de {totalPaginas}
               </span>
               <button

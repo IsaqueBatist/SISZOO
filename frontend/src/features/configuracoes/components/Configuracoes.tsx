@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { AlertaErroEnvio } from '@/components/AlertaErroEnvio'
 import { Switch } from '@/components/Switch'
 import { Icon } from '@/components/layout/Icon'
@@ -18,9 +18,9 @@ const LABELS_DENSIDADE: Record<DensidadeUsuario, string> = {
 
 const OPCOES_DENSIDADE: DensidadeUsuario[] = ['NORMAL', 'COMPACTO', 'CONFORTAVEL']
 
-const OPCOES_TEMA: { valor: TemaUsuario; label: string; gradiente: string }[] = [
-  { valor: 'LIGHT', label: 'Claro', gradiente: 'linear-gradient(135deg, #1B5E20, #2E7D32)' },
-  { valor: 'DARK', label: 'Escuro', gradiente: 'linear-gradient(135deg, #0F1720, #2C3A4E)' },
+const OPCOES_TEMA: { valor: TemaUsuario; label: string; amostra: string }[] = [
+  { valor: 'LIGHT', label: 'Claro', amostra: '#FFFFFF' },
+  { valor: 'DARK', label: 'Escuro', amostra: '#181F27' },
 ]
 
 interface FormState {
@@ -40,6 +40,30 @@ export function Configuracoes() {
   const [form, setForm] = useState<FormState | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSucesso, setSubmitSucesso] = useState(false)
+  const preferenciasSalvas = useRef(query.data)
+
+  useEffect(() => {
+    preferenciasSalvas.current = query.data
+  }, [query.data])
+
+  const temaEmVisualizacao = form?.tema
+  const densidadeEmVisualizacao = form?.densidade
+
+  useEffect(() => {
+    if (temaEmVisualizacao && densidadeEmVisualizacao) {
+      aplicarPreferenciasVisuais({ tema: temaEmVisualizacao, densidade: densidadeEmVisualizacao })
+    }
+  }, [temaEmVisualizacao, densidadeEmVisualizacao])
+
+  useEffect(
+    () => () => {
+      if (preferenciasSalvas.current) aplicarPreferenciasVisuais(preferenciasSalvas.current)
+    },
+    [],
+  )
+
+  const alteracaoVisualNaoSalva =
+    !!form && !!query.data && (form.tema !== query.data.tema || form.densidade !== query.data.densidade)
 
   if (query.data && !form) {
     setForm({
@@ -91,7 +115,6 @@ export function Configuracoes() {
           <h1>Configurações</h1>
         </div>
         <div className="alert danger" role="alert">
-          <span className="bullet" />
           <div className="alert-content">Não foi possível carregar suas preferências. Tente novamente.</div>
         </div>
       </div>
@@ -143,7 +166,6 @@ export function Configuracoes() {
           <AlertaErroEnvio mensagem={submitError} />
           {submitSucesso && !submitError && (
             <div className="alert success" role="status">
-              <span className="bullet" />
               <div className="alert-content">Preferências salvas com sucesso.</div>
             </div>
           )}
@@ -166,11 +188,15 @@ export function Configuracoes() {
                         type="button"
                         key={opcao.valor}
                         className={`pal-chip${form.tema === opcao.valor ? ' active' : ''}`}
-                        style={{ background: opcao.gradiente }}
-                        title={opcao.label}
-                        aria-label={opcao.label}
-                        onClick={() => setForm({ ...form, tema: opcao.valor })}
-                      />
+                        aria-pressed={form.tema === opcao.valor}
+                        onClick={() => {
+                          setSubmitSucesso(false)
+                          setForm({ ...form, tema: opcao.valor })
+                        }}
+                      >
+                        <span className="amostra" style={{ background: opcao.amostra }} aria-hidden="true" />
+                        {opcao.label}
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -184,7 +210,10 @@ export function Configuracoes() {
                     aria-label="Densidade da interface"
                     style={{ width: 180 }}
                     value={form.densidade}
-                    onChange={(event) => setForm({ ...form, densidade: event.target.value as DensidadeUsuario })}
+                    onChange={(event) => {
+                      setSubmitSucesso(false)
+                      setForm({ ...form, densidade: event.target.value as DensidadeUsuario })
+                    }}
                   >
                     {OPCOES_DENSIDADE.map((opcao) => (
                       <option key={opcao} value={opcao}>
@@ -193,6 +222,12 @@ export function Configuracoes() {
                     ))}
                   </select>
                 </div>
+                {alteracaoVisualNaoSalva && (
+                  <p className="aviso-visualizacao" role="status">
+                    Você está vendo a aparência escolhida. Clique em <strong>Salvar alterações</strong> para mantê-la; se
+                    sair sem salvar, volta a anterior.
+                  </p>
+                )}
               </div>
             </div>
           </div>

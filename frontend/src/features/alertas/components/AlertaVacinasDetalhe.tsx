@@ -7,6 +7,7 @@ import { formatarDataBR } from '@/lib/datas'
 import { normalizarBusca } from '@/lib/texto'
 import { classeDoFiltro, useFiltrosLista } from '@/lib/useFiltrosLista'
 import { formatarSexo } from '@/features/animais/utils/rotulosAnimal'
+import { useLinhaClicavel } from '@/lib/useLinhaClicavel'
 
 const FILTROS_PADRAO = { busca: '', situacao: '' }
 
@@ -25,6 +26,7 @@ interface Linha {
 
 export function AlertaVacinasDetalhe() {
   const { data, isLoading, isError } = useAlertasVacinaisQuery()
+  const propsDaLinha = useLinhaClicavel()
   const { filtros, definirFiltros, limparFiltros, filtrosAtivos } = useFiltrosLista('alertas-vacinas', FILTROS_PADRAO)
 
   const linhas: Linha[] = (data ?? []).flatMap((animal) => animal.vacinas.map((item) => ({ animal, item })))
@@ -51,8 +53,8 @@ export function AlertaVacinasDetalhe() {
     <>
       <div className="page-header">
         <div className="title-block">
-          <Link to="/dashboard" className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start', marginBottom: 4 }}>
-            ← Voltar para Dashboard
+          <Link to="/dashboard" className="link-voltar">
+            ← Voltar para o início
           </Link>
           <h1>Vacinas vencendo ou vencidas</h1>
           <p className="subtitle">Reforços com vencimento em até 7 dias, e reforços já vencidos</p>
@@ -61,7 +63,6 @@ export function AlertaVacinasDetalhe() {
 
       {isError && (
         <div className="alert danger" role="alert">
-          <span className="bullet" />
           <div className="alert-content">Não foi possível carregar os alertas de vacina.</div>
         </div>
       )}
@@ -166,7 +167,7 @@ export function AlertaVacinasDetalhe() {
                     </thead>
                     <tbody>
                       {linhasFiltradas.map(({ animal, item }) => (
-                        <tr key={item.vacinacaoId}>
+                        <tr key={item.vacinacaoId} {...propsDaLinha(`/animais/${animal.animalId}`)}>
                           <td>
                             <Link to={`/animais/${animal.animalId}`} style={{ fontWeight: 600 }}>
                               {animal.animalNome}
@@ -177,7 +178,7 @@ export function AlertaVacinasDetalhe() {
                           </td>
                           <td>{animal.animalBaiaNome ?? '—'}</td>
                           <td>{item.vacinaNome}</td>
-                          <td className="mono">
+                          <td>
                             {formatarData(item.dataValidade)} · {formatarPrazo(item.diasRestantes)}
                           </td>
                           <td>{item.veterinarioNome ?? '—'}</td>

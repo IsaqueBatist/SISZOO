@@ -27,7 +27,7 @@ describe('Perfil', () => {
 
     expect(await screen.findByText('Stéphanie Lima')).toBeInTheDocument()
     expect(screen.getAllByText('stephanie.lima@itu.sp.gov.br').length).toBeGreaterThan(0)
-    expect(screen.getByText('VETERINÁRIO(A)')).toBeInTheDocument()
+    expect(screen.getByText('Veterinário(a)')).toBeInTheDocument()
   })
 
   it('lista as permissões do perfil, incluindo as negadas', async () => {

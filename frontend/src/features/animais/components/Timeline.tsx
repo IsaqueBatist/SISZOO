@@ -67,7 +67,6 @@ export function Timeline({ eventos, carregando, fimDoHistorico, erro, onCarregar
   if (erro) {
     return (
       <div className="alert danger" role="alert">
-        <span className="bullet" />
         <div className="alert-content">Não foi possível carregar o histórico.</div>
       </div>
     )

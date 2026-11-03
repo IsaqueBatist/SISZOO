@@ -97,7 +97,6 @@ function ListaAnexos({ ocorrencia }: { ocorrencia: Ocorrencia }) {
       <div className="card-body" style={{ padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 6 }}>
         {erro && (
           <div className="alert danger" role="alert">
-            <span className="bullet" />
             <div className="alert-content">{erro}</div>
           </div>
         )}
@@ -150,10 +149,9 @@ export function OcorrenciaDetalhe() {
     return (
       <>
         <div className="alert danger" role="alert">
-          <span className="bullet" />
           <div className="alert-content">Não foi possível carregar esta ocorrência.</div>
         </div>
-        <Link to="/ocorrencias" className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}>
+        <Link to="/ocorrencias" className="link-voltar">
           ← Voltar para Ocorrências
         </Link>
       </>
@@ -167,12 +165,17 @@ export function OcorrenciaDetalhe() {
       <AnexosPendentesDaOcorrencia ocorrenciaId={ocorrencia.id} />
       <div className="page-header">
         <div className="title-block">
-          <Link to="/ocorrencias" className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}>
+          <Link to="/ocorrencias" className="link-voltar">
             ← Voltar para Ocorrências
           </Link>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '4px 0' }}>
+          <div className="titulo-com-status">
+            <h1>Ocorrência {formatarProtocoloOcorrencia(ocorrencia.protocolo)}</h1>
             <span className={`badge ${statusBadge.classe}`}>{statusBadge.label}</span>
-            {ocorrencia.urgente && <span className="badge badge-urgent">🚨 URGENTE</span>}
+            {ocorrencia.urgente && (
+              <span className="badge badge-urgent">
+                <Icon name="alert" size={12} /> Urgente
+              </span>
+            )}
             {ocorrencia.sigilosa && (
               <span className="badge badge-neutral">
                 <Icon name="lock" size={12} /> Sigilosa
@@ -180,7 +183,6 @@ export function OcorrenciaDetalhe() {
             )}
             {ocorrencia.anonima && <span className="badge badge-neutral">Anônima</span>}
           </div>
-          <h1 style={{ fontFamily: 'var(--font-mono)', letterSpacing: 0 }}>Ocorrência {formatarProtocoloOcorrencia(ocorrencia.protocolo)}</h1>
           <p className="subtitle">
             {ocorrencia.tipoOcorrenciaNome} · {ocorrencia.bairro}
           </p>
@@ -200,52 +202,38 @@ export function OcorrenciaDetalhe() {
         <div className="col gap-4">
           <div className="card">
             <div className="card-header">
-              <h3>Detalhes da Ocorrência</h3>
+              <h3>Detalhes da ocorrência</h3>
             </div>
             <div className="card-body">
               <div className="form-grid">
                 <div className="field">
-                  <label>Tipo</label>
-                  <div>
-                    <span className="badge" style={{ background: 'var(--color-danger-bg)', color: 'var(--color-danger)' }}>
-                      {ocorrencia.tipoOcorrenciaNome}
-                    </span>
-                  </div>
+                  <span className="dado-rotulo">Tipo</span>
+                  <div>{ocorrencia.tipoOcorrenciaNome}</div>
                 </div>
                 <div className="field">
-                  <label>Data / hora</label>
-                  <div className="mono" style={{ fontSize: 14 }}>
+                  <span className="dado-rotulo">Data / hora</span>
+                  <div>
                     {formatarData(ocorrencia.dataAbertura)}
                     {ocorrencia.horaAbertura ? ` · ${formatarHora(ocorrencia.horaAbertura)}` : ''}
                   </div>
                 </div>
                 <div className="field full">
-                  <label>Endereço</label>
+                  <span className="dado-rotulo">Endereço</span>
                   <div>
                     {ocorrencia.endereco} · {ocorrencia.bairro}
                   </div>
                 </div>
                 <div className="field">
-                  <label>Ponto de referência</label>
+                  <span className="dado-rotulo">Ponto de referência</span>
                   <div>{ocorrencia.pontoReferencia ?? '—'}</div>
                 </div>
                 <div className="field">
-                  <label>Registrada por</label>
+                  <span className="dado-rotulo">Registrada por</span>
                   <div>{ocorrencia.registradoPorNome}</div>
                 </div>
                 <div className="field full">
-                  <label>Descrição</label>
-                  <div
-                    style={{
-                      padding: 12,
-                      background: 'var(--color-surface-alt)',
-                      borderRadius: 'var(--radius-sm)',
-                      fontSize: 13,
-                      lineHeight: 1.6,
-                    }}
-                  >
-                    {ocorrencia.descricao}
-                  </div>
+                  <span className="dado-rotulo">Descrição</span>
+                  <p className="texto-longo">{ocorrencia.descricao}</p>
                 </div>
               </div>
             </div>
@@ -269,24 +257,24 @@ export function OcorrenciaDetalhe() {
               ) : (
                 <div className="form-grid" style={{ paddingTop: 12 }}>
                   <div className="field">
-                    <label>Nome</label>
+                    <span className="dado-rotulo">Nome</span>
                     <div>{ocorrencia.denunciado.nome ?? '—'}</div>
                   </div>
                   <div className="field">
-                    <label>CPF</label>
+                    <span className="dado-rotulo">CPF</span>
                     <div className="mono">{ocorrencia.denunciado.cpf ?? '—'}</div>
                   </div>
                   <div className="field">
-                    <label>Telefone</label>
+                    <span className="dado-rotulo">Telefone</span>
                     <div className="mono">{ocorrencia.denunciado.telefone ?? '—'}</div>
                   </div>
                   <div className="field full">
-                    <label>Endereço</label>
+                    <span className="dado-rotulo">Endereço</span>
                     <div>{ocorrencia.denunciado.endereco ?? '—'}</div>
                   </div>
                   {ocorrencia.denunciado.observacoes && (
                     <div className="field full">
-                      <label>Observações</label>
+                      <span className="dado-rotulo">Observações</span>
                       <div>{ocorrencia.denunciado.observacoes}</div>
                     </div>
                   )}
@@ -297,7 +285,7 @@ export function OcorrenciaDetalhe() {
 
           <div className="card">
             <div className="card-header">
-              <h3>Histórico de Movimentações</h3>
+              <h3>Histórico de movimentações</h3>
             </div>
             <div className="card-body">
               {podeEscrever && ocorrencia.statusOcorrencia !== 'ENCERRADA' && <FormNota ocorrenciaId={ocorrencia.id} />}
