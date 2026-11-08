@@ -1,0 +1,53 @@
+# Servidor (VM): imagens publicadas pelo workflow Deploy, PostgreSQL gerenciado
+# fora da VM e Caddy na frente com HTTPS. Não sobe banco local.
+# Uso e atualização automática: docs/deploy.md.
+name: siszoo
+
+x-logs: &logs
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  backend:
+    image: ${SISZOO_REGISTRO:-ghcr.io/isaquebatist}/siszoo-backend:${SISZOO_TAG:-latest}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      TZ: America/Sao_Paulo
+      DB_URL: ${DB_URL:?defina DB_URL no .env}
+      JWT_SECRET: ${JWT_SECRET:?defina JWT_SECRET no .env}
+      # Atrás do Caddy: usa o IP do cliente (X-Forwarded-For) no limite de login e na auditoria.
+      SERVER_FORWARD_HEADERS_STRATEGY: native
+      # Dimensionado para VM com 1 GB de RAM e swap.
+      JAVA_TOOL_OPTIONS: "-Xmx400m -XX:MaxMetaspaceSize=160m -XX:+UseSerialGC -Xss512k -XX:TieredStopAtLevel=1"
+    <<: *logs
+
+  frontend:
+    image: ${SISZOO_REGISTRO:-ghcr.io/isaquebatist}/siszoo-frontend:${SISZOO_TAG:-latest}
+    restart: unless-stopped
+    <<: *logs
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SISZOO_DOMINIO: ${SISZOO_DOMINIO:?defina SISZOO_DOMINIO no .env}
+    volumes:
+      - ./deploy:/etc/caddy:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+      - frontend
+    <<: *logs
+
+volumes:
+  caddy_data:
+  caddy_config:
