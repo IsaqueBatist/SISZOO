@@ -16,6 +16,7 @@ manda e a documentação é corrigida no mesmo PR (checklist abaixo, em "Como ma
 | `contratos/` | Pedidos do frontend ao backend e contratos de endpoints, cada um com `Status:` na primeira linha (implementado/pendente). |
 | `regras-negocio-clinico.md` | Regras de vacinação, procedimento, prescrição, exame, anexos do animal, datas e ficha completa; alerta vacinal. |
 | `email.md` | Serviço de e-mail (T35): variáveis SMTP, sandbox, GreenMail, templates, notificação de resultado e reenvio. |
+| `deploy.md` | Deploy em servidor: imagens no GHCR publicadas pelo workflow Deploy, `docker-compose.deploy.yml`, Caddy com HTTPS e atualização por cron na VM. |
 | `roteiro-testes-manuais.md` | Roteiro de teste manual (tela, API e banco) por área, inclusive o alinhamento com o TG. |
 | `insomnia/README.md` | Como abrir a coleção do Insomnia (`.insomnia/` na raiz) com os endpoints e suítes de regras. |
 | `pendencias-documentacao.md` | Divergências conhecidas entre documentação e código, abertas e resolvidas. |
