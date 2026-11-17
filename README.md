@@ -354,7 +354,9 @@ npm run build   # checagem de tipos e build de produção
 ```
 
 O [CI](.github/workflows/ci.yml) roda esses comandos a cada push e pull request
-na `main`. Para testes manuais da API, há uma coleção do Insomnia em `.insomnia/`
+na `main`. Depois de um push na `main` com o CI aprovado, o workflow
+[Deploy](.github/workflows/deploy.yml) publica as imagens no GitHub Container
+Registry, e o servidor se atualiza sozinho ([docs/deploy.md](docs/deploy.md)). Para testes manuais da API, há uma coleção do Insomnia em `.insomnia/`
 ([como usar](docs/insomnia/README.md)) e um
 [roteiro de testes manuais](docs/roteiro-testes-manuais.md).
 
@@ -372,9 +374,11 @@ SISZOO/
 │   └── src/features/         uma pasta por módulo, com telas, chamadas à API e testes
 ├── docs/                     modelo de dados, decisões, contratos de API e protótipo
 ├── .insomnia/                coleção do Insomnia para testar a API
-├── .github/workflows/        pipeline de CI
+├── .github/workflows/        CI e publicação das imagens (deploy)
+├── deploy/                   Caddyfile e script de atualização do servidor
 ├── docker-compose.yml        banco, backend e frontend
 ├── docker-compose.seed.yml   override de desenvolvimento com dados fictícios
+├── docker-compose.deploy.yml servidor: imagens publicadas, banco externo e HTTPS
 └── .env.example              variáveis de ambiente do Docker Compose
 ```
 
@@ -389,6 +393,7 @@ SISZOO/
 | [docs/integracao-frontend-api.md](docs/integracao-frontend-api.md) | Relação entre telas, chamadas, endpoints e tabelas |
 | [docs/regras-negocio-clinico.md](docs/regras-negocio-clinico.md) | Regras de vacinação, procedimentos, prescrições, exames e alertas |
 | [docs/email.md](docs/email.md) | Configuração de SMTP, modelos e notificações |
+| [docs/deploy.md](docs/deploy.md) | Publicação em servidor e atualização automática a partir da `main` |
 | [docs/insomnia/README.md](docs/insomnia/README.md) | Uso da coleção do Insomnia |
 | [docs/roteiro-testes-manuais.md](docs/roteiro-testes-manuais.md) | Roteiro de testes manuais por área |
 | [docs/prototipo/](docs/prototipo/) | Protótipo navegável e design system |
